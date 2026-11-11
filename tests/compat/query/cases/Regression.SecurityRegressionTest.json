@@ -1,0 +1,4977 @@
+{
+  "source": "packages/query/tests/Regression/SecurityRegressionTest.php",
+  "cases": [
+    {
+      "name": "testAlterColumnTypeRejectsSemicolonInUsingExpression",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "alterColumnType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "age",
+              "INTEGER",
+              "age::integer; DROP TABLE users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid USING expression: age::integer; DROP TABLE users"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testAlterColumnTypeRejectsDisallowedTypeCharacters",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "alterColumnType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "age",
+              "INTEGER'; DROP TABLE users; --"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column type: INTEGER'; DROP TABLE users; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCreatePartitionRejectsCommentInjection",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "createPartition",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "p1",
+              "FOR VALUES IN ('a') /* evil */"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid partition expression: FOR VALUES IN ('a') /* evil */"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testExtractKeywordIgnoresKeywordInsideStringLiteral",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT 'DELETE FROM users' AS x"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        "SELECT"
+      ]
+    },
+    {
+      "name": "testExtractKeywordIgnoresKeywordInsideBlockComment",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "/* DELETE FROM users */ SELECT 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        "SELECT"
+      ]
+    },
+    {
+      "name": "testCteClassifierIgnoresKeywordHiddenInStringLiteral",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH x AS (SELECT 'INSERT INTO users VALUES(1)' AS s) SELECT * FROM x"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testMongoBuilderRejectsDollarPrefixedFieldNameInPush",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "push",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "$where",
+              "value"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid MongoDB field name: $where"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testMongoBuilderRejectsEmptyFieldNameInSet",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "": "value"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid MongoDB field name: "
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testMySqlCreateTableEnumEscapesTrailingBackslash",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "widgets"
+            ]
+          },
+          {
+            "call": "enum",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "grade",
+              [
+                "A",
+                "B",
+                "bad\\"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `widgets` (`grade` ENUM('A','B','bad\\\\') NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `widgets` (`grade` ENUM('A','B','bad\\\\') NOT NULL)"
+      ]
+    },
+    {
+      "name": "testPostgreSqlCreateCollationRejectsInvalidOptionKey",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "createCollation",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c1",
+              {
+                "provider = 'x', danger": "icu"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid collation option key: provider = 'x', danger"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testPostgreSqlTablesampleRejectsInvalidMethod",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "tablesample",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              10.0,
+              "BERNOULLI); DROP TABLE users; --"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid TABLESAMPLE method: BERNOULLI); DROP TABLE users; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testDdlStringLiteralEscapesBackslashes",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "notes"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "body"
+            ]
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "evil\\"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `notes` (`body` VARCHAR(255) NOT NULL DEFAULT 'evil\\\\')",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `notes` (`body` VARCHAR(255) NOT NULL DEFAULT 'evil\\\\')"
+      ]
+    },
+    {
+      "name": "testQueryParseRejectsRawByDefault",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Raw"
+            }
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "raw",
+                "values": [
+                  "SELECT * FROM users; DROP TABLE users"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "raw",
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseAcceptsRawWhenAllowRawTrue",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Raw"
+            }
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": {
+              "0": {
+                "method": "raw",
+                "values": [
+                  "trusted_raw"
+                ]
+              },
+              "allowRaw": true
+            }
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        "raw",
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "",
+            "values": [
+              "trusted_raw"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Raw"
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseRejectsRawNestedInsideOr",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Or"
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Equal"
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Raw"
+            }
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "or",
+                "values": [
+                  {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ]
+                  },
+                  {
+                    "method": "raw",
+                    "values": [
+                      "DROP TABLE users"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "or",
+        "equal",
+        "raw",
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testSelectWindowRejectsInjectionInsideParens",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectWindow",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "ROW_NUMBER(1); DROP TABLE x;-- )",
+              "w"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid window function: ROW_NUMBER(1); DROP TABLE x;-- )"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectWindowRejectsSemicolonInsideArgs",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectWindow",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SUM(a; DROP TABLE x)",
+              "w"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid window function: SUM(a; DROP TABLE x)"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectWindowAcceptsValidArgs",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectWindow",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SUM(\"amount\")",
+              "w",
+              [
+                "dept"
+              ]
+            ]
+          },
+          {
+            "is": "Builder\\PostgreSQL",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        true
+      ]
+    },
+    {
+      "name": "testCreateIndexRejectsDoubleQuoteInCollation",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Index",
+            "args": {
+              "name": "idx_name",
+              "columns": [
+                "name"
+              ],
+              "collations": {
+                "name": "\"en_US\""
+              }
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid collation: \"en_US\""
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testCreateProcedureRejectsCommaInjectionInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "createProcedure",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "p",
+              [
+                [
+                  {
+                    "$enum": "Schema\\ParameterDirection::In"
+                  },
+                  "x",
+                  "VARCHAR(255), DROP TABLE x --"
+                ]
+              ],
+              "SELECT 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid procedure parameter type: VARCHAR(255), DROP TABLE x --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectCastRejectsCommaInjectionInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectCast",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "VARCHAR(255), DROP TABLE x --",
+              "a"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: VARCHAR(255), DROP TABLE x --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectCastRejectsQuoteInjectionInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectCast",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "INT'; DROP TABLE x; --",
+              "a"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: INT'; DROP TABLE x; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectCastRejectsCommentSequenceInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectCast",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "INT /* danger */",
+              "a"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: INT /* danger */"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testAlterColumnTypeRejectsCommaInjectionInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "alterColumnType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "age",
+              "INTEGER, DROP TABLE users --"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column type: INTEGER, DROP TABLE users --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectCastAcceptsStructuredType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectCast",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "DECIMAL(10, 2)",
+              "a"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT CAST(`c` AS DECIMAL(10, 2)) AS `a` FROM `t`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT CAST(`c` AS DECIMAL(10, 2)) AS `a` FROM `t`"
+      ]
+    },
+    {
+      "name": "testExtractFirstBsonKeyRejectsOutOfBoundsDocLength",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "JAAAAAEAAAAAAAAA3QcAAAAAAAAA////fxBmaW5kAAEAAAAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testQuoteRejectsNullByteInIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users\u0000 DROP TABLE x"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Identifier contains control character"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testQuoteRejectsControlByteInIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users\u001f"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Identifier contains control character"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testQuoteAcceptsValidIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users`"
+      ]
+    },
+    {
+      "name": "testJoinOnRejectsInjectionInLeftIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\JoinBuilder",
+            "args": []
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.id); DROP TABLE users; --",
+              "orders.user_id"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column name: users.id); DROP TABLE users; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testJoinOnRejectsInjectionInRightIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\JoinBuilder",
+            "args": []
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.id",
+              "orders.user_id OR 1=1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column name: orders.user_id OR 1=1"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testJoinOnAcceptsValidIdentifiers",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\JoinBuilder",
+            "args": []
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "get": "ons",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Builder\\JoinOn",
+            "id": 2,
+            "props": {
+              "left": "users.id",
+              "operator": "=",
+              "right": "orders.user_id"
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testMongoBuilderRejectsFilterHookInsteadOfDroppingIt",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\UnsupportedException",
+            "message": "Filter hooks are not supported on the MongoDB builder: Utopia\\Query\\Hook\\Filter returns a SQL expression, which has no place in an operation document. Express the constraint as a Query passed to filter() instead."
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testMongoBuilderRejectsJoinFilterHook",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ],
+              "org_id"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\UnsupportedException",
+            "message": "Filter hooks are not supported on the MongoDB builder: Utopia\\Query\\Hook\\Filter returns a SQL expression, which has no place in an operation document. Express the constraint as a Query passed to filter() instead."
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testSqlBuildersStillScopeByTenantHook",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "a"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              {
+                "$o": 5
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "a"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `a` FROM `docs` WHERE tenant_id IN (?)",
+            "bindings": [
+              "7"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT `a` FROM `docs` WHERE tenant_id IN (?)",
+        [
+          "7"
+        ],
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT \"a\" FROM \"docs\" WHERE tenant_id IN (?)",
+            "bindings": [
+              "7"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT \"a\" FROM \"docs\" WHERE tenant_id IN (?)",
+        [
+          "7"
+        ]
+      ]
+    },
+    {
+      "name": "testMongoBuilderStillAppliesAttributeHooks",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "new": "Hook\\Attribute\\Map",
+            "args": [
+              {
+                "a": "renamed"
+              }
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "a",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Hook\\Attribute\\Map",
+          "id": 2,
+          "props": []
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "a",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "{\"collection\":\"docs\",\"operation\":\"find\",\"filter\":{\"renamed\":\"?\"}}",
+            "bindings": [
+              "x"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"docs\",\"operation\":\"find\",\"filter\":{\"renamed\":\"?\"}}",
+        "{\"collection\":\"docs\",\"operation\":\"find\",\"filter\":{\"renamed\":\"?\"}}"
+      ]
+    },
+    {
+      "name": "testParserRejectsSqlInQuotedFunctionNameOrCastType with data set \"function name\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Parser",
+            "args": []
+          },
+          {
+            "new": "Tokenizer\\Tokenizer",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "SELECT name FROM users WHERE \"1=1 OR TRUE OR LOWER\"(name) = 1"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                },
+                {
+                  "$o": 10
+                },
+                {
+                  "$o": 11
+                },
+                {
+                  "$o": 12
+                },
+                {
+                  "$o": 13
+                },
+                {
+                  "$o": 14
+                },
+                {
+                  "$o": 15
+                },
+                {
+                  "$o": 16
+                },
+                {
+                  "$o": 17
+                },
+                {
+                  "$o": 18
+                },
+                {
+                  "$o": 19
+                },
+                {
+                  "$o": 20
+                },
+                {
+                  "$o": 21
+                }
+              ]
+            ]
+          },
+          {
+            "call": "parse",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 22
+                },
+                {
+                  "$o": 23
+                },
+                {
+                  "$o": 24
+                },
+                {
+                  "$o": 25
+                },
+                {
+                  "$o": 26
+                },
+                {
+                  "$o": 27
+                },
+                {
+                  "$o": 28
+                },
+                {
+                  "$o": 29
+                },
+                {
+                  "$o": 30
+                },
+                {
+                  "$o": 31
+                },
+                {
+                  "$o": 32
+                },
+                {
+                  "$o": 33
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "AST\\Parser",
+          "id": 1
+        },
+        {
+          "$object": "Tokenizer\\Tokenizer",
+          "id": 2
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 16
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"1=1 OR TRUE OR LOWER\"",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LeftParen"
+              },
+              "value": "(",
+              "position": 51
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 52
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::RightParen"
+              },
+              "value": ")",
+              "position": 56
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 17,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 57
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 18,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 58
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 19,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 59
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 20,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 60
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 21,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 61
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 22,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 23,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 24,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 25,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 26,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 27,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"1=1 OR TRUE OR LOWER\"",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 28,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LeftParen"
+              },
+              "value": "(",
+              "position": 51
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 29,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 52
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 30,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::RightParen"
+              },
+              "value": ")",
+              "position": 56
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 31,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 58
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 32,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 60
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 33,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 61
+            }
+          }
+        ],
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid function name: 1=1 OR TRUE OR LOWER"
+          },
+          "id": 34
+        }
+      ]
+    },
+    {
+      "name": "testParserRejectsSqlInQuotedFunctionNameOrCastType with data set \"double colon cast type\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Parser",
+            "args": []
+          },
+          {
+            "new": "Tokenizer\\Tokenizer",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "SELECT name FROM users WHERE name::\"TEXT) OR 1=1 OR CAST(name AS TEXT\" = 1"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                },
+                {
+                  "$o": 10
+                },
+                {
+                  "$o": 11
+                },
+                {
+                  "$o": 12
+                },
+                {
+                  "$o": 13
+                },
+                {
+                  "$o": 14
+                },
+                {
+                  "$o": 15
+                },
+                {
+                  "$o": 16
+                },
+                {
+                  "$o": 17
+                },
+                {
+                  "$o": 18
+                },
+                {
+                  "$o": 19
+                },
+                {
+                  "$o": 20
+                }
+              ]
+            ]
+          },
+          {
+            "call": "parse",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 21
+                },
+                {
+                  "$o": 22
+                },
+                {
+                  "$o": 23
+                },
+                {
+                  "$o": 24
+                },
+                {
+                  "$o": 25
+                },
+                {
+                  "$o": 26
+                },
+                {
+                  "$o": 27
+                },
+                {
+                  "$o": 28
+                },
+                {
+                  "$o": 29
+                },
+                {
+                  "$o": 30
+                },
+                {
+                  "$o": 31
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "AST\\Parser",
+          "id": 1
+        },
+        {
+          "$object": "Tokenizer\\Tokenizer",
+          "id": 2
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 16
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "::",
+              "position": 33
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"TEXT) OR 1=1 OR CAST(name AS TEXT\"",
+              "position": 35
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 70
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 17,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 71
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 18,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 72
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 19,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 73
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 20,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 74
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 21,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 22,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 23,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 24,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 25,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 26,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 27,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "::",
+              "position": 33
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 28,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"TEXT) OR 1=1 OR CAST(name AS TEXT\"",
+              "position": 35
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 29,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 71
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 30,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 73
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 31,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 74
+            }
+          }
+        ],
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: TEXT) OR 1=1 OR CAST(name AS TEXT"
+          },
+          "id": 32
+        }
+      ]
+    },
+    {
+      "name": "testParserRejectsSqlInQuotedFunctionNameOrCastType with data set \"cast type\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Parser",
+            "args": []
+          },
+          {
+            "new": "Tokenizer\\Tokenizer",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "SELECT name FROM users WHERE CAST(name AS \"TEXT) OR (1=1\") = 1"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                },
+                {
+                  "$o": 10
+                },
+                {
+                  "$o": 11
+                },
+                {
+                  "$o": 12
+                },
+                {
+                  "$o": 13
+                },
+                {
+                  "$o": 14
+                },
+                {
+                  "$o": 15
+                },
+                {
+                  "$o": 16
+                },
+                {
+                  "$o": 17
+                },
+                {
+                  "$o": 18
+                },
+                {
+                  "$o": 19
+                },
+                {
+                  "$o": 20
+                },
+                {
+                  "$o": 21
+                },
+                {
+                  "$o": 22
+                },
+                {
+                  "$o": 23
+                },
+                {
+                  "$o": 24
+                },
+                {
+                  "$o": 25
+                }
+              ]
+            ]
+          },
+          {
+            "call": "parse",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 26
+                },
+                {
+                  "$o": 27
+                },
+                {
+                  "$o": 28
+                },
+                {
+                  "$o": 29
+                },
+                {
+                  "$o": 30
+                },
+                {
+                  "$o": 31
+                },
+                {
+                  "$o": 32
+                },
+                {
+                  "$o": 33
+                },
+                {
+                  "$o": 34
+                },
+                {
+                  "$o": 35
+                },
+                {
+                  "$o": 36
+                },
+                {
+                  "$o": 37
+                },
+                {
+                  "$o": 38
+                },
+                {
+                  "$o": 39
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "AST\\Parser",
+          "id": 1
+        },
+        {
+          "$object": "Tokenizer\\Tokenizer",
+          "id": 2
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 16
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "CAST",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LeftParen"
+              },
+              "value": "(",
+              "position": 33
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 34
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 38
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 17,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "AS",
+              "position": 39
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 18,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 41
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 19,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"TEXT) OR (1=1\"",
+              "position": 42
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 20,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::RightParen"
+              },
+              "value": ")",
+              "position": 57
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 21,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 58
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 22,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 59
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 23,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 60
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 24,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 61
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 25,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 62
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 26,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 27,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 28,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 29,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 30,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 31,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "CAST",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 32,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LeftParen"
+              },
+              "value": "(",
+              "position": 33
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 33,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 34
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 34,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "AS",
+              "position": 39
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 35,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"TEXT) OR (1=1\"",
+              "position": 42
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 36,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::RightParen"
+              },
+              "value": ")",
+              "position": 57
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 37,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 59
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 38,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 61
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 39,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 62
+            }
+          }
+        ],
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: TEXT) OR (1=1"
+          },
+          "id": 40
+        }
+      ]
+    },
+    {
+      "name": "testParserKeepsInjectedFilterForQuotedFunctionName",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Parser",
+            "args": []
+          },
+          {
+            "new": "Tokenizer\\Tokenizer",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "SELECT name FROM users WHERE \"lower\"(name) = 1"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                },
+                {
+                  "$o": 10
+                },
+                {
+                  "$o": 11
+                },
+                {
+                  "$o": 12
+                },
+                {
+                  "$o": 13
+                },
+                {
+                  "$o": 14
+                },
+                {
+                  "$o": 15
+                },
+                {
+                  "$o": 16
+                },
+                {
+                  "$o": 17
+                },
+                {
+                  "$o": 18
+                },
+                {
+                  "$o": 19
+                },
+                {
+                  "$o": 20
+                },
+                {
+                  "$o": 21
+                }
+              ]
+            ]
+          },
+          {
+            "call": "parse",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 22
+                },
+                {
+                  "$o": 23
+                },
+                {
+                  "$o": 24
+                },
+                {
+                  "$o": 25
+                },
+                {
+                  "$o": 26
+                },
+                {
+                  "$o": 27
+                },
+                {
+                  "$o": 28
+                },
+                {
+                  "$o": 29
+                },
+                {
+                  "$o": 30
+                },
+                {
+                  "$o": 31
+                },
+                {
+                  "$o": 32
+                },
+                {
+                  "$o": 33
+                }
+              ]
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "tenant"
+            ]
+          },
+          {
+            "new": "AST\\Literal",
+            "args": [
+              7
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Binary",
+            "args": [
+              {
+                "$o": 41
+              },
+              "=",
+              {
+                "$o": 42
+              }
+            ]
+          },
+          {
+            "new": "AST\\Visitor\\FilterInjector",
+            "args": [
+              {
+                "$o": 43
+              }
+            ]
+          },
+          {
+            "call": "visitSelect",
+            "on": {
+              "$o": 46
+            },
+            "args": [
+              {
+                "$o": 34
+              }
+            ]
+          },
+          {
+            "new": "AST\\Serializer",
+            "args": []
+          },
+          {
+            "call": "serialize",
+            "on": {
+              "$o": 58
+            },
+            "args": [
+              {
+                "$o": 47
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "AST\\Parser",
+          "id": 1
+        },
+        {
+          "$object": "Tokenizer\\Tokenizer",
+          "id": 2
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 16
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"lower\"",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LeftParen"
+              },
+              "value": "(",
+              "position": 36
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 37
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::RightParen"
+              },
+              "value": ")",
+              "position": 41
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 17,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 42
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 18,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 43
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 19,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 44
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 20,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 45
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 21,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 46
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 22,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 23,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 24,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 25,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 26,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 27,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"lower\"",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 28,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LeftParen"
+              },
+              "value": "(",
+              "position": 36
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 29,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 37
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 30,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::RightParen"
+              },
+              "value": ")",
+              "position": 41
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 31,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 43
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 32,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 45
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 33,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 46
+            }
+          }
+        ],
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 34,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 35,
+                "props": {
+                  "name": "name",
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 36,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 37,
+              "props": {
+                "left": {
+                  "$value": "AST\\Call\\Func",
+                  "id": 38,
+                  "props": {
+                    "name": "LOWER",
+                    "arguments": [
+                      {
+                        "$value": "AST\\Reference\\Column",
+                        "id": 39,
+                        "props": {
+                          "name": "name",
+                          "table": null,
+                          "schema": null
+                        }
+                      }
+                    ],
+                    "distinct": false,
+                    "filter": null
+                  }
+                },
+                "operator": "=",
+                "right": {
+                  "$value": "AST\\Literal",
+                  "id": 40,
+                  "props": {
+                    "value": 1
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 41,
+          "props": {
+            "name": "tenant",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Literal",
+          "id": 42,
+          "props": {
+            "value": 7
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Binary",
+          "id": 43,
+          "props": {
+            "left": {
+              "$value": "AST\\Reference\\Column",
+              "id": 44,
+              "props": {
+                "name": "tenant",
+                "table": null,
+                "schema": null
+              }
+            },
+            "operator": "=",
+            "right": {
+              "$value": "AST\\Literal",
+              "id": 45,
+              "props": {
+                "value": 7
+              }
+            }
+          }
+        },
+        {
+          "$object": "AST\\Visitor\\FilterInjector",
+          "id": 46
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 47,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 48,
+                "props": {
+                  "name": "name",
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 49,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 50,
+              "props": {
+                "left": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 51,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Call\\Func",
+                      "id": 52,
+                      "props": {
+                        "name": "LOWER",
+                        "arguments": [
+                          {
+                            "$value": "AST\\Reference\\Column",
+                            "id": 53,
+                            "props": {
+                              "name": "name",
+                              "table": null,
+                              "schema": null
+                            }
+                          }
+                        ],
+                        "distinct": false,
+                        "filter": null
+                      }
+                    },
+                    "operator": "=",
+                    "right": {
+                      "$value": "AST\\Literal",
+                      "id": 54,
+                      "props": {
+                        "value": 1
+                      }
+                    }
+                  }
+                },
+                "operator": "AND",
+                "right": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 55,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 56,
+                      "props": {
+                        "name": "tenant",
+                        "table": null,
+                        "schema": null
+                      }
+                    },
+                    "operator": "=",
+                    "right": {
+                      "$value": "AST\\Literal",
+                      "id": 57,
+                      "props": {
+                        "value": 7
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$object": "AST\\Serializer",
+          "id": 58
+        },
+        "SELECT `name` FROM `users` WHERE LOWER(`name`) = 1 AND `tenant` = 7"
+      ]
+    },
+    {
+      "name": "testFuncRejectsSqlInName",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Call\\Func",
+            "args": [
+              "NOW() OR 1=1 OR NOW"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid function name: NOW() OR 1=1 OR NOW"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testCastRejectsSqlInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "TEXT) OR (1=1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: TEXT) OR (1=1"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testFuncRejectsTrailingWhitespaceInName with data set \"newline\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Call\\Func",
+            "args": [
+              "NOW\n"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid function name: NOW\n"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testFuncRejectsTrailingWhitespaceInName with data set \"carriage return and newline\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Call\\Func",
+            "args": [
+              "NOW\r\n"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid function name: NOW\r\n"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testFuncRejectsTrailingWhitespaceInName with data set \"space\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Call\\Func",
+            "args": [
+              "NOW "
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid function name: NOW "
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testFuncRejectsTrailingWhitespaceInName with data set \"tab\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Call\\Func",
+            "args": [
+              "NOW\t"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid function name: NOW\t"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testCastRejectsTrailingWhitespaceInType with data set \"newline after word\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "INT\n"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: INT\n"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCastRejectsTrailingWhitespaceInType with data set \"newline after arguments\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "DECIMAL(10, 2)\n"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: DECIMAL(10, 2)\n"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCastRejectsTrailingWhitespaceInType with data set \"space after word\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "INT "
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: INT "
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCastRejectsTrailingWhitespaceInType with data set \"space after arguments\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "DECIMAL(10, 2) "
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: DECIMAL(10, 2) "
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCastAcceptsMultiWordType with data set \"two words\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "DOUBLE PRECISION"
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Cast",
+          "id": 2,
+          "props": {
+            "expression": {
+              "$value": "AST\\Reference\\Column",
+              "id": 3,
+              "props": {
+                "name": "price",
+                "table": null,
+                "schema": null
+              }
+            },
+            "type": "DOUBLE PRECISION"
+          }
+        },
+        "DOUBLE PRECISION"
+      ]
+    },
+    {
+      "name": "testCastAcceptsMultiWordType with data set \"tab separated\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "DOUBLE\tPRECISION"
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Cast",
+          "id": 2,
+          "props": {
+            "expression": {
+              "$value": "AST\\Reference\\Column",
+              "id": 3,
+              "props": {
+                "name": "price",
+                "table": null,
+                "schema": null
+              }
+            },
+            "type": "DOUBLE\tPRECISION"
+          }
+        },
+        "DOUBLE\tPRECISION"
+      ]
+    },
+    {
+      "name": "testCastAcceptsMultiWordType with data set \"four words\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "TIMESTAMP WITH TIME ZONE"
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Cast",
+          "id": 2,
+          "props": {
+            "expression": {
+              "$value": "AST\\Reference\\Column",
+              "id": 3,
+              "props": {
+                "name": "price",
+                "table": null,
+                "schema": null
+              }
+            },
+            "type": "TIMESTAMP WITH TIME ZONE"
+          }
+        },
+        "TIMESTAMP WITH TIME ZONE"
+      ]
+    },
+    {
+      "name": "testCastAcceptsMultiWordType with data set \"words and arguments\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "CHARACTER VARYING (255)"
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Cast",
+          "id": 2,
+          "props": {
+            "expression": {
+              "$value": "AST\\Reference\\Column",
+              "id": 3,
+              "props": {
+                "name": "price",
+                "table": null,
+                "schema": null
+              }
+            },
+            "type": "CHARACTER VARYING (255)"
+          }
+        },
+        "CHARACTER VARYING (255)"
+      ]
+    },
+    {
+      "name": "testCastAcceptsMultiWordType with data set \"whitespace inside arguments\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "NUMERIC( 10 ,\n2 )"
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Cast",
+          "id": 2,
+          "props": {
+            "expression": {
+              "$value": "AST\\Reference\\Column",
+              "id": 3,
+              "props": {
+                "name": "price",
+                "table": null,
+                "schema": null
+              }
+            },
+            "type": "NUMERIC( 10 ,\n2 )"
+          }
+        },
+        "NUMERIC( 10 ,\n2 )"
+      ]
+    },
+    {
+      "name": "testCastAcceptsParameterisedType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Cast",
+            "args": [
+              {
+                "$o": 1
+              },
+              "DECIMAL(10, 2)"
+            ]
+          },
+          {
+            "new": "AST\\Serializer",
+            "args": []
+          },
+          {
+            "call": "serializeExpression",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "price",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Cast",
+          "id": 2,
+          "props": {
+            "expression": {
+              "$value": "AST\\Reference\\Column",
+              "id": 3,
+              "props": {
+                "name": "price",
+                "table": null,
+                "schema": null
+              }
+            },
+            "type": "DECIMAL(10, 2)"
+          }
+        },
+        {
+          "$object": "AST\\Serializer",
+          "id": 4
+        },
+        "CAST(`price` AS DECIMAL(10, 2))"
+      ]
+    },
+    {
+      "name": "testToAstRejectsUnsupportedFilterInsteadOfEmittingRaw",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "static": "search",
+            "class": "Query",
+            "args": [
+              "name) OR (1=1",
+              "term"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toAst",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Search"
+            },
+            "attribute": "name) OR (1=1",
+            "values": [
+              "term"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\UnsupportedException",
+            "message": "Unsupported filter type: search"
+          },
+          "id": 3
+        }
+      ]
+    }
+  ]
+}

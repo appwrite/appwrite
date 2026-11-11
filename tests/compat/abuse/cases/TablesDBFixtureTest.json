@@ -1,0 +1,543 @@
+{
+  "source": "packages/abuse/tests/E2E/Appwrite/TablesDBFixtureTest.php",
+  "cases": [
+    {
+      "name": "a successful setup creates the database, the table and the lock table",
+      "state": [],
+      "steps": [
+        {
+          "op": "tables.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "tables",
+            "key": "",
+            "limit": 1,
+            "seconds": 1,
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.setup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "tables.calls",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": [
+              "getTable",
+              "create",
+              "createTable",
+              "createTable"
+            ],
+            "abuse": [
+              "key",
+              "time",
+              "count",
+              "unique1",
+              "index2"
+            ],
+            "lock": []
+          }
+        },
+        {
+          "op": "tables.setup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "tables.calls",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": [
+              "getTable"
+            ],
+            "abuse": [
+              "key",
+              "time",
+              "count",
+              "unique1",
+              "index2"
+            ],
+            "lock": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a rejected table creation fails setup with the Appwrite error",
+      "state": [],
+      "steps": [
+        {
+          "op": "tables.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.reject",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            },
+            "createTable": 500
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "tables",
+            "key": "",
+            "limit": 1,
+            "seconds": 1,
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.setup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "setup rejected"
+            }
+          }
+        },
+        {
+          "op": "tables.calls",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": [
+              "getTable",
+              "create",
+              "createTable"
+            ],
+            "abuse": [],
+            "lock": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a forbidden database creation fails setup with the Appwrite error",
+      "state": [],
+      "steps": [
+        {
+          "op": "tables.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.reject",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            },
+            "create": 403
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "tables",
+            "key": "",
+            "limit": 1,
+            "seconds": 1,
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.setup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "setup rejected"
+            }
+          }
+        },
+        {
+          "op": "tables.calls",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": [
+              "getTable",
+              "create"
+            ],
+            "abuse": [],
+            "lock": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a database that already exists is kept",
+      "state": [],
+      "steps": [
+        {
+          "op": "tables.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.reject",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            },
+            "create": 409
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "tables",
+            "key": "",
+            "limit": 1,
+            "seconds": 1,
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.setup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "tables.calls",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": [
+              "getTable",
+              "create",
+              "createTable",
+              "createTable"
+            ],
+            "abuse": [
+              "key",
+              "time",
+              "count",
+              "unique1",
+              "index2"
+            ],
+            "lock": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "setup runs again after a failure",
+      "state": [],
+      "steps": [
+        {
+          "op": "tables.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.reject",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            },
+            "createTable": 500
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "tables",
+            "key": "",
+            "limit": 1,
+            "seconds": 1,
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.setup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "setup rejected"
+            }
+          }
+        },
+        {
+          "op": "tables.calls",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": [
+              "getTable",
+              "create",
+              "createTable"
+            ],
+            "abuse": [],
+            "lock": []
+          }
+        },
+        {
+          "op": "tables.reject",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "tables.setup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "tables.calls",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": [
+              "getTable",
+              "create",
+              "createTable",
+              "createTable"
+            ],
+            "abuse": [
+              "key",
+              "time",
+              "count",
+              "unique1",
+              "index2"
+            ],
+            "lock": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "setup failures on both the database and the table",
+      "state": [],
+      "steps": [
+        {
+          "op": "tables.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.reject",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            },
+            "create": 500,
+            "createTable": 503
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "tables",
+            "key": "",
+            "limit": 1,
+            "seconds": 1,
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "tables.setup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "setup rejected"
+            }
+          }
+        },
+        {
+          "op": "tables.calls",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": [
+              "getTable",
+              "create"
+            ],
+            "abuse": [],
+            "lock": []
+          }
+        },
+        {
+          "op": "tables.reject",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            },
+            "createTable": 503
+          },
+          "expect": null
+        },
+        {
+          "op": "tables.setup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Appwrite\\AppwriteException",
+              "message": "setup rejected"
+            }
+          }
+        },
+        {
+          "op": "tables.calls",
+          "args": {
+            "tables": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": [
+              "getTable",
+              "create",
+              "createTable"
+            ],
+            "abuse": [],
+            "lock": []
+          }
+        }
+      ]
+    }
+  ]
+}

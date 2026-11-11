@@ -1,0 +1,412 @@
+{
+  "service": "vcs",
+  "file": "tests/benchmarks/results/vcs.json",
+  "workload": {
+    "script": "tests/benchmarks/api/vcs.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "vcs-20261012-014445"
+  },
+  "environment": {
+    "date": "2026-10-12T00:47:01Z",
+    "commit": "d6407e639f",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 3.903,
+        "p50": 3.601,
+        "p90": 4.448,
+        "p95": 5.307,
+        "p99": 11.835,
+        "max": 64.678
+      },
+      "cpu_ms_per_request": 2.588,
+      "db_cpu_ms_per_request": 5.359,
+      "memory_mib": {
+        "baseline": 3389.4,
+        "avg": 3395.8,
+        "peak": 3399.7
+      },
+      "endpoints": {
+        "vcs.installations.list": {
+          "route": "GET /v1/vcs/installations",
+          "count": 1001,
+          "rps": 16.68,
+          "avg": 4.195,
+          "p50": 3.756,
+          "p90": 4.599,
+          "p95": 5.857,
+          "p99": 14.237,
+          "max": 64.678
+        },
+        "vcs.installations.get": {
+          "route": "GET /v1/vcs/installations/:installationId",
+          "note": "measured on its not-found path: an installation needs a Git provider to complete its install flow",
+          "count": 626,
+          "rps": 10.43,
+          "avg": 3.882,
+          "p50": 3.69,
+          "p90": 4.414,
+          "p95": 4.75,
+          "p99": 7.2,
+          "max": 19.951
+        },
+        "vcs.installations.delete": {
+          "route": "DELETE /v1/vcs/installations/:installationId",
+          "note": "measured on its not-found path: an installation needs a Git provider to complete its install flow",
+          "count": 98,
+          "rps": 1.63,
+          "avg": 4.119,
+          "p50": 3.677,
+          "p90": 4.655,
+          "p95": 6.014,
+          "p99": 12.364,
+          "max": 19.035
+        },
+        "vcs.github.authorize": {
+          "route": "GET /v1/vcs/github/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 86,
+          "rps": 1.43,
+          "avg": 3.969,
+          "p50": 3.829,
+          "p90": 4.365,
+          "p95": 5.885,
+          "p99": 6.722,
+          "max": 8.219
+        },
+        "vcs.gitlab.authorize": {
+          "route": "GET /v1/vcs/gitlab/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 106,
+          "rps": 1.77,
+          "avg": 4.199,
+          "p50": 3.697,
+          "p90": 4.629,
+          "p95": 7.712,
+          "p99": 11.031,
+          "max": 16.236
+        },
+        "vcs.bitbucket.authorize": {
+          "route": "GET /v1/vcs/bitbucket/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 94,
+          "rps": 1.57,
+          "avg": 4.365,
+          "p50": 3.795,
+          "p90": 4.694,
+          "p95": 6.041,
+          "p99": 20.537,
+          "max": 23.132
+        },
+        "vcs.gitea.authorize": {
+          "route": "GET /v1/vcs/gitea/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 100,
+          "rps": 1.67,
+          "avg": 4.084,
+          "p50": 3.699,
+          "p90": 4.426,
+          "p95": 5.394,
+          "p99": 10.553,
+          "max": 18.547
+        },
+        "vcs.origin.authorize": {
+          "route": "GET /v1/vcs/origin/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 104,
+          "rps": 1.73,
+          "avg": 4.561,
+          "p50": 3.768,
+          "p90": 4.704,
+          "p95": 5.32,
+          "p99": 9.923,
+          "max": 60.229
+        },
+        "vcs.github.events.create": {
+          "route": "POST /v1/vcs/github/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 402,
+          "rps": 6.7,
+          "avg": 3.289,
+          "p50": 2.897,
+          "p90": 3.474,
+          "p95": 3.926,
+          "p99": 14.098,
+          "max": 31.706
+        },
+        "vcs.gitlab.events.create": {
+          "route": "POST /v1/vcs/gitlab/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 101,
+          "rps": 1.68,
+          "avg": 3.142,
+          "p50": 2.972,
+          "p90": 3.592,
+          "p95": 3.691,
+          "p99": 6.187,
+          "max": 13.38
+        },
+        "vcs.bitbucket.events.create": {
+          "route": "POST /v1/vcs/bitbucket/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 89,
+          "rps": 1.48,
+          "avg": 3.245,
+          "p50": 2.941,
+          "p90": 3.908,
+          "p95": 4.371,
+          "p99": 9.941,
+          "max": 9.964
+        },
+        "vcs.gitea.events.create": {
+          "route": "POST /v1/vcs/gitea/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 100,
+          "rps": 1.67,
+          "avg": 3.766,
+          "p50": 2.986,
+          "p90": 4.235,
+          "p95": 6.286,
+          "p99": 12.174,
+          "max": 45.696
+        },
+        "vcs.origin.events.create": {
+          "route": "POST /v1/vcs/origin/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 94,
+          "rps": 1.57,
+          "avg": 3.152,
+          "p50": 2.955,
+          "p90": 3.714,
+          "p95": 4.605,
+          "p99": 5.875,
+          "max": 7.433
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 2654.2,
+      "requests": 159249,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 18.707,
+        "p50": 15.088,
+        "p90": 32.3,
+        "p95": 43.361,
+        "p99": 75.198,
+        "max": 290.361
+      },
+      "cpu_ms_per_request": 2.939,
+      "db_cpu_ms_per_request": 0.718,
+      "memory_mib": {
+        "baseline": 3397.6,
+        "avg": 3313.7,
+        "peak": 3404.8
+      },
+      "endpoints": {
+        "vcs.installations.list": {
+          "route": "GET /v1/vcs/installations",
+          "count": 53106,
+          "rps": 885.1,
+          "avg": 20.86,
+          "p50": 16.904,
+          "p90": 35.517,
+          "p95": 47.672,
+          "p99": 82.246,
+          "max": 290.361
+        },
+        "vcs.installations.get": {
+          "route": "GET /v1/vcs/installations/:installationId",
+          "note": "measured on its not-found path: an installation needs a Git provider to complete its install flow",
+          "count": 31841,
+          "rps": 530.68,
+          "avg": 20.679,
+          "p50": 16.904,
+          "p90": 34.379,
+          "p95": 46.084,
+          "p99": 81.736,
+          "max": 240.698
+        },
+        "vcs.installations.delete": {
+          "route": "DELETE /v1/vcs/installations/:installationId",
+          "note": "measured on its not-found path: an installation needs a Git provider to complete its install flow",
+          "count": 5307,
+          "rps": 88.45,
+          "avg": 20.916,
+          "p50": 17.039,
+          "p90": 35.107,
+          "p95": 46.647,
+          "p99": 81.703,
+          "max": 226.474
+        },
+        "vcs.github.authorize": {
+          "route": "GET /v1/vcs/github/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 5355,
+          "rps": 89.25,
+          "avg": 17.674,
+          "p50": 14.335,
+          "p90": 30.378,
+          "p95": 40.892,
+          "p99": 65.777,
+          "max": 124.757
+        },
+        "vcs.gitlab.authorize": {
+          "route": "GET /v1/vcs/gitlab/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 5260,
+          "rps": 87.67,
+          "avg": 17.51,
+          "p50": 14.442,
+          "p90": 29.549,
+          "p95": 39.38,
+          "p99": 65.609,
+          "max": 146.242
+        },
+        "vcs.bitbucket.authorize": {
+          "route": "GET /v1/vcs/bitbucket/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 5300,
+          "rps": 88.33,
+          "avg": 18.103,
+          "p50": 14.483,
+          "p90": 31.501,
+          "p95": 43.326,
+          "p99": 69.138,
+          "max": 152.745
+        },
+        "vcs.gitea.authorize": {
+          "route": "GET /v1/vcs/gitea/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 5429,
+          "rps": 90.48,
+          "avg": 17.755,
+          "p50": 14.539,
+          "p90": 29.96,
+          "p95": 39.799,
+          "p99": 68.224,
+          "max": 170.832
+        },
+        "vcs.origin.authorize": {
+          "route": "GET /v1/vcs/origin/authorize",
+          "note": "the redirect to the provider's install page, not followed; a stack without the provider configured (_APP_VCS_*) answers 500",
+          "count": 5325,
+          "rps": 88.75,
+          "avg": 18.163,
+          "p50": 14.881,
+          "p90": 30.849,
+          "p95": 41.731,
+          "p99": 69.563,
+          "max": 139.762
+        },
+        "vcs.github.events.create": {
+          "route": "POST /v1/vcs/github/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 21151,
+          "rps": 352.52,
+          "avg": 14.808,
+          "p50": 11.762,
+          "p90": 25.585,
+          "p95": 35.787,
+          "p99": 62.37,
+          "max": 162.146
+        },
+        "vcs.gitlab.events.create": {
+          "route": "POST /v1/vcs/gitlab/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 5299,
+          "rps": 88.32,
+          "avg": 14.815,
+          "p50": 11.675,
+          "p90": 26.146,
+          "p95": 35.965,
+          "p99": 63.18,
+          "max": 167.283
+        },
+        "vcs.bitbucket.events.create": {
+          "route": "POST /v1/vcs/bitbucket/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 5237,
+          "rps": 87.28,
+          "avg": 14.652,
+          "p50": 11.683,
+          "p90": 24.943,
+          "p95": 34.992,
+          "p99": 61.833,
+          "max": 184.897
+        },
+        "vcs.gitea.events.create": {
+          "route": "POST /v1/vcs/gitea/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 5338,
+          "rps": 88.97,
+          "avg": 14.859,
+          "p50": 11.701,
+          "p90": 25.939,
+          "p95": 34.604,
+          "p99": 64.298,
+          "max": 229.683
+        },
+        "vcs.origin.events.create": {
+          "route": "POST /v1/vcs/origin/events",
+          "note": "measured on its rejected path: an unsigned delivery (only the provider can sign one)",
+          "count": 5301,
+          "rps": 88.35,
+          "avg": 14.763,
+          "p50": 11.749,
+          "p90": 25.789,
+          "p95": 34.516,
+          "p99": 59.672,
+          "max": 213.472
+        }
+      }
+    }
+  ]
+}

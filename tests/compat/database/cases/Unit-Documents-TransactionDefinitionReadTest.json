@@ -1,0 +1,1256 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/TransactionDefinitionReadTest.php"
+  ],
+  "cases": [
+    {
+      "name": "TransactionDefinitionReadTest::testARawDefinitionReadInATransactionLeavesLaterWritesWorking#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4223"
+          },
+          "bind": "s7294",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4223"
+              },
+              "cache": "memory"
+            },
+            "as": "o4236"
+          },
+          "bind": "s7317",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "transactions"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "transactions_u000000000157"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "balance"
+            },
+            "as": "o4237"
+          },
+          "bind": "s7321",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "balance",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4238"
+          },
+          "bind": "s7322",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4238"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4239"
+          },
+          "bind": "s7324",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4239"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4240"
+          },
+          "bind": "s7326",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4240"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "accounts",
+              "attributes": [
+                {
+                  "$obj": "o4237"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o4241"
+          },
+          "bind": "s7328",
+          "expect": {
+            "$document": {
+              "$id": "accounts",
+              "name": "accounts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "balance",
+                    "key": "balance",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4241"
+              }
+            },
+            "as": "o4242"
+          },
+          "expect": {
+            "$document": {
+              "$id": "accounts",
+              "name": "accounts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "balance",
+                    "key": "balance",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ada",
+                "balance": 1
+              }
+            },
+            "as": "o4243"
+          },
+          "bind": "s7330",
+          "expect": {
+            "$document": {
+              "$id": "ada",
+              "balance": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "accounts",
+              "document": {
+                "$obj": "o4243"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ada",
+              "balance": 1,
+              "$collection": "accounts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "accounts",
+              "id": "ada"
+            },
+            "as": "o4244"
+          },
+          "expect": {
+            "$document": {
+              "balance": 1,
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "accounts"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "purgeCachedDocument",
+            "args": {
+              "collection": "_metadata",
+              "id": "accounts"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "withTransaction",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o4236"
+                      },
+                      "method": "skipFilters",
+                      "args": {
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o4236"
+                                },
+                                "method": "getDocument",
+                                "args": {
+                                  "collection": "_metadata",
+                                  "id": "accounts"
+                                },
+                                "as": "o4245"
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "grace",
+                          "balance": 5
+                        }
+                      },
+                      "as": "o4246"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o4236"
+                      },
+                      "method": "createDocument",
+                      "args": {
+                        "collection": "accounts",
+                        "document": {
+                          "$obj": "o4246"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": [
+                        {
+                          "$obj": "o4245"
+                        },
+                        {
+                          "$obj": "o4246"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7334",
+          "expect": {
+            "result": [
+              {
+                "$obj": "o4245"
+              },
+              {
+                "$obj": "o4246"
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": {
+                        "$document": {
+                          "name": "accounts",
+                          "attributes": "[{\"$id\":\"balance\",\"key\":\"balance\",\"type\":\"integer\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]",
+                          "indexes": "[]",
+                          "documentSecurity": false,
+                          "$sequence": "1",
+                          "$id": "accounts",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "create(\"any\")",
+                            "read(\"any\")",
+                            "update(\"any\")"
+                          ],
+                          "$collection": "_metadata"
+                        },
+                        "$class": "Collection"
+                      },
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "name": "accounts",
+                                  "attributes": "[{\"$id\":\"balance\",\"key\":\"balance\",\"type\":\"integer\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]",
+                                  "indexes": "[]",
+                                  "documentSecurity": false,
+                                  "$sequence": "1",
+                                  "$id": "accounts",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                  ],
+                                  "$collection": "_metadata"
+                                },
+                                "$class": "Collection"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "grace",
+                        "balance": 5
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "grace",
+                        "balance": 5,
+                        "$collection": "accounts",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "2"
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4245"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "attributes"
+            }
+          },
+          "expect": "[{\"$id\":\"balance\",\"key\":\"balance\",\"type\":\"integer\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4246"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "balance"
+            }
+          },
+          "expect": 5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4236"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "accounts",
+              "id": "grace"
+            },
+            "as": "o4247"
+          },
+          "bind": "s7337",
+          "expect": {
+            "$document": {
+              "balance": 5,
+              "$sequence": "2",
+              "$id": "grace",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "accounts"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4247"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "balance"
+            }
+          },
+          "expect": 5
+        }
+      ]
+    },
+    {
+      "name": "TransactionDefinitionReadTest::testAFilteredDefinitionReadInATransactionLeavesLaterRawReadsRaw#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4248"
+          },
+          "bind": "s7339",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4248"
+              },
+              "cache": "memory"
+            },
+            "as": "o4260"
+          },
+          "bind": "s7360",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4260"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "transactions"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4260"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "transactions_u000000000159"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4260"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "balance"
+            },
+            "as": "o4261"
+          },
+          "bind": "s7364",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "balance",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4262"
+          },
+          "bind": "s7365",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4262"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4263"
+          },
+          "bind": "s7367",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4263"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4264"
+          },
+          "bind": "s7369",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4264"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "accounts",
+              "attributes": [
+                {
+                  "$obj": "o4261"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o4265"
+          },
+          "bind": "s7371",
+          "expect": {
+            "$document": {
+              "$id": "accounts",
+              "name": "accounts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "balance",
+                    "key": "balance",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4260"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4265"
+              }
+            },
+            "as": "o4266"
+          },
+          "expect": {
+            "$document": {
+              "$id": "accounts",
+              "name": "accounts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "balance",
+                    "key": "balance",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ada",
+                "balance": 1
+              }
+            },
+            "as": "o4267"
+          },
+          "bind": "s7373",
+          "expect": {
+            "$document": {
+              "$id": "ada",
+              "balance": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4260"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "accounts",
+              "document": {
+                "$obj": "o4267"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ada",
+              "balance": 1,
+              "$collection": "accounts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4260"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "accounts",
+              "id": "ada"
+            },
+            "as": "o4268"
+          },
+          "expect": {
+            "$document": {
+              "balance": 1,
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "accounts"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4260"
+            },
+            "method": "purgeCachedDocument",
+            "args": {
+              "collection": "_metadata",
+              "id": "accounts"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4260"
+            },
+            "method": "withTransaction",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o4260"
+                      },
+                      "method": "getCollection",
+                      "args": {
+                        "collection": "accounts"
+                      },
+                      "as": "o4269"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o4260"
+                      },
+                      "method": "skipFilters",
+                      "args": {
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o4260"
+                                },
+                                "method": "getDocument",
+                                "args": {
+                                  "collection": "_metadata",
+                                  "id": "accounts"
+                                },
+                                "as": "o4270"
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": [
+                        {
+                          "$obj": "o4269"
+                        },
+                        {
+                          "$obj": "o4270"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s7377",
+          "expect": {
+            "result": [
+              {
+                "$obj": "o4269"
+              },
+              {
+                "$obj": "o4270"
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "accounts",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "balance",
+                              "key": "balance",
+                              "type": "integer",
+                              "size": 0,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$sequence": "1",
+                        "$id": "accounts",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "_metadata"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "result": {
+                        "$document": {
+                          "name": "accounts",
+                          "attributes": "[{\"$id\":\"balance\",\"key\":\"balance\",\"type\":\"integer\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]",
+                          "indexes": "[]",
+                          "documentSecurity": false,
+                          "$sequence": "1",
+                          "$id": "accounts",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "create(\"any\")",
+                            "read(\"any\")",
+                            "update(\"any\")"
+                          ],
+                          "$collection": "_metadata"
+                        },
+                        "$class": "Collection"
+                      },
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "name": "accounts",
+                                  "attributes": "[{\"$id\":\"balance\",\"key\":\"balance\",\"type\":\"integer\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]",
+                                  "indexes": "[]",
+                                  "documentSecurity": false,
+                                  "$sequence": "1",
+                                  "$id": "accounts",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                  ],
+                                  "$collection": "_metadata"
+                                },
+                                "$class": "Collection"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4269"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "balance",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Integer"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4270"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "attributes"
+            }
+          },
+          "expect": "[{\"$id\":\"balance\",\"key\":\"balance\",\"type\":\"integer\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]"
+        }
+      ]
+    }
+  ]
+}

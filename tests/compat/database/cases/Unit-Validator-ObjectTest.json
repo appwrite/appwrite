@@ -1,0 +1,459 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/ObjectTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ObjectTest::test_valid_associative_objects",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\ObjectValue",
+            "args": {},
+            "as": "o21467"
+          },
+          "bind": "s24149",
+          "expect": {
+            "$value": "Validator\\ObjectValue",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21467"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "key": "value"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21467"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "a": {
+                  "b": {
+                    "c": 123
+                  }
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21467"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "author": "Arnab",
+                "metadata": {
+                  "rating": 4.5,
+                  "info": {
+                    "category": "science"
+                  }
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21467"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "key1": null,
+                "key2": {
+                  "nested": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21467"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "meta": {
+                  "$object": {
+                    "x": 1
+                  }
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21467"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "a": 1,
+                "2": "b"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ObjectTest::test_invalid_structures",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\ObjectValue",
+            "args": {},
+            "as": "o21468"
+          },
+          "bind": "s24156",
+          "expect": {
+            "$value": "Validator\\ObjectValue",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21468"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "a",
+                "b",
+                "c"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21468"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "not an array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21468"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "value"
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectTest::test_scalar_json_strings_are_not_objects",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\ObjectValue",
+            "args": {},
+            "as": "o21469"
+          },
+          "bind": "s24160",
+          "expect": {
+            "$value": "Validator\\ObjectValue",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21469"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "123"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21469"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "0"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21469"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "true"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21469"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "null"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21469"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "\"str\""
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21469"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "\"\""
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21469"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "[1, 2]"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectTest::test_json_object_strings_are_objects",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\ObjectValue",
+            "args": {},
+            "as": "o21470"
+          },
+          "bind": "s24168",
+          "expect": {
+            "$value": "Validator\\ObjectValue",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21470"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "{\"a\": 1}"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21470"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "{}"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21470"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "[]"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ObjectTest::test_empty_cases",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\ObjectValue",
+            "args": {},
+            "as": "o21471"
+          },
+          "bind": "s24172",
+          "expect": {
+            "$value": "Validator\\ObjectValue",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21471"
+            },
+            "method": "isValid",
+            "args": {
+              "value": []
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21471"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {}
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o21471"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "sldfjsdlfj"
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

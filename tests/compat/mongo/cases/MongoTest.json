@@ -1,0 +1,2553 @@
+{
+  "source": "vendor/utopia-php/mongo/tests/MongoTest.php",
+  "cases": [
+    {
+      "name": "testDeleteDatabase",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.drop_database",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testGetHost",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.get_host",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": "compat-mongo"
+        }
+      ]
+    },
+    {
+      "name": "testCreateCollection",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "movies"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.drop_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "movies"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "movies"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "movies",
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Collection Exists",
+              "code": 48,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "movies"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Collection Exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testListDatabases",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "movies"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.list_database_names",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$object": {
+              "databases": [
+                {
+                  "$object": {
+                    "name": "admin"
+                  }
+                },
+                {
+                  "$object": {
+                    "name": "config"
+                  }
+                },
+                {
+                  "$object": {
+                    "name": "${ns}"
+                  }
+                },
+                {
+                  "$object": {
+                    "name": "local"
+                  }
+                }
+              ],
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.drop_database",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.list_database_names",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$object": {
+              "databases": [
+                {
+                  "$object": {
+                    "name": "admin"
+                  }
+                },
+                {
+                  "$object": {
+                    "name": "config"
+                  }
+                },
+                {
+                  "$object": {
+                    "name": "local"
+                  }
+                }
+              ],
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCreateDocument",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "document": {
+              "name": "Armageddon",
+              "country": "USA",
+              "language": "English"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "name": "Armageddon",
+            "country": "USA",
+            "language": "English",
+            "_id": "<uuid7>"
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {
+              "name": "Armageddon"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "Armageddon",
+                        "country": "USA",
+                        "language": "English"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {
+              "_id": {
+                "$ref": "a",
+                "path": "/_id"
+              }
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "Armageddon",
+                        "country": "USA",
+                        "language": "English"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "document": [
+              "9 Monkeys"
+            ]
+          },
+          "expect": {
+            "0": "9 Monkeys",
+            "_id": "<uuid7>"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "document": {
+              "name": 300,
+              "country": "USA",
+              "language": "English"
+            }
+          },
+          "expect": {
+            "name": 300,
+            "country": "USA",
+            "language": "English",
+            "_id": "<uuid7>"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "document": {
+              "_id": 999,
+              "array": [
+                "USA",
+                "UK",
+                "India"
+              ],
+              "language": "English",
+              "float": 9.9,
+              "integer": 9,
+              "is_open": true,
+              "date_string": "2024-05-06T07:08:09.123+00:00",
+              "date_object": {
+                "$object": {
+                  "date": "2024-05-06 07:08:09.000000",
+                  "timezone_type": 3,
+                  "timezone": "UTC"
+                }
+              }
+            }
+          },
+          "expect": {
+            "_id": 999,
+            "array": [
+              "USA",
+              "UK",
+              "India"
+            ],
+            "language": "English",
+            "float": 9.9,
+            "integer": 9,
+            "is_open": true,
+            "date_string": "2024-05-06T07:08:09.123+00:00",
+            "date_object": {
+              "date": "2024-05-06 07:08:09.000000",
+              "timezone_type": 3,
+              "timezone": "UTC"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {
+              "_id": 999
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 999,
+                        "array": [
+                          "USA",
+                          "UK",
+                          "India"
+                        ],
+                        "language": "English",
+                        "float": 9.9,
+                        "integer": 9,
+                        "is_open": true,
+                        "date_string": "2024-05-06T07:08:09.123+00:00",
+                        "date_object": {
+                          "$object": {
+                            "date": "2024-05-06 07:08:09.000000",
+                            "timezone_type": 3,
+                            "timezone": "UTC"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {},
+            "options": {
+              "sort": {
+                "_id": 1
+              }
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 999,
+                        "array": [
+                          "USA",
+                          "UK",
+                          "India"
+                        ],
+                        "language": "English",
+                        "float": 9.9,
+                        "integer": 9,
+                        "is_open": true,
+                        "date_string": "2024-05-06T07:08:09.123+00:00",
+                        "date_object": {
+                          "$object": {
+                            "date": "2024-05-06 07:08:09.000000",
+                            "timezone_type": 3,
+                            "timezone": "UTC"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "Armageddon",
+                        "country": "USA",
+                        "language": "English"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "0": "9 Monkeys"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": 300,
+                        "country": "USA",
+                        "language": "English"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCreateDocuments",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "documents": [
+              {
+                "name": "Armageddon",
+                "country": "USA",
+                "language": "English"
+              },
+              {
+                "name": "9 Monkeys",
+                "country": "USA",
+                "language": "English"
+              },
+              {
+                "name": 300,
+                "country": "USA",
+                "language": "English"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "name": "Armageddon",
+              "country": "USA",
+              "language": "English",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "9 Monkeys",
+              "country": "USA",
+              "language": "English",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": 300,
+              "country": "USA",
+              "language": "English",
+              "_id": "<uuid7>"
+            }
+          ]
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {}
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "Armageddon",
+                        "country": "USA",
+                        "language": "English"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "9 Monkeys",
+                        "country": "USA",
+                        "language": "English"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": 300,
+                        "country": "USA",
+                        "language": "English"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUpdateDocument",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "document": {
+              "name": "Armageddon",
+              "country": "AUS",
+              "language": "English"
+            }
+          },
+          "expect": {
+            "name": "Armageddon",
+            "country": "AUS",
+            "language": "English",
+            "_id": "<uuid7>"
+          }
+        },
+        {
+          "op": "client.update",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "where": {
+              "name": "Armageddon"
+            },
+            "updates": {
+              "$set": {
+                "name": "Armageddon 2"
+              }
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {
+              "name": "Armageddon 2"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "Armageddon 2",
+                        "country": "AUS",
+                        "language": "English"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUpdateDocuments",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "documents": [
+              {
+                "name": "Armageddon",
+                "country": "USA",
+                "language": "English"
+              },
+              {
+                "name": "9 Monkeys"
+              },
+              {
+                "name": 300
+              }
+            ]
+          },
+          "expect": [
+            {
+              "name": "Armageddon",
+              "country": "USA",
+              "language": "English",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "9 Monkeys",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": 300,
+              "_id": "<uuid7>"
+            }
+          ]
+        },
+        {
+          "op": "client.update",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "updates": {
+              "$set": {
+                "name": "Armageddon 2"
+              }
+            },
+            "multi": true
+          },
+          "expect": 3
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {
+              "name": "Armageddon 2"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "Armageddon 2",
+                        "country": "USA",
+                        "language": "English"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "Armageddon 2"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "Armageddon 2"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.update",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "updates": {
+              "$set": {
+                "name": "first only"
+              }
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {
+              "name": "first only"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testUpdateMultipleDocuments",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "documents": [
+              {
+                "name": "Armageddon 2"
+              },
+              {
+                "name": "Armageddon 2"
+              },
+              {
+                "name": "other"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "name": "Armageddon 2",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Armageddon 2",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "other",
+              "_id": "<uuid7>"
+            }
+          ]
+        },
+        {
+          "op": "client.update",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "where": {
+              "name": "Armageddon 2"
+            },
+            "updates": {
+              "$rename": {
+                "name": "title"
+              }
+            },
+            "multi": true
+          },
+          "expect": 2
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {
+              "title": "Armageddon 2"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "title": "Armageddon 2"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "title": "Armageddon 2"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {
+              "name": "other"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "other"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDuplicationException",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "document": {
+              "_id": 999
+            }
+          },
+          "expect": {
+            "_id": 999
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "document": {
+              "_id": 999
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E11000 duplicate key error collection: ${ns}.movies index: _id_ dup key: { _id: 999 }",
+              "code": 11000,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": true,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "Duplicate Key Error"
+            }
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "document": {
+              "_id": 999
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E11000 duplicate key error collection: ${ns}.movies index: _id_ dup key: { _id: 999 }"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExceedTimeException",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "document": {
+              "_id": 1
+            }
+          },
+          "expect": {
+            "_id": 1
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies",
+            "filters": {
+              "$where": "sleep(1000) || true"
+            },
+            "options": {
+              "maxTimeMS": 1
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E50 MaxTimeMSExpired: operation exceeded time limit",
+              "code": 50,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": true,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "Timeout Error"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUpsert",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_upsert",
+            "document": {
+              "name": "Gone with the wind",
+              "language": "English",
+              "country": "UK",
+              "counter": 1
+            }
+          },
+          "expect": {
+            "name": "Gone with the wind",
+            "language": "English",
+            "country": "UK",
+            "counter": 1,
+            "_id": "<uuid7>"
+          }
+        },
+        {
+          "op": "client.upsert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_upsert",
+            "operations": [
+              {
+                "filter": {
+                  "name": "Gone with the wind"
+                },
+                "update": {
+                  "$set": {
+                    "country": "USA"
+                  },
+                  "$inc": {
+                    "counter": 3
+                  }
+                }
+              },
+              {
+                "filter": {
+                  "name": "The godfather"
+                },
+                "update": {
+                  "$set": {
+                    "name": "The godfather 2",
+                    "country": "USA",
+                    "language": "English"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_upsert"
+          },
+          "mask": {
+            "paths": [
+              "/$object/cursor/$object/firstBatch/*/$object/_id/$bson"
+            ],
+            "reason": "the server makes an ObjectId for an upserted document"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "name": "Gone with the wind",
+                        "language": "English",
+                        "country": "USA",
+                        "counter": 4
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": {
+                          "$bson": "<masked>"
+                        },
+                        "name": "The godfather 2",
+                        "country": "USA",
+                        "language": "English"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies_upsert"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testToArrayWithNestedDocumentFromMongo",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_nested",
+            "document": {
+              "_id": "nested-test-1",
+              "title": "Inception",
+              "director": {
+                "name": "Christopher Nolan",
+                "born": 1970
+              },
+              "cast": [
+                {
+                  "name": "Leonardo DiCaprio",
+                  "role": "Cobb"
+                },
+                {
+                  "name": "Tom Hardy",
+                  "role": "Eames"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "_id": "nested-test-1",
+            "title": "Inception",
+            "director": {
+              "name": "Christopher Nolan",
+              "born": 1970
+            },
+            "cast": [
+              {
+                "name": "Leonardo DiCaprio",
+                "role": "Cobb"
+              },
+              {
+                "name": "Tom Hardy",
+                "role": "Eames"
+              }
+            ]
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_nested",
+            "filters": {
+              "_id": "nested-test-1"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "nested-test-1",
+                        "title": "Inception",
+                        "director": {
+                          "$object": {
+                            "name": "Christopher Nolan",
+                            "born": 1970
+                          }
+                        },
+                        "cast": [
+                          {
+                            "$object": {
+                              "name": "Leonardo DiCaprio",
+                              "role": "Cobb"
+                            }
+                          },
+                          {
+                            "$object": {
+                              "name": "Tom Hardy",
+                              "role": "Eames"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies_nested"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.last_document",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_nested"
+          },
+          "expect": {
+            "_id": "nested-test-1",
+            "title": "Inception",
+            "director": {
+              "name": "Christopher Nolan",
+              "born": 1970
+            },
+            "cast": [
+              {
+                "name": "Leonardo DiCaprio",
+                "role": "Cobb"
+              },
+              {
+                "name": "Tom Hardy",
+                "role": "Eames"
+              }
+            ]
+          }
+        },
+        {
+          "op": "client.drop_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "movies_nested"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.last_document",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_nested"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Mongo\\Client::lastDocument(): Return value must be of type array, null returned"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInt64ValuesDecodeToNativeIntegers",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_int64",
+            "document": {
+              "_id": "int64-test-1",
+              "small": -42,
+              "big": -3408048000,
+              "list": [
+                -3408048000,
+                -42,
+                3408048000,
+                9223372036854775807
+              ],
+              "nested": {
+                "deep": {
+                  "value": -3408048000
+                }
+              }
+            }
+          },
+          "expect": {
+            "_id": "int64-test-1",
+            "small": -42,
+            "big": -3408048000,
+            "list": [
+              -3408048000,
+              -42,
+              3408048000,
+              9223372036854775807
+            ],
+            "nested": {
+              "deep": {
+                "value": -3408048000
+              }
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_int64",
+            "filters": {
+              "_id": "int64-test-1"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "int64-test-1",
+                        "small": -42,
+                        "big": -3408048000,
+                        "list": [
+                          -3408048000,
+                          -42,
+                          3408048000,
+                          9223372036854775807
+                        ],
+                        "nested": {
+                          "$object": {
+                            "deep": {
+                              "$object": {
+                                "value": -3408048000
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies_int64"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.last_document",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_int64"
+          },
+          "expect": {
+            "_id": "int64-test-1",
+            "small": -42,
+            "big": -3408048000,
+            "list": [
+              -3408048000,
+              -42,
+              3408048000,
+              9223372036854775807
+            ],
+            "nested": {
+              "deep": {
+                "value": -3408048000
+              }
+            }
+          }
+        },
+        {
+          "op": "client.drop_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "movies_int64"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testEmptyObjectSurvivesToArray",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_empty_object",
+            "document": {
+              "_id": "empty-object-1",
+              "empty": {},
+              "inner": {
+                "$object": {
+                  "nested": {}
+                }
+              },
+              "list": [
+                {},
+                {
+                  "$object": {
+                    "x": 1
+                  }
+                }
+              ],
+              "filled": {
+                "$object": {
+                  "a": 1
+                }
+              },
+              "emptyList": []
+            }
+          },
+          "expect": {
+            "_id": "empty-object-1",
+            "empty": {},
+            "inner": {
+              "nested": {}
+            },
+            "list": [
+              {},
+              {
+                "x": 1
+              }
+            ],
+            "filled": {
+              "a": 1
+            },
+            "emptyList": []
+          }
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_empty_object",
+            "documents": [
+              {
+                "_id": "empty-object-2",
+                "empty": {},
+                "inner": {
+                  "$object": {
+                    "nested": {}
+                  }
+                },
+                "list": [
+                  {},
+                  {
+                    "$object": {
+                      "x": 1
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": [
+            {
+              "_id": "empty-object-2",
+              "empty": {},
+              "inner": {
+                "nested": {}
+              },
+              "list": [
+                {},
+                {
+                  "x": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_empty_object",
+            "filters": {
+              "_id": "empty-object-1"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "empty-object-1",
+                        "empty": {},
+                        "inner": {
+                          "$object": {
+                            "nested": {}
+                          }
+                        },
+                        "list": [
+                          {},
+                          {
+                            "$object": {
+                              "x": 1
+                            }
+                          }
+                        ],
+                        "filled": {
+                          "$object": {
+                            "a": 1
+                          }
+                        },
+                        "emptyList": []
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.movies_empty_object"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.last_document",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "movies_empty_object"
+          },
+          "expect": {
+            "_id": "empty-object-2",
+            "empty": {},
+            "inner": {
+              "nested": {}
+            },
+            "list": [
+              {},
+              {
+                "x": 1
+              }
+            ]
+          }
+        },
+        {
+          "op": "client.drop_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "movies_empty_object"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testCountMethod",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "count_test"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "documents": [
+              {
+                "name": "Document 1",
+                "number": 1,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 2",
+                "number": 2,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 3",
+                "number": 3,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 4",
+                "number": 4,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 5",
+                "number": 5,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 6",
+                "number": 6,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 7",
+                "number": 7,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 8",
+                "number": 8,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 9",
+                "number": 9,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 10",
+                "number": 10,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 11",
+                "number": 11,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 12",
+                "number": 12,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 13",
+                "number": 13,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 14",
+                "number": 14,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 15",
+                "number": 15,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 16",
+                "number": 16,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 17",
+                "number": 17,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 18",
+                "number": 18,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 19",
+                "number": 19,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 20",
+                "number": 20,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 21",
+                "number": 21,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 22",
+                "number": 22,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 23",
+                "number": 23,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 24",
+                "number": 24,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 25",
+                "number": 25,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 26",
+                "number": 26,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 27",
+                "number": 27,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 28",
+                "number": 28,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 29",
+                "number": 29,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              },
+              {
+                "name": "Document 30",
+                "number": 30,
+                "category": "test",
+                "created_at": "2024-01-01T00:00:00.000+00:00"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "name": "Document 1",
+              "number": 1,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 2",
+              "number": 2,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 3",
+              "number": 3,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 4",
+              "number": 4,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 5",
+              "number": 5,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 6",
+              "number": 6,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 7",
+              "number": 7,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 8",
+              "number": 8,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 9",
+              "number": 9,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 10",
+              "number": 10,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 11",
+              "number": 11,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 12",
+              "number": 12,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 13",
+              "number": 13,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 14",
+              "number": 14,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 15",
+              "number": 15,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 16",
+              "number": 16,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 17",
+              "number": 17,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 18",
+              "number": 18,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 19",
+              "number": 19,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 20",
+              "number": 20,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 21",
+              "number": 21,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 22",
+              "number": 22,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 23",
+              "number": 23,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 24",
+              "number": 24,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 25",
+              "number": 25,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 26",
+              "number": 26,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 27",
+              "number": 27,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 28",
+              "number": 28,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 29",
+              "number": 29,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            },
+            {
+              "name": "Document 30",
+              "number": 30,
+              "category": "test",
+              "created_at": "2024-01-01T00:00:00.000+00:00",
+              "_id": "<uuid7>"
+            }
+          ]
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test"
+          },
+          "expect": 30
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "filters": {
+              "number": 15
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "filters": {
+              "number": {
+                "$lte": 10
+              }
+            }
+          },
+          "expect": 10
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "options": {
+              "limit": 5
+            }
+          },
+          "expect": 5
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "filters": {
+              "number": {
+                "$lte": 10
+              }
+            },
+            "options": {
+              "limit": 3
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "filters": {
+              "$or": [
+                {
+                  "number": {
+                    "$lte": 2
+                  }
+                },
+                {
+                  "number": {
+                    "$gte": 29
+                  }
+                }
+              ]
+            }
+          },
+          "expect": 4
+        },
+        {
+          "op": "client.aggregate",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "pipeline": [
+              {
+                "$count": "total"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "total": 30
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.count_test"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.aggregate",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "pipeline": [
+              {
+                "$match": {
+                  "number": {
+                    "$lte": 10
+                  }
+                }
+              },
+              {
+                "$count": "total"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "total": 10
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.count_test"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.aggregate",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "pipeline": [
+              {
+                "$limit": 7
+              },
+              {
+                "$count": "total"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "total": 7
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.count_test"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.aggregate",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "pipeline": [
+              {
+                "$group": {
+                  "_id": "$category",
+                  "count": {
+                    "$sum": 1
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "test",
+                        "count": 30
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.count_test"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.aggregate",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "pipeline": [
+              {
+                "$match": {
+                  "$or": [
+                    {
+                      "number": 5
+                    },
+                    {
+                      "number": 15
+                    },
+                    {
+                      "number": 25
+                    }
+                  ]
+                }
+              },
+              {
+                "$count": "total"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "total": 3
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.count_test"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.aggregate",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "pipeline": [
+              {
+                "$match": {
+                  "$or": [
+                    {
+                      "number": {
+                        "$lte": 3
+                      }
+                    },
+                    {
+                      "number": {
+                        "$gte": 28
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "$count": "total"
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "total": 6
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.count_test"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "count_test",
+            "filters": {
+              "$bad": 1
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "client.drop_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "count_test"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

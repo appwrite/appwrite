@@ -1,0 +1,1366 @@
+{
+  "source": "packages/nats/tests/ConnectionDeathDetectionTest.php",
+  "cases": [
+    {
+      "name": "closesConnection classifies server errors",
+      "steps": [
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Stale Connection"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "stale connection"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Slow Consumer"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Maximum Payload Exceeded"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Invalid Client Protocol"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Authorization Violation"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Authentication Expired"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Secure Connection - TLS Required"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Maximum Connections Exceeded"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Unknown Protocol Operation"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Permissions Violation for Publish to 'foo'"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Maximum Subscriptions Exceeded"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": "Invalid Subject"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.closes_connection",
+          "args": {
+            "message": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "reconnectsAfter separates recoverable errors",
+      "steps": [
+        {
+          "op": "connection.reconnects_after",
+          "args": {
+            "message": "Stale Connection"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.reconnects_after",
+          "args": {
+            "message": "Slow Consumer"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.reconnects_after",
+          "args": {
+            "message": "Maximum Payload Exceeded"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.reconnects_after",
+          "args": {
+            "message": "Authorization Violation"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.reconnects_after",
+          "args": {
+            "message": "Authentication Timeout"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.reconnects_after",
+          "args": {
+            "message": "Authentication Expired"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.reconnects_after",
+          "args": {
+            "message": "Secure Connection - TLS Required"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.reconnects_after",
+          "args": {
+            "message": "Maximum Connections Exceeded"
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.reconnects_after",
+          "args": {
+            "message": "Unknown Protocol Operation"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "a connection-closing -ERR triggers a reconnect",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "hooks": {
+                "onReconnect": true
+              },
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "-ERR 'Stale Connection'\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Server error: Stale Connection"
+            }
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "onReconnect"
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 2
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a connection-closing -ERR without reconnect marks the connection dead",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "-ERR 'Stale Connection'\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Server error: Stale Connection"
+            }
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "foo",
+            "data": "bar"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Not connected (status: disconnected)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unrecoverable closing error marks the connection dead without reconnecting",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "hooks": {
+                "onReconnect": true
+              },
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "-ERR 'Authorization Violation'\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+              "message": "Authorization Violation"
+            }
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "foo",
+            "data": "bar"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Not connected (status: disconnected)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a non-closing error leaves the connection intact",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "hooks": {
+                "onReconnect": true
+              },
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "-ERR 'Permissions Violation for Publish to \"foo\"'\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\PermissionException",
+              "message": "Permissions Violation for Publish to \"foo"
+            }
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "tick sends the keepalive PING when due",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "pingInterval": 0.0,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.mark",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "m",
+          "expect": 142
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PING\r\n",
+            "from": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "tick recycles a connection that stopped answering pings",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "pingInterval": 0.0,
+              "maxPingsOut": 1,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to reconnect to any NATS server"
+            }
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 61
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "publishing does not accumulate unanswered pings",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "pingInterval": 0.0,
+              "maxPingsOut": 1,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.mark",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "m",
+          "expect": 142
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "foo",
+            "data": "bar"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "foo",
+            "data": "bar"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "foo",
+            "data": "bar"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "foo",
+            "data": "bar"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "foo",
+            "data": "bar"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.written",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "from": {
+              "$ref": "m"
+            }
+          },
+          "expect": "PUB foo 3\r\nbar\r\nPUB foo 3\r\nbar\r\nPUB foo 3\r\nbar\r\nPUB foo 3\r\nbar\r\nPUB foo 3\r\nbar\r\n"
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "tick collects its own PONGs, so a healthy connection survives",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "pingInterval": 0.0,
+              "maxPingsOut": 2,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "subject",
+            "data": "payload"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB subject"
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "publish takes the keepalive verdict before writing",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "pingInterval": 0.0,
+              "maxPingsOut": 1,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.answer_pings",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "answer": false
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.mark",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "m",
+          "expect": 148
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "foo",
+            "data": "bar"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to reconnect to any NATS server"
+            }
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 61
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "PUB foo",
+            "from": {
+              "$ref": "m"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a closed TCP stream raises ConnectionException, not TypeError",
+      "steps": [
+        {
+          "op": "transport.round_trip",
+          "args": {
+            "kind": "tcp",
+            "service": "nats"
+          },
+          "expect": [
+            [
+              "connect",
+              null
+            ],
+            [
+              "connected",
+              true
+            ],
+            [
+              "info",
+              true
+            ],
+            [
+              "write",
+              33
+            ],
+            [
+              "pong",
+              "PONG\r\n"
+            ],
+            [
+              "ping",
+              6
+            ],
+            [
+              "read",
+              "PONG\r\n"
+            ],
+            [
+              "close",
+              null
+            ],
+            [
+              "connected_after",
+              false
+            ],
+            [
+              "write_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ],
+            [
+              "read_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a closed TLS stream raises ConnectionException, not TypeError",
+      "steps": [
+        {
+          "op": "transport.round_trip",
+          "args": {
+            "kind": "tls",
+            "service": "nats-tls",
+            "tls": {
+              "cafile": "packages/nats/tests/fixtures/certs/ca.pem",
+              "local_cert": "packages/nats/tests/fixtures/certs/client-cert.pem",
+              "local_pk": "packages/nats/tests/fixtures/certs/client-key.pem",
+              "peer_name": "localhost"
+            }
+          },
+          "expect": [
+            [
+              "connect",
+              null
+            ],
+            [
+              "connected",
+              true
+            ],
+            [
+              "info",
+              true
+            ],
+            [
+              "write",
+              33
+            ],
+            [
+              "pong",
+              "PONG\r\n"
+            ],
+            [
+              "ping",
+              6
+            ],
+            [
+              "read",
+              "PONG\r\n"
+            ],
+            [
+              "close",
+              null
+            ],
+            [
+              "connected_after",
+              false
+            ],
+            [
+              "write_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ],
+            [
+              "read_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a closed WebSocket stream raises ConnectionException, not TypeError",
+      "steps": [
+        {
+          "op": "transport.round_trip",
+          "args": {
+            "kind": "ws",
+            "service": "nats-ws"
+          },
+          "expect": [
+            [
+              "connect",
+              null
+            ],
+            [
+              "connected",
+              true
+            ],
+            [
+              "info",
+              true
+            ],
+            [
+              "write",
+              33
+            ],
+            [
+              "pong",
+              "PONG\r\n"
+            ],
+            [
+              "ping",
+              6
+            ],
+            [
+              "read",
+              "PONG\r\n"
+            ],
+            [
+              "close",
+              null
+            ],
+            [
+              "connected_after",
+              false
+            ],
+            [
+              "write_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ],
+            [
+              "read_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

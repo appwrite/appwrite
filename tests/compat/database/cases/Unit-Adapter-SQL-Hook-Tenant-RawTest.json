@@ -1,0 +1,1713 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQL/Hook/Tenant/RawTest.php"
+  ],
+  "cases": [
+    {
+      "name": "RawTest::testInnerAndLeftJoinsMeetTheirConditionInOn",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1438"
+          },
+          "bind": "s2729",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1438"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1439"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1440"
+          },
+          "bind": "s2731",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1440"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            },
+            "as": "o1441"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testOtherJoinsMeetTheirConditionInWhereLettingMissingRowsThrough",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1442"
+          },
+          "bind": "s2733",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1442"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1443"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1444"
+          },
+          "bind": "s2735",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1444"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1445"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1446"
+          },
+          "bind": "s2737",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1446"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o1447"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1448"
+          },
+          "bind": "s2739",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1448"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Natural"
+              }
+            },
+            "as": "o1449"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testTheMainTableIsNamedAsTheBuilderNamesIt",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1450"
+          },
+          "bind": "s2741",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1450"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1451"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`appwrite`.`ns_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1452"
+          },
+          "bind": "s2743",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1452"
+            },
+            "method": "filter",
+            "args": {
+              "table": "author"
+            },
+            "as": "o1453"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`author`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testTheMainTableLetsMissingRowsThroughOnlyAfterARightOrFullOuterJoin#inner",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1454"
+          },
+          "bind": "s2745",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1454"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1455"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1454"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1456"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`appwrite`.`ns_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testTheMainTableLetsMissingRowsThroughOnlyAfterARightOrFullOuterJoin#left",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1457"
+          },
+          "bind": "s2748",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1457"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            },
+            "as": "o1458"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1457"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1459"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`appwrite`.`ns_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testTheMainTableLetsMissingRowsThroughOnlyAfterARightOrFullOuterJoin#cross",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1460"
+          },
+          "bind": "s2751",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1460"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o1461"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1460"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1462"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`appwrite`.`ns_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testTheMainTableLetsMissingRowsThroughOnlyAfterARightOrFullOuterJoin#natural",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1463"
+          },
+          "bind": "s2754",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1463"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Natural"
+              }
+            },
+            "as": "o1464"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1463"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1465"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`appwrite`.`ns_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testTheMainTableLetsMissingRowsThroughOnlyAfterARightOrFullOuterJoin#right",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1466"
+          },
+          "bind": "s2757",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1466"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1467"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1466"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1468"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`appwrite`.`ns_authors`._tenant IN (?) OR `appwrite`.`ns_authors`.`_uid` IS NULL)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testTheMainTableLetsMissingRowsThroughOnlyAfterARightOrFullOuterJoin#full outer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1469"
+          },
+          "bind": "s2760",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1469"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1470"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1469"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1471"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`appwrite`.`ns_authors`._tenant IN (?) OR `appwrite`.`ns_authors`.`_uid` IS NULL)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testMetadataKeepsTheDefinitionsAPoolSharesWithoutATenant",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": true,
+              "quoteCharacter": "`"
+            },
+            "as": "o1472"
+          },
+          "bind": "s2763",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1472"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1473"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`appwrite`.`ns_authors`._tenant IN (?) OR `appwrite`.`ns_authors`._tenant IS NULL)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1472"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1474"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testEachStatementLearnsItsOwnJoins",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1475"
+          },
+          "bind": "s2766",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1475"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1476"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1475"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1477"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`appwrite`.`ns_authors`._tenant IN (?) OR `appwrite`.`ns_authors`.`_uid` IS NULL)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1475"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1478"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`appwrite`.`ns_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1475"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1479"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1475"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1475"
+            },
+            "method": "filter",
+            "args": {
+              "table": "appwrite.ns_authors"
+            },
+            "as": "o1480"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`appwrite`.`ns_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testARightOrFullOuterJoinRefusesARenamedMainTable",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1481"
+          },
+          "bind": "s2773",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1481"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1482"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1481"
+            },
+            "method": "filter",
+            "args": {
+              "table": "author"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "A right or full outer join needs the main table named 'appwrite.ns_authors', as Database::from() names it, under shared tables"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1483"
+          },
+          "bind": "s2776",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1483"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1484"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Book`._tenant IN (?) OR `Book`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1483"
+            },
+            "method": "filter",
+            "args": {
+              "table": "author"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "A right or full outer join needs the main table named 'appwrite.ns_authors', as Database::from() names it, under shared tables"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1485"
+          },
+          "bind": "s2779",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1485"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1486"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Book`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1485"
+            },
+            "method": "filter",
+            "args": {
+              "table": "author"
+            },
+            "as": "o1487"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`author`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testAStatementWithoutATableIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1488"
+          },
+          "bind": "s2782",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1488"
+            },
+            "method": "filter",
+            "args": {
+              "table": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "A query builder statement without a table cannot be kept to the selected tenant under shared tables"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testARightOrFullOuterJoinPairsOnlyRowsTheTenantCouldRead",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1489"
+          },
+          "bind": "s2784",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1489"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Extra",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o1490"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Extra`._tenant IN (?) OR `Extra`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1489"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Note",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1491"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`Note`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1489"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Review",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1492"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`Review`._tenant IN (?) OR `Review`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1489"
+            },
+            "method": "outerJoin",
+            "args": {
+              "table": "Review",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1493"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`appwrite`.`ns_authors`._tenant IN (?) OR `appwrite`.`ns_authors`.`_uid` IS NULL) AND `Review`._tenant IN (?) AND (`Extra`._tenant IN (?) OR `Extra`.`_uid` IS NULL)",
+              "bindings": [
+                7,
+                7,
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testPostgresQuotesEveryTableItNames",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "appwrite.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "\""
+            },
+            "as": "o1494"
+          },
+          "bind": "s2789",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1494"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Book",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1495"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Book\"._tenant IN (?) OR \"Book\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1494"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "Review",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1496"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(\"Review\"._tenant IN (?) OR \"Review\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1494"
+            },
+            "method": "outerJoin",
+            "args": {
+              "table": "Review",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1497"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(\"appwrite\".\"ns_authors\"._tenant IN (?) OR \"appwrite\".\"ns_authors\".\"_uid\" IS NULL) AND \"Review\"._tenant IN (?) AND (\"Book\"._tenant IN (?) OR \"Book\".\"_uid\" IS NULL)",
+              "bindings": [
+                7,
+                7,
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RawTest::testADigitLeadingOuterJoinAliasAndDatabaseAreQuoted",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Raw",
+            "args": {
+              "tenant": 7,
+              "table": "1db.ns_authors",
+              "metadata": false,
+              "quoteCharacter": "`"
+            },
+            "as": "o1498"
+          },
+          "bind": "s2793",
+          "expect": {
+            "$hook": "Raw"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1498"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "9x",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1499"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`9x`._tenant IN (?) OR `9x`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1498"
+            },
+            "method": "filter",
+            "args": {
+              "table": "1db.ns_authors"
+            },
+            "as": "o1500"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`1db`.`ns_authors`._tenant IN (?) OR `1db`.`ns_authors`.`_uid` IS NULL)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

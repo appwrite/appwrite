@@ -1,0 +1,2439 @@
+{
+  "source": "packages/auth/tests/Verifiers/SymmetricTest.php",
+  "cases": [
+    {
+      "name": "verifies an issued token",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j",
+            "scopes": [
+              "offline_access"
+            ]
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAwMDAzNjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoiLCJzY29wZSI6Im9mZmxpbmVfYWNjZXNzIn0.XaB2sBpErNyZXI2tdRc9fsIkhZ3tHP61ZNP0XS6N3ns"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "audience": "https://example.com/token"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": "https://example.com/token",
+            "sub": "user-123",
+            "client_id": "client-abc",
+            "exp": 1700003600,
+            "iat": 1700000000,
+            "jti": "j",
+            "scope": "offline_access"
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrong secret rejected",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAwMDAzNjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.u6A9fllVsz9se7c6O4cgMA6tBZ35MUz9avWVPPmNUA4"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "other-secret"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Signature verification failed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "expired token rejected",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": -3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNjk5OTk2NDAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.W5ZUIaeTsZnMUSCm4YWPZ2ROO_t9fa6tXfvuBPFp4RQ"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token has expired"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "audience mismatch rejected",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "aud",
+            "client_id": "client-abc",
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJhdWQiLCJzdWIiOiJ1c2VyLTEyMyIsImNsaWVudF9pZCI6ImNsaWVudC1hYmMiLCJleHAiOjE3MDAwMDM2MDAsImlhdCI6MTcwMDAwMDAwMCwianRpIjoiaiJ9.45xd4YQhw5-UzHjwx9IOec8ZSPxdOrwta9Vtkse5d4c"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "audience": "other"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token audience"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "leeway allows recently expired",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": -10,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNjk5OTk5OTkwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.92pWvqJ2P3k9cym5dlBPyIvLOnN5qsExJblmSJP1hyE"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "leeway": 60
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": "https://example.com/token",
+            "sub": "user-123",
+            "client_id": "client-abc",
+            "exp": 1699999990,
+            "iat": 1700000000,
+            "jti": "j"
+          }
+        }
+      ]
+    },
+    {
+      "name": "leeway boundaries",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 100,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAwMDAwMTAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.LpLlMa4lDA3a5_RpDj-q5pox0kD_dyMNRwKwpFj__vM"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "leeway": 5
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000104
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": "https://example.com/token",
+            "sub": "user-123",
+            "client_id": "client-abc",
+            "exp": 1700000100,
+            "iat": 1700000000,
+            "jti": "j"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000105
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token has expired"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1699999995
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": "https://example.com/token",
+            "sub": "user-123",
+            "client_id": "client-abc",
+            "exp": 1700000100,
+            "iat": 1700000000,
+            "jti": "j"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1699999994
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token was issued in the future"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "expiry boundary",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 100,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAwMDAwMTAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.LpLlMa4lDA3a5_RpDj-q5pox0kD_dyMNRwKwpFj__vM"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000099
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": "https://example.com/token",
+            "sub": "user-123",
+            "client_id": "client-abc",
+            "exp": 1700000100,
+            "iat": 1700000000,
+            "jti": "j"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000100
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token has expired"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "negative leeway rejected",
+      "steps": [
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "leeway": -1
+          },
+          "bind": "v",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Leeway cannot be negative"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty secret rejected before leeway",
+      "steps": [
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "",
+            "leeway": -1
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "A signing secret is required"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "allow expired keeps nbf and iat",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": -3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNjk5OTk2NDAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.W5ZUIaeTsZnMUSCm4YWPZ2ROO_t9fa6tXfvuBPFp4RQ"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "allow_expired": true
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": "https://example.com/token",
+            "sub": "user-123",
+            "client_id": "client-abc",
+            "exp": 1699996400,
+            "iat": 1700000000,
+            "jti": "j"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1699999999
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token was issued in the future"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "audience lists",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "b",
+            "client_id": "client-abc",
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJiIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAwMDAzNjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.x5YB7RkqauXNHtckUVRSULbjfY1NcvBwSSE0To1Gc40"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "audience": [
+              "a",
+              "b"
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": "b",
+            "sub": "user-123",
+            "client_id": "client-abc",
+            "exp": 1700003600,
+            "iat": 1700000000,
+            "jti": "j"
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "audience": [
+              "a"
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token audience"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "audience": []
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token audience"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "type",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAwMDAzNjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.u6A9fllVsz9se7c6O4cgMA6tBZ35MUz9avWVPPmNUA4"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "type": "JWT"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": "https://example.com/token",
+            "sub": "user-123",
+            "client_id": "client-abc",
+            "exp": 1700003600,
+            "iat": 1700000000,
+            "jti": "j"
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "type": "at+jwt"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token type"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "issuer must be identical",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAwMDAzNjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.u6A9fllVsz9se7c6O4cgMA6tBZ35MUz9avWVPPmNUA4"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test/"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token issuer"
+            }
+          }
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "iss": "https://example.com/v1/oauth2/test",
+            "aud": "https://example.com/token",
+            "sub": "user-123",
+            "client_id": "client-abc",
+            "exp": 1700003600,
+            "iat": 1700000000,
+            "jti": "j"
+          }
+        }
+      ]
+    },
+    {
+      "name": "malformed tokens",
+      "steps": [
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "not-a-jwt",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token must have three segments"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "a.b",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token must have three segments"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "a.b.c.d",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token must have three segments"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token must have three segments"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "..",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid JSON"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "!!.e30.x",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid base64url"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "e30.!!.x",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Claims is not valid base64url"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "e30.e30.!!",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Signature is not valid base64url"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "e30.e30.",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token algorithm"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "eyJ.e30.x",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid JSON"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "W10.e30.x",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Signature is not valid base64url"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "WzFd.e30.x",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header must be a JSON object"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "MQ.e30.x",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header must be a JSON object"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "e30.WzEsMiwzXQ.x",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Claims must be a JSON object"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "e30.e30.x",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Signature is not valid base64url"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "eyJhbGciOiJIUzI1NiJ9.e30.x",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Signature is not valid base64url"
+            }
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": "eyJhbGciOiJub25lIn0.e30.",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token algorithm"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "crafted claims",
+      "steps": [
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "sub": "u"
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1In0.eQVwRENIsnR0-lbZmttpkvCczVziBu_ixQeN8ZrUrWU"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token is missing the \"exp\" claim"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": "soon"
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOiJzb29uIn0.djJBzhPaAqVXYPmsmCPvz6D8H8uMntk7BY2BIdi3Qio"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Invalid \"exp\" claim"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "nbf": "x"
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsIm5iZiI6IngifQ.pgapHLhcXQR0Rz6NaFPq3y3YjgY4gxyYvtLgg4l-8Fs"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Invalid \"nbf\" claim"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "iat": [
+                1
+              ]
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsImlhdCI6WzFdfQ.-_X3yDmcsoWaUKipq1xG_L-ABqAJ-NTpgnEYGrwMTCo"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Invalid \"iat\" claim"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": "1700000010"
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOiIxNzAwMDAwMDEwIn0.wli9zTshuHyxpWBCxw3Vz6xzfaqy3oJumMEwOV3-ehQ"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": "1700000010"
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010.5
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAuNX0.ZjE1hHfuLfy-AVUtGeUgOpYNw_bQJ48uVuz-wyarQ4w"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000010.5
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": " 1700000010 "
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOiIgMTcwMDAwMDAxMCAifQ.iwKMepFvT-rv8DxoTG-GyLLoTRvfi4vOxRpmoLBLLoI"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": " 1700000010 "
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": "1.7e9"
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOiIxLjdlOSJ9.3AyNbhtyHCpZsTQBT5QzF--mZdtop4IS3Svf7Gu80qM"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token has expired"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": "1e30"
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOiIxZTMwIn0.9FquQAgwO1dlS92ER5PE2vaxFBUqEy5hBTnSy4RQfdU"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": "1e30"
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "nbf": 1700000001
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsIm5iZiI6MTcwMDAwMDAwMX0._Z1JmSo0rtLMGIZjP0Lt9qTs24P1rakBK7vwMnSvAmM"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token is not yet valid"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "iat": 1700000001
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsImlhdCI6MTcwMDAwMDAwMX0.-zhL84x9gRRqb0avvi8W6WVsFUeF3A8s7Uyx1Q9ql-U"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token was issued in the future"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "nbf": null,
+              "iat": null
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsIm5iZiI6bnVsbCwiaWF0IjpudWxsfQ.2xNKx6J3zG--PsLYmm-yRI6-XngXJdnryvuUWMbWpIA"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000010,
+            "nbf": null,
+            "iat": null
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": true
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOnRydWV9.ZVNCbDl1waQx45ZfZhRfTobDp-jmDku5AONcysrCZWc"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Invalid \"exp\" claim"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": null
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOm51bGx9.ww_t02r2dSA6SOZpCHDVQ4mgkE8o_1Wn4BwEifHkdPo"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token is missing the \"exp\" claim"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": []
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.W10.NMZ7dxAlS8SrIKEdVge7-8B44MPOELZxJkczTT_GMbs"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token is missing the \"exp\" claim"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1.5e+300
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjEuNWUrMzAwfQ.oD4L4VBHRdeq3dK1_Be6UGDz9f3viEhQfu-Hcn1skJ4"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Token has expired"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "aud": null
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsImF1ZCI6bnVsbH0.e189q4tBthVqD7wHtJl880xL0UXXmAHL65r6QSxs05g"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000010,
+            "aud": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "audience checks are strict",
+      "steps": [
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "aud": 5
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsImF1ZCI6NX0.lznXTG9bLQY_LZ61oGzouqToexMNMDsh2vf9DkOyHkY"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "audience": [
+              "5"
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token audience"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "aud": [
+                "x",
+                5
+              ]
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsImF1ZCI6WyJ4Iiw1XX0._PWa8Q3DhoQ-NMKEXO44WljDZEsc9NEMIVJHt8Oogu0"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "audience": [
+              5
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000010,
+            "aud": [
+              "x",
+              5
+            ]
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "aud": {
+                "k": "x"
+              }
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsImF1ZCI6eyJrIjoieCJ9fQ.u2ORJJC7qKSNFlVBiiJKy-lRXBk1ZcrK7MhiYZz_hkM"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "audience": "x"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000010,
+            "aud": {
+              "k": "x"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTB9.AIq1ePazKlLk625ICV7JvPWNje3vVLZ4bxuvVJrKHr0"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "audience": "x"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token audience"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010,
+              "aud": null
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTAsImF1ZCI6bnVsbH0.e189q4tBthVqD7wHtJl880xL0UXXmAHL65r6QSxs05g"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "audience": [
+              null
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000010,
+            "aud": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "crafted headers",
+      "steps": [
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010
+            }
+          },
+          "bind": "t",
+          "expect": "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTB9.C_YmiUA4D5BRiiyOmkIyKwolWzMORU--V8KPVLahd_A"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000010
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "alg": "hs256"
+            },
+            "claims": {
+              "exp": 1700000010
+            }
+          },
+          "bind": "t",
+          "expect": "eyJhbGciOiJoczI1NiJ9.eyJleHAiOjE3MDAwMDAwMTB9.wS0nQwu4TvmwZICBCMrsZKZ_340wBgfCKYepcJL-WKs"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token algorithm"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "alg": "RS256"
+            },
+            "claims": {
+              "exp": 1700000010
+            }
+          },
+          "bind": "t",
+          "expect": "eyJhbGciOiJSUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTB9.Jf_W1CiKqOUIsDrEdDZGY2uKfjzF1X8VfF9E_HgyoWE"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token algorithm"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "alg": null
+            },
+            "claims": {
+              "exp": 1700000010
+            }
+          },
+          "bind": "t",
+          "expect": "eyJhbGciOm51bGx9.eyJleHAiOjE3MDAwMDAwMTB9.CQ0_ChYyuQzpNpVE0Pz09-lC63KDPu8IcXtikAo-EBE"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Unexpected token algorithm"
+            }
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTB9.AIq1ePazKlLk625ICV7JvPWNje3vVLZ4bxuvVJrKHr0"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000010
+          }
+        },
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256",
+              "kid": "x"
+            },
+            "claims": {
+              "exp": 1700000010
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6IngifQ.eyJleHAiOjE3MDAwMDAwMTB9.GWr09H6J5VysAgzVwUXF6Qp_5l6smhQh5k687r0IM7U"
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000010
+          }
+        }
+      ]
+    },
+    {
+      "name": "tokens signed by another secret",
+      "steps": [
+        {
+          "op": "fixture.jws",
+          "args": {
+            "alg": "HS256",
+            "key": "other",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000010
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDAwMDAwMTB9.vr3f1amBAoOoKDVbcLudXsvjYcpY3TY4RMXT0sUdWbM"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Signature verification failed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-shot verification",
+      "steps": [
+        {
+          "op": "verifier.check",
+          "args": {
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1700000005,
+              "aud": [
+                "a",
+                "b"
+              ]
+            },
+            "audience": "b",
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1700000005,
+            "aud": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        {
+          "op": "verifier.check",
+          "args": {
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "exp": 1699999995
+            },
+            "leeway": 10,
+            "now": 1700000000
+          },
+          "expect": {
+            "exp": 1699999995
+          }
+        },
+        {
+          "op": "verifier.check",
+          "args": {
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "token": "a.b.c",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Header is not valid base64url"
+            }
+          }
+        },
+        {
+          "op": "verifier.check",
+          "args": {
+            "secret": "",
+            "token": "a.b.c",
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "A signing secret is required"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,303 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Connection.php",
+  "cases": [
+    {
+      "name": "hasError \"SQLSTATE[HY000] [2002] Connection refused\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "SQLSTATE[HY000] [2002] Connection refused"
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "hasError \"MySQL server has gone away\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "MySQL server has gone away"
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "hasError \"Lost connection to server\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "Lost connection to server"
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "hasError \"Max connect timeout reached\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "Max connect timeout reached"
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "hasError \"max connect timeout reached\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "max connect timeout reached"
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "hasError \"SQLSTATE[23505]: Unique violation\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "SQLSTATE[23505]: Unique violation"
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "hasError \"\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": ""
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "hasError \"TIMED OUT\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "TIMED OUT"
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "hasError \"Connection timed out after 5s\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "Connection timed out after 5s"
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "hasError \"SSL connection has been closed unexpectedly\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "SSL connection has been closed unexpectedly"
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "hasError \"Error reading result set\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "Error reading result set"
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "hasError \"pool: Broken pipe\"",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": "pool: Broken pipe"
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "hasError with invalid UTF-8 around a needle",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": {
+                    "$bytes": "/yB0aW1lZCBvdXQ="
+                  }
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "hasError with invalid UTF-8 and the own list",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "Exception",
+                  "message": {
+                    "$bytes": "4oIgTWF4IGNvbm5lY3QgdGltZW91dCByZWFjaGVk"
+                  }
+                }
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

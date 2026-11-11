@@ -1,0 +1,2527 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SpatialCodecTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#point on MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1966"
+          },
+          "bind": "s3322",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1966"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                1.5,
+                2
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": "POINT(1.5 2)"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#linestring on MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1966"
+          },
+          "bind": "s3322",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1966"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  2,
+                  0.5
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": "LINESTRING(0 0, 1 1, 2 0.5)"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#polygon with a hole on MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1966"
+          },
+          "bind": "s3322",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1966"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 2, 2 2, 1 1))"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#polygon given as one ring on MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1966"
+          },
+          "bind": "s3322",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1966"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#point on MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1967"
+          },
+          "bind": "s3323",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1967"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                1.5,
+                2
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": "POINT(1.5 2)"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#linestring on MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1967"
+          },
+          "bind": "s3323",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1967"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  2,
+                  0.5
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": "LINESTRING(0 0, 1 1, 2 0.5)"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#polygon with a hole on MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1967"
+          },
+          "bind": "s3323",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1967"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 2, 2 2, 1 1))"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#polygon given as one ring on MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1967"
+          },
+          "bind": "s3323",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1967"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#point on Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1968"
+          },
+          "bind": "s3324",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1968"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                1.5,
+                2
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": "POINT(1.5 2)"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#linestring on Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1968"
+          },
+          "bind": "s3324",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1968"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  2,
+                  0.5
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": "LINESTRING(0 0, 1 1, 2 0.5)"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#polygon with a hole on Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1968"
+          },
+          "bind": "s3324",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1968"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 2, 2 2, 1 1))"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAGeometryIsEncodedAsWellKnownText#polygon given as one ring on Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1968"
+          },
+          "bind": "s3324",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1968"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#point on MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1969"
+          },
+          "bind": "s3337",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1969"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                1.5,
+                2
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": "POINT(1.5 2)"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1969"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POINT(1.5 2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": [
+            1.5,
+            2.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#linestring on MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1969"
+          },
+          "bind": "s3337",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1969"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  2,
+                  0.5
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": "LINESTRING(0 0, 1 1, 2 0.5)"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1969"
+            },
+            "method": "decode",
+            "args": {
+              "value": "LINESTRING(0 0, 1 1, 2 0.5)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              1.0,
+              1.0
+            ],
+            [
+              2.0,
+              0.5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#polygon with a hole on MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1969"
+          },
+          "bind": "s3337",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1969"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 2, 2 2, 1 1))"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1969"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 2, 2 2, 1 1))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": [
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                4.0
+              ],
+              [
+                4.0,
+                4.0
+              ],
+              [
+                4.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                1.0,
+                1.0
+              ],
+              [
+                1.0,
+                2.0
+              ],
+              [
+                2.0,
+                2.0
+              ],
+              [
+                1.0,
+                1.0
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#polygon given as one ring on MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1969"
+          },
+          "bind": "s3337",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1969"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1969"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((0 0, 0 1, 1 1, 0 0))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": [
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0
+              ],
+              [
+                1.0,
+                1.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#point on MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1970"
+          },
+          "bind": "s3338",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1970"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                1.5,
+                2
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": "POINT(1.5 2)"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1970"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POINT(1.5 2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": [
+            1.5,
+            2.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#linestring on MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1970"
+          },
+          "bind": "s3338",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1970"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  2,
+                  0.5
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": "LINESTRING(0 0, 1 1, 2 0.5)"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1970"
+            },
+            "method": "decode",
+            "args": {
+              "value": "LINESTRING(0 0, 1 1, 2 0.5)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              1.0,
+              1.0
+            ],
+            [
+              2.0,
+              0.5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#polygon with a hole on MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1970"
+          },
+          "bind": "s3338",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1970"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 2, 2 2, 1 1))"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1970"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 2, 2 2, 1 1))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": [
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                4.0
+              ],
+              [
+                4.0,
+                4.0
+              ],
+              [
+                4.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                1.0,
+                1.0
+              ],
+              [
+                1.0,
+                2.0
+              ],
+              [
+                2.0,
+                2.0
+              ],
+              [
+                1.0,
+                1.0
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#polygon given as one ring on MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1970"
+          },
+          "bind": "s3338",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1970"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1970"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((0 0, 0 1, 1 1, 0 0))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": [
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0
+              ],
+              [
+                1.0,
+                1.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#point on Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1971"
+          },
+          "bind": "s3339",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1971"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                1.5,
+                2
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": "POINT(1.5 2)"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1971"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POINT(1.5 2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": [
+            1.5,
+            2.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#linestring on Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1971"
+          },
+          "bind": "s3339",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1971"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  2,
+                  0.5
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": "LINESTRING(0 0, 1 1, 2 0.5)"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1971"
+            },
+            "method": "decode",
+            "args": {
+              "value": "LINESTRING(0 0, 1 1, 2 0.5)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              1.0,
+              1.0
+            ],
+            [
+              2.0,
+              0.5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#polygon with a hole on Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1971"
+          },
+          "bind": "s3339",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1971"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 2, 2 2, 1 1))"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1971"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((0 0, 0 4, 4 4, 4 0, 0 0), (1 1, 1 2, 2 2, 1 1))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": [
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                4.0
+              ],
+              [
+                4.0,
+                4.0
+              ],
+              [
+                4.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                1.0,
+                1.0
+              ],
+              [
+                1.0,
+                2.0
+              ],
+              [
+                2.0,
+                2.0
+              ],
+              [
+                1.0,
+                1.0
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnEncodedGeometryDecodesToItsCoordinates#polygon given as one ring on Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1971"
+          },
+          "bind": "s3339",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1971"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "POLYGON((0 0, 0 1, 1 1, 0 0))"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1971"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((0 0, 0 1, 1 1, 0 0))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": [
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0
+              ],
+              [
+                1.0,
+                1.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnInvalidGeometryIsRefused#MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1972"
+          },
+          "bind": "s3364",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1972"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                1
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Value must be a valid point: Point must be an array of two numeric values [x, y]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnInvalidGeometryIsRefused#MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1973"
+          },
+          "bind": "s3365",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1973"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                1
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Value must be a valid point: Point must be an array of two numeric values [x, y]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testAnInvalidGeometryIsRefused#Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1974"
+          },
+          "bind": "s3366",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1974"
+            },
+            "method": "encode",
+            "args": {
+              "value": [
+                1
+              ],
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Value must be a valid point: Point must be an array of two numeric values [x, y]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testANonSpatialTypeIsRefused#MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1975"
+          },
+          "bind": "s3370",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1975"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POINT(1 2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown spatial type: string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testANonSpatialTypeIsRefused#MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1976"
+          },
+          "bind": "s3371",
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1976"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POINT(1 2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown spatial type: string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testANonSpatialTypeIsRefused#Postgres",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1977"
+          },
+          "bind": "s3372",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1977"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POINT(1 2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown spatial type: string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testTheDatabaseEncodesASpatialAttributeThroughItsAdapter",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1991"
+          },
+          "bind": "s3402",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1991"
+              },
+              "cache": "none"
+            },
+            "as": "o1992"
+          },
+          "bind": "s3403",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "point",
+            "args": {
+              "key": "location"
+            },
+            "as": "o1993"
+          },
+          "bind": "s3404",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "location",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "places",
+              "attributes": [
+                {
+                  "$obj": "o1993"
+                }
+              ]
+            },
+            "as": "o1994"
+          },
+          "bind": "s3405",
+          "expect": {
+            "$document": {
+              "$id": "places",
+              "name": "places",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "location",
+                    "key": "location",
+                    "type": "point",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "point"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "location": [
+                  5,
+                  6
+                ]
+              }
+            },
+            "as": "o1995"
+          },
+          "bind": "s3406",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "location": [
+                5,
+                6
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1992"
+            },
+            "method": "encode",
+            "args": {
+              "collection": {
+                "$obj": "o1994"
+              },
+              "document": {
+                "$obj": "o1995"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "location": "POINT(5 6)"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1995"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "location"
+            }
+          },
+          "expect": "POINT(5 6)"
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testTheDatabaseLeavesAnInvalidGeometryForTheStructureValidator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1996"
+          },
+          "bind": "s3409",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1996"
+              },
+              "cache": "none"
+            },
+            "as": "o1997"
+          },
+          "bind": "s3410",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "point",
+            "args": {
+              "key": "location"
+            },
+            "as": "o1998"
+          },
+          "bind": "s3411",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "location",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "places",
+              "attributes": [
+                {
+                  "$obj": "o1998"
+                }
+              ]
+            },
+            "as": "o1999"
+          },
+          "bind": "s3412",
+          "expect": {
+            "$document": {
+              "$id": "places",
+              "name": "places",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "location",
+                    "key": "location",
+                    "type": "point",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "point"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "location": [
+                  5
+                ]
+              }
+            },
+            "as": "o2000"
+          },
+          "bind": "s3413",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "location": [
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1997"
+            },
+            "method": "encode",
+            "args": {
+              "collection": {
+                "$obj": "o1999"
+              },
+              "document": {
+                "$obj": "o2000"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "location": [
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2000"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "location"
+            }
+          },
+          "expect": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialCodecTest::testWithoutSpatialTheDatabaseLeavesTheValueAsGiven",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o2005"
+          },
+          "bind": "s3421",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o2005"
+              },
+              "cache": "none"
+            },
+            "as": "o2006"
+          },
+          "bind": "s3422",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "point",
+            "args": {
+              "key": "location"
+            },
+            "as": "o2007"
+          },
+          "bind": "s3423",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "location",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "places",
+              "attributes": [
+                {
+                  "$obj": "o2007"
+                }
+              ]
+            },
+            "as": "o2008"
+          },
+          "bind": "s3424",
+          "expect": {
+            "$document": {
+              "$id": "places",
+              "name": "places",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "location",
+                    "key": "location",
+                    "type": "point",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "point"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "location": [
+                  5,
+                  6
+                ]
+              }
+            },
+            "as": "o2009"
+          },
+          "bind": "s3425",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "location": [
+                5,
+                6
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2006"
+            },
+            "method": "encode",
+            "args": {
+              "collection": {
+                "$obj": "o2008"
+              },
+              "document": {
+                "$obj": "o2009"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "location": [
+                5,
+                6
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2009"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "location"
+            }
+          },
+          "expect": [
+            5,
+            6
+          ]
+        }
+      ]
+    }
+  ]
+}

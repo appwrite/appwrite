@@ -1,0 +1,717 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/CursorTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MongoDBTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CursorTests::testResolveCursorPagesPastADocumentTheCallerCannotRead",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_customers"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_orders"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "cursor_customers",
+                "name": "cursor_customers",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cursor_customers",
+              "name": "cursor_customers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "cursor_orders",
+                "name": "cursor_orders",
+                "attributes": [
+                  {
+                    "$id": "customerId",
+                    "key": "customerId",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cursor_orders",
+              "name": "cursor_orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "customerId",
+                    "key": "customerId",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_customers",
+                    "document": {
+                      "$document": {
+                        "$id": "alice",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Alice"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "alice",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "Alice",
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "<uuid7>"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "alice",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Alice",
+                        "$collection": "cursor_customers",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "<uuid7>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_customers",
+                    "document": {
+                      "$document": {
+                        "$id": "bob",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "name": "Bob"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "bind": "s2722",
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "bob",
+                "$permissions": [
+                  "read(\"user:cursor-other\")"
+                ],
+                "name": "Bob",
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "<uuid7>"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "bob",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "name": "Bob",
+                        "$collection": "cursor_customers",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "<uuid7>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_customers",
+                    "document": {
+                      "$document": {
+                        "$id": "carol",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Carol"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "carol",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "Carol",
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "<uuid7>"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "carol",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Carol",
+                        "$collection": "cursor_customers",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "<uuid7>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "bob",
+            "direction": {
+              "$enum": "Query\\CursorDirection::After"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "bob",
+              "$sequence": "<uuid7>",
+              "$collection": "cursor_customers",
+              "name": "Bob"
+            }
+          }
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "bob",
+            "direction": {
+              "$enum": "Query\\CursorDirection::Before"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "bob",
+              "$sequence": "<uuid7>",
+              "$collection": "cursor_customers",
+              "name": "Bob"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "bob",
+                        "$sequence": {
+                          "$ref": "s2722",
+                          "path": "/result/$document/$sequence",
+                          "default": "01a13e1b-b564-7020-bc7c-5212c618978c"
+                        },
+                        "$collection": "cursor_customers",
+                        "name": "Bob"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Carol",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "carol",
+                "$tenant": "999"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "bob",
+                        "$sequence": {
+                          "$ref": "s2722",
+                          "path": "/result/$document/$sequence",
+                          "default": "01a13e1b-b564-7020-bc7c-5212c618978c"
+                        },
+                        "$collection": "cursor_customers",
+                        "name": "Bob"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "alice",
+                "$tenant": "999"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "nobody",
+            "direction": {
+              "$enum": "Query\\CursorDirection::After"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_customers"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cursor_customers"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_orders"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cursor_orders"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "CursorTests::testResolveCursorTakesAJoinedOrderFromTheRowsTheCallerCanRead",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

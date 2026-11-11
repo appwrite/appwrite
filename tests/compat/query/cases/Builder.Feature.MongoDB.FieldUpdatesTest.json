@@ -1,0 +1,1100 @@
+{
+  "source": "packages/query/tests/Builder/Feature/MongoDB/FieldUpdatesTest.php",
+  "cases": [
+    {
+      "name": "testRenameEmitsRenameUpdateOperator",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "rename",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "old",
+              "new"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$rename\":{\"old\":\"new\"}}}",
+            "bindings": [
+              "x"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$rename\":{\"old\":\"new\"}}}",
+        [
+          "x"
+        ],
+        [
+          "x"
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$rename\":{\"old\":\"new\"}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$rename\":{\"old\":\"new\"}}}"
+      ]
+    },
+    {
+      "name": "testMultiplyEmitsMulOperator",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "products"
+            ]
+          },
+          {
+            "call": "multiply",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "price",
+              1.1
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"products\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$mul\":{\"price\":1.1}}}",
+            "bindings": [
+              "x"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"products\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$mul\":{\"price\":1.1}}}",
+        [
+          "x"
+        ],
+        [
+          "x"
+        ],
+        "{\"collection\":\"products\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$mul\":{\"price\":1.1}}}",
+        "{\"collection\":\"products\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$mul\":{\"price\":1.1}}}"
+      ]
+    },
+    {
+      "name": "testPopFirstEmitsNegativeOneMarker",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "popFirst",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tags"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pop\":{\"tags\":-1}}}",
+            "bindings": [
+              "x"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pop\":{\"tags\":-1}}}",
+        [
+          "x"
+        ],
+        [
+          "x"
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pop\":{\"tags\":-1}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pop\":{\"tags\":-1}}}"
+      ]
+    },
+    {
+      "name": "testPopLastEmitsPositiveOneMarker",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "popLast",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tags"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pop\":{\"tags\":1}}}",
+            "bindings": [
+              "x"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pop\":{\"tags\":1}}}",
+        [
+          "x"
+        ],
+        [
+          "x"
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pop\":{\"tags\":1}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pop\":{\"tags\":1}}}"
+      ]
+    },
+    {
+      "name": "testPullAllBindsEachValueInOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "pullAll",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "scores",
+              [
+                10,
+                20
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pullAll\":{\"scores\":[\"?\",\"?\"]}}}",
+            "bindings": [
+              "x",
+              10,
+              20
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pullAll\":{\"scores\":[\"?\",\"?\"]}}}",
+        [
+          "x",
+          10,
+          20
+        ],
+        [
+          "x",
+          10,
+          20
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$pullAll\":{\"scores\":[\"?\",\"?\"]}}}",
+        [
+          "x",
+          10,
+          20
+        ],
+        [
+          "x",
+          10,
+          20
+        ]
+      ]
+    },
+    {
+      "name": "testUpdateMinEmitsMinOperator",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "updateMin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "low_score",
+              50
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$min\":{\"low_score\":\"?\"}}}",
+            "bindings": [
+              "x",
+              50
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$min\":{\"low_score\":\"?\"}}}",
+        [
+          "x",
+          50
+        ],
+        [
+          "x",
+          50
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$min\":{\"low_score\":\"?\"}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$min\":{\"low_score\":\"?\"}}}"
+      ]
+    },
+    {
+      "name": "testCurrentDateWithTimestampTypeEmitsTimestampType",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "currentDate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "modified",
+              "timestamp"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$currentDate\":{\"modified\":{\"$type\":\"timestamp\"}}}}",
+            "bindings": [
+              "x"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$currentDate\":{\"modified\":{\"$type\":\"timestamp\"}}}}",
+        [
+          "x"
+        ],
+        [
+          "x"
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$currentDate\":{\"modified\":{\"$type\":\"timestamp\"}}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$currentDate\":{\"modified\":{\"$type\":\"timestamp\"}}}}"
+      ]
+    },
+    {
+      "name": "testRenameRejectsDollarPrefixedField",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "rename",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "$danger",
+              "ok"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid MongoDB field name: $danger"
+          },
+          "id": 2
+        }
+      ]
+    }
+  ]
+}

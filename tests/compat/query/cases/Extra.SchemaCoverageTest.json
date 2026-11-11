@@ -1,0 +1,4424 @@
+{
+  "source": "tests/compat/query/record/Extra/SchemaCoverageTest.php",
+  "cases": [
+    {
+      "name": "testCompileMySQL",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "`id`",
+              4
+            ]
+          },
+          {
+            "call": "compileCreate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "compileCreate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              },
+              true
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "call": "compileCreatePartitioning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "nickname"
+            ]
+          },
+          {
+            "call": "compileAlter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 7
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "call": "compileDrop",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              false
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "call": "compileDrop",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              true
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "call": "compileRename",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "people"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "call": "compileTruncate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "call": "dropDatabase",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "app"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 14
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `users` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`) PARTITIONS 4",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `users` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`) PARTITIONS 4",
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE IF NOT EXISTS `users` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`) PARTITIONS 4",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE IF NOT EXISTS `users` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`) PARTITIONS 4",
+        "PARTITION BY HASH(`id`) PARTITIONS 4",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 8
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 9,
+          "props": {
+            "query": "ALTER TABLE `users` ADD COLUMN `nickname` VARCHAR(255) NOT NULL",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `users` ADD COLUMN `nickname` VARCHAR(255) NOT NULL",
+        {
+          "$value": "Builder\\Statement",
+          "id": 10,
+          "props": {
+            "query": "DROP TABLE `users`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE `users`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 11,
+          "props": {
+            "query": "DROP TABLE IF EXISTS `users`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE IF EXISTS `users`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 12,
+          "props": {
+            "query": "RENAME TABLE `users` TO `people`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "RENAME TABLE `users` TO `people`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 13,
+          "props": {
+            "query": "TRUNCATE TABLE `users`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "TRUNCATE TABLE `users`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 14,
+          "props": {
+            "query": "DROP DATABASE `app`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP DATABASE `app`"
+      ]
+    },
+    {
+      "name": "testCompilePostgreSQL",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "partitionByList",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "region"
+            ]
+          },
+          {
+            "call": "compileCreate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "compileCreatePartitioning",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "region"
+            ]
+          },
+          {
+            "call": "compileAlter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 5
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "call": "compileDrop",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events",
+              true
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "call": "compileRename",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events",
+              "old_events"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "call": "compileTruncate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 10
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE \"events\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\")) PARTITION BY LIST(region)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"events\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\")) PARTITION BY LIST(region)",
+        "PARTITION BY LIST(region)",
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "ALTER TABLE \"events\" ADD COLUMN \"region\" VARCHAR(255) NOT NULL",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE \"events\" ADD COLUMN \"region\" VARCHAR(255) NOT NULL",
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "DROP TABLE IF EXISTS \"events\"",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE IF EXISTS \"events\"",
+        {
+          "$value": "Builder\\Statement",
+          "id": 9,
+          "props": {
+            "query": "ALTER TABLE \"events\" RENAME TO \"old_events\"",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE \"events\" RENAME TO \"old_events\"",
+        {
+          "$value": "Builder\\Statement",
+          "id": 10,
+          "props": {
+            "query": "TRUNCATE TABLE \"events\"",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "TRUNCATE TABLE \"events\""
+      ]
+    },
+    {
+      "name": "testCompileSQLite",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "notes"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "body"
+            ]
+          },
+          {
+            "call": "compileCreate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "compileCreate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              },
+              true
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "notes"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "title"
+            ]
+          },
+          {
+            "call": "compileAlter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 7
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "call": "compileDrop",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "notes",
+              false
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "call": "compileRename",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "notes",
+              "memos"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "call": "compileTruncate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "notes"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 12
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `notes` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `body` VARCHAR(255) NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `notes` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `body` VARCHAR(255) NOT NULL)",
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE IF NOT EXISTS `notes` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `body` VARCHAR(255) NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE IF NOT EXISTS `notes` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `body` VARCHAR(255) NOT NULL)",
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 8
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 9,
+          "props": {
+            "query": "ALTER TABLE `notes` ADD COLUMN `title` VARCHAR(255) NOT NULL",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `notes` ADD COLUMN `title` VARCHAR(255) NOT NULL",
+        {
+          "$value": "Builder\\Statement",
+          "id": 10,
+          "props": {
+            "query": "DROP TABLE `notes`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE `notes`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 11,
+          "props": {
+            "query": "ALTER TABLE `notes` RENAME TO `memos`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `notes` RENAME TO `memos`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 12,
+          "props": {
+            "query": "DELETE FROM `notes`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `notes`"
+      ]
+    },
+    {
+      "name": "testCompileClickHouse",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "hits"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "url"
+            ]
+          },
+          {
+            "call": "compileCreate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "hits"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "referrer"
+            ]
+          },
+          {
+            "call": "compileAlter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 6
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "call": "compileDrop",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "hits",
+              true
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "call": "compileRename",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "hits",
+              "visits"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "call": "compileTruncate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "hits"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "call": "createDatabase",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "analytics"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "call": "dropDatabase",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "analytics"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 13
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `hits` (`id` UInt64, `url` String) ENGINE = MergeTree() ORDER BY (`id`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `hits` (`id` UInt64, `url` String) ENGINE = MergeTree() ORDER BY (`id`)",
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 7
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "ALTER TABLE `hits` ADD COLUMN `referrer` String",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `hits` ADD COLUMN `referrer` String",
+        {
+          "$value": "Builder\\Statement",
+          "id": 9,
+          "props": {
+            "query": "DROP TABLE IF EXISTS `hits`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE IF EXISTS `hits`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 10,
+          "props": {
+            "query": "RENAME TABLE `hits` TO `visits`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "RENAME TABLE `hits` TO `visits`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 11,
+          "props": {
+            "query": "TRUNCATE TABLE `hits`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "TRUNCATE TABLE `hits`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 12,
+          "props": {
+            "query": "CREATE DATABASE `analytics`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE DATABASE `analytics`",
+        {
+          "$value": "Builder\\Statement",
+          "id": 13,
+          "props": {
+            "query": "DROP DATABASE `analytics`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP DATABASE `analytics`"
+      ]
+    },
+    {
+      "name": "testCompileMongoDB",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "compileCreate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "compileCreate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              },
+              true
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "compileAlter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 7
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "call": "compileDrop",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              false
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "call": "compileRename",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "people"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "call": "compileTruncate",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 12
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"name\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"name\"]}}}",
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"name\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"name\":{\"bsonType\":\"string\"}},\"required\":[\"id\",\"name\"]}}}",
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 8
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 9,
+          "props": {
+            "query": "{\"command\":\"collMod\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"email\":{\"bsonType\":\"string\"}},\"required\":[\"email\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"collMod\",\"collection\":\"users\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"email\":{\"bsonType\":\"string\"}},\"required\":[\"email\"]}}}",
+        {
+          "$value": "Builder\\Statement",
+          "id": 10,
+          "props": {
+            "query": "{\"command\":\"drop\",\"collection\":\"users\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"drop\",\"collection\":\"users\"}",
+        {
+          "$value": "Builder\\Statement",
+          "id": 11,
+          "props": {
+            "query": "{\"command\":\"renameCollection\",\"from\":\"users\",\"to\":\"people\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"renameCollection\",\"from\":\"users\",\"to\":\"people\"}",
+        {
+          "$value": "Builder\\Statement",
+          "id": 12,
+          "props": {
+            "query": "{\"command\":\"deleteMany\",\"collection\":\"users\",\"filter\":{}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"deleteMany\",\"collection\":\"users\",\"filter\":{}}"
+      ]
+    },
+    {
+      "name": "testSchemaExecutor",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "setExecutor",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$fn": 1
+              }
+            ]
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "drop",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "execute",
+            "on": {
+              "$o": 3
+            },
+            "args": [],
+            "cb": [
+              {
+                "fn": 1,
+                "ret": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DROP TABLE `users`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$cb": "fn:1",
+          "args": [
+            {
+              "$value": "Builder\\Statement",
+              "id": 4,
+              "props": {
+                "query": "DROP TABLE `users`",
+                "bindings": [],
+                "readOnly": false,
+                "namedBindings": null
+              }
+            }
+          ]
+        },
+        1
+      ]
+    },
+    {
+      "name": "testEngines",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "static": "cases",
+            "class": "Schema\\ClickHouse\\Engine",
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::MergeTree"
+            },
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::ReplacingMergeTree"
+            },
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::SummingMergeTree"
+            },
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::AggregatingMergeTree"
+            },
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::CollapsingMergeTree"
+            },
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::ReplicatedMergeTree"
+            },
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::Memory"
+            },
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::Log"
+            },
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::TinyLog"
+            },
+            "args": []
+          },
+          {
+            "call": "requiresOrderBy",
+            "on": {
+              "$enum": "Schema\\ClickHouse\\Engine::StripeLog"
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        [
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::MergeTree"
+          },
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::ReplacingMergeTree"
+          },
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::SummingMergeTree"
+          },
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::AggregatingMergeTree"
+          },
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::CollapsingMergeTree"
+          },
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::ReplicatedMergeTree"
+          },
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::Memory"
+          },
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::Log"
+          },
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::TinyLog"
+          },
+          {
+            "$enum": "Schema\\ClickHouse\\Engine::StripeLog"
+          }
+        ],
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "name": "testForeignKeyActions",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "static": "cases",
+            "class": "Schema\\ForeignKeyAction",
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Schema\\ForeignKeyAction::Cascade"
+            },
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Schema\\ForeignKeyAction::SetNull"
+            },
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Schema\\ForeignKeyAction::SetDefault"
+            },
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Schema\\ForeignKeyAction::Restrict"
+            },
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Schema\\ForeignKeyAction::NoAction"
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        [
+          {
+            "$enum": "Schema\\ForeignKeyAction::Cascade"
+          },
+          {
+            "$enum": "Schema\\ForeignKeyAction::SetNull"
+          },
+          {
+            "$enum": "Schema\\ForeignKeyAction::SetDefault"
+          },
+          {
+            "$enum": "Schema\\ForeignKeyAction::Restrict"
+          },
+          {
+            "$enum": "Schema\\ForeignKeyAction::NoAction"
+          }
+        ],
+        "CASCADE",
+        "SET NULL",
+        "SET DEFAULT",
+        "RESTRICT",
+        "NO ACTION"
+      ]
+    },
+    {
+      "name": "testCreateIfNotExists",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "createIfNotExists",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 9
+            },
+            "args": []
+          },
+          {
+            "call": "createIfNotExists",
+            "on": {
+              "$o": 9
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 12
+            },
+            "args": []
+          },
+          {
+            "call": "createIfNotExists",
+            "on": {
+              "$o": 12
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 15
+            },
+            "args": []
+          },
+          {
+            "call": "createIfNotExists",
+            "on": {
+              "$o": 15
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 17
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 18
+            },
+            "args": []
+          },
+          {
+            "call": "createIfNotExists",
+            "on": {
+              "$o": 18
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 20
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 7
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "CREATE TABLE IF NOT EXISTS `items` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE IF NOT EXISTS `items` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 10
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 11,
+          "props": {
+            "query": "CREATE TABLE IF NOT EXISTS \"items\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE IF NOT EXISTS \"items\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\"))",
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 12
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 13
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 14,
+          "props": {
+            "query": "CREATE TABLE IF NOT EXISTS `items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE IF NOT EXISTS `items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 15
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 16
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 17,
+          "props": {
+            "query": "CREATE TABLE IF NOT EXISTS `items` (`id` UInt64) ENGINE = MergeTree() ORDER BY (`id`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE IF NOT EXISTS `items` (`id` UInt64) ENGINE = MergeTree() ORDER BY (`id`)",
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 18
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 19
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 20,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"items\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"}},\"required\":[\"id\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"items\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"}},\"required\":[\"id\"]}}}"
+      ]
+    },
+    {
+      "name": "testBaseColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "code"
+            ]
+          },
+          {
+            "call": "modify",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "slug"
+            ]
+          },
+          {
+            "call": "uuid",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "ref"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "code"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 9
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "slug"
+            ]
+          },
+          {
+            "call": "uuid",
+            "on": {
+              "$o": 10
+            },
+            "args": [
+              "ref"
+            ]
+          },
+          {
+            "call": "modify",
+            "on": {
+              "$o": 11
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 12
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "ALTER TABLE `items` MODIFY COLUMN `code` VARCHAR(255) NOT NULL, ADD COLUMN `slug` VARCHAR(255) NOT NULL, ADD COLUMN `ref` CHAR(36) NOT NULL",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `items` MODIFY COLUMN `code` VARCHAR(255) NOT NULL, ADD COLUMN `slug` VARCHAR(255) NOT NULL, ADD COLUMN `ref` CHAR(36) NOT NULL",
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 11
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 11
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 12,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"items\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"code\":{\"bsonType\":\"string\"},\"slug\":{\"bsonType\":\"string\"},\"ref\":{\"bsonType\":\"string\"}},\"required\":[\"code\",\"slug\",\"ref\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"items\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"code\":{\"bsonType\":\"string\"},\"slug\":{\"bsonType\":\"string\"},\"ref\":{\"bsonType\":\"string\"}},\"required\":[\"code\",\"slug\",\"ref\"]}}}"
+      ]
+    },
+    {
+      "name": "testClickHouseColumns",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "hits"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "tags"
+            ]
+          },
+          {
+            "call": "asArray",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ColumnType::String"
+              }
+            ]
+          },
+          {
+            "call": "isArray",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isTuple",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "code"
+            ]
+          },
+          {
+            "call": "asFixedString",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              3
+            ]
+          },
+          {
+            "call": "isFixedString",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "call": "isArray",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "pair"
+            ]
+          },
+          {
+            "call": "asTuple",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              [
+                {
+                  "$enum": "Schema\\ColumnType::String"
+                },
+                {
+                  "$enum": "Schema\\ColumnType::Integer"
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isTuple",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "isFixedString",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id",
+                "name_key"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "hits"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "renameColumn",
+            "on": {
+              "$o": 10
+            },
+            "args": [
+              "old",
+              "new"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 9
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        true,
+        false,
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 5
+        },
+        true,
+        false,
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 6
+        },
+        true,
+        false,
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "CREATE TABLE `hits` (`id` Int32, `tags` Array(String), `code` FixedString(3), `pair` Tuple(String, Int32)) ENGINE = MergeTree() ORDER BY (`id`, `name_key`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `hits` (`id` Int32, `tags` Array(String), `code` FixedString(3), `pair` Tuple(String, Int32)) ENGINE = MergeTree() ORDER BY (`id`, `name_key`)",
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 9
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 11,
+          "props": {
+            "query": "ALTER TABLE `hits` ADD COLUMN `a` String, RENAME COLUMN `old` TO `new`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `hits` ADD COLUMN `a` String, RENAME COLUMN `old` TO `new`"
+      ]
+    },
+    {
+      "name": "testMySQLColumns",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "autoIncrement",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "point",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "location"
+            ]
+          },
+          {
+            "call": "srid",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              3857
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "serial",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "seq"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "call": "bigSerial",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "big_seq"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "c"
+            ]
+          },
+          {
+            "call": "smallSerial",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "small_seq"
+            ]
+          },
+          {
+            "call": "smallSerial",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "tiny"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id",
+                "name_key"
+              ]
+            ]
+          },
+          {
+            "call": "spatialIndex",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "location"
+              ]
+            ]
+          },
+          {
+            "call": "spatialIndex",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "location"
+              ],
+              "sp_location"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 13
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 14
+            },
+            "args": [
+              "d"
+            ]
+          },
+          {
+            "call": "renameColumn",
+            "on": {
+              "$o": 15
+            },
+            "args": [
+              "old",
+              "new"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 14
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 16
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 11
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 12,
+          "props": {
+            "query": "CREATE TABLE `places` (`id` INT AUTO_INCREMENT NOT NULL, `location` POINT SRID 3857 NOT NULL, `a` VARCHAR(255) NOT NULL, `seq` INT AUTO_INCREMENT NOT NULL, `b` VARCHAR(255) NOT NULL, `big_seq` BIGINT AUTO_INCREMENT NOT NULL, `c` VARCHAR(255) NOT NULL, `small_seq` SMALLINT AUTO_INCREMENT NOT NULL, `tiny` SMALLINT AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`, `name_key`), SPATIAL INDEX `sp_location` (`location`), SPATIAL INDEX `sp_location` (`location`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `places` (`id` INT AUTO_INCREMENT NOT NULL, `location` POINT SRID 3857 NOT NULL, `a` VARCHAR(255) NOT NULL, `seq` INT AUTO_INCREMENT NOT NULL, `b` VARCHAR(255) NOT NULL, `big_seq` BIGINT AUTO_INCREMENT NOT NULL, `c` VARCHAR(255) NOT NULL, `small_seq` SMALLINT AUTO_INCREMENT NOT NULL, `tiny` SMALLINT AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`, `name_key`), SPATIAL INDEX `sp_location` (`location`), SPATIAL INDEX `sp_location` (`location`))",
+        {
+          "$object": "Schema\\MySQL",
+          "id": 13
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 14
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 15
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 14
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 16,
+          "props": {
+            "query": "ALTER TABLE `places` ADD COLUMN `d` VARCHAR(255) NOT NULL, RENAME COLUMN `old` TO `new`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `places` ADD COLUMN `d` VARCHAR(255) NOT NULL, RENAME COLUMN `old` TO `new`"
+      ]
+    },
+    {
+      "name": "testMySQLPartitions",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "partitionByRange",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "`id`"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "partitionByList",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "`id`"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 10
+            },
+            "args": []
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 10
+            },
+            "args": [
+              "`id`"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 10
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 12
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `orders` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY RANGE(`id`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `orders` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY RANGE(`id`)",
+        {
+          "$object": "Schema\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "CREATE TABLE `orders` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY LIST(`id`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `orders` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY LIST(`id`)",
+        {
+          "$object": "Schema\\MySQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 11
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 10
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 12,
+          "props": {
+            "query": "CREATE TABLE `orders` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `orders` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)"
+      ]
+    },
+    {
+      "name": "testMySQLForeignKeyForwarding",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "smallSerial",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "small_seq"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "team_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "teams"
+            ]
+          },
+          {
+            "call": "bigSerial",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "big_seq"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 10
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "renameColumn",
+            "on": {
+              "$o": 11
+            },
+            "args": [
+              "old",
+              "new"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 10
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 12
+            },
+            "args": [
+              "legacy"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 10
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 13
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 7
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "CREATE TABLE `orders` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `small_seq` SMALLINT AUTO_INCREMENT NOT NULL, `big_seq` BIGINT AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`user_id`) REFERENCES `users` (`id`), FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `orders` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `small_seq` SMALLINT AUTO_INCREMENT NOT NULL, `big_seq` BIGINT AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`user_id`) REFERENCES `users` (`id`), FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`))",
+        {
+          "$object": "Schema\\MySQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 11
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 12
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 10
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 13,
+          "props": {
+            "query": "ALTER TABLE `orders` RENAME COLUMN `old` TO `new`, DROP COLUMN `legacy`, ADD FOREIGN KEY (`user_id`) REFERENCES `` (``), ADD FOREIGN KEY (`user_id`) REFERENCES `` (``)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `orders` RENAME COLUMN `old` TO `new`, DROP COLUMN `legacy`, ADD FOREIGN KEY (`user_id`) REFERENCES `` (``), ADD FOREIGN KEY (`user_id`) REFERENCES `` (``)"
+      ]
+    },
+    {
+      "name": "testPostgreSQLColumns",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "point",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "location"
+            ]
+          },
+          {
+            "call": "srid",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              3857
+            ]
+          },
+          {
+            "call": "vector",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "embedding",
+              3
+            ]
+          },
+          {
+            "call": "dimensions",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              8
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "n"
+            ]
+          },
+          {
+            "call": "autoIncrement",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "onDelete",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ForeignKeyAction::Cascade"
+              }
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id",
+                "name_key"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "CREATE TABLE \"places\" (\"id\" INTEGER NOT NULL, \"location\" GEOMETRY(POINT, 3857) NOT NULL, \"embedding\" VECTOR(8) NOT NULL, \"n\" INTEGER GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\", \"name_key\"), FOREIGN KEY (\"user_id\") REFERENCES \"users\" (\"id\") ON DELETE CASCADE)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"places\" (\"id\" INTEGER NOT NULL, \"location\" GEOMETRY(POINT, 3857) NOT NULL, \"embedding\" VECTOR(8) NOT NULL, \"n\" INTEGER GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\", \"name_key\"), FOREIGN KEY (\"user_id\") REFERENCES \"users\" (\"id\") ON DELETE CASCADE)"
+      ]
+    },
+    {
+      "name": "testPostgreSQLPartitionByList",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "partitionByList",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "region"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE \"events\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\")) PARTITION BY LIST(region)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"events\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\")) PARTITION BY LIST(region)"
+      ]
+    },
+    {
+      "name": "testSQLiteColumns",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "shapes"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "autoIncrement",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "width"
+            ]
+          },
+          {
+            "call": "comment",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "in pixels"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "height"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "area"
+            ]
+          },
+          {
+            "call": "generatedAs",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "`width` * `height`"
+            ]
+          },
+          {
+            "call": "stored",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "perimeter"
+            ]
+          },
+          {
+            "call": "generatedAs",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "2 * (`width` + `height`)"
+            ]
+          },
+          {
+            "call": "virtual",
+            "on": {
+              "$o": 7
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "serial",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "seq"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "call": "bigSerial",
+            "on": {
+              "$o": 10
+            },
+            "args": [
+              "big_seq"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "c"
+            ]
+          },
+          {
+            "call": "smallSerial",
+            "on": {
+              "$o": 12
+            },
+            "args": [
+              "small_seq"
+            ]
+          },
+          {
+            "call": "bigSerial",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "big"
+            ]
+          },
+          {
+            "call": "smallSerial",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "small"
+            ]
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "positive_width",
+              "`width` > 0"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id",
+                "name_key"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 16
+            }
+          },
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 17
+            },
+            "args": [
+              "shapes"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 18
+            },
+            "args": [
+              "d"
+            ]
+          },
+          {
+            "call": "renameColumn",
+            "on": {
+              "$o": 19
+            },
+            "args": [
+              "old",
+              "new"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 18
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 20
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 11
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 12
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 13
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 14
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 15
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 16,
+          "props": {
+            "query": "CREATE TABLE `shapes` (`id` INTEGER AUTOINCREMENT NOT NULL, `width` INTEGER NOT NULL COMMENT 'in pixels', `height` INTEGER NOT NULL, `area` INTEGER GENERATED ALWAYS AS (`width` * `height`) STORED NOT NULL, `perimeter` INTEGER GENERATED ALWAYS AS (2 * (`width` + `height`)) VIRTUAL NOT NULL, `a` VARCHAR(255) NOT NULL, `seq` INTEGER AUTOINCREMENT NOT NULL, `b` VARCHAR(255) NOT NULL, `big_seq` INTEGER AUTOINCREMENT NOT NULL, `c` VARCHAR(255) NOT NULL, `small_seq` INTEGER AUTOINCREMENT NOT NULL, `big` INTEGER AUTOINCREMENT NOT NULL, `small` INTEGER AUTOINCREMENT NOT NULL, PRIMARY KEY (`id`, `name_key`), CONSTRAINT `positive_width` CHECK (`width` > 0))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `shapes` (`id` INTEGER AUTOINCREMENT NOT NULL, `width` INTEGER NOT NULL COMMENT 'in pixels', `height` INTEGER NOT NULL, `area` INTEGER GENERATED ALWAYS AS (`width` * `height`) STORED NOT NULL, `perimeter` INTEGER GENERATED ALWAYS AS (2 * (`width` + `height`)) VIRTUAL NOT NULL, `a` VARCHAR(255) NOT NULL, `seq` INTEGER AUTOINCREMENT NOT NULL, `b` VARCHAR(255) NOT NULL, `big_seq` INTEGER AUTOINCREMENT NOT NULL, `c` VARCHAR(255) NOT NULL, `small_seq` INTEGER AUTOINCREMENT NOT NULL, `big` INTEGER AUTOINCREMENT NOT NULL, `small` INTEGER AUTOINCREMENT NOT NULL, PRIMARY KEY (`id`, `name_key`), CONSTRAINT `positive_width` CHECK (`width` > 0))",
+        {
+          "$object": "Schema\\SQLite",
+          "id": 17
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 18
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 19
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 18
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 20,
+          "props": {
+            "query": "ALTER TABLE `shapes` ADD COLUMN `d` VARCHAR(255) NOT NULL, RENAME COLUMN `old` TO `new`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `shapes` ADD COLUMN `d` VARCHAR(255) NOT NULL, RENAME COLUMN `old` TO `new`"
+      ]
+    },
+    {
+      "name": "testSQLiteForeignKeyForwarding",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "smallSerial",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "small_seq"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "team_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "teams"
+            ]
+          },
+          {
+            "call": "bigSerial",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "big_seq"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "owner_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "group_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "groups"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 11
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 12
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "renameColumn",
+            "on": {
+              "$o": 13
+            },
+            "args": [
+              "old",
+              "new"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 12
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 14
+            },
+            "args": [
+              "legacy"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 12
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 15
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 9
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 10,
+          "props": {
+            "query": "CREATE TABLE `orders` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `small_seq` INTEGER AUTOINCREMENT NOT NULL, `big_seq` INTEGER AUTOINCREMENT NOT NULL, FOREIGN KEY (`user_id`) REFERENCES `users` (`id`), FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`), FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`), FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `orders` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `small_seq` INTEGER AUTOINCREMENT NOT NULL, `big_seq` INTEGER AUTOINCREMENT NOT NULL, FOREIGN KEY (`user_id`) REFERENCES `users` (`id`), FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`), FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`), FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`))",
+        {
+          "$object": "Schema\\SQLite",
+          "id": 11
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 12
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 13
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 12
+        },
+        {
+          "$object": "Schema\\ForeignKey\\SQLite",
+          "id": 14
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 12
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 15,
+          "props": {
+            "query": "ALTER TABLE `orders` RENAME COLUMN `old` TO `new`, DROP COLUMN `legacy`, ADD FOREIGN KEY (`user_id`) REFERENCES `` (``), ADD FOREIGN KEY (`user_id`) REFERENCES `` (``)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `orders` RENAME COLUMN `old` TO `new`, DROP COLUMN `legacy`, ADD FOREIGN KEY (`user_id`) REFERENCES `` (``), ADD FOREIGN KEY (`user_id`) REFERENCES `` (``)"
+      ]
+    },
+    {
+      "name": "testMongoDBColumns",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "vector",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "embedding"
+            ]
+          },
+          {
+            "call": "bigSerial",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "big"
+            ]
+          },
+          {
+            "call": "smallSerial",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "small"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "serial",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "seq"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "call": "bigSerial",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "big_seq"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "c"
+            ]
+          },
+          {
+            "call": "smallSerial",
+            "on": {
+              "$o": 11
+            },
+            "args": [
+              "small_seq"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 13
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 11
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 12
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 13,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"docs\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"embedding\":{\"bsonType\":\"array\"},\"big\":{\"bsonType\":\"int\"},\"small\":{\"bsonType\":\"int\"},\"a\":{\"bsonType\":\"string\"},\"seq\":{\"bsonType\":\"int\"},\"b\":{\"bsonType\":\"string\"},\"big_seq\":{\"bsonType\":\"int\"},\"c\":{\"bsonType\":\"string\"},\"small_seq\":{\"bsonType\":\"int\"}},\"required\":[\"id\",\"embedding\",\"big\",\"small\",\"a\",\"seq\",\"b\",\"big_seq\",\"c\",\"small_seq\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"docs\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"id\":{\"bsonType\":\"int\"},\"embedding\":{\"bsonType\":\"array\"},\"big\":{\"bsonType\":\"int\"},\"small\":{\"bsonType\":\"int\"},\"a\":{\"bsonType\":\"string\"},\"seq\":{\"bsonType\":\"int\"},\"b\":{\"bsonType\":\"string\"},\"big_seq\":{\"bsonType\":\"int\"},\"c\":{\"bsonType\":\"string\"},\"small_seq\":{\"bsonType\":\"int\"}},\"required\":[\"id\",\"embedding\",\"big\",\"small\",\"a\",\"seq\",\"b\",\"big_seq\",\"c\",\"small_seq\"]}}}"
+      ]
+    }
+  ]
+}

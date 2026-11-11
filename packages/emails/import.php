@@ -1,13 +1,31 @@
 <?php
 
-require_once __DIR__.'/vendor/autoload.php';
+/**
+ * Refreshes the free and disposable email domain lists in data/ from their sources.
+ *
+ *   php import.php disposable|free|all [--commit=true] [--force=true] [--source=<key>]
+ *   php import.php stats
+ *
+ * Environment (all optional; tests point them at fixtures, never at the internet):
+ *   UTOPIA_EMAILS_DATA_DIR                 the directory the lists are read from and written to (default: data/)
+ *   UTOPIA_EMAILS_<TYPE>_<SOURCE>_URL      where to download one source from, e.g.
+ *                                          UTOPIA_EMAILS_DISPOSABLE_MARTENSON_URL, UTOPIA_EMAILS_FREE_KIKOBEATS_URL
+ *
+ * The Rust port is the `emails-import` binary of crates/utopia/emails.
+ */
+
+// The package's own dependencies, or the monorepo's when run from appwrite/appwrite.
+require_once is_file(__DIR__.'/vendor/autoload.php') ? __DIR__.'/vendor/autoload.php' : __DIR__.'/../../vendor/autoload.php';
 
 use Utopia\CLI\CLI;
+use Utopia\Client\Adapter\Curl\Client as Curl;
+use Utopia\Client\Client;
 use Utopia\Console\Console;
+use Utopia\Psr7\Request\Factory;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
-const CONFIG_DIR = __DIR__.'/data';
+define('CONFIG_DIR', getenv('UTOPIA_EMAILS_DATA_DIR') ?: __DIR__.'/data');
 
 /**
  * Source configurations for disposable email domains
@@ -266,10 +284,36 @@ function fetchAllSources(array $sources, string $type): array
 }
 
 /**
+ * Download a source, following redirects; any status but 200 fails
+ */
+function download(string $url): string
+{
+    try {
+        $client = (new Client(new Curl()))->withFollowRedirects(true, 5);
+
+        $response = $client->sendRequest((new Factory())->createRequest('GET', $url));
+
+        if ($response->getStatusCode() !== 200) {
+            throw new \Exception('HTTP '.$response->getStatusCode());
+        }
+
+        return (string) $response->getBody();
+    } catch (\Exception $e) {
+        throw new \Exception('Network error: '.$e->getMessage());
+    }
+}
+
+/**
  * Fetch domains from a specific source
  */
 function fetchSource(string $sourceKey, array $sourceConfig, string $type): array
 {
+    // UTOPIA_EMAILS_<TYPE>_<SOURCE>_URL replaces a source's URL (tests serve fixtures).
+    $override = getenv('UTOPIA_EMAILS_'.strtoupper($type).'_'.strtoupper($sourceKey).'_URL');
+    if ($sourceConfig['url'] !== null && $override !== false && $override !== '') {
+        $sourceConfig['url'] = $override;
+    }
+
     if ($type === 'disposable') {
         switch ($sourceKey) {
             case 'manual':
@@ -306,22 +350,7 @@ function fetchSource(string $sourceKey, array $sourceConfig, string $type): arra
  */
 function fetchMartensonDomains(array $sourceConfig): array
 {
-    try {
-        $client = new \Utopia\Fetch\Client();
-
-        $response = $client->fetch(
-            url: $sourceConfig['url'],
-            method: \Utopia\Fetch\Client::METHOD_GET
-        );
-
-        if ($response->getStatusCode() !== 200) {
-            throw new \Exception('HTTP '.$response->getStatusCode());
-        }
-
-        $content = $response->getBody();
-    } catch (\Exception $e) {
-        throw new \Exception('Network error: '.$e->getMessage());
-    }
+    $content = download($sourceConfig['url']);
 
     $domains = [];
     $lines = explode("\n", $content);
@@ -352,22 +381,7 @@ function fetchMartensonDomains(array $sourceConfig): array
  */
 function fetchDisposableDomains(array $sourceConfig): array
 {
-    try {
-        $client = new \Utopia\Fetch\Client();
-
-        $response = $client->fetch(
-            url: $sourceConfig['url'],
-            method: \Utopia\Fetch\Client::METHOD_GET
-        );
-
-        if ($response->getStatusCode() !== 200) {
-            throw new \Exception('HTTP '.$response->getStatusCode());
-        }
-
-        $content = $response->getBody();
-    } catch (\Exception $e) {
-        throw new \Exception('Network error: '.$e->getMessage());
-    }
+    $content = download($sourceConfig['url']);
 
     $domains = [];
     $processed = 0;
@@ -399,22 +413,7 @@ function fetchDisposableDomains(array $sourceConfig): array
  */
 function fetchWesbosDomains(array $sourceConfig): array
 {
-    try {
-        $client = new \Utopia\Fetch\Client();
-
-        $response = $client->fetch(
-            url: $sourceConfig['url'],
-            method: \Utopia\Fetch\Client::METHOD_GET
-        );
-
-        if ($response->getStatusCode() !== 200) {
-            throw new \Exception('HTTP '.$response->getStatusCode());
-        }
-
-        $content = $response->getBody();
-    } catch (\Exception $e) {
-        throw new \Exception('Network error: '.$e->getMessage());
-    }
+    $content = download($sourceConfig['url']);
 
     $domains = [];
     $processed = 0;
@@ -446,22 +445,7 @@ function fetchWesbosDomains(array $sourceConfig): array
  */
 function fetchFakeFilterDomains(array $sourceConfig): array
 {
-    try {
-        $client = new \Utopia\Fetch\Client();
-
-        $response = $client->fetch(
-            url: $sourceConfig['url'],
-            method: \Utopia\Fetch\Client::METHOD_GET
-        );
-
-        if ($response->getStatusCode() !== 200) {
-            throw new \Exception('HTTP '.$response->getStatusCode());
-        }
-
-        $content = $response->getBody();
-    } catch (\Exception $e) {
-        throw new \Exception('Network error: '.$e->getMessage());
-    }
+    $content = download($sourceConfig['url']);
 
     $domains = [];
     $lines = explode("\n", $content);
@@ -492,22 +476,7 @@ function fetchFakeFilterDomains(array $sourceConfig): array
  */
 function fetchAdamLovingDomains(array $sourceConfig): array
 {
-    try {
-        $client = new \Utopia\Fetch\Client();
-
-        $response = $client->fetch(
-            url: $sourceConfig['url'],
-            method: \Utopia\Fetch\Client::METHOD_GET
-        );
-
-        if ($response->getStatusCode() !== 200) {
-            throw new \Exception('HTTP '.$response->getStatusCode());
-        }
-
-        $content = $response->getBody();
-    } catch (\Exception $e) {
-        throw new \Exception('Network error: '.$e->getMessage());
-    }
+    $content = download($sourceConfig['url']);
 
     $domains = [];
     $processed = 0;
@@ -556,22 +525,7 @@ function loadManualDisposableDomains(array $sourceConfig): array
  */
 function fetchKikobeatsDomains(array $sourceConfig): array
 {
-    try {
-        $client = new \Utopia\Fetch\Client();
-
-        $response = $client->fetch(
-            url: $sourceConfig['url'],
-            method: \Utopia\Fetch\Client::METHOD_GET
-        );
-
-        if ($response->getStatusCode() !== 200) {
-            throw new \Exception('HTTP '.$response->getStatusCode());
-        }
-
-        $content = $response->getBody();
-    } catch (\Exception $e) {
-        throw new \Exception('Network error: '.$e->getMessage());
-    }
+    $content = download($sourceConfig['url']);
 
     $domains = [];
     $processed = 0;

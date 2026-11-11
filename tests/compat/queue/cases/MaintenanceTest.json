@@ -1,0 +1,272 @@
+{
+  "source": "packages/queue/tests/MaintenanceTest.php",
+  "cases": [
+    {
+      "name": "maintain sweeps the bound consumer",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "maintain": "ok"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.maintain",
+          "args": {
+            "consumers": [
+              {
+                "$ref": "c"
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "maintain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "maintain skips consumers that cannot be swept",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.maintain",
+          "args": {
+            "consumers": [
+              {
+                "$ref": "c"
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "maintain reports a failed sweep instead of swallowing it",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "maintain": "fail"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.maintain",
+          "args": {
+            "consumers": [
+              {
+                "$ref": "c"
+              }
+            ]
+          },
+          "expect": [
+            [
+              null,
+              "pool is unreachable"
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "maintain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "maintain survives a failed sweep and a failing reporter",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "maintain": "fail"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.maintain",
+          "args": {
+            "consumers": [
+              {
+                "$ref": "c"
+              }
+            ],
+            "fail_report": true
+          },
+          "expect": [
+            [
+              null,
+              "pool is unreachable"
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "maintain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "maintain survives a failed sweep without a reporter",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "maintain": "fail"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.maintain",
+          "args": {
+            "consumers": [
+              {
+                "$ref": "c"
+              }
+            ],
+            "report": false
+          },
+          "expect": []
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "maintain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "maintain sweeps every consumer, not only the first to fail",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "maintain": "fail"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [],
+            "maintain": "ok"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.maintain",
+          "args": {
+            "consumers": [
+              {
+                "$ref": "c"
+              },
+              {
+                "$ref": "h"
+              }
+            ]
+          },
+          "expect": [
+            [
+              null,
+              "pool is unreachable"
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "maintain"
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "h"
+            }
+          },
+          "expect": [
+            "maintain"
+          ]
+        }
+      ]
+    }
+  ]
+}

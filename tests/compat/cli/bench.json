@@ -1,0 +1,93 @@
+{
+  "lib": "cli",
+  "environment": {
+    "date": "2026-10-18T14:19:03Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse",
+      "description": "Parse a command line with five arguments, one repeated",
+      "php": {
+        "ns": 1093.7181609780948,
+        "min": 1048.0636143657666,
+        "max": 1346.2971217524198,
+        "samples": 15,
+        "calls": 15704,
+        "cpu": 1101.8254372559009,
+        "peak": 3696.0,
+        "retained": 0.0015961962981830531,
+        "rss": 107577344.0
+      },
+      "rust": {
+        "ns": 610.5376102540386,
+        "min": 599.1143999207162,
+        "max": 657.0617752964883,
+        "samples": 15,
+        "calls": 30271,
+        "cpu": 615.0630900862211,
+        "rss": 22437888.0,
+        "allocations": 23.000024225606467,
+        "bytes": 2488.00618633896,
+        "peak": 2192.0,
+        "retained": 0.003642650281347384
+      },
+      "speedup": 1.791401778709439,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "run",
+      "description": "Run a task: resolve and validate two params and an injected resource, then call it",
+      "php": {
+        "ns": 1032.1481449224873,
+        "min": 1022.5461592057133,
+        "max": 1438.1060790802997,
+        "samples": 15,
+        "calls": 11482,
+        "cpu": 1077.9538988561808,
+        "peak": 3008.0,
+        "retained": 0.002183127213609708,
+        "rss": 107577344.0
+      },
+      "rust": {
+        "ns": 553.624229406678,
+        "min": 544.4294122569668,
+        "max": 582.1536165583419,
+        "samples": 15,
+        "calls": 35849,
+        "cpu": 556.0498330962276,
+        "rss": 22437888.0,
+        "allocations": 29.00002045617265,
+        "bytes": 815.005223762634,
+        "peak": 1650.0,
+        "retained": 0.003075864505750974
+      },
+      "speedup": 1.8643478556360258,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

@@ -1,0 +1,6461 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/AggregateTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AggregateTest::testAnUnaliasedAggregateComesBackUnderItsDefaultAlias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4506"
+          },
+          "bind": "s8038",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4506"
+              },
+              "cache": "none"
+            },
+            "as": "o4507"
+          },
+          "bind": "s8039",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4508"
+          },
+          "bind": "s8040",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4507"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4508"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4507"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4507"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000183"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4507"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4509"
+          },
+          "bind": "s8045",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4510"
+          },
+          "bind": "s8046",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4511"
+          },
+          "bind": "s8047",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4511"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4512"
+          },
+          "bind": "s8049",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4512"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4513"
+          },
+          "bind": "s8051",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4513"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4514"
+          },
+          "bind": "s8053",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4514"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4509"
+                },
+                {
+                  "$obj": "o4510"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4515"
+          },
+          "bind": "s8055",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4507"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4515"
+              }
+            },
+            "as": "o4516"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4517"
+          },
+          "bind": "s8057",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4507"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4517"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4518"
+          },
+          "bind": "s8059",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4507"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4518"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4519"
+          },
+          "bind": "s8061",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4507"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4519"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {},
+            "as": "o4520"
+          },
+          "bind": "s8063",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "views"
+            },
+            "as": "o4521"
+          },
+          "bind": "s8064",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "views",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "max",
+            "args": {
+              "attribute": "views"
+            },
+            "as": "o4522"
+          },
+          "bind": "s8065",
+          "expect": {
+            "$query": {
+              "method": "max",
+              "attribute": "views",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4507"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4520"
+                },
+                {
+                  "$obj": "o4521"
+                },
+                {
+                  "$obj": "o4522"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "count": 3,
+              "sum_views": 6,
+              "max_views": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testAnAliasIsKept",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4523"
+          },
+          "bind": "s8067",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4523"
+              },
+              "cache": "none"
+            },
+            "as": "o4524"
+          },
+          "bind": "s8068",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4525"
+          },
+          "bind": "s8069",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4524"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4525"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4524"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4524"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000184"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4524"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4526"
+          },
+          "bind": "s8074",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4527"
+          },
+          "bind": "s8075",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4528"
+          },
+          "bind": "s8076",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4528"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4529"
+          },
+          "bind": "s8078",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4529"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4530"
+          },
+          "bind": "s8080",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4530"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4531"
+          },
+          "bind": "s8082",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4531"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4526"
+                },
+                {
+                  "$obj": "o4527"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4532"
+          },
+          "bind": "s8084",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4524"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4532"
+              }
+            },
+            "as": "o4533"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4534"
+          },
+          "bind": "s8086",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4524"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4534"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4535"
+          },
+          "bind": "s8088",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4524"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4535"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4536"
+          },
+          "bind": "s8090",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4524"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4536"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {
+              "attribute": "*",
+              "alias": "total"
+            },
+            "as": "o4537"
+          },
+          "bind": "s8092",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "views"
+            },
+            "as": "o4538"
+          },
+          "bind": "s8093",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "views",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4524"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4537"
+                },
+                {
+                  "$obj": "o4538"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "total": 3,
+              "sum_views": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testADefaultAliasTakenTwiceIsRefused#the same aggregate twice",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "views"
+            },
+            "as": "o4539"
+          },
+          "bind": "s8095",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "views",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "views"
+            },
+            "as": "o4540"
+          },
+          "bind": "s8096",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "views",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4543"
+          },
+          "bind": "s8099",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4543"
+              },
+              "cache": "none"
+            },
+            "as": "o4544"
+          },
+          "bind": "s8100",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4545"
+          },
+          "bind": "s8101",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4544"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4545"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4544"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4544"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000185"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4544"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4546"
+          },
+          "bind": "s8106",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4547"
+          },
+          "bind": "s8107",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4548"
+          },
+          "bind": "s8108",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4548"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4549"
+          },
+          "bind": "s8110",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4549"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4550"
+          },
+          "bind": "s8112",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4550"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4551"
+          },
+          "bind": "s8114",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4551"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4546"
+                },
+                {
+                  "$obj": "o4547"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4552"
+          },
+          "bind": "s8116",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4544"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4552"
+              }
+            },
+            "as": "o4553"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4554"
+          },
+          "bind": "s8118",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4544"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4554"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4555"
+          },
+          "bind": "s8120",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4544"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4555"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4556"
+          },
+          "bind": "s8122",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4544"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4556"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4544"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4539"
+                },
+                {
+                  "$obj": "o4540"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "The default aggregate alias 'sum_views' is used by more than one aggregate; give each of them an explicit alias"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testADefaultAliasTakenTwiceIsRefused#an explicit alias equal to a default one",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {
+              "attribute": "*",
+              "alias": "sum_views"
+            },
+            "as": "o4541"
+          },
+          "bind": "s8097",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": [],
+              "alias": "sum_views"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "views"
+            },
+            "as": "o4542"
+          },
+          "bind": "s8098",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "views",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4557"
+          },
+          "bind": "s8125",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4557"
+              },
+              "cache": "none"
+            },
+            "as": "o4558"
+          },
+          "bind": "s8126",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4559"
+          },
+          "bind": "s8127",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4558"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4559"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4558"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4558"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000186"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4558"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4560"
+          },
+          "bind": "s8132",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4561"
+          },
+          "bind": "s8133",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4562"
+          },
+          "bind": "s8134",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4562"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4563"
+          },
+          "bind": "s8136",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4563"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4564"
+          },
+          "bind": "s8138",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4564"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4565"
+          },
+          "bind": "s8140",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4565"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4560"
+                },
+                {
+                  "$obj": "o4561"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4566"
+          },
+          "bind": "s8142",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4558"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4566"
+              }
+            },
+            "as": "o4567"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4568"
+          },
+          "bind": "s8144",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4558"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4568"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4569"
+          },
+          "bind": "s8146",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4558"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4569"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4570"
+          },
+          "bind": "s8148",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4558"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4570"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4558"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4541"
+                },
+                {
+                  "$obj": "o4542"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "The default aggregate alias 'sum_views' is used by more than one aggregate; give each of them an explicit alias"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testADefaultAliasTakenTwiceIsRefusedWithValidationOff",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4571"
+          },
+          "bind": "s8151",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4571"
+              },
+              "cache": "none"
+            },
+            "as": "o4572"
+          },
+          "bind": "s8152",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4573"
+          },
+          "bind": "s8153",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4572"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4573"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4572"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4572"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000187"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4572"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4574"
+          },
+          "bind": "s8158",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4575"
+          },
+          "bind": "s8159",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4576"
+          },
+          "bind": "s8160",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4576"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4577"
+          },
+          "bind": "s8162",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4577"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4578"
+          },
+          "bind": "s8164",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4578"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4579"
+          },
+          "bind": "s8166",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4579"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4574"
+                },
+                {
+                  "$obj": "o4575"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4580"
+          },
+          "bind": "s8168",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4572"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4580"
+              }
+            },
+            "as": "o4581"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4582"
+          },
+          "bind": "s8170",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4572"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4582"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4583"
+          },
+          "bind": "s8172",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4572"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4583"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4584"
+          },
+          "bind": "s8174",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4572"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4584"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4572"
+            },
+            "method": "skipValidation",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Query",
+                      "method": "max",
+                      "args": {
+                        "attribute": "views"
+                      },
+                      "as": "o4585"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Query",
+                      "method": "max",
+                      "args": {
+                        "attribute": "views"
+                      },
+                      "as": "o4586"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o4572"
+                      },
+                      "method": "aggregate",
+                      "args": {
+                        "collection": "posts",
+                        "queries": [
+                          {
+                            "$obj": "o4585"
+                          },
+                          {
+                            "$obj": "o4586"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s8176",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "The default aggregate alias 'max_views' is used by more than one aggregate; give each of them an explicit alias"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testAnExplicitAliasGivenTwiceIsRefusedTheSameWithValidationOff",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4587"
+          },
+          "bind": "s8177",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4587"
+              },
+              "cache": "none"
+            },
+            "as": "o4588"
+          },
+          "bind": "s8178",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4589"
+          },
+          "bind": "s8179",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4589"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000188"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4590"
+          },
+          "bind": "s8184",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4591"
+          },
+          "bind": "s8185",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4592"
+          },
+          "bind": "s8186",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4592"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4593"
+          },
+          "bind": "s8188",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4593"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4594"
+          },
+          "bind": "s8190",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4594"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4595"
+          },
+          "bind": "s8192",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4595"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4590"
+                },
+                {
+                  "$obj": "o4591"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4596"
+          },
+          "bind": "s8194",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4596"
+              }
+            },
+            "as": "o4597"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4598"
+          },
+          "bind": "s8196",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4598"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4599"
+          },
+          "bind": "s8198",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4599"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4600"
+          },
+          "bind": "s8200",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4600"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "views",
+              "alias": "total"
+            },
+            "as": "o4601"
+          },
+          "bind": "s8202",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "views",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "max",
+            "args": {
+              "attribute": "views",
+              "alias": "total"
+            },
+            "as": "o4602"
+          },
+          "bind": "s8203",
+          "expect": {
+            "$query": {
+              "method": "max",
+              "attribute": "views",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4601"
+                },
+                {
+                  "$obj": "o4602"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate alias \"total\" is given to more than one aggregate"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4588"
+            },
+            "method": "skipValidation",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o4588"
+                      },
+                      "method": "aggregate",
+                      "args": {
+                        "collection": "posts",
+                        "queries": [
+                          {
+                            "$obj": "o4601"
+                          },
+                          {
+                            "$obj": "o4602"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate alias \"total\" is given to more than one aggregate"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testExplicitAliasesSeparateTheSameAggregate",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4603"
+          },
+          "bind": "s8206",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4603"
+              },
+              "cache": "none"
+            },
+            "as": "o4604"
+          },
+          "bind": "s8207",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4605"
+          },
+          "bind": "s8208",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4605"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000189"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4606"
+          },
+          "bind": "s8213",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4607"
+          },
+          "bind": "s8214",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4608"
+          },
+          "bind": "s8215",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4608"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4609"
+          },
+          "bind": "s8217",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4609"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4610"
+          },
+          "bind": "s8219",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4610"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4611"
+          },
+          "bind": "s8221",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4611"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4606"
+                },
+                {
+                  "$obj": "o4607"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4612"
+          },
+          "bind": "s8223",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4612"
+              }
+            },
+            "as": "o4613"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4614"
+          },
+          "bind": "s8225",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4614"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4615"
+          },
+          "bind": "s8227",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4615"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4616"
+          },
+          "bind": "s8229",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4616"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "views",
+              "alias": "first"
+            },
+            "as": "o4617"
+          },
+          "bind": "s8231",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "views",
+              "values": [],
+              "alias": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "views",
+              "alias": "second"
+            },
+            "as": "o4618"
+          },
+          "bind": "s8232",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "views",
+              "values": [],
+              "alias": "second"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4617"
+                },
+                {
+                  "$obj": "o4618"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "first": 6,
+              "second": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testEachGroupIsOneRow",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4619"
+          },
+          "bind": "s8234",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4619"
+              },
+              "cache": "none"
+            },
+            "as": "o4620"
+          },
+          "bind": "s8235",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4621"
+          },
+          "bind": "s8236",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4621"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000190"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4622"
+          },
+          "bind": "s8241",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4623"
+          },
+          "bind": "s8242",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4624"
+          },
+          "bind": "s8243",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4624"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4625"
+          },
+          "bind": "s8245",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4625"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4626"
+          },
+          "bind": "s8247",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4626"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4627"
+          },
+          "bind": "s8249",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4627"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4622"
+                },
+                {
+                  "$obj": "o4623"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4628"
+          },
+          "bind": "s8251",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4628"
+              }
+            },
+            "as": "o4629"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4630"
+          },
+          "bind": "s8253",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4630"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4631"
+          },
+          "bind": "s8255",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4631"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4632"
+          },
+          "bind": "s8257",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4632"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "title": "first"
+              }
+            },
+            "as": "o4633"
+          },
+          "bind": "s8259",
+          "expect": {
+            "$document": {
+              "title": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "posts",
+              "id": "third",
+              "document": {
+                "$obj": "o4633"
+              }
+            },
+            "as": "o4634"
+          },
+          "expect": {
+            "$document": {
+              "title": "first",
+              "views": 3,
+              "$sequence": "3",
+              "$id": "third",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "posts"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {},
+            "as": "o4635"
+          },
+          "bind": "s8261",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o4636"
+          },
+          "bind": "s8262",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "title"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "title"
+            },
+            "as": "o4637"
+          },
+          "bind": "s8263",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "title",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4620"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4635"
+                },
+                {
+                  "$obj": "o4636"
+                },
+                {
+                  "$obj": "o4637"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "count": 2,
+              "title": "first"
+            },
+            {
+              "count": 1,
+              "title": "second"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testFindRefusesAggregateAndGroupByQueries",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4638"
+          },
+          "bind": "s8265",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4638"
+              },
+              "cache": "none"
+            },
+            "as": "o4639"
+          },
+          "bind": "s8266",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4640"
+          },
+          "bind": "s8267",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4640"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000191"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4641"
+          },
+          "bind": "s8272",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4642"
+          },
+          "bind": "s8273",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4643"
+          },
+          "bind": "s8274",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4643"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4644"
+          },
+          "bind": "s8276",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4644"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4645"
+          },
+          "bind": "s8278",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4645"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4646"
+          },
+          "bind": "s8280",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4646"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4641"
+                },
+                {
+                  "$obj": "o4642"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4647"
+          },
+          "bind": "s8282",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4647"
+              }
+            },
+            "as": "o4648"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4649"
+          },
+          "bind": "s8284",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4649"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4650"
+          },
+          "bind": "s8286",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4650"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4651"
+          },
+          "bind": "s8288",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4651"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {},
+            "as": "o4652"
+          },
+          "bind": "s8290",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o4653"
+          },
+          "bind": "s8291",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "title"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4652"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "find() does not run aggregate or groupBy queries: use aggregate()"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4639"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4653"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "find() does not run aggregate or groupBy queries: use aggregate()"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateTest::testAggregateNeedsAnAggregation",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o4654"
+          },
+          "bind": "s8294",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4654"
+              },
+              "cache": "none"
+            },
+            "as": "o4655"
+          },
+          "bind": "s8295",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o4656"
+          },
+          "bind": "s8296",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4655"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o4656"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4655"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "hooks"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4655"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "hooks_u000000000192"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4655"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4657"
+          },
+          "bind": "s8301",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "views"
+            },
+            "as": "o4658"
+          },
+          "bind": "s8302",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "views",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4659"
+          },
+          "bind": "s8303",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o4659"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4660"
+          },
+          "bind": "s8305",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4660"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4661"
+          },
+          "bind": "s8307",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o4661"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4662"
+          },
+          "bind": "s8309",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o4662"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "attributes": [
+                {
+                  "$obj": "o4657"
+                },
+                {
+                  "$obj": "o4658"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "o4663"
+          },
+          "bind": "s8311",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4655"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4663"
+              }
+            },
+            "as": "o4664"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "views",
+                    "key": "views",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "title": "first",
+                "views": 1
+              }
+            },
+            "as": "o4665"
+          },
+          "bind": "s8313",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4655"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4665"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "title": "first",
+              "views": 1,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "title": "second",
+                "views": 2
+              }
+            },
+            "as": "o4666"
+          },
+          "bind": "s8315",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4655"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4666"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "title": "second",
+              "views": 2,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "title": "third",
+                "views": 3
+              }
+            },
+            "as": "o4667"
+          },
+          "bind": "s8317",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4655"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o4667"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "title": "third",
+              "views": 3,
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "title",
+              "values": [
+                "first"
+              ]
+            },
+            "as": "o4668"
+          },
+          "bind": "s8319",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "title",
+              "values": [
+                "first"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4655"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o4668"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "aggregate() needs an aggregate or groupBy query"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

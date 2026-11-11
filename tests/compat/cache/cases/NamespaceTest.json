@@ -1,0 +1,735 @@
+{
+  "source": "packages/cache/tests/NamespaceTest.php",
+  "cases": [
+    {
+      "name": "testSharesExistingValuesWithoutChangingTheOriginalView",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.with_namespace",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "namespace": "v2:"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "entry",
+            "data": "unprefixed"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:entry",
+            "data": "warm"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "entry",
+            "ttl": 60
+          },
+          "expect": "warm"
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "entry",
+            "data": "updated"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:entry",
+            "ttl": 60
+          },
+          "expect": "updated"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "entry",
+            "ttl": 60
+          },
+          "expect": "unprefixed"
+        }
+      ]
+    },
+    {
+      "name": "testSharesSnapshotsAndRejectsFillsInvalidatedThroughTheOtherView",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.with_namespace",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "namespace": "v2:"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:state"
+          },
+          "bind": "snap",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": false
+          }
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "state"
+          },
+          "bind": "snap2",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": false
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "snap"
+            },
+            "b": {
+              "$ref": "snap2"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.compare_and_swap",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "state",
+            "data": {
+              "owners": []
+            },
+            "version": {
+              "$ref": "snap",
+              "path": "/version"
+            }
+          },
+          "bind": "version",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.load_versioned",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:state"
+          },
+          "bind": "after",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": {
+              "$array": [
+                [
+                  "owners",
+                  []
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "after",
+              "path": "/version"
+            },
+            "b": {
+              "$ref": "version"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "entry"
+          },
+          "bind": "lease",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:entry"
+          },
+          "bind": "lease2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "lease"
+            },
+            "b": {
+              "$ref": "lease2"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "entry",
+            "data": "original",
+            "hash": "",
+            "version": {
+              "$ref": "lease"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:entry"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "entry",
+            "data": "stale",
+            "hash": "",
+            "version": {
+              "$ref": "lease"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "entry",
+            "ttl": 60
+          },
+          "expect": "original"
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "entry"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:entry"
+          },
+          "bind": "lease3",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "lease"
+            },
+            "b": {
+              "$ref": "lease3"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:state"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.compare_and_swap",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "state",
+            "data": {
+              "owners": {
+                "stale": 1
+              }
+            },
+            "version": {
+              "$ref": "version"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testRecordedPurgesReplayLogicalKeysExactlyOnce",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.with_namespace",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "namespace": "v2:"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "m2"
+            }
+          },
+          "bind": "o0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.with_namespace",
+          "args": {
+            "cache": {
+              "$ref": "o0"
+            },
+            "namespace": "v2:"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "users",
+            "data": "local",
+            "hash": "list"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "o"
+            },
+            "key": "users",
+            "data": "remote",
+            "hash": "list"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.record_purges",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "key": "Users",
+                "hash": "List"
+              }
+            ]
+          },
+          "bind": "purges",
+          "expect": {
+            "purges": {
+              "$array": [
+                [
+                  "users",
+                  {
+                    "$array": [
+                      [
+                        "list",
+                        true
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            "results": [
+              true
+            ]
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "o"
+            },
+            "key": "users",
+            "hash": "list"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "v2:users",
+            "ttl": 60,
+            "hash": "list"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "o"
+            },
+            "key": "users",
+            "ttl": 60,
+            "hash": "list"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testPreservesCaseSensitivityAndKeepsNamespaceViewsIndependent",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_case_sensitivity",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.with_namespace",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "namespace": "V2:"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.with_namespace",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "namespace": "Other:"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "Key",
+            "data": "first",
+            "hash": "Field"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "o"
+            },
+            "key": "Key",
+            "data": "second",
+            "hash": "Field"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "V2:Key",
+            "ttl": 60,
+            "hash": "Field"
+          },
+          "expect": "first"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "Other:Key",
+            "ttl": 60,
+            "hash": "Field"
+          },
+          "expect": "second"
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "ttl": 60,
+            "hash": "Field"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "key": "Key",
+            "ttl": 60,
+            "hash": "Field"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.case_sensitive",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

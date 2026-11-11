@@ -1,0 +1,29 @@
+[package]
+name = "utopia-domains"
+description = "Domain names split against the Public Suffix List, domain validators, and registrar clients for availability, prices, purchases, renewals and transfers."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/domains"
+publish.workspace = true
+
+[dependencies]
+bytes.workspace = true
+getrandom.workspace = true
+http-body-util.workspace = true
+hyper = { workspace = true, features = ["client", "http1"] }
+hyper-rustls.workspace = true
+hyper-util = { workspace = true, features = ["client-legacy", "http1"] }
+indexmap.workspace = true
+php-std.workspace = true
+rustls.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+utopia-async = { workspace = true, features = ["hyper"] }
+utopia-validators.workspace = true
+
+
+[package.metadata.utopia]
+category = "utilities"
+php-sync = "64e53bc74f2e4abec3bfed656c92b4a8429d54b0"

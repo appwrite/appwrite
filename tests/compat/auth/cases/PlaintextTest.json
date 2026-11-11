@@ -1,0 +1,277 @@
+{
+  "source": "packages/auth/tests/Algorithms/PlaintextTest.php",
+  "cases": [
+    {
+      "name": "hash",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "plaintext"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "expect": "test123"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "plaintext"
+          }
+        }
+      ]
+    },
+    {
+      "name": "special characters",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "plaintext"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "!@#$%^&*()_+-=[]{}|;:,.<>?"
+          },
+          "bind": "out",
+          "expect": "!@#$%^&*()_+-=[]{}|;:,.<>?"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "!@#$%^&*()_+-=[]{}|;:,.<>?",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "unicode characters",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "plaintext"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "Hello 世界"
+          },
+          "bind": "out",
+          "expect": "Hello 世界"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "Hello 世界",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "empty string",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "plaintext"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": ""
+          },
+          "bind": "out",
+          "expect": ""
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "binary",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "plaintext"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": {
+              "$bytes": "/wCA"
+            }
+          },
+          "expect": {
+            "$bytes": "/wCA"
+          }
+        }
+      ]
+    },
+    {
+      "name": "name",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "plaintext"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.name",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": "plaintext"
+        }
+      ]
+    }
+  ]
+}

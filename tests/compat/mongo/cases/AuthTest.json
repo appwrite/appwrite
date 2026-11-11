@@ -1,0 +1,181 @@
+{
+  "source": "vendor/utopia-php/mongo/tests/AuthTest.php",
+  "cases": [
+    {
+      "name": "testStartDefaultsToAdminAuthSource",
+      "steps": [
+        {
+          "op": "auth.new",
+          "args": {
+            "authcid": "root",
+            "secret": "example"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "auth.start",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/0/payload"
+            ],
+            "reason": "the first message carries the random client nonce"
+          },
+          "expect": [
+            {
+              "saslStart": 1,
+              "mechanism": "SCRAM-SHA-256",
+              "payload": "<masked>",
+              "autoAuthorize": 1,
+              "options": {
+                "skipEmptyExchange": true
+              }
+            },
+            "admin"
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testStartUsesProvidedAuthSource",
+      "steps": [
+        {
+          "op": "auth.new",
+          "args": {
+            "authcid": "appuser",
+            "secret": "example",
+            "auth_source": "appdb"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "auth.start",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/0/payload"
+            ],
+            "reason": "the first message carries the random client nonce"
+          },
+          "expect": [
+            {
+              "saslStart": 1,
+              "mechanism": "SCRAM-SHA-256",
+              "payload": "<masked>",
+              "autoAuthorize": 1,
+              "options": {
+                "skipEmptyExchange": true
+              }
+            },
+            "appdb"
+          ]
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "testContinueUsesProvidedAuthSource",
+      "steps": [
+        {
+          "op": "auth.new",
+          "args": {
+            "authcid": "appuser",
+            "secret": "example",
+            "auth_source": "appdb"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "auth.start",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/0/payload"
+            ],
+            "reason": "the first message carries the random client nonce"
+          },
+          "expect": [
+            {
+              "saslStart": 1,
+              "mechanism": "SCRAM-SHA-256",
+              "payload": "<masked>",
+              "autoAuthorize": 1,
+              "options": {
+                "skipEmptyExchange": true
+              }
+            },
+            "appdb"
+          ]
+        },
+        {
+          "op": "auth.server_first",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "suffix": "server",
+            "salt": "salt",
+            "iterations": 4096
+          },
+          "bind": "challenge",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "carries the random client nonce"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "auth.continue",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "conversation_id": 1,
+            "payload": {
+              "$ref": "challenge"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/0/payload"
+            ],
+            "reason": "the proof answers the random client nonce"
+          },
+          "expect": [
+            {
+              "saslContinue": 1,
+              "conversationId": 1,
+              "payload": "<masked>"
+            },
+            "appdb"
+          ]
+        }
+      ],
+      "state": []
+    }
+  ]
+}

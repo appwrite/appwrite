@@ -1,0 +1,169 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/EncodeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "EncodeTest::testExplicitNullUsesDeclaredDefault",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o499"
+          },
+          "bind": "s787",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o499"
+              },
+              "cache": "none"
+            },
+            "as": "o500"
+          },
+          "bind": "s788",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "status",
+              "default": "pending"
+            },
+            "as": "o501"
+          },
+          "bind": "s789",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "status",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": "pending",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "documents",
+              "attributes": [
+                {
+                  "$obj": "o501"
+                }
+              ]
+            },
+            "as": "o502"
+          },
+          "bind": "s790",
+          "expect": {
+            "$document": {
+              "$id": "documents",
+              "name": "documents",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": "pending",
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "status": null
+              }
+            },
+            "as": "o503"
+          },
+          "bind": "s791",
+          "expect": {
+            "$document": {
+              "status": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o500"
+            },
+            "method": "encode",
+            "args": {
+              "collection": {
+                "$obj": "o502"
+              },
+              "document": {
+                "$obj": "o503"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "status": "pending"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o503"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "status"
+            }
+          },
+          "expect": "pending"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,450 @@
+{
+  "source": "packages/validators/tests/MultipleOfTest.php",
+  "cases": [
+    {
+      "name": "testIsValid",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Text",
+            "args": {
+              "length": 20
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "AllOf",
+            "args": {
+              "validators": [
+                {
+                  "$ref": "v1"
+                },
+                {
+                  "$ref": "v2"
+                }
+              ],
+              "type": "string"
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            }
+          },
+          "expect": "Value must be a valid string and at least 1 chars and no longer than 20 chars"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "http://example.com/very-long-url"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "hello world"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "http://example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "https://google.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "example.com/hello-world"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testRules",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Text",
+            "args": {
+              "length": 20
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "AllOf",
+            "args": {
+              "validators": [
+                {
+                  "$ref": "v1"
+                },
+                {
+                  "$ref": "v2"
+                }
+              ],
+              "type": "string"
+            }
+          },
+          "bind": "v3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "http://example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "hello world"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "http://example.com/very-long-url"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v3"
+            },
+            "value": "Some very long text that is also not an URL"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Text",
+            "args": {
+              "length": 20
+            }
+          },
+          "bind": "v4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "AnyOf",
+            "args": {
+              "validators": [
+                {
+                  "$ref": "v4"
+                },
+                {
+                  "$ref": "v5"
+                }
+              ],
+              "type": "string"
+            }
+          },
+          "bind": "v6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "value": "http://example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "value": "hello world"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "value": "http://example.com/very-long-url"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "value": "Some very long text that is also not an URL"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "property": "validators"
+          },
+          "expect": [
+            {
+              "description": "Value must be a valid string and at least 1 chars and no longer than 20 chars",
+              "type": "string"
+            },
+            {
+              "description": "Value must be a valid URL",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "property": "validators"
+          },
+          "expect": [
+            {
+              "description": "Value must be a valid string and at least 1 chars and no longer than 20 chars",
+              "type": "string"
+            },
+            {
+              "description": "Value must be a valid URL",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "op": "validator.get",
+          "args": {
+            "validator": {
+              "$ref": "v6"
+            },
+            "property": "validators"
+          },
+          "expect": [
+            {
+              "description": "Value must be a valid string and at least 1 chars and no longer than 20 chars",
+              "type": "string"
+            },
+            {
+              "description": "Value must be a valid URL",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Text",
+            "args": {
+              "length": 20
+            }
+          },
+          "bind": "v7",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "URL",
+            "args": {}
+          },
+          "bind": "v8",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "NoneOf",
+            "args": {
+              "validators": [
+                {
+                  "$ref": "v7"
+                },
+                {
+                  "$ref": "v8"
+                }
+              ],
+              "type": "string"
+            }
+          },
+          "bind": "v9",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v9"
+            },
+            "value": "http://example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v9"
+            },
+            "value": "hello world"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v9"
+            },
+            "value": "http://example.com/very-long-url"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v9"
+            },
+            "value": "Some very long text that is also not an URL"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

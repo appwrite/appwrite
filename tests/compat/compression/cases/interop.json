@@ -1,0 +1,1554 @@
+{
+  "cases": [
+    {
+      "name": "Brotli text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli"
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              "/value"
+            ],
+            "reason": "Brotli above quality 1 may encode differently (spec.json deviations); the other runtime's decoding is what this case checks"
+          },
+          "expect": {
+            "value": "<masked>",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli"
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              "/value"
+            ],
+            "reason": "Brotli above quality 1 may encode differently (spec.json deviations); the other runtime's decoding is what this case checks"
+          },
+          "expect": {
+            "value": "<masked>",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli"
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              "/value"
+            ],
+            "reason": "Brotli above quality 1 may encode differently (spec.json deviations); the other runtime's decoding is what this case checks"
+          },
+          "expect": {
+            "value": "<masked>",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli set_level=1 text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 1
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "C3UEAICqqqrq/3RluBvY6WSXi4KIgAEDqIgoiIjCBhy4hmECOJDNBmOeEbT7sszB09ehubPQHCy3eSAZbTI2t7CUhy2MH7Y5L+afAQDIQgc="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 1
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli set_level=1 binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 1
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "i10BAICqqqrqf13XjWJ471LMh4HihHFsAJfA9p8BdLsz31ebEe1lqSHORooC9niwPNSYE+9nqyPNRYkB9XqyPtZakBzkaCDPR4sD93mxPdVZkh7maqIsxEiA9HuzP9dbkR3laaEtxkqCDvpwvDTYkB/na6MvxUmBDflyvjbaUpwU6GAsx0uDD/txvTXZUZ4W6mKuJMhAjPhzvzfbU50V6WGtJspCjgbwfLQ40JwX62OvJ8lBjQXxfrY60l6UGOBsJMtDjwfzfbU50V2WGuJupijATITwf7c701+VGeFtpSrCToYK/HS4MFyXG+NvpynBTYUJ/Xa6Mt5WmBDsZCjDT4cL/3W5Md1VmhLuZqogzESI/H+nSlQFQKpFTQClxgyqDIi1oMmg2Ai6DJmhljUJFBpZlyChtUBQbiRdhORWMkTYAnUBklrREGCpE00LbAVDhsVOMGVE7M1sSLDQyaZeIQI/HS701+XG+FtpSnBTAw=="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 1
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli set_level=1 empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 1
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "expect": {
+            "value": ";",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 1
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli set_level=4 text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 4
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              "/value"
+            ],
+            "reason": "Brotli above quality 1 may encode differently (spec.json deviations); the other runtime's decoding is what this case checks"
+          },
+          "expect": {
+            "value": "<masked>",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 4
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli set_level=4 binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 4
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              "/value"
+            ],
+            "reason": "Brotli above quality 1 may encode differently (spec.json deviations); the other runtime's decoding is what this case checks"
+          },
+          "expect": {
+            "value": "<masked>",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 4
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli set_level=4 empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 4
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              "/value"
+            ],
+            "reason": "Brotli above quality 1 may encode differently (spec.json deviations); the other runtime's decoding is what this case checks"
+          },
+          "expect": {
+            "value": "<masked>",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 4
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli set_level=9 text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 9
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              "/value"
+            ],
+            "reason": "Brotli above quality 1 may encode differently (spec.json deviations); the other runtime's decoding is what this case checks"
+          },
+          "expect": {
+            "value": "<masked>",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 9
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli set_level=9 binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 9
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              "/value"
+            ],
+            "reason": "Brotli above quality 1 may encode differently (spec.json deviations); the other runtime's decoding is what this case checks"
+          },
+          "expect": {
+            "value": "<masked>",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 9
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brotli set_level=9 empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 9
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "mask": {
+            "paths": [
+              "/value"
+            ],
+            "reason": "Brotli above quality 1 may encode differently (spec.json deviations); the other runtime's decoding is what this case checks"
+          },
+          "expect": {
+            "value": "<masked>",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Brotli",
+              "set_level": 9
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deflate text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Deflate"
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "7cvBCQAhDATAVraA4yqxCdEgATWSxP6vjXvs/KeYy4KeuAvdpjlCE3VJPmi2Q1pKXkftejSa7gGZmi8KIyMjIyMjI+O/o+z+AQ=="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Deflate"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deflate binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Deflate"
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "Y9hdbvx+dZrSvVlhgmc7XRn3VJh8WJOufH92uNC5LjemvZWmH9dmqDyYEyF8vtudeV+V2ad1maoP50aKXOjxYNlfbf55fZbao3lRYhd7PVkP1lh82ZCj/nh+tPilPi+2Q7WWXzfmajxZECNxud+b/XCd1bdNeZpPF8ZKXpngw3Gk3vr75nytZ4vipK5O9OU82mDzY0uBzvPF8dLXJ/lxHWuy/bm1UPfFkgSZG5P9uY832/3aVqT3cmmi7M0pATwnWux/by/Wf7UsSe7W1EDek60Of3aUGLxenix/e1oQ36k2p787Sw3frkhRuDMjmP90u/O/XWVG71amKt6dGSJwpsPlP8jPq0B+DgX5mQHk59UgP4eB/MwI8vMaIvwsCvLzAZCfs0F+FgP5+SDIzzkgP4uD/HyICD9rg/x8DeTnRpCfdUB+vg7ycxPIz7rE+tkR5Oc3ID9PB/nZCeTntyA/zwD52ZlYP4eD/MwE8vNakJ8jQH5mBvl5HcjPkcT6ORfkZwmQnw+D/JwH8rMkyM9HQH7OJ8LPN0B+bgb5WQ/k55sgP7eA/KwP8vMtkJ8B"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Deflate"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deflate empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Deflate"
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "expect": {
+            "value": "\u0003\u0000",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Deflate"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "GZIP text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "GZIP"
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "H4sIAAAAAAAAA+3LwQkAIQwEwFa2gOMqsQnRIAE1ksT+r4177PynmMuCnrgL3aY5QhN1ST5otkNaSl5H7Xo0mu4BmZovCiMjIyMjIyPjv6Ps/gErKRHr6wgAAA=="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "GZIP"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "GZIP binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "GZIP"
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "H4sIAAAAAAAAA2PYXW78fnWa0r1ZYYJnO10Z91SYfFiTrnx/drjQuS43pr2Vph/XZqg8mBMhfL7bnXlfldmndZmqD+dGilzo8WDZX23+eX2W2qN5UWIXez1ZD9ZYfNmQo/54frT4pT4vtkO1ll835mo8WRAjcbnfm/1wndW3TXmaTxfGSl6Z4MNxpN76++Z8rWeL4qSuTvTlPNpg82NLgc7zxfHS1yf5cR1rsv25tVD3xZIEmRuT/bmPN9v92lak93JpouzNKQE8J1rsf28v1n+1LEnu1tRA3pOtDn92lBi8Xp4sf3taEN+pNqe/O0sN365IUbgzI5j/dLvzv11lRu9WpirenRkicKbD5T/Iz6tAfg4F+ZkB5OfVID+HgfzMCPLzGiL8LAry8wGQn7NBfhYD+fkgyM85ID+Lg/x8iAg/a4P8fA3k50aQn3VAfr4O8nMTyM+6xPrZEeTnNyA/Twf52Qnk57cgP88A+dmZWD+Hg/zMBPLzWpCfI0B+Zgb5eR3Iz5HE+jkX5GcJkJ8Pg/ycB/KzJMjPR0B+zifCzzdAfm4G+VkP5OebID+3gPysD/LzLZCfAS75QCm8AgAA"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "GZIP"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "GZIP empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "GZIP"
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "H4sIAAAAAAAAAwMAAAAAAAAAAAA="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "GZIP"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "LZ4 text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4"
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "6wgAAP8qTG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4gOQD//////////6JQLiBlbmQ="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "LZ4 binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4"
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "vAIAAPDmALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP/0ABCq9AAQVfQAEAD0ABCr9AAQVvQAEAH0AB+s9AAQEBX0AGDAfDj0sGv0AGAW0o5KBsH0AGBsKOSgXBf0AB/C9AAQYCvno18b1vQAYIE9+bVxLPQAYNeTTwvHgvQAHy30ABWwQf25dTHsqGQg3Jf0ALBC/rp2Mu2pZSHdmPQAH0P0ABUQV+gBEALoARCt6AEQWOgBEAPoARCu6AEfWfQAFRBt6AFgGNSQTAjD6AFgbirmol4Z6AFvxIA8+LRv9AAQENjoAWCDP/u3cy7oAfAF2ZVRDcmEQPy4dC/rp2Mf2pZSDso="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "LZ4 empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4"
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "expect": {
+            "value": "\u0000\u0000\u0000\u0000\u0000",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": "lz4_uncompress : data error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "LZ4 set_level=9 text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4",
+              "set_level": 9
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "6wgAAP8qTG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4gOQD//////////6JQLiBlbmQ="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4",
+              "set_level": 9
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "LZ4 set_level=9 binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4",
+              "set_level": 9
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "vAIAAPDmALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP/0ABCq9AAQVfQAEAD0ABCr9AAQVvQAEAH0AB+s9AAQEBX0ABDA9AAQa/QAEBb0ABDB9AAQbPQAEBf0AB/C9AAQECv0ABDW9AAQgfQAECz0ABDX9AAQgvQAHy30ABUQQfQAEOz0ABCX9AAQQvQAEO30ABCY9AAfQ/QAFRBX9AAQAvQAEK30ABBY9AAQA/QAEK70AB9Z9AAVEG30ABAY9AAQw/QAEG70ABAZ9AAQxPQAH2/0ABAQ2PQAEIP0ABAu9AAQ2fQAEIT0AKAv66djH9qWUg7K"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4",
+              "set_level": 9
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "LZ4 set_level=9 empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4",
+              "set_level": 9
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "expect": {
+            "value": "\u0000\u0000\u0000\u0000\u0000",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "LZ4",
+              "set_level": 9
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": "lz4_uncompress : data error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Snappy text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Snappy"
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "6xHgTG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4g/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkA/jkAujkACGVuZA=="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Snappy"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Snappy binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Snappy"
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "vAX0IAEAu3cz76tmIt6aVhHNiUUBvHg08KxnI9+bVxLOikYCvXk18a1oJOCcWBPPi0cDvno28q5pJeGdWRTQjEgEv3s3869qJuKeWhbRjUkFwXw49LBsJ+OfWxfSjkoGwn059bFtKOSgXBjTj0sHw3469rJuKeWhXRnUkEwIxH8797NvKuaiXhrVkU0JxYA8+LRwLOejXxvXkk4KxoI9+bVxLeikYBzYk08Lx4M++rZyLumlYR3ZlFAMyIQ/+7dzL+qmYh7alVENyYVA/Lh0MOunYx/bllIOyoZC/bl1Me2oZCDcmFMPy4dD/rp2Mu6pZSHdmVQQzIhE/7t3M++qZiLemlURzYlFALx4NPCrZyPfm1YSzopGAb15NfGsaCTgnFgTz4tHZvQAFBXRjUkFwAH0KGsn459bFtKOSgbBAfQUbCjkoFwXAfQMwn469n70AIgr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHY70AHxB/bl1MeyoZCDcl1MPy4dC/rp2Mu2pZSHdmFQQzIhD/yHoAKoh6Hb0AABXIegUAr56NvKtIegUWBTQjEgDIegUrmom4p5ZnvQAKG0p5aFdGNSQTAjDIeg8birmol4Z1ZFNCcSAPPi0b4r0ABTYlFAMyIMh6GAu6qZiHtmVUQ3JhED8uHQv66djH9qWUg7K"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Snappy"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Snappy empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Snappy"
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "expect": {
+            "value": "\u0000",
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Snappy"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zstd text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd"
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "KLUv/WDrBy0CAMQDTG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4gZW5kAQDJCu4rKA=="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zstd binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd"
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "KLUv/WC8AW0LALQSALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+qVQCrVgGsFcBrFsFsF8Ir1oEs14ItQeyXQu2YQ1cCrVgDrlltGMNuGcRv2IMu2YQv2pZSDsoyIOC3AyFxwULiAoZkb9nK3rJV1i1b2Vu2Yr3FVvaWreytbMnespW9ZaugW7ayt8zK3sqQ7C1b2VuGVtTva5IC"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zstd empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd"
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "KLUv/SAAAQAA"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd"
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zstd level=19 text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": 19
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "KLUv/WDrB9UBAMIDDBDAtwHSTEtFmmex39eOdbkTZu6wV25irvTO2TBK+62ryTLY4/CeGmVJMyY9ZzxKEQEAyQruKyg="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": 19
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zstd level=19 binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": 19
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "KLUv/WC8AU0KALQSALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+qVQCrVgGsFcBrFsFsF8Ir1oEs14ItQeyXQu2YQ1cCrVgDrlltGMNuGcRv2IMu2YQv2pZSDsoyqBHg7/934LcDEZDn/38bB8QYliUakVG/J6kK"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": 19
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zstd level=19 empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": 19
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "KLUv/SAAAQAA"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": 19
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zstd level=-3 text",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": -3
+            },
+            "data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end"
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "KLUv/WDrBy0CAMQDTG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4gZW5kAQDJCu4rKA=="
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": -3
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. end",
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zstd level=-3 binary",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": -3
+            },
+            "data": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "KLUv/WC8ARUPADQcALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrBXRjUkFwHw49LBrJ+OfWxbBfTn1sWwo5KBcF9OPSwfCK+ejXxvWkk4KxoE9+bVxLNeTTwvHgj76tnItQf25dTHsqGQg3JdTD8uHQu2pZSHdmFQQzIhDVxPPi0cCvno28q1pJeGdWAO/ezfzrmom4p5ZbSnloV0Y1JBMCMN/O/ezbhnVkU0JxIA8+LRv2JRQDMiDP/u3cy7qpmIe2YRA/Lh0L+unYx/allIOygwAQLAA8sC6gvLAuoLywLqC8sC6ALTAumC4k2YK"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": -3
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": {
+              "$bytes": "ALt3M++rZiLemlYRzYlFAbx4NPCsZyPfm1cSzopGAr15NfGtaCTgnFgTz4tHA756NvKuaSXhnVkU0IxIBL97N/OvaibinloW0Y1JBcF8OPSwbCfjn1sX0o5KBsJ9OfWxbSjkoFwY049LB8N+OvaybinloV0Z1JBMCMR/O/ezbyrmol4a1ZFNCcWAPPi0cCzno18b15JOCsaCPfm1cS3opGAc2JNPC8eDPvq2ci7ppWEd2ZRQDMiEP/u3cy/qpmIe2pVRDcmFQPy4dDDrp2Mf25ZSDsqGQv25dTHtqGQg3JhTD8uHQ/66djLuqWUh3ZlUEMyIRP+7dzPvqmYi3ppVEc2JRQC8eDTwq2cj35tWEs6KRgG9eTXxrGgk4JxYE8+LRwO+ejbyrmkl4Z1ZFNCMSAS/ezfzr2om4p5aFdGNSQXAfDj0sGsn459bFtKOSgbBfTn1sWwo5KBcF9OPSwfCfjr2sm4p5aFdGdSQTAjEfzv3s28q5qJeGtWRTQnFgDz4tHAr56NfG9aSTgrGgT35tXEs6KRgHNeTTwvHgj76tnIt6aVhHdmUUAzIhD/7t3Mv6qZiHtqVUQ3JhUD8uHQw66djH9uWUg7KhkH9uXUx7KhkINyXUw/Lh0L+unYy7allId2YVBDMiEP/u3cz76pmIt6aVRHNiUUAvHg08KtnI9+bVhLOikYBvXk18axoJOCcVxPPi0cCvno28q1pJeGdWBTQjEgDv3s3865qJuKeWRXRjUkFwHw49LBrJ+OfWxbSjkoGwX059bFsKOSgXBfTj0sHwn469rJtKeWhXRjUkEwIw38797NuKuaiXhnVkU0JxIA8+LRvK+ejXxvWkk4KxoE9+bVxLOikYBzXk08Lx4I++rZyLemlYR3YlFAMyIM/+7dzLuqmYh7ZlVENyYRA/Lh0L+unYx/allIOyg=="
+            },
+            "warning": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zstd level=-3 empty",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "compress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": -3
+            },
+            "data": ""
+          },
+          "bind": "c",
+          "expect": {
+            "value": {
+              "$bytes": "KLUv/SAAAQAA"
+            },
+            "warning": null
+          }
+        },
+        {
+          "side": "b",
+          "op": "decompress",
+          "args": {
+            "algorithm": {
+              "class": "Zstd",
+              "level": -3
+            },
+            "data": {
+              "$ref": "c",
+              "path": "/value"
+            }
+          },
+          "expect": {
+            "value": "",
+            "warning": null
+          }
+        }
+      ]
+    }
+  ]
+}

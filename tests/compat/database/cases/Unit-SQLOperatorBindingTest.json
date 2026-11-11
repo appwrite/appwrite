@@ -1,0 +1,514 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/SQLOperatorBindingTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLOperatorBindingTest::testUpsertBindsOperatorsToDatabaseStatement",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "wrapper": true
+                }
+              }
+            },
+            "as": "o1"
+          },
+          "bind": "s0",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1"
+              },
+              "cache": "none"
+            },
+            "as": "o2"
+          },
+          "bind": "s1",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "operators"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "operators"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3"
+          },
+          "bind": "s4",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4"
+          },
+          "bind": "s5",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "value"
+            },
+            "as": "o5"
+          },
+          "bind": "s9",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6"
+          },
+          "bind": "s10",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o6"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o7"
+          },
+          "bind": "s12",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o7"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o8"
+          },
+          "bind": "s14",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o8"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "scores",
+              "attributes": [
+                {
+                  "$obj": "o5"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o9"
+          },
+          "bind": "s16",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o9"
+              }
+            },
+            "as": "o10"
+          },
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "value": 1
+              }
+            },
+            "as": "o11"
+          },
+          "bind": "s18",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "scores",
+              "document": {
+                "$obj": "o11"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 1,
+              "$collection": "scores",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 2
+            },
+            "as": "o12"
+          },
+          "bind": "s20",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "value": {
+                  "$obj": "o12"
+                }
+              }
+            },
+            "as": "o13"
+          },
+          "bind": "s21",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "upsertDocuments",
+            "args": {
+              "collection": "scores",
+              "documents": [
+                {
+                  "$obj": "o13"
+                }
+              ]
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "scores",
+              "id": "first"
+            },
+            "as": "o14"
+          },
+          "bind": "s23",
+          "expect": {
+            "$document": {
+              "value": 3,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "scores"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2453 @@
+{
+  "source": "packages/abuse/tests/E2E/RedisTest.php",
+  "cases": [
+    {
+      "name": "static key",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-static-key",
+            "limit": 2,
+            "seconds": 3600
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dynamic key",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-dynamic-key-{{ip}}",
+            "limit": 2,
+            "seconds": 3600
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{{ip}}": "0.0.0.10"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dynamic key with 2 params",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-two-params-{{ip}}-{{email}}",
+            "limit": 2,
+            "seconds": 3600
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{{ip}}": "0.0.0.10",
+              "{{email}}": "test@test.com"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dynamic key fast requests",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-fast-requests-{{ip}}",
+            "limit": 10,
+            "seconds": 3600
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{{ip}}": "0.0.0.10"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 9,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 8,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 7,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 6,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 5,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 4,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 3,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 2,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 10,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "limit reset",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-limit-reset-{{ip}}",
+            "limit": 10,
+            "seconds": 2
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{{ip}}": "127.0.0.1"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 9,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 8,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 7,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 6,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 5,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 4,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 3,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 2,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 10,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 9,
+            "reset": "<masked>"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "new window allows same instance",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-new-window",
+            "limit": 1,
+            "seconds": 1
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "remaining",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-remaining",
+            "limit": 3,
+            "seconds": 3600
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "peek does not consume",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-peek",
+            "limit": 2,
+            "seconds": 3600
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "reset time",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-reset-time",
+            "limit": 5,
+            "seconds": 3600
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "bind": "r",
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "clock.window_end",
+          "args": {
+            "seconds": 3600
+          },
+          "bind": "e",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the real clock"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "r",
+              "path": "/reset"
+            },
+            "b": {
+              "$ref": "e"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "bind": "p",
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 3,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "clock.window_end",
+          "args": {
+            "seconds": 3600
+          },
+          "bind": "f",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the real clock"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "p",
+              "path": "/reset"
+            },
+            "b": {
+              "$ref": "f"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "withParams keeps original key",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-param-reuse-{{ip}}",
+            "limit": 2,
+            "seconds": 3600
+          },
+          "bind": "base",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "base"
+            },
+            "params": {
+              "{{ip}}": "10.0.0.1"
+            }
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "first"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "first"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "first"
+            },
+            "params": {
+              "{{ip}}": "10.0.0.2"
+            }
+          },
+          "bind": "second",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "base"
+            }
+          },
+          "expect": "${ns}-param-reuse-{{ip}}"
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "first"
+            }
+          },
+          "expect": "${ns}-param-reuse-10.0.0.1"
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "second"
+            }
+          },
+          "expect": "${ns}-param-reuse-10.0.0.2"
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "second"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "second"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "second"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "first"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "reset",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-reset-test-{{ip}}",
+            "limit": 5,
+            "seconds": 600
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{{ip}}": "u1"
+            }
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clock.wait_window",
+          "args": {
+            "seconds": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 3,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 2,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 5,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 3,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 2,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": true,
+            "limit": 5,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-reset-test-{{ip}}",
+            "limit": 2,
+            "seconds": 600
+          },
+          "bind": "b2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b2"
+            },
+            "params": {
+              "{{ip}}": "u2"
+            }
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "cleanup",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-cleanup",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.cleanup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "timestamp": 1700000000
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "seconds must be positive",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-guard",
+            "limit": 1,
+            "seconds": 0
+          },
+          "bind": "l",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "seconds must be greater than 0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "getLogs scans once, without an offset",
+      "steps": [
+        {
+          "op": "redis.clear",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "redis",
+            "key": "${ns}-logs",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.set",
+          "args": {
+            "key": "abuse__${ns}-logs__1",
+            "value": "7"
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "abuse__${ns}-logs__1": "7"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "offset": 9,
+            "count": null
+          },
+          "expect": {
+            "abuse__${ns}-logs__1": "7"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "count": 0
+          },
+          "expect": {
+            "abuse__${ns}-logs__1": "7"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "count": -1
+          },
+          "expect": []
+        },
+        {
+          "op": "redis.clear",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": []
+        }
+      ],
+      "state": []
+    }
+  ]
+}

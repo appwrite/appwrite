@@ -1,0 +1,1557 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Hook/ColumnNameTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ColumnNameTest::testWrapAllowsNullInTheQuotedColumn",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "x = ?",
+              "bindings": [
+                1
+              ]
+            },
+            "as": "o7300"
+          },
+          "bind": "s11315",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "x = ?",
+              "bindings": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "method": "wrap",
+            "args": {
+              "condition": {
+                "$obj": "o7300"
+              },
+              "column": "alias._uid"
+            },
+            "as": "o7301"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(x = ? OR `alias`.`_uid` IS NULL)",
+              "bindings": [
+                1
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testWrapRejectsAColumnOutsideTheIdentifierPattern#a space",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "x = 1"
+            },
+            "as": "o7302"
+          },
+          "bind": "s11317",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "x = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "method": "wrap",
+            "args": {
+              "condition": {
+                "$obj": "o7302"
+              },
+              "column": "a b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid column name: a b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testWrapRejectsAColumnOutsideTheIdentifierPattern#a statement separator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "x = 1"
+            },
+            "as": "o7303"
+          },
+          "bind": "s11319",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "x = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "method": "wrap",
+            "args": {
+              "condition": {
+                "$obj": "o7303"
+              },
+              "column": "x;y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid column name: x;y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testWrapRejectsAColumnOutsideTheIdentifierPattern#a quote character",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "x = 1"
+            },
+            "as": "o7304"
+          },
+          "bind": "s11321",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "x = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "method": "wrap",
+            "args": {
+              "condition": {
+                "$obj": "o7304"
+              },
+              "column": "x`y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid column name: x`y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testWrapRejectsAColumnOutsideTheIdentifierPattern#an empty name",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "x = 1"
+            },
+            "as": "o7305"
+          },
+          "bind": "s11323",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "x = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "method": "wrap",
+            "args": {
+              "condition": {
+                "$obj": "o7305"
+              },
+              "column": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid column name: "
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testAllowNullRejectsAColumnOutsideTheIdentifierPattern#a space",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true
+            },
+            "as": "o7306"
+          },
+          "bind": "s11325",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "args": {
+              "filter": {
+                "$obj": "o7306"
+              },
+              "column": "a b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: a b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testAllowNullRejectsAColumnOutsideTheIdentifierPattern#a statement separator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true
+            },
+            "as": "o7307"
+          },
+          "bind": "s11327",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "args": {
+              "filter": {
+                "$obj": "o7307"
+              },
+              "column": "x;y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x;y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testAllowNullRejectsAColumnOutsideTheIdentifierPattern#a quote character",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true
+            },
+            "as": "o7308"
+          },
+          "bind": "s11329",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "args": {
+              "filter": {
+                "$obj": "o7308"
+              },
+              "column": "x`y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x`y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testAllowNullRejectsAColumnOutsideTheIdentifierPattern#an empty name",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true
+            },
+            "as": "o7309"
+          },
+          "bind": "s11331",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "args": {
+              "filter": {
+                "$obj": "o7309"
+              },
+              "column": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: "
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testAllowNullRejectsAnInjectedStatement",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true
+            },
+            "as": "o7310"
+          },
+          "bind": "s11333",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "args": {
+              "filter": {
+                "$obj": "o7310"
+              },
+              "column": "table_main._uid; DROP TABLE"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: table_main._uid; DROP TABLE"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#documentColumn with a space",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "documentColumn": "a b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: a b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#documentColumn with a statement separator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "documentColumn": "x;y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x;y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#documentColumn with a quote character",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "documentColumn": "x`y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x`y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#documentColumn with an empty name",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "documentColumn": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: "
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionDocumentColumn with a space",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionDocumentColumn": "a b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: a b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionDocumentColumn with a statement separator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionDocumentColumn": "x;y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x;y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionDocumentColumn with a quote character",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionDocumentColumn": "x`y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x`y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionDocumentColumn with an empty name",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionDocumentColumn": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: "
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionRoleColumn with a space",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionRoleColumn": "a b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: a b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionRoleColumn with a statement separator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionRoleColumn": "x;y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x;y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionRoleColumn with a quote character",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionRoleColumn": "x`y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x`y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionRoleColumn with an empty name",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionRoleColumn": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: "
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionTypeColumn with a space",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionTypeColumn": "a b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: a b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionTypeColumn with a statement separator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionTypeColumn": "x;y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x;y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionTypeColumn with a quote character",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionTypeColumn": "x`y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x`y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#permissionTypeColumn with an empty name",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionTypeColumn": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: "
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#scopeColumn with a space",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "scopeColumn": "a b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: a b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#scopeColumn with a statement separator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "scopeColumn": "x;y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x;y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#scopeColumn with a quote character",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "scopeColumn": "x`y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: x`y"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAColumnOutsideTheIdentifierPattern#scopeColumn with an empty name",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "scopeColumn": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: "
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterWithoutRolesMatchesNothing",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [],
+              "permissionsTable": true
+            },
+            "as": "o7311"
+          },
+          "bind": "s11355",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7311"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7312"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "1 = 0",
+              "bindings": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterRejectsAPermissionsTableOutsideTheIdentifierPattern",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "posts perms"
+                    }
+                  }
+                ]
+              }
+            },
+            "as": "o7313"
+          },
+          "bind": "s11357",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7313"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permissions table name: posts perms"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterWithNoColumnsMatchesOnlyCollectionWidePermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "posts_perms"
+                    }
+                  }
+                ]
+              },
+              "columns": []
+            },
+            "as": "o7314"
+          },
+          "bind": "s11359",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7314"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7315"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`id` IN (SELECT document_id FROM `posts_perms` WHERE role IN (?) AND type = ? AND column IS NULL)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterWithColumnsMatchesThemOrCollectionWidePermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any",
+                "users"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "posts_perms"
+                    }
+                  }
+                ]
+              },
+              "columns": [
+                "title",
+                "body"
+              ]
+            },
+            "as": "o7316"
+          },
+          "bind": "s11361",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7316"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7317"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`id` IN (SELECT document_id FROM `posts_perms` WHERE role IN (?, ?) AND type = ? AND (column IS NULL OR column IN (?, ?)))",
+              "bindings": [
+                "any",
+                "users",
+                "read",
+                "title",
+                "body"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterQuotesADocumentColumnUnderAnAppwriteIdAlias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "posts_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "6ad1e9ed691819ab52ee._uid"
+            },
+            "as": "o7318"
+          },
+          "bind": "s11363",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7318"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7319"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`6ad1e9ed691819ab52ee`.`_uid` IN (SELECT document_id FROM `posts_perms` WHERE role IN (?) AND type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "posts_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "order-items._uid"
+            },
+            "as": "o7320"
+          },
+          "bind": "s11365",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7320"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7321"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`order-items`.`_uid` IN (SELECT document_id FROM `posts_perms` WHERE role IN (?) AND type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "posts_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "6ad1e9ed691819ab52ee._uid",
+              "quoteCharacter": "\""
+            },
+            "as": "o7322"
+          },
+          "bind": "s11367",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7322"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7323"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"6ad1e9ed691819ab52ee\".\"_uid\" IN (SELECT document_id FROM \"posts_perms\" WHERE role IN (?) AND type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterKeepsUnquotedColumnsToPlainIdentifiers",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionDocumentColumn": "1document"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: 1document"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testWrapAcceptsADigitOrHyphenLeadingColumnAndQuotesIt",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "x = 1"
+            },
+            "as": "o7324"
+          },
+          "bind": "s11370",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "x = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "method": "wrap",
+            "args": {
+              "condition": {
+                "$obj": "o7324"
+              },
+              "column": "1db._uid"
+            },
+            "as": "o7325"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(x = 1 OR `1db`.`_uid` IS NULL)",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "x = 1"
+            },
+            "as": "o7326"
+          },
+          "bind": "s11372",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "x = 1",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
+            "method": "wrap",
+            "args": {
+              "condition": {
+                "$obj": "o7326"
+              },
+              "column": "-ns._uid"
+            },
+            "as": "o7327"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(x = 1 OR `-ns`.`_uid` IS NULL)",
+              "bindings": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterAcceptsADigitLeadingPermissionsTableAndQuotesIt",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "1db.ns_posts_perms"
+                    }
+                  }
+                ]
+              }
+            },
+            "as": "o7328"
+          },
+          "bind": "s11374",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7328"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7329"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`id` IN (SELECT document_id FROM `1db`.`ns_posts_perms` WHERE role IN (?) AND type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterStillRefusesADigitLeadingUnquotedColumn",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionRoleColumn": "1role"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: 1role"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

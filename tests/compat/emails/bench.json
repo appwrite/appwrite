@@ -1,0 +1,217 @@
+{
+  "lib": "emails",
+  "environment": {
+    "date": "2026-10-18T14:20:18Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse",
+      "description": "Parse a mixed-case address with a plus tag",
+      "php": {
+        "ns": 382.77592563843825,
+        "min": 361.59085616704186,
+        "max": 422.1567763719631,
+        "samples": 15,
+        "calls": 51532,
+        "cpu": 383.8236435612823,
+        "peak": 3008.0,
+        "retained": 0.000486429144350436,
+        "rss": 107859968.0
+      },
+      "rust": {
+        "ns": 87.094933159036,
+        "min": 86.23448437286085,
+        "max": 93.93746052916315,
+        "samples": 15,
+        "calls": 226433,
+        "cpu": 87.62393261288476,
+        "rss": 22577152.0,
+        "allocations": 2.000003238632767,
+        "bytes": 46.00082702904023,
+        "peak": 1650.0,
+        "retained": 0.00048697259969468525
+      },
+      "speedup": 4.394927600891392,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "validate",
+      "description": "Validate an address with the email validator",
+      "php": {
+        "ns": 1312.1383631379715,
+        "min": 1288.5447722229474,
+        "max": 1379.791606839838,
+        "samples": 15,
+        "calls": 15322,
+        "cpu": 1314.919723273724,
+        "peak": 3008.0,
+        "retained": 0.0016359918200408998,
+        "rss": 107859968.0
+      },
+      "rust": {
+        "ns": 182.33373781805773,
+        "min": 176.53980698494559,
+        "max": 187.26536725948958,
+        "samples": 15,
+        "calls": 105484,
+        "cpu": 182.404281850012,
+        "rss": 22585344.0,
+        "allocations": 4.0000069520812005,
+        "bytes": 96.0017753087356,
+        "peak": 1650.0,
+        "retained": 0.0010453402095736478
+      },
+      "speedup": 7.1963553143812184,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "canonical_gmail",
+      "description": "Canonicalise a parsed Gmail address with dots and a plus tag",
+      "php": {
+        "ns": 207.67108165495063,
+        "min": 206.08031499309408,
+        "max": 226.83548413696428,
+        "samples": 15,
+        "calls": 97018,
+        "cpu": 211.21235234698716,
+        "peak": 3008.0,
+        "retained": 0.00025837129879678687,
+        "rss": 122023936.0
+      },
+      "rust": {
+        "ns": 107.27882898964656,
+        "min": 105.56519857626606,
+        "max": 108.66654766154944,
+        "samples": 15,
+        "calls": 184866,
+        "cpu": 107.09258417808935,
+        "rss": 28200960.0,
+        "allocations": 5.000003966837241,
+        "bytes": 61.00101298598264,
+        "peak": 1650.0,
+        "retained": 0.0005964680723695361
+      },
+      "speedup": 1.9358067533995258,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "canonical_outlook",
+      "description": "Canonicalise a parsed Outlook address with a plus tag",
+      "php": {
+        "ns": 213.1672480385576,
+        "min": 208.9550601362281,
+        "max": 227.21049330413635,
+        "samples": 15,
+        "calls": 90877,
+        "cpu": 215.1508815945362,
+        "peak": 123288.0,
+        "retained": 0.0002758307015709879,
+        "rss": 122023936.0
+      },
+      "rust": {
+        "ns": 93.65275925543305,
+        "min": 91.2330481414001,
+        "max": 95.56159957925581,
+        "samples": 15,
+        "calls": 212956,
+        "cpu": 93.43766380535573,
+        "rss": 28200960.0,
+        "allocations": 5.000003443590852,
+        "bytes": 81.00087936788194,
+        "peak": 1650.0,
+        "retained": 0.0005177908425527653
+      },
+      "speedup": 2.276144875317074,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "disposable",
+      "description": "Check a parsed corporate address against the disposable domain list",
+      "php": {
+        "ns": 72804.04290429043,
+        "min": 65709.15841584158,
+        "max": 86122.11221122112,
+        "samples": 15,
+        "calls": 303,
+        "cpu": 72920.57205720572,
+        "peak": 115664.0,
+        "retained": 0.08272827282728273,
+        "rss": 122023936.0
+      },
+      "rust": {
+        "ns": 8.485477076627724,
+        "min": 8.337500178419772,
+        "max": 8.69210947480356,
+        "samples": 15,
+        "calls": 2241904,
+        "cpu": 8.50863935297854,
+        "rss": 28200960.0,
+        "allocations": 3.271029149032846e-7,
+        "bytes": 0.00008353018981484786,
+        "peak": 1650.0,
+        "retained": 0.000049184383750002975
+      },
+      "speedup": 8579.840855951497,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "free",
+      "description": "Check a parsed Gmail address against the free and disposable domain lists",
+      "php": {
+        "ns": 81391.63374485596,
+        "min": 72297.49794238684,
+        "max": 91062.24279835391,
+        "samples": 15,
+        "calls": 243,
+        "cpu": 80487.79149519891,
+        "peak": 3008.0,
+        "retained": 0.10315500685871057,
+        "rss": 122023936.0
+      },
+      "rust": {
+        "ns": 17.669746242703415,
+        "min": 17.281873958714378,
+        "max": 19.512204170863594,
+        "samples": 15,
+        "calls": 1153622,
+        "cpu": 17.76232428530894,
+        "rss": 28200960.0,
+        "allocations": 6.356790468050482e-7,
+        "bytes": 0.0001623293129523073,
+        "peak": 1650.0,
+        "retained": 0.00009558301303777725
+      },
+      "speedup": 4606.270663251093,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

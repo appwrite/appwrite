@@ -1,0 +1,1784 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/DocumentFromStorageTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DocumentFromStorageTest::testDropsNonStringPermissionsAndDuplicates",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1826"
+          },
+          "bind": "s4196",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1826"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1827"
+          },
+          "bind": "s4198",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1827"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o1828"
+          },
+          "bind": "s4200",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1828"
+              }
+            }
+          },
+          "expect": "update(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Document",
+            "method": "fromStorage",
+            "args": {
+              "data": {
+                "$id": "legacy",
+                "$permissions": [
+                  42,
+                  "read(\"any\")",
+                  null,
+                  1.5,
+                  true,
+                  [
+                    "read(\"any\")"
+                  ],
+                  "read(\"any\")",
+                  "update(\"users\")"
+                ]
+              }
+            },
+            "as": "o1829"
+          },
+          "bind": "s4202",
+          "expect": {
+            "$document": {
+              "$id": "legacy",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"users\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1830"
+          },
+          "bind": "s4203",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1830"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o1831"
+          },
+          "bind": "s4205",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1831"
+              }
+            }
+          },
+          "expect": "update(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1829"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "$permissions"
+            }
+          },
+          "expect": [
+            "read(\"any\")",
+            "update(\"users\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1829"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1829"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Update"
+              }
+            }
+          },
+          "expect": [
+            "users"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentFromStorageTest::testTheConstructorStillRejectsNonStringPermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1832"
+          },
+          "bind": "s4210",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1832"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$permissions": [
+                  "read(\"any\")",
+                  42
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Every permission must be of type string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentFromStorageTest::testBuildsNestedDocumentsLikeTheConstructor",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1833"
+          },
+          "bind": "s4213",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1833"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Document",
+            "method": "fromStorage",
+            "args": {
+              "data": {
+                "$id": "parent",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "author": {
+                  "$id": "author",
+                  "name": "Ada"
+                },
+                "category": {
+                  "$collection": "categories",
+                  "name": "Books"
+                },
+                "comments": [
+                  {
+                    "$id": "first",
+                    "body": "one"
+                  },
+                  {
+                    "$collection": "comments",
+                    "body": "two"
+                  },
+                  {
+                    "body": "three"
+                  },
+                  "plain"
+                ],
+                "tags": [
+                  "a",
+                  "b"
+                ],
+                "settings": {
+                  "theme": "dark",
+                  "nested": {
+                    "depth": 2
+                  }
+                },
+                "count": 3
+              }
+            },
+            "as": "o1834"
+          },
+          "bind": "s4215",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "author": {
+                "$document": {
+                  "$id": "author",
+                  "name": "Ada"
+                }
+              },
+              "category": {
+                "$document": {
+                  "$collection": "categories",
+                  "name": "Books"
+                }
+              },
+              "comments": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "body": "one"
+                  }
+                },
+                {
+                  "$document": {
+                    "$collection": "comments",
+                    "body": "two"
+                  }
+                },
+                {
+                  "body": "three"
+                },
+                "plain"
+              ],
+              "tags": [
+                "a",
+                "b"
+              ],
+              "settings": {
+                "theme": "dark",
+                "nested": {
+                  "depth": 2
+                }
+              },
+              "count": 3
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "author": {
+                  "$id": "author",
+                  "name": "Ada"
+                },
+                "category": {
+                  "$collection": "categories",
+                  "name": "Books"
+                },
+                "comments": [
+                  {
+                    "$id": "first",
+                    "body": "one"
+                  },
+                  {
+                    "$collection": "comments",
+                    "body": "two"
+                  },
+                  {
+                    "body": "three"
+                  },
+                  "plain"
+                ],
+                "tags": [
+                  "a",
+                  "b"
+                ],
+                "settings": {
+                  "theme": "dark",
+                  "nested": {
+                    "depth": 2
+                  }
+                },
+                "count": 3
+              }
+            },
+            "as": "o1835"
+          },
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "author": {
+                "$document": {
+                  "$id": "author",
+                  "name": "Ada"
+                }
+              },
+              "category": {
+                "$document": {
+                  "$collection": "categories",
+                  "name": "Books"
+                }
+              },
+              "comments": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "body": "one"
+                  }
+                },
+                {
+                  "$document": {
+                    "$collection": "comments",
+                    "body": "two"
+                  }
+                },
+                {
+                  "body": "three"
+                },
+                "plain"
+              ],
+              "tags": [
+                "a",
+                "b"
+              ],
+              "settings": {
+                "theme": "dark",
+                "nested": {
+                  "depth": 2
+                }
+              },
+              "count": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1834"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "author"
+            },
+            "as": "o1836"
+          },
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "name": "Ada"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1834"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "category"
+            },
+            "as": "o1837"
+          },
+          "expect": {
+            "$document": {
+              "$collection": "categories",
+              "name": "Books"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1834"
+            },
+            "method": "getArray",
+            "args": {
+              "key": "comments"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "body": "one"
+              }
+            },
+            {
+              "$document": {
+                "$collection": "comments",
+                "body": "two"
+              }
+            },
+            {
+              "body": "three"
+            },
+            "plain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentFromStorageTest::testDropsNonStringPermissionsOfNestedDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1838"
+          },
+          "bind": "s4220",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1838"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o1839"
+          },
+          "bind": "s4222",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1839"
+              }
+            }
+          },
+          "expect": "read(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1840"
+          },
+          "bind": "s4224",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o1840"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Document",
+            "method": "fromStorage",
+            "args": {
+              "data": {
+                "$id": "parent",
+                "author": {
+                  "$id": "author",
+                  "$permissions": [
+                    42,
+                    "read(\"any\")"
+                  ],
+                  "publisher": {
+                    "$id": "publisher",
+                    "$permissions": [
+                      false,
+                      "read(\"users\")"
+                    ]
+                  }
+                },
+                "comments": [
+                  {
+                    "$id": "first",
+                    "$permissions": [
+                      null,
+                      "delete(\"any\")"
+                    ]
+                  }
+                ]
+              }
+            },
+            "as": "o1841"
+          },
+          "bind": "s4226",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "author": {
+                "$document": {
+                  "$id": "author",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "publisher": {
+                    "$document": {
+                      "$id": "publisher",
+                      "$permissions": [
+                        "read(\"users\")"
+                      ]
+                    }
+                  }
+                }
+              },
+              "comments": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "$permissions": [
+                      "delete(\"any\")"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1841"
+            },
+            "method": "getDocument",
+            "args": {
+              "key": "author"
+            },
+            "as": "o1842"
+          },
+          "bind": "s4227",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "publisher": {
+                "$document": {
+                  "$id": "publisher",
+                  "$permissions": [
+                    "read(\"users\")"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1843"
+          },
+          "bind": "s4228",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1843"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1842"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o1844"
+          },
+          "bind": "s4231",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1844"
+              }
+            }
+          },
+          "expect": "read(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1842"
+            },
+            "method": "getDocument",
+            "args": {
+              "key": "publisher"
+            },
+            "as": "o1845"
+          },
+          "bind": "s4233",
+          "expect": {
+            "$document": {
+              "$id": "publisher",
+              "$permissions": [
+                "read(\"users\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1845"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"users\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1846"
+          },
+          "bind": "s4235",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o1846"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1841"
+            },
+            "method": "getDocuments",
+            "args": {
+              "key": "comments"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$permissions": [
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "first",
+                "$permissions": [
+                  "delete(\"any\")"
+                ]
+              }
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "delete(\"any\")"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentFromStorageTest::testRejectsWhatTheConstructorRejectsBesidesPermissionEntries#non-string id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Document",
+            "method": "fromStorage",
+            "args": {
+              "data": {
+                "$id": 42
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "$id must be of type string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentFromStorageTest::testRejectsWhatTheConstructorRejectsBesidesPermissionEntries#permissions that are not an array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Document",
+            "method": "fromStorage",
+            "args": {
+              "data": {
+                "$permissions": "read(\"any\")"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "$permissions must be of type array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentFromStorageTest::testJsonFilterDecodesADocumentShapedValueWithANonStringPermission",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1848"
+          },
+          "bind": "s4243",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1848"
+              },
+              "cache": "none"
+            },
+            "as": "o1849"
+          },
+          "bind": "s4244",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "prefs",
+              "size": 1024,
+              "filters": [
+                {
+                  "$enum": "Filter::Json"
+                }
+              ]
+            },
+            "as": "o1850"
+          },
+          "bind": "s4245",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "prefs",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 1024,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "json"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "settings",
+              "size": 1024,
+              "filters": [
+                {
+                  "$enum": "Filter::Json"
+                }
+              ]
+            },
+            "as": "o1851"
+          },
+          "bind": "s4246",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "settings",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 1024,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "json"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "users",
+              "attributes": [
+                {
+                  "$obj": "o1850"
+                },
+                {
+                  "$obj": "o1851"
+                }
+              ]
+            },
+            "as": "o1852"
+          },
+          "bind": "s4247",
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "prefs",
+                    "key": "prefs",
+                    "type": "string",
+                    "size": 1024,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "settings",
+                    "key": "settings",
+                    "type": "string",
+                    "size": 1024,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "prefs": "{\"$id\":\"x\",\"$permissions\":[\"read(\\\"any\\\")\",42]}",
+                "settings": "{\"outer\":{\"$id\":\"y\",\"$permissions\":[7]}}"
+              }
+            },
+            "as": "o1853"
+          },
+          "bind": "s4248",
+          "expect": {
+            "$document": {
+              "prefs": "{\"$id\":\"x\",\"$permissions\":[\"read(\\\"any\\\")\",42]}",
+              "settings": "{\"outer\":{\"$id\":\"y\",\"$permissions\":[7]}}"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1849"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o1852"
+              },
+              "document": {
+                "$obj": "o1853"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "prefs": {
+                "$document": {
+                  "$id": "x",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ]
+                }
+              },
+              "settings": {
+                "outer": {
+                  "$document": {
+                    "$id": "y",
+                    "$permissions": []
+                  }
+                }
+              },
+              "$id": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1853"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "prefs"
+            },
+            "as": "o1854"
+          },
+          "bind": "s4250",
+          "expect": {
+            "$document": {
+              "$id": "x",
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1855"
+          },
+          "bind": "s4251",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1855"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1854"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1853"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "settings"
+            }
+          },
+          "expect": {
+            "outer": {
+              "$document": {
+                "$id": "y",
+                "$permissions": []
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "y",
+                "$permissions": []
+              }
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "DocumentFromStorageTest::testQueryCacheRebuildsCachedDocumentsWithANonStringPermission",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Query",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o1856"
+          },
+          "bind": "s4256",
+          "expect": {
+            "$queryCache": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Scope",
+            "args": {},
+            "as": "o1857"
+          },
+          "bind": "s4257",
+          "expect": {
+            "$value": "Cache\\Scope",
+            "fields": {
+              "hostname": "",
+              "database": "",
+              "namespace": "",
+              "tenant": null,
+              "name": "default",
+              "writerTimeout": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1856"
+            },
+            "method": "getEntry",
+            "args": {
+              "scope": {
+                "$obj": "o1857"
+              },
+              "collection": "users",
+              "queries": []
+            },
+            "as": "o1858"
+          },
+          "bind": "s4258",
+          "expect": {
+            "$value": "Cache\\Entry",
+            "fields": {
+              "key": "default:qcache:users:971e90168d06981774b24c4d40887058",
+              "collection": "users",
+              "field": "6aa9cdaf66b15f8dbe47f61730b2783e",
+              "epoch": "<masked>",
+              "slot": "431"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/fields/epoch"
+            ],
+            "reason": "a cache identifies a key's state by a random CAS version (utopia-php/database 10.0.0), its own in each runtime"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {},
+            "as": "o1859"
+          },
+          "bind": "s4259",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1860"
+          },
+          "bind": "s4260",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1860"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1859"
+            },
+            "method": "exchangeArray",
+            "args": {
+              "array": {
+                "$id": "legacy",
+                "$permissions": [
+                  "read(\"any\")",
+                  42
+                ]
+              }
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1856"
+            },
+            "method": "getLease",
+            "args": {
+              "entry": {
+                "$obj": "o1858"
+              }
+            }
+          },
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a cache identifies a key's state by a random CAS version (utopia-php/database 10.0.0), its own in each runtime"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1856"
+            },
+            "method": "set",
+            "args": {
+              "entry": {
+                "$obj": "o1858"
+              },
+              "results": [
+                {
+                  "$obj": "o1859"
+                }
+              ],
+              "version": "79787697ee9f3cb1121f6660b6460038"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1856"
+            },
+            "method": "get",
+            "args": {
+              "entry": {
+                "$obj": "o1858"
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "legacy",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "legacy"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1861"
+          },
+          "bind": "s4267",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1861"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "legacy",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DocumentFromStorageTest::testAStorageRebuildKeepsTheMappedTypeAndDropsNonStringPermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1876"
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1877"
+          },
+          "bind": "s4303",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1877"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1878"
+          },
+          "bind": "s4305",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1878"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1879"
+          },
+          "bind": "s4307",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o1879"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1880"
+          },
+          "bind": "s4309",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1880"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1881"
+          },
+          "bind": "s4311",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1881"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "x",
+                "$permissions": [
+                  "update(\"any\")"
+                ]
+              }
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "update(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1882"
+          },
+          "bind": "s4314",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o1882"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "phone",
+                "$permissions": [
+                  "delete(\"any\")"
+                ]
+              }
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "delete(\"any\")"
+          ]
+        }
+      ]
+    }
+  ]
+}

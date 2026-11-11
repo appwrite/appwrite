@@ -1,0 +1,3649 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/SelectProjectionTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SelectProjectionTest::testAMalformedSelectionIsRefusedRatherThanFatal#nested array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1"
+          },
+          "bind": "s0",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1"
+              },
+              "cache": "memory"
+            },
+            "as": "o2"
+          },
+          "bind": "s1",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000001"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o3"
+          },
+          "bind": "s5",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3"
+              }
+            },
+            "as": "o4"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o5"
+          },
+          "bind": "s7",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o5"
+              }
+            },
+            "as": "o6"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o7"
+          },
+          "bind": "s9",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o7"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o8"
+          },
+          "bind": "s11",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o8"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                [
+                  "sku"
+                ]
+              ]
+            },
+            "as": "o9"
+          },
+          "bind": "s13",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                [
+                  "sku"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o9"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testAMalformedSelectionIsRefusedRatherThanFatal#nested wildcard",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o10"
+          },
+          "bind": "s15",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o10"
+              },
+              "cache": "memory"
+            },
+            "as": "o11"
+          },
+          "bind": "s16",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000002"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o12"
+          },
+          "bind": "s20",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o12"
+              }
+            },
+            "as": "o13"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o14"
+          },
+          "bind": "s22",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o14"
+              }
+            },
+            "as": "o15"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o16"
+          },
+          "bind": "s24",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o16"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o17"
+          },
+          "bind": "s26",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o17"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                [
+                  "*"
+                ]
+              ]
+            },
+            "as": "o18"
+          },
+          "bind": "s28",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                [
+                  "*"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o18"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testAMalformedSelectionIsRefusedRatherThanFatal#mixed flat and nested",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o19"
+          },
+          "bind": "s30",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o19"
+              },
+              "cache": "memory"
+            },
+            "as": "o20"
+          },
+          "bind": "s31",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000003"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o21"
+          },
+          "bind": "s35",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o21"
+              }
+            },
+            "as": "o22"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o23"
+          },
+          "bind": "s37",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o23"
+              }
+            },
+            "as": "o24"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o25"
+          },
+          "bind": "s39",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o25"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o26"
+          },
+          "bind": "s41",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o26"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                "sku",
+                [
+                  "x"
+                ]
+              ]
+            },
+            "as": "o27"
+          },
+          "bind": "s43",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "sku",
+                [
+                  "x"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o27"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testAMalformedSelectionIsRefusedRatherThanFatal#two nested values",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o28"
+          },
+          "bind": "s45",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o28"
+              },
+              "cache": "memory"
+            },
+            "as": "o29"
+          },
+          "bind": "s46",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o29"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o29"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000004"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o29"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o30"
+          },
+          "bind": "s50",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o29"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o30"
+              }
+            },
+            "as": "o31"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o32"
+          },
+          "bind": "s52",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o29"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o32"
+              }
+            },
+            "as": "o33"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o34"
+          },
+          "bind": "s54",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o34"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o35"
+          },
+          "bind": "s56",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o29"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o35"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                [
+                  "a"
+                ],
+                [
+                  "b"
+                ]
+              ]
+            },
+            "as": "o36"
+          },
+          "bind": "s58",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                [
+                  "a"
+                ],
+                [
+                  "b"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o29"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o36"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testTheRefusalIsCatchableAsAnException#nested array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o37"
+          },
+          "bind": "s60",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o37"
+              },
+              "cache": "memory"
+            },
+            "as": "o38"
+          },
+          "bind": "s61",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o38"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o38"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000005"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o38"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o39"
+          },
+          "bind": "s65",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o38"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o39"
+              }
+            },
+            "as": "o40"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o41"
+          },
+          "bind": "s67",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o38"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o41"
+              }
+            },
+            "as": "o42"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o43"
+          },
+          "bind": "s69",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o43"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o44"
+          },
+          "bind": "s71",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o38"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o44"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                [
+                  "sku"
+                ]
+              ]
+            },
+            "as": "o45"
+          },
+          "bind": "s73",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                [
+                  "sku"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o38"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o45"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testTheRefusalIsCatchableAsAnException#nested wildcard",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o46"
+          },
+          "bind": "s75",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o46"
+              },
+              "cache": "memory"
+            },
+            "as": "o47"
+          },
+          "bind": "s76",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o47"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o47"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000006"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o47"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o48"
+          },
+          "bind": "s80",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o47"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o48"
+              }
+            },
+            "as": "o49"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o50"
+          },
+          "bind": "s82",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o47"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o50"
+              }
+            },
+            "as": "o51"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o52"
+          },
+          "bind": "s84",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o52"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o53"
+          },
+          "bind": "s86",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o47"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o53"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                [
+                  "*"
+                ]
+              ]
+            },
+            "as": "o54"
+          },
+          "bind": "s88",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                [
+                  "*"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o47"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o54"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testTheRefusalIsCatchableAsAnException#mixed flat and nested",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o55"
+          },
+          "bind": "s90",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o55"
+              },
+              "cache": "memory"
+            },
+            "as": "o56"
+          },
+          "bind": "s91",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o56"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o56"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000007"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o56"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o57"
+          },
+          "bind": "s95",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o56"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o57"
+              }
+            },
+            "as": "o58"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o59"
+          },
+          "bind": "s97",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o56"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o59"
+              }
+            },
+            "as": "o60"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o61"
+          },
+          "bind": "s99",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o61"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o62"
+          },
+          "bind": "s101",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o56"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o62"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                "sku",
+                [
+                  "x"
+                ]
+              ]
+            },
+            "as": "o63"
+          },
+          "bind": "s103",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "sku",
+                [
+                  "x"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o56"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o63"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testTheRefusalIsCatchableAsAnException#two nested values",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o64"
+          },
+          "bind": "s105",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o64"
+              },
+              "cache": "memory"
+            },
+            "as": "o65"
+          },
+          "bind": "s106",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o65"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o65"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000008"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o65"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o66"
+          },
+          "bind": "s110",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o65"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o66"
+              }
+            },
+            "as": "o67"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o68"
+          },
+          "bind": "s112",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o65"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o68"
+              }
+            },
+            "as": "o69"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o70"
+          },
+          "bind": "s114",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o70"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o71"
+          },
+          "bind": "s116",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o65"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o71"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                [
+                  "a"
+                ],
+                [
+                  "b"
+                ]
+              ]
+            },
+            "as": "o72"
+          },
+          "bind": "s118",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                [
+                  "a"
+                ],
+                [
+                  "b"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o65"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o72"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testTheLegitimateFlatFormStillProjects",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o73"
+          },
+          "bind": "s120",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o73"
+              },
+              "cache": "memory"
+            },
+            "as": "o74"
+          },
+          "bind": "s121",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o74"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o74"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000009"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o74"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o75"
+          },
+          "bind": "s125",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o74"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o75"
+              }
+            },
+            "as": "o76"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o77"
+          },
+          "bind": "s127",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o74"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o77"
+              }
+            },
+            "as": "o78"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o79"
+          },
+          "bind": "s129",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o79"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o80"
+          },
+          "bind": "s131",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o74"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o80"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "sku"
+              ]
+            },
+            "as": "o81"
+          },
+          "bind": "s133",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "sku"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o74"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o81"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "sku": "abc",
+                "$id": "widget",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "widgets"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "sku": "abc",
+                "$id": "widget",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "widgets"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "sku"
+            }
+          },
+          "expect": "abc"
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testTheWildcardStillProjects",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o82"
+          },
+          "bind": "s136",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o82"
+              },
+              "cache": "memory"
+            },
+            "as": "o83"
+          },
+          "bind": "s137",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o83"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o83"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000010"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o83"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o84"
+          },
+          "bind": "s141",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o83"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o84"
+              }
+            },
+            "as": "o85"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o86"
+          },
+          "bind": "s143",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o83"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o86"
+              }
+            },
+            "as": "o87"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o88"
+          },
+          "bind": "s145",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o88"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o89"
+          },
+          "bind": "s147",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o83"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o89"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "*"
+              ]
+            },
+            "as": "o90"
+          },
+          "bind": "s149",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o83"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o90"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "sku": "abc",
+                "$id": "widget",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "widgets"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SelectProjectionTest::testAnUnknownAttributeIsStillRefusedBySchema",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o91"
+          },
+          "bind": "s151",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o91"
+              },
+              "cache": "memory"
+            },
+            "as": "o92"
+          },
+          "bind": "s152",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o92"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o92"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_u000000000011"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o92"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "widgets"
+            },
+            "as": "o93"
+          },
+          "bind": "s156",
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o92"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o93"
+              }
+            },
+            "as": "o94"
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "sku"
+            },
+            "as": "o95"
+          },
+          "bind": "s158",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o92"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "widgets",
+              "attribute": {
+                "$obj": "o95"
+              }
+            },
+            "as": "o96"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "sku",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o97"
+          },
+          "bind": "s160",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o97"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "widget",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "sku": "abc"
+              }
+            },
+            "as": "o98"
+          },
+          "bind": "s162",
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o92"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "widgets",
+              "document": {
+                "$obj": "o98"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "nope"
+              ]
+            },
+            "as": "o99"
+          },
+          "bind": "s164",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "nope"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o92"
+            },
+            "method": "find",
+            "args": {
+              "collection": "widgets",
+              "queries": [
+                {
+                  "$obj": "o99"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: nope"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

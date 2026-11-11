@@ -1,0 +1,155 @@
+{
+  "lib": "pools",
+  "environment": {
+    "date": "2026-10-19T07:41:47Z",
+    "commit": "7b1eced40d",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "pop_reclaim_stack",
+      "description": "Pop and reclaim a connection of a Stack pool of 8",
+      "php": {
+        "ns": 724.9451832630555,
+        "min": 710.690746489968,
+        "max": 885.1729298920346,
+        "samples": 15,
+        "calls": 21581,
+        "cpu": 734.6523948534976,
+        "peak": 3008.0,
+        "retained": 0.0011615155306365166,
+        "rss": 106958848.0
+      },
+      "rust": {
+        "ns": 153.3895629737683,
+        "min": 132.3199575031409,
+        "max": 273.27068138317156,
+        "samples": 15,
+        "calls": 118597,
+        "cpu": 166.08343325154374,
+        "rss": 22585344.0,
+        "allocations": 2.0000061834054264,
+        "bytes": 235.00157901689474,
+        "peak": 1650.0,
+        "retained": 0.0009297593249969786
+      },
+      "speedup": 4.726170211378925,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "pop_reclaim_channel",
+      "description": "Pop and reclaim a connection of a waiting (Swoole) pool of 8, 100 times in one coroutine",
+      "php": {
+        "ns": 118765.38095238095,
+        "min": 115089.53571428571,
+        "max": 136142.85714285713,
+        "samples": 15,
+        "calls": 168,
+        "cpu": 120405.15873015873,
+        "peak": 11304.0,
+        "retained": 0.1492063492063492,
+        "rss": 108326912.0
+      },
+      "rust": {
+        "ns": 12753.23547979798,
+        "min": 12272.700757575758,
+        "max": 12932.212752525253,
+        "samples": 15,
+        "calls": 1584,
+        "cpu": 12701.001262626263,
+        "rss": 22585344.0,
+        "allocations": 101.00046296296296,
+        "bytes": 2292.118223905724,
+        "peak": 1650.0,
+        "retained": 0.06961279461279461
+      },
+      "speedup": 9.312568652912717,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "use_stack",
+      "description": "Run a callback with a connection of a Stack pool of 8",
+      "php": {
+        "ns": 812.98941047592,
+        "min": 801.853856453118,
+        "max": 848.0426826794336,
+        "samples": 15,
+        "calls": 24647,
+        "cpu": 814.7036150444274,
+        "peak": 3008.0,
+        "retained": 0.0010170270891656861,
+        "rss": 108326912.0
+      },
+      "rust": {
+        "ns": 134.17320733596262,
+        "min": 129.95214573001678,
+        "max": 139.30052585679513,
+        "samples": 15,
+        "calls": 153654,
+        "cpu": 134.30246614688411,
+        "rss": 22585344.0,
+        "allocations": 2.000004772627679,
+        "bytes": 299.001218755559,
+        "peak": 1650.0,
+        "retained": 0.0007176296527696426
+      },
+      "speedup": 6.059253010477997,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "pop_reclaim_telemetry",
+      "description": "Pop and reclaim a connection of a Stack pool recording telemetry",
+      "php": {
+        "ns": 788.9282971585627,
+        "min": 752.0360939331474,
+        "max": 1021.3630006871185,
+        "samples": 15,
+        "calls": 24741,
+        "cpu": 790.0758524985516,
+        "peak": 16900504.0,
+        "retained": 45.20860649663851,
+        "rss": 133640192.0
+      },
+      "rust": {
+        "ns": 147.1795141941625,
+        "min": 143.53954529271147,
+        "max": 164.44599533521765,
+        "samples": 15,
+        "calls": 137627,
+        "cpu": 148.58524611207588,
+        "rss": 197820416.0,
+        "allocations": 2.000006297213967,
+        "bytes": 300.01657232955745,
+        "peak": 67110514.0,
+        "retained": 32.508407022846775
+      },
+      "speedup": 5.360313230262405,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

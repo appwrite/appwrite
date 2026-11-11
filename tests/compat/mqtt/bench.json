@@ -1,0 +1,217 @@
+{
+  "lib": "mqtt",
+  "environment": {
+    "date": "2026-10-18T14:21:25Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "decode",
+      "description": "Parse a v5 PUBLISH with three properties and decode it",
+      "php": {
+        "ns": 1606.0133354251648,
+        "min": 1562.571932852212,
+        "max": 1710.9121430812677,
+        "samples": 15,
+        "calls": 12748,
+        "cpu": 1608.3150298085975,
+        "peak": 3008.0,
+        "retained": 0.0019663215144859326,
+        "rss": 107601920.0
+      },
+      "rust": {
+        "ns": 113.74189348455211,
+        "min": 112.11775812811226,
+        "max": 180.9652970177896,
+        "samples": 15,
+        "calls": 162061,
+        "cpu": 118.40622029153631,
+        "rss": 22044672.0,
+        "allocations": 6.000004525045096,
+        "bytes": 366.0011555319705,
+        "peak": 1650.0,
+        "retained": 0.0006804022353722775
+      },
+      "speedup": 14.119804816184866,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "encode",
+      "description": "Encode a v5 PUBLISH with three properties",
+      "php": {
+        "ns": 1098.1909528705157,
+        "min": 1085.9621773713543,
+        "max": 1141.3636166874087,
+        "samples": 15,
+        "calls": 18481,
+        "cpu": 1099.4679220099922,
+        "peak": 3008.0,
+        "retained": 0.001356347960968923,
+        "rss": 107601920.0
+      },
+      "rust": {
+        "ns": 179.20003279375462,
+        "min": 176.25428823888427,
+        "max": 187.24930541005858,
+        "samples": 15,
+        "calls": 109777,
+        "cpu": 180.9562403782213,
+        "rss": 22044672.0,
+        "allocations": 11.000006680209273,
+        "bytes": 884.0017058825316,
+        "peak": 1650.0,
+        "retained": 0.0010044605579189326
+      },
+      "speedup": 6.128296606588508,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "properties",
+      "description": "Parse a property block of three properties and merge its User Properties",
+      "php": {
+        "ns": 1044.381485879498,
+        "min": 1033.436160875626,
+        "max": 1064.639372192679,
+        "samples": 15,
+        "calls": 19369,
+        "cpu": 1047.0029428468172,
+        "peak": 3008.0,
+        "retained": 0.001294164214294319,
+        "rss": 107601920.0
+      },
+      "rust": {
+        "ns": 90.03374888138717,
+        "min": 88.94670086742333,
+        "max": 95.77171880953014,
+        "samples": 15,
+        "calls": 225726,
+        "cpu": 90.65103000983493,
+        "rss": 22044672.0,
+        "allocations": 7.00000324877654,
+        "bytes": 466.0008296193911,
+        "peak": 1650.0,
+        "retained": 0.0004884978543307668
+      },
+      "speedup": 11.599888917825623,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "connect",
+      "description": "Decode a v5 CONNECT with authentication and a User Property",
+      "php": {
+        "ns": 1726.9598485515542,
+        "min": 1701.832262041032,
+        "max": 1759.7259839746412,
+        "samples": 15,
+        "calls": 11357,
+        "cpu": 1726.7764374394646,
+        "peak": 123288.0,
+        "retained": 0.002207155645563676,
+        "rss": 107601920.0
+      },
+      "rust": {
+        "ns": 129.7635234979448,
+        "min": 127.3533951513509,
+        "max": 141.6813468326332,
+        "samples": 15,
+        "calls": 154971,
+        "cpu": 131.6431599030356,
+        "rss": 22044672.0,
+        "allocations": 8.00000473206815,
+        "bytes": 640.0012083981304,
+        "peak": 1650.0,
+        "retained": 0.0007115309746124544
+      },
+      "speedup": 13.308515382436466,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "match",
+      "description": "Find the subscribers of a topic among 10,000 subscriptions (exact, + and # filters)",
+      "php": {
+        "ns": 5638.09982788296,
+        "min": 5600.760183591509,
+        "max": 5698.663798049341,
+        "samples": 15,
+        "calls": 3486,
+        "cpu": 5646.5672212660165,
+        "peak": 50128.0,
+        "retained": 0.007190667431631287,
+        "rss": 115478528.0
+      },
+      "rust": {
+        "ns": 546.0142927124456,
+        "min": 533.3220470852664,
+        "max": 955.2896579546436,
+        "samples": 15,
+        "calls": 34703,
+        "cpu": 601.0748350286718,
+        "rss": 28995584.0,
+        "allocations": 5.000021131698508,
+        "bytes": 30800.005396267374,
+        "peak": 30800.0,
+        "retained": 0.003177439030247145
+      },
+      "speedup": 10.325919858021416,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "fanout",
+      "description": "Dispatch a QoS 0 PUBLISH through the broker to 1,000 subscribers on the in-process adapter",
+      "php": {
+        "ns": 401860.82,
+        "min": 394065.0,
+        "max": 425362.5,
+        "samples": 15,
+        "calls": 50,
+        "cpu": 402845.3333333333,
+        "peak": 586008.0,
+        "retained": 0.5013333333333333,
+        "rss": 115871744.0
+      },
+      "rust": {
+        "ns": 70011.17549668874,
+        "min": 66111.61589403973,
+        "max": 76605.96026490066,
+        "samples": 15,
+        "calls": 302,
+        "cpu": 70280.09558498896,
+        "rss": 29126656.0,
+        "allocations": 3025.0024282560707,
+        "bytes": 405708.6200883002,
+        "peak": 130312.0,
+        "retained": 0.365121412803532
+      },
+      "speedup": 5.739952474001904,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

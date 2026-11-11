@@ -1,0 +1,468 @@
+{
+  "source": "packages/openapi/tests/ValueTest.php",
+  "cases": [
+    {
+      "name": "empty arrays read as an object",
+      "op": "value.object",
+      "args": {
+        "value": [],
+        "location": "#/x"
+      },
+      "expect": []
+    },
+    {
+      "name": "empty arrays read as a list",
+      "op": "value.list",
+      "args": {
+        "value": [],
+        "location": "#/x"
+      },
+      "expect": []
+    },
+    {
+      "name": "object accepts a map",
+      "op": "value.object",
+      "args": {
+        "value": {
+          "a": 1
+        },
+        "location": "#/x"
+      },
+      "expect": {
+        "$array": [
+          [
+            "a",
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "object rejects a list",
+      "op": "value.object",
+      "args": {
+        "value": [
+          1,
+          2
+        ],
+        "location": "#/paths"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected an object at #/paths"
+        }
+      }
+    },
+    {
+      "name": "object rejects a text",
+      "op": "value.object",
+      "args": {
+        "value": "text",
+        "location": "#/paths"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected an object at #/paths"
+        }
+      }
+    },
+    {
+      "name": "object rejects a int",
+      "op": "value.object",
+      "args": {
+        "value": 7,
+        "location": "#/paths"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected an object at #/paths"
+        }
+      }
+    },
+    {
+      "name": "object rejects a bool",
+      "op": "value.object",
+      "args": {
+        "value": true,
+        "location": "#/paths"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected an object at #/paths"
+        }
+      }
+    },
+    {
+      "name": "object rejects a null",
+      "op": "value.object",
+      "args": {
+        "value": null,
+        "location": "#/paths"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected an object at #/paths"
+        }
+      }
+    },
+    {
+      "name": "object accepts stdClass",
+      "op": "value.object",
+      "args": {
+        "value": {
+          "$object": [
+            [
+              "a",
+              1
+            ]
+          ]
+        },
+        "location": "#/x"
+      },
+      "expect": {
+        "$array": [
+          [
+            "a",
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "list accepts a list",
+      "op": "value.list",
+      "args": {
+        "value": [
+          1,
+          2
+        ],
+        "location": "#/x"
+      },
+      "expect": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "list rejects a map",
+      "op": "value.list",
+      "args": {
+        "value": {
+          "a": 1
+        },
+        "location": "#/tags"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected a list at #/tags"
+        }
+      }
+    },
+    {
+      "name": "list rejects a text",
+      "op": "value.list",
+      "args": {
+        "value": "text",
+        "location": "#/tags"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected a list at #/tags"
+        }
+      }
+    },
+    {
+      "name": "list rejects a int",
+      "op": "value.list",
+      "args": {
+        "value": 7,
+        "location": "#/tags"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected a list at #/tags"
+        }
+      }
+    },
+    {
+      "name": "list rejects a null",
+      "op": "value.list",
+      "args": {
+        "value": null,
+        "location": "#/tags"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected a list at #/tags"
+        }
+      }
+    },
+    {
+      "name": "string list accepts strings",
+      "op": "value.string_list",
+      "args": {
+        "value": [
+          "first",
+          "second"
+        ],
+        "location": "#/tags"
+      },
+      "expect": [
+        "first",
+        "second"
+      ]
+    },
+    {
+      "name": "string list rejects non-string items",
+      "op": "value.string_list",
+      "args": {
+        "value": [
+          "first",
+          2
+        ],
+        "location": "#/tags"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected string at #/tags/1"
+        }
+      }
+    },
+    {
+      "name": "required string reads the key",
+      "op": "value.required_string",
+      "args": {
+        "data": {
+          "title": "Pets"
+        },
+        "key": "title",
+        "location": "#/info"
+      },
+      "expect": "Pets"
+    },
+    {
+      "name": "required string names the missing key",
+      "op": "value.required_string",
+      "args": {
+        "data": [],
+        "key": "title",
+        "location": "#/info"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected string #/info/title"
+        }
+      }
+    },
+    {
+      "name": "required string rejects non-strings",
+      "op": "value.required_string",
+      "args": {
+        "data": {
+          "title": 7
+        },
+        "key": "title",
+        "location": "#/info"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected string #/info/title"
+        }
+      }
+    },
+    {
+      "name": "optional string reads the key",
+      "op": "value.optional_string",
+      "args": {
+        "data": {
+          "title": "Pets"
+        },
+        "key": "title"
+      },
+      "expect": "Pets"
+    },
+    {
+      "name": "optional string: missing",
+      "op": "value.optional_string",
+      "args": {
+        "data": [],
+        "key": "title"
+      },
+      "expect": null
+    },
+    {
+      "name": "optional string: null",
+      "op": "value.optional_string",
+      "args": {
+        "data": {
+          "title": null
+        },
+        "key": "title"
+      },
+      "expect": null
+    },
+    {
+      "name": "optional string rejects wrong types",
+      "op": "value.optional_string",
+      "args": {
+        "data": {
+          "title": 7
+        },
+        "key": "title"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected 'title' to be a string"
+        }
+      }
+    },
+    {
+      "name": "nullable int: null",
+      "op": "value.nullable_int",
+      "args": {
+        "value": null,
+        "location": "#/x"
+      },
+      "expect": null
+    },
+    {
+      "name": "nullable int: integer",
+      "op": "value.nullable_int",
+      "args": {
+        "value": 3,
+        "location": "#/x"
+      },
+      "expect": 3
+    },
+    {
+      "name": "nullable int rejects floats",
+      "op": "value.nullable_int",
+      "args": {
+        "value": 3.5,
+        "location": "#/x/minLength"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected integer at #/x/minLength"
+        }
+      }
+    },
+    {
+      "name": "nullable number: null",
+      "op": "value.nullable_number",
+      "args": {
+        "value": null,
+        "location": "#/x"
+      },
+      "expect": null
+    },
+    {
+      "name": "nullable number: integer",
+      "op": "value.nullable_number",
+      "args": {
+        "value": 3,
+        "location": "#/x"
+      },
+      "expect": 3
+    },
+    {
+      "name": "nullable number: float",
+      "op": "value.nullable_number",
+      "args": {
+        "value": 3.5,
+        "location": "#/x"
+      },
+      "expect": 3.5
+    },
+    {
+      "name": "nullable number rejects strings",
+      "op": "value.nullable_number",
+      "args": {
+        "value": "3",
+        "location": "#/x/minimum"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected number at #/x/minimum"
+        }
+      }
+    },
+    {
+      "name": "extensions ignore integer and numeric string keys",
+      "op": "value.extensions",
+      "args": {
+        "data": {
+          "$array": [
+            [
+              0,
+              "zero"
+            ],
+            [
+              "200",
+              "OK"
+            ],
+            [
+              "0200",
+              "padded"
+            ],
+            [
+              "default",
+              "fallback"
+            ],
+            [
+              "x-owner",
+              "team"
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "x-owner",
+            "team"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "extensions keep only prefixed keys, case-insensitively",
+      "op": "value.extensions",
+      "args": {
+        "data": {
+          "title": "Pets",
+          "x-owner": "team",
+          "X-Trace": true,
+          "xenon": 1
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "x-owner",
+            "team"
+          ],
+          [
+            "X-Trace",
+            true
+          ]
+        ]
+      }
+    }
+  ]
+}

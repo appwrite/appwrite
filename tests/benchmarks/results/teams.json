@@ -1,0 +1,1902 @@
+{
+  "service": "teams",
+  "file": "tests/benchmarks/results/teams.json",
+  "workload": {
+    "script": "tests/benchmarks/api/teams.js",
+    "duration": "60s",
+    "hashing": false,
+    "error_budget": 0.25,
+    "seed": 200,
+    "run": "teams-20261019-192652"
+  },
+  "environment": {
+    "date": "2026-10-19T18:38:55Z",
+    "commit": "bb4e21c120",
+    "branch": "feat/rust-storage",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "load_max": 8.0,
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "f49f76c97837",
+      "created": "2026-10-16T10:47:34.041512547Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "9f1cfd1f5b19",
+      "created": "2026-10-19T17:03:51.672841756Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-14T04:17:58.349428089Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 200,
+      "rps": 200.0,
+      "requests": 12000,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 4.769,
+        "p50": 3.738,
+        "p90": 7.979,
+        "p95": 10.179,
+        "p99": 21.271,
+        "max": 136.514
+      },
+      "cpu_ms_per_request": 3.57,
+      "db_cpu_ms_per_request": 1.79,
+      "memory_mib": {
+        "baseline": 3547.1,
+        "avg": 3045.0,
+        "peak": 3548.2
+      },
+      "load_before": 7.8,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 3273,
+          "rps": 54.55,
+          "avg": 2.981,
+          "p50": 2.629,
+          "p90": 3.603,
+          "p95": 4.214,
+          "p99": 9.991,
+          "max": 59.324
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 1273,
+          "rps": 21.22,
+          "avg": 4.176,
+          "p50": 3.769,
+          "p90": 4.983,
+          "p95": 5.904,
+          "p99": 11.978,
+          "max": 57.748
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 480,
+          "rps": 8.0,
+          "avg": 6.173,
+          "p50": 5.672,
+          "p90": 7.216,
+          "p95": 7.832,
+          "p99": 16.767,
+          "max": 34.511
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 312,
+          "rps": 5.2,
+          "avg": 4.513,
+          "p50": 3.952,
+          "p90": 5.299,
+          "p95": 6.252,
+          "p99": 15.11,
+          "max": 52.971
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 520,
+          "rps": 8.67,
+          "avg": 4.569,
+          "p50": 4.133,
+          "p90": 5.437,
+          "p95": 6.435,
+          "p99": 11.638,
+          "max": 69.505
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 155,
+          "rps": 2.58,
+          "avg": 6.296,
+          "p50": 5.034,
+          "p90": 7.045,
+          "p95": 8.263,
+          "p99": 40.222,
+          "max": 83.94
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 1012,
+          "rps": 16.87,
+          "avg": 2.995,
+          "p50": 2.624,
+          "p90": 3.657,
+          "p95": 4.454,
+          "p99": 8.471,
+          "max": 46.6
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 528,
+          "rps": 8.8,
+          "avg": 4.678,
+          "p50": 4.139,
+          "p90": 5.476,
+          "p95": 7.333,
+          "p99": 15.995,
+          "max": 36.982
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 1627,
+          "rps": 27.12,
+          "avg": 5.39,
+          "p50": 4.282,
+          "p90": 8.128,
+          "p95": 9.531,
+          "p99": 18.354,
+          "max": 136.514
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 1719,
+          "rps": 28.65,
+          "avg": 4.829,
+          "p50": 3.963,
+          "p90": 8.116,
+          "p95": 9.235,
+          "p99": 13.139,
+          "max": 42.735
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 324,
+          "rps": 5.4,
+          "avg": 10.047,
+          "p50": 9.579,
+          "p90": 12.18,
+          "p95": 13.633,
+          "p99": 18.65,
+          "max": 54.527
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 456,
+          "rps": 7.6,
+          "avg": 6.605,
+          "p50": 5.739,
+          "p90": 9.365,
+          "p95": 11.007,
+          "p99": 19.092,
+          "max": 47.3
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 161,
+          "rps": 2.68,
+          "avg": 12.509,
+          "p50": 10.059,
+          "p90": 13.418,
+          "p95": 17.047,
+          "p99": 83.625,
+          "max": 112.136
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 160,
+          "rps": 2.67,
+          "avg": 22.386,
+          "p50": 20.066,
+          "p90": 25.811,
+          "p95": 38.081,
+          "p99": 72.345,
+          "max": 88.77
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 6.69,
+        "p50": 4.863,
+        "p90": 10.394,
+        "p95": 15.675,
+        "p99": 36.879,
+        "max": 98.617
+      },
+      "cpu_ms_per_request": 4.447,
+      "db_cpu_ms_per_request": 2.484,
+      "memory_mib": {
+        "baseline": 3902.5,
+        "avg": 3640.7,
+        "peak": 3882.0
+      },
+      "load_before": 6.44,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 846,
+          "rps": 14.1,
+          "avg": 4.088,
+          "p50": 3.397,
+          "p90": 5.3,
+          "p95": 6.811,
+          "p99": 23.181,
+          "max": 35.317
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 313,
+          "rps": 5.22,
+          "avg": 6.096,
+          "p50": 4.551,
+          "p90": 7.722,
+          "p95": 9.996,
+          "p99": 43.321,
+          "max": 54.515
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 115,
+          "rps": 1.92,
+          "avg": 9.608,
+          "p50": 7.064,
+          "p90": 10.074,
+          "p95": 20.684,
+          "p99": 65.355,
+          "max": 76.31
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 99,
+          "rps": 1.65,
+          "avg": 6.76,
+          "p50": 4.906,
+          "p90": 9.095,
+          "p95": 13.64,
+          "p99": 24.336,
+          "max": 71.066
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 126,
+          "rps": 2.1,
+          "avg": 6.782,
+          "p50": 5.309,
+          "p90": 8.408,
+          "p95": 15.269,
+          "p99": 35.836,
+          "max": 39.152
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 52,
+          "rps": 0.87,
+          "avg": 5.842,
+          "p50": 5.255,
+          "p90": 6.667,
+          "p95": 8.028,
+          "p99": 18.704,
+          "max": 25.038
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 222,
+          "rps": 3.7,
+          "avg": 4.241,
+          "p50": 3.429,
+          "p90": 5.404,
+          "p95": 6.772,
+          "p99": 28.044,
+          "max": 39.998
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 140,
+          "rps": 2.33,
+          "avg": 6.026,
+          "p50": 5.315,
+          "p90": 8.164,
+          "p95": 9.348,
+          "p99": 17.484,
+          "max": 28.281
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 385,
+          "rps": 6.42,
+          "avg": 7.753,
+          "p50": 6.337,
+          "p90": 10.491,
+          "p95": 13.053,
+          "p99": 46.919,
+          "max": 84.351
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 431,
+          "rps": 7.18,
+          "avg": 7.752,
+          "p50": 6.032,
+          "p90": 10.515,
+          "p95": 16.088,
+          "p99": 50.35,
+          "max": 81.096
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 80,
+          "rps": 1.33,
+          "avg": 12.216,
+          "p50": 10.305,
+          "p90": 15.574,
+          "p95": 20.424,
+          "p99": 45.736,
+          "max": 98.617
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 110,
+          "rps": 1.83,
+          "avg": 10.825,
+          "p50": 8.634,
+          "p90": 12.783,
+          "p95": 25.624,
+          "p99": 64.041,
+          "max": 64.74
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 36,
+          "rps": 0.6,
+          "avg": 11.978,
+          "p50": 9.863,
+          "p90": 18.908,
+          "p95": 23.171,
+          "p99": 29.927,
+          "max": 33.125
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 46,
+          "rps": 0.77,
+          "avg": 23.186,
+          "p50": 20.715,
+          "p90": 28.71,
+          "p95": 31.706,
+          "p99": 54.814,
+          "max": 69.489
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 500,
+      "rps": 500.0,
+      "requests": 30000,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 11.122,
+        "p50": 6.276,
+        "p90": 21.185,
+        "p95": 36.231,
+        "p99": 88.97,
+        "max": 382.325
+      },
+      "cpu_ms_per_request": 5.464,
+      "db_cpu_ms_per_request": 2.503,
+      "memory_mib": {
+        "baseline": 2846.7,
+        "avg": 2865.4,
+        "peak": 2881.5
+      },
+      "load_before": 9.69,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 8106,
+          "rps": 135.1,
+          "avg": 6.978,
+          "p50": 4.113,
+          "p90": 9.971,
+          "p95": 22.174,
+          "p99": 56.802,
+          "max": 211.738
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 3277,
+          "rps": 54.62,
+          "avg": 8.917,
+          "p50": 6.064,
+          "p90": 13.397,
+          "p95": 25.403,
+          "p99": 58.035,
+          "max": 135.057
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 1230,
+          "rps": 20.5,
+          "avg": 11.812,
+          "p50": 9.008,
+          "p90": 16.922,
+          "p95": 29.719,
+          "p99": 62.178,
+          "max": 114.035
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 845,
+          "rps": 14.08,
+          "avg": 9.64,
+          "p50": 6.378,
+          "p90": 14.531,
+          "p95": 26.837,
+          "p99": 63.054,
+          "max": 235.328
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 1288,
+          "rps": 21.47,
+          "avg": 10.797,
+          "p50": 6.786,
+          "p90": 15.166,
+          "p95": 36.225,
+          "p99": 77.653,
+          "max": 167.823
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 405,
+          "rps": 6.75,
+          "avg": 13.713,
+          "p50": 9.348,
+          "p90": 21.271,
+          "p95": 41.195,
+          "p99": 76.598,
+          "max": 176.86
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 2417,
+          "rps": 40.28,
+          "avg": 6.874,
+          "p50": 4.168,
+          "p90": 9.797,
+          "p95": 21.874,
+          "p99": 55.451,
+          "max": 129.187
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 1142,
+          "rps": 19.03,
+          "avg": 10.765,
+          "p50": 6.834,
+          "p90": 15.795,
+          "p95": 30.604,
+          "p99": 76.896,
+          "max": 175.681
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 4143,
+          "rps": 69.05,
+          "avg": 12.157,
+          "p50": 7.56,
+          "p90": 20.728,
+          "p95": 35.104,
+          "p99": 90.385,
+          "max": 343.972
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 4195,
+          "rps": 69.92,
+          "avg": 11.529,
+          "p50": 7.052,
+          "p90": 18.957,
+          "p95": 35.446,
+          "p99": 89.371,
+          "max": 229.628
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 856,
+          "rps": 14.27,
+          "avg": 26.474,
+          "p50": 18.816,
+          "p90": 48.947,
+          "p95": 75.549,
+          "p99": 140.06,
+          "max": 235.194
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 1265,
+          "rps": 21.08,
+          "avg": 16.254,
+          "p50": 10.264,
+          "p90": 27.442,
+          "p95": 50.955,
+          "p99": 122.844,
+          "max": 275.407
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 422,
+          "rps": 7.03,
+          "avg": 30.19,
+          "p50": 20.344,
+          "p90": 52.231,
+          "p95": 85.871,
+          "p99": 168.607,
+          "max": 357.283
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 409,
+          "rps": 6.82,
+          "avg": 54.134,
+          "p50": 38.643,
+          "p90": 100.913,
+          "p95": 139.663,
+          "p99": 256.57,
+          "max": 382.325
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 200,
+      "rps": 926.1,
+      "requests": 55569,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 151.9,
+        "p50": 114.45,
+        "p90": 290.909,
+        "p95": 395.256,
+        "p99": 689.223,
+        "max": 2332.674
+      },
+      "cpu_ms_per_request": 7.56,
+      "db_cpu_ms_per_request": 2.562,
+      "memory_mib": {
+        "baseline": 2935.8,
+        "avg": 3009.6,
+        "peak": 3044.4
+      },
+      "load_before": 18.91,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 15441,
+          "rps": 257.35,
+          "avg": 91.435,
+          "p50": 79.319,
+          "p90": 159.868,
+          "p95": 193.522,
+          "p99": 271.455,
+          "max": 587.395
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 6134,
+          "rps": 102.23,
+          "avg": 111.833,
+          "p50": 96.74,
+          "p90": 190.753,
+          "p95": 234.507,
+          "p99": 344.646,
+          "max": 796.907
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 2243,
+          "rps": 37.38,
+          "avg": 120.689,
+          "p50": 106.044,
+          "p90": 208.37,
+          "p95": 249.25,
+          "p99": 333.878,
+          "max": 666.428
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 1504,
+          "rps": 25.07,
+          "avg": 109.556,
+          "p50": 97.941,
+          "p90": 189.899,
+          "p95": 228.027,
+          "p99": 331.528,
+          "max": 517.598
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 2266,
+          "rps": 37.77,
+          "avg": 134.176,
+          "p50": 118.91,
+          "p90": 230.251,
+          "p95": 273.333,
+          "p99": 373.205,
+          "max": 530.411
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 722,
+          "rps": 12.03,
+          "avg": 185.611,
+          "p50": 168.613,
+          "p90": 310.839,
+          "p95": 364.229,
+          "p99": 481.513,
+          "max": 587.945
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 4558,
+          "rps": 75.97,
+          "avg": 90.844,
+          "p50": 79.221,
+          "p90": 159.019,
+          "p95": 195.596,
+          "p99": 271.236,
+          "max": 497.352
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 2257,
+          "rps": 37.62,
+          "avg": 136.227,
+          "p50": 120.042,
+          "p90": 226.804,
+          "p95": 274.18,
+          "p99": 397.124,
+          "max": 830.656
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 7571,
+          "rps": 126.18,
+          "avg": 194.803,
+          "p50": 165.121,
+          "p90": 350.263,
+          "p95": 429.375,
+          "p99": 623.811,
+          "max": 1187.227
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 7521,
+          "rps": 125.35,
+          "avg": 179.26,
+          "p50": 153.692,
+          "p90": 317.65,
+          "p95": 388.466,
+          "p99": 554.133,
+          "max": 1265.973
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 1485,
+          "rps": 24.75,
+          "avg": 342.967,
+          "p50": 313.717,
+          "p90": 561.244,
+          "p95": 633.425,
+          "p99": 844.334,
+          "max": 1107.115
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 2329,
+          "rps": 38.82,
+          "avg": 239.686,
+          "p50": 214.266,
+          "p90": 403.212,
+          "p95": 488.831,
+          "p99": 686.247,
+          "max": 1227.602
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 754,
+          "rps": 12.57,
+          "avg": 396.498,
+          "p50": 371.398,
+          "p90": 624.428,
+          "p95": 729.423,
+          "p99": 920.979,
+          "max": 1142.071
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 784,
+          "rps": 13.07,
+          "avg": 712.331,
+          "p50": 669.292,
+          "p90": 1104.057,
+          "p95": 1219.005,
+          "p99": 1600.398,
+          "max": 2332.674
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 676.8,
+      "requests": 40608,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 47.657,
+        "p50": 33.602,
+        "p90": 90.318,
+        "p95": 127.085,
+        "p99": 245.712,
+        "max": 1678.271
+      },
+      "cpu_ms_per_request": 8.845,
+      "db_cpu_ms_per_request": 3.116,
+      "memory_mib": {
+        "baseline": 2878.5,
+        "avg": 2920.7,
+        "peak": 2948.1
+      },
+      "load_before": 14.69,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 11118,
+          "rps": 185.3,
+          "avg": 27.983,
+          "p50": 22.831,
+          "p90": 51.235,
+          "p95": 64.142,
+          "p99": 106.655,
+          "max": 265.958
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 4385,
+          "rps": 73.08,
+          "avg": 36.782,
+          "p50": 30.307,
+          "p90": 66.212,
+          "p95": 83.212,
+          "p99": 133.847,
+          "max": 321.053
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 1664,
+          "rps": 27.73,
+          "avg": 44.278,
+          "p50": 37.846,
+          "p90": 74.777,
+          "p95": 91.295,
+          "p99": 139.937,
+          "max": 260.271
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 1132,
+          "rps": 18.87,
+          "avg": 51.4,
+          "p50": 35.903,
+          "p90": 90.634,
+          "p95": 138.735,
+          "p99": 239.203,
+          "max": 1466.637
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 1680,
+          "rps": 28.0,
+          "avg": 57.006,
+          "p50": 39.694,
+          "p90": 94.297,
+          "p95": 142.91,
+          "p99": 279.506,
+          "max": 1480.176
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 579,
+          "rps": 9.65,
+          "avg": 64.831,
+          "p50": 51.768,
+          "p90": 103.106,
+          "p95": 131.746,
+          "p99": 263.465,
+          "max": 1529.565
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 3312,
+          "rps": 55.2,
+          "avg": 28.197,
+          "p50": 22.981,
+          "p90": 50.854,
+          "p95": 64.787,
+          "p99": 99.37,
+          "max": 410.134
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 1712,
+          "rps": 28.53,
+          "avg": 55.594,
+          "p50": 40.306,
+          "p90": 90.347,
+          "p95": 128.287,
+          "p99": 225.789,
+          "max": 1484.048
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 5484,
+          "rps": 91.4,
+          "avg": 50.34,
+          "p50": 41.834,
+          "p90": 92.411,
+          "p95": 117.073,
+          "p99": 176.337,
+          "max": 472.624
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 5602,
+          "rps": 93.37,
+          "avg": 46.869,
+          "p50": 38.014,
+          "p90": 85.074,
+          "p95": 108.989,
+          "p99": 174.34,
+          "max": 462.328
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 1139,
+          "rps": 18.98,
+          "avg": 116.207,
+          "p50": 95.425,
+          "p90": 188.465,
+          "p95": 233.053,
+          "p99": 378.51,
+          "max": 1636.097
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 1635,
+          "rps": 27.25,
+          "avg": 76.561,
+          "p50": 59.121,
+          "p90": 126.758,
+          "p95": 168.058,
+          "p99": 293.617,
+          "max": 1440.358
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 612,
+          "rps": 10.2,
+          "avg": 128.619,
+          "p50": 107.751,
+          "p90": 210.201,
+          "p95": 255.777,
+          "p99": 412.158,
+          "max": 1475.852
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 554,
+          "rps": 9.23,
+          "avg": 242.32,
+          "p50": 209.583,
+          "p90": 350.861,
+          "p95": 442.396,
+          "p99": 1344.172,
+          "max": 1678.271
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "rate",
+      "level": 200,
+      "rps": 200.0,
+      "requests": 12001,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 2.352,
+        "p50": 1.597,
+        "p90": 4.618,
+        "p95": 6.633,
+        "p99": 15.062,
+        "max": 140.598
+      },
+      "cpu_ms_per_request": 1.083,
+      "db_cpu_ms_per_request": 1.496,
+      "memory_mib": {
+        "baseline": 413.0,
+        "avg": 397.5,
+        "peak": 413.0
+      },
+      "load_before": 10.67,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 3281,
+          "rps": 54.68,
+          "avg": 0.813,
+          "p50": 0.633,
+          "p90": 1.106,
+          "p95": 1.316,
+          "p99": 3.742,
+          "max": 24.407
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 1285,
+          "rps": 21.42,
+          "avg": 1.769,
+          "p50": 1.513,
+          "p90": 2.029,
+          "p95": 2.296,
+          "p99": 8.436,
+          "max": 31.811
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 532,
+          "rps": 8.87,
+          "avg": 3.572,
+          "p50": 3.387,
+          "p90": 3.904,
+          "p95": 4.139,
+          "p99": 6.308,
+          "max": 22.348
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 343,
+          "rps": 5.72,
+          "avg": 2.024,
+          "p50": 1.723,
+          "p90": 2.472,
+          "p95": 3.307,
+          "p99": 6.462,
+          "max": 28.611
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 513,
+          "rps": 8.55,
+          "avg": 2.692,
+          "p50": 1.92,
+          "p90": 2.601,
+          "p95": 3.191,
+          "p99": 16.975,
+          "max": 130.94
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 157,
+          "rps": 2.62,
+          "avg": 2.751,
+          "p50": 2.555,
+          "p90": 3.401,
+          "p95": 3.738,
+          "p99": 5.15,
+          "max": 9.789
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 963,
+          "rps": 16.05,
+          "avg": 0.903,
+          "p50": 0.638,
+          "p90": 1.183,
+          "p95": 1.39,
+          "p99": 5.635,
+          "max": 22.953
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 530,
+          "rps": 8.83,
+          "avg": 2.624,
+          "p50": 1.933,
+          "p90": 2.75,
+          "p95": 3.526,
+          "p99": 16.381,
+          "max": 140.598
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 1648,
+          "rps": 27.47,
+          "avg": 2.77,
+          "p50": 2.01,
+          "p90": 4.714,
+          "p95": 5.538,
+          "p99": 12.199,
+          "max": 52.985
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 1588,
+          "rps": 26.47,
+          "avg": 2.342,
+          "p50": 1.756,
+          "p90": 4.352,
+          "p95": 5.01,
+          "p99": 7.891,
+          "max": 34.422
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 331,
+          "rps": 5.52,
+          "avg": 6.878,
+          "p50": 6.377,
+          "p90": 8.582,
+          "p95": 9.812,
+          "p99": 13.346,
+          "max": 27.983
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 493,
+          "rps": 8.22,
+          "avg": 4.087,
+          "p50": 3.197,
+          "p90": 6.593,
+          "p95": 7.477,
+          "p99": 15.346,
+          "max": 30.695
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 176,
+          "rps": 2.93,
+          "avg": 7.475,
+          "p50": 6.965,
+          "p90": 9.367,
+          "p95": 11.342,
+          "p99": 14.207,
+          "max": 19.506
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 161,
+          "rps": 2.68,
+          "avg": 16.896,
+          "p50": 14.394,
+          "p90": 19.269,
+          "p95": 23.564,
+          "p99": 71.109,
+          "max": 135.528
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 2.75,
+        "p50": 2.072,
+        "p90": 5.948,
+        "p95": 7.092,
+        "p99": 13.873,
+        "max": 19.802
+      },
+      "cpu_ms_per_request": 1.328,
+      "db_cpu_ms_per_request": 2.238,
+      "memory_mib": {
+        "baseline": 478.6,
+        "avg": 421.2,
+        "peak": 480.0
+      },
+      "load_before": 13.27,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 855,
+          "rps": 14.25,
+          "avg": 1.05,
+          "p50": 0.927,
+          "p90": 1.534,
+          "p95": 1.673,
+          "p99": 2.352,
+          "max": 6.129
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 335,
+          "rps": 5.58,
+          "avg": 2.067,
+          "p50": 2.011,
+          "p90": 2.373,
+          "p95": 2.619,
+          "p99": 3.478,
+          "max": 6.246
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 120,
+          "rps": 2.0,
+          "avg": 4.591,
+          "p50": 4.534,
+          "p90": 5.413,
+          "p95": 5.568,
+          "p99": 7.579,
+          "max": 9.408
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 99,
+          "rps": 1.65,
+          "avg": 2.61,
+          "p50": 2.434,
+          "p90": 3.081,
+          "p95": 3.221,
+          "p99": 6.051,
+          "max": 10.044
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 111,
+          "rps": 1.85,
+          "avg": 2.665,
+          "p50": 2.539,
+          "p90": 3.147,
+          "p95": 3.432,
+          "p99": 7.116,
+          "max": 9.761
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 38,
+          "rps": 0.63,
+          "avg": 3.035,
+          "p50": 2.975,
+          "p90": 3.306,
+          "p95": 3.568,
+          "p99": 5.498,
+          "max": 6.406
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 233,
+          "rps": 3.88,
+          "avg": 1.025,
+          "p50": 0.902,
+          "p90": 1.515,
+          "p95": 1.713,
+          "p99": 2.617,
+          "max": 5.163
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 125,
+          "rps": 2.08,
+          "avg": 2.708,
+          "p50": 2.508,
+          "p90": 3.216,
+          "p95": 3.552,
+          "p99": 7.277,
+          "max": 9.115
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 355,
+          "rps": 5.92,
+          "avg": 3.462,
+          "p50": 2.592,
+          "p90": 6.083,
+          "p95": 6.47,
+          "p99": 7.35,
+          "max": 9.421
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 428,
+          "rps": 7.13,
+          "avg": 3.354,
+          "p50": 2.296,
+          "p90": 5.969,
+          "p95": 6.408,
+          "p99": 9.352,
+          "max": 13.751
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 89,
+          "rps": 1.48,
+          "avg": 6.908,
+          "p50": 6.846,
+          "p90": 8.037,
+          "p95": 8.153,
+          "p99": 8.971,
+          "max": 10.064
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 127,
+          "rps": 2.12,
+          "avg": 4.953,
+          "p50": 4.001,
+          "p90": 7.545,
+          "p95": 8.159,
+          "p99": 9.425,
+          "max": 9.979
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 46,
+          "rps": 0.77,
+          "avg": 7.571,
+          "p50": 7.42,
+          "p90": 9.037,
+          "p95": 9.289,
+          "p99": 9.584,
+          "max": 9.648
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 40,
+          "rps": 0.67,
+          "avg": 15.198,
+          "p50": 14.811,
+          "p90": 17.303,
+          "p95": 19.14,
+          "p99": 19.637,
+          "max": 19.802
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "rate",
+      "level": 500,
+      "rps": 500.0,
+      "requests": 30000,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 5.241,
+        "p50": 2.896,
+        "p90": 11.563,
+        "p95": 17.498,
+        "p99": 39.867,
+        "max": 150.492
+      },
+      "cpu_ms_per_request": 1.951,
+      "db_cpu_ms_per_request": 2.297,
+      "memory_mib": {
+        "baseline": 384.0,
+        "avg": 339.2,
+        "peak": 384.0
+      },
+      "load_before": 11.44,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 8332,
+          "rps": 138.87,
+          "avg": 1.796,
+          "p50": 1.162,
+          "p90": 2.957,
+          "p95": 4.583,
+          "p99": 12.626,
+          "max": 47.376
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 3235,
+          "rps": 53.92,
+          "avg": 3.822,
+          "p50": 2.707,
+          "p90": 5.912,
+          "p95": 9.459,
+          "p99": 23.008,
+          "max": 55.191
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 1263,
+          "rps": 21.05,
+          "avg": 6.649,
+          "p50": 5.49,
+          "p90": 9.072,
+          "p95": 12.237,
+          "p99": 27.007,
+          "max": 48.636
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 819,
+          "rps": 13.65,
+          "avg": 4.873,
+          "p50": 3.263,
+          "p90": 7.65,
+          "p95": 11.7,
+          "p99": 37.585,
+          "max": 74.153
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 1200,
+          "rps": 20.0,
+          "avg": 5.066,
+          "p50": 3.545,
+          "p90": 8.163,
+          "p95": 12.592,
+          "p99": 31.187,
+          "max": 71.835
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 405,
+          "rps": 6.75,
+          "avg": 7.438,
+          "p50": 5.633,
+          "p90": 12.752,
+          "p95": 18.236,
+          "p99": 24.79,
+          "max": 49.38
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 2493,
+          "rps": 41.55,
+          "avg": 1.832,
+          "p50": 1.173,
+          "p90": 2.945,
+          "p95": 4.728,
+          "p99": 13.849,
+          "max": 42.992
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 1209,
+          "rps": 20.15,
+          "avg": 5.216,
+          "p50": 3.65,
+          "p90": 8.637,
+          "p95": 13.919,
+          "p99": 28.904,
+          "max": 76.131
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 4100,
+          "rps": 68.33,
+          "avg": 6.132,
+          "p50": 3.925,
+          "p90": 11.552,
+          "p95": 16.379,
+          "p99": 35.352,
+          "max": 94.846
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 4016,
+          "rps": 66.93,
+          "avg": 5.508,
+          "p50": 3.431,
+          "p90": 10.762,
+          "p95": 14.594,
+          "p99": 34.925,
+          "max": 71.716
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 869,
+          "rps": 14.48,
+          "avg": 17.693,
+          "p50": 14.152,
+          "p90": 27.796,
+          "p95": 37.907,
+          "p99": 73.728,
+          "max": 148.639
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 1229,
+          "rps": 20.48,
+          "avg": 8.868,
+          "p50": 6.504,
+          "p90": 15.36,
+          "p95": 20.248,
+          "p99": 40.387,
+          "max": 78.498
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 426,
+          "rps": 7.1,
+          "avg": 20.495,
+          "p50": 15.68,
+          "p90": 31.134,
+          "p95": 46.704,
+          "p99": 98.91,
+          "max": 140.886
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 404,
+          "rps": 6.73,
+          "avg": 37.881,
+          "p50": 30.76,
+          "p90": 62.042,
+          "p95": 78.76,
+          "p99": 123.167,
+          "max": 150.492
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "vus",
+      "level": 200,
+      "rps": 1768.2,
+      "requests": 106089,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 80.666,
+        "p50": 51.922,
+        "p90": 190.1,
+        "p95": 267.058,
+        "p99": 551.176,
+        "max": 982.856
+      },
+      "cpu_ms_per_request": 1.536,
+      "db_cpu_ms_per_request": 1.894,
+      "memory_mib": {
+        "baseline": 223.2,
+        "avg": 383.5,
+        "peak": 433.8
+      },
+      "load_before": 20.41,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 29075,
+          "rps": 484.58,
+          "avg": 26.241,
+          "p50": 22.644,
+          "p90": 43.91,
+          "p95": 50.977,
+          "p99": 66.285,
+          "max": 145.891
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 11631,
+          "rps": 193.85,
+          "avg": 44.645,
+          "p50": 42.517,
+          "p90": 61.699,
+          "p95": 69.584,
+          "p99": 88.514,
+          "max": 191.515
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 4285,
+          "rps": 71.42,
+          "avg": 53.452,
+          "p50": 50.927,
+          "p90": 73.259,
+          "p95": 82.393,
+          "p99": 102.478,
+          "max": 158.763
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 2879,
+          "rps": 47.98,
+          "avg": 55.91,
+          "p50": 53.533,
+          "p90": 74.299,
+          "p95": 83.071,
+          "p99": 105.01,
+          "max": 173.642
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 4395,
+          "rps": 73.25,
+          "avg": 67.768,
+          "p50": 64.404,
+          "p90": 92.3,
+          "p95": 103.332,
+          "p99": 131.861,
+          "max": 221.721
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 1462,
+          "rps": 24.37,
+          "avg": 111.648,
+          "p50": 106.937,
+          "p90": 147.656,
+          "p95": 160.937,
+          "p99": 201.821,
+          "max": 264.682
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 8725,
+          "rps": 145.42,
+          "avg": 26.38,
+          "p50": 22.755,
+          "p90": 44.233,
+          "p95": 51.489,
+          "p99": 69.562,
+          "max": 157.89
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 4315,
+          "rps": 71.92,
+          "avg": 68.219,
+          "p50": 64.535,
+          "p90": 92.85,
+          "p95": 103.1,
+          "p99": 136.96,
+          "max": 239.716
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 14598,
+          "rps": 243.3,
+          "avg": 114.685,
+          "p50": 88.762,
+          "p90": 218.876,
+          "p95": 253.928,
+          "p99": 334.365,
+          "max": 597.801
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 14391,
+          "rps": 239.85,
+          "avg": 96.501,
+          "p50": 76.669,
+          "p90": 191.259,
+          "p95": 219.771,
+          "p99": 275.045,
+          "max": 466.879
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 3034,
+          "rps": 50.57,
+          "avg": 279.779,
+          "p50": 273.84,
+          "p90": 344.642,
+          "p95": 372.381,
+          "p99": 425.352,
+          "max": 579.112
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 4319,
+          "rps": 71.98,
+          "avg": 147.763,
+          "p50": 130.62,
+          "p90": 239.769,
+          "p95": 273.463,
+          "p99": 331.177,
+          "max": 537.125
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 1470,
+          "rps": 24.5,
+          "avg": 305.299,
+          "p50": 300.673,
+          "p90": 376.357,
+          "p95": 405.633,
+          "p99": 455.034,
+          "max": 591.694
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 1510,
+          "rps": 25.17,
+          "avg": 596.797,
+          "p50": 589.904,
+          "p90": 721.099,
+          "p95": 764.202,
+          "p99": 850.7,
+          "max": 982.856
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "vus",
+      "level": 50,
+      "rps": 1456.5,
+      "requests": 87390,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 20.286,
+        "p50": 13.281,
+        "p90": 43.699,
+        "p95": 68.08,
+        "p99": 141.378,
+        "max": 354.66
+      },
+      "cpu_ms_per_request": 1.57,
+      "db_cpu_ms_per_request": 1.993,
+      "memory_mib": {
+        "baseline": 307.6,
+        "avg": 291.8,
+        "peak": 330.0
+      },
+      "load_before": 25.05,
+      "endpoints": {
+        "teams.get": {
+          "route": "GET /v1/teams/:teamId",
+          "count": 24006,
+          "rps": 400.1,
+          "avg": 6.345,
+          "p50": 5.301,
+          "p90": 10.908,
+          "p95": 13.478,
+          "p99": 20.113,
+          "max": 75.702
+        },
+        "teams.list": {
+          "route": "GET /v1/teams",
+          "count": 9585,
+          "rps": 159.75,
+          "avg": 12.542,
+          "p50": 11.415,
+          "p90": 18.301,
+          "p95": 21.629,
+          "p99": 30.367,
+          "max": 94.403
+        },
+        "teams.search": {
+          "route": "GET /v1/teams",
+          "note": "full-text search",
+          "count": 3569,
+          "rps": 59.48,
+          "avg": 17.63,
+          "p50": 16.39,
+          "p90": 24.635,
+          "p95": 28.26,
+          "p99": 37.83,
+          "max": 75.78
+        },
+        "teams.create": {
+          "route": "POST /v1/teams",
+          "count": 2407,
+          "rps": 40.12,
+          "avg": 16.694,
+          "p50": 15.265,
+          "p90": 23.34,
+          "p95": 27.731,
+          "p99": 41.163,
+          "max": 78.897
+        },
+        "teams.name.update": {
+          "route": "PUT /v1/teams/:teamId",
+          "count": 3651,
+          "rps": 60.85,
+          "avg": 18.444,
+          "p50": 16.635,
+          "p90": 26.474,
+          "p95": 30.98,
+          "p99": 51.112,
+          "max": 110.355
+        },
+        "teams.delete": {
+          "route": "DELETE /v1/teams/:teamId",
+          "count": 1146,
+          "rps": 19.1,
+          "avg": 29.64,
+          "p50": 27.497,
+          "p90": 41.637,
+          "p95": 47.483,
+          "p99": 67.534,
+          "max": 101.586
+        },
+        "teams.prefs.get": {
+          "route": "GET /v1/teams/:teamId/prefs",
+          "count": 7234,
+          "rps": 120.57,
+          "avg": 6.322,
+          "p50": 5.213,
+          "p90": 10.782,
+          "p95": 13.241,
+          "p99": 19.917,
+          "max": 59.878
+        },
+        "teams.prefs.update": {
+          "route": "PUT /v1/teams/:teamId/prefs",
+          "count": 3705,
+          "rps": 61.75,
+          "avg": 18.603,
+          "p50": 16.913,
+          "p90": 27.089,
+          "p95": 31.356,
+          "p99": 47.042,
+          "max": 101.128
+        },
+        "teams.memberships.list": {
+          "route": "GET /v1/teams/:teamId/memberships",
+          "count": 11779,
+          "rps": 196.32,
+          "avg": 25.869,
+          "p50": 20.059,
+          "p90": 49.237,
+          "p95": 60.44,
+          "p99": 84.911,
+          "max": 203.954
+        },
+        "teams.memberships.get": {
+          "route": "GET /v1/teams/:teamId/memberships/:membershipId",
+          "count": 11956,
+          "rps": 199.27,
+          "avg": 22.614,
+          "p50": 17.4,
+          "p90": 45.106,
+          "p95": 55.708,
+          "p99": 76.779,
+          "max": 176.981
+        },
+        "teams.memberships.create": {
+          "route": "POST /v1/teams/:teamId/memberships",
+          "note": "with an API key and a user id: confirmed at once, no invitation email",
+          "count": 2406,
+          "rps": 40.1,
+          "avg": 74.51,
+          "p50": 70.991,
+          "p90": 98.195,
+          "p95": 112.758,
+          "p99": 140.987,
+          "max": 208.405
+        },
+        "teams.memberships.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId",
+          "count": 3534,
+          "rps": 58.9,
+          "avg": 37.044,
+          "p50": 31.819,
+          "p90": 61.444,
+          "p95": 71.923,
+          "p99": 98.369,
+          "max": 176.133
+        },
+        "teams.memberships.delete": {
+          "route": "DELETE /v1/teams/:teamId/memberships/:membershipId",
+          "count": 1188,
+          "rps": 19.8,
+          "avg": 84.453,
+          "p50": 79.754,
+          "p90": 112.086,
+          "p95": 127.106,
+          "p99": 167.119,
+          "max": 226.579
+        },
+        "teams.memberships.status.update": {
+          "route": "PATCH /v1/teams/:teamId/memberships/:membershipId/status",
+          "note": "accepts an invitation (read from the mail catcher) and creates the invitee's session",
+          "count": 1224,
+          "rps": 20.4,
+          "avg": 159.788,
+          "p50": 152.712,
+          "p90": 207.34,
+          "p95": 243.426,
+          "p99": 286.161,
+          "max": 354.66
+        }
+      }
+    }
+  ]
+}

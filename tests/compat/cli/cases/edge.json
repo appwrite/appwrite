@@ -1,0 +1,1738 @@
+{
+  "cases": [
+    {
+      "name": "missing command",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "test.php"
+        ],
+        "steps": []
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Missing command",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty argv: PHP reads $_SERVER['argv'] (the driver's), Rust none: both have no command",
+      "op": "cli.run",
+      "args": {
+        "argv": [],
+        "steps": []
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Missing command",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse: -- prefix, repeated keys, keys without values, values with =",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build",
+          "--a=1",
+          "--a=2",
+          "--a=3",
+          "b=x=y",
+          "--flag",
+          "--",
+          "---c=d",
+          ""
+        ],
+        "steps": [
+          {
+            "args": true
+          },
+          {
+            "match": true
+          },
+          {
+            "parse": [
+              "x",
+              "deploy",
+              "--z=1"
+            ]
+          },
+          {
+            "match": true
+          },
+          {
+            "args": true
+          }
+        ]
+      },
+      "expect": [
+        {
+          "a": [
+            "1",
+            "2",
+            "3"
+          ],
+          "b": "x=y",
+          "flag": null,
+          "": [
+            null,
+            null
+          ],
+          "-c": "d"
+        },
+        null,
+        {
+          "z": "1"
+        },
+        null,
+        {
+          "a": [
+            "1",
+            "2",
+            "3"
+          ],
+          "b": "x=y",
+          "flag": null,
+          "": [
+            null,
+            null
+          ],
+          "-c": "d"
+        }
+      ]
+    },
+    {
+      "name": "parse without a command",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "parse": [
+              "only"
+            ]
+          },
+          {
+            "match": true
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Missing command",
+            "code": 0
+          }
+        },
+        null
+      ]
+    },
+    {
+      "name": "no command found goes to the error hooks",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "missing"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build"
+            }
+          },
+          {
+            "error": {
+              "id": "e1",
+              "inject": [
+                "error"
+              ]
+            }
+          },
+          {
+            "error": {
+              "id": "e2"
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "e1",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "No command found",
+                    "code": 0
+                  }
+                }
+              }
+            ],
+            [
+              "e2",
+              []
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "no command found without error hooks is silent",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "missing"
+        ],
+        "steps": [
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        {
+          "calls": [],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "a failing task skips shutdown and reaches every error hook",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "init": {
+              "id": "init"
+            }
+          },
+          {
+            "shutdown": {
+              "id": "shutdown"
+            }
+          },
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "fail": {
+                "message": "boom",
+                "code": 42
+              }
+            }
+          },
+          {
+            "error": {
+              "id": "e1",
+              "inject": [
+                "error"
+              ]
+            }
+          },
+          {
+            "error": {
+              "id": "e2",
+              "inject": [
+                "error"
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "init",
+              []
+            ],
+            [
+              "build",
+              []
+            ],
+            [
+              "e1",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "boom",
+                    "code": 42
+                  }
+                }
+              }
+            ],
+            [
+              "e2",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "boom",
+                    "code": 42
+                  }
+                }
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "a failing init hook skips the task",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "init": {
+              "id": "init",
+              "fail": {
+                "message": "init failed",
+                "code": 1
+              }
+            }
+          },
+          {
+            "task": {
+              "name": "build",
+              "id": "build"
+            }
+          },
+          {
+            "error": {
+              "id": "e",
+              "inject": [
+                "error"
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "init",
+              []
+            ],
+            [
+              "e",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "init failed",
+                    "code": 1
+                  }
+                }
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "a failing error hook escapes run()",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "fail": {
+                "message": "boom",
+                "code": 0
+              }
+            }
+          },
+          {
+            "error": {
+              "id": "e",
+              "fail": {
+                "message": "handler failed",
+                "code": 7
+              }
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "build",
+              []
+            ],
+            [
+              "e",
+              []
+            ]
+          ],
+          "error": {
+            "class": "Exception",
+            "message": "handler failed",
+            "code": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "an error hook with a missing resource escapes run()",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "fail": {
+                "message": "boom",
+                "code": 0
+              }
+            }
+          },
+          {
+            "error": {
+              "id": "e",
+              "inject": [
+                "missing"
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "build",
+              []
+            ]
+          ],
+          "error": {
+            "class": "Exception",
+            "message": "Failed to find resource: \"missing\"",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "a missing injection fails the task",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "inject": [
+                "missing"
+              ]
+            }
+          },
+          {
+            "error": {
+              "id": "e",
+              "inject": [
+                "error"
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "e",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "Failed to find resource: \"missing\"",
+                    "code": 0
+                  }
+                }
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "required param missing",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "name",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      10
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "error": {
+              "id": "e",
+              "inject": [
+                "error"
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "e",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "Param \"name\" is not optional.",
+                    "code": 400
+                  }
+                }
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "optional param with an empty default is not validated",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "name",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      1,
+                      5
+                    ]
+                  },
+                  "optional": true
+                }
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "calls": [
+            [
+              "build",
+              {
+                "name": ""
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "a null default is validated",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "name",
+                  "default": null,
+                  "validator": {
+                    "text": [
+                      10
+                    ]
+                  },
+                  "optional": true
+                }
+              ]
+            }
+          },
+          {
+            "error": {
+              "id": "e",
+              "inject": [
+                "error"
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "e",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "Invalid name: Value must be a valid string and at least 1 chars and no longer than 10 chars",
+                    "code": 400
+                  }
+                }
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "--key without a value falls back to the default",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build",
+          "--name"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "name",
+                  "default": "fallback",
+                  "validator": {
+                    "text": [
+                      10
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "calls": [
+            [
+              "build",
+              {
+                "name": "fallback"
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "key wins over aliases; first alias given wins",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build",
+          "--em=second",
+          "--e=first"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "email",
+                  "default": null,
+                  "validator": {
+                    "text": [
+                      0
+                    ]
+                  },
+                  "description": "Valid email address",
+                  "aliases": [
+                    "e",
+                    "em"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "email",
+                  "default": null,
+                  "validator": {
+                    "text": [
+                      0
+                    ]
+                  },
+                  "description": "Valid email address",
+                  "aliases": [
+                    "em",
+                    "e"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "build",
+              {
+                "email": "second"
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "camel-cased argument names; an injection named like a param is skipped",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build",
+          "--dry-run=1",
+          "--project_id=p"
+        ],
+        "steps": [
+          {
+            "set_resource": {
+              "name": "dryRun",
+              "value": "resource"
+            }
+          },
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "dry-run",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      5
+                    ]
+                  }
+                },
+                {
+                  "key": "project_id",
+                  "default": "",
+                  "validator": {
+                    "text": [
+                      5
+                    ]
+                  }
+                }
+              ],
+              "inject": [
+                "dryRun"
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        null,
+        true,
+        {
+          "calls": [
+            [
+              "build",
+              {
+                "dryRun": "1",
+                "projectId": "p"
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "a validator factory",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build",
+          "--commit=yes"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "commit",
+                  "default": false,
+                  "validator": {
+                    "factory": {
+                      "boolean": true
+                    }
+                  },
+                  "description": "Commit changes",
+                  "optional": true
+                }
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "calls": [],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "boolean coercion leaves unknown strings and lists",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build",
+          "--commit=maybe",
+          "--flags=true",
+          "--flags=false"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "commit",
+                  "default": false,
+                  "validator": {
+                    "any": true
+                  },
+                  "description": "Commit changes",
+                  "optional": true
+                },
+                {
+                  "key": "flags",
+                  "default": null,
+                  "validator": {
+                    "any": true
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "task": {
+              "name": "deploy",
+              "id": "deploy",
+              "params": [
+                {
+                  "key": "commit",
+                  "default": false,
+                  "validator": {
+                    "boolean": true
+                  },
+                  "description": "Commit changes",
+                  "optional": true
+                }
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "build",
+              {
+                "commit": "maybe",
+                "flags": [
+                  "true",
+                  "false"
+                ]
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "strict boolean rejects strings",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build",
+          "--commit=true"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "params": [
+                {
+                  "key": "commit",
+                  "default": false,
+                  "validator": {
+                    "boolean": false
+                  },
+                  "description": "Commit changes",
+                  "optional": true
+                }
+              ]
+            }
+          },
+          {
+            "error": {
+              "id": "e",
+              "inject": [
+                "error"
+              ]
+            }
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "e",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "Invalid commit: Value must be a valid boolean",
+                    "code": 400
+                  }
+                }
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "declaring an injection twice",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "inject": [
+                "db",
+                "db"
+              ]
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Injection already declared for db",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "a task added again replaces the first",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "task": {
+              "name": "build",
+              "id": "first",
+              "desc": "first"
+            }
+          },
+          {
+            "task": {
+              "name": "deploy",
+              "id": "deploy"
+            }
+          },
+          {
+            "task": {
+              "name": "build",
+              "id": "second",
+              "desc": "second"
+            }
+          },
+          {
+            "tasks": true
+          },
+          {
+            "task_keys": true
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true,
+        [
+          [
+            "build",
+            "second"
+          ],
+          [
+            "deploy",
+            ""
+          ]
+        ],
+        [
+          "build",
+          "deploy"
+        ],
+        {
+          "calls": [
+            [
+              "second",
+              []
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "resources: missing, list, error resource after a run",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "resource": "missing"
+          },
+          {
+            "set_resource": {
+              "name": "db",
+              "value": "primary"
+            }
+          },
+          {
+            "resources": [
+              "db"
+            ]
+          },
+          {
+            "resources": [
+              "db",
+              "missing"
+            ]
+          },
+          {
+            "resources": []
+          },
+          {
+            "task": {
+              "name": "build",
+              "id": "build",
+              "fail": {
+                "message": "boom",
+                "code": 3
+              }
+            }
+          },
+          {
+            "error": {
+              "id": "e"
+            }
+          },
+          {
+            "run": true
+          },
+          {
+            "resource": "error"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Failed to find resource: \"missing\"",
+            "code": 0
+          }
+        },
+        null,
+        {
+          "db": "primary"
+        },
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Failed to find resource: \"missing\"",
+            "code": 0
+          }
+        },
+        [],
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "build",
+              []
+            ],
+            [
+              "e",
+              []
+            ]
+          ],
+          "error": null
+        },
+        {
+          "$exception": {
+            "class": "Exception",
+            "message": "boom",
+            "code": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "setContainer replaces the parent; reset keeps it",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "set_resource": {
+              "name": "own",
+              "value": "o"
+            }
+          },
+          {
+            "set_container": {
+              "base": "new-base"
+            }
+          },
+          {
+            "has": "own"
+          },
+          {
+            "has": "base"
+          },
+          {
+            "resource": "base"
+          },
+          {
+            "set_resource": {
+              "name": "own",
+              "value": "o2"
+            }
+          },
+          {
+            "reset": true
+          },
+          {
+            "has": "own"
+          },
+          {
+            "resource": "base"
+          }
+        ],
+        "container": {
+          "base": "old-base"
+        }
+      },
+      "expect": [
+        null,
+        true,
+        false,
+        true,
+        "new-base",
+        null,
+        null,
+        false,
+        "new-base"
+      ]
+    },
+    {
+      "name": "hooks registered on the CLI do not get groups",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "init": {
+              "id": "i",
+              "groups": [
+                "x"
+              ]
+            }
+          },
+          {
+            "task": {
+              "name": "build",
+              "id": "b",
+              "groups": [
+                "y"
+              ],
+              "labels": {
+                "k": "v"
+              }
+            }
+          },
+          {
+            "run": true
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "calls": [
+            [
+              "i",
+              []
+            ],
+            [
+              "b",
+              []
+            ]
+          ],
+          "error": null
+        },
+        {
+          "calls": [
+            [
+              "i",
+              []
+            ],
+            [
+              "b",
+              []
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "counter resource is built once per container",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "set_resource": {
+              "name": "counter",
+              "counter": true
+            }
+          },
+          {
+            "task": {
+              "name": "build",
+              "id": "b",
+              "inject": [
+                "counter"
+              ]
+            }
+          },
+          {
+            "run": true
+          },
+          {
+            "run": true
+          },
+          {
+            "reset": true
+          },
+          {
+            "set_resource": {
+              "name": "counter",
+              "counter": true
+            }
+          },
+          {
+            "resource": "counter"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        true,
+        {
+          "calls": [
+            [
+              "b",
+              {
+                "counter": 1
+              }
+            ]
+          ],
+          "error": null
+        },
+        {
+          "calls": [
+            [
+              "b",
+              {
+                "counter": 1
+              }
+            ]
+          ],
+          "error": null
+        },
+        null,
+        null,
+        2
+      ]
+    },
+    {
+      "name": "resource with dependencies",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "set_resource": {
+              "name": "a",
+              "value": "A",
+              "dependencies": [
+                "b",
+                "c"
+              ]
+            }
+          },
+          {
+            "set_resource": {
+              "name": "b",
+              "value": "B"
+            }
+          },
+          {
+            "set_resource": {
+              "name": "c",
+              "value": [
+                1,
+                2
+              ]
+            }
+          },
+          {
+            "resource": "a"
+          },
+          {
+            "set_resource": {
+              "name": "d",
+              "value": "D",
+              "dependencies": [
+                "missing"
+              ]
+            }
+          },
+          {
+            "resource": "d"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        [
+          "A",
+          "B",
+          [
+            1,
+            2
+          ]
+        ],
+        null,
+        {
+          "$error": {
+            "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+            "message": "Dependency missing not found",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "generic adapter",
+      "op": "generic.run",
+      "args": {
+        "steps": [
+          "workers",
+          "on_worker_start",
+          "on_worker_stop",
+          "start",
+          "on_job",
+          "stop",
+          "start"
+        ]
+      },
+      "expect": {
+        "results": [
+          0,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "calls": [
+          [
+            "start",
+            []
+          ],
+          [
+            "job",
+            []
+          ],
+          [
+            "start",
+            []
+          ]
+        ]
+      }
+    },
+    {
+      "name": "task with params, injections, labels and errors",
+      "op": "task.run",
+      "args": {
+        "name": "test",
+        "steps": [
+          {
+            "param": {
+              "key": "a",
+              "default": "",
+              "validator": {
+                "text": [
+                  3
+                ]
+              }
+            }
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "get": "params"
+          },
+          {
+            "get": "dependencies"
+          },
+          {
+            "get": "desc"
+          },
+          {
+            "label_of": {
+              "key": "missing"
+            }
+          },
+          {
+            "get": "action"
+          },
+          {
+            "get": "name"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Injection already declared for user",
+            "code": 0
+          }
+        },
+        [
+          "a"
+        ],
+        [
+          "user"
+        ],
+        "",
+        null,
+        {
+          "$error": {
+            "class": "TypeError",
+            "message": "call_user_func_array(): Argument #1 ($callback) must be a valid callback, no array or string given",
+            "code": 0
+          }
+        },
+        "test"
+      ]
+    },
+    {
+      "name": "a task without a callback escapes run()",
+      "op": "cli.run",
+      "args": {
+        "argv": [
+          "app",
+          "build"
+        ],
+        "steps": [
+          {
+            "error": {
+              "id": "e",
+              "inject": [
+                "error"
+              ]
+            }
+          },
+          {
+            "init": {
+              "id": "i"
+            }
+          },
+          {
+            "shutdown": {
+              "id": "s"
+            }
+          },
+          {
+            "bare_task": "build"
+          },
+          {
+            "tasks": true
+          },
+          {
+            "run": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true,
+        "build",
+        [
+          [
+            "build",
+            ""
+          ]
+        ],
+        {
+          "calls": [
+            [
+              "i",
+              []
+            ]
+          ],
+          "error": {
+            "class": "TypeError",
+            "message": "call_user_func_array(): Argument #1 ($callback) must be a valid callback, no array or string given",
+            "code": 0
+          }
+        }
+      ]
+    }
+  ]
+}

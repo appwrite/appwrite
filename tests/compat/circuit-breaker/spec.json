@@ -1,0 +1,207 @@
+{
+  "lib": "circuit-breaker",
+  "description": "utopia-php/circuit-breaker: circuit breakers judged on a rolling failure rate, half-open probes, state shared through Redis or a Swoole table, telemetry.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/circuit-breaker/src"
+    ],
+    "tests": [
+      "packages/circuit-breaker/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/circuit-breaker"
+  },
+  "services": [
+    "redis"
+  ],
+  "state": [
+    "redis"
+  ],
+  "ops": {
+    "store.array": {
+      "doc": "fixture: the tests' array adapter, preloaded with `values` ([key, value] pairs; \"$opened_ago_10\" is time() - 10), logging every write"
+    },
+    "store.writes": {
+      "doc": "fixture: the writes an array adapter logged, as [op, key, value]"
+    },
+    "store.table": {
+      "doc": "SwooleTable::createTable(size?, value_length?)",
+      "covers": [
+        "Utopia\\CircuitBreaker\\Adapter\\SwooleTable::createTable"
+      ]
+    },
+    "store.swoole_table": {
+      "doc": "new SwooleTable(table, prefix?)",
+      "covers": [
+        "Utopia\\CircuitBreaker\\Adapter\\SwooleTable::__construct"
+      ]
+    },
+    "store.redis": {
+      "doc": "new Redis(redis client, prefix?) on the `redis` service",
+      "covers": [
+        "Utopia\\CircuitBreaker\\Adapter\\Redis::__construct"
+      ]
+    },
+    "store.get": {
+      "doc": "$adapter->get(key)",
+      "covers": [
+        "Utopia\\CircuitBreaker\\Adapter\\Redis::get",
+        "Utopia\\CircuitBreaker\\Adapter\\SwooleTable::get"
+      ]
+    },
+    "store.set": {
+      "doc": "$adapter->set(key, value)",
+      "covers": [
+        "Utopia\\CircuitBreaker\\Adapter\\Redis::set",
+        "Utopia\\CircuitBreaker\\Adapter\\SwooleTable::set"
+      ]
+    },
+    "store.increment": {
+      "doc": "$adapter->increment(key, by?)",
+      "covers": [
+        "Utopia\\CircuitBreaker\\Adapter\\Redis::increment",
+        "Utopia\\CircuitBreaker\\Adapter\\SwooleTable::increment"
+      ]
+    },
+    "store.delete": {
+      "doc": "$adapter->delete(key)",
+      "covers": [
+        "Utopia\\CircuitBreaker\\Adapter\\Redis::delete",
+        "Utopia\\CircuitBreaker\\Adapter\\SwooleTable::delete"
+      ]
+    },
+    "telemetry.new": {
+      "doc": "fixture: the Test telemetry backend, also logging every counter and gauge point"
+    },
+    "telemetry.log": {
+      "doc": "fixture: every logged point as [kind, name, value, attribute pairs]; gauge values (timestamps) as 0"
+    },
+    "telemetry.observe": {
+      "doc": "fixture: runs every observable gauge's callbacks: [[gauge, [[breaker name, value], ...]], ...]"
+    },
+    "telemetry.callbacks": {
+      "doc": "fixture: [[gauge, callback count], ...]"
+    },
+    "breaker.new": {
+      "doc": "new CircuitBreaker(timeout?, successThreshold?, cache: store?, key?, telemetry?, metricPrefix?, window?, failureRatio?, minimumThroughput?, halfOpenPermittedCalls?)",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::__construct"
+      ]
+    },
+    "breaker.discarded": {
+      "doc": "a breaker made like breaker.new and dropped at once: whether it is gone (nothing keeps it alive)"
+    },
+    "breaker.set_telemetry": {
+      "doc": "$breaker->setTelemetry(telemetry)",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::setTelemetry"
+      ]
+    },
+    "breaker.call": {
+      "doc": "$breaker->call(open: fn => fallback, close, halfOpen?) where close and half_open are {result} or {throw}, optionally running `during` actions inside first ({op: call|state|observe}): the result, or {result, during}",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::call"
+      ]
+    },
+    "breaker.calls": {
+      "doc": "one call per `outcomes` entry (succeed or fail, fallback 'fallback', result 'ok'): count of each returned value",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::call"
+      ]
+    },
+    "breaker.scenario": {
+      "doc": "a breaker made like breaker.new, then each of `steps` (succeed, fail, probe: with a half-open callback, trip): [result, state, failures, successes] after each",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::__construct",
+        "Utopia\\CircuitBreaker\\CircuitBreaker::call",
+        "Utopia\\CircuitBreaker\\CircuitBreaker::trip",
+        "Utopia\\CircuitBreaker\\CircuitBreaker::getState",
+        "Utopia\\CircuitBreaker\\CircuitBreaker::getFailureCount",
+        "Utopia\\CircuitBreaker\\CircuitBreaker::getSuccessCount"
+      ],
+      "fuzz": [
+        {
+          "name": "steps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "timeout": { "gen": "int", "min": -1, "max": 30 },
+              "success_threshold": { "gen": "int", "min": -1, "max": 3 },
+              "key": { "gen": "pick", "from": ["default", "api", ""] },
+              "window": { "gen": "int", "min": -1, "max": 60 },
+              "failure_ratio": { "gen": "float", "min": -0.1, "max": 1.2 },
+              "minimum_throughput": { "gen": "int", "min": 0, "max": 6 },
+              "half_open_permitted_calls": { "gen": "int", "min": 0, "max": 2 },
+              "steps": { "gen": "array", "min": 0, "max": 30, "items": { "gen": "pick", "from": ["succeed", "fail", "fail", "probe", "trip"] } }
+            },
+            "optional": ["timeout", "success_threshold", "key", "window", "failure_ratio", "minimum_throughput", "half_open_permitted_calls"]
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "breaker.state": {
+      "doc": "$breaker->getState()->value",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::getState"
+      ]
+    },
+    "breaker.is": {
+      "doc": "{open: isOpen(), closed: isClosed(), half_open: isHalfOpen()}",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::isOpen",
+        "Utopia\\CircuitBreaker\\CircuitBreaker::isClosed",
+        "Utopia\\CircuitBreaker\\CircuitBreaker::isHalfOpen"
+      ]
+    },
+    "breaker.failures": {
+      "doc": "$breaker->getFailureCount()",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::getFailureCount"
+      ]
+    },
+    "breaker.successes": {
+      "doc": "$breaker->getSuccessCount()",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::getSuccessCount"
+      ]
+    },
+    "breaker.trip": {
+      "doc": "$breaker->trip()",
+      "covers": [
+        "Utopia\\CircuitBreaker\\CircuitBreaker::trip"
+      ]
+    },
+    "sleep": {
+      "doc": "fixture: waits `ms` milliseconds (open timeouts and windows are in whole seconds)"
+    }
+  },
+  "generators": {},
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "Utopia\\CircuitBreaker\\CircuitBreaker::call",
+      "php": "`open` is any callable and may throw; the call then reports the outcome `exception`, `short_circuit_exception` or `fallback_exception` and rethrows.",
+      "reason": "The Rust fallback is an infallible closure returning the value: a fallback that fails is not representable (a caller wanting one returns a Result as the value)."
+    },
+    {
+      "symbol": "Utopia\\CircuitBreaker\\CircuitBreaker::__construct",
+      "php": "The constructor reads the shared state from the cache adapter (and throws AdapterException when it fails).",
+      "reason": "Constructors are not async in Rust; every operation reads the shared state first anyway, so only a failing store at construction time differs (the first operation reports it)."
+    },
+    {
+      "symbol": "Utopia\\CircuitBreaker\\Adapter\\Redis::__construct",
+      "php": "Any object is accepted and checked for get, set, incrBy and del methods (InvalidArgumentException otherwise).",
+      "reason": "Redis<C> takes a redis-rs connection: a client without the commands does not type-check."
+    },
+    {
+      "symbol": "Utopia\\CircuitBreaker\\Adapter\\SwooleTable::createTable",
+      "php": "A Swoole\\Table has a fixed number of rows: set() on a full table fails with AdapterException.",
+      "reason": "SharedTable is a map in process memory that grows; Swoole's real capacity depends on its hash conflict allowance and is not a contract."
+    }
+  ]
+}

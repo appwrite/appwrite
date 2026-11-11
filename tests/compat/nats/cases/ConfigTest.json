@@ -1,0 +1,1927 @@
+{
+  "source": "packages/nats/tests/JetStream/ConfigTest.php",
+  "cases": [
+    {
+      "name": "push and flow control fields serialize",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ConsumerConfig",
+            "args": {
+              "deliverSubject": "deliver.here",
+              "deliverGroup": "group-a",
+              "flowControl": true,
+              "idleHeartbeat": 2.0
+            }
+          },
+          "expect": {
+            "deliver_policy": "all",
+            "ack_policy": "explicit",
+            "replay_policy": "instant",
+            "deliver_subject": "deliver.here",
+            "deliver_group": "group-a",
+            "flow_control": true,
+            "idle_heartbeat": 2000000000
+          }
+        }
+      ]
+    },
+    {
+      "name": "consumer config round trip",
+      "steps": [
+        {
+          "op": "config.from",
+          "args": {
+            "type": "ConsumerConfig",
+            "data": {
+              "deliver_subject": "x.y",
+              "flow_control": true,
+              "idle_heartbeat": 5000000000
+            }
+          },
+          "expect": {
+            "array": {
+              "deliver_policy": "all",
+              "ack_policy": "explicit",
+              "replay_policy": "instant",
+              "deliver_subject": "x.y",
+              "flow_control": true,
+              "idle_heartbeat": 5000000000
+            },
+            "ack_wait": null,
+            "inactive_threshold": null,
+            "idle_heartbeat": 5.0,
+            "backoff": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "consumer info populates sequences",
+      "steps": [
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "ConsumerInfo",
+            "data": {
+              "stream_name": "S",
+              "name": "C",
+              "num_pending": 7,
+              "num_ack_pending": 3,
+              "delivered": {
+                "consumer_seq": 4,
+                "stream_seq": 10
+              },
+              "ack_floor": {
+                "consumer_seq": 1,
+                "stream_seq": 7
+              }
+            }
+          },
+          "expect": {
+            "stream_name": "S",
+            "name": "C",
+            "config": {
+              "deliver_policy": "all",
+              "ack_policy": "explicit",
+              "replay_policy": "instant"
+            },
+            "created": "",
+            "num_ack_pending": 3,
+            "num_redelivered": 0,
+            "num_waiting": 0,
+            "num_pending": 7,
+            "delivered": {
+              "consumer_seq": 4,
+              "stream_seq": 10,
+              "last_active": null
+            },
+            "ack_floor": {
+              "consumer_seq": 1,
+              "stream_seq": 7,
+              "last_active": null
+            },
+            "push_bound": false,
+            "cluster": null,
+            "metadata": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "backoff serializes to nanos",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ConsumerConfig",
+            "args": {
+              "ackWait": 10.0,
+              "maxDeliver": 5,
+              "backoff": [
+                10.0,
+                30.0,
+                120.0
+              ]
+            }
+          },
+          "expect": {
+            "deliver_policy": "all",
+            "ack_policy": "explicit",
+            "replay_policy": "instant",
+            "ack_wait": 10000000000,
+            "max_deliver": 5,
+            "backoff": [
+              10000000000,
+              30000000000,
+              120000000000
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "backoff omitted when unset",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ConsumerConfig",
+            "args": {}
+          },
+          "expect": {
+            "deliver_policy": "all",
+            "ack_policy": "explicit",
+            "replay_policy": "instant"
+          }
+        }
+      ]
+    },
+    {
+      "name": "backoff round trip",
+      "steps": [
+        {
+          "op": "config.from",
+          "args": {
+            "type": "ConsumerConfig",
+            "data": {
+              "backoff": [
+                5000000000,
+                60000000000
+              ]
+            }
+          },
+          "expect": {
+            "array": {
+              "deliver_policy": "all",
+              "ack_policy": "explicit",
+              "replay_policy": "instant",
+              "backoff": [
+                5000000000,
+                60000000000
+              ]
+            },
+            "ack_wait": null,
+            "inactive_threshold": null,
+            "idle_heartbeat": null,
+            "backoff": [
+              5.0,
+              60.0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "stream message decodes its base64 payload",
+      "steps": [
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "StreamMessage",
+            "data": {
+              "subject": "foo.bar",
+              "seq": 42,
+              "data": "dGhlLXBheWxvYWQ="
+            }
+          },
+          "expect": {
+            "subject": "foo.bar",
+            "seq": 42,
+            "data": "the-payload",
+            "time": false,
+            "headers": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "stream config: defaults and every field",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "StreamConfig",
+            "args": {
+              "name": "S"
+            }
+          },
+          "expect": {
+            "name": "S",
+            "retention": "limits",
+            "max_consumers": -1,
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msgs_per_subject": -1,
+            "storage": "file",
+            "num_replicas": 1,
+            "discard": "old",
+            "no_ack": false,
+            "allow_direct": false,
+            "mirror_direct": false,
+            "sealed": false,
+            "deny_delete": false,
+            "deny_purge": false,
+            "allow_rollup_hdrs": false
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "StreamConfig",
+            "args": {
+              "name": "S",
+              "subjects": [
+                "a.>",
+                "b"
+              ],
+              "description": "d",
+              "retention": "workqueue",
+              "maxConsumers": 3,
+              "maxMsgs": 10,
+              "maxBytes": 100,
+              "maxMsgsPerSubject": 2,
+              "maxMsgSize": 64,
+              "maxAge": 1.5,
+              "storage": "memory",
+              "replicas": 3,
+              "discard": "new",
+              "noAck": true,
+              "duplicateWindow": 120,
+              "allowDirect": true,
+              "mirrorDirect": true,
+              "sealed": true,
+              "denyDelete": true,
+              "denyPurge": true,
+              "allowRollup": true,
+              "metadata": {
+                "env": "test"
+              },
+              "mirror": {
+                "name": "M",
+                "optStartSeq": 3,
+                "filterSubject": "x",
+                "subjectTransforms": [
+                  {
+                    "source": "a",
+                    "destination": "b"
+                  }
+                ],
+                "external": {
+                  "api": "$JS.x.API",
+                  "deliver": "d"
+                }
+              },
+              "sources": [
+                {
+                  "name": "A"
+                },
+                {
+                  "name": "B",
+                  "optStartTime": "2024-01-01T00:00:00Z"
+                }
+              ],
+              "republish": {
+                "source": ">",
+                "destination": "r.>",
+                "headersOnly": true
+              },
+              "subjectTransform": {
+                "source": "a",
+                "destination": "b"
+              },
+              "placement": {
+                "cluster": "c",
+                "tags": [
+                  "t"
+                ]
+              },
+              "compression": "s2",
+              "firstSeq": 9,
+              "consumerLimits": {
+                "inactiveThreshold": 30.0,
+                "maxAckPending": 5
+              },
+              "allowMsgTtl": true,
+              "subjectDeleteMarkerTtl": 2.0
+            }
+          },
+          "expect": {
+            "name": "S",
+            "retention": "workqueue",
+            "max_consumers": 3,
+            "max_msgs": 10,
+            "max_bytes": 100,
+            "max_msgs_per_subject": 2,
+            "storage": "memory",
+            "num_replicas": 3,
+            "discard": "new",
+            "no_ack": true,
+            "allow_direct": true,
+            "mirror_direct": true,
+            "sealed": true,
+            "deny_delete": true,
+            "deny_purge": true,
+            "allow_rollup_hdrs": true,
+            "subjects": [
+              "a.>",
+              "b"
+            ],
+            "description": "d",
+            "max_msg_size": 64,
+            "max_age": 1500000000,
+            "duplicate_window": 120000000000,
+            "metadata": {
+              "env": "test"
+            },
+            "mirror": {
+              "name": "M",
+              "opt_start_seq": 3,
+              "filter_subject": "x",
+              "subject_transforms": [
+                {
+                  "src": "a",
+                  "dest": "b"
+                }
+              ],
+              "external": {
+                "api": "$JS.x.API",
+                "deliver": "d"
+              }
+            },
+            "sources": [
+              {
+                "name": "A"
+              },
+              {
+                "name": "B",
+                "opt_start_time": "2024-01-01T00:00:00Z"
+              }
+            ],
+            "republish": {
+              "src": ">",
+              "dest": "r.>",
+              "headers_only": true
+            },
+            "subject_transform": {
+              "src": "a",
+              "dest": "b"
+            },
+            "placement": {
+              "cluster": "c",
+              "tags": [
+                "t"
+              ]
+            },
+            "compression": "s2",
+            "first_seq": 9,
+            "consumer_limits": {
+              "inactive_threshold": 30000000000,
+              "max_ack_pending": 5
+            },
+            "allow_msg_ttl": true,
+            "subject_delete_marker_ttl": 2000000000
+          }
+        }
+      ]
+    },
+    {
+      "name": "consumer config: every field",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ConsumerConfig",
+            "args": {
+              "name": "n",
+              "durableName": "d",
+              "description": "x",
+              "deliverPolicy": "by_start_sequence",
+              "ackPolicy": "all",
+              "ackWait": 0.3,
+              "maxDeliver": 4,
+              "filterSubject": "f",
+              "filterSubjects": [
+                "a",
+                "b"
+              ],
+              "replayPolicy": "original",
+              "maxWaiting": 10,
+              "maxAckPending": 20,
+              "inactiveThreshold": 30.0,
+              "optStartSeq": 7,
+              "optStartTime": "2024-01-01T00:00:00Z",
+              "maxBatch": 5,
+              "maxBytes": 1000,
+              "memStorage": true,
+              "numReplicas": 1,
+              "deliverSubject": "ds",
+              "deliverGroup": "dg",
+              "flowControl": true,
+              "idleHeartbeat": 5.0,
+              "metadata": {
+                "owner": "billing"
+              },
+              "backoff": [
+                1.0,
+                2.5
+              ]
+            }
+          },
+          "expect": {
+            "deliver_policy": "by_start_sequence",
+            "ack_policy": "all",
+            "replay_policy": "original",
+            "name": "n",
+            "durable_name": "d",
+            "description": "x",
+            "ack_wait": 300000000,
+            "max_deliver": 4,
+            "filter_subject": "f",
+            "filter_subjects": [
+              "a",
+              "b"
+            ],
+            "max_waiting": 10,
+            "max_ack_pending": 20,
+            "inactive_threshold": 30000000000,
+            "opt_start_seq": 7,
+            "opt_start_time": "2024-01-01T00:00:00Z",
+            "max_batch": 5,
+            "max_bytes": 1000,
+            "mem_storage": true,
+            "num_replicas": 1,
+            "deliver_subject": "ds",
+            "deliver_group": "dg",
+            "flow_control": true,
+            "idle_heartbeat": 5000000000,
+            "metadata": {
+              "owner": "billing"
+            },
+            "backoff": [
+              1000000000,
+              2500000000
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty metadata and empty limits encode as PHP arrays",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "StreamConfig",
+            "args": {
+              "name": "S",
+              "metadata": {},
+              "consumerLimits": {},
+              "placement": {}
+            }
+          },
+          "expect": {
+            "name": "S",
+            "retention": "limits",
+            "max_consumers": -1,
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msgs_per_subject": -1,
+            "storage": "file",
+            "num_replicas": 1,
+            "discard": "old",
+            "no_ack": false,
+            "allow_direct": false,
+            "mirror_direct": false,
+            "sealed": false,
+            "deny_delete": false,
+            "deny_purge": false,
+            "allow_rollup_hdrs": false,
+            "metadata": [],
+            "placement": [],
+            "consumer_limits": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "limits, placement, republish, transform, external and source on their own",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ConsumerLimits",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ConsumerLimits",
+            "args": {
+              "inactiveThreshold": 0.5
+            }
+          },
+          "expect": {
+            "inactive_threshold": 500000000
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "Placement",
+            "args": {
+              "tags": []
+            }
+          },
+          "expect": {
+            "tags": []
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "Republish",
+            "args": {
+              "source": "a",
+              "destination": "b"
+            }
+          },
+          "expect": {
+            "src": "a",
+            "dest": "b"
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "SubjectTransform",
+            "args": {
+              "source": "a",
+              "destination": "b"
+            }
+          },
+          "expect": {
+            "src": "a",
+            "dest": "b"
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ExternalStream",
+            "args": {
+              "api": "x"
+            }
+          },
+          "expect": {
+            "api": "x"
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "StreamSource",
+            "args": {
+              "name": "S"
+            }
+          },
+          "expect": {
+            "name": "S"
+          }
+        },
+        {
+          "op": "config.from",
+          "args": {
+            "type": "ConsumerLimits",
+            "data": {
+              "inactive_threshold": 1500000000
+            }
+          },
+          "expect": {
+            "array": {
+              "inactive_threshold": 1500000000
+            }
+          }
+        },
+        {
+          "op": "config.from",
+          "args": {
+            "type": "Placement",
+            "data": {
+              "cluster": "c"
+            }
+          },
+          "expect": {
+            "array": {
+              "cluster": "c"
+            }
+          }
+        },
+        {
+          "op": "config.from",
+          "args": {
+            "type": "Republish",
+            "data": {
+              "src": "a",
+              "dest": "b",
+              "headers_only": true
+            }
+          },
+          "expect": {
+            "array": {
+              "src": "a",
+              "dest": "b",
+              "headers_only": true
+            }
+          }
+        },
+        {
+          "op": "config.from",
+          "args": {
+            "type": "SubjectTransform",
+            "data": {}
+          },
+          "expect": {
+            "array": {
+              "src": "",
+              "dest": ""
+            }
+          }
+        },
+        {
+          "op": "config.from",
+          "args": {
+            "type": "ExternalStream",
+            "data": {
+              "api": "x",
+              "deliver": "y"
+            }
+          },
+          "expect": {
+            "array": {
+              "api": "x",
+              "deliver": "y"
+            }
+          }
+        },
+        {
+          "op": "config.from",
+          "args": {
+            "type": "StreamSource",
+            "data": {
+              "name": "S",
+              "subject_transforms": [
+                {
+                  "src": "a"
+                }
+              ],
+              "external": {
+                "api": "x"
+              }
+            }
+          },
+          "expect": {
+            "array": {
+              "name": "S",
+              "subject_transforms": [
+                {
+                  "src": "a",
+                  "dest": ""
+                }
+              ],
+              "external": {
+                "api": "x"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "stream config from the API, with unknown policies falling back",
+      "steps": [
+        {
+          "op": "config.from",
+          "args": {
+            "type": "StreamConfig",
+            "data": {
+              "name": "S",
+              "retention": "bogus",
+              "storage": "memory",
+              "discard": "new",
+              "max_age": 1500000000,
+              "duplicate_window": 120000000000,
+              "subject_delete_marker_ttl": 2000000000,
+              "mirror": {
+                "name": "M"
+              },
+              "sources": [
+                {
+                  "name": "A"
+                }
+              ],
+              "consumer_limits": {
+                "inactive_threshold": 3
+              }
+            }
+          },
+          "expect": {
+            "array": {
+              "name": "S",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "memory",
+              "num_replicas": 1,
+              "discard": "new",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "max_age": 1500000000,
+              "duplicate_window": 120000000000,
+              "mirror": {
+                "name": "M"
+              },
+              "sources": [
+                {
+                  "name": "A"
+                }
+              ],
+              "consumer_limits": {
+                "inactive_threshold": 3
+              },
+              "subject_delete_marker_ttl": 2000000000
+            },
+            "max_age": 1.5,
+            "duplicate_window": 120.0,
+            "subject_delete_marker_ttl": 2.0,
+            "limits_ttl": 3e-9
+          }
+        }
+      ]
+    },
+    {
+      "name": "seconds and nanos",
+      "steps": [
+        {
+          "op": "nanos.from_seconds",
+          "args": {
+            "seconds": 0.0
+          },
+          "expect": 0
+        },
+        {
+          "op": "nanos.from_seconds",
+          "args": {
+            "seconds": 0.1
+          },
+          "expect": 100000000
+        },
+        {
+          "op": "nanos.from_seconds",
+          "args": {
+            "seconds": 0.3
+          },
+          "expect": 300000000
+        },
+        {
+          "op": "nanos.from_seconds",
+          "args": {
+            "seconds": 0.045
+          },
+          "expect": 45000000
+        },
+        {
+          "op": "nanos.from_seconds",
+          "args": {
+            "seconds": 2.0
+          },
+          "expect": 2000000000
+        },
+        {
+          "op": "nanos.from_seconds",
+          "args": {
+            "seconds": 1e-9
+          },
+          "expect": 1
+        },
+        {
+          "op": "nanos.from_seconds",
+          "args": {
+            "seconds": 86400.0
+          },
+          "expect": 86400000000000
+        },
+        {
+          "op": "nanos.to_seconds",
+          "args": {
+            "nanos": 0
+          },
+          "expect": 0.0
+        },
+        {
+          "op": "nanos.to_seconds",
+          "args": {
+            "nanos": 1
+          },
+          "expect": 1e-9
+        },
+        {
+          "op": "nanos.to_seconds",
+          "args": {
+            "nanos": 5000000000
+          },
+          "expect": 5.0
+        },
+        {
+          "op": "nanos.to_seconds",
+          "args": {
+            "nanos": 1500000000
+          },
+          "expect": 1.5
+        },
+        {
+          "op": "nanos.to_seconds",
+          "args": {
+            "nanos": 300000000
+          },
+          "expect": 0.3
+        },
+        {
+          "op": "nanos.to_seconds",
+          "args": {
+            "nanos": -1000000000
+          },
+          "expect": -1.0
+        }
+      ]
+    },
+    {
+      "name": "key-value and object store configs",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "KeyValueConfig",
+            "args": {
+              "bucket": "b"
+            }
+          },
+          "expect": {
+            "name": "KV_b",
+            "retention": "limits",
+            "max_consumers": -1,
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msgs_per_subject": 1,
+            "storage": "file",
+            "num_replicas": 1,
+            "discard": "new",
+            "no_ack": false,
+            "allow_direct": true,
+            "mirror_direct": false,
+            "sealed": false,
+            "deny_delete": false,
+            "deny_purge": false,
+            "allow_rollup_hdrs": true,
+            "subjects": [
+              "$KV.b.>"
+            ]
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "KeyValueConfig",
+            "args": {
+              "bucket": "b",
+              "description": "d",
+              "maxValueSize": 64,
+              "history": 5,
+              "ttl": 3600.0,
+              "maxBytes": 1000,
+              "storage": "memory",
+              "replicas": 3
+            }
+          },
+          "expect": {
+            "name": "KV_b",
+            "retention": "limits",
+            "max_consumers": -1,
+            "max_msgs": -1,
+            "max_bytes": 1000,
+            "max_msgs_per_subject": 5,
+            "storage": "memory",
+            "num_replicas": 3,
+            "discard": "new",
+            "no_ack": false,
+            "allow_direct": true,
+            "mirror_direct": false,
+            "sealed": false,
+            "deny_delete": false,
+            "deny_purge": false,
+            "allow_rollup_hdrs": true,
+            "subjects": [
+              "$KV.b.>"
+            ],
+            "description": "d",
+            "max_msg_size": 64,
+            "max_age": 3600000000000
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "KeyValueConfig",
+            "args": {
+              "bucket": "b",
+              "maxValueSize": 0
+            }
+          },
+          "expect": {
+            "name": "KV_b",
+            "retention": "limits",
+            "max_consumers": -1,
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msgs_per_subject": 1,
+            "storage": "file",
+            "num_replicas": 1,
+            "discard": "new",
+            "no_ack": false,
+            "allow_direct": true,
+            "mirror_direct": false,
+            "sealed": false,
+            "deny_delete": false,
+            "deny_purge": false,
+            "allow_rollup_hdrs": true,
+            "subjects": [
+              "$KV.b.>"
+            ]
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ObjectStoreConfig",
+            "args": {
+              "bucket": "b"
+            }
+          },
+          "expect": {
+            "name": "OBJ_b",
+            "retention": "limits",
+            "max_consumers": -1,
+            "max_msgs": -1,
+            "max_bytes": -1,
+            "max_msgs_per_subject": -1,
+            "storage": "file",
+            "num_replicas": 1,
+            "discard": "new",
+            "no_ack": false,
+            "allow_direct": true,
+            "mirror_direct": false,
+            "sealed": false,
+            "deny_delete": false,
+            "deny_purge": false,
+            "allow_rollup_hdrs": true,
+            "subjects": [
+              "$O.b.C.>",
+              "$O.b.M.>"
+            ]
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ObjectStoreConfig",
+            "args": {
+              "bucket": "b",
+              "description": "d",
+              "maxBytes": 10,
+              "ttl": 1.0,
+              "storage": "memory",
+              "replicas": 2
+            }
+          },
+          "expect": {
+            "name": "OBJ_b",
+            "retention": "limits",
+            "max_consumers": -1,
+            "max_msgs": -1,
+            "max_bytes": 10,
+            "max_msgs_per_subject": -1,
+            "storage": "memory",
+            "num_replicas": 2,
+            "discard": "new",
+            "no_ack": false,
+            "allow_direct": true,
+            "mirror_direct": false,
+            "sealed": false,
+            "deny_delete": false,
+            "deny_purge": false,
+            "allow_rollup_hdrs": true,
+            "subjects": [
+              "$O.b.C.>",
+              "$O.b.M.>"
+            ],
+            "description": "d",
+            "max_age": 1000000000
+          }
+        }
+      ]
+    },
+    {
+      "name": "key-value entry and watch options defaults",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "KeyValueEntry",
+            "args": {
+              "bucket": "b",
+              "key": "k",
+              "value": "v",
+              "revision": 3
+            }
+          },
+          "expect": {
+            "bucket": "b",
+            "key": "k",
+            "value": "v",
+            "revision": 3,
+            "created": false,
+            "operation": "PUT"
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "KeyValueWatchOptions",
+            "args": {}
+          },
+          "expect": [
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "KeyValueWatchOptions",
+            "args": {
+              "includeHistory": true,
+              "metaOnly": true
+            }
+          },
+          "expect": [
+            true,
+            false,
+            false,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "name": "object meta and links",
+      "steps": [
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ObjectMeta",
+            "args": {
+              "name": "n",
+              "bucket": "b",
+              "nuid": "X",
+              "size": 3,
+              "chunks": 1,
+              "digest": "SHA-256=x"
+            }
+          },
+          "expect": {
+            "name": "n",
+            "bucket": "b",
+            "nuid": "X",
+            "size": 3,
+            "chunks": 1,
+            "digest": "SHA-256=x"
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ObjectMeta",
+            "args": {
+              "name": "n",
+              "bucket": "b",
+              "nuid": "",
+              "size": 0,
+              "chunks": 0,
+              "digest": "",
+              "description": "d",
+              "modified": "t",
+              "deleted": true,
+              "metadata": {
+                "a": "b"
+              },
+              "link": {
+                "bucket": "b",
+                "name": "t"
+              }
+            }
+          },
+          "expect": {
+            "name": "n",
+            "bucket": "b",
+            "nuid": "",
+            "size": 0,
+            "chunks": 0,
+            "digest": "",
+            "description": "d",
+            "mtime": "t",
+            "deleted": true,
+            "metadata": {
+              "a": "b"
+            },
+            "options": {
+              "link": {
+                "bucket": "b",
+                "name": "t"
+              }
+            }
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ObjectMeta",
+            "args": {
+              "name": "n",
+              "bucket": "b",
+              "nuid": "",
+              "size": 0,
+              "chunks": 0,
+              "digest": "",
+              "metadata": {},
+              "link": {
+                "bucket": "other"
+              }
+            }
+          },
+          "expect": {
+            "name": "n",
+            "bucket": "b",
+            "nuid": "",
+            "size": 0,
+            "chunks": 0,
+            "digest": "",
+            "options": {
+              "link": {
+                "bucket": "other"
+              }
+            }
+          }
+        },
+        {
+          "op": "config.new",
+          "args": {
+            "type": "ObjectLink",
+            "args": {
+              "bucket": "b",
+              "name": ""
+            }
+          },
+          "expect": {
+            "bucket": "b"
+          }
+        },
+        {
+          "op": "config.from",
+          "args": {
+            "type": "ObjectMeta",
+            "data": {
+              "name": 5,
+              "size": "12abc",
+              "chunks": true,
+              "deleted": "0",
+              "metadata": {
+                "a": 1,
+                "b": true
+              },
+              "options": {
+                "link": {
+                  "bucket": "x",
+                  "name": 7
+                }
+              }
+            }
+          },
+          "expect": {
+            "array": {
+              "name": "5",
+              "bucket": "",
+              "nuid": "",
+              "size": 12,
+              "chunks": 1,
+              "digest": "",
+              "metadata": {
+                "a": "1",
+                "b": "1"
+              },
+              "options": {
+                "link": {
+                  "bucket": "x",
+                  "name": "7"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "config.from",
+          "args": {
+            "type": "ObjectLink",
+            "data": {
+              "bucket": "b"
+            }
+          },
+          "expect": {
+            "array": {
+              "bucket": "b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "decoded infos",
+      "steps": [
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "StreamInfo",
+            "data": {
+              "config": {
+                "name": "S",
+                "subjects": [
+                  "a"
+                ]
+              },
+              "state": {
+                "messages": 3,
+                "bytes": 30,
+                "first_seq": 1,
+                "first_ts": "2024-01-01T00:00:00Z",
+                "last_seq": 3,
+                "consumer_count": 1,
+                "num_subjects": 1
+              },
+              "created": "2024-01-01T00:00:00Z"
+            }
+          },
+          "expect": {
+            "config": {
+              "name": "S",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "file",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "subjects": [
+                "a"
+              ]
+            },
+            "state": {
+              "messages": 3,
+              "bytes": true,
+              "first_seq": 1,
+              "last_seq": 3,
+              "consumer_count": 1,
+              "num_deleted": 0,
+              "num_subjects": 1
+            },
+            "created": "2024-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "StreamInfo",
+            "data": {}
+          },
+          "expect": {
+            "config": {
+              "name": "",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "file",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false
+            },
+            "state": {
+              "messages": 0,
+              "bytes": false,
+              "first_seq": 0,
+              "last_seq": 0,
+              "consumer_count": 0,
+              "num_deleted": 0,
+              "num_subjects": 0
+            },
+            "created": ""
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "StreamState",
+            "data": {
+              "messages": 1
+            }
+          },
+          "expect": {
+            "messages": 1,
+            "bytes": 0,
+            "first_seq": 0,
+            "last_seq": 0,
+            "consumer_count": 0,
+            "num_deleted": 0,
+            "num_subjects": 0,
+            "first_ts": null,
+            "last_ts": null
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "SequenceInfo",
+            "data": {
+              "consumer_seq": 1,
+              "stream_seq": 2,
+              "last_active": "now"
+            }
+          },
+          "expect": {
+            "consumer_seq": 1,
+            "stream_seq": 2,
+            "last_active": "now"
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "ConsumerInfo",
+            "data": {
+              "stream_name": "S",
+              "name": "C",
+              "config": {
+                "durable_name": "C",
+                "metadata": {
+                  "owner": "x"
+                }
+              },
+              "created": "t",
+              "push_bound": true,
+              "cluster": {
+                "name": "c1"
+              }
+            }
+          },
+          "expect": {
+            "stream_name": "S",
+            "name": "C",
+            "config": {
+              "deliver_policy": "all",
+              "ack_policy": "explicit",
+              "replay_policy": "instant",
+              "durable_name": "C",
+              "metadata": {
+                "owner": "x"
+              }
+            },
+            "created": "t",
+            "num_ack_pending": 0,
+            "num_redelivered": 0,
+            "num_waiting": 0,
+            "num_pending": 0,
+            "delivered": {
+              "consumer_seq": 0,
+              "stream_seq": 0,
+              "last_active": null
+            },
+            "ack_floor": {
+              "consumer_seq": 0,
+              "stream_seq": 0,
+              "last_active": null
+            },
+            "push_bound": true,
+            "cluster": "c1",
+            "metadata": {
+              "owner": "x"
+            }
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "AccountInfo",
+            "data": {
+              "memory": 1,
+              "storage": 2,
+              "streams": 3,
+              "consumers": 4,
+              "limits": {
+                "max_memory": -1
+              },
+              "api": {
+                "total": 9,
+                "errors": 1
+              },
+              "domain": "hub"
+            }
+          },
+          "expect": [
+            1,
+            2,
+            3,
+            4,
+            {
+              "max_memory": -1
+            },
+            9,
+            1,
+            "hub",
+            {
+              "memory": 1,
+              "storage": 2,
+              "streams": 3,
+              "consumers": 4,
+              "limits": {
+                "max_memory": -1
+              },
+              "api": {
+                "total": 9,
+                "errors": 1
+              },
+              "domain": "hub"
+            }
+          ]
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "AccountInfo",
+            "data": {}
+          },
+          "expect": [
+            0,
+            0,
+            0,
+            0,
+            [],
+            0,
+            0,
+            null,
+            []
+          ]
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "ApiError",
+            "data": {
+              "code": 404,
+              "err_code": 10059,
+              "description": "stream not found"
+            }
+          },
+          "expect": [
+            404,
+            10059,
+            "stream not found"
+          ]
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "ApiError",
+            "data": {}
+          },
+          "expect": [
+            0,
+            0,
+            "Unknown error"
+          ]
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "PubAck",
+            "data": {
+              "stream": "S",
+              "seq": 5,
+              "domain": "d",
+              "duplicate": true
+            }
+          },
+          "expect": {
+            "stream": "S",
+            "seq": 5,
+            "domain": "d",
+            "duplicate": true
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "PubAck",
+            "data": {}
+          },
+          "expect": {
+            "stream": "",
+            "seq": 0,
+            "domain": null,
+            "duplicate": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "stream messages: a payload of \"0\" reads as empty (PHP ?: ''), bad base64 too, headers decode",
+      "steps": [
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "StreamMessage",
+            "data": {
+              "subject": "s",
+              "seq": 1,
+              "data": "MA==",
+              "time": "t",
+              "hdrs": "TkFUUy8xLjANCk5hdHMtVFRMOiAycw0KDQo="
+            }
+          },
+          "expect": {
+            "subject": "s",
+            "seq": 1,
+            "data": "",
+            "time": true,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "Nats-TTL",
+                  [
+                    "2s"
+                  ]
+                ]
+              ],
+              "count": 1,
+              "all_count": 1,
+              "wire": "NATS/1.0\r\nNats-TTL: 2s\r\n\r\n"
+            }
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "StreamMessage",
+            "data": {
+              "data": "not base64!",
+              "hdrs": ""
+            }
+          },
+          "expect": {
+            "subject": "",
+            "seq": 0,
+            "data": "",
+            "time": false,
+            "headers": null
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "StreamMessage",
+            "data": {
+              "hdrs": "Tk9QRS8xLjANCg0K"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Invalid header version: NOPE/1.0"
+            }
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "StreamMessage",
+            "data": {
+              "data": "//4="
+            }
+          },
+          "expect": {
+            "subject": "",
+            "seq": 0,
+            "data": {
+              "$bytes": "//4="
+            },
+            "time": false,
+            "headers": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "message metadata from reply subjects",
+      "steps": [
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "MsgMetadata",
+            "data": "$JS.ACK.ORDERS.worker.1.42.17.1700000000000000000.3"
+          },
+          "expect": {
+            "stream": "ORDERS",
+            "consumer": "worker",
+            "delivered": 1,
+            "stream_seq": 42,
+            "consumer_seq": 17,
+            "timestamp": "1700000000000000000",
+            "pending": 3,
+            "domain": null
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "MsgMetadata",
+            "data": "$JS.ACK.hub.ACCHASH.ORDERS.worker.2.43.18.1700000000000000001.0.token"
+          },
+          "expect": {
+            "stream": "ORDERS",
+            "consumer": "worker",
+            "delivered": 2,
+            "stream_seq": 43,
+            "consumer_seq": 18,
+            "timestamp": "1700000000000000001",
+            "pending": 0,
+            "domain": "hub"
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "MsgMetadata",
+            "data": "$JS.ACK.a.b.c.d.e.f.g.h"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Cannot parse JetStream reply subject: $JS.ACK.a.b.c.d.e.f.g.h"
+            }
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "MsgMetadata",
+            "data": "_INBOX.x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Cannot parse JetStream reply subject: _INBOX.x"
+            }
+          }
+        },
+        {
+          "op": "decode.info",
+          "args": {
+            "type": "MsgMetadata",
+            "data": "$JS.ACK.S.C.x.5abc.7.ts.-1"
+          },
+          "expect": {
+            "stream": "S",
+            "consumer": "C",
+            "delivered": 0,
+            "stream_seq": 5,
+            "consumer_seq": 7,
+            "timestamp": "ts",
+            "pending": -1,
+            "domain": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "check error",
+      "steps": [
+        {
+          "op": "jetstream.check_error",
+          "args": {
+            "data": {
+              "stream": "S"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "jetstream.check_error",
+          "args": {
+            "data": {
+              "error": {
+                "code": 404,
+                "err_code": 10059,
+                "description": "stream not found"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "stream not found"
+            }
+          }
+        },
+        {
+          "op": "jetstream.check_error",
+          "args": {
+            "data": {
+              "error": {}
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "Unknown error"
+            }
+          }
+        },
+        {
+          "op": "jetstream.check_error",
+          "args": {
+            "data": {
+              "error": null
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "api prefixes",
+      "steps": [
+        {
+          "op": "jetstream.prefix",
+          "expect": "$JS.API"
+        },
+        {
+          "op": "jetstream.prefix",
+          "args": {
+            "domain": "hub"
+          },
+          "expect": "$JS.hub.API"
+        },
+        {
+          "op": "jetstream.prefix",
+          "args": {
+            "prefix": "$JS.custom.API"
+          },
+          "expect": "$JS.custom.API"
+        },
+        {
+          "op": "jetstream.prefix",
+          "args": {
+            "domain": "hub",
+            "prefix": "p"
+          },
+          "expect": "p"
+        }
+      ]
+    },
+    {
+      "name": "server info from INFO",
+      "steps": [
+        {
+          "op": "server_info.from_array",
+          "args": {
+            "data": {}
+          },
+          "expect": {
+            "server_id": "",
+            "server_name": "",
+            "version": "",
+            "proto": 0,
+            "host": "",
+            "port": 0,
+            "headers": false,
+            "auth_required": false,
+            "tls_required": false,
+            "tls_available": false,
+            "max_payload": 1048576,
+            "connect_urls": [],
+            "nonce": null,
+            "jetstream": false,
+            "client_id": null,
+            "client_ip": null
+          }
+        },
+        {
+          "op": "server_info.from_array",
+          "args": {
+            "data": {
+              "server_id": "X",
+              "headers": true,
+              "tls_available": true,
+              "max_payload": 5,
+              "connect_urls": [
+                "a:1"
+              ],
+              "nonce": "n",
+              "client_id": 7,
+              "client_ip": "::1",
+              "jetstream": true,
+              "proto": 1,
+              "port": 4222
+            }
+          },
+          "expect": {
+            "server_id": "X",
+            "server_name": "",
+            "version": "",
+            "proto": 1,
+            "host": "",
+            "port": 4222,
+            "headers": true,
+            "auth_required": false,
+            "tls_required": false,
+            "tls_available": true,
+            "max_payload": 5,
+            "connect_urls": [
+              "a:1"
+            ],
+            "nonce": "n",
+            "jetstream": true,
+            "client_id": 7,
+            "client_ip": "::1"
+          }
+        }
+      ]
+    }
+  ]
+}

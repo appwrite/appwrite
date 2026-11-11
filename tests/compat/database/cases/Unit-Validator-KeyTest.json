@@ -1,0 +1,648 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/KeyTest.php"
+  ],
+  "cases": [
+    {
+      "name": "KeyTest::test_values",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Key",
+            "args": {},
+            "as": "o5081"
+          },
+          "bind": "s6379",
+          "expect": {
+            "$value": "Validator\\Key",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": false
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "value"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 0
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 1.5
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "asdas7as9as"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "5f058a8925807"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": ""
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "0"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "null"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "_asdasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": ".as5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "-as5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as5dadasdas_"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as_5dasdasdas"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as5dasdasdas."
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as.5dasdasdas"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as5dasdasdas-"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as-5dasdasdas"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "dasda asdasd"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "asd\"asd6sdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "asd'as0asdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as!5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as@5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as#5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as$5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as%5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as^5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as&5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as*5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as(5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as)5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as+5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "as=5dasdasdas"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5081"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Key",
+            "args": {
+              "allowInternal": true
+            },
+            "as": "o5082"
+          },
+          "bind": "s6416",
+          "expect": {
+            "$value": "Validator\\Key",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "appwrite"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "appwrite_"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "_appwrite"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "_"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "$id"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "$createdAt"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "$updatedAt"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "$appwrite"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "$permissions"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5082"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "$"
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

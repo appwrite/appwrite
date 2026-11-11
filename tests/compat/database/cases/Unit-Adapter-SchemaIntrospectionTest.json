@@ -1,0 +1,2862 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SchemaIntrospectionTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SchemaIntrospectionTest::testSQLiteReadsItsColumnsBackAsTypedColumns",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o880"
+          },
+          "bind": "s1585",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o880"
+              },
+              "cache": "none"
+            },
+            "as": "o881"
+          },
+          "bind": "s1586",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o882"
+          },
+          "bind": "s1587",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o882"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "introspection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "introspection_u000000000001"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o883"
+          },
+          "bind": "s1592",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o883"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o882"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o884"
+          },
+          "bind": "s1596",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o884"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o885"
+          },
+          "bind": "s1598",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o885"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o886"
+          },
+          "bind": "s1600",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o886"
+              }
+            },
+            "as": "o887"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o888"
+          },
+          "bind": "s1602",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "people",
+              "attribute": {
+                "$obj": "o888"
+              }
+            },
+            "as": "o889"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "age"
+            },
+            "as": "o890"
+          },
+          "bind": "s1604",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "people",
+              "attribute": {
+                "$obj": "o890"
+              }
+            },
+            "as": "o891"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "getSchemaAttributes",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_id",
+                "type": "INTEGER",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_uid",
+                "type": "VARCHAR(36)",
+                "length": 36,
+                "nullable": false
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_createdAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_updatedAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_permissions",
+                "type": "MEDIUMTEXT",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "name",
+                "type": "VARCHAR(64)",
+                "length": 64,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "age",
+                "type": "INT",
+                "length": null,
+                "nullable": true
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o881"
+            },
+            "method": "getSchemaAttributes",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_id",
+                "type": "INTEGER",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_uid",
+                "type": "VARCHAR(36)",
+                "length": 36,
+                "nullable": false
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_createdAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_updatedAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_permissions",
+                "type": "MEDIUMTEXT",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "name",
+                "type": "VARCHAR(64)",
+                "length": 64,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "age",
+                "type": "INT",
+                "length": null,
+                "nullable": true
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o892"
+          },
+          "bind": "s1608",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o880"
+            },
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$obj": "o892"
+              }
+            }
+          },
+          "expect": "VARCHAR(64)"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "age"
+            },
+            "as": "o893"
+          },
+          "bind": "s1610",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o880"
+            },
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$obj": "o893"
+              }
+            }
+          },
+          "expect": "INT"
+        }
+      ]
+    },
+    {
+      "name": "SchemaIntrospectionTest::testSQLiteReadsItsIndexesBackAsTypedIndexes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o894"
+          },
+          "bind": "s1612",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o894"
+              },
+              "cache": "none"
+            },
+            "as": "o895"
+          },
+          "bind": "s1613",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o896"
+          },
+          "bind": "s1614",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o896"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "introspection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "introspection_u000000000002"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o897"
+          },
+          "bind": "s1619",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o897"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o896"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o898"
+          },
+          "bind": "s1623",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o898"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o899"
+          },
+          "bind": "s1625",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o899"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o900"
+          },
+          "bind": "s1627",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o900"
+              }
+            },
+            "as": "o901"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o902"
+          },
+          "bind": "s1629",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "people",
+              "attribute": {
+                "$obj": "o902"
+              }
+            },
+            "as": "o903"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "email",
+              "size": 64
+            },
+            "as": "o904"
+          },
+          "bind": "s1631",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "email",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "people",
+              "attribute": {
+                "$obj": "o904"
+              }
+            },
+            "as": "o905"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "email",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o906"
+          },
+          "bind": "s1633",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "people",
+              "index": {
+                "$obj": "o906"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_email",
+              "attributes": [
+                "email"
+              ]
+            },
+            "as": "o907"
+          },
+          "bind": "s1635",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "people",
+              "index": {
+                "$obj": "o907"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "search",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o908"
+          },
+          "bind": "s1637",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "people",
+              "index": {
+                "$obj": "o908"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "getSchemaIndexes",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "by_email",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "columns": [
+                  "email"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "by_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "name"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_updated_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_updatedAt"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_created_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_createdAt"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_index1",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "columns": [
+                  "_uid"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "search",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Fulltext"
+                },
+                "columns": [
+                  "name"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SchemaIntrospectionTest::testAnEngineOnlyColumnIsReadBackWithoutBecomingAnAttribute",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o909"
+          },
+          "bind": "s1640",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o909"
+              },
+              "cache": "none"
+            },
+            "as": "o910"
+          },
+          "bind": "s1641",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o911"
+          },
+          "bind": "s1642",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o910"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o911"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o910"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "introspection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o910"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "introspection_u000000000003"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o910"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o912"
+          },
+          "bind": "s1647",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o912"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o911"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o910"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o913"
+          },
+          "bind": "s1651",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o913"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o914"
+          },
+          "bind": "s1653",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o914"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o915"
+          },
+          "bind": "s1655",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o910"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o915"
+              }
+            },
+            "as": "o916"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o910"
+            },
+            "method": "getNamespace",
+            "args": {}
+          },
+          "expect": "introspection_u000000000003"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o910"
+            },
+            "method": "getSchemaAttributes",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_id",
+                "type": "INTEGER",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_uid",
+                "type": "VARCHAR(36)",
+                "length": 36,
+                "nullable": false
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_createdAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_updatedAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_permissions",
+                "type": "MEDIUMTEXT",
+                "length": null,
+                "nullable": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SchemaIntrospectionTest::testAnAttributeOverAnEngineOnlyColumnOfAnotherTypeReplacesIt",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o917"
+          },
+          "bind": "s1659",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o917"
+              },
+              "cache": "none"
+            },
+            "as": "o918"
+          },
+          "bind": "s1660",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o919"
+          },
+          "bind": "s1661",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o919"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "introspection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "introspection_u000000000004"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o920"
+          },
+          "bind": "s1666",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o920"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o919"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o921"
+          },
+          "bind": "s1670",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o921"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o922"
+          },
+          "bind": "s1672",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o922"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o923"
+          },
+          "bind": "s1674",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o923"
+              }
+            },
+            "as": "o924"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "getNamespace",
+            "args": {}
+          },
+          "expect": "introspection_u000000000004"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "legacy"
+            },
+            "as": "o925"
+          },
+          "bind": "s1677",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "legacy",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "people",
+              "attribute": {
+                "$obj": "o925"
+              }
+            },
+            "as": "o926"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "legacy",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "legacy"
+            },
+            "as": "o927"
+          },
+          "bind": "s1679",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "legacy",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o917"
+            },
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$obj": "o927"
+              }
+            }
+          },
+          "expect": "INT"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "getSchemaAttributes",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_id",
+                "type": "INTEGER",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_uid",
+                "type": "VARCHAR(36)",
+                "length": 36,
+                "nullable": false
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_createdAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_updatedAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_permissions",
+                "type": "MEDIUMTEXT",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "legacy",
+                "type": "INT",
+                "length": null,
+                "nullable": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SchemaIntrospectionTest::testAnAdapterThatCannotIntrospectReportsNothingAndDoesNotDeclareIt#Memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o963"
+          },
+          "bind": "s1737",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o963"
+            },
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::SchemaIntrospection"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o963"
+            },
+            "method": "getSchemaAttributes",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o963"
+            },
+            "method": "getSchemaIndexes",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o964"
+          },
+          "bind": "s1741",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o963"
+            },
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$obj": "o964"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "SchemaIntrospectionTest::testAnAdapterThatCannotIntrospectReportsNothingAndDoesNotDeclareIt#MongoDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o965"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SchemaIntrospectionTest::testAnAdapterThatCannotIntrospectReportsNothingAndDoesNotDeclareIt#Redis",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o966"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SchemaIntrospectionTest::testPostgresReportsAFulltextIndexAsTheKeyItStores",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o967"
+          },
+          "bind": "s1745",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o968"
+          },
+          "bind": "s1746",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o967"
+            },
+            "method": "getSchemaIndexType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              }
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\IndexType::Key"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o967"
+            },
+            "method": "getSchemaIndexType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              }
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\IndexType::Unique"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o968"
+            },
+            "method": "getSchemaIndexType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              }
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\IndexType::Fulltext"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SchemaIntrospectionTest::testNoReconciliationRunsWithoutIntrospection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o969"
+          },
+          "bind": "s1750",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o969"
+              },
+              "cache": "none"
+            },
+            "as": "o970"
+          },
+          "bind": "s1751",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o971"
+          },
+          "bind": "s1752",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o971"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "introspection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "introspection_u000000000005"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o972"
+          },
+          "bind": "s1757",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o972"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o971"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o973"
+          },
+          "bind": "s1761",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o973"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o974"
+          },
+          "bind": "s1763",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o974"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o975"
+          },
+          "bind": "s1765",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o975"
+              }
+            },
+            "as": "o976"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o977"
+          },
+          "bind": "s1767",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "people",
+              "attribute": {
+                "$obj": "o977"
+              }
+            },
+            "as": "o978"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "getSchemaAttributes",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "getSchemaIndexes",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o979"
+          },
+          "bind": "s1771",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o970"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "people",
+              "attribute": {
+                "$obj": "o979"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in metadata"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

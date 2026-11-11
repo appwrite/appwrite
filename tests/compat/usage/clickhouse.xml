@@ -1,0 +1,20 @@
+<!-- Keeps the test server light: warning-level logging and no system log
+     tables but query_log, which the projection cases read. -->
+<clickhouse>
+    <logger>
+        <level>warning</level>
+    </logger>
+    <text_log remove="1"/>
+    <trace_log remove="1"/>
+    <metric_log remove="1"/>
+    <asynchronous_metric_log remove="1"/>
+    <processors_profile_log remove="1"/>
+    <part_log remove="1"/>
+    <query_views_log remove="1"/>
+    <query_metric_log remove="1"/>
+    <histogram_metric_log remove="1"/>
+    <background_schedule_pool_log remove="1"/>
+    <latency_log remove="1"/>
+    <error_log remove="1"/>
+    <asynchronous_insert_log remove="1"/>
+</clickhouse>

@@ -1,0 +1,376 @@
+{
+  "source": "packages/config/tests/Parser/YAMLTest.php",
+  "cases": [
+    {
+      "name": "testYAMLBasicTypes",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "  string: hello world\n  unicode_string: ä你こحب🌍\n  integer: 42\n  float: 3.14159\n  negative: -50\n  boolean_true: true\n  boolean_false: false\n  null_value: null"
+          },
+          "expect": {
+            "$array": [
+              [
+                "string",
+                "hello world"
+              ],
+              [
+                "unicode_string",
+                "ä你こحب🌍"
+              ],
+              [
+                "integer",
+                42
+              ],
+              [
+                "float",
+                3.14159
+              ],
+              [
+                "negative",
+                -50
+              ],
+              [
+                "boolean_true",
+                true
+              ],
+              [
+                "boolean_false",
+                false
+              ],
+              [
+                "null_value",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testYAMLArray",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "  simple_array:\n    - 1\n    - 2\n    - 3\n    - 4\n    - 5\n  mixed_array:\n    - string\n    - 42\n    - true\n    - null\n    - 3.14\n  nested_array:\n    - [1, 2, 3]\n    - [a, b, c, d]\n    - [true, false]\n  empty_array: []"
+          },
+          "expect": {
+            "$array": [
+              [
+                "simple_array",
+                [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ]
+              ],
+              [
+                "mixed_array",
+                [
+                  "string",
+                  42,
+                  true,
+                  null,
+                  3.14
+                ]
+              ],
+              [
+                "nested_array",
+                [
+                  [
+                    1,
+                    2,
+                    3
+                  ],
+                  [
+                    "a",
+                    "b",
+                    "c",
+                    "d"
+                  ],
+                  [
+                    true,
+                    false
+                  ]
+                ]
+              ],
+              [
+                "empty_array",
+                []
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testYAMLObject",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "  simple_object:\n    name: John Doe\n    age: 30\n    active: true\n  nested_object:\n    user:\n      profile:\n        name: Jane\n        settings:\n          theme: dark\n          notifications: false\n          timeout: 300\n  empty_object: {}"
+          },
+          "expect": {
+            "$array": [
+              [
+                "simple_object",
+                {
+                  "$array": [
+                    [
+                      "name",
+                      "John Doe"
+                    ],
+                    [
+                      "age",
+                      30
+                    ],
+                    [
+                      "active",
+                      true
+                    ]
+                  ]
+                }
+              ],
+              [
+                "nested_object",
+                {
+                  "$array": [
+                    [
+                      "user",
+                      {
+                        "$array": [
+                          [
+                            "profile",
+                            {
+                              "$array": [
+                                [
+                                  "name",
+                                  "Jane"
+                                ],
+                                [
+                                  "settings",
+                                  {
+                                    "$array": [
+                                      [
+                                        "theme",
+                                        "dark"
+                                      ],
+                                      [
+                                        "notifications",
+                                        false
+                                      ],
+                                      [
+                                        "timeout",
+                                        300
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "empty_object",
+                []
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testYAMLParseExceptionInvalid",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": ":value"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid YAML file."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testYAMLParseExceptionNumber",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": 12
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testYAMLParseExceptionBoolean",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testYAMLParseExceptionNull",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": null
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testYAMLScalarTopLevelThrows",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "123"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a YAML mapping."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "3.14"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a YAML mapping."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "true"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a YAML mapping."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "plain string"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid YAML file."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testYAMLTopLevelSequenceThrows",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "- a\n- b"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a YAML mapping."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testYAMLEdgeCases",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": ""
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testYAMLComment",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "  keyWithComment: value # A comment\n  # Another comment, with empty line below intentionally\n  \n"
+          },
+          "expect": {
+            "$array": [
+              [
+                "keyWithComment",
+                "value"
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

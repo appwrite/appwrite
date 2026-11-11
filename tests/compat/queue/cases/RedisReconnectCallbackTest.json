@@ -1,0 +1,37 @@
+{
+  "source": "packages/queue/tests/RedisReconnectCallbackTest.php",
+  "cases": [
+    {
+      "name": "the reconnect callback receives the attempt context",
+      "op": "broker.reconnects",
+      "args": {
+        "time": 1700000000,
+        "queue": {
+          "name": "events",
+          "namespace": "${ns}"
+        },
+        "times": 2
+      },
+      "expect": {
+        "received": [
+          0,
+          0
+        ],
+        "events": [
+          [
+            "events",
+            "RedisException",
+            1,
+            true
+          ],
+          [
+            "events",
+            "RedisException",
+            2,
+            true
+          ]
+        ]
+      }
+    }
+  ]
+}

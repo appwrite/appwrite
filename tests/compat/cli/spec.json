@@ -1,0 +1,760 @@
+{
+  "lib": "cli",
+  "description": "utopia-php/cli: command-line applications. A CLI parses `<command> --key=value` arguments, matches a Task, resolves its params (validated, booleans coerced) and injected resources from a container, and runs it between init and shutdown hooks; failures go to error hooks. Adapters run the work once (Generic) or in a worker pool (Swoole).",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/cli/src"
+    ],
+    "tests": [
+      "packages/cli/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/cli"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "cli.run": {
+      "doc": "new CLI(new Generic(), argv, container?) (argv, or ['app', command, ...arguments] when `command` is given) (a parent container holding `container`), driven by `steps`, each {name: argument}: task {name, id, desc, groups, labels, params (each {key, default, validator (see http.run's validators; {factory: spec} for a callable), description, optional, injections, skip_validation, aliases}), inject, fail {message, code}}, bare_task name (a task without a callback, its getName()), init|shutdown|error (the same without name), set_resource {name, value, dependencies, counter}, resource name, resources [names], reset, set_container {name: value}, has name (getContainer()->has()), tasks ([getName, getDesc] of getTasks()), task_keys, args (getArgs()), match (match()?->getName()), parse argv, run. Callbacks record [id, the named arguments they got] (exceptions as {$exception: {class, message, code}}) and throw `fail`; run returns the calls and the exception run() let out. Each step's result ({\"$error\": {class, message, code}} when it throws); a CLI that cannot be built is [its error]",
+      "covers": [
+        "Utopia\\CLI\\CLI::__construct",
+        "Utopia\\CLI\\CLI::init",
+        "Utopia\\CLI\\CLI::shutdown",
+        "Utopia\\CLI\\CLI::error",
+        "Utopia\\CLI\\CLI::task",
+        "Utopia\\CLI\\CLI::getResource",
+        "Utopia\\CLI\\CLI::getResources",
+        "Utopia\\CLI\\CLI::setResource",
+        "Utopia\\CLI\\CLI::getContainer",
+        "Utopia\\CLI\\CLI::setContainer",
+        "Utopia\\CLI\\CLI::reset",
+        "Utopia\\CLI\\CLI::parse",
+        "Utopia\\CLI\\CLI::match",
+        "Utopia\\CLI\\CLI::run",
+        "Utopia\\CLI\\CLI::getTasks",
+        "Utopia\\CLI\\CLI::getArgs",
+        "Utopia\\CLI\\Task::getName"
+      ],
+      "fuzz": [
+        {
+          "name": "parse",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "argv": {
+                "gen": "ref",
+                "name": "argv"
+              },
+              "steps": {
+                "gen": "const",
+                "value": [
+                  {
+                    "args": true
+                  },
+                  {
+                    "match": true
+                  },
+                  {
+                    "parse": [
+                      "x",
+                      "deploy",
+                      "--a=1",
+                      "--a",
+                      "--b=c=d"
+                    ]
+                  },
+                  {
+                    "args": true
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "run",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "command": {
+                "gen": "pick",
+                "from": [
+                  "build",
+                  "deploy",
+                  "other"
+                ]
+              },
+              "arguments": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "arg"
+                },
+                "min": 0,
+                "max": 6
+              },
+              "container": {
+                "gen": "const",
+                "value": {
+                  "base": "from-parent",
+                  "db": "parent-db"
+                }
+              },
+              "steps": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "step"
+                },
+                "min": 1,
+                "max": 8
+              }
+            },
+            "optional": [
+              "container"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "task.run": {
+      "doc": "new Task(name) configured and read by `steps`: desc, label {key, value}, param (as cli.run's), inject, action; get name|desc|params (keys)|dependencies|action (calls it with call_user_func_array, as CLI::run() does); label_of {key, default}. Each step's result ({\"$error\": ...} when it throws)",
+      "covers": [
+        "Utopia\\CLI\\Task::__construct",
+        "Utopia\\CLI\\Task::getName"
+      ]
+    },
+    "generic.run": {
+      "doc": "new Generic() driven by `steps`: workers ($workerNum), start, stop, on_worker_start, on_worker_stop, on_job, each with a callback recording its name and arguments. Returns each step's result (true when the method returns the adapter) and the calls",
+      "covers": [
+        "Utopia\\CLI\\Adapter::__construct",
+        "Utopia\\CLI\\Adapters\\Generic::start",
+        "Utopia\\CLI\\Adapters\\Generic::stop",
+        "Utopia\\CLI\\Adapters\\Generic::onWorkerStart",
+        "Utopia\\CLI\\Adapters\\Generic::onWorkerStop",
+        "Utopia\\CLI\\Adapters\\Generic::onJob"
+      ],
+      "fuzz": [
+        {
+          "name": "steps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "steps": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "workers",
+                    "start",
+                    "stop",
+                    "on_worker_start",
+                    "on_worker_stop",
+                    "on_job"
+                  ]
+                },
+                "min": 1,
+                "max": 8
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    }
+  },
+  "generators": {
+    "arg": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "app",
+            "build",
+            "deploy",
+            "",
+            "--",
+            "---email=x",
+            "--email=me@example.com",
+            "--email=me.example.com",
+            "--email",
+            "--list=item1",
+            "--list=item2",
+            "--commit=false",
+            "--commit=true",
+            "--commit=0",
+            "--commit=yes",
+            "--commit=maybe",
+            "--commit=",
+            "--e=alias@example.com",
+            "--em=second",
+            "--dry-run=1",
+            "--a_b=x",
+            "--a=b=c",
+            "email=raw",
+            "--x"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "--",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "email",
+                "list",
+                "commit",
+                "e",
+                "dry-run",
+                "a_b"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "=",
+                ""
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "abtrue01@.= -",
+              "max": 8
+            }
+          ]
+        }
+      ]
+    },
+    "argv": {
+      "gen": "array",
+      "items": {
+        "gen": "ref",
+        "name": "arg"
+      },
+      "min": 0,
+      "max": 7
+    },
+    "value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "a",
+            "me@example.com",
+            "true",
+            "false",
+            "0",
+            "1",
+            "yes"
+          ]
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "int",
+          "min": -1,
+          "max": 2
+        }
+      ]
+    },
+    "validator": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "text": {
+              "gen": "array",
+              "items": {
+                "gen": "int",
+                "min": 0,
+                "max": 20
+              },
+              "min": 0,
+              "max": 2
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "boolean": {
+              "gen": "bool"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "nullable": {
+              "gen": "object",
+              "fields": {
+                "boolean": {
+                  "gen": "bool"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "nullable": {
+              "gen": "object",
+              "fields": {
+                "text": {
+                  "gen": "const",
+                  "value": [
+                    5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "array_list": {
+              "gen": "const",
+              "value": [
+                {
+                  "text": [
+                    256
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "integer": {
+              "gen": "bool"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "whitelist": {
+              "gen": "const",
+              "value": [
+                [
+                  "true",
+                  "false",
+                  "a"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "any": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "factory": {
+              "gen": "object",
+              "fields": {
+                "boolean": {
+                  "gen": "bool"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "param": {
+      "gen": "object",
+      "fields": {
+        "key": {
+          "gen": "pick",
+          "from": [
+            "email",
+            "list",
+            "commit",
+            "dry-run",
+            "a_b"
+          ]
+        },
+        "default": {
+          "gen": "ref",
+          "name": "value"
+        },
+        "validator": {
+          "gen": "ref",
+          "name": "validator"
+        },
+        "optional": {
+          "gen": "bool"
+        },
+        "aliases": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "e",
+              "em",
+              "x",
+              "email"
+            ]
+          },
+          "min": 0,
+          "max": 2
+        }
+      }
+    },
+    "hook": {
+      "gen": "object",
+      "fields": {
+        "id": {
+          "gen": "pick",
+          "from": [
+            "h1",
+            "h2"
+          ]
+        },
+        "params": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "param"
+          },
+          "min": 0,
+          "max": 3
+        },
+        "inject": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "db",
+              "error",
+              "missing",
+              "counter",
+              "email"
+            ]
+          },
+          "min": 0,
+          "max": 2
+        },
+        "fail": {
+          "gen": "object",
+          "fields": {
+            "message": {
+              "gen": "pick",
+              "from": [
+                "boom",
+                ""
+              ]
+            },
+            "code": {
+              "gen": "int",
+              "min": 0,
+              "max": 500
+            }
+          }
+        }
+      },
+      "optional": [
+        "params",
+        "inject",
+        "fail"
+      ]
+    },
+    "step": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "task": {
+              "gen": "object",
+              "fields": {
+                "name": {
+                  "gen": "pick",
+                  "from": [
+                    "build",
+                    "deploy"
+                  ]
+                },
+                "id": {
+                  "gen": "pick",
+                  "from": [
+                    "t1",
+                    "t2"
+                  ]
+                },
+                "desc": {
+                  "gen": "pick",
+                  "from": [
+                    "Build",
+                    ""
+                  ]
+                },
+                "params": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "ref",
+                    "name": "param"
+                  },
+                  "min": 0,
+                  "max": 3
+                },
+                "inject": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "pick",
+                    "from": [
+                      "db",
+                      "missing",
+                      "counter",
+                      "email"
+                    ]
+                  },
+                  "min": 0,
+                  "max": 2
+                },
+                "fail": {
+                  "gen": "object",
+                  "fields": {
+                    "message": {
+                      "gen": "pick",
+                      "from": [
+                        "boom",
+                        "failed"
+                      ]
+                    },
+                    "code": {
+                      "gen": "int",
+                      "min": 0,
+                      "max": 500
+                    }
+                  }
+                }
+              },
+              "optional": [
+                "desc",
+                "params",
+                "inject",
+                "fail"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "init": {
+              "gen": "ref",
+              "name": "hook"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "shutdown": {
+              "gen": "ref",
+              "name": "hook"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "error": {
+              "gen": "ref",
+              "name": "hook"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "set_resource": {
+              "gen": "object",
+              "fields": {
+                "name": {
+                  "gen": "pick",
+                  "from": [
+                    "db",
+                    "email"
+                  ]
+                },
+                "value": {
+                  "gen": "ref",
+                  "name": "value"
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "set_resource": {
+              "gen": "object",
+              "fields": {
+                "name": {
+                  "gen": "const",
+                  "value": "counter"
+                },
+                "counter": {
+                  "gen": "const",
+                  "value": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "resource": {
+              "gen": "pick",
+              "from": [
+                "db",
+                "counter",
+                "missing",
+                "error"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "resources": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "db",
+                  "counter",
+                  "missing"
+                ]
+              },
+              "min": 0,
+              "max": 2
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "run": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "run": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "reset": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "has": {
+              "gen": "pick",
+              "from": [
+                "db",
+                "error",
+                "base"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "match": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "tasks": {
+              "gen": "const",
+              "value": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\CLI\\Adapters\\Swoole::*": "Swoole process-pool adapter (Swoole\\Process\\Pool, coroutine runtime hooks, getNative() returning the pool): runtime plumbing with no Rust counterpart (CONVERSION.md section 6). Running the work in several workers with start and stop callbacks is utopia_cli::Workers."
+  },
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\CLI\\Task::__construct",
+      "description": "Task's constructor does not call Hook's, so a task's action is null until action() sets one: calling it raises TypeError, which CLI::run() (catching \\Exception only) lets out without running the error hooks.",
+      "case": "edge.json#a task without a callback escapes run()"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\CLI\\CLI::run",
+      "php": "A param default that is a callable is passed to the validator and to the task as the closure itself (getParams() never calls it).",
+      "reason": "utopia_cli resolves params like every server: a ParamDefault::Factory is called with the param's injections. A closure is not a value a Rust task can receive; cases use value defaults."
+    },
+    {
+      "symbol": "Utopia\\CLI\\CLI::run",
+      "php": "coerce() turns a string into a boolean only when the validator (inside any Nullable) is an instance of Utopia\\Validator\\Boolean.",
+      "reason": "utopia_validators::Validator has no class identity: utopia_cli coerces when the validator's kind() is Type::Boolean, which only Boolean (and a Nullable around it) reports among the library's validators; a WhiteList or AnyOf built with the boolean type would be coerced too."
+    },
+    {
+      "symbol": "Utopia\\CLI\\CLI::run",
+      "php": "Callbacks are called with named arguments, so one that declares no parameter for a name (the default action of a Hook given params or injections) raises Error 'Unknown named parameter $<name>'.",
+      "reason": "A Rust callback receives Arguments, which cannot reject a name; a hook's default action does nothing whatever it is given. Cases set an action on every hook that has params or injections."
+    }
+  ]
+}

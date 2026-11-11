@@ -1,0 +1,510 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/IndexRevalidationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "IndexRevalidationTest::testUpdatingAnIndexedAttributeDoesNotConflictWithItsOwnIndex",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o984"
+          },
+          "bind": "s1568",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o984"
+              },
+              "cache": "none"
+            },
+            "as": "o985"
+          },
+          "bind": "s1569",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "index_revalidation"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "index_revalidation_u000000000001"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o986"
+          },
+          "bind": "s1572",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o987"
+          },
+          "bind": "s1573",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o987"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o986"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "getAdapter",
+            "args": {}
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexIdentical"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o988"
+          },
+          "bind": "s1579",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_name",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o989"
+          },
+          "bind": "s1580",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "attributes": [
+                {
+                  "$obj": "o988"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o989"
+                }
+              ]
+            },
+            "as": "o990"
+          },
+          "bind": "s1581",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o990"
+              }
+            },
+            "as": "o991"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "size": 128
+            },
+            "as": "o992"
+          },
+          "bind": "s1583",
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": null,
+              "size": 128,
+              "required": null,
+              "default": {
+                "$enum": "Unchanged::Value"
+              },
+              "signed": null,
+              "array": null,
+              "format": {
+                "$enum": "Unchanged::Value"
+              },
+              "filters": null,
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "updateAttribute",
+            "args": {
+              "collection": "people",
+              "key": "name",
+              "update": {
+                "$obj": "o992"
+              }
+            },
+            "as": "o993"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o994"
+          },
+          "bind": "s1585",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o994"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

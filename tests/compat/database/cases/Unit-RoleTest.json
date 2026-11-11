@@ -1,0 +1,1311 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/RoleTest.php"
+  ],
+  "cases": [
+    {
+      "name": "RoleTest::test_output_from_string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "any"
+            },
+            "as": "o86763"
+          },
+          "bind": "s109869",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86763"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86763"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86763"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "guests"
+            },
+            "as": "o86764"
+          },
+          "bind": "s109873",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86764"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "guests"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86764"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86764"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "users"
+            },
+            "as": "o86765"
+          },
+          "bind": "s109877",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86765"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86765"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86765"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "user:123"
+            },
+            "as": "o86766"
+          },
+          "bind": "s109881",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86766"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "user"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86766"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86766"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "team:123"
+            },
+            "as": "o86767"
+          },
+          "bind": "s109885",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86767"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "team"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86767"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86767"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "team:123/456"
+            },
+            "as": "o86768"
+          },
+          "bind": "s109889",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86768"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "team"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86768"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86768"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": "456"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "team:123/project-456-owner"
+            },
+            "as": "o86769"
+          },
+          "bind": "s109893",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86769"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "team"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86769"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86769"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": "project-456-owner"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "team:123/project-456"
+            },
+            "as": "o86770"
+          },
+          "bind": "s109897",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86770"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "team"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86770"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86770"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": "project-456"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "user:123/verified"
+            },
+            "as": "o86771"
+          },
+          "bind": "s109901",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86771"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "user"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86771"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86771"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": "verified"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "users/verified"
+            },
+            "as": "o86772"
+          },
+          "bind": "s109905",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86772"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86772"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86772"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": "verified"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "label:vip"
+            },
+            "as": "o86773"
+          },
+          "bind": "s109909",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86773"
+            },
+            "method": "getRole",
+            "args": {}
+          },
+          "expect": "label"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86773"
+            },
+            "method": "getIdentifier",
+            "args": {}
+          },
+          "expect": "vip"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86773"
+            },
+            "method": "getDimension",
+            "args": {}
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "RoleTest::test_input_from_parameters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Role",
+            "args": {
+              "role": "any"
+            },
+            "as": "o86774"
+          },
+          "bind": "s109913",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86774"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Role",
+            "args": {
+              "role": "guests"
+            },
+            "as": "o86775"
+          },
+          "bind": "s109915",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86775"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "guests"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Role",
+            "args": {
+              "role": "users"
+            },
+            "as": "o86776"
+          },
+          "bind": "s109917",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86776"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Role",
+            "args": {
+              "role": "user",
+              "identifier": "123"
+            },
+            "as": "o86777"
+          },
+          "bind": "s109919",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86777"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:123"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Role",
+            "args": {
+              "role": "team",
+              "identifier": "123"
+            },
+            "as": "o86778"
+          },
+          "bind": "s109921",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86778"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Role",
+            "args": {
+              "role": "team",
+              "identifier": "123",
+              "dimension": "456"
+            },
+            "as": "o86779"
+          },
+          "bind": "s109923",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86779"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123/456"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Role",
+            "args": {
+              "role": "team",
+              "identifier": "123",
+              "dimension": "project-456-owner"
+            },
+            "as": "o86780"
+          },
+          "bind": "s109925",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86780"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123/project-456-owner"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Role",
+            "args": {
+              "role": "team",
+              "identifier": "123",
+              "dimension": "project-456"
+            },
+            "as": "o86781"
+          },
+          "bind": "s109927",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86781"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123/project-456"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Role",
+            "args": {
+              "role": "label",
+              "identifier": "vip"
+            },
+            "as": "o86782"
+          },
+          "bind": "s109929",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86782"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "label:vip"
+        }
+      ]
+    },
+    {
+      "name": "RoleTest::test_input_from_roles",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o86783"
+          },
+          "bind": "s109931",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86783"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o86784"
+          },
+          "bind": "s109933",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86784"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "guests"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o86785"
+          },
+          "bind": "s109935",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86785"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123"
+            },
+            "as": "o86786"
+          },
+          "bind": "s109938",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86786"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123"
+            },
+            "as": "o86787"
+          },
+          "bind": "s109941",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86787"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123",
+              "dimension": "456"
+            },
+            "as": "o86788"
+          },
+          "bind": "s109944",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86788"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123/456"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123",
+              "dimension": "project-456-owner"
+            },
+            "as": "o86789"
+          },
+          "bind": "s109947",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86789"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123/project-456-owner"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123",
+              "dimension": "project-456"
+            },
+            "as": "o86790"
+          },
+          "bind": "s109950",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86790"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123/project-456"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "label",
+            "args": {
+              "identifier": "vip"
+            },
+            "as": "o86791"
+          },
+          "bind": "s109952",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86791"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "label:vip"
+        }
+      ]
+    },
+    {
+      "name": "RoleTest::test_input_from_id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123"
+            },
+            "as": "o86792"
+          },
+          "bind": "s109955",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86792"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123"
+            },
+            "as": "o86793"
+          },
+          "bind": "s109958",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86793"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123",
+              "dimension": "456"
+            },
+            "as": "o86794"
+          },
+          "bind": "s109961",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o86794"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123/456"
+        }
+      ]
+    },
+    {
+      "name": "RoleTest::testParseRejectsMalformedDimensions#two dimensions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "team/a/b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Only one dimension can be provided"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RoleTest::testParseRejectsMalformedDimensions#an empty dimension",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "team/"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Dimension must not be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RoleTest::testParseRejectsMalformedDimensions#two dimensions after an identifier",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "team:abc/x/y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Only one dimension can be provided"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RoleTest::testParseRejectsMalformedDimensions#an empty dimension after an identifier",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "parse",
+            "args": {
+              "role": "team:abc/"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Dimension must not be empty"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

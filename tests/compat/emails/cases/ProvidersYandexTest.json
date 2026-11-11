@@ -1,0 +1,306 @@
+{
+  "source": "packages/emails/tests/Canonicals/Providers/YandexTest.php",
+  "cases": [
+    {
+      "name": "supports",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "yandex.ru"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "yandex.ua"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "yandex.kz"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "yandex.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "yandex.by"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "ya.ru"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "yahoo.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "yandex",
+            "domain": "example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get canonical",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.name",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.name+tag",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.name-tag",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": "user.name-tag",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.name_tag",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": "user.name_tag",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "u-s-e-r-n-a-m-e",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": "u-s-e-r-n-a-m-e",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": "user.",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": ".user",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": ".user",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user+",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": "user+",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user-",
+            "domain": "yandex.ru"
+          },
+          "expect": {
+            "local": "user-",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.name+tag",
+            "domain": "yandex.ua"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.name+tag",
+            "domain": "yandex.kz"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.name+tag",
+            "domain": "yandex.com"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.name+tag",
+            "domain": "yandex.by"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "yandex.ru"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "yandex",
+            "local": "user.name+tag",
+            "domain": "ya.ru"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "yandex.ru"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "provider.canonical_domain",
+          "args": {
+            "provider": "yandex"
+          },
+          "expect": "yandex.ru"
+        }
+      ]
+    },
+    {
+      "name": "get supported domains",
+      "steps": [
+        {
+          "op": "provider.supported_domains",
+          "args": {
+            "provider": "yandex"
+          },
+          "expect": [
+            "yandex.ru",
+            "yandex.ua",
+            "yandex.kz",
+            "yandex.com",
+            "yandex.by",
+            "ya.ru"
+          ]
+        }
+      ]
+    }
+  ]
+}

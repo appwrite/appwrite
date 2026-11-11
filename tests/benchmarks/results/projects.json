@@ -1,0 +1,398 @@
+{
+  "service": "projects",
+  "file": "tests/benchmarks/results/projects.json",
+  "workload": {
+    "script": "tests/benchmarks/api/projects.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "projects-20261012-010906"
+  },
+  "environment": {
+    "date": "2026-10-12T00:11:31Z",
+    "commit": "208eb48c73",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 49.8,
+      "requests": 2990,
+      "failures": 0,
+      "dropped": 10,
+      "latency": {
+        "avg": 128.179,
+        "p50": 44.352,
+        "p90": 417.742,
+        "p95": 634.031,
+        "p99": 1123.886,
+        "max": 3538.398
+      },
+      "cpu_ms_per_request": 23.715,
+      "db_cpu_ms_per_request": 19.669,
+      "memory_mib": {
+        "baseline": 3000.3,
+        "avg": 3008.5,
+        "peak": 3012.6
+      },
+      "endpoints": {
+        "projects.list": {
+          "route": "GET /v1/projects",
+          "count": 906,
+          "rps": 15.1,
+          "avg": 209.343,
+          "p50": 58.581,
+          "p90": 620.952,
+          "p95": 876.292,
+          "p99": 1197.612,
+          "max": 1521.74
+        },
+        "projects.search": {
+          "route": "GET /v1/projects",
+          "note": "full-text search",
+          "count": 261,
+          "rps": 4.35,
+          "avg": 207.237,
+          "p50": 70.928,
+          "p90": 606.18,
+          "p95": 718.769,
+          "p99": 1209.194,
+          "max": 1429.887
+        },
+        "projects.create": {
+          "route": "POST /v1/projects",
+          "note": "creates the project's platform records; deleting it afterwards removes them in the background",
+          "count": 43,
+          "rps": 0.72,
+          "avg": 656.259,
+          "p50": 310.522,
+          "p90": 1586.96,
+          "p95": 1723.174,
+          "p99": 3369.836,
+          "max": 3538.398
+        },
+        "projects.update": {
+          "route": "PATCH /v1/projects/:projectId",
+          "count": 170,
+          "rps": 2.83,
+          "avg": 117.272,
+          "p50": 13.294,
+          "p90": 330.454,
+          "p95": 672.36,
+          "p99": 1199.18,
+          "max": 1593.491
+        },
+        "projects.mockNumbers.update": {
+          "route": "PATCH /v1/projects/:projectId/auth/mock-numbers",
+          "count": 87,
+          "rps": 1.45,
+          "avg": 126.001,
+          "p50": 19.193,
+          "p90": 362.207,
+          "p95": 632.758,
+          "p99": 997.029,
+          "max": 1038.405
+        },
+        "projects.oauth2.update": {
+          "route": "PATCH /v1/projects/:projectId/oauth2",
+          "note": "leaves the provider disabled",
+          "count": 95,
+          "rps": 1.58,
+          "avg": 87.587,
+          "p50": 17.994,
+          "p90": 229.43,
+          "p95": 363.213,
+          "p99": 662.094,
+          "max": 1088.665
+        },
+        "projects.schedules.list": {
+          "route": "GET /v1/projects/:projectId/schedules",
+          "count": 361,
+          "rps": 6.02,
+          "avg": 40.735,
+          "p50": 8.749,
+          "p90": 131.77,
+          "p95": 194.966,
+          "p99": 348.9,
+          "max": 432.556
+        },
+        "projects.schedules.get": {
+          "route": "GET /v1/projects/:projectId/schedules/:scheduleId",
+          "count": 372,
+          "rps": 6.2,
+          "avg": 32.85,
+          "p50": 6.542,
+          "p90": 95.712,
+          "p95": 139.744,
+          "p99": 442.658,
+          "max": 558.075
+        },
+        "projects.schedules.create": {
+          "route": "POST /v1/projects/:projectId/schedules",
+          "note": "an inactive schedule on a draft message, deleted after: maintenance reaps the schedule (there is no delete route)",
+          "count": 82,
+          "rps": 1.37,
+          "avg": 45.132,
+          "p50": 7.812,
+          "p90": 175.031,
+          "p95": 240.182,
+          "p99": 267.369,
+          "max": 290.528
+        },
+        "projects.stages.list": {
+          "route": "GET /v1/projects/:projectId/stages",
+          "count": 357,
+          "rps": 5.95,
+          "avg": 37.754,
+          "p50": 7.179,
+          "p90": 107.604,
+          "p95": 158.648,
+          "p99": 363.628,
+          "max": 447.353
+        },
+        "projects.stages.update": {
+          "route": "PATCH /v1/projects/:projectId/stages/:stageId",
+          "count": 70,
+          "rps": 1.17,
+          "avg": 137.128,
+          "p50": 9.626,
+          "p90": 543.661,
+          "p95": 818.55,
+          "p99": 996.521,
+          "max": 1123.776
+        },
+        "projects.team.update": {
+          "route": "PATCH /v1/projects/:projectId/team",
+          "note": "to the team that already owns it (self-hosted has one organization)",
+          "count": 91,
+          "rps": 1.52,
+          "avg": 90.08,
+          "p50": 15.399,
+          "p90": 268.329,
+          "p95": 364.397,
+          "p99": 638.08,
+          "max": 758.28
+        },
+        "projects.templates.email.delete": {
+          "route": "DELETE /v1/projects/:projectId/templates/email",
+          "count": 95,
+          "rps": 1.58,
+          "avg": 106.971,
+          "p50": 17.152,
+          "p90": 268.038,
+          "p95": 648.099,
+          "p99": 1134.961,
+          "max": 1148.352
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 178.9,
+      "requests": 10737,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 261.284,
+        "p50": 125.079,
+        "p90": 646.722,
+        "p95": 1104.849,
+        "p99": 2385.837,
+        "max": 7179.448
+      },
+      "cpu_ms_per_request": 24.693,
+      "db_cpu_ms_per_request": 17.232,
+      "memory_mib": {
+        "baseline": 3008.5,
+        "avg": 3019.6,
+        "peak": 3026.9
+      },
+      "endpoints": {
+        "projects.list": {
+          "route": "GET /v1/projects",
+          "count": 3287,
+          "rps": 54.78,
+          "avg": 224.638,
+          "p50": 161.446,
+          "p90": 361.488,
+          "p95": 579.817,
+          "p99": 1378.262,
+          "max": 2797.861
+        },
+        "projects.search": {
+          "route": "GET /v1/projects",
+          "note": "full-text search",
+          "count": 948,
+          "rps": 15.8,
+          "avg": 243.334,
+          "p50": 173.957,
+          "p90": 432.197,
+          "p95": 667.671,
+          "p99": 1324.384,
+          "max": 2573.573
+        },
+        "projects.create": {
+          "route": "POST /v1/projects",
+          "note": "creates the project's platform records; deleting it afterwards removes them in the background",
+          "count": 154,
+          "rps": 2.57,
+          "avg": 1531.147,
+          "p50": 1331.889,
+          "p90": 2333.821,
+          "p95": 3001.297,
+          "p99": 4526.69,
+          "max": 4769.728
+        },
+        "projects.update": {
+          "route": "PATCH /v1/projects/:projectId",
+          "count": 587,
+          "rps": 9.78,
+          "avg": 625.03,
+          "p50": 404.292,
+          "p90": 1420.414,
+          "p95": 2039.414,
+          "p99": 3652.684,
+          "max": 5646.499
+        },
+        "projects.mockNumbers.update": {
+          "route": "PATCH /v1/projects/:projectId/auth/mock-numbers",
+          "count": 304,
+          "rps": 5.07,
+          "avg": 698.838,
+          "p50": 459.692,
+          "p90": 1610.819,
+          "p95": 2441.51,
+          "p99": 4049.344,
+          "max": 5808.435
+        },
+        "projects.oauth2.update": {
+          "route": "PATCH /v1/projects/:projectId/oauth2",
+          "note": "leaves the provider disabled",
+          "count": 299,
+          "rps": 4.98,
+          "avg": 616.293,
+          "p50": 424.074,
+          "p90": 1486.215,
+          "p95": 1983.036,
+          "p99": 3294.752,
+          "max": 4240.22
+        },
+        "projects.schedules.list": {
+          "route": "GET /v1/projects/:projectId/schedules",
+          "count": 1257,
+          "rps": 20.95,
+          "avg": 45.583,
+          "p50": 31.759,
+          "p90": 70.776,
+          "p95": 117.102,
+          "p99": 315.198,
+          "max": 576.368
+        },
+        "projects.schedules.get": {
+          "route": "GET /v1/projects/:projectId/schedules/:scheduleId",
+          "count": 1329,
+          "rps": 22.15,
+          "avg": 39.624,
+          "p50": 26.147,
+          "p90": 63.48,
+          "p95": 115.512,
+          "p99": 296.472,
+          "max": 864.657
+        },
+        "projects.schedules.create": {
+          "route": "POST /v1/projects/:projectId/schedules",
+          "note": "an inactive schedule on a draft message, deleted after: maintenance reaps the schedule (there is no delete route)",
+          "count": 308,
+          "rps": 5.13,
+          "avg": 57.196,
+          "p50": 38.478,
+          "p90": 107.492,
+          "p95": 162.118,
+          "p99": 287.78,
+          "max": 773.742
+        },
+        "projects.stages.list": {
+          "route": "GET /v1/projects/:projectId/stages",
+          "count": 1307,
+          "rps": 21.78,
+          "avg": 41.079,
+          "p50": 25.922,
+          "p90": 60.786,
+          "p95": 128.916,
+          "p99": 348.011,
+          "max": 794.387
+        },
+        "projects.stages.update": {
+          "route": "PATCH /v1/projects/:projectId/stages/:stageId",
+          "count": 341,
+          "rps": 5.68,
+          "avg": 695.909,
+          "p50": 492.808,
+          "p90": 1533.489,
+          "p95": 1929.715,
+          "p99": 3668.801,
+          "max": 6173.667
+        },
+        "projects.team.update": {
+          "route": "PATCH /v1/projects/:projectId/team",
+          "note": "to the team that already owns it (self-hosted has one organization)",
+          "count": 310,
+          "rps": 5.17,
+          "avg": 675.674,
+          "p50": 462.788,
+          "p90": 1456.307,
+          "p95": 2021.365,
+          "p99": 4129.89,
+          "max": 7179.448
+        },
+        "projects.templates.email.delete": {
+          "route": "DELETE /v1/projects/:projectId/templates/email",
+          "count": 306,
+          "rps": 5.1,
+          "avg": 682.706,
+          "p50": 463.739,
+          "p90": 1635.479,
+          "p95": 2218.028,
+          "p99": 3884.802,
+          "max": 5416.837
+        }
+      }
+    }
+  ]
+}

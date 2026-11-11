@@ -1,0 +1,909 @@
+{
+  "source": "packages/query/tests/Builder/Feature/MongoDB/ConditionalArrayUpdatesTest.php",
+  "cases": [
+    {
+      "name": "testArrayFilterRegistersSingleFilterUnderArrayFiltersOption",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "students"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "grades.$[elem].mean": 0
+              }
+            ]
+          },
+          {
+            "call": "arrayFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "elem",
+              {
+                "elem.grade": {
+                  "$gte": 85
+                }
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "abc"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "abc"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].mean\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}}]}}",
+            "bindings": [
+              "abc",
+              0
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].mean\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}}]}}",
+        [
+          "abc",
+          0
+        ],
+        [
+          "abc",
+          0
+        ],
+        "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].mean\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}}]}}",
+        "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].mean\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}}]}}"
+      ]
+    },
+    {
+      "name": "testArrayFilterPreservesInsertionOrderAcrossMultipleCalls",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "students"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "grades.$[elem].adjusted": true
+              }
+            ]
+          },
+          {
+            "call": "arrayFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "elem",
+              {
+                "elem.grade": {
+                  "$gte": 85
+                }
+              }
+            ]
+          },
+          {
+            "call": "arrayFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "other",
+              {
+                "other.type": "test"
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "abc"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "abc"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].adjusted\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}},{\"other.type\":\"test\"}]}}",
+            "bindings": [
+              "abc",
+              true
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].adjusted\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}},{\"other.type\":\"test\"}]}}",
+        [
+          "abc",
+          true
+        ],
+        [
+          "abc",
+          true
+        ],
+        "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].adjusted\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}},{\"other.type\":\"test\"}]}}",
+        "{\"collection\":\"students\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"grades.$[elem].adjusted\":\"?\"}},\"options\":{\"arrayFilters\":[{\"elem.grade\":{\"$gte\":85}},{\"other.type\":\"test\"}]}}"
+      ]
+    },
+    {
+      "name": "testArrayFilterAcceptsComparisonOperators",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "items.$[it].status": "shipped"
+              }
+            ]
+          },
+          {
+            "call": "arrayFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "it",
+              {
+                "it.price": {
+                  "$lt": 100,
+                  "$gte": 10
+                }
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "abc"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "abc"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"orders\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"items.$[it].status\":\"?\"}},\"options\":{\"arrayFilters\":[{\"it.price\":{\"$lt\":100,\"$gte\":10}}]}}",
+            "bindings": [
+              "abc",
+              "shipped"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"orders\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"items.$[it].status\":\"?\"}},\"options\":{\"arrayFilters\":[{\"it.price\":{\"$lt\":100,\"$gte\":10}}]}}",
+        [
+          "abc",
+          "shipped"
+        ],
+        [
+          "abc",
+          "shipped"
+        ],
+        "{\"collection\":\"orders\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"items.$[it].status\":\"?\"}},\"options\":{\"arrayFilters\":[{\"it.price\":{\"$lt\":100,\"$gte\":10}}]}}",
+        "{\"collection\":\"orders\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"items.$[it].status\":\"?\"}},\"options\":{\"arrayFilters\":[{\"it.price\":{\"$lt\":100,\"$gte\":10}}]}}"
+      ]
+    },
+    {
+      "name": "testArrayFilterWithLogicalOperators",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tasks"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "items.$[it].done": true
+              }
+            ]
+          },
+          {
+            "call": "arrayFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "it",
+              {
+                "$or": [
+                  {
+                    "it.priority": "high"
+                  },
+                  {
+                    "it.deadline": {
+                      "$lt": 1000
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "abc"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "abc"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"tasks\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"items.$[it].done\":\"?\"}},\"options\":{\"arrayFilters\":[{\"$or\":[{\"it.priority\":\"high\"},{\"it.deadline\":{\"$lt\":1000}}]}]}}",
+            "bindings": [
+              "abc",
+              true
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"tasks\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"items.$[it].done\":\"?\"}},\"options\":{\"arrayFilters\":[{\"$or\":[{\"it.priority\":\"high\"},{\"it.deadline\":{\"$lt\":1000}}]}]}}",
+        [
+          "abc",
+          true
+        ],
+        [
+          "abc",
+          true
+        ],
+        "{\"collection\":\"tasks\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"items.$[it].done\":\"?\"}},\"options\":{\"arrayFilters\":[{\"$or\":[{\"it.priority\":\"high\"},{\"it.deadline\":{\"$lt\":1000}}]}]}}",
+        "{\"collection\":\"tasks\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"items.$[it].done\":\"?\"}},\"options\":{\"arrayFilters\":[{\"$or\":[{\"it.priority\":\"high\"},{\"it.deadline\":{\"$lt\":1000}}]}]}}"
+      ]
+    },
+    {
+      "name": "testWithoutArrayFilterNoOptionsAreEmitted",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Alice"
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "_id",
+              [
+                "abc"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "_id",
+            "values": [
+              "abc"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"name\":\"?\"}}}",
+            "bindings": [
+              "abc",
+              "Alice"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"name\":\"?\"}}}",
+        [
+          "abc",
+          "Alice"
+        ],
+        [
+          "abc",
+          "Alice"
+        ],
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"name\":\"?\"}}}",
+        "{\"collection\":\"users\",\"operation\":\"updateMany\",\"filter\":{\"_id\":\"?\"},\"update\":{\"$set\":{\"name\":\"?\"}}}"
+      ]
+    },
+    {
+      "name": "testChainableReturnsSameInstance",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "students"
+            ]
+          },
+          {
+            "call": "arrayFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "elem",
+              {
+                "elem.x": 1
+              }
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 1
+              },
+              {
+                "$o": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        true
+      ]
+    }
+  ]
+}

@@ -1,0 +1,850 @@
+{
+  "source": "packages/auth/tests/Issuers/Symmetric/RefreshTokenTest.php",
+  "cases": [
+    {
+      "name": "header uses HS256 and no kid by default",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the jti is random"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/claims/jti"
+            ],
+            "reason": "random jti"
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": "https://example.com/token",
+              "sub": "user-123",
+              "client_id": "client-abc",
+              "exp": 1701209600,
+              "iat": 1700000000,
+              "jti": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "claims",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000,
+            "scopes": [
+              "read",
+              "offline_access"
+            ]
+          },
+          "bind": "t",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the jti is random"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "bind": "d",
+          "mask": {
+            "paths": [
+              "/claims/jti"
+            ],
+            "reason": "random jti"
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": "https://example.com/token",
+              "sub": "user-123",
+              "client_id": "client-abc",
+              "exp": 1701209600,
+              "iat": 1700000000,
+              "jti": "<masked>",
+              "scope": "read offline_access"
+            }
+          }
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[a-f0-9]{32}$/",
+            "value": {
+              "$ref": "d",
+              "path": "/claims/jti"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "signature is a valid HMAC",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "aud",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000,
+            "jti": "fixed"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJhdWQiLCJzdWIiOiJ1c2VyLTEyMyIsImNsaWVudF9pZCI6ImNsaWVudC1hYmMiLCJleHAiOjE3MDEyMDk2MDAsImlhdCI6MTcwMDAwMDAwMCwianRpIjoiZml4ZWQifQ.CLTEt-ExzkXuE4VdoT5OIZjFuKwMA1-bXXbA9vxa5bw"
+        },
+        {
+          "op": "issuer.key_id",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "signature fails with a wrong secret",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "aud",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000,
+            "jti": "fixed"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJhdWQiLCJzdWIiOiJ1c2VyLTEyMyIsImNsaWVudF9pZCI6ImNsaWVudC1hYmMiLCJleHAiOjE3MDEyMDk2MDAsImlhdCI6MTcwMDAwMDAwMCwianRpIjoiZml4ZWQifQ.CLTEt-ExzkXuE4VdoT5OIZjFuKwMA1-bXXbA9vxa5bw"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "not-the-secret"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Verifiers\\VerificationException",
+              "message": "Signature verification failed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "scope omitted when empty",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAxMjA5NjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.KTYY-0U8-W-5Y3vzf55rkiliS09qaV914hCbJpnG51k"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": "https://example.com/token",
+              "sub": "user-123",
+              "client_id": "client-abc",
+              "exp": 1701209600,
+              "iat": 1700000000,
+              "jti": "j"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "scope cannot be injected via claims when empty",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000,
+            "jti": "j",
+            "claims": {
+              "scope": "admin"
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAxMjA5NjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.KTYY-0U8-W-5Y3vzf55rkiliS09qaV914hCbJpnG51k"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": "https://example.com/token",
+              "sub": "user-123",
+              "client_id": "client-abc",
+              "exp": 1701209600,
+              "iat": 1700000000,
+              "jti": "j"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "scope cannot be overridden via claims",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000,
+            "jti": "j",
+            "scopes": [
+              "read"
+            ],
+            "claims": {
+              "scope": "admin"
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNzAxMjA5NjAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoiLCJzY29wZSI6InJlYWQifQ.T-sVLPxIa_C5pV-wJjXUmZcPPjlIqhlAL_Cs5-Ixr8g"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": "https://example.com/token",
+              "sub": "user-123",
+              "client_id": "client-abc",
+              "exp": 1701209600,
+              "iat": 1700000000,
+              "jti": "j",
+              "scope": "read"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "jti is generated and unique",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000
+          },
+          "bind": "a",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the jti is random"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "a"
+            }
+          },
+          "bind": "da",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random jti"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000
+          },
+          "bind": "b",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the jti is random"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "b"
+            }
+          },
+          "bind": "db",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random jti"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "da",
+              "path": "/claims/jti"
+            },
+            "b": {
+              "$ref": "db",
+              "path": "/claims/jti"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "custom jti",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": "a",
+            "client_id": "c",
+            "duration": 100,
+            "now": 1700000000,
+            "jti": "fixed-jti"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJhIiwic3ViIjoidSIsImNsaWVudF9pZCI6ImMiLCJleHAiOjE3MDAwMDAxMDAsImlhdCI6MTcwMDAwMDAwMCwianRpIjoiZml4ZWQtanRpIn0.SUI1otb5LqihhErGfh-mCbOS5rP8UHmwDtR43ITiotw"
+        }
+      ]
+    },
+    {
+      "name": "kid header when configured",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test",
+            "key_id": "secret-v2"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.key_id",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            }
+          },
+          "expect": "secret-v2"
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "u",
+            "audience": "a",
+            "client_id": "c",
+            "duration": 100,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6InNlY3JldC12MiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJhIiwic3ViIjoidSIsImNsaWVudF9pZCI6ImMiLCJleHAiOjE3MDAwMDAxMDAsImlhdCI6MTcwMDAwMDAwMCwianRpIjoiaiJ9.Lqz9L2F0n6m9JtvTwTfL5mfLn5zismeNUIkPBZSn2uM"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256",
+              "kid": "secret-v2"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": "a",
+              "sub": "u",
+              "client_id": "c",
+              "exp": 1700000100,
+              "iat": 1700000000,
+              "jti": "j"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "additional claims cannot override registered claims",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "aud",
+            "client_id": "client",
+            "duration": 100,
+            "now": 1700000000,
+            "jti": "j",
+            "claims": {
+              "sub": "attacker",
+              "iss": "https://evil.example.com",
+              "extra": 1
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLTEyMyIsImlzcyI6Imh0dHBzOlwvXC9leGFtcGxlLmNvbVwvdjFcL29hdXRoMlwvdGVzdCIsImV4dHJhIjoxLCJhdWQiOiJhdWQiLCJjbGllbnRfaWQiOiJjbGllbnQiLCJleHAiOjE3MDAwMDAxMDAsImlhdCI6MTcwMDAwMDAwMCwianRpIjoiaiJ9.O1kO6CYhQldRFry6k8RVEJ38pnZH3OGPw9W9Qzv3_YQ"
+        }
+      ]
+    },
+    {
+      "name": "empty secret throws",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "A signing secret is required"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "zero secret throws",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "A signing secret is required"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty issuer throws",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "An issuer is required"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty secret and issuer reports the issuer",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "",
+            "issuer": "0"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "An issuer is required"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "integer claim keys are renumbered",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": 1209600,
+            "now": 1700000000,
+            "jti": "j",
+            "claims": {
+              "5": "five",
+              "x": "y"
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyIwIjoiZml2ZSIsIngiOiJ5IiwiaXNzIjoiaHR0cHM6XC9cL2V4YW1wbGUuY29tXC92MVwvb2F1dGgyXC90ZXN0IiwiYXVkIjoiaHR0cHM6XC9cL2V4YW1wbGUuY29tXC90b2tlbiIsInN1YiI6InVzZXItMTIzIiwiY2xpZW50X2lkIjoiY2xpZW50LWFiYyIsImV4cCI6MTcwMTIwOTYwMCwiaWF0IjoxNzAwMDAwMDAwLCJqdGkiOiJqIn0.Z7Nd4Mjgop1fgrG8SIwZRIoRuVPiataxvd5r4QYDNKs"
+        }
+      ]
+    },
+    {
+      "name": "negative duration expires in the past",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "refresh",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com/v1/oauth2/test"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "subject": "user-123",
+            "audience": "https://example.com/token",
+            "client_id": "client-abc",
+            "duration": -3600,
+            "now": 1700000000,
+            "jti": "j"
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3YxXC9vYXV0aDJcL3Rlc3QiLCJhdWQiOiJodHRwczpcL1wvZXhhbXBsZS5jb21cL3Rva2VuIiwic3ViIjoidXNlci0xMjMiLCJjbGllbnRfaWQiOiJjbGllbnQtYWJjIiwiZXhwIjoxNjk5OTk2NDAwLCJpYXQiOjE3MDAwMDAwMDAsImp0aSI6ImoifQ.W5ZUIaeTsZnMUSCm4YWPZ2ROO_t9fa6tXfvuBPFp4RQ"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "iss": "https://example.com/v1/oauth2/test",
+              "aud": "https://example.com/token",
+              "sub": "user-123",
+              "client_id": "client-abc",
+              "exp": 1699996400,
+              "iat": 1700000000,
+              "jti": "j"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4851 @@
+{
+  "source": "packages/query/tests/Schema/TableTest.php",
+  "cases": [
+    {
+      "name": "testColumnsPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testColumnsPropertyPopulatedByString",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "same": [
+              {
+                "$o": 2
+              },
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        true,
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        "name",
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::String"
+        }
+      ]
+    },
+    {
+      "name": "testColumnsPropertyPopulatedByMultipleMethods",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "active"
+            ]
+          },
+          {
+            "call": "text",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "bio"
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          }
+        ],
+        "age",
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          }
+        ],
+        "active",
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          }
+        ],
+        "bio"
+      ]
+    },
+    {
+      "name": "testColumnsPropertyNotWritableExternally",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Schema\\Column\\PostgreSQL",
+            "args": [
+              {
+                "$o": 1
+              },
+              "x",
+              {
+                "$enum": "Schema\\ColumnType::String"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testColumnsPopulatedById",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "pk"
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "isPrimary",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "isAutoIncrement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "isUnsigned",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        "pk",
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        true,
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        true,
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "testColumnsPopulatedByAddColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "addColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "score",
+              {
+                "$enum": "Schema\\ColumnType::Integer"
+              }
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        "score"
+      ]
+    },
+    {
+      "name": "testColumnsPopulatedByModifyColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "modifyColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "score",
+              {
+                "$enum": "Schema\\ColumnType::Integer"
+              }
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "isModify",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        true
+      ]
+    },
+    {
+      "name": "testIndexesPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testIndexesPopulatedByIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "index",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "email"
+              ]
+            ]
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "is": "Schema\\Index",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 2,
+            "props": {
+              "name": "idx_email",
+              "columns": [
+                "email"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Index"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 3,
+            "props": {
+              "name": "idx_email",
+              "columns": [
+                "email"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Index"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        true,
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 4,
+            "props": {
+              "name": "idx_email",
+              "columns": [
+                "email"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Index"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        "idx_email"
+      ]
+    },
+    {
+      "name": "testIndexesPopulatedByUniqueIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "uniqueIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "email"
+              ]
+            ]
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 2,
+            "props": {
+              "name": "uniq_email",
+              "columns": [
+                "email"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Unique"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 3,
+            "props": {
+              "name": "uniq_email",
+              "columns": [
+                "email"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Unique"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        "uniq_email"
+      ]
+    },
+    {
+      "name": "testIndexesPopulatedByFulltextIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "fulltextIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "body"
+              ]
+            ]
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 2,
+            "props": {
+              "name": "ft_body",
+              "columns": [
+                "body"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Fulltext"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 3,
+            "props": {
+              "name": "ft_body",
+              "columns": [
+                "body"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Fulltext"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        "ft_body"
+      ]
+    },
+    {
+      "name": "testIndexesPopulatedBySpatialIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "spatialIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "location"
+              ]
+            ]
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 2,
+            "props": {
+              "name": "sp_location",
+              "columns": [
+                "location"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Spatial"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 3,
+            "props": {
+              "name": "sp_location",
+              "columns": [
+                "location"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Spatial"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        "sp_location"
+      ]
+    },
+    {
+      "name": "testIndexesPopulatedByAddIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "addIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "my_idx",
+              [
+                "col1",
+                "col2"
+              ]
+            ]
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 2,
+            "props": {
+              "name": "my_idx",
+              "columns": [
+                "col1",
+                "col2"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Index"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 3,
+            "props": {
+              "name": "my_idx",
+              "columns": [
+                "col1",
+                "col2"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Index"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        "my_idx",
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 4,
+            "props": {
+              "name": "my_idx",
+              "columns": [
+                "col1",
+                "col2"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Index"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        [
+          "col1",
+          "col2"
+        ]
+      ]
+    },
+    {
+      "name": "testIndexesPropertyNotWritableExternally",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testForeignKeysPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testForeignKeysPopulatedByForeignKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "is": "Schema\\ForeignKey",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "column",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 2
+        },
+        [
+          {
+            "$object": "Schema\\ForeignKey\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\ForeignKey\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        true,
+        [
+          {
+            "$object": "Schema\\ForeignKey\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        "user_id"
+      ]
+    },
+    {
+      "name": "testForeignKeysPopulatedByAddForeignKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "addForeignKey",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "order_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "column",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 2
+        },
+        [
+          {
+            "$object": "Schema\\ForeignKey\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\ForeignKey\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        "order_id"
+      ]
+    },
+    {
+      "name": "testForeignKeysPropertyNotWritableExternally",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testDropColumnsPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "dropColumns",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testDropColumnsPopulatedByDropColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "old_field"
+            ]
+          },
+          {
+            "get": "dropColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropColumns",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          "old_field"
+        ],
+        [
+          "old_field"
+        ]
+      ]
+    },
+    {
+      "name": "testDropColumnsMultiple",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c"
+            ]
+          },
+          {
+            "get": "dropColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropColumns",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          "a",
+          "b",
+          "c"
+        ]
+      ]
+    },
+    {
+      "name": "testRenameColumnsPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "renameColumns",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testRenameColumnsPopulatedByRenameColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "renameColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "old",
+              "new"
+            ]
+          },
+          {
+            "get": "renameColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "renameColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "is": "Schema\\RenameColumn",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "renameColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "from",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "renameColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "to",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Schema\\RenameColumn",
+            "id": 2,
+            "props": {
+              "from": "old",
+              "to": "new"
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Schema\\RenameColumn",
+            "id": 3,
+            "props": {
+              "from": "old",
+              "to": "new"
+            }
+          }
+        ],
+        true,
+        [
+          {
+            "$value": "Schema\\RenameColumn",
+            "id": 4,
+            "props": {
+              "from": "old",
+              "to": "new"
+            }
+          }
+        ],
+        "old",
+        [
+          {
+            "$value": "Schema\\RenameColumn",
+            "id": 5,
+            "props": {
+              "from": "old",
+              "to": "new"
+            }
+          }
+        ],
+        "new"
+      ]
+    },
+    {
+      "name": "testDropIndexesPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "dropIndexes",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testDropIndexesPopulatedByDropIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "dropIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "idx_old"
+            ]
+          },
+          {
+            "get": "dropIndexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropIndexes",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          "idx_old"
+        ],
+        [
+          "idx_old"
+        ]
+      ]
+    },
+    {
+      "name": "testDropForeignKeysPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "dropForeignKeys",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testDropForeignKeysPopulatedByDropForeignKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "dropForeignKey",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fk_user"
+            ]
+          },
+          {
+            "get": "dropForeignKeys",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropForeignKeys",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          "fk_user"
+        ],
+        [
+          "fk_user"
+        ]
+      ]
+    },
+    {
+      "name": "testRawColumnDefsPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "rawColumnDefs",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testRawColumnDefsPopulatedByRawColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "rawColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`my_col` VARCHAR(100) NOT NULL"
+            ]
+          },
+          {
+            "get": "rawColumnDefs",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "rawColumnDefs",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          "`my_col` VARCHAR(100) NOT NULL"
+        ],
+        [
+          "`my_col` VARCHAR(100) NOT NULL"
+        ]
+      ]
+    },
+    {
+      "name": "testRawIndexDefsPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "rawIndexDefs",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testRawIndexDefsPopulatedByRawIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "rawIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "INDEX `idx_custom` (`col1`)"
+            ]
+          },
+          {
+            "get": "rawIndexDefs",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "rawIndexDefs",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          "INDEX `idx_custom` (`col1`)"
+        ],
+        [
+          "INDEX `idx_custom` (`col1`)"
+        ]
+      ]
+    },
+    {
+      "name": "testAllPropertiesStartEmpty",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "renameColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropIndexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropForeignKeys",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "rawColumnDefs",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "rawIndexDefs",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "name": "testMultiplePropertiesPopulatedTogether",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "index",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "team_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "teams"
+            ]
+          },
+          {
+            "call": "rawColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`extra` TEXT"
+            ]
+          },
+          {
+            "call": "rawIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "INDEX `idx_extra` (`extra`)"
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "indexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "foreignKeys",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "rawColumnDefs",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "rawIndexDefs",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          }
+        ],
+        [
+          {
+            "$value": "Schema\\Index",
+            "id": 5,
+            "props": {
+              "name": "idx_name",
+              "columns": [
+                "name"
+              ],
+              "type": {
+                "$enum": "Schema\\IndexType::Index"
+              },
+              "lengths": [],
+              "orders": [],
+              "method": "",
+              "operatorClass": "",
+              "collations": [],
+              "rawColumns": [],
+              "algorithm": null,
+              "algorithmArgs": [],
+              "granularity": null
+            }
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\ForeignKey\\PostgreSQL",
+            "id": 4
+          }
+        ],
+        [
+          "`extra` TEXT"
+        ],
+        [
+          "INDEX `idx_extra` (`extra`)"
+        ]
+      ]
+    },
+    {
+      "name": "testAlterOperationsPopulateCorrectProperties",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "modifyColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "score",
+              {
+                "$enum": "Schema\\ColumnType::BigInteger"
+              }
+            ]
+          },
+          {
+            "call": "renameColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "old_name",
+              "new_name"
+            ]
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "obsolete"
+            ]
+          },
+          {
+            "call": "dropIndex",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "idx_dead"
+            ]
+          },
+          {
+            "call": "dropForeignKey",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fk_dead"
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "isModify",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "renameColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropColumns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropIndexes",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "dropForeignKeys",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          }
+        ],
+        true,
+        [
+          {
+            "$value": "Schema\\RenameColumn",
+            "id": 3,
+            "props": {
+              "from": "old_name",
+              "to": "new_name"
+            }
+          }
+        ],
+        [
+          "obsolete"
+        ],
+        [
+          "idx_dead"
+        ],
+        [
+          "fk_dead"
+        ]
+      ]
+    },
+    {
+      "name": "testColumnTypeVariants",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "text",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "body"
+            ]
+          },
+          {
+            "call": "mediumText",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "summary"
+            ]
+          },
+          {
+            "call": "longText",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "content"
+            ]
+          },
+          {
+            "call": "bigInteger",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "count"
+            ]
+          },
+          {
+            "call": "float",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "price"
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "active"
+            ]
+          },
+          {
+            "call": "datetime",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "created_at",
+              3
+            ]
+          },
+          {
+            "call": "timestamp",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "updated_at",
+              6
+            ]
+          },
+          {
+            "call": "json",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "meta"
+            ]
+          },
+          {
+            "call": "binary",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "data"
+            ]
+          },
+          {
+            "call": "enum",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "status",
+              [
+                "draft",
+                "published"
+              ]
+            ]
+          },
+          {
+            "call": "point",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "location"
+            ]
+          },
+          {
+            "call": "linestring",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "route"
+            ]
+          },
+          {
+            "call": "polygon",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "area"
+            ]
+          },
+          {
+            "call": "vector",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding",
+              768
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 15
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 16
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 11
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 12
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 13
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 14
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 15
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 16
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Text"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::MediumText"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::LongText"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::BigInteger"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Float"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Boolean"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Datetime"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Timestamp"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Json"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Binary"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Enum"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Point"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Linestring"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Polygon"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 4
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 5
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 6
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 7
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 8
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 9
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 10
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 11
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 12
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 13
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 14
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 15
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 16
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Vector"
+        }
+      ]
+    },
+    {
+      "name": "testTimestampsHelperAddsTwoColumns",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "timestamps",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              6
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          }
+        ],
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          }
+        ],
+        "created_at",
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          }
+        ],
+        "updated_at",
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Datetime"
+        },
+        [
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 2
+          },
+          {
+            "$object": "Schema\\Column\\PostgreSQL",
+            "id": 3
+          }
+        ],
+        {
+          "$enum": "Schema\\ColumnType::Datetime"
+        }
+      ]
+    },
+    {
+      "name": "testChecksPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "checks",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testCheckPopulatesChecksList",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "age_range",
+              "`age` >= 0 AND `age` < 150"
+            ]
+          },
+          {
+            "get": "checks",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "checks",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "is": "Schema\\CheckConstraint",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "checks",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "name",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "checks",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Schema\\CheckConstraint",
+            "id": 2,
+            "props": {
+              "name": "age_range",
+              "expression": "`age` >= 0 AND `age` < 150"
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Schema\\CheckConstraint",
+            "id": 3,
+            "props": {
+              "name": "age_range",
+              "expression": "`age` >= 0 AND `age` < 150"
+            }
+          }
+        ],
+        true,
+        [
+          {
+            "$value": "Schema\\CheckConstraint",
+            "id": 4,
+            "props": {
+              "name": "age_range",
+              "expression": "`age` >= 0 AND `age` < 150"
+            }
+          }
+        ],
+        "age_range",
+        [
+          {
+            "$value": "Schema\\CheckConstraint",
+            "id": 5,
+            "props": {
+              "name": "age_range",
+              "expression": "`age` >= 0 AND `age` < 150"
+            }
+          }
+        ],
+        "`age` >= 0 AND `age` < 150"
+      ]
+    },
+    {
+      "name": "testCheckRejectsInvalidName",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "bad name;",
+              "x > 0"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid check constraint name: bad name;"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testColumnCheckAttachesExpression",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "`age` >= 0"
+            ]
+          },
+          {
+            "get": "checkExpression",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        },
+        "`age` >= 0"
+      ]
+    },
+    {
+      "name": "testColumnGeneratedAsDefaultsToVirtualOnCompile",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Schema\\Column\\MySQL",
+            "args": [
+              {
+                "$o": 1
+              },
+              "area",
+              {
+                "$enum": "Schema\\ColumnType::Integer"
+              }
+            ]
+          },
+          {
+            "call": "generatedAs",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "`width` * `height`"
+            ]
+          },
+          {
+            "get": "generatedExpression",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "generatedStored",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 2
+        },
+        "`width` * `height`",
+        null
+      ]
+    },
+    {
+      "name": "testColumnStoredAndVirtualAreMutuallyExclusive",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Schema\\Column\\MySQL",
+            "args": [
+              {
+                "$o": 1
+              },
+              "area",
+              {
+                "$enum": "Schema\\ColumnType::Integer"
+              }
+            ]
+          },
+          {
+            "call": "generatedAs",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "`width` * `height`"
+            ]
+          },
+          {
+            "call": "stored",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "generatedStored",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "virtual",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "generatedStored",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "stored",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "generatedStored",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 2
+        },
+        true,
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 2
+        },
+        false,
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 2
+        },
+        true
+      ]
+    },
+    {
+      "name": "testPostgreSQLColumnDoesNotExposeVirtual",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Schema\\Column\\PostgreSQL",
+            "args": [
+              {
+                "$o": 1
+              },
+              "area",
+              {
+                "$enum": "Schema\\ColumnType::Integer"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testPartitionByHashWithCount",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`id`",
+              4
+            ]
+          },
+          {
+            "get": "partitionCount",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        4
+      ]
+    },
+    {
+      "name": "testPartitionByHashWithoutCount",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`id`"
+            ]
+          },
+          {
+            "get": "partitionCount",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        null
+      ]
+    },
+    {
+      "name": "testPartitionByHashRejectsZeroCount",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`id`",
+              0
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Partition count must be at least 1."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testPartitionByHashRejectsNegativeCount",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`id`",
+              -5
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Partition count must be at least 1."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCompositePrimaryKeyPropertyIsReadable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "get": "compositePrimaryKey",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        []
+      ]
+    },
+    {
+      "name": "testPrimaryPopulatesCompositePrimaryKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id",
+                "created_at"
+              ]
+            ]
+          },
+          {
+            "get": "compositePrimaryKey",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        [
+          "id",
+          "created_at"
+        ]
+      ]
+    },
+    {
+      "name": "testPrimaryReturnsStaticForChaining",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 1
+              },
+              {
+                "$o": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        true
+      ]
+    },
+    {
+      "name": "testPrimaryRejectsSingleColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Table::primary(array) requires at least two columns; use Column::primary() for single-column keys."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testPrimaryRejectsEmptyArray",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              []
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Table::primary(array) requires at least two columns; use Column::primary() for single-column keys."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testPrimaryRejectsInvalidColumnName",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Table\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id",
+                "bad name;"
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column name in composite primary key: bad name;"
+          },
+          "id": 2
+        }
+      ]
+    }
+  ]
+}

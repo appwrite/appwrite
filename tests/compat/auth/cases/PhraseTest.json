@@ -1,0 +1,177 @@
+{
+  "source": "packages/auth/tests/Proofs/PhraseTest.php",
+  "cases": [
+    {
+      "name": "generate",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "phrase"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "w",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[a-zA-Z\\s-]+$/",
+            "value": {
+              "$ref": "w"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[A-Z][a-z-]+ [a-z ]+$/",
+            "value": {
+              "$ref": "w"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "hash",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "phrase"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "w",
+          "expect": "<masked>"
+        },
+        {
+          "op": "proof.hash",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": {
+              "$ref": "w"
+            }
+          },
+          "bind": "h",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted argon2"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "h"
+            },
+            "start": 0,
+            "length": 10
+          },
+          "expect": "$argon2id$"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "steps": [
+        {
+          "op": "proof.new",
+          "args": {
+            "kind": "phrase"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "proof.generate",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            }
+          },
+          "bind": "w",
+          "expect": "<masked>"
+        },
+        {
+          "op": "proof.hash",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": {
+              "$ref": "w"
+            }
+          },
+          "bind": "h",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted argon2"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "proof.verify",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": {
+              "$ref": "w"
+            },
+            "hash_value": {
+              "$ref": "h"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "proof.verify",
+          "args": {
+            "proof": {
+              "$ref": "p"
+            },
+            "value": "wrong phrase here",
+            "hash_value": {
+              "$ref": "h"
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

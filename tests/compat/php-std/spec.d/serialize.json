@@ -1,0 +1,2908 @@
+{
+  "ops": {
+    "serialize.serialize": {
+      "doc": "serialize($v)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_v3"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "serialize.serialize_value": {
+      "doc": "serialize($v) of a request-model serde_json::Value",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_pv3"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "serialize.var_export": {
+      "doc": "var_export($v, true)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_v3"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "serialize.var_export_value": {
+      "doc": "var_export($v, true) of a request-model serde_json::Value",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "json_pv3"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "serialize.unserialize": {
+      "doc": "['value' => unserialize($s, $options), 'warnings' => the warnings and deprecations it emitted]",
+      "fuzz": [
+        {
+          "name": "documents",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "ser_doc"
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "max_depth": {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4096,
+                      -1
+                    ]
+                  }
+                },
+                "optional": []
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "serialize.roundtrip": {
+      "doc": "['serialized' => serialize(unserialize($s, $options)), 'warnings' => ...]: what was read, byte for byte",
+      "fuzz": [
+        {
+          "name": "documents",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "ser_doc_keys"
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "max_depth": {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4096,
+                      -1
+                    ]
+                  }
+                },
+                "optional": []
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "serialize.unserialize_typed": {
+      "doc": "['value' => unserialize($s, $options) as an exact typed dump, 'warnings' => the warnings it emitted]",
+      "fuzz": [
+        {
+          "name": "documents",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "s": {
+                "gen": "ref",
+                "name": "ser_doc"
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "max_depth": {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4096,
+                      -1
+                    ]
+                  }
+                },
+                "optional": []
+              }
+            },
+            "optional": [
+              "options"
+            ]
+          },
+          "iterations": 5000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "ser_int": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "i:"
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "int"
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "i:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "+5",
+                "-0",
+                "007",
+                "99999999999999999999",
+                "-9223372036854775808",
+                "9223372036854775808",
+                "-9223372036854775809",
+                "+",
+                "-",
+                "",
+                "1.5",
+                "1e3",
+                "00000000000000000000001",
+                "18446744073709551616"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";"
+            }
+          ]
+        }
+      ]
+    },
+    "ser_float": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "d:"
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "float",
+                  "min": -1e+300,
+                  "max": 1e+300
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "d:"
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "float"
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "d:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "NAN",
+                "INF",
+                "-INF",
+                "+INF",
+                "nan",
+                ".5",
+                "5.",
+                "-.5e-3",
+                "1e400",
+                "1E+2",
+                "1e",
+                "1.5e+",
+                "+1",
+                "0x1",
+                "",
+                ".",
+                "-",
+                "1.5e3.2",
+                "0.1",
+                "-0",
+                "-0.0",
+                "2.5E-310",
+                "1e-400",
+                "+.5",
+                "5.e3"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";"
+            }
+          ]
+        }
+      ]
+    },
+    "ser_str": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "s:0:\"\";",
+            "s:1:\"a\";",
+            "s:2:\"é\";",
+            "s:3:\"a\"b\";",
+            "s:1:\"\"\";",
+            "s:1:\";\";",
+            "s:2:\"\\x\";",
+            "s:1:\"7\";",
+            "s:2:\"07\";",
+            "s:2:\"-0\";",
+            "s:4:\"😀\";",
+            "s:20:\"-9223372036854775808\";",
+            "s:19:\"9223372036854775808\";",
+            "s:1:\"a\"",
+            "s:1:\"a\":",
+            "s:5:\"a\";",
+            "s:x:\"a\";",
+            "s:-1:\"\";",
+            "s:01:\"a\";",
+            "s:18446744073709551617:\"a\";"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "s:"
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "int",
+                  "min": 0,
+                  "max": 6
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":\""
+            },
+            {
+              "gen": "string",
+              "alphabet": "unicode",
+              "max": 4
+            },
+            {
+              "gen": "const",
+              "value": "\";"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "S:"
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "int",
+                  "min": 0,
+                  "max": 4
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":\""
+            },
+            {
+              "gen": "string",
+              "alphabet": "\\01234567xg\"",
+              "max": 6
+            },
+            {
+              "gen": "const",
+              "value": "\";"
+            }
+          ]
+        }
+      ]
+    },
+    "ser_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "ser_int"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_float"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_str"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_str"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "b:0;",
+            "b:1;",
+            "b:2;",
+            "b:;",
+            "b:01;",
+            "b:1"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "N;",
+            "N;",
+            "N",
+            "N:"
+          ]
+        }
+      ]
+    },
+    "ser_key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "ser_int"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_str"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_str"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "i:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "-1"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "s:1:\"a\";",
+            "s:1:\"b\";",
+            "s:1:\"0\";",
+            "s:1:\"1\";",
+            "s:0:\"\";"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "N;",
+            "b:1;",
+            "d:1;",
+            "a:0:{}",
+            "R:1;",
+            "r:1;",
+            "O:8:\"stdClass\":0:{}",
+            "E:3:\"A:B\";",
+            "}",
+            "C:8:\"stdClass\":0:{}",
+            ""
+          ]
+        }
+      ]
+    },
+    "ser_v1": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "ser_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_scalar"
+        },
+        {
+          "gen": "const",
+          "value": "a:0:{}"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "-1",
+                "99999999999999999999"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":{"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "ser_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "ser_scalar"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "0:{}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "x",
+                "-1",
+                "+1"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ":{",
+                ":",
+                "{",
+                ":["
+              ]
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 2,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "ser_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "ser_scalar"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "}",
+                "",
+                "};"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "C:8:\"stdClass\":0:{}",
+            "C:8:\"stdClass\":3:{abc}",
+            "C:8:\"stdClass\":3:{ab}",
+            "C:8:\"stdClass\":-1:{}",
+            "C:8:\"stdClass\":0:[}",
+            "C:8:\"stdClass\":",
+            "O:3:\"a-b\":0:{}",
+            "O:2:\"\\a\":0:{}",
+            "O:0:\"\":0:{}",
+            "O:8:\"stdClass\":",
+            "O:9:\"stdClass\":0:{}",
+            "O:8:\"stdClass\"0:{}",
+            "O:8:\"stdClass\":1",
+            "O:3:\"Foo\":",
+            "O:3:\"Foo\"",
+            "C:3:\"Foo\":",
+            "O:4:\"Foo\":0:{}",
+            "E:3:\"A:B\";",
+            "E:2:\"AB\";",
+            "E:2:\":B\";",
+            "E:0:\"\";",
+            "E:3:\"A-:B\";",
+            "E:4:\"A-:B\";",
+            "E:5:\"A:B\";",
+            "E:3:\"A:B\"x"
+          ]
+        }
+      ]
+    },
+    "ser_v2": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "ser_v1"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_v1"
+        },
+        {
+          "gen": "const",
+          "value": "a:0:{}"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "-1",
+                "99999999999999999999"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":{"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "ser_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "ser_v1"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "0:{}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "x",
+                "-1",
+                "+1"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ":{",
+                ":",
+                "{",
+                ":["
+              ]
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 2,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "ser_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "ser_v1"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "}",
+                "",
+                "};"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "C:8:\"stdClass\":0:{}",
+            "C:8:\"stdClass\":3:{abc}",
+            "C:8:\"stdClass\":3:{ab}",
+            "C:8:\"stdClass\":-1:{}",
+            "C:8:\"stdClass\":0:[}",
+            "C:8:\"stdClass\":",
+            "O:3:\"a-b\":0:{}",
+            "O:2:\"\\a\":0:{}",
+            "O:0:\"\":0:{}",
+            "O:8:\"stdClass\":",
+            "O:9:\"stdClass\":0:{}",
+            "O:8:\"stdClass\"0:{}",
+            "O:8:\"stdClass\":1",
+            "O:3:\"Foo\":",
+            "O:3:\"Foo\"",
+            "C:3:\"Foo\":",
+            "O:4:\"Foo\":0:{}",
+            "E:3:\"A:B\";",
+            "E:2:\"AB\";",
+            "E:2:\":B\";",
+            "E:0:\"\";",
+            "E:3:\"A-:B\";",
+            "E:4:\"A-:B\";",
+            "E:5:\"A:B\";",
+            "E:3:\"A:B\"x"
+          ]
+        }
+      ]
+    },
+    "ser_v3": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "ser_v2"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_v2"
+        },
+        {
+          "gen": "const",
+          "value": "a:0:{}"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v2"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v2"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v2"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "-1",
+                "99999999999999999999"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":{"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "ser_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "ser_v2"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "0:{}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v2"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v2"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_key"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v2"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "x",
+                "-1",
+                "+1"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ":{",
+                ":",
+                "{",
+                ":["
+              ]
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 2,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "ser_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "ser_v2"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "}",
+                "",
+                "};"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "C:8:\"stdClass\":0:{}",
+            "C:8:\"stdClass\":3:{abc}",
+            "C:8:\"stdClass\":3:{ab}",
+            "C:8:\"stdClass\":-1:{}",
+            "C:8:\"stdClass\":0:[}",
+            "C:8:\"stdClass\":",
+            "O:3:\"a-b\":0:{}",
+            "O:2:\"\\a\":0:{}",
+            "O:0:\"\":0:{}",
+            "O:8:\"stdClass\":",
+            "O:9:\"stdClass\":0:{}",
+            "O:8:\"stdClass\"0:{}",
+            "O:8:\"stdClass\":1",
+            "O:3:\"Foo\":",
+            "O:3:\"Foo\"",
+            "C:3:\"Foo\":",
+            "O:4:\"Foo\":0:{}",
+            "E:3:\"A:B\";",
+            "E:2:\"AB\";",
+            "E:2:\":B\";",
+            "E:0:\"\";",
+            "E:3:\"A-:B\";",
+            "E:4:\"A-:B\";",
+            "E:5:\"A:B\";",
+            "E:3:\"A:B\"x"
+          ]
+        }
+      ]
+    },
+    "serb_str": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "s:0:\"\";",
+            "s:1:\"a\";",
+            "s:2:\"é\";",
+            "s:3:\"a\"b\";",
+            "s:1:\"\"\";",
+            "s:1:\";\";",
+            "s:2:\"\\x\";",
+            "s:1:\"7\";",
+            "s:2:\"07\";",
+            "s:2:\"-0\";",
+            "s:4:\"😀\";",
+            "s:20:\"-9223372036854775808\";",
+            "s:19:\"9223372036854775808\";",
+            "s:1:\"a\"",
+            "s:1:\"a\":",
+            "s:5:\"a\";",
+            "s:x:\"a\";",
+            "s:-1:\"\";",
+            "s:01:\"a\";",
+            "s:18446744073709551617:\"a\";"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "s:"
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "int",
+                  "min": 0,
+                  "max": 6
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":\""
+            },
+            {
+              "gen": "string",
+              "alphabet": "unicode",
+              "max": 4
+            },
+            {
+              "gen": "const",
+              "value": "\";"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "S:"
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "int",
+                  "min": 0,
+                  "max": 4
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":\""
+            },
+            {
+              "gen": "string",
+              "alphabet": "\\0123456789abcdefABCDEFxg\"",
+              "max": 6
+            },
+            {
+              "gen": "const",
+              "value": "\";"
+            }
+          ]
+        }
+      ]
+    },
+    "serb_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "ser_int"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_float"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_str"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_str"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "b:0;",
+            "b:1;",
+            "b:2;",
+            "b:;",
+            "b:01;",
+            "b:1"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "N;",
+            "N;",
+            "N",
+            "N:"
+          ]
+        }
+      ]
+    },
+    "serb_key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "ser_int"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_str"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_str"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "i:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "-1"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "s:1:\"a\";",
+            "s:1:\"b\";",
+            "s:1:\"0\";",
+            "s:1:\"1\";",
+            "s:0:\"\";"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "N;",
+            "b:1;",
+            "d:1;",
+            "a:0:{}",
+            "R:1;",
+            "r:1;",
+            "O:8:\"stdClass\":0:{}",
+            "E:3:\"A:B\";",
+            "}",
+            "C:8:\"stdClass\":0:{}",
+            ""
+          ]
+        }
+      ]
+    },
+    "serb_v1": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "serb_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_scalar"
+        },
+        {
+          "gen": "const",
+          "value": "a:0:{}"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "-1",
+                "99999999999999999999"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":{"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "serb_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "serb_scalar"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "0:{}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_scalar"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_scalar"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "x",
+                "-1",
+                "+1"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ":{",
+                ":",
+                "{",
+                ":["
+              ]
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 2,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "serb_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "serb_scalar"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "}",
+                "",
+                "};"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "C:8:\"stdClass\":0:{}",
+            "C:8:\"stdClass\":3:{abc}",
+            "C:8:\"stdClass\":3:{ab}",
+            "C:8:\"stdClass\":-1:{}",
+            "C:8:\"stdClass\":0:[}",
+            "C:8:\"stdClass\":",
+            "O:3:\"a-b\":0:{}",
+            "O:2:\"\\a\":0:{}",
+            "O:0:\"\":0:{}",
+            "O:8:\"stdClass\":",
+            "O:9:\"stdClass\":0:{}",
+            "O:8:\"stdClass\"0:{}",
+            "O:8:\"stdClass\":1",
+            "O:3:\"Foo\":",
+            "O:3:\"Foo\"",
+            "C:3:\"Foo\":",
+            "O:4:\"Foo\":0:{}",
+            "E:3:\"A:B\";",
+            "E:2:\"AB\";",
+            "E:2:\":B\";",
+            "E:0:\"\";",
+            "E:3:\"A-:B\";",
+            "E:4:\"A-:B\";",
+            "E:5:\"A:B\";",
+            "E:3:\"A:B\"x"
+          ]
+        }
+      ]
+    },
+    "serb_v2": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "serb_v1"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_v1"
+        },
+        {
+          "gen": "const",
+          "value": "a:0:{}"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v1"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v1"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v1"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "-1",
+                "99999999999999999999"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":{"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "serb_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "serb_v1"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "0:{}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v1"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v1"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v1"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "x",
+                "-1",
+                "+1"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ":{",
+                ":",
+                "{",
+                ":["
+              ]
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 2,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "serb_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "serb_v1"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "}",
+                "",
+                "};"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "C:8:\"stdClass\":0:{}",
+            "C:8:\"stdClass\":3:{abc}",
+            "C:8:\"stdClass\":3:{ab}",
+            "C:8:\"stdClass\":-1:{}",
+            "C:8:\"stdClass\":0:[}",
+            "C:8:\"stdClass\":",
+            "O:3:\"a-b\":0:{}",
+            "O:2:\"\\a\":0:{}",
+            "O:0:\"\":0:{}",
+            "O:8:\"stdClass\":",
+            "O:9:\"stdClass\":0:{}",
+            "O:8:\"stdClass\"0:{}",
+            "O:8:\"stdClass\":1",
+            "O:3:\"Foo\":",
+            "O:3:\"Foo\"",
+            "C:3:\"Foo\":",
+            "O:4:\"Foo\":0:{}",
+            "E:3:\"A:B\";",
+            "E:2:\"AB\";",
+            "E:2:\":B\";",
+            "E:0:\"\";",
+            "E:3:\"A-:B\";",
+            "E:4:\"A-:B\";",
+            "E:5:\"A:B\";",
+            "E:3:\"A:B\"x"
+          ]
+        }
+      ]
+    },
+    "serb_v3": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "serb_v2"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_v2"
+        },
+        {
+          "gen": "const",
+          "value": "a:0:{}"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v2"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v2"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v2"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "-1",
+                "99999999999999999999"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":{"
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 3,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "serb_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "serb_v2"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "0:{}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "1:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v2"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "2:{"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v2"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_key"
+            },
+            {
+              "gen": "ref",
+              "name": "serb_v2"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "O:8:\"stdClass\":",
+                "O:8:\"STDCLASS\":",
+                "O:8:\"stdclass\":"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "2",
+                "x",
+                "-1",
+                "+1"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ":{",
+                ":",
+                "{",
+                ":["
+              ]
+            },
+            {
+              "gen": "repeat",
+              "min": 0,
+              "max": 2,
+              "part": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "serb_key"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "serb_v2"
+                  }
+                ]
+              }
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "}",
+                "",
+                "};"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "C:8:\"stdClass\":0:{}",
+            "C:8:\"stdClass\":3:{abc}",
+            "C:8:\"stdClass\":3:{ab}",
+            "C:8:\"stdClass\":-1:{}",
+            "C:8:\"stdClass\":0:[}",
+            "C:8:\"stdClass\":",
+            "O:3:\"a-b\":0:{}",
+            "O:2:\"\\a\":0:{}",
+            "O:0:\"\":0:{}",
+            "O:8:\"stdClass\":",
+            "O:9:\"stdClass\":0:{}",
+            "O:8:\"stdClass\"0:{}",
+            "O:8:\"stdClass\":1",
+            "O:3:\"Foo\":",
+            "O:3:\"Foo\"",
+            "C:3:\"Foo\":",
+            "O:4:\"Foo\":0:{}",
+            "E:3:\"A:B\";",
+            "E:2:\"AB\";",
+            "E:2:\":B\";",
+            "E:0:\"\";",
+            "E:3:\"A-:B\";",
+            "E:4:\"A-:B\";",
+            "E:5:\"A:B\";",
+            "E:3:\"A:B\"x"
+          ]
+        }
+      ]
+    },
+    "ser_refs": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:3:{i:0;"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v2"
+            },
+            {
+              "gen": "const",
+              "value": "i:1;"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "const",
+              "value": "i:2;"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "R:",
+                "r:"
+              ]
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "int",
+                  "min": 2,
+                  "max": 9
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:3:{i:0;"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "const",
+              "value": "i:1;"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "R:",
+                "r:"
+              ]
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "int",
+                  "min": 2,
+                  "max": 6
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";i:0;"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:2:{i:0;"
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "pick",
+                  "from": [
+                    "O:8:\"stdClass\":",
+                    "O:8:\"STDCLASS\":",
+                    "O:8:\"stdclass\":"
+                  ]
+                },
+                {
+                  "gen": "const",
+                  "value": "1:{"
+                },
+                {
+                  "gen": "ref",
+                  "name": "ser_key"
+                },
+                {
+                  "gen": "ref",
+                  "name": "ser_v1"
+                },
+                {
+                  "gen": "const",
+                  "value": "}"
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "i:1;"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "R:",
+                "r:"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "2",
+                "3",
+                "4"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "a:4:{s:1:\"a\";"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "const",
+              "value": "s:1:\"b\";R:2;s:1:\"a\";"
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            },
+            {
+              "gen": "const",
+              "value": "s:1:\"c\";"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "R:",
+                "r:"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "2",
+                "3",
+                "4",
+                "5"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ";}"
+            }
+          ]
+        }
+      ]
+    },
+    "ser_doc": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "ser_v3"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_v3"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_v3"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_v2"
+        },
+        {
+          "gen": "ref",
+          "name": "ser_refs"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "ser_v2"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "x",
+                ";",
+                "}",
+                "N;",
+                "i:1;",
+                "\u0000",
+                "a:1:{",
+                " "
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "x",
+                ";",
+                "}",
+                "N;",
+                "i:1;",
+                "\u0000",
+                "a:1:{",
+                " "
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "ser_v1"
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "aidsSNbOCRrE:;{}\"0123456789-+.eE\\x ",
+          "max": 12
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "czoxOiL/Ijs="
+            },
+            {
+              "$bytes": "czoyOiLDKCI7"
+            },
+            {
+              "$bytes": "YToyOntpOjA7czoxOiKAIjtpOjE7czozOiLigiI7fQ=="
+            },
+            "a:1:{i:0;s:3:\"€\";}",
+            {
+              "$bytes": "Tzo4OiJzdGRDbGFzcyI6MTp7czoxOiJhIjtzOjE6Iv4iO30="
+            },
+            {
+              "$bytes": "UzoxOiL/Ijs="
+            },
+            "S:3:\"\\ff\\00\\e9\";",
+            "s:1:\"\u0000\";",
+            "a:1:{s:3:\"a\u0000b\";b:1;}",
+            "O:8:\"stdClass\":1:{s:2:\"\u0000a\";i:1;}",
+            "O:8:\"stdClass\":2:{s:2:\"\u0000a\";i:1;s:1:\"b\";i:2;}",
+            {
+              "$bytes": "czo0OiLwn5giOw=="
+            },
+            {
+              "$bytes": "/w=="
+            },
+            {
+              "$bytes": "aToxO/8="
+            },
+            {
+              "$bytes": "YToxOntpOjA7/30="
+            },
+            {
+              "$bytes": "czoyOiL/Ijs="
+            },
+            "O:2:\"é\":",
+            "O:2:\"é\":0:{",
+            "C:2:\"é\":3:{ab}"
+          ]
+        }
+      ]
+    },
+    "ser_doc_keys": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "serb_v3"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_v3"
+        },
+        {
+          "gen": "ref",
+          "name": "serb_v2"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "serb_v2"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "x",
+                ";",
+                "}",
+                "N;",
+                "i:1;",
+                "\u0000",
+                "a:1:{",
+                " "
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "aidsSNbOCRrE:;{}\"0123456789-+.eE\\x ",
+          "max": 12
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "czoxOiL/Ijs="
+            },
+            {
+              "$bytes": "czoyOiLDKCI7"
+            },
+            {
+              "$bytes": "YToyOntpOjA7czoxOiKAIjtpOjE7czozOiLigiI7fQ=="
+            },
+            "a:1:{i:0;s:3:\"€\";}",
+            {
+              "$bytes": "Tzo4OiJzdGRDbGFzcyI6MTp7czoxOiJhIjtzOjE6Iv4iO30="
+            },
+            {
+              "$bytes": "UzoxOiL/Ijs="
+            },
+            "S:3:\"\\ff\\00\\e9\";",
+            "s:1:\"\u0000\";",
+            "a:1:{s:3:\"a\u0000b\";b:1;}",
+            "O:8:\"stdClass\":1:{s:2:\"\u0000a\";i:1;}",
+            "O:8:\"stdClass\":2:{s:2:\"\u0000a\";i:1;s:1:\"b\";i:2;}",
+            {
+              "$bytes": "czo0OiLwn5giOw=="
+            },
+            {
+              "$bytes": "/w=="
+            },
+            {
+              "$bytes": "aToxO/8="
+            },
+            {
+              "$bytes": "YToxOntpOjA7/30="
+            },
+            {
+              "$bytes": "czoyOiL/Ijs="
+            },
+            "O:2:\"é\":",
+            "O:2:\"é\":0:{",
+            "C:2:\"é\":3:{ab}",
+            {
+              "$bytes": "YToxOntzOjE6Iv8iO2k6MTt9"
+            },
+            {
+              "$bytes": "YToyOntzOjI6IsMoIjtOO3M6MToigCI7YjowO30="
+            },
+            {
+              "$bytes": "Tzo4OiJzdGRDbGFzcyI6MTp7czoxOiL+IjtOO30="
+            },
+            {
+              "$bytes": "YToyOntzOjE6Iv8iO2k6MTtzOjE6Iv8iO2k6Mjt9"
+            },
+            {
+              "$bytes": "Tzo4OiJzdGRDbGFzcyI6MTp7aTo3O3M6MToi/yI7fQ=="
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "unserialize",
+      "php": "Objects of classes other than stdClass (real classes, __PHP_Incomplete_Class, the allowed_classes option), C: data of classes with an unserializer, and enum cases (E:) of defined enums.",
+      "reason": "Zval models scalars, arrays and stdClass only (the values the libraries serialize). unserialize() returns Error::Unsupported for valid class names other than stdClass, and treats E: like PHP does when the enum class does not exist (no PHP classes exist on the Rust side)."
+    },
+    {
+      "symbol": "unserialize",
+      "php": "R:/r: back-references create PHP references and shared objects; a back-reference to a container still being read creates a recursive structure.",
+      "reason": "Zval has no references or object identity: back-references resolve to a copy of the value at that slot when read (exactly what PHP observes for data serialize() writes), and recursive structures fail with Error::Unsupported. serialize(unserialize($s)) therefore writes copies where PHP writes R:/r: again; the serialize.roundtrip profile leaves back-references out."
+    },
+    {
+      "symbol": "unserialize",
+      "php": "Warnings quote enum names byte for byte.",
+      "reason": "Unserialized::warnings are Strings: a non-UTF-8 enum name is quoted lossily."
+    }
+  ]
+}

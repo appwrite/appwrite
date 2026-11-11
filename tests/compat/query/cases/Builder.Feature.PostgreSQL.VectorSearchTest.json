@@ -1,0 +1,661 @@
+{
+  "source": "packages/query/tests/Builder/Feature/PostgreSQL/VectorSearchTest.php",
+  "cases": [
+    {
+      "name": "testOrderByVectorDistanceCosineUsesCosineOperator",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "orderByVectorDistance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding",
+              [
+                0.1,
+                0.2,
+                0.3
+              ],
+              {
+                "$enum": "Builder\\VectorMetric::Cosine"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+            "bindings": [
+              "[0.1,0.2,0.3]"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+        [
+          "[0.1,0.2,0.3]"
+        ],
+        [
+          "[0.1,0.2,0.3]"
+        ],
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC"
+      ]
+    },
+    {
+      "name": "testOrderByVectorDistanceEuclideanUsesL2Operator",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "orderByVectorDistance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding",
+              [
+                1.0,
+                2.0
+              ],
+              {
+                "$enum": "Builder\\VectorMetric::Euclidean"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"items\" ORDER BY (\"embedding\" <-> ?::vector) ASC",
+            "bindings": [
+              "[1,2]"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <-> ?::vector) ASC",
+        [
+          "[1,2]"
+        ],
+        [
+          "[1,2]"
+        ],
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <-> ?::vector) ASC",
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <-> ?::vector) ASC"
+      ]
+    },
+    {
+      "name": "testOrderByVectorDistanceDotUsesInnerProductOperator",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "orderByVectorDistance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding",
+              [
+                1.0,
+                2.0
+              ],
+              {
+                "$enum": "Builder\\VectorMetric::Dot"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"items\" ORDER BY (\"embedding\" <#> ?::vector) ASC",
+            "bindings": [
+              "[1,2]"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <#> ?::vector) ASC",
+        [
+          "[1,2]"
+        ],
+        [
+          "[1,2]"
+        ],
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <#> ?::vector) ASC",
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <#> ?::vector) ASC"
+      ]
+    },
+    {
+      "name": "testOrderByVectorDistanceSerializesVectorAsPgvectorLiteral",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "orderByVectorDistance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding",
+              [
+                0.1,
+                0.2,
+                0.3
+              ],
+              {
+                "$enum": "Builder\\VectorMetric::Cosine"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+            "bindings": [
+              "[0.1,0.2,0.3]"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+        [
+          "[0.1,0.2,0.3]"
+        ],
+        [
+          "[0.1,0.2,0.3]"
+        ],
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+        [
+          "[0.1,0.2,0.3]"
+        ]
+      ]
+    },
+    {
+      "name": "testOrderByVectorDistanceEmptyVectorStillBindsValue",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "orderByVectorDistance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding",
+              [],
+              {
+                "$enum": "Builder\\VectorMetric::Cosine"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+            "bindings": [
+              "[]"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+        [
+          "[]"
+        ],
+        [
+          "[]"
+        ],
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+        [
+          "[]"
+        ]
+      ]
+    },
+    {
+      "name": "testOrderByVectorDistanceQuotesAttributeIdentifier",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "items"
+            ]
+          },
+          {
+            "call": "orderByVectorDistance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding",
+              [
+                1.0
+              ],
+              {
+                "$enum": "Builder\\VectorMetric::Cosine"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+            "bindings": [
+              "[1]"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+        [
+          "[1]"
+        ],
+        [
+          "[1]"
+        ],
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC",
+        "SELECT * FROM \"items\" ORDER BY (\"embedding\" <=> ?::vector) ASC"
+      ]
+    }
+  ]
+}

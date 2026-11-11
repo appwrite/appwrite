@@ -1,0 +1,296 @@
+{
+  "lib": "orchestration",
+  "description": "utopia-php/orchestration: command parsing, environment names, the Container, Network and Stats values, and the DockerCLI and DockerAPI adapters against the local Docker daemon (containers and networks named after each case, images from a local registry: nothing reaches Docker Hub).",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/orchestration/src"
+    ],
+    "tests": [
+      "packages/orchestration/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/orchestration"
+  },
+  "services": [
+    "orchestration-php"
+  ],
+  "state": [],
+  "ops": {
+    "parse_command": {
+      "doc": "Orchestration::parseCommandString(command)",
+      "covers": [
+        "Utopia\\Orchestration\\Orchestration::parseCommandString"
+      ],
+      "fuzz": [
+        {
+          "name": "commands",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "command": {
+                "gen": "ref",
+                "name": "command"
+              }
+            }
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "free text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "command": {
+                "gen": "string",
+                "alphabet": "ab '0é",
+                "max": 16
+              }
+            }
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "unicode",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "command": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "max": 16,
+                "tricky": 0.3
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "filter_env_key": {
+      "doc": "Adapter::filterEnvKey(key)",
+      "covers": [
+        "Utopia\\Orchestration\\Adapter::filterEnvKey"
+      ],
+      "fuzz": [
+        {
+          "name": "keys",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "key": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "max": 20,
+                "tricky": 0.3
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "container.new": {
+      "doc": "new Container(name, id, status, labels) (fields left out take their defaults), then the setters in `set`, read back through the getters",
+      "covers": [
+        "Utopia\\Orchestration\\Container::__construct",
+        "Utopia\\Orchestration\\Container::getName",
+        "Utopia\\Orchestration\\Container::getId",
+        "Utopia\\Orchestration\\Container::getStatus",
+        "Utopia\\Orchestration\\Container::getLabels",
+        "Utopia\\Orchestration\\Container::setName",
+        "Utopia\\Orchestration\\Container::setId",
+        "Utopia\\Orchestration\\Container::setStatus",
+        "Utopia\\Orchestration\\Container::setLabels"
+      ]
+    },
+    "network.new": {
+      "doc": "new Network(name, id, driver, scope), then the setters in `set`, read back through the getters",
+      "covers": [
+        "Utopia\\Orchestration\\Network::__construct",
+        "Utopia\\Orchestration\\Network::getName",
+        "Utopia\\Orchestration\\Network::getId",
+        "Utopia\\Orchestration\\Network::getDriver",
+        "Utopia\\Orchestration\\Network::getScope",
+        "Utopia\\Orchestration\\Network::setName",
+        "Utopia\\Orchestration\\Network::setId",
+        "Utopia\\Orchestration\\Network::setDriver",
+        "Utopia\\Orchestration\\Network::setScope"
+      ]
+    },
+    "stats.new": {
+      "doc": "new Stats(...) read back through the getters",
+      "covers": [
+        "Utopia\\Orchestration\\Container\\Stats::__construct",
+        "Utopia\\Orchestration\\Container\\Stats::getContainerId",
+        "Utopia\\Orchestration\\Container\\Stats::getContainerName",
+        "Utopia\\Orchestration\\Container\\Stats::getCpuUsage",
+        "Utopia\\Orchestration\\Container\\Stats::getMemoryUsage",
+        "Utopia\\Orchestration\\Container\\Stats::getMemoryIO",
+        "Utopia\\Orchestration\\Container\\Stats::getDiskIO",
+        "Utopia\\Orchestration\\Container\\Stats::getNetworkIO"
+      ]
+    },
+    "constants": {
+      "doc": "the Adapter::RESTART_* values",
+      "covers": []
+    },
+    "orchestration.new": {
+      "doc": "new Orchestration(new DockerCLI(username, password) | new DockerAPI(username, password, email)) with setNamespace/setCpus/setMemory/setSwap; a handle, or {error} when the constructor fails",
+      "covers": [
+        "Utopia\\Orchestration\\Orchestration::__construct",
+        "Utopia\\Orchestration\\Orchestration::setNamespace",
+        "Utopia\\Orchestration\\Orchestration::setCpus",
+        "Utopia\\Orchestration\\Orchestration::setMemory",
+        "Utopia\\Orchestration\\Orchestration::setSwap",
+        "Utopia\\Orchestration\\Adapter::setNamespace",
+        "Utopia\\Orchestration\\Adapter::setCpus",
+        "Utopia\\Orchestration\\Adapter::setMemory",
+        "Utopia\\Orchestration\\Adapter::setSwap",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::__construct",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::__construct"
+      ]
+    },
+    "orchestration.call": {
+      "doc": "one Orchestration method (`method`) with its arguments: {result | error}, and `output` for execute(); listings keep the entries whose name contains `match`, networks sorted by name",
+      "covers": [
+        "Utopia\\Orchestration\\Orchestration::createNetwork",
+        "Utopia\\Orchestration\\Orchestration::removeNetwork",
+        "Utopia\\Orchestration\\Orchestration::networkConnect",
+        "Utopia\\Orchestration\\Orchestration::networkDisconnect",
+        "Utopia\\Orchestration\\Orchestration::networkExists",
+        "Utopia\\Orchestration\\Orchestration::getStats",
+        "Utopia\\Orchestration\\Orchestration::listNetworks",
+        "Utopia\\Orchestration\\Orchestration::pull",
+        "Utopia\\Orchestration\\Orchestration::list",
+        "Utopia\\Orchestration\\Orchestration::run",
+        "Utopia\\Orchestration\\Orchestration::execute",
+        "Utopia\\Orchestration\\Orchestration::remove",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::createNetwork",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::removeNetwork",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::networkConnect",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::networkDisconnect",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::networkExists",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::getStats",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::listNetworks",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::pull",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::list",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::run",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::execute",
+        "Utopia\\Orchestration\\Adapter\\DockerCLI::remove",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::createNetwork",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::removeNetwork",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::networkConnect",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::networkDisconnect",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::networkExists",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::getStats",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::listNetworks",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::pull",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::list",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::run",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::execute",
+        "Utopia\\Orchestration\\Adapter\\DockerAPI::remove"
+      ],
+      "mask": {
+        "paths": [
+          "/result/*/labels"
+        ],
+        "order": true,
+        "reason": "the docker CLI prints a container's labels in Go map order, which changes from one call to the next"
+      }
+    },
+    "daemon.inspect": {
+      "doc": "what Docker made of a container (`docker inspect`): the settings run() passes",
+      "covers": []
+    },
+    "daemon.restarted": {
+      "doc": "whether Docker restarted a container at least once",
+      "covers": []
+    },
+    "daemon.wait": {
+      "doc": "waits `seconds`",
+      "covers": []
+    },
+    "daemon.wait_gone": {
+      "doc": "waits up to `seconds` for a container to be gone; whether it is",
+      "covers": []
+    },
+    "daemon.cleanup": {
+      "doc": "removes every container and network whose name contains `match`",
+      "covers": []
+    },
+    "fixture.write": {
+      "doc": "writes a file under /tmp/compat-fs (mounted into the containers the cases run)",
+      "covers": []
+    }
+  },
+  "generators": {
+    "command": {
+      "gen": "repeat",
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "string",
+            "alphabet": "abc-/.0",
+            "min": 0,
+            "max": 5
+          },
+          {
+            "gen": "pick",
+            "from": [
+              "'",
+              "'quoted words'",
+              "'a b",
+              "''",
+              "0",
+              " ",
+              "sh -c 'x'",
+              "é",
+              "' '"
+            ]
+          }
+        ]
+      },
+      "sep": " ",
+      "min": 1,
+      "max": 6
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "deviations": [],
+  "quirks": [
+    {
+      "symbol": "Utopia\\Orchestration\\Orchestration::parseCommandString",
+      "description": "after a quoted argument the next piece is cut with substr($command, $place + 1, $closingString), an offset used as a length, so it can run past the closing quote; a last piece that is `0` is dropped (empty())",
+      "case": "OrchestrationTest.json#parse \"a 'x' 0\""
+    },
+    {
+      "symbol": "Utopia\\Orchestration\\Adapter\\DockerCLI::execute",
+      "description": "a command that runs out of time is reported as Exception\\Orchestration (`Docker Error: ` and its output), not Exception\\Timeout: Console::execute() returns 1 on a timeout, and DockerCLI only maps 124 to Timeout",
+      "case": "DockerCLITest.json#timeouts"
+    },
+    {
+      "symbol": "Utopia\\Orchestration\\Adapter\\DockerAPI::__construct",
+      "description": "the registry credentials are never sent: pull() passes ['X-Registry-Auth' => $auth] to CURLOPT_HTTPHEADER, so cURL gets a header line without a name, which it drops",
+      "case": "DockerAPITest.json#constructors"
+    },
+    {
+      "symbol": "Utopia\\Orchestration\\Adapter\\DockerCLI::list",
+      "description": "labels are read from `docker ps --format`, split at `,` and `=` after parse_str(): a label value holding `=` keeps only its first part, and `+` or `%xx` in a value is decoded",
+      "case": "DockerCLITest.json#preserves label values with single quotes"
+    },
+    {
+      "symbol": "Utopia\\Orchestration\\Adapter\\DockerAPI::createNetwork",
+      "description": "returns Docker's response body converted to bool (true for any non-empty body but `0`)",
+      "case": "DockerAPITest.json#networks"
+    },
+    {
+      "symbol": "Utopia\\Orchestration\\Adapter\\DockerAPI::getStats",
+      "description": "disk I/O adds up only the `Read` and `Write` entries of blkio_stats.io_service_bytes_recursive (cgroup v1 names; cgroup v2 reports `read`/`write`, so it stays 0 there)",
+      "case": "DockerAPITest.json#usage stats"
+    }
+  ]
+}

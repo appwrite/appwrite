@@ -1,0 +1,421 @@
+{
+  "source": "packages/storage/tests/Validator/FileExtTest.php",
+  "cases": [
+    {
+      "name": "values",
+      "steps": [
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": false
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "test"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "...test.png"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": ".gif"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "x.gif"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "gif"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "file.tar"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "file.tar.g"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "file.tar.gz"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "file.gz"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "file.GIF"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "file.zip"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "gif",
+              "gz",
+              "zip"
+            ],
+            "value": "file.7zip"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "extensions compare loosely and by the last dot",
+      "steps": [
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "jpg",
+              "jpeg"
+            ],
+            "value": "photo.JPEG"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "10"
+            ],
+            "value": "file.1e1"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "10"
+            ],
+            "value": "file.10.0"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "png"
+            ],
+            "value": "dir.png/file"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "png"
+            ],
+            "value": "dir/file.png/"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [],
+            "value": "a.png"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "png"
+            ],
+            "value": 123
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              "png"
+            ],
+            "value": [
+              "a.png"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              ""
+            ],
+            "value": "noext"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_ext.validate",
+          "args": {
+            "allowed": [
+              ""
+            ],
+            "value": "dot."
+          },
+          "expect": {
+            "valid": true,
+            "description": "File extension is not valid",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

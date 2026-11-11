@@ -1,0 +1,421 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/ObjectFilterTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ObjectFilterTest::testObjectFilterPreservesEmptyObjectsAndArrays",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o98"
+          },
+          "bind": "s193",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o98"
+              },
+              "cache": "none"
+            },
+            "as": "o99"
+          },
+          "bind": "s194",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "meta",
+                "type": "object",
+                "array": false,
+                "filters": [
+                  "object"
+                ]
+              }
+            },
+            "as": "o100"
+          },
+          "bind": "s195",
+          "expect": {
+            "$document": {
+              "$id": "meta",
+              "type": "object",
+              "array": false,
+              "filters": [
+                "object"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "attributes": [
+                  {
+                    "$obj": "o100"
+                  }
+                ]
+              }
+            },
+            "as": "o101"
+          },
+          "bind": "s196",
+          "expect": {
+            "$document": {
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "meta",
+                    "type": "object",
+                    "array": false,
+                    "filters": [
+                      "object"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "meta": {
+                  "emptyObject": {},
+                  "emptyArray": [],
+                  "nested": [
+                    {},
+                    {
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            },
+            "as": "o102"
+          },
+          "bind": "s197",
+          "expect": {
+            "$document": {
+              "meta": {
+                "emptyObject": {},
+                "emptyArray": [],
+                "nested": [
+                  {},
+                  {
+                    "value": 1
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o99"
+            },
+            "method": "encode",
+            "args": {
+              "collection": {
+                "$obj": "o101"
+              },
+              "document": {
+                "$obj": "o102"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "meta": "{\"emptyObject\":{},\"emptyArray\":[],\"nested\":[{},{\"value\":1}]}"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o102"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "meta"
+            }
+          },
+          "expect": "{\"emptyObject\":{},\"emptyArray\":[],\"nested\":[{},{\"value\":1}]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o99"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o101"
+              },
+              "document": {
+                "$obj": "o102"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "meta": {
+                "emptyObject": {},
+                "emptyArray": [],
+                "nested": [
+                  {},
+                  {
+                    "value": 1
+                  }
+                ]
+              },
+              "$id": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o102"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "meta"
+            }
+          },
+          "expect": {
+            "emptyObject": {},
+            "emptyArray": [],
+            "nested": [
+              {},
+              {
+                "value": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ObjectFilterTest::testObjectFilterEncodesTopLevelEmptyObject",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o103"
+          },
+          "bind": "s202",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o103"
+              },
+              "cache": "none"
+            },
+            "as": "o104"
+          },
+          "bind": "s203",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "meta",
+                "type": "object",
+                "array": false,
+                "filters": [
+                  "object"
+                ]
+              }
+            },
+            "as": "o105"
+          },
+          "bind": "s204",
+          "expect": {
+            "$document": {
+              "$id": "meta",
+              "type": "object",
+              "array": false,
+              "filters": [
+                "object"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "attributes": [
+                  {
+                    "$obj": "o105"
+                  }
+                ]
+              }
+            },
+            "as": "o106"
+          },
+          "bind": "s205",
+          "expect": {
+            "$document": {
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "meta",
+                    "type": "object",
+                    "array": false,
+                    "filters": [
+                      "object"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "meta": {}
+              }
+            },
+            "as": "o107"
+          },
+          "bind": "s206",
+          "expect": {
+            "$document": {
+              "meta": {}
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o104"
+            },
+            "method": "encode",
+            "args": {
+              "collection": {
+                "$obj": "o106"
+              },
+              "document": {
+                "$obj": "o107"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "meta": "{}"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o107"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "meta"
+            }
+          },
+          "expect": "{}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o104"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o106"
+              },
+              "document": {
+                "$obj": "o107"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "meta": {},
+              "$id": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o107"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "meta"
+            }
+          },
+          "expect": {}
+        }
+      ]
+    }
+  ]
+}

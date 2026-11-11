@@ -1,0 +1,391 @@
+{
+  "source": "packages/dns/tests/E2E/ProxyProtocolTest.php",
+  "cases": [
+    {
+      "name": "v1 header (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "proxy"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "PROXY TCP4 203.0.113.9 10.0.0.1 42424 53\r\n\u0000!\u0002\u0001\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "frames": 1
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": {
+                "$bytes": "AEACAYUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMY"
+              },
+              "closed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "v2 header (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "proxy"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": {
+                  "$bytes": "DQoNCgANClFVSVQKIREADMsAcQkKAAABpbgANQAhAgEBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB"
+                },
+                "frames": 1
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": {
+                "$bytes": "AEACAYUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMY"
+              },
+              "closed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "invalid header closes connection (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "proxy"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "NOT A PROXY HEADER\r\n"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": "",
+              "closed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "header in pieces and the client address (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "proxy"
+                ],
+                "resolver": {
+                  "kind": "throw"
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "",
+                "chunks": [
+                  "PROXY TCP4 203.0",
+                  ".113.9 10.0.0.1 42424 53\r\n",
+                  "\u0000!\u0002\u0001\u0001",
+                  "\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+                ],
+                "frames": 1
+              },
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "\r\n\r\n\u0000\r\nQUIT\n \u0000\u0000\u0000\u0000!\u0002\u0001\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "frames": 1
+              },
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "PROXY UNKNOWN\r\n\u0000!\u0002\u0001\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001\u0000!\u0002\u0001\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "frames": 2
+              },
+              {
+                "kind": "errors"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": {
+                "$bytes": "ACECAYECAAEAAAAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAE="
+              },
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "ACECAYECAAEAAAAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAE="
+              },
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "ACECAYECAAEAAAAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEAIQIBgQIAAQAAAAAAAANkZXYIYXBwd3JpdGUCaW8AAAEAAQ=="
+              },
+              "closed": false
+            },
+            [
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              },
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              },
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              },
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "v1 header (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "proxy"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "PROXY TCP4 203.0.113.9 10.0.0.1 42424 53\r\n\u0000!\u0002\u0001\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "frames": 1
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": {
+                "$bytes": "AEACAYUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMY"
+              },
+              "closed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "v2 header (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "proxy"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": {
+                  "$bytes": "DQoNCgANClFVSVQKIREADMsAcQkKAAABpbgANQAhAgEBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB"
+                },
+                "frames": 1
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": {
+                "$bytes": "AEACAYUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMY"
+              },
+              "closed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "invalid header closes connection (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "proxy"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "NOT A PROXY HEADER\r\n"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": "",
+              "closed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "header in pieces and the client address (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "proxy"
+                ],
+                "resolver": {
+                  "kind": "throw"
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "",
+                "chunks": [
+                  "PROXY TCP4 203.0",
+                  ".113.9 10.0.0.1 42424 53\r\n",
+                  "\u0000!\u0002\u0001\u0001",
+                  "\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+                ],
+                "frames": 1
+              },
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "\r\n\r\n\u0000\r\nQUIT\n \u0000\u0000\u0000\u0000!\u0002\u0001\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "frames": 1
+              },
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "PROXY UNKNOWN\r\n\u0000!\u0002\u0001\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001\u0000!\u0002\u0001\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "frames": 2
+              },
+              {
+                "kind": "errors"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": {
+                "$bytes": "ACECAYECAAEAAAAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAE="
+              },
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "ACECAYECAAEAAAAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAE="
+              },
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "ACECAYECAAEAAAAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEAIQIBgQIAAQAAAAAAAANkZXYIYXBwd3JpdGUCaW8AAAEAAQ=="
+              },
+              "closed": false
+            },
+            [
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              },
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              },
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              },
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,588 @@
+{
+  "source": "packages/dns/tests/Message/HeaderTest.php",
+  "cases": [
+    {
+      "name": "encode decode round trip",
+      "steps": [
+        {
+          "op": "header.encode",
+          "args": {
+            "header": {
+              "id": 4660,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": true,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 2,
+              "authorityCount": 3,
+              "additionalCount": 4
+            }
+          },
+          "bind": "bin",
+          "expect": {
+            "$bytes": "EjSDgAABAAIAAwAE"
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$ref": "bin"
+            }
+          },
+          "expect": {
+            "id": 4660,
+            "isResponse": true,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": true,
+            "recursionDesired": true,
+            "recursionAvailable": true,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 2,
+            "authorityCount": 3,
+            "additionalCount": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode throws on short data",
+      "steps": [
+        {
+          "op": "header.decode",
+          "args": {
+            "data": "\u0000\u0001"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "DNS header too short"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode honors offset",
+      "steps": [
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "/////woLg4AAAQACAAMABAAA"
+            },
+            "offset": 4
+          },
+          "expect": {
+            "id": 2571,
+            "isResponse": true,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": true,
+            "recursionDesired": true,
+            "recursionAvailable": true,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 2,
+            "authorityCount": 3,
+            "additionalCount": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "encode uses network byte order",
+      "steps": [
+        {
+          "op": "header.encode",
+          "args": {
+            "header": {
+              "id": 6699,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1286,
+              "answerCount": 1800,
+              "authorityCount": 2314,
+              "additionalCount": 2828
+            }
+          },
+          "expect": "\u001a+\u0001\u0003\u0005\u0006\u0007\b\t\n\u000b\f"
+        }
+      ]
+    },
+    {
+      "name": "opcode validation",
+      "steps": [
+        {
+          "op": "header.new",
+          "args": {
+            "header": {
+              "id": 1,
+              "isResponse": false,
+              "opcode": 16,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Opcode must be 0-15"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "response code validation",
+      "steps": [
+        {
+          "op": "header.new",
+          "args": {
+            "header": {
+              "id": 1,
+              "isResponse": false,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 16,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Response code must be 0-15"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode accepts non-zero Z bits",
+      "steps": [
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "EjSB8AABAAAAAAAA"
+            }
+          },
+          "expect": {
+            "id": 4660,
+            "isResponse": true,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": true,
+            "recursionAvailable": true,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 0,
+            "authorityCount": 0,
+            "additionalCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode accepts various Z bit patterns",
+      "steps": [
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "q80BEAABAAAAAAAA"
+            }
+          },
+          "expect": {
+            "id": 43981,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": true,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 0,
+            "authorityCount": 0,
+            "additionalCount": 0
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "q80BIAABAAAAAAAA"
+            }
+          },
+          "expect": {
+            "id": 43981,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": true,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 0,
+            "authorityCount": 0,
+            "additionalCount": 0
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "q80BQAABAAAAAAAA"
+            }
+          },
+          "expect": {
+            "id": 43981,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": true,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 0,
+            "authorityCount": 0,
+            "additionalCount": 0
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "q80BMAABAAAAAAAA"
+            }
+          },
+          "expect": {
+            "id": 43981,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": true,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 0,
+            "authorityCount": 0,
+            "additionalCount": 0
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "q80BUAABAAAAAAAA"
+            }
+          },
+          "expect": {
+            "id": 43981,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": true,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 0,
+            "authorityCount": 0,
+            "additionalCount": 0
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "q80BYAABAAAAAAAA"
+            }
+          },
+          "expect": {
+            "id": 43981,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": true,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 0,
+            "authorityCount": 0,
+            "additionalCount": 0
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "q80BcAABAAAAAAAA"
+            }
+          },
+          "expect": {
+            "id": 43981,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": true,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 1,
+            "answerCount": 0,
+            "authorityCount": 0,
+            "additionalCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "every flag and field",
+      "steps": [
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "////////AAAAAf//"
+            }
+          },
+          "expect": {
+            "id": 65535,
+            "isResponse": true,
+            "opcode": 15,
+            "authoritative": true,
+            "truncated": true,
+            "recursionDesired": true,
+            "recursionAvailable": true,
+            "responseCode": 15,
+            "questionCount": 65535,
+            "answerCount": 0,
+            "authorityCount": 1,
+            "additionalCount": 65535
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "//8AAP//AAAAAf//"
+            }
+          },
+          "expect": {
+            "id": 65535,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": false,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 65535,
+            "answerCount": 0,
+            "authorityCount": 1,
+            "additionalCount": 65535
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "//94AP//AAAAAf//"
+            }
+          },
+          "expect": {
+            "id": 65535,
+            "isResponse": false,
+            "opcode": 15,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": false,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 65535,
+            "answerCount": 0,
+            "authorityCount": 1,
+            "additionalCount": 65535
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "//+EAP//AAAAAf//"
+            }
+          },
+          "expect": {
+            "id": 65535,
+            "isResponse": true,
+            "opcode": 0,
+            "authoritative": true,
+            "truncated": false,
+            "recursionDesired": false,
+            "recursionAvailable": false,
+            "responseCode": 0,
+            "questionCount": 65535,
+            "answerCount": 0,
+            "authorityCount": 1,
+            "additionalCount": 65535
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "//8AD///AAAAAf//"
+            }
+          },
+          "expect": {
+            "id": 65535,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": false,
+            "recursionAvailable": false,
+            "responseCode": 15,
+            "questionCount": 65535,
+            "answerCount": 0,
+            "authorityCount": 1,
+            "additionalCount": 65535
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": {
+              "$bytes": "//8AgP//AAAAAf//"
+            }
+          },
+          "expect": {
+            "id": 65535,
+            "isResponse": false,
+            "opcode": 0,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": false,
+            "recursionAvailable": true,
+            "responseCode": 0,
+            "questionCount": 65535,
+            "answerCount": 0,
+            "authorityCount": 1,
+            "additionalCount": 65535
+          }
+        },
+        {
+          "op": "header.new",
+          "args": {
+            "header": {
+              "id": 65535,
+              "isResponse": false,
+              "opcode": 15,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 15,
+              "questionCount": 65535,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            }
+          },
+          "expect": {
+            "id": 65535,
+            "isResponse": false,
+            "opcode": 15,
+            "authoritative": false,
+            "truncated": false,
+            "recursionDesired": false,
+            "recursionAvailable": false,
+            "responseCode": 15,
+            "questionCount": 65535,
+            "answerCount": 0,
+            "authorityCount": 0,
+            "additionalCount": 0
+          }
+        },
+        {
+          "op": "header.encode",
+          "args": {
+            "header": {
+              "id": 65535,
+              "isResponse": true,
+              "opcode": 15,
+              "authoritative": true,
+              "truncated": true,
+              "recursionDesired": true,
+              "recursionAvailable": true,
+              "responseCode": 15,
+              "questionCount": 65535,
+              "answerCount": 65535,
+              "authorityCount": 65535,
+              "additionalCount": 65535
+            }
+          },
+          "expect": {
+            "$bytes": "////j///////////"
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "DNS header too short"
+            }
+          }
+        },
+        {
+          "op": "header.decode",
+          "args": {
+            "data": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+            "offset": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "DNS header too short"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

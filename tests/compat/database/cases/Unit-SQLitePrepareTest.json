@@ -1,0 +1,230 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/SQLitePrepareTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLitePrepareTest::testWrapperBackedCollectionAndDocumentStatementsExecute",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "wrapper": true
+                }
+              }
+            },
+            "as": "o50243"
+          },
+          "bind": "s76793",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50243"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o50244"
+          },
+          "bind": "s76795",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50244"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50243"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o50244"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50243"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "movies"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movies"
+              }
+            },
+            "as": "o50245"
+          },
+          "bind": "s76799",
+          "expect": {
+            "$document": {
+              "$id": "movies"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movie",
+                "$permissions": []
+              }
+            },
+            "as": "o50246"
+          },
+          "bind": "s76800",
+          "expect": {
+            "$document": {
+              "$id": "movie",
+              "$permissions": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50243"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o50245"
+              },
+              "document": {
+                "$obj": "o50246"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "movie",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50246"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "movie"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movies"
+              }
+            },
+            "as": "o50247"
+          },
+          "bind": "s76803",
+          "expect": {
+            "$document": {
+              "$id": "movies"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50243"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o50247"
+              },
+              "id": "movie"
+            },
+            "as": "o50248"
+          },
+          "bind": "s76804",
+          "expect": {
+            "$document": {
+              "$id": "movie",
+              "$sequence": 1,
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50248"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "movie"
+        }
+      ]
+    }
+  ]
+}

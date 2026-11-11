@@ -1,0 +1,260 @@
+{
+  "source": "packages/queue/tests/E2E/RedisConnectionRecoveryTest.php",
+  "cases": [
+    {
+      "name": "commands recover once the server answers again",
+      "state": [],
+      "steps": [
+        {
+          "op": "redis.cmd",
+          "args": {
+            "service": "queue-redis-auth",
+            "auth": "secretpw",
+            "args": [
+              "ACL",
+              "SETUSER",
+              "${ns}",
+              "on",
+              ">pw",
+              "~*",
+              "&*",
+              "+@all"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis",
+            "service": "queue-redis-auth",
+            "user": "${ns}",
+            "password": "pw"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.recovery",
+              "before"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "service": "queue-redis-auth",
+            "auth": "secretpw",
+            "args": [
+              "CLIENT",
+              "KILL",
+              "USER",
+              "${ns}"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "remove",
+            "args": [
+              "${ns}.recovery"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.recovery",
+              "after"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.recovery"
+            ]
+          },
+          "expect": "after"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "remove",
+            "args": [
+              "${ns}.recovery"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "service": "queue-redis-auth",
+            "auth": "secretpw",
+            "args": [
+              "ACL",
+              "DELUSER",
+              "${ns}"
+            ]
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "a push on a connection the server closed is sent once, on a new connection",
+      "state": [],
+      "steps": [
+        {
+          "op": "redis.cmd",
+          "args": {
+            "service": "queue-redis-auth",
+            "auth": "secretpw",
+            "args": [
+              "ACL",
+              "SETUSER",
+              "${ns}",
+              "on",
+              ">pw",
+              "~*",
+              "&*",
+              "+@all"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis",
+            "service": "queue-redis-auth",
+            "user": "${ns}",
+            "password": "pw"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPush",
+            "args": [
+              "${ns}.recovery",
+              "one"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "service": "queue-redis-auth",
+            "auth": "secretpw",
+            "args": [
+              "CLIENT",
+              "KILL",
+              "USER",
+              "${ns}"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPush",
+            "args": [
+              "${ns}.recovery",
+              "two"
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the message can name the server, which differs between the runtimes' networks"
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listSize",
+            "args": [
+              "${ns}.recovery"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "remove",
+            "args": [
+              "${ns}.recovery"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "service": "queue-redis-auth",
+            "auth": "secretpw",
+            "args": [
+              "ACL",
+              "DELUSER",
+              "${ns}"
+            ]
+          },
+          "expect": 1
+        }
+      ]
+    }
+  ]
+}

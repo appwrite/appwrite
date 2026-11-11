@@ -1,0 +1,672 @@
+{
+  "cases": [
+    {
+      "name": "labels, defaults and metadata",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "label": {
+              "key": "scope",
+              "value": "users.read"
+            }
+          },
+          {
+            "label": {
+              "key": "empty",
+              "value": null
+            }
+          },
+          {
+            "label_of": {
+              "key": "scope",
+              "default": "default"
+            }
+          },
+          {
+            "label_of": {
+              "key": "empty",
+              "default": "default"
+            }
+          },
+          {
+            "label_of": {
+              "key": "missing",
+              "default": "default"
+            }
+          },
+          {
+            "param": {
+              "key": "a",
+              "default": 5,
+              "validator": {
+                "integer": true
+              },
+              "description": "A.",
+              "optional": true,
+              "injections": [
+                "db"
+              ],
+              "skip_validation": true,
+              "deprecated": true,
+              "example": "7",
+              "model": "user",
+              "aliases": [
+                "b"
+              ]
+            }
+          },
+          {
+            "get": "params"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        "users.read",
+        "default",
+        "default",
+        true,
+        {
+          "a": {
+            "default": 5,
+            "validator": "Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647",
+            "description": "A.",
+            "optional": true,
+            "injections": [
+              "db"
+            ],
+            "skipValidation": true,
+            "deprecated": true,
+            "example": "7",
+            "model": "user",
+            "aliases": [
+              "b"
+            ],
+            "enum": null,
+            "value": null,
+            "order": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "an injection declared twice",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "inject": "user"
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "get": "dependencies"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Injection already declared for user",
+            "code": 0
+          }
+        },
+        [
+          "user"
+        ]
+      ]
+    },
+    {
+      "name": "unknown param keys",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "set_param_value": {
+              "key": "x",
+              "value": 1
+            }
+          },
+          {
+            "param_value": "x"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Unknown key",
+            "code": 0
+          }
+        },
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Unknown key",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "a param declared again keeps its place and takes a new order",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "param": {
+              "key": "a",
+              "default": 1
+            }
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "param": {
+              "key": "b",
+              "default": 2
+            }
+          },
+          {
+            "set_param_value": {
+              "key": "a",
+              "value": "set"
+            }
+          },
+          {
+            "param": {
+              "key": "a",
+              "default": 3
+            }
+          },
+          {
+            "get": "params"
+          },
+          {
+            "get": "params_values"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        {
+          "a": {
+            "default": 3,
+            "validator": "Value must be anything",
+            "description": "",
+            "optional": false,
+            "injections": [],
+            "skipValidation": false,
+            "deprecated": false,
+            "example": "",
+            "model": null,
+            "aliases": [],
+            "enum": null,
+            "value": null,
+            "order": 3
+          },
+          "b": {
+            "default": 2,
+            "validator": "Value must be anything",
+            "description": "",
+            "optional": false,
+            "injections": [],
+            "skipValidation": false,
+            "deprecated": false,
+            "example": "",
+            "model": null,
+            "aliases": [],
+            "enum": null,
+            "value": null,
+            "order": 2
+          }
+        },
+        {
+          "a": null,
+          "b": null
+        }
+      ]
+    },
+    {
+      "name": "prepare: request values, aliases and path values",
+      "op": "base.prepare",
+      "args": {
+        "params": [
+          {
+            "key": "a",
+            "default": "",
+            "validator": {
+              "text": [
+                5
+              ]
+            }
+          },
+          {
+            "key": "b",
+            "default": "",
+            "validator": {
+              "text": [
+                5
+              ]
+            },
+            "aliases": [
+              "x",
+              "y"
+            ]
+          },
+          {
+            "key": "c",
+            "default": "d",
+            "validator": {
+              "text": [
+                5
+              ]
+            },
+            "optional": true
+          }
+        ],
+        "values": {
+          "a": "path"
+        },
+        "request": {
+          "a": "query",
+          "y": "alias",
+          "x": "first"
+        }
+      },
+      "expect": {
+        "scope": {
+          "a": "path",
+          "b": "first",
+          "c": "d"
+        },
+        "values": {
+          "a": "path",
+          "b": "first",
+          "c": "d"
+        },
+        "factories": [],
+        "error": null
+      }
+    },
+    {
+      "name": "prepare: a required param is missing",
+      "op": "base.prepare",
+      "args": {
+        "params": [
+          {
+            "key": "a",
+            "default": "",
+            "validator": {
+              "text": [
+                5
+              ]
+            }
+          }
+        ],
+        "request": {}
+      },
+      "expect": {
+        "scope": [],
+        "values": {
+          "a": null
+        },
+        "factories": [],
+        "error": {
+          "class": "Utopia\\Servers\\Exception",
+          "message": "Param \"a\" is not optional.",
+          "code": 400
+        }
+      }
+    },
+    {
+      "name": "prepare: an invalid value",
+      "op": "base.prepare",
+      "args": {
+        "params": [
+          {
+            "key": "a",
+            "default": "",
+            "validator": {
+              "text": [
+                3
+              ]
+            }
+          }
+        ],
+        "request": {
+          "a": "toolong"
+        }
+      },
+      "expect": {
+        "scope": [],
+        "values": {
+          "a": null
+        },
+        "factories": [],
+        "error": {
+          "class": "Utopia\\Servers\\Exception",
+          "message": "Invalid `a` param: Value must be a valid string and at least 1 chars and no longer than 3 chars",
+          "code": 400
+        }
+      }
+    },
+    {
+      "name": "prepare: optional null skips validation",
+      "op": "base.prepare",
+      "args": {
+        "params": [
+          {
+            "key": "a",
+            "default": "",
+            "validator": {
+              "text": [
+                3
+              ]
+            },
+            "optional": true
+          }
+        ],
+        "request": {
+          "a": null
+        }
+      },
+      "expect": {
+        "scope": {
+          "a": null
+        },
+        "values": {
+          "a": null
+        },
+        "factories": [],
+        "error": null
+      }
+    },
+    {
+      "name": "prepare: skip validation",
+      "op": "base.prepare",
+      "args": {
+        "params": [
+          {
+            "key": "a",
+            "default": "",
+            "validator": {
+              "text": [
+                3
+              ]
+            },
+            "skip_validation": true
+          }
+        ],
+        "request": {}
+      },
+      "expect": {
+        "scope": {
+          "a": ""
+        },
+        "values": {
+          "a": ""
+        },
+        "factories": [],
+        "error": null
+      }
+    },
+    {
+      "name": "prepare: default and validator factories get their injections",
+      "op": "base.prepare",
+      "args": {
+        "resources": {
+          "r1": "one",
+          "r2": 2
+        },
+        "params": [
+          {
+            "key": "a",
+            "default": "fallback",
+            "default_fn": true,
+            "injections": [
+              "r1",
+              "r2"
+            ],
+            "validator": {
+              "factory": {
+                "text": [
+                  10
+                ]
+              }
+            },
+            "optional": true
+          },
+          {
+            "key": "b",
+            "default": "",
+            "injections": [
+              "r2"
+            ],
+            "validator": {
+              "factory": {
+                "integer": true
+              }
+            }
+          }
+        ],
+        "request": {
+          "b": "12"
+        }
+      },
+      "expect": {
+        "scope": {
+          "a": "fallback",
+          "b": "12"
+        },
+        "values": {
+          "a": "fallback",
+          "b": "12"
+        },
+        "factories": [
+          "one",
+          2,
+          2
+        ],
+        "error": null
+      }
+    },
+    {
+      "name": "prepare: a factory injection that is missing",
+      "op": "base.prepare",
+      "args": {
+        "params": [
+          {
+            "key": "a",
+            "default": "",
+            "default_fn": true,
+            "injections": [
+              "missing"
+            ],
+            "optional": true
+          }
+        ],
+        "request": {}
+      },
+      "expect": {
+        "scope": [],
+        "values": {
+          "a": null
+        },
+        "factories": [],
+        "error": {
+          "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+          "message": "Dependency missing not found",
+          "code": 0
+        }
+      }
+    },
+    {
+      "name": "prepare: an earlier param is injectable into a later factory",
+      "op": "base.prepare",
+      "args": {
+        "params": [
+          {
+            "key": "a",
+            "default": "",
+            "validator": {
+              "text": [
+                5
+              ]
+            }
+          },
+          {
+            "key": "b",
+            "default": "",
+            "default_fn": true,
+            "injections": [
+              "a"
+            ],
+            "optional": true
+          }
+        ],
+        "request": {
+          "a": "first"
+        }
+      },
+      "expect": {
+        "scope": {
+          "a": "first",
+          "b": ""
+        },
+        "values": {
+          "a": "first",
+          "b": ""
+        },
+        "factories": [
+          "first"
+        ],
+        "error": null
+      }
+    },
+    {
+      "name": "base: mode, hooks and container",
+      "op": "base.run",
+      "args": {
+        "steps": [
+          {
+            "mode": true
+          },
+          {
+            "set_mode": "production"
+          },
+          {
+            "mode": true
+          },
+          {
+            "set_mode": "development"
+          },
+          {
+            "mode": true
+          },
+          {
+            "set_mode": "stage"
+          },
+          {
+            "mode": true
+          },
+          {
+            "hook": "init"
+          },
+          {
+            "hook": "shutdown"
+          },
+          {
+            "hook": "error"
+          },
+          {
+            "hook": "start"
+          },
+          {
+            "hook": "end"
+          },
+          {
+            "container": true
+          },
+          {
+            "set_container": "main"
+          },
+          {
+            "container": true
+          },
+          {
+            "reset": true
+          },
+          {
+            "mode": true
+          }
+        ]
+      },
+      "expect": [
+        [
+          "",
+          false,
+          false,
+          false
+        ],
+        null,
+        [
+          "production",
+          true,
+          false,
+          false
+        ],
+        null,
+        [
+          "development",
+          false,
+          true,
+          false
+        ],
+        null,
+        [
+          "stage",
+          false,
+          false,
+          true
+        ],
+        [
+          "*"
+        ],
+        [
+          "*"
+        ],
+        [
+          "*"
+        ],
+        [],
+        [],
+        {
+          "$error": {
+            "class": "Error"
+          }
+        },
+        true,
+        "main",
+        null,
+        [
+          "",
+          false,
+          false,
+          false
+        ]
+      ]
+    }
+  ]
+}

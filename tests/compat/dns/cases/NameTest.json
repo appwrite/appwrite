@@ -1,0 +1,512 @@
+{
+  "source": "packages/dns/tests/Validator/NameTest.php",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "name",
+            "recordType": 5,
+            "values": [
+              "@",
+              "example",
+              "example.com",
+              "EXAMPLE.COM",
+              "a-b.com",
+              "a123.example-domain.org",
+              "xn--d1acufc.xn--p1ai",
+              "123.com",
+              "example.com.",
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+              "*",
+              "*.",
+              "*.example.com",
+              "*.example.com.",
+              "_dmarc",
+              "_acme-challenge",
+              "selector1._domainkey",
+              "mail._domainkey.example.com",
+              "exa_mple.com"
+            ]
+          },
+          "expect": [
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            }
+          ]
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "name",
+            "recordType": 33,
+            "values": [
+              "example._tcp.com"
+            ]
+          },
+          "expect": [
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            }
+          ]
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "name",
+            "values": [
+              "selector1._domainkey",
+              "*.example.com"
+            ]
+          },
+          "expect": [
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            }
+          ]
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "name",
+            "recordType": 1,
+            "values": [
+              "*",
+              "*.example.com",
+              "_dmarc"
+            ]
+          },
+          "expect": [
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "name",
+            "recordType": 1,
+            "values": [
+              123,
+              "",
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+              "@.com",
+              "-example.com",
+              "example-.com",
+              "exa_mple.com",
+              "example..com",
+              ".example.com",
+              "example.com..",
+              "exa mple.com"
+            ]
+          },
+          "expect": [
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long"
+            },
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long"
+            },
+            {
+              "valid": false,
+              "description": "Label must be between 1 and 63 characters long"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            }
+          ]
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "name",
+            "recordType": 16,
+            "values": [
+              123,
+              "",
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+              "@.com",
+              "-example.com",
+              "example-.com",
+              "example..com",
+              ".example.com",
+              "example.com..",
+              "exa mple.com",
+              "google console"
+            ]
+          },
+          "expect": [
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long"
+            },
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long"
+            },
+            {
+              "valid": false,
+              "description": "Label must be between 1 and 63 characters long"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters, hyphens and underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters, hyphens and underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters, hyphens and underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters, hyphens and underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters, hyphens and underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters, hyphens and underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters, hyphens and underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters, hyphens and underscores, and cannot start or end with a hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "invalid wildcard",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "name",
+            "recordType": 5,
+            "values": [
+              "foo.*.com",
+              "foo.*",
+              "*foo.com",
+              "f*o.com",
+              "*a",
+              "a*",
+              "**",
+              "*.*.example.com",
+              "*..com"
+            ]
+          },
+          "expect": [
+            {
+              "valid": false,
+              "description": "Wildcard \"*\" must be the entire leftmost label"
+            },
+            {
+              "valid": false,
+              "description": "Wildcard \"*\" must be the entire leftmost label"
+            },
+            {
+              "valid": false,
+              "description": "Wildcard \"*\" must be the entire leftmost label"
+            },
+            {
+              "valid": false,
+              "description": "Wildcard \"*\" must be the entire leftmost label"
+            },
+            {
+              "valid": false,
+              "description": "Wildcard \"*\" must be the entire leftmost label"
+            },
+            {
+              "valid": false,
+              "description": "Wildcard \"*\" must be the entire leftmost label"
+            },
+            {
+              "valid": false,
+              "description": "Wildcard \"*\" must be the entire leftmost label"
+            },
+            {
+              "valid": false,
+              "description": "Wildcard \"*\" must be the entire leftmost label"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters, hyphens and underscores, and cannot start or end with a hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "descriptions and state",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "name",
+            "recordType": 28,
+            "values": [
+              "ok.com",
+              "-bad",
+              "still.ok",
+              null,
+              true,
+              1.5,
+              [
+                "a"
+              ],
+              {
+                "a": "b"
+              },
+              "é.com",
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a",
+              ".",
+              "..",
+              "*.."
+            ]
+          },
+          "expect": [
+            {
+              "valid": true,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": true,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must be between 1 and 63 characters long"
+            },
+            {
+              "valid": true,
+              "description": "Label must be between 1 and 63 characters long"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            },
+            {
+              "valid": false,
+              "description": "Label must contain only alpha-numeric characters and hyphens, and cannot start or end with a hyphen"
+            }
+          ]
+        },
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "name",
+            "recordType": null
+          },
+          "expect": {
+            "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "name",
+            "recordType": 1
+          },
+          "expect": {
+            "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "name",
+            "recordType": 5
+          },
+          "expect": {
+            "description": "Name must be between 1 and 255 characters long, and contain only alpha-numeric characters, hyphens and (for non-address record types) underscores, and cannot start or end with a hyphen",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

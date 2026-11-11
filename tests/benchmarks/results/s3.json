@@ -1,0 +1,222 @@
+{
+  "service": "s3",
+  "file": "tests/benchmarks/results/s3.json",
+  "workload": {
+    "script": "tests/benchmarks/api/s3.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "s3-20261012-011353"
+  },
+  "environment": {
+    "date": "2026-10-12T00:16:11Z",
+    "commit": "208eb48c73",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 5.158,
+        "p50": 4.569,
+        "p90": 6.841,
+        "p95": 8.105,
+        "p99": 16.808,
+        "max": 162.048
+      },
+      "cpu_ms_per_request": 3.644,
+      "db_cpu_ms_per_request": 1.693,
+      "memory_mib": {
+        "baseline": 3117.1,
+        "avg": 3123.8,
+        "peak": 3138.6
+      },
+      "endpoints": {
+        "s3.buckets.list": {
+          "route": "GET /v1/s3",
+          "note": "ListBuckets",
+          "count": 366,
+          "rps": 6.1,
+          "avg": 3.456,
+          "p50": 3.332,
+          "p90": 4.054,
+          "p95": 4.461,
+          "p99": 7.405,
+          "max": 12.881
+        },
+        "s3.objects.list": {
+          "route": "GET /v1/s3",
+          "note": "ListObjectsV2 of a bucket",
+          "count": 535,
+          "rps": 8.92,
+          "avg": 5.702,
+          "p50": 5.342,
+          "p90": 6.632,
+          "p95": 8.041,
+          "p99": 13.962,
+          "max": 27.888
+        },
+        "s3.objects.get": {
+          "route": "GET /v1/s3",
+          "note": "GetObject (1.4 kB)",
+          "count": 1405,
+          "rps": 23.42,
+          "avg": 4.557,
+          "p50": 4.255,
+          "p90": 5.556,
+          "p95": 6.539,
+          "p99": 10.954,
+          "max": 28.137
+        },
+        "s3.objects.put": {
+          "route": "PUT /v1/s3",
+          "note": "PutObject (1.4 kB)",
+          "count": 370,
+          "rps": 6.17,
+          "avg": 7.812,
+          "p50": 6.601,
+          "p90": 9.197,
+          "p95": 12.328,
+          "p99": 26.951,
+          "max": 162.048
+        },
+        "s3.objects.delete": {
+          "route": "DELETE /v1/s3",
+          "note": "DeleteObject",
+          "count": 325,
+          "rps": 5.42,
+          "avg": 5.759,
+          "p50": 4.809,
+          "p90": 7.167,
+          "p95": 9.127,
+          "p99": 22.396,
+          "max": 70.292
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 444.0,
+      "requests": 26639,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 86.404,
+        "p50": 70.263,
+        "p90": 170.435,
+        "p95": 210.778,
+        "p99": 316.698,
+        "max": 720.563
+      },
+      "cpu_ms_per_request": 6.289,
+      "db_cpu_ms_per_request": 1.735,
+      "memory_mib": {
+        "baseline": 3137.5,
+        "avg": 3225.1,
+        "peak": 3269.6
+      },
+      "endpoints": {
+        "s3.buckets.list": {
+          "route": "GET /v1/s3",
+          "note": "ListBuckets",
+          "count": 3106,
+          "rps": 51.77,
+          "avg": 54.59,
+          "p50": 41.659,
+          "p90": 112.548,
+          "p95": 141.051,
+          "p99": 221.724,
+          "max": 452.862
+        },
+        "s3.objects.list": {
+          "route": "GET /v1/s3",
+          "note": "ListObjectsV2 of a bucket",
+          "count": 4823,
+          "rps": 80.38,
+          "avg": 87.051,
+          "p50": 70.39,
+          "p90": 169.935,
+          "p95": 211.711,
+          "p99": 316.87,
+          "max": 646.458
+        },
+        "s3.objects.get": {
+          "route": "GET /v1/s3",
+          "note": "GetObject (1.4 kB)",
+          "count": 12498,
+          "rps": 208.3,
+          "avg": 81.291,
+          "p50": 66.231,
+          "p90": 159.655,
+          "p95": 197.603,
+          "p99": 303.915,
+          "max": 716.866
+        },
+        "s3.objects.put": {
+          "route": "PUT /v1/s3",
+          "note": "PutObject (1.4 kB)",
+          "count": 3152,
+          "rps": 52.53,
+          "avg": 110.824,
+          "p50": 94.521,
+          "p90": 204.407,
+          "p95": 249.939,
+          "p99": 356.439,
+          "max": 588.946
+        },
+        "s3.objects.delete": {
+          "route": "DELETE /v1/s3",
+          "note": "DeleteObject",
+          "count": 3060,
+          "rps": 51.0,
+          "avg": 113.408,
+          "p50": 97.626,
+          "p90": 204.487,
+          "p95": 247.081,
+          "p99": 367.145,
+          "max": 720.563
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1011 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/SumValidatorCacheTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SumValidatorCacheTest::testRepeatedSumsAreValidatedAlike",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3406"
+          },
+          "bind": "s5879",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3406"
+              },
+              "cache": "memory"
+            },
+            "as": "o3407"
+          },
+          "bind": "s5880",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "sums"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "sums_u000000000118"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o3408"
+          },
+          "bind": "s5884",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "pages"
+            },
+            "as": "o3409"
+          },
+          "bind": "s5885",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3410"
+          },
+          "bind": "s5886",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3410"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3411"
+          },
+          "bind": "s5888",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3411"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o3408"
+                },
+                {
+                  "$obj": "o3409"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3412"
+          },
+          "bind": "s5890",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3412"
+              }
+            },
+            "as": "o3413"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "pages": 7
+              }
+            },
+            "as": "o3414"
+          },
+          "bind": "s5892",
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3414"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "pages"
+            }
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "title"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate sum requires a numeric attribute that is not an array: title"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "pages"
+            }
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "title"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate sum requires a numeric attribute that is not an array: title"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "pages"
+            }
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3407"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "title"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate sum requires a numeric attribute that is not an array: title"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SumValidatorCacheTest::testASchemaChangeSelectsAnotherValidator",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3415"
+          },
+          "bind": "s5900",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3415"
+              },
+              "cache": "memory"
+            },
+            "as": "o3416"
+          },
+          "bind": "s5901",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "sums"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "sums_u000000000119"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o3417"
+          },
+          "bind": "s5905",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "pages"
+            },
+            "as": "o3418"
+          },
+          "bind": "s5906",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3419"
+          },
+          "bind": "s5907",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3419"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3420"
+          },
+          "bind": "s5909",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3420"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o3417"
+                },
+                {
+                  "$obj": "o3418"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3421"
+          },
+          "bind": "s5911",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3421"
+              }
+            },
+            "as": "o3422"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "pages": 7
+              }
+            },
+            "as": "o3423"
+          },
+          "bind": "s5913",
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3423"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "pages"
+            }
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "deleteAttribute",
+            "args": {
+              "collection": "books",
+              "key": "pages"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "pages"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: pages"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "pages",
+              "size": 8
+            },
+            "as": "o3424"
+          },
+          "bind": "s5918",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "books",
+              "attribute": {
+                "$obj": "o3424"
+              }
+            },
+            "as": "o3425"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3416"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "pages"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate sum requires a numeric attribute that is not an array: pages"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

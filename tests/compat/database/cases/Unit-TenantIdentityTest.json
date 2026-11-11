@@ -1,0 +1,71 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/TenantIdentityTest.php"
+  ],
+  "cases": [
+    {
+      "name": "TenantIdentityTest::testADocumentTenantNormalisesTheSameWayTheAdapterDoes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$tenant": "1"
+              }
+            },
+            "as": "o459"
+          },
+          "bind": "s880",
+          "expect": {
+            "$document": {
+              "$tenant": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o459"
+            },
+            "method": "getTenant",
+            "args": {}
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$tenant": "001"
+              }
+            },
+            "as": "o460"
+          },
+          "bind": "s882",
+          "expect": {
+            "$document": {
+              "$tenant": "001"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o460"
+            },
+            "method": "getTenant",
+            "args": {}
+          },
+          "expect": 1
+        }
+      ]
+    }
+  ]
+}

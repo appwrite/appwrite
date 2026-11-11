@@ -1,0 +1,407 @@
+{
+  "source": "packages/auth/tests/OAuth2/ResourceIndicatorsTest.php",
+  "cases": [
+    {
+      "name": "normalizes resources",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": null
+          },
+          "expect": []
+        },
+        {
+          "op": "resources.from",
+          "args": {
+            "value": ""
+          },
+          "expect": []
+        },
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "https://api.example.com/"
+          },
+          "expect": [
+            "https://api.example.com/"
+          ]
+        },
+        {
+          "op": "resources.from",
+          "args": {
+            "value": null,
+            "audience": "https://api.example.com/"
+          },
+          "expect": [
+            "https://api.example.com/"
+          ]
+        },
+        {
+          "op": "resources.from",
+          "args": {
+            "value": [
+              "https://api.example.com/",
+              "http://localhost:8080/v1",
+              "https://api.example.com/"
+            ]
+          },
+          "expect": [
+            "https://api.example.com/",
+            "http://localhost:8080/v1"
+          ]
+        },
+        {
+          "op": "resources.from",
+          "args": {
+            "value": [
+              "https://api.example.com/",
+              "http://localhost:8080/v1"
+            ],
+            "audience": "https://api.example.com/"
+          },
+          "expect": [
+            "https://api.example.com/",
+            "http://localhost:8080/v1"
+          ]
+        },
+        {
+          "op": "resources.from",
+          "args": {
+            "value": {
+              "a": "https://api.example.com/",
+              "b": "https://x.example.com/"
+            }
+          },
+          "expect": [
+            "https://api.example.com/",
+            "https://x.example.com/"
+          ]
+        },
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "",
+            "audience": ""
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (fragment)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "https://api.example.com/#section"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be an absolute HTTP(S) URI with no fragment component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (relative URI)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "/relative"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be an absolute HTTP(S) URI with no fragment component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (urn URI)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "urn:example:resource"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be an absolute HTTP(S) URI with no fragment component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (file URI)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "file:///etc/passwd"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be an absolute HTTP(S) URI with no fragment component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (javascript URI)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "javascript:alert(1)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be an absolute HTTP(S) URI with no fragment component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (non-string)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": [
+              "https://api.example.com/",
+              42
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be a non-empty absolute URI."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (invalid audience)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": [],
+            "audience": "not-a-uri"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be an absolute HTTP(S) URI with no fragment component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (audience outside resources)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": [
+              "https://api.example.com/"
+            ],
+            "audience": "https://files.example.com/"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "audience must match one of the resource values when both parameters are provided."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (empty string in list)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": [
+              "https://api.example.com/",
+              ""
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be a non-empty absolute URI."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (host zero)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "https://0/x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be an absolute HTTP(S) URI with no fragment component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (empty fragment)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "https://a.example/#"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\OAuth2\\InvalidResourceException",
+              "message": "resource must be an absolute HTTP(S) URI with no fragment component."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid resources (uppercase scheme)",
+      "steps": [
+        {
+          "op": "resources.from",
+          "args": {
+            "value": "HTTPS://A.example/"
+          },
+          "expect": [
+            "HTTPS://A.example/"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "compares resource sets",
+      "steps": [
+        {
+          "op": "resources.is_subset_of",
+          "args": {
+            "value": [
+              "https://api.example.com/"
+            ],
+            "granted": [
+              "https://api.example.com/",
+              "https://files.example.com/"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "resources.is_subset_of",
+          "args": {
+            "value": [
+              "https://api.example.com/"
+            ],
+            "granted": [
+              "https://files.example.com/"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "resources.equals",
+          "args": {
+            "value": [
+              "https://api.example.com/",
+              "https://files.example.com/"
+            ],
+            "other": [
+              "https://files.example.com/",
+              "https://api.example.com/"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "resources.equals",
+          "args": {
+            "value": [
+              "https://api.example.com/"
+            ],
+            "other": [
+              "https://api.example.com/",
+              "https://files.example.com/"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "resources.is_subset_of",
+          "args": {
+            "value": null,
+            "granted": null
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "builds the audience",
+      "steps": [
+        {
+          "op": "resources.audience",
+          "args": {
+            "value": null,
+            "default": "https://cloud.appwrite.io/v1/project1"
+          },
+          "expect": [
+            "https://cloud.appwrite.io/v1/project1"
+          ]
+        },
+        {
+          "op": "resources.audience",
+          "args": {
+            "value": [
+              "https://mcp.example.com/"
+            ],
+            "default": "https://cloud.appwrite.io/v1/project1"
+          },
+          "expect": [
+            "https://mcp.example.com/"
+          ]
+        },
+        {
+          "op": "resources.audience",
+          "args": {
+            "value": [
+              "https://cloud.appwrite.io/v1/project1"
+            ],
+            "default": "https://cloud.appwrite.io/v1/project1"
+          },
+          "expect": [
+            "https://cloud.appwrite.io/v1/project1"
+          ]
+        }
+      ]
+    }
+  ]
+}

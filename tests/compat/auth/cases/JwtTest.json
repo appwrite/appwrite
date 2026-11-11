@@ -1,0 +1,850 @@
+{
+  "source": "packages/auth/tests/Issuers/Symmetric/JwtTest.php",
+  "cases": [
+    {
+      "name": "round trip preserves custom claims and protects registered claims (one recipient)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": "preview",
+            "duration": 600,
+            "now": 1700000000,
+            "claims": {
+              "purpose": "state",
+              "iss": "https://wrong.example.com",
+              "aud": "wrong",
+              "iat": 0,
+              "exp": 0
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwdXJwb3NlIjoic3RhdGUiLCJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb20iLCJhdWQiOiJwcmV2aWV3IiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDA2MDB9.9Qg1vFm7yPg6Zy8jvrCAjt20FDPWyJvI-eZwEDFCo14"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com",
+            "audience": "preview",
+            "type": "JWT"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000010
+          },
+          "expect": {
+            "purpose": "state",
+            "iss": "https://example.com",
+            "aud": "preview",
+            "iat": 1700000000,
+            "exp": 1700000600
+          }
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "purpose": "state",
+              "iss": "https://example.com",
+              "aud": "preview",
+              "iat": 1700000000,
+              "exp": 1700000600
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "round trip preserves custom claims and protects registered claims (several recipients)",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": [
+              "preview",
+              "other"
+            ],
+            "duration": 600,
+            "now": 1700000000,
+            "claims": {
+              "purpose": "state",
+              "iss": "https://wrong.example.com",
+              "aud": "wrong",
+              "iat": 0,
+              "exp": 0
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwdXJwb3NlIjoic3RhdGUiLCJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb20iLCJhdWQiOlsicHJldmlldyIsIm90aGVyIl0sImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxNzAwMDAwNjAwfQ.3SX9_ga38p2qgl1CjXaywU7OZdHcXkgwWGZfOIWaPZ0"
+        },
+        {
+          "op": "verifier.new",
+          "args": {
+            "kind": "symmetric",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com",
+            "audience": "preview",
+            "type": "JWT"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "verifier.verify",
+          "args": {
+            "verifier": {
+              "$ref": "v"
+            },
+            "token": {
+              "$ref": "t"
+            },
+            "now": 1700000010
+          },
+          "expect": {
+            "purpose": "state",
+            "iss": "https://example.com",
+            "aud": [
+              "preview",
+              "other"
+            ],
+            "iat": 1700000000,
+            "exp": 1700000600
+          }
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "purpose": "state",
+              "iss": "https://example.com",
+              "aud": [
+                "preview",
+                "other"
+              ],
+              "iat": 1700000000,
+              "exp": 1700000600
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 0",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": "",
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience recipients must be non-empty strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 1",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": [],
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience must be a non-empty list of recipients"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 2",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": [
+              ""
+            ],
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience recipients must be non-empty strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 3",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": [
+              "preview",
+              ""
+            ],
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience recipients must be non-empty strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 4",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": {
+              "recipient": "preview"
+            },
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience must be a non-empty list of recipients"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 5",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": {
+              "1": "preview"
+            },
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience must be a non-empty list of recipients"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 6",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": [
+              "preview",
+              123
+            ],
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience recipients must be non-empty strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 7",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": [
+              null
+            ],
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience recipients must be non-empty strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 8",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": [
+              false
+            ],
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience recipients must be non-empty strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid audience 9",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": [
+              [
+                "preview"
+              ]
+            ],
+            "duration": 600,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token audience recipients must be non-empty strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects non-positive duration 0",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": "preview",
+            "duration": 0,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token duration must be greater than zero"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects non-positive duration -1",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": "preview",
+            "duration": -1,
+            "now": 1700000000
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token duration must be greater than zero"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "generated secrets are 64 hex characters",
+      "steps": [
+        {
+          "op": "issuer.generate_secret",
+          "bind": "s",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[a-f0-9]{64}$/",
+            "value": {
+              "$ref": "s"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "issuer.generate_secret",
+          "args": {
+            "bytes": 8
+          },
+          "bind": "s8",
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[a-f0-9]{16}$/",
+            "value": {
+              "$ref": "s8"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "issuer.generate_secret",
+          "bind": "s2",
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "s"
+            },
+            "b": {
+              "$ref": "s2"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "custom claims with unicode, slashes and numbers",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": "a/b",
+            "duration": 1,
+            "now": 1700000000,
+            "claims": {
+              "name": "Jöhn ✓",
+              "url": "https://x/y",
+              "n": 1.5,
+              "big": 9007199254740993,
+              "list": [
+                1,
+                "2",
+                null
+              ],
+              "obj": {},
+              "nested": {
+                "a": [
+                  true
+                ]
+              }
+            }
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSlx1MDBmNmhuIFx1MjcxMyIsInVybCI6Imh0dHBzOlwvXC94XC95IiwibiI6MS41LCJiaWciOjkwMDcxOTkyNTQ3NDA5OTMsImxpc3QiOlsxLCIyIixudWxsXSwib2JqIjp7fSwibmVzdGVkIjp7ImEiOlt0cnVlXX0sImlzcyI6Imh0dHBzOlwvXC9leGFtcGxlLmNvbSIsImF1ZCI6ImFcL2IiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMDAwMDAwMX0.Pws0J9jc2oQWu83R5kUl1HphoFQh7Bl2ujRxAlkMQSE"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "name": "Jöhn ✓",
+              "url": "https://x/y",
+              "n": 1.5,
+              "big": 9007199254740993,
+              "list": [
+                1,
+                "2",
+                null
+              ],
+              "obj": [],
+              "nested": {
+                "a": [
+                  true
+                ]
+              },
+              "iss": "https://example.com",
+              "aud": "a/b",
+              "iat": 1700000000,
+              "exp": 1700000001
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "duration overflowing an integer becomes a float",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": "a",
+            "duration": 9223372036854775807,
+            "now": 1700000000
+          },
+          "bind": "t",
+          "expect": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZXhhbXBsZS5jb20iLCJhdWQiOiJhIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjkuMjIzMzcyMDM4NTU0Nzc2ZSsxOH0.s8ppErVMHc2Y9V5AvHYU5ydOKgfAn9TkunBHpj1iWMU"
+        },
+        {
+          "op": "fixture.jwt",
+          "args": {
+            "token": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "header": {
+              "typ": "JWT",
+              "alg": "HS256"
+            },
+            "claims": {
+              "iss": "https://example.com",
+              "aud": "a",
+              "iat": 1700000000,
+              "exp": 9.223372038554776e+18
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unencodable claim fails",
+      "steps": [
+        {
+          "op": "issuer.new",
+          "args": {
+            "kind": "jwt",
+            "secret": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+            "issuer": "https://example.com"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "issuer.issue",
+          "args": {
+            "issuer": {
+              "$ref": "i"
+            },
+            "audience": "a",
+            "duration": 60,
+            "now": 1700000000,
+            "claims": {
+              "bad": {
+                "$bytes": "/w=="
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonException",
+              "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

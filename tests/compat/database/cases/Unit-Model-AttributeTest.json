@@ -1,0 +1,3626 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/AttributeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AttributeTest::testTypesListsTheEighteenAttributeTypes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query\\Schema\\ColumnType",
+            "method": "cases",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$enum": "Query\\Schema\\ColumnType::String"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Varchar"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Text"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::MediumText"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::LongText"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::TinyInteger"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::SmallInteger"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Integer"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::BigInteger"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Float"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Double"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Decimal"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Boolean"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Datetime"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Timestamp"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Json"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Binary"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Enum"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Point"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Linestring"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Polygon"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Vector"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Id"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Uuid"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Uuid7"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Object"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Relationship"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Serial"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::BigSerial"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::SmallSerial"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Array"
+            },
+            {
+              "$enum": "Query\\Schema\\ColumnType::Tuple"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "string"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::String"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "varchar"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Varchar"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "text"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Text"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "mediumtext"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::MediumText"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "longtext"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::LongText"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "tinyinteger"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: tinyinteger"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "smallinteger"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: smallinteger"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "integer"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Integer"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "biginteger"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::BigInteger"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "float"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Float"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "double"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Double"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "decimal"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: decimal"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "boolean"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Boolean"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "datetime"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Datetime"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "timestamp"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: timestamp"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "json"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: json"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "binary"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: binary"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "enum"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: enum"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "point"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Point"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "linestring"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Linestring"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "polygon"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Polygon"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "vector"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Vector"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "id"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Id"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "uuid"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: uuid"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "uuid7"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: uuid7"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Object"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "relationship"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Relationship"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "serial"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: serial"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "bigserial"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: bigserial"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "smallserial"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: smallserial"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "array"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: array"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "tuple"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: tuple"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3550"
+          },
+          "bind": "s5218",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3550"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3550"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3550"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3551"
+          },
+          "bind": "s5219",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3551"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3551"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3551"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#bigInteger",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3552"
+          },
+          "bind": "s5220",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3552"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3552"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3552"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#float",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3553"
+          },
+          "bind": "s5221",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3553"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3553"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3553"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#double",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3554"
+          },
+          "bind": "s5222",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3554"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3554"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3554"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#boolean",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "boolean",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3555"
+          },
+          "bind": "s5223",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Boolean"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3555"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3555"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3555"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#datetime",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3556"
+          },
+          "bind": "s5224",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3556"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3556"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3556"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#point",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "point",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3557"
+          },
+          "bind": "s5225",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3557"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3557"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3557"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#lineString",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "lineString",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3558"
+          },
+          "bind": "s5226",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "linestring"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3558"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3558"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3558"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#polygon",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "polygon",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3559"
+          },
+          "bind": "s5227",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "polygon"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3559"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3559"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3559"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#vector",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "vector",
+            "args": {
+              "key": "a",
+              "dimensions": 3
+            },
+            "as": "o3560"
+          },
+          "bind": "s5228",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Vector"
+              },
+              "size": 3,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "vector"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3560"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3560"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3560"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#object",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3561"
+          },
+          "bind": "s5229",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3561"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3561"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3561"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypePredicates#id",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "id",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3562"
+          },
+          "bind": "s5230",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Id"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3562"
+            },
+            "method": "isSpatial",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3562"
+            },
+            "method": "isNumeric",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3562"
+            },
+            "method": "isInteger",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testNumericBounds#signed integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3563"
+          },
+          "bind": "s5270",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3563"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o3569"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": -2147483648,
+              "max": 2147483647
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testNumericBounds#unsigned integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "a",
+              "signed": false
+            },
+            "as": "o3564"
+          },
+          "bind": "s5271",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3564"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o3570"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": 0,
+              "max": 2147483647
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testNumericBounds#signed bigInteger",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3565"
+          },
+          "bind": "s5272",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3565"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o3571"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": -9223372036854775808,
+              "max": 9223372036854775807
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testNumericBounds#unsigned bigInteger",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "a",
+              "signed": false
+            },
+            "as": "o3566"
+          },
+          "bind": "s5273",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3566"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o3572"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": 0,
+              "max": "18446744073709551615"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testNumericBounds#signed float",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3567"
+          },
+          "bind": "s5274",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3567"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o3573"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": -1.7976931348623157e+308,
+              "max": 1.7976931348623157e+308
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testNumericBounds#unsigned double",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "a",
+              "signed": false
+            },
+            "as": "o3568"
+          },
+          "bind": "s5275",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3568"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o3574"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": 0,
+              "max": 1.7976931348623157e+308
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testNonNumericTypesHaveNoBounds",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3575"
+          },
+          "bind": "s5282",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3575"
+            },
+            "method": "bounds",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "boolean",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3576"
+          },
+          "bind": "s5284",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Boolean"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3576"
+            },
+            "method": "bounds",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3577"
+          },
+          "bind": "s5286",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3577"
+            },
+            "method": "bounds",
+            "args": {}
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testResolvedSizeUsesTheEngineMaximumForSizelessText",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "text",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3578"
+          },
+          "bind": "s5288",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Text"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3578"
+            },
+            "method": "resolvedSize",
+            "args": {}
+          },
+          "expect": 65535
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "mediumText",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3579"
+          },
+          "bind": "s5290",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::MediumText"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3579"
+            },
+            "method": "resolvedSize",
+            "args": {}
+          },
+          "expect": 16777215
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "longText",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3580"
+          },
+          "bind": "s5292",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::LongText"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3580"
+            },
+            "method": "resolvedSize",
+            "args": {}
+          },
+          "expect": 4294967295
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testResolvedSizeUsesTheDeclaredSize",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "text",
+            "args": {
+              "key": "a",
+              "size": 500
+            },
+            "as": "o3581"
+          },
+          "bind": "s5294",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Text"
+              },
+              "size": 500,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3581"
+            },
+            "method": "resolvedSize",
+            "args": {}
+          },
+          "expect": 500
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "varchar",
+            "args": {
+              "key": "a",
+              "size": 64
+            },
+            "as": "o3582"
+          },
+          "bind": "s5296",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Varchar"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3582"
+            },
+            "method": "resolvedSize",
+            "args": {}
+          },
+          "expect": 64
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "a",
+                "type": "integer",
+                "size": 8
+              }
+            },
+            "as": "o3583"
+          },
+          "bind": "s5298",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3583"
+            },
+            "method": "resolvedSize",
+            "args": {}
+          },
+          "expect": 8
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testResolvedSizeIsZeroForSizelessNonTextTypes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "boolean",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3584"
+          },
+          "bind": "s5300",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Boolean"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3584"
+            },
+            "method": "resolvedSize",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3585"
+          },
+          "bind": "s5302",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3585"
+            },
+            "method": "resolvedSize",
+            "args": {}
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testWidthIsOnlyDefinedForIntegers",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3586"
+          },
+          "bind": "s5304",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3586"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3587"
+          },
+          "bind": "s5306",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3587"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3588"
+          },
+          "bind": "s5308",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3588"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testWithFiltersReplacesFiltersOnly",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32,
+              "required": true,
+              "default": "x"
+            },
+            "as": "o3589"
+          },
+          "bind": "s5310",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": true,
+              "default": "x",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3589"
+            },
+            "method": "withFilters",
+            "args": {
+              "filters": [
+                {
+                  "$enum": "Filter::Json"
+                },
+                "encrypt"
+              ]
+            },
+            "as": "o3590"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": true,
+              "default": "x",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "json",
+                "encrypt"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testWithFiltersCanClearFilters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "a",
+              "filters": [
+                "encrypt"
+              ]
+            },
+            "as": "o3591"
+          },
+          "bind": "s5312",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "encrypt"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3591"
+            },
+            "method": "withFilters",
+            "args": {
+              "filters": []
+            },
+            "as": "o3592"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testWithFiltersKeepsTheTypeFilter",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3593"
+          },
+          "bind": "s5314",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3593"
+            },
+            "method": "withFilters",
+            "args": {
+              "filters": []
+            },
+            "as": "o3594"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "vector",
+            "args": {
+              "key": "a",
+              "dimensions": 3
+            },
+            "as": "o3595"
+          },
+          "bind": "s5316",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Vector"
+              },
+              "size": 3,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "vector"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3595"
+            },
+            "method": "withFilters",
+            "args": {
+              "filters": [
+                "encrypt"
+              ]
+            },
+            "as": "o3596"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Vector"
+              },
+              "size": 3,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "vector",
+                "encrypt"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "a"
+            },
+            "as": "o3597"
+          },
+          "bind": "s5318",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3597"
+            },
+            "method": "withFilters",
+            "args": {
+              "filters": [
+                "encrypt",
+                {
+                  "$enum": "Filter::Object"
+                }
+              ]
+            },
+            "as": "o3598"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "encrypt",
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testIsRelationshipReadsTheRawStoredType",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "type": "relationship"
+              }
+            },
+            "as": "o3599"
+          },
+          "bind": "s5320",
+          "expect": {
+            "$document": {
+              "type": "relationship"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "isRelationship",
+            "args": {
+              "attribute": {
+                "$obj": "o3599"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Relationship"
+                }
+              }
+            },
+            "as": "o3600"
+          },
+          "bind": "s5322",
+          "expect": {
+            "$document": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "isRelationship",
+            "args": {
+              "attribute": {
+                "$obj": "o3600"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "type": "string"
+              }
+            },
+            "as": "o3601"
+          },
+          "bind": "s5324",
+          "expect": {
+            "$document": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "isRelationship",
+            "args": {
+              "attribute": {
+                "$obj": "o3601"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "type": "bigint"
+              }
+            },
+            "as": "o3602"
+          },
+          "bind": "s5326",
+          "expect": {
+            "$document": {
+              "type": "bigint"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "isRelationship",
+            "args": {
+              "attribute": {
+                "$obj": "o3602"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": []
+            },
+            "as": "o3603"
+          },
+          "bind": "s5328",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "isRelationship",
+            "args": {
+              "attribute": {
+                "$obj": "o3603"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "relationship"
+            },
+            "as": "o3604"
+          },
+          "bind": "s5330",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "relationship",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3604"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o3605"
+          },
+          "bind": "s5331",
+          "expect": {
+            "$document": {
+              "$id": "relationship",
+              "key": "relationship",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "isRelationship",
+            "args": {
+              "attribute": {
+                "$obj": "o3605"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testStoredTypeUsesTheLegacyBigIntegerSpelling",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              }
+            }
+          },
+          "expect": "bigint"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              }
+            }
+          },
+          "expect": "integer"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": "linestring"
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypeFromStoredMapsBothBigIntegerSpellings",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "bigint"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::BigInteger"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "biginteger"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::BigInteger"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "double"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Double"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testEveryTypeRoundTripsThroughItsStoredSpelling",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              }
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "string"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::String"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Varchar"
+              }
+            }
+          },
+          "expect": "varchar"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "varchar"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Varchar"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Text"
+              }
+            }
+          },
+          "expect": "text"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "text"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Text"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::MediumText"
+              }
+            }
+          },
+          "expect": "mediumtext"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "mediumtext"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::MediumText"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::LongText"
+              }
+            }
+          },
+          "expect": "longtext"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "longtext"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::LongText"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              }
+            }
+          },
+          "expect": "integer"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "integer"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Integer"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              }
+            }
+          },
+          "expect": "bigint"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "bigint"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::BigInteger"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              }
+            }
+          },
+          "expect": "float"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "float"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Float"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              }
+            }
+          },
+          "expect": "double"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "double"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Double"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Boolean"
+              }
+            }
+          },
+          "expect": "boolean"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "boolean"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Boolean"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              }
+            }
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "datetime"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Datetime"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Id"
+              }
+            }
+          },
+          "expect": "id"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "id"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Id"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              }
+            }
+          },
+          "expect": "relationship"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "relationship"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Relationship"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              }
+            }
+          },
+          "expect": "object"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "object"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Object"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": "point"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "point"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Point"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": "linestring"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "linestring"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Linestring"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": "polygon"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "polygon"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Polygon"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "storedType",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Vector"
+              }
+            }
+          },
+          "expect": "vector"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "vector"
+            }
+          },
+          "expect": {
+            "$enum": "Query\\Schema\\ColumnType::Vector"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypeFromStoredRejectsNonAttributeTypes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "tuple"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: tuple"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeTest::testTypeFromStoredRejectsUnknownStrings",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "typeFromStored",
+            "args": {
+              "type": "BIGINT"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: BIGINT"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

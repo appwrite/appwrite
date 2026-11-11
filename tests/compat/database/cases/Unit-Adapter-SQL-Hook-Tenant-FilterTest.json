@@ -1,0 +1,869 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQL/Hook/Tenant/FilterTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FilterTest::testMetadataPermissionRowsMayBeTenantless",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "permissionsTable",
+            "args": {
+              "collection": "_metadata"
+            }
+          },
+          "expect": "_metadata_perms"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 989,
+              "metadataCollection": "_metadata",
+              "collection": "_metadata_perms"
+            },
+            "as": "o1372"
+          },
+          "bind": "s2648",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1372"
+            },
+            "method": "filter",
+            "args": {
+              "table": "perms"
+            },
+            "as": "o1373"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`perms`._tenant IN (?) OR `perms`._tenant IS NULL)",
+              "bindings": [
+                989
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testANonMetadataPermissionsTableStaysStrictlyTenanted",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "permissionsTable",
+            "args": {
+              "collection": "orders"
+            }
+          },
+          "expect": "orders_perms"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 989,
+              "metadataCollection": "_metadata",
+              "collection": "orders_perms"
+            },
+            "as": "o1374"
+          },
+          "bind": "s2651",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1374"
+            },
+            "method": "filter",
+            "args": {
+              "table": "perms"
+            },
+            "as": "o1375"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`perms`._tenant IN (?)",
+              "bindings": [
+                989
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterDoesNotAllowNullTenantByDefault",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "",
+              "collection": "orders"
+            },
+            "as": "o1376"
+          },
+          "bind": "s2653",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1376"
+            },
+            "method": "filter",
+            "args": {
+              "table": "table_main"
+            },
+            "as": "o1377"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`table_main`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterAllowsNullTenantWhenColumnProvided",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "",
+              "collection": "orders",
+              "allowNullColumn": "table_main._tenant"
+            },
+            "as": "o1378"
+          },
+          "bind": "s2655",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1378"
+            },
+            "method": "filter",
+            "args": {
+              "table": "table_main"
+            },
+            "as": "o1379"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`table_main`._tenant IN (?) OR `table_main`.`_tenant` IS NULL)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinLeftPlacesTenantInOnClause",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7
+            },
+            "as": "o1380"
+          },
+          "bind": "s2657",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1380"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            },
+            "as": "o1381"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinRightPlacesTenantInWhereClause",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7
+            },
+            "as": "o1382"
+          },
+          "bind": "s2659",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1382"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1383"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinFullOuterPlacesTenantInWhereClauseAndAllowsNull",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7
+            },
+            "as": "o1384"
+          },
+          "bind": "s2661",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1384"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1385"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`j0`._tenant IN (?) OR `j0`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinInnerPlacesTenantInOnClause",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7
+            },
+            "as": "o1386"
+          },
+          "bind": "s2663",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1386"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1387"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinMatchesTheTenantOfAnUnindexedJoinAsARange#inner",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "unindexed": [
+                "j0"
+              ]
+            },
+            "as": "o1388"
+          },
+          "bind": "s2665",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1388"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1389"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`j0`._tenant >= ? AND `j0`._tenant <= ?)",
+                  "bindings": [
+                    7,
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinMatchesTheTenantOfAnUnindexedJoinAsARange#left",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "unindexed": [
+                "j0"
+              ]
+            },
+            "as": "o1390"
+          },
+          "bind": "s2667",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1390"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            },
+            "as": "o1391"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`j0`._tenant >= ? AND `j0`._tenant <= ?)",
+                  "bindings": [
+                    7,
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinKeepsTheEqualityOfAnIndexedJoin",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "unindexed": [
+                "j1"
+              ]
+            },
+            "as": "o1392"
+          },
+          "bind": "s2669",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1392"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1393"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinKeepsTheEqualityOfAnUnindexedJoinPlacedInWhere#right",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "unindexed": [
+                "j0"
+              ]
+            },
+            "as": "o1394"
+          },
+          "bind": "s2671",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1394"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1395"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinKeepsTheEqualityOfAnUnindexedJoinPlacedInWhere#full outer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "unindexed": [
+                "j0"
+              ]
+            },
+            "as": "o1396"
+          },
+          "bind": "s2673",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1396"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1397"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`j0`._tenant IN (?) OR `j0`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinKeepsTheEqualityOfAnUnindexedJoinPlacedInWhere#cross",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "unindexed": [
+                "j0"
+              ]
+            },
+            "as": "o1398"
+          },
+          "bind": "s2675",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1398"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o1399"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinMatchesSeveralTenantsOfAnUnindexedJoinAsAList",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": [
+                7,
+                8
+              ],
+              "unindexed": [
+                "j0"
+              ]
+            },
+            "as": "o1400"
+          },
+          "bind": "s2677",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1400"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            },
+            "as": "o1401"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`._tenant IN (?, ?)",
+                  "bindings": [
+                    7,
+                    8
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FilterTest::testFilterJoinCrossPlacesTenantInWhereClause",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7
+            },
+            "as": "o1402"
+          },
+          "bind": "s2679",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1402"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            },
+            "as": "o1403"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`j0`._tenant IN (?)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

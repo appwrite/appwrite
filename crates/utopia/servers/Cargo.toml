@@ -1,0 +1,23 @@
+[package]
+name = "utopia-servers"
+description = "The base of Utopia-style servers: hooks with params, validators, injections, groups and labels, and the mode and hook registries a server keeps."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/servers"
+publish.workspace = true
+
+[dependencies]
+indexmap.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+utopia-di.workspace = true
+utopia-validators.workspace = true
+
+[dev-dependencies]
+utopia-async.workspace = true
+
+[package.metadata.utopia]
+category = "servers"
+php-sync = "e0bfa9bf4bbd92f78bb67a0e0856f552cb757177"

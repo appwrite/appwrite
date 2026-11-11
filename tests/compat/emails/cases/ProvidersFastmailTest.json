@@ -1,0 +1,334 @@
+{
+  "source": "packages/emails/tests/Canonicals/Providers/FastmailTest.php",
+  "cases": [
+    {
+      "name": "supports",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "fastmail",
+            "domain": "fastmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "fastmail",
+            "domain": "fastmail.fm"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "fastmail",
+            "domain": "gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "fastmail",
+            "domain": "outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "fastmail",
+            "domain": "example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get canonical",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+tag",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+spam",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+spam",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+newsletter",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+newsletter",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+work",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+work",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+personal",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+personal",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+test123",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+test123",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+anything",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+anything",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+verylongtag",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+verylongtag",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+tag.with.dots",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+tag.with.dots",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+tag-with-hyphens",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+tag-with-hyphens",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+tag_with_underscores",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+tag_with_underscores",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+tag123",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.name+tag123",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user+",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user+",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user.",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": ".user",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": ".user",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user..name",
+            "domain": "fastmail.com"
+          },
+          "expect": {
+            "local": "user..name",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name+tag",
+            "domain": "fastmail.fm"
+          },
+          "expect": {
+            "local": "user.name+tag",
+            "domain": "fastmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "fastmail",
+            "local": "user.name",
+            "domain": "fastmail.fm"
+          },
+          "expect": {
+            "local": "user.name",
+            "domain": "fastmail.com"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "provider.canonical_domain",
+          "args": {
+            "provider": "fastmail"
+          },
+          "expect": "fastmail.com"
+        }
+      ]
+    },
+    {
+      "name": "get supported domains",
+      "steps": [
+        {
+          "op": "provider.supported_domains",
+          "args": {
+            "provider": "fastmail"
+          },
+          "expect": [
+            "fastmail.com",
+            "fastmail.fm"
+          ]
+        }
+      ]
+    }
+  ]
+}

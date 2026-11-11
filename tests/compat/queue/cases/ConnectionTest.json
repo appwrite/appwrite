@@ -1,0 +1,1271 @@
+{
+  "source": "connection",
+  "cases": [
+    {
+      "name": "every command on a Redis connection",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "ping",
+            "args": []
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.k"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.k",
+              "v"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.k"
+            ]
+          },
+          "expect": "v"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.k",
+              "",
+              0
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.k"
+            ]
+          },
+          "expect": ""
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.k",
+              "ttl",
+              100
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "TTL",
+              "${ns}.k"
+            ]
+          },
+          "expect": 100
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "setNotExists",
+            "args": [
+              "${ns}.k",
+              "x"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "remove",
+            "args": [
+              "${ns}.k"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "setNotExists",
+            "args": [
+              "${ns}.k",
+              "x",
+              50
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "setNotExists",
+            "args": [
+              "${ns}.k",
+              "y"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.k"
+            ]
+          },
+          "expect": "x"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "remove",
+            "args": [
+              "${ns}.k"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "remove",
+            "args": [
+              "${ns}.k"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "increment",
+            "args": [
+              "${ns}.n"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "incrementBy",
+            "args": [
+              "${ns}.n",
+              41
+            ]
+          },
+          "expect": 42
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "decrement",
+            "args": [
+              "${ns}.n"
+            ]
+          },
+          "expect": 41
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.list",
+              "a"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPush",
+            "args": [
+              "${ns}.list",
+              "b"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPushMany",
+            "args": [
+              "${ns}.list",
+              [
+                "c",
+                "d"
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPushMany",
+            "args": [
+              "${ns}.list",
+              [
+                "e",
+                "f"
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPushMany",
+            "args": [
+              "${ns}.list",
+              []
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPushMany",
+            "args": [
+              "${ns}.list",
+              []
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listSize",
+            "args": [
+              "${ns}.list"
+            ]
+          },
+          "expect": 6
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRange",
+            "args": [
+              "${ns}.list",
+              3,
+              1
+            ]
+          },
+          "expect": [
+            "e",
+            "b",
+            "a"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRange",
+            "args": [
+              "${ns}.list",
+              100,
+              0
+            ]
+          },
+          "expect": [
+            "f",
+            "e",
+            "b",
+            "a",
+            "c",
+            "d"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRemove",
+            "args": [
+              "${ns}.list",
+              "c"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRemove",
+            "args": [
+              "${ns}.list",
+              "zzz"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPop",
+            "args": [
+              "${ns}.list",
+              1
+            ]
+          },
+          "expect": "d"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPop",
+            "args": [
+              "${ns}.list",
+              1
+            ]
+          },
+          "expect": "f"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopMany",
+            "args": [
+              "${ns}.list",
+              2,
+              1
+            ]
+          },
+          "expect": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopMany",
+            "args": [
+              "${ns}.list",
+              0,
+              1
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopLeftPush",
+            "args": [
+              "${ns}.list",
+              "${ns}.dest",
+              1
+            ]
+          },
+          "expect": "e"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRange",
+            "args": [
+              "${ns}.dest",
+              10,
+              0
+            ]
+          },
+          "expect": [
+            "e"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPushArray",
+            "args": [
+              "${ns}.list",
+              {
+                "a": 1,
+                "path": "x/y"
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPushArray",
+            "args": [
+              "${ns}.list",
+              [
+                1,
+                2,
+                "é"
+              ]
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRange",
+            "args": [
+              "${ns}.list",
+              10,
+              0
+            ]
+          },
+          "expect": [
+            "[1,2,\"\\u00e9\"]",
+            "{\"a\":1,\"path\":\"x\\/y\"}"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopArray",
+            "args": [
+              "${ns}.list",
+              1
+            ]
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                1
+              ],
+              [
+                "path",
+                "x/y"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPopArray",
+            "args": [
+              "${ns}.list",
+              1
+            ]
+          },
+          "expect": [
+            1,
+            2,
+            "é"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPushArray",
+            "args": [
+              "${ns}.list",
+              {
+                "z": true
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopLeftPushArray",
+            "args": [
+              "${ns}.list",
+              "${ns}.dest",
+              1
+            ]
+          },
+          "expect": {
+            "$array": [
+              [
+                "z",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRange",
+            "args": [
+              "${ns}.dest",
+              10,
+              0
+            ]
+          },
+          "expect": [
+            "{\"z\":true}",
+            "e"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "setArray",
+            "args": [
+              "${ns}.k",
+              {
+                "k": [
+                  1,
+                  2
+                ]
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.k"
+            ]
+          },
+          "expect": "{\"k\":[1,2]}"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "setArray",
+            "args": [
+              "${ns}.k",
+              {
+                "k": 1
+              },
+              100
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "TTL",
+              "${ns}.k"
+            ]
+          },
+          "expect": 100
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPop",
+            "args": [
+              "${ns}.empty",
+              1
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPop",
+            "args": [
+              "${ns}.empty",
+              1
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopMany",
+            "args": [
+              "${ns}.empty",
+              3,
+              1
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopLeftPush",
+            "args": [
+              "${ns}.empty",
+              "${ns}.dest",
+              1
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopArray",
+            "args": [
+              "${ns}.empty",
+              1
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPopArray",
+            "args": [
+              "${ns}.empty",
+              1
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopLeftPushArray",
+            "args": [
+              "${ns}.empty",
+              "${ns}.dest",
+              1
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.zero",
+              "0"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopLeftPush",
+            "args": [
+              "${ns}.zero",
+              "${ns}.dest",
+              1
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listRange",
+            "args": [
+              "${ns}.dest",
+              10,
+              0
+            ]
+          },
+          "expect": [
+            "0",
+            "{\"z\":true}",
+            "e"
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.notjson",
+              "nope"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPopArray",
+            "args": [
+              "${ns}.notjson",
+              1
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.str",
+              "s"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "leftPush",
+            "args": [
+              "${ns}.str",
+              "x"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "listSize",
+            "args": [
+              "${ns}.str"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return {KEYS[1], ARGV[1], 7}",
+              [
+                "${ns}.a"
+              ],
+              [
+                "b"
+              ]
+            ]
+          },
+          "expect": [
+            "${ns}.a",
+            "b",
+            7
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return redis.call('GET', KEYS[1])",
+              [
+                "${ns}.k"
+              ],
+              []
+            ]
+          },
+          "expect": "{\"k\":1}"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return redis.error_reply('Queue reservation expired')",
+              [
+                "${ns}.a"
+              ],
+              []
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "Queue reservation expired"
+            }
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return nil",
+              [
+                "${ns}.a"
+              ],
+              []
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "close",
+            "args": []
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.n"
+            ]
+          },
+          "expect": "41"
+        }
+      ]
+    },
+    {
+      "name": "a connection from a DSN",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis-dsn",
+            "dsn": "redis://{host}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.k",
+              "v"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.k"
+            ]
+          },
+          "expect": "v"
+        }
+      ]
+    },
+    {
+      "name": "which nested script errors raise, like phpredis",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return {1, redis.error_reply('WRONGTYPE nested'), 2}",
+              [
+                "${ns}.a"
+              ],
+              []
+            ]
+          },
+          "expect": [
+            1,
+            false,
+            2
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return {1, redis.error_reply('ERR nested')}",
+              [
+                "${ns}.a"
+              ],
+              []
+            ]
+          },
+          "expect": [
+            1,
+            false
+          ]
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return {1, redis.error_reply('ERR AUTH nested')}",
+              [
+                "${ns}.a"
+              ],
+              []
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "ERR AUTH nested"
+            }
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return {1, {redis.error_reply('Queue deep')}}",
+              [
+                "${ns}.a"
+              ],
+              []
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "Queue deep"
+            }
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return redis.error_reply('WRONGTYPE top')",
+              [
+                "${ns}.a"
+              ],
+              []
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "WRONGTYPE top"
+            }
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "execute",
+            "args": [
+              "return redis.error_reply('NOGROUP top')",
+              [
+                "${ns}.a"
+              ],
+              []
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "NOGROUP top"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unreachable server fails after its retries",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis",
+            "host": "localhost",
+            "port": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "ping",
+            "args": []
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

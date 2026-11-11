@@ -1,0 +1,444 @@
+{
+  "source": "packages/auth/tests/OAuth2/RedirectUrisTest.php",
+  "cases": [
+    {
+      "name": "matching",
+      "steps": [
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "https://example.com/cb"
+            ],
+            "presented": "https://example.com/cb",
+            "allow_loopback": false
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "https://example.com/cb"
+            ],
+            "presented": "https://example.com/other",
+            "allow_loopback": false
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "https://example.com/cb"
+            ],
+            "presented": "",
+            "allow_loopback": false
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [],
+            "presented": "https://example.com/cb",
+            "allow_loopback": false
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost:54155/callback",
+            "allow_loopback": false
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://127.0.0.1:3118/callback"
+            ],
+            "presented": "http://127.0.0.1:54155/callback",
+            "allow_loopback": false
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://[::1]:3118/callback"
+            ],
+            "presented": "http://[::1]:54155/callback",
+            "allow_loopback": false
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost/callback"
+            ],
+            "presented": "http://localhost:54155/callback",
+            "allow_loopback": false
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://LOCALHOST:3118/callback",
+            "allow_loopback": false
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118"
+            ],
+            "presented": "http://localhost:3118/",
+            "allow_loopback": false
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost:3118/callback",
+            "allow_loopback": false
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost/callback"
+            ],
+            "presented": "http://localhost:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost/callback",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://127.0.0.1:3118/callback"
+            ],
+            "presented": "http://127.0.0.1:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://[::1]:3118/callback"
+            ],
+            "presented": "http://[::1]:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback?flow=cli"
+            ],
+            "presented": "http://localhost:54155/callback?flow=cli",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118"
+            ],
+            "presented": "http://localhost:54155/",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://LOCALHOST:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "https://example.com/cb",
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://127.0.0.1:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost.evil.com:3118/callback",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "https://localhost:3118/callback"
+            ],
+            "presented": "https://localhost:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "myapp://localhost:3118/callback"
+            ],
+            "presented": "myapp://localhost:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost:54155/other",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost:54155/Callback",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback?flow=cli"
+            ],
+            "presented": "http://localhost:54155/callback?flow=web",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost:54155/callback?flow=cli",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://localhost:54155/callback#fragment",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback#fragment"
+            ],
+            "presented": "http://localhost:54155/callback#fragment",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://user@localhost:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/callback"
+            ],
+            "presented": "http://",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://"
+            ],
+            "presented": "http://localhost:54155/callback",
+            "allow_loopback": true
+          },
+          "expect": false
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "HTTP://localhost:3118/cb"
+            ],
+            "presented": "http://localhost:1/cb",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/cb?"
+            ],
+            "presented": "http://localhost:1/cb",
+            "allow_loopback": true
+          },
+          "expect": true
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "http://localhost:3118/cb?"
+            ],
+            "presented": "http://localhost:1/cb?",
+            "allow_loopback": true
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "from filters malformed entries",
+      "steps": [
+        {
+          "op": "redirect_uris.from",
+          "args": {
+            "uris": [
+              "https://example.com/cb",
+              "",
+              42,
+              null,
+              [
+                "nested"
+              ],
+              {}
+            ]
+          },
+          "expect": [
+            "https://example.com/cb"
+          ]
+        },
+        {
+          "op": "redirect_uris.matches",
+          "args": {
+            "uris": [
+              "https://example.com/cb",
+              "",
+              42,
+              null,
+              [
+                "nested"
+              ]
+            ],
+            "presented": "https://example.com/cb"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

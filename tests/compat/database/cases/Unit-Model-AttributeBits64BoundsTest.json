@@ -1,0 +1,1611 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/AttributeBits64BoundsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AttributeBits64BoundsTest::testBounds#signed 64-bit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "a",
+              "width": {
+                "$enum": "IntegerWidth::Bits64"
+              }
+            },
+            "as": "o2958"
+          },
+          "bind": "s4237",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2958"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o2963"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": -9223372036854775808,
+              "max": 9223372036854775807
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeBits64BoundsTest::testBounds#unsigned 64-bit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "a",
+              "signed": false,
+              "width": {
+                "$enum": "IntegerWidth::Bits64"
+              }
+            },
+            "as": "o2959"
+          },
+          "bind": "s4238",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2959"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o2964"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": 0,
+              "max": 9223372036854775807
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeBits64BoundsTest::testBounds#signed 32-bit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "a"
+            },
+            "as": "o2960"
+          },
+          "bind": "s4239",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2960"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o2965"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": -2147483648,
+              "max": 2147483647
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeBits64BoundsTest::testBounds#unsigned 32-bit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "a",
+              "signed": false
+            },
+            "as": "o2961"
+          },
+          "bind": "s4240",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2961"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o2966"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": 0,
+              "max": 2147483647
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeBits64BoundsTest::testBounds#stored size 8",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "a",
+                "type": "integer",
+                "size": 8,
+                "signed": true
+              }
+            },
+            "as": "o2962"
+          },
+          "bind": "s4241",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2962"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o2967"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": -9223372036854775808,
+              "max": 9223372036854775807
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeBits64BoundsTest::testIncreasingPastThe32BitMaximumSucceeds",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o2968"
+          },
+          "bind": "s4247",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o2968"
+              },
+              "cache": "none"
+            },
+            "as": "o2969"
+          },
+          "bind": "s4248",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2969"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "bounds"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2969"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "bounds_u000000000124"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o2970"
+          },
+          "bind": "s4251",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2969"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o2970"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2969"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "total",
+              "signed": true,
+              "width": {
+                "$enum": "IntegerWidth::Bits64"
+              }
+            },
+            "as": "o2971"
+          },
+          "bind": "s4254",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2972"
+          },
+          "bind": "s4255",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o2972"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2973"
+          },
+          "bind": "s4257",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o2973"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2974"
+          },
+          "bind": "s4259",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o2974"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "counters",
+              "attributes": [
+                {
+                  "$obj": "o2971"
+                }
+              ],
+              "permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "as": "o2975"
+          },
+          "bind": "s4261",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "name": "counters",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "total",
+                    "key": "total",
+                    "type": "integer",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2969"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o2975"
+              }
+            },
+            "as": "o2976"
+          },
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "name": "counters",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "total",
+                    "key": "total",
+                    "type": "integer",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counter",
+                "total": 2147483647
+              }
+            },
+            "as": "o2977"
+          },
+          "bind": "s4263",
+          "expect": {
+            "$document": {
+              "$id": "counter",
+              "total": 2147483647
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2969"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "counters",
+              "document": {
+                "$obj": "o2977"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "counter",
+              "total": 2147483647,
+              "$collection": "counters",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2969"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "counters",
+              "id": "counter",
+              "attribute": "total",
+              "value": 1
+            },
+            "as": "o2978"
+          },
+          "bind": "s4265",
+          "expect": {
+            "$document": {
+              "total": 2147483648,
+              "$sequence": "1",
+              "$id": "counter",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "counters"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2978"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "total"
+            }
+          },
+          "expect": 2147483648
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2969"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "counters",
+              "id": "counter"
+            },
+            "as": "o2979"
+          },
+          "bind": "s4267",
+          "expect": {
+            "$document": {
+              "total": 2147483648,
+              "$sequence": "1",
+              "$id": "counter",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "counters"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2979"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "total"
+            }
+          },
+          "expect": 2147483648
+        }
+      ]
+    },
+    {
+      "name": "AttributeBits64BoundsTest::testIncreasingPastThe64BitMaximumFails",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o2980"
+          },
+          "bind": "s4269",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o2980"
+              },
+              "cache": "none"
+            },
+            "as": "o2981"
+          },
+          "bind": "s4270",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2981"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "bounds"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2981"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "bounds_u000000000125"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o2982"
+          },
+          "bind": "s4273",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2981"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o2982"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2981"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "total",
+              "signed": false,
+              "width": {
+                "$enum": "IntegerWidth::Bits64"
+              }
+            },
+            "as": "o2983"
+          },
+          "bind": "s4276",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2984"
+          },
+          "bind": "s4277",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o2984"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2985"
+          },
+          "bind": "s4279",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o2985"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2986"
+          },
+          "bind": "s4281",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o2986"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "counters",
+              "attributes": [
+                {
+                  "$obj": "o2983"
+                }
+              ],
+              "permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "as": "o2987"
+          },
+          "bind": "s4283",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "name": "counters",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "total",
+                    "key": "total",
+                    "type": "integer",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2981"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o2987"
+              }
+            },
+            "as": "o2988"
+          },
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "name": "counters",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "total",
+                    "key": "total",
+                    "type": "integer",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counter",
+                "total": 2147483647
+              }
+            },
+            "as": "o2989"
+          },
+          "bind": "s4285",
+          "expect": {
+            "$document": {
+              "$id": "counter",
+              "total": 2147483647
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2981"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "counters",
+              "document": {
+                "$obj": "o2989"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "counter",
+              "total": 2147483647,
+              "$collection": "counters",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "total": 9223372036854775807
+              }
+            },
+            "as": "o2990"
+          },
+          "bind": "s4287",
+          "expect": {
+            "$document": {
+              "total": 9223372036854775807
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2981"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "counters",
+              "id": "counter",
+              "document": {
+                "$obj": "o2990"
+              }
+            },
+            "as": "o2991"
+          },
+          "expect": {
+            "$document": {
+              "total": 9223372036854775807,
+              "$sequence": "1",
+              "$id": "counter",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "counters"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2981"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": "counters",
+              "id": "counter",
+              "attribute": "total",
+              "value": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Attribute value exceeds maximum limit: 9223372036854775807"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AttributeBits64BoundsTest::testDecreasingAnUnsignedCounterBelowZeroFails",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o2992"
+          },
+          "bind": "s4290",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o2992"
+              },
+              "cache": "none"
+            },
+            "as": "o2993"
+          },
+          "bind": "s4291",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2993"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "bounds"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2993"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "bounds_u000000000126"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o2994"
+          },
+          "bind": "s4294",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2993"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o2994"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2993"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "total",
+              "signed": false,
+              "width": {
+                "$enum": "IntegerWidth::Bits64"
+              }
+            },
+            "as": "o2995"
+          },
+          "bind": "s4297",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2996"
+          },
+          "bind": "s4298",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o2996"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2997"
+          },
+          "bind": "s4300",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o2997"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2998"
+          },
+          "bind": "s4302",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o2998"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "counters",
+              "attributes": [
+                {
+                  "$obj": "o2995"
+                }
+              ],
+              "permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "as": "o2999"
+          },
+          "bind": "s4304",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "name": "counters",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "total",
+                    "key": "total",
+                    "type": "integer",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2993"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o2999"
+              }
+            },
+            "as": "o3000"
+          },
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "name": "counters",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "total",
+                    "key": "total",
+                    "type": "integer",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counter",
+                "total": 2147483647
+              }
+            },
+            "as": "o3001"
+          },
+          "bind": "s4306",
+          "expect": {
+            "$document": {
+              "$id": "counter",
+              "total": 2147483647
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2993"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "counters",
+              "document": {
+                "$obj": "o3001"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "counter",
+              "total": 2147483647,
+              "$collection": "counters",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "total": 0
+              }
+            },
+            "as": "o3002"
+          },
+          "bind": "s4308",
+          "expect": {
+            "$document": {
+              "total": 0
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2993"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "counters",
+              "id": "counter",
+              "document": {
+                "$obj": "o3002"
+              }
+            },
+            "as": "o3003"
+          },
+          "expect": {
+            "$document": {
+              "total": 0,
+              "$sequence": "1",
+              "$id": "counter",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "counters"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2993"
+            },
+            "method": "decreaseDocumentAttribute",
+            "args": {
+              "collection": "counters",
+              "id": "counter",
+              "attribute": "total",
+              "value": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Attribute value exceeds minimum limit: 0"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

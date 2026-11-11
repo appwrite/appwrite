@@ -1,0 +1,32 @@
+[package]
+name = "utopia-span"
+description = "Span tracing: attributes on the current span of each task, W3C trace context, and exporters to stdout, a terminal and Sentry."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/span"
+publish.workspace = true
+
+[features]
+default = ["http"]
+# The default Sentry transport: HTTP/1.1 over TLS on hyper.
+http = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:rustls"]
+
+[dependencies]
+getrandom.workspace = true
+php-std.workspace = true
+thiserror.workspace = true
+utopia-async = { workspace = true, features = ["hyper"] }
+
+bytes = { workspace = true, optional = true }
+http-body-util = { workspace = true, optional = true }
+hyper = { workspace = true, features = ["client", "http1"], optional = true }
+hyper-rustls = { workspace = true, optional = true }
+hyper-util = { workspace = true, features = ["client-legacy", "http1"], optional = true }
+rustls = { workspace = true, optional = true }
+
+
+[package.metadata.utopia]
+category = "observability"
+php-sync = "8bf9b1498e8ad3ab1e16ed288d182f49a097e52f"

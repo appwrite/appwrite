@@ -1,0 +1,1043 @@
+{
+  "source": "packages/telemetry/tests/Adapter/OpenTelemetryTest.php",
+  "cases": [
+    {
+      "name": "empty observations do not discard the request's metrics",
+      "steps": [
+        {
+          "op": "telemetry.otlp",
+          "args": {
+            "namespace": "edge",
+            "service": "edge-databases",
+            "instance": "instance"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "edge.database.http.request"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "edge.database.backup.schedule.missed"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.observe",
+          "args": {
+            "instrument": {
+              "$ref": "g"
+            },
+            "source": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "source.set",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "observations": [
+              {
+                "value": 0
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "source.set",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "observations": []
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "source.set",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "observations": [
+              {
+                "value": 2
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "otlp.payloads",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "edge"
+                  ],
+                  [
+                    "service.name",
+                    "edge-databases"
+                  ],
+                  [
+                    "service.instance.id",
+                    "instance"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "edge.database.http.request",
+                        "unit": "",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": true,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 1,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "edge"
+                  ],
+                  [
+                    "service.name",
+                    "edge-databases"
+                  ],
+                  [
+                    "service.instance.id",
+                    "instance"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "edge.database.backup.schedule.missed",
+                        "unit": "",
+                        "description": "",
+                        "data": "gauge",
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 0,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "edge.database.http.request",
+                        "unit": "",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": true,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 2,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "edge"
+                  ],
+                  [
+                    "service.name",
+                    "edge-databases"
+                  ],
+                  [
+                    "service.instance.id",
+                    "instance"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "edge.database.http.request",
+                        "unit": "",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": true,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 3,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "edge"
+                  ],
+                  [
+                    "service.name",
+                    "edge-databases"
+                  ],
+                  [
+                    "service.instance.id",
+                    "instance"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "edge.database.backup.schedule.missed",
+                        "unit": "",
+                        "description": "",
+                        "data": "gauge",
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 2,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "edge.database.http.request",
+                        "unit": "",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": true,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 4,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an empty collection does not send a request",
+      "steps": [
+        {
+          "op": "telemetry.otlp",
+          "args": {
+            "namespace": "edge",
+            "service": "edge-databases",
+            "instance": "instance"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "empty"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.observe",
+          "args": {
+            "instrument": {
+              "$ref": "g"
+            },
+            "source": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "otlp.payloads",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "only recorded instruments are exported",
+      "steps": [
+        {
+          "op": "telemetry.otlp",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "recorded.counter",
+            "unit": "{event}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "up_down_counter",
+            "name": "recorded.up_down_counter",
+            "unit": "{request}"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "u"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "histogram",
+            "name": "recorded.histogram",
+            "unit": "ms"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "h"
+            },
+            "value": 12.3
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "gauge",
+            "name": "recorded.gauge",
+            "unit": "s"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "g"
+            },
+            "value": 4.5
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "recorded.observable_gauge",
+            "unit": "%"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "observations": [
+              {
+                "value": 72.4
+              }
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.observe",
+          "args": {
+            "instrument": {
+              "$ref": "o"
+            },
+            "source": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "unused.counter",
+            "unit": "{event}"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "up_down_counter",
+            "name": "unused.up_down_counter",
+            "unit": "{request}"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "histogram",
+            "name": "unused.histogram",
+            "unit": "ms"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "gauge",
+            "name": "unused.gauge",
+            "unit": "s"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "unused.observable_gauge",
+            "unit": "%"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "otlp.payloads",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "namespace"
+                  ],
+                  [
+                    "service.name",
+                    "service"
+                  ],
+                  [
+                    "service.instance.id",
+                    "instance"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "recorded.counter",
+                        "unit": "{event}",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": true,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 1,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "recorded.up_down_counter",
+                        "unit": "{request}",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": false,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 1,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "recorded.histogram",
+                        "unit": "ms",
+                        "description": "",
+                        "data": "histogram",
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "count": 1,
+                            "sum": 12.3,
+                            "min": 12.3,
+                            "max": 12.3,
+                            "buckets": [
+                              0,
+                              0,
+                              0,
+                              1,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0
+                            ],
+                            "bounds": [
+                              0.0,
+                              5.0,
+                              10.0,
+                              25.0,
+                              50.0,
+                              75.0,
+                              100.0,
+                              250.0,
+                              500.0,
+                              1000.0
+                            ],
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "recorded.gauge",
+                        "unit": "s",
+                        "description": "",
+                        "data": "gauge",
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 4.5,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "recorded.observable_gauge",
+                        "unit": "%",
+                        "description": "",
+                        "data": "gauge",
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 72.4,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gauges are exported without a start time",
+      "steps": [
+        {
+          "op": "telemetry.otlp",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "gauge",
+            "name": "gauge"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "g"
+            },
+            "value": 4.5
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "observable_gauge",
+            "name": "observable_gauge"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "observations": [
+              {
+                "value": 607
+              }
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.observe",
+          "args": {
+            "instrument": {
+              "$ref": "o"
+            },
+            "source": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "instrument.new",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            },
+            "kind": "counter",
+            "name": "counter"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "instrument.record",
+          "args": {
+            "instrument": {
+              "$ref": "c"
+            },
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.collect",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "otlp.payloads",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              {
+                "resource": [
+                  [
+                    "service.namespace",
+                    "namespace"
+                  ],
+                  [
+                    "service.name",
+                    "service"
+                  ],
+                  [
+                    "service.instance.id",
+                    "instance"
+                  ]
+                ],
+                "schema_url": "https://opentelemetry.io/schemas/1.32.0",
+                "scopes": [
+                  {
+                    "name": "cloud",
+                    "version": "",
+                    "schema_url": "",
+                    "metrics": [
+                      {
+                        "name": "gauge",
+                        "unit": "",
+                        "description": "",
+                        "data": "gauge",
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 4.5,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "observable_gauge",
+                        "unit": "",
+                        "description": "",
+                        "data": "gauge",
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 607,
+                            "start": false,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      },
+                      {
+                        "name": "counter",
+                        "unit": "",
+                        "description": "",
+                        "data": "sum",
+                        "monotonic": true,
+                        "temporality": 2,
+                        "points": [
+                          {
+                            "attributes": [],
+                            "value": 1,
+                            "start": true,
+                            "time": true,
+                            "exemplars": 0
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

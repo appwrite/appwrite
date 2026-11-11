@@ -1,0 +1,2502 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Relationship/PageTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PageTest::testNoPaginationIsNoPage",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "approved",
+              "values": [
+                true
+              ]
+            },
+            "as": "o12163"
+          },
+          "bind": "s20968",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "approved",
+              "values": [
+                true
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "name"
+            },
+            "as": "o12164"
+          },
+          "bind": "s20969",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "name",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12163"
+                },
+                {
+                  "$obj": "o12164"
+                }
+              ]
+            }
+          },
+          "expect": [
+            null,
+            [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "approved",
+                  "values": [
+                    true
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testSplitsPaginationFromTheRest",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12165"
+          },
+          "bind": "s20971",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "approved",
+              "values": [
+                true
+              ]
+            },
+            "as": "o12166"
+          },
+          "bind": "s20972",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "approved",
+              "values": [
+                true
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 1
+            },
+            "as": "o12167"
+          },
+          "bind": "s20973",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12165"
+                },
+                {
+                  "$obj": "o12166"
+                },
+                {
+                  "$obj": "o12167"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 1,
+                "cursor": null,
+                "before": false
+              }
+            },
+            [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "approved",
+                  "values": [
+                    true
+                  ]
+                }
+              }
+            ]
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12166"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testLimitAndOffset",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12168"
+          },
+          "bind": "s20976",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 1
+            },
+            "as": "o12169"
+          },
+          "bind": "s20977",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12168"
+                },
+                {
+                  "$obj": "o12169"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 1,
+                "cursor": null,
+                "before": false
+              }
+            },
+            []
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12170"
+          },
+          "bind": "s20979",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12171"
+          },
+          "bind": "s20980",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12172"
+          },
+          "bind": "s20981",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12173"
+          },
+          "bind": "s20982",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "e"
+              }
+            },
+            "as": "o12174"
+          },
+          "bind": "s20983",
+          "expect": {
+            "$document": {
+              "$id": "e"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 1,
+                "cursor": null,
+                "before": false
+              }
+            },
+            "method": "slice",
+            "args": {
+              "documents": [
+                {
+                  "$obj": "o12170"
+                },
+                {
+                  "$obj": "o12171"
+                },
+                {
+                  "$obj": "o12172"
+                },
+                {
+                  "$obj": "o12173"
+                },
+                {
+                  "$obj": "o12174"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "b"
+              }
+            },
+            {
+              "$document": {
+                "$id": "c"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12171"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "b"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12172"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "c"
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testCursorAfterDocument",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12175"
+          },
+          "bind": "s20987",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorAfter",
+            "args": {
+              "value": {
+                "$obj": "o12175"
+              }
+            },
+            "as": "o12176"
+          },
+          "bind": "s20988",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "b"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12177"
+          },
+          "bind": "s20989",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12176"
+                },
+                {
+                  "$obj": "o12177"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 0,
+                "cursor": "b",
+                "before": false
+              }
+            },
+            []
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12178"
+          },
+          "bind": "s20991",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12179"
+          },
+          "bind": "s20992",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12180"
+          },
+          "bind": "s20993",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12181"
+          },
+          "bind": "s20994",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "e"
+              }
+            },
+            "as": "o12182"
+          },
+          "bind": "s20995",
+          "expect": {
+            "$document": {
+              "$id": "e"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 0,
+                "cursor": "b",
+                "before": false
+              }
+            },
+            "method": "slice",
+            "args": {
+              "documents": [
+                {
+                  "$obj": "o12178"
+                },
+                {
+                  "$obj": "o12179"
+                },
+                {
+                  "$obj": "o12180"
+                },
+                {
+                  "$obj": "o12181"
+                },
+                {
+                  "$obj": "o12182"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "c"
+              }
+            },
+            {
+              "$document": {
+                "$id": "d"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12180"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "c"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12181"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "d"
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testCursorAfterParsedId",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12183"
+          },
+          "bind": "s20999",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorAfter",
+            "args": {
+              "value": {
+                "$obj": "o12183"
+              }
+            },
+            "as": "o12184"
+          },
+          "bind": "s21000",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "c"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12184"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"cursorAfter\",\"values\":[\"c\"]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"cursorAfter\",\"values\":[\"c\"]}"
+            },
+            "as": "o12185"
+          },
+          "bind": "s21002",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12185"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": null,
+                "offset": 0,
+                "cursor": "c",
+                "before": false
+              }
+            },
+            []
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12186"
+          },
+          "bind": "s21004",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12187"
+          },
+          "bind": "s21005",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12188"
+          },
+          "bind": "s21006",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12189"
+          },
+          "bind": "s21007",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "e"
+              }
+            },
+            "as": "o12190"
+          },
+          "bind": "s21008",
+          "expect": {
+            "$document": {
+              "$id": "e"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": null,
+                "offset": 0,
+                "cursor": "c",
+                "before": false
+              }
+            },
+            "method": "slice",
+            "args": {
+              "documents": [
+                {
+                  "$obj": "o12186"
+                },
+                {
+                  "$obj": "o12187"
+                },
+                {
+                  "$obj": "o12188"
+                },
+                {
+                  "$obj": "o12189"
+                },
+                {
+                  "$obj": "o12190"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "d"
+              }
+            },
+            {
+              "$document": {
+                "$id": "e"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12189"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "d"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12190"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "e"
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testCursorAfterWithOffset",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12191"
+          },
+          "bind": "s21012",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorAfter",
+            "args": {
+              "value": {
+                "$obj": "o12191"
+              }
+            },
+            "as": "o12192"
+          },
+          "bind": "s21013",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "a"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 1
+            },
+            "as": "o12193"
+          },
+          "bind": "s21014",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12194"
+          },
+          "bind": "s21015",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12192"
+                },
+                {
+                  "$obj": "o12193"
+                },
+                {
+                  "$obj": "o12194"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 1,
+                "cursor": "a",
+                "before": false
+              }
+            },
+            []
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12195"
+          },
+          "bind": "s21017",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12196"
+          },
+          "bind": "s21018",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12197"
+          },
+          "bind": "s21019",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12198"
+          },
+          "bind": "s21020",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "e"
+              }
+            },
+            "as": "o12199"
+          },
+          "bind": "s21021",
+          "expect": {
+            "$document": {
+              "$id": "e"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 1,
+                "cursor": "a",
+                "before": false
+              }
+            },
+            "method": "slice",
+            "args": {
+              "documents": [
+                {
+                  "$obj": "o12195"
+                },
+                {
+                  "$obj": "o12196"
+                },
+                {
+                  "$obj": "o12197"
+                },
+                {
+                  "$obj": "o12198"
+                },
+                {
+                  "$obj": "o12199"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "c"
+              }
+            },
+            {
+              "$document": {
+                "$id": "d"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12197"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "c"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12198"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "d"
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testCursorBefore",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12200"
+          },
+          "bind": "s21025",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorBefore",
+            "args": {
+              "value": {
+                "$obj": "o12200"
+              }
+            },
+            "as": "o12201"
+          },
+          "bind": "s21026",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "d"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12202"
+          },
+          "bind": "s21027",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12201"
+                },
+                {
+                  "$obj": "o12202"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 0,
+                "cursor": "d",
+                "before": true
+              }
+            },
+            []
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12203"
+          },
+          "bind": "s21029",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12204"
+          },
+          "bind": "s21030",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12205"
+          },
+          "bind": "s21031",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12206"
+          },
+          "bind": "s21032",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "e"
+              }
+            },
+            "as": "o12207"
+          },
+          "bind": "s21033",
+          "expect": {
+            "$document": {
+              "$id": "e"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 0,
+                "cursor": "d",
+                "before": true
+              }
+            },
+            "method": "slice",
+            "args": {
+              "documents": [
+                {
+                  "$obj": "o12203"
+                },
+                {
+                  "$obj": "o12204"
+                },
+                {
+                  "$obj": "o12205"
+                },
+                {
+                  "$obj": "o12206"
+                },
+                {
+                  "$obj": "o12207"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "b"
+              }
+            },
+            {
+              "$document": {
+                "$id": "c"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12204"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "b"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12205"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "c"
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testCursorBeforeWithOffsetCountsBackFromTheCursor",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12208"
+          },
+          "bind": "s21037",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorBefore",
+            "args": {
+              "value": {
+                "$obj": "o12208"
+              }
+            },
+            "as": "o12209"
+          },
+          "bind": "s21038",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "d"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 1
+            },
+            "as": "o12210"
+          },
+          "bind": "s21039",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12211"
+          },
+          "bind": "s21040",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12209"
+                },
+                {
+                  "$obj": "o12210"
+                },
+                {
+                  "$obj": "o12211"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 1,
+                "cursor": "d",
+                "before": true
+              }
+            },
+            []
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12212"
+          },
+          "bind": "s21042",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12213"
+          },
+          "bind": "s21043",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12214"
+          },
+          "bind": "s21044",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12215"
+          },
+          "bind": "s21045",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "e"
+              }
+            },
+            "as": "o12216"
+          },
+          "bind": "s21046",
+          "expect": {
+            "$document": {
+              "$id": "e"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 2,
+                "offset": 1,
+                "cursor": "d",
+                "before": true
+              }
+            },
+            "method": "slice",
+            "args": {
+              "documents": [
+                {
+                  "$obj": "o12212"
+                },
+                {
+                  "$obj": "o12213"
+                },
+                {
+                  "$obj": "o12214"
+                },
+                {
+                  "$obj": "o12215"
+                },
+                {
+                  "$obj": "o12216"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "a"
+              }
+            },
+            {
+              "$document": {
+                "$id": "b"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12212"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "a"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12213"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testCursorBeforeWithOffsetPastTheWindowIsEmpty",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12217"
+          },
+          "bind": "s21050",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorBefore",
+            "args": {
+              "value": {
+                "$obj": "o12217"
+              }
+            },
+            "as": "o12218"
+          },
+          "bind": "s21051",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "b"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 1
+            },
+            "as": "o12219"
+          },
+          "bind": "s21052",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12218"
+                },
+                {
+                  "$obj": "o12219"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": null,
+                "offset": 1,
+                "cursor": "b",
+                "before": true
+              }
+            },
+            []
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12220"
+          },
+          "bind": "s21054",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12221"
+          },
+          "bind": "s21055",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12222"
+          },
+          "bind": "s21056",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12223"
+          },
+          "bind": "s21057",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "e"
+              }
+            },
+            "as": "o12224"
+          },
+          "bind": "s21058",
+          "expect": {
+            "$document": {
+              "$id": "e"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": null,
+                "offset": 1,
+                "cursor": "b",
+                "before": true
+              }
+            },
+            "method": "slice",
+            "args": {
+              "documents": [
+                {
+                  "$obj": "o12220"
+                },
+                {
+                  "$obj": "o12221"
+                },
+                {
+                  "$obj": "o12222"
+                },
+                {
+                  "$obj": "o12223"
+                },
+                {
+                  "$obj": "o12224"
+                }
+              ]
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testCursorTheParentDoesNotHoldIsEmpty",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "missing"
+              }
+            },
+            "as": "o12225"
+          },
+          "bind": "s21060",
+          "expect": {
+            "$document": {
+              "$id": "missing"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorAfter",
+            "args": {
+              "value": {
+                "$obj": "o12225"
+              }
+            },
+            "as": "o12226"
+          },
+          "bind": "s21061",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "missing"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12226"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": null,
+                "offset": 0,
+                "cursor": "missing",
+                "before": false
+              }
+            },
+            []
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12227"
+          },
+          "bind": "s21063",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12228"
+          },
+          "bind": "s21064",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12229"
+          },
+          "bind": "s21065",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12230"
+          },
+          "bind": "s21066",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "e"
+              }
+            },
+            "as": "o12231"
+          },
+          "bind": "s21067",
+          "expect": {
+            "$document": {
+              "$id": "e"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": null,
+                "offset": 0,
+                "cursor": "missing",
+                "before": false
+              }
+            },
+            "method": "slice",
+            "args": {
+              "documents": [
+                {
+                  "$obj": "o12227"
+                },
+                {
+                  "$obj": "o12228"
+                },
+                {
+                  "$obj": "o12229"
+                },
+                {
+                  "$obj": "o12230"
+                },
+                {
+                  "$obj": "o12231"
+                }
+              ]
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "PageTest::testFirstOfEachPaginationQueryWins",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o12232"
+          },
+          "bind": "s21069",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 4
+            },
+            "as": "o12233"
+          },
+          "bind": "s21070",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                4
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 2
+            },
+            "as": "o12234"
+          },
+          "bind": "s21071",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 0
+            },
+            "as": "o12235"
+          },
+          "bind": "s21072",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship\\Page",
+            "method": "from",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12232"
+                },
+                {
+                  "$obj": "o12233"
+                },
+                {
+                  "$obj": "o12234"
+                },
+                {
+                  "$obj": "o12235"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 1,
+                "offset": 2,
+                "cursor": null,
+                "before": false
+              }
+            },
+            []
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o12236"
+          },
+          "bind": "s21074",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o12237"
+          },
+          "bind": "s21075",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c"
+              }
+            },
+            "as": "o12238"
+          },
+          "bind": "s21076",
+          "expect": {
+            "$document": {
+              "$id": "c"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "d"
+              }
+            },
+            "as": "o12239"
+          },
+          "bind": "s21077",
+          "expect": {
+            "$document": {
+              "$id": "d"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "e"
+              }
+            },
+            "as": "o12240"
+          },
+          "bind": "s21078",
+          "expect": {
+            "$document": {
+              "$id": "e"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Relationship\\Page",
+              "fields": {
+                "limit": 1,
+                "offset": 2,
+                "cursor": null,
+                "before": false
+              }
+            },
+            "method": "slice",
+            "args": {
+              "documents": [
+                {
+                  "$obj": "o12236"
+                },
+                {
+                  "$obj": "o12237"
+                },
+                {
+                  "$obj": "o12238"
+                },
+                {
+                  "$obj": "o12239"
+                },
+                {
+                  "$obj": "o12240"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "c"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12238"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "c"
+        }
+      ]
+    }
+  ]
+}

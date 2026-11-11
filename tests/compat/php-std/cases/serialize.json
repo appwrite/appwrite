@@ -1,0 +1,1416 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "serialize: floats",
+      "op": "serialize.serialize",
+      "args": {
+        "v": [
+          1.0,
+          0.1,
+          1e+25,
+          -0.0,
+          {
+            "$float": "INF"
+          },
+          {
+            "$float": "-INF"
+          },
+          {
+            "$float": "NAN"
+          },
+          1000000000000000.0,
+          100000000000000.0,
+          0.00001,
+          0.0001,
+          0.30000000000000004,
+          1.7976931348623157e+308,
+          5e-324,
+          100.0,
+          -2.5
+        ]
+      },
+      "expect": "a:16:{i:0;d:1;i:1;d:0.1;i:2;d:1.0E+25;i:3;d:-0;i:4;d:INF;i:5;d:-INF;i:6;d:NAN;i:7;d:1000000000000000;i:8;d:100000000000000;i:9;d:1.0E-5;i:10;d:0.0001;i:11;d:0.30000000000000004;i:12;d:1.7976931348623157E+308;i:13;d:5.0E-324;i:14;d:100;i:15;d:-2.5;}"
+    },
+    {
+      "name": "serialize: strings and binary",
+      "op": "serialize.serialize",
+      "args": {
+        "v": [
+          "",
+          "a\u0000b",
+          "é",
+          {
+            "$bytes": "/wA="
+          }
+        ]
+      },
+      "expect": {
+        "$bytes": "YTo0OntpOjA7czowOiIiO2k6MTtzOjM6ImEAYiI7aToyO3M6Mjoiw6kiO2k6MztzOjI6Iv8AIjt9"
+      }
+    },
+    {
+      "name": "serialize: keys",
+      "op": "serialize.serialize",
+      "args": {
+        "v": {
+          "7": 1,
+          "-7": 2,
+          "07": 3,
+          "-0": 4,
+          "9223372036854775808": 5,
+          "a": {
+            "0": [],
+            "1": {}
+          }
+        }
+      },
+      "expect": "a:6:{i:7;i:1;i:-7;i:2;s:2:\"07\";i:3;s:2:\"-0\";i:4;s:19:\"9223372036854775808\";i:5;s:1:\"a\";a:2:{i:0;a:0:{}i:1;O:8:\"stdClass\":0:{}}}"
+    },
+    {
+      "name": "serialize: integers",
+      "op": "serialize.serialize",
+      "args": {
+        "v": [
+          0,
+          -1,
+          9223372036854775807,
+          -9223372036854775808,
+          18446744073709551615
+        ]
+      },
+      "expect": "a:5:{i:0;i:0;i:1;i:-1;i:2;i:9223372036854775807;i:3;i:-9223372036854775808;i:4;d:1.8446744073709552E+19;}"
+    },
+    {
+      "name": "serialize: stdClass",
+      "op": "serialize.serialize",
+      "args": {
+        "v": [
+          {},
+          {
+            "a": {}
+          }
+        ]
+      },
+      "expect": "a:2:{i:0;O:8:\"stdClass\":0:{}i:1;a:1:{s:1:\"a\";O:8:\"stdClass\":0:{}}}"
+    },
+    {
+      "name": "serialize: scalars",
+      "op": "serialize.serialize",
+      "args": {
+        "v": [
+          null,
+          true,
+          false
+        ]
+      },
+      "expect": "a:3:{i:0;N;i:1;b:1;i:2;b:0;}"
+    },
+    {
+      "name": "serialize: database index signature",
+      "op": "serialize.serialize",
+      "args": {
+        "v": [
+          [
+            "key",
+            [
+              "a",
+              "b"
+            ],
+            [
+              "ASC",
+              "DESC"
+            ]
+          ],
+          "unique"
+        ]
+      },
+      "expect": "a:2:{i:0;a:3:{i:0;s:3:\"key\";i:1;a:2:{i:0;s:1:\"a\";i:1;s:1:\"b\";}i:2;a:2:{i:0;s:3:\"ASC\";i:1;s:4:\"DESC\";}}i:1;s:6:\"unique\";}"
+    },
+    {
+      "name": "serialize_value: serde_json model",
+      "op": "serialize.serialize_value",
+      "args": {
+        "v": {
+          "a": {},
+          "b": [
+            1,
+            2.5
+          ],
+          "0": null
+        }
+      },
+      "expect": "a:3:{s:1:\"a\";O:8:\"stdClass\":0:{}s:1:\"b\";a:2:{i:0;i:1;i:1;d:2.5;}i:0;N;}"
+    },
+    {
+      "name": "var_export: floats",
+      "op": "serialize.var_export",
+      "args": {
+        "v": [
+          1.0,
+          0.1,
+          1e+25,
+          -0.0,
+          {
+            "$float": "INF"
+          },
+          {
+            "$float": "-INF"
+          },
+          {
+            "$float": "NAN"
+          },
+          1000000000000000.0,
+          100000000000000.0,
+          0.00001,
+          0.0001,
+          0.30000000000000004,
+          1.7976931348623157e+308,
+          5e-324,
+          100.0,
+          -2.5
+        ]
+      },
+      "expect": "array (\n  0 => 1.0,\n  1 => 0.1,\n  2 => 1.0E+25,\n  3 => -0.0,\n  4 => INF,\n  5 => -INF,\n  6 => NAN,\n  7 => 1000000000000000.0,\n  8 => 100000000000000.0,\n  9 => 1.0E-5,\n  10 => 0.0001,\n  11 => 0.30000000000000004,\n  12 => 1.7976931348623157E+308,\n  13 => 5.0E-324,\n  14 => 100.0,\n  15 => -2.5,\n)"
+    },
+    {
+      "name": "var_export: integer min",
+      "op": "serialize.var_export",
+      "args": {
+        "v": -9223372036854775808
+      },
+      "expect": "-9223372036854775807-1"
+    },
+    {
+      "name": "var_export: string escapes",
+      "op": "serialize.var_export",
+      "args": {
+        "v": [
+          "a\u0000b'\\",
+          "'",
+          "\\",
+          "\u0000",
+          "",
+          "é\n\t"
+        ]
+      },
+      "expect": "array (\n  0 => 'a' . \"\\0\" . 'b\\'\\\\',\n  1 => '\\'',\n  2 => '\\\\',\n  3 => '' . \"\\0\" . '',\n  4 => '',\n  5 => 'é\n\t',\n)"
+    },
+    {
+      "name": "var_export: nested indentation",
+      "op": "serialize.var_export",
+      "args": {
+        "v": {
+          "x": true,
+          "5": null,
+          "k'\u0000": [],
+          "o": {
+            "a": 1,
+            "p'\\\u0000q": {}
+          },
+          "n": [
+            [
+              [
+                1
+              ]
+            ]
+          ]
+        }
+      },
+      "expect": "array (\n  'x' => true,\n  5 => NULL,\n  'k\\'' . \"\\0\" . '' => \n  array (\n  ),\n  'o' => \n  array (\n    'a' => 1,\n    'p\\'\\\\' . \"\\0\" . 'q' => \n    (object) array(\n    ),\n  ),\n  'n' => \n  array (\n    0 => \n    array (\n      0 => \n      array (\n        0 => 1,\n      ),\n    ),\n  ),\n)"
+    },
+    {
+      "name": "var_export: empty array",
+      "op": "serialize.var_export",
+      "args": {
+        "v": []
+      },
+      "expect": "array (\n)"
+    },
+    {
+      "name": "var_export: empty object",
+      "op": "serialize.var_export",
+      "args": {
+        "v": {}
+      },
+      "expect": "(object) array(\n)"
+    },
+    {
+      "name": "var_export: object at the top",
+      "op": "serialize.var_export",
+      "args": {
+        "v": {
+          "a": {}
+        }
+      },
+      "expect": "array (\n  'a' => \n  (object) array(\n  ),\n)"
+    },
+    {
+      "name": "var_export: scalars",
+      "op": "serialize.var_export",
+      "args": {
+        "v": [
+          null,
+          true,
+          false,
+          0,
+          "0"
+        ]
+      },
+      "expect": "array (\n  0 => NULL,\n  1 => true,\n  2 => false,\n  3 => 0,\n  4 => '0',\n)"
+    },
+    {
+      "name": "var_export: binary string",
+      "op": "serialize.var_export",
+      "args": {
+        "v": {
+          "$bytes": "/wAn"
+        }
+      },
+      "expect": {
+        "$bytes": "J/8nIC4gIlwwIiAuICdcJyc="
+      }
+    },
+    {
+      "name": "var_export_value: serde_json model",
+      "op": "serialize.var_export_value",
+      "args": {
+        "v": {
+          "a": {},
+          "b": [
+            1,
+            2.5
+          ]
+        }
+      },
+      "expect": "array (\n  'a' => \n  (object) array(\n  ),\n  'b' => \n  array (\n    0 => 1,\n    1 => 2.5,\n  ),\n)"
+    },
+    {
+      "name": "unserialize: ",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": ""
+      },
+      "expect": {
+        "value": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: i:5;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "i:5;"
+      },
+      "expect": {
+        "value": 5,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: i:5;x",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "i:5;x"
+      },
+      "expect": {
+        "value": 5,
+        "warnings": [
+          "unserialize(): Extra data starting at offset 4 of 5 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: i:5",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "i:5"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 0 of 3 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: i:99999999999999999999;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "i:99999999999999999999;"
+      },
+      "expect": {
+        "value": 9223372036854775807,
+        "warnings": [
+          "unserialize(): Numerical result out of range"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: i:-9223372036854775808;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "i:-9223372036854775808;"
+      },
+      "expect": {
+        "value": -9223372036854775808,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: i:+0005;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "i:+0005;"
+      },
+      "expect": {
+        "value": 5,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: d:0.1;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:0.1;"
+      },
+      "expect": {
+        "value": 0.1,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: d:.5;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:.5;"
+      },
+      "expect": {
+        "value": 0.5,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: d:5.;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:5.;"
+      },
+      "expect": {
+        "value": 5.0,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: d:1e400;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:1e400;"
+      },
+      "expect": {
+        "value": {
+          "$float": "INF"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: d:-INF;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:-INF;"
+      },
+      "expect": {
+        "value": {
+          "$float": "-INF"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: d:NAN;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:NAN;"
+      },
+      "expect": {
+        "value": {
+          "$float": "NAN"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: d:1e;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:1e;"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 0 of 5 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: s:3:\"abc\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "s:3:\"abc\";"
+      },
+      "expect": {
+        "value": "abc",
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: s:3:\"ab\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "s:3:\"ab\";"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 8 of 9 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: s:2:\"abc\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "s:2:\"abc\";"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 7 of 10 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: s:3:\"abc\"",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "s:3:\"abc\""
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 9 of 9 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: S:3:\"\\61bc\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "S:3:\"\\61bc\";"
+      },
+      "expect": {
+        "value": "abc",
+        "warnings": [
+          "unserialize(): Unserializing the 'S' format is deprecated"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: S:3:\"\\6xbc\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "S:3:\"\\6xbc\";"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 0 of 12 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:0:{}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:0:{}"
+      },
+      "expect": {
+        "value": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: a:1:{i:0;i:1;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;i:1;}"
+      },
+      "expect": {
+        "value": [
+          1
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: a:1:{i:0;i:1;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;i:1;"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 13 of 13 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:2:{i:0;i:1;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:2:{i:0;i:1;}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Unexpected end of serialized data",
+          "unserialize(): Error at offset 13 of 14 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:1:{s:1:\"7\";i:1;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{s:1:\"7\";i:1;}"
+      },
+      "expect": {
+        "value": {
+          "7": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: a:1:{d:1;i:1;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{d:1;i:1;}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 9 of 14 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:1:{N;i:1;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{N;i:1;}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 7 of 12 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:3:{i:0;i:1;i:0;i:2;i:1;R:2;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:3:{i:0;i:1;i:0;i:2;i:1;R:2;}"
+      },
+      "expect": {
+        "value": [
+          2,
+          2
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: a:2:{i:0;O:8:\"stdClass\":0:{}i:1;r:2;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:2:{i:0;O:8:\"stdClass\":0:{}i:1;r:2;}"
+      },
+      "expect": {
+        "value": [
+          {},
+          {}
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: a:2:{i:0;i:5;i:1;r:2;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:2:{i:0;i:5;i:1;r:2;}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 21 of 22 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: O:8:\"stdClass\":1:{i:0;i:1;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:8:\"stdClass\":1:{i:0;i:1;}"
+      },
+      "expect": {
+        "value": {
+          "0": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: O:8:\"STDCLASS\":1:{s:1:\"a\";i:1;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:8:\"STDCLASS\":1:{s:1:\"a\";i:1;}"
+      },
+      "expect": {
+        "value": {
+          "a": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: O:0:\"\":0:{}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:0:\"\":0:{}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 2 of 11 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: }",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Unexpected end of serialized data",
+          "unserialize(): Error at offset 0 of 1 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:1:{}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 5 of 6 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: b:2;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "b:2;"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 0 of 4 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: N;N;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "N;N;"
+      },
+      "expect": {
+        "value": null,
+        "warnings": [
+          "unserialize(): Extra data starting at offset 2 of 4 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: R:1;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "R:1;"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 4 of 4 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: r:1;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "r:1;"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 4 of 4 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: E:3:\"A:B\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "E:3:\"A:B\";"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Class 'A' not found",
+          "unserialize(): Error at offset 0 of 10 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: E:2:\"AB\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "E:2:\"AB\";"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Invalid enum name 'AB' (missing colon)",
+          "unserialize(): Error at offset 0 of 9 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: E:2:\":B\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "E:2:\":B\";"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Class '' not found",
+          "unserialize(): Error at offset 0 of 9 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: E:3:\"A-:B\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "E:3:\"A-:B\";"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 8 of 11 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: E:3:\"A:B\"x",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "E:3:\"A:B\"x"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 9 of 10 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: E:5:\"A:B\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "E:5:\"A:B\";"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 10 of 10 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:1:{i:0;E:3:\"A:B\";}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;E:3:\"A:B\";}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Class 'A' not found",
+          "unserialize(): Error at offset 9 of 20 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:1:{E:3:\"A:B\";i:0;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{E:3:\"A:B\";i:0;}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 5 of 20 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: E:0:\"\";",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "E:0:\"\";"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 2 of 7 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: C:8:\"stdClass\":0:{}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "C:8:\"stdClass\":0:{}"
+      },
+      "expect": {
+        "value": {},
+        "warnings": [
+          "Class stdClass has no unserializer"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: C:8:\"stdClass\":3:{abc}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "C:8:\"stdClass\":3:{abc}"
+      },
+      "expect": {
+        "value": {},
+        "warnings": [
+          "Class stdClass has no unserializer"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: C:8:\"stdClass\":3:{ab}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "C:8:\"stdClass\":3:{ab}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "Insufficient data for unserializing - 3 required, 3 present",
+          "unserialize(): Error at offset 18 of 21 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: O:8:\"stdClass\":",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:8:\"stdClass\":"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "Bad unserialize data",
+          "unserialize(): Error at offset 13 of 15 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: O:8:\"stdClass\":1:{s:1:\"a\";a:0:{}}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:8:\"stdClass\":1:{s:1:\"a\";a:0:{}}"
+      },
+      "expect": {
+        "value": {
+          "a": []
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: O:3:\"a-b\":0:{}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:3:\"a-b\":0:{}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 0 of 14 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: O:2:\"\\a\":0:{}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:2:\"\\a\":0:{}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 0 of 13 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: i:00000000000000000000000000000001;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "i:00000000000000000000000000000001;"
+      },
+      "expect": {
+        "value": 1,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: i:12345678901234567890;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "i:12345678901234567890;"
+      },
+      "expect": {
+        "value": 9223372036854775807,
+        "warnings": [
+          "unserialize(): Numerical result out of range"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:99999999999999999999:{}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:99999999999999999999:{}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Numerical result out of range",
+          "unserialize(): Error at offset 24 of 25 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: O:8:\"stdClass\":1",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:8:\"stdClass\":1"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 16 of 16 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:2:{i:0;a:1:{i:0;i:1;}i:0;i:5;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:2:{i:0;a:1:{i:0;i:1;}i:0;i:5;}"
+      },
+      "expect": {
+        "value": [
+          5
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: a:3:{i:0;a:1:{i:0;i:7;}i:0;i:5;i:1;R:3;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:3:{i:0;a:1:{i:0;i:7;}i:0;i:5;i:1;R:3;}"
+      },
+      "expect": {
+        "value": [
+          5,
+          7
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: a:2:{i:0;i:1;i:0;R:2;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:2:{i:0;i:1;i:0;R:2;}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 21 of 22 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: a:2:{s:1:\"1\";i:1;i:1;i:2;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:2:{s:1:\"1\";i:1;i:1;i:2;}"
+      },
+      "expect": {
+        "value": {
+          "1": 2
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: O:8:\"stdClass\":2:{s:1:\"a\";i:1;s:1:\"a\";i:2;}",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:8:\"stdClass\":2:{s:1:\"a\";i:1;s:1:\"a\";i:2;}"
+      },
+      "expect": {
+        "value": {
+          "a": 2
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: a:1:{i:0;b:1;}x",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;b:1;}x"
+      },
+      "expect": {
+        "value": [
+          true
+        ],
+        "warnings": [
+          "unserialize(): Extra data starting at offset 14 of 15 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: d:1.5e+3;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:1.5e+3;"
+      },
+      "expect": {
+        "value": 1500.0,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: d:-.5e-3;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:-.5e-3;"
+      },
+      "expect": {
+        "value": -0.0005,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: d:+1;",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "d:+1;"
+      },
+      "expect": {
+        "value": 1.0,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: max depth 2 exceeded",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;a:1:{i:0;a:1:{i:0;i:1;}}}",
+        "options": {
+          "max_depth": 2
+        }
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Maximum depth of 2 exceeded. The depth limit can be changed using the max_depth unserialize() option or the unserialize_max_depth ini setting",
+          "unserialize(): Error at offset 23 of 34 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: max depth: empty arrays are not counted",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;a:1:{i:0;a:0:{}}}",
+        "options": {
+          "max_depth": 2
+        }
+      },
+      "expect": {
+        "value": [
+          [
+            []
+          ]
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: max depth: empty objects are counted",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;O:8:\"stdClass\":0:{}}",
+        "options": {
+          "max_depth": 1
+        }
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Maximum depth of 1 exceeded. The depth limit can be changed using the max_depth unserialize() option or the unserialize_max_depth ini setting",
+          "unserialize(): Error at offset 27 of 29 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: max depth 0 is unlimited",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:8:\"stdClass\":0:{}",
+        "options": {
+          "max_depth": 0
+        }
+      },
+      "expect": {
+        "value": {},
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: negative max depth",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "i:1;",
+        "options": {
+          "max_depth": -1
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "unserialize(): Option \"max_depth\" must be greater than or equal to 0"
+        }
+      }
+    },
+    {
+      "name": "unserialize: negative max depth with empty data",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "",
+        "options": {
+          "max_depth": -1
+        }
+      },
+      "expect": {
+        "value": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unserialize: default max depth 4096",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;a:1:{i:0;N;}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Maximum depth of 4096 exceeded. The depth limit can be changed using the max_depth unserialize() option or the unserialize_max_depth ini setting",
+          "unserialize(): Error at offset 36869 of 40972 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: unknown class: failure after the name",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;O:3:\"Foo\":1:{s:1:\"a\";N;}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 33 of 33 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: unknown class: custom data failure",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "C:3:\"Foo\":3:{ab}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "Insufficient data for unserializing - 3 required, 3 present",
+          "unserialize(): Error at offset 13 of 16 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: unknown class: bad data",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "O:3:\"Foo\":"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "Bad unserialize data",
+          "unserialize(): Error at offset 8 of 10 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: unknown class: depth",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:1:{i:0;O:3:\"Foo\":0:{}}",
+        "options": {
+          "max_depth": 1
+        }
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Maximum depth of 1 exceeded. The depth limit can be changed using the max_depth unserialize() option or the unserialize_max_depth ini setting",
+          "unserialize(): Error at offset 22 of 24 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: recursive reference in a failing document",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:2:{i:0;R:1;i:1;"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 17 of 17 bytes"
+        ]
+      }
+    },
+    {
+      "name": "unserialize: r: to an array fails",
+      "op": "serialize.unserialize",
+      "args": {
+        "s": "a:2:{i:0;i:1;i:1;r:1;}"
+      },
+      "expect": {
+        "value": false,
+        "warnings": [
+          "unserialize(): Error at offset 21 of 22 bytes"
+        ]
+      }
+    },
+    {
+      "name": "roundtrip: binary key",
+      "op": "serialize.roundtrip",
+      "args": {
+        "s": {
+          "$bytes": "YToxOntzOjE6Iv8iO2k6MTt9"
+        }
+      },
+      "expect": {
+        "serialized": {
+          "$bytes": "YToxOntzOjE6Iv8iO2k6MTt9"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "roundtrip: NUL-prefixed property",
+      "op": "serialize.roundtrip",
+      "args": {
+        "s": "O:8:\"stdClass\":1:{s:2:\"\u0000a\";i:1;}"
+      },
+      "expect": {
+        "serialized": "O:8:\"stdClass\":1:{s:2:\"\u0000a\";i:1;}",
+        "warnings": []
+      }
+    },
+    {
+      "name": "roundtrip: numeric string keys become integers",
+      "op": "serialize.roundtrip",
+      "args": {
+        "s": "a:2:{s:1:\"7\";i:1;s:2:\"07\";i:2;}"
+      },
+      "expect": {
+        "serialized": "a:2:{i:7;i:1;s:2:\"07\";i:2;}",
+        "warnings": []
+      }
+    },
+    {
+      "name": "roundtrip: integer property names become strings",
+      "op": "serialize.roundtrip",
+      "args": {
+        "s": "O:8:\"stdClass\":1:{i:7;i:1;}"
+      },
+      "expect": {
+        "serialized": "O:8:\"stdClass\":1:{s:1:\"7\";i:1;}",
+        "warnings": []
+      }
+    },
+    {
+      "name": "roundtrip: failure serializes false",
+      "op": "serialize.roundtrip",
+      "args": {
+        "s": "i:"
+      },
+      "expect": {
+        "serialized": "b:0;",
+        "warnings": [
+          "unserialize(): Error at offset 0 of 2 bytes"
+        ]
+      }
+    }
+  ]
+}

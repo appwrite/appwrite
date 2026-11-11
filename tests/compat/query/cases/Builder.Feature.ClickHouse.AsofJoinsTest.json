@@ -1,0 +1,749 @@
+{
+  "source": "packages/query/tests/Builder/Feature/ClickHouse/AsofJoinsTest.php",
+  "cases": [
+    {
+      "name": "testAsofJoinEmitsEquiAndInequalityConditions",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "trades"
+            ]
+          },
+          {
+            "call": "asofJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "quotes",
+              {
+                "trades.symbol": "quotes.symbol"
+              },
+              "trades.ts",
+              {
+                "$enum": "Builder\\ClickHouse\\AsofOperator::GreaterThanEqual"
+              },
+              "quotes.ts"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts`",
+        [],
+        [],
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts`",
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts`"
+      ]
+    },
+    {
+      "name": "testAsofJoinWithAliasUsesAliasInOnClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "trades"
+            ]
+          },
+          {
+            "call": "asofJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "quotes",
+              {
+                "trades.symbol": "q.symbol"
+              },
+              "trades.ts",
+              {
+                "$enum": "Builder\\ClickHouse\\AsofOperator::GreaterThan"
+              },
+              "q.ts",
+              "q"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `trades` ASOF JOIN `quotes` AS `q` ON `trades`.`symbol` = `q`.`symbol` AND `trades`.`ts` > `q`.`ts`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `trades` ASOF JOIN `quotes` AS `q` ON `trades`.`symbol` = `q`.`symbol` AND `trades`.`ts` > `q`.`ts`",
+        [],
+        [],
+        "SELECT * FROM `trades` ASOF JOIN `quotes` AS `q` ON `trades`.`symbol` = `q`.`symbol` AND `trades`.`ts` > `q`.`ts`",
+        "SELECT * FROM `trades` ASOF JOIN `quotes` AS `q` ON `trades`.`symbol` = `q`.`symbol` AND `trades`.`ts` > `q`.`ts`"
+      ]
+    },
+    {
+      "name": "testAsofJoinSupportsMultipleEquiPairs",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "trades"
+            ]
+          },
+          {
+            "call": "asofJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "quotes",
+              {
+                "trades.symbol": "quotes.symbol",
+                "trades.exchange": "quotes.exchange"
+              },
+              "trades.ts",
+              {
+                "$enum": "Builder\\ClickHouse\\AsofOperator::GreaterThanEqual"
+              },
+              "quotes.ts"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`exchange` = `quotes`.`exchange` AND `trades`.`ts` >= `quotes`.`ts`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`exchange` = `quotes`.`exchange` AND `trades`.`ts` >= `quotes`.`ts`",
+        [],
+        [],
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`exchange` = `quotes`.`exchange` AND `trades`.`ts` >= `quotes`.`ts`",
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`exchange` = `quotes`.`exchange` AND `trades`.`ts` >= `quotes`.`ts`"
+      ]
+    },
+    {
+      "name": "testAsofLeftJoinEmitsAsofLeftJoinKeyword",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "trades"
+            ]
+          },
+          {
+            "call": "asofLeftJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "quotes",
+              {
+                "trades.symbol": "quotes.symbol"
+              },
+              "trades.ts",
+              {
+                "$enum": "Builder\\ClickHouse\\AsofOperator::GreaterThanEqual"
+              },
+              "quotes.ts"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `trades` ASOF LEFT JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `trades` ASOF LEFT JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts`",
+        [],
+        [],
+        "SELECT * FROM `trades` ASOF LEFT JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts`",
+        "SELECT * FROM `trades` ASOF LEFT JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts`"
+      ]
+    },
+    {
+      "name": "testAsofJoinRejectsEmptyEquiPairs",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "trades"
+            ]
+          },
+          {
+            "call": "asofJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "quotes",
+              [],
+              "trades.ts",
+              {
+                "$enum": "Builder\\ClickHouse\\AsofOperator::GreaterThanEqual"
+              },
+              "quotes.ts"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "ASOF JOIN requires at least one equi-join column pair."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testAsofJoinPrecedesWhereClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "trades"
+            ]
+          },
+          {
+            "call": "asofJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "quotes",
+              {
+                "trades.symbol": "quotes.symbol"
+              },
+              "trades.ts",
+              {
+                "$enum": "Builder\\ClickHouse\\AsofOperator::GreaterThanEqual"
+              },
+              "quotes.ts"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "trades.symbol",
+              [
+                "AAPL"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "trades.symbol",
+            "values": [
+              "AAPL"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts` WHERE `trades`.`symbol` IN (?)",
+            "bindings": [
+              "AAPL"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts` WHERE `trades`.`symbol` IN (?)",
+        [
+          "AAPL"
+        ],
+        [
+          "AAPL"
+        ],
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts` WHERE `trades`.`symbol` IN (?)",
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts` WHERE `trades`.`symbol` IN (?)",
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` >= `quotes`.`ts` WHERE `trades`.`symbol` IN (?)",
+        [
+          "AAPL"
+        ]
+      ]
+    },
+    {
+      "name": "testAsofJoinDoesNotAddBindings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "trades"
+            ]
+          },
+          {
+            "call": "asofJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "quotes",
+              {
+                "trades.symbol": "quotes.symbol"
+              },
+              "trades.ts",
+              {
+                "$enum": "Builder\\ClickHouse\\AsofOperator::LessThanEqual"
+              },
+              "quotes.ts"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` <= `quotes`.`ts`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` <= `quotes`.`ts`",
+        [],
+        [],
+        "SELECT * FROM `trades` ASOF JOIN `quotes` ON `trades`.`symbol` = `quotes`.`symbol` AND `trades`.`ts` <= `quotes`.`ts`",
+        []
+      ]
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+# Crates
+
+The documentation of the Utopia libraries in Rust, as a TanStack Start app designed as a printed engineering catalogue: warm paper and ink, the wordmark's red dot as the one accent, Archivo titles, Geist text, Geist Mono code and labels, square corners and hairline rules (tokens in `src/styles.css`). It is written to become the official Utopia docs: by default it shows only the Rust crates, their getting started guides, namespaces, items and examples.
+
+**Migration** mode (the switch in the header) adds everything about the move from PHP, each piece in a yellow migration card: the libraries not converted yet and their PHP API, each library's conversion status and sync with PHP, the PHP twin of every example, the PHP method each item ports, and the PHP notes the generator moves out of the Rust docs (paragraphs that mention PHP, sections under a PHP heading, and a leading PHP name such as `` `getHost()`: ``). Libraries are grouped by category. The site's pages are in the header (Libraries, a Categories menu, Map, Changelog, Contributing); a library's pages add its own menu on the left, listing its sections, modules and commands. On small screens a drawer holds both.
+
+Migration mode also adds **Migration** to the header (`/migration`): a dashboard of the whole move from PHP to Rust, the Appwrite API's included ([rfc/rust.md](../../rfc/rust.md)), in tabs, each opening on a progress bar of its section. **Utopia** lists every library with its status, its compat cases against PHP, its benchmark's bottom line, expanding to the full results, and its crate's compile time: the latest and the average of the runs kept. **Services** lists every API service with how many of its routes Rust serves, its E2E suites and latest runs, and its benchmark's bottom line, expanding to the full run; then the Traefik routing. **Hooks** lists the shared logic every migrated route must reproduce (hooks and request resources), where Rust does, and the E2E runs against Rust that go through each, filtered by group. **Facts** has the project in numbers and **Tasks** the task board. Each service's page (`/migration/services/<service>`) lists its routes, its suites and recorded runs, its benchmarks and the hooks its routes run. The old `/appwrite` pages redirect there.
+
+The home page opens on Appwrite drawn as a circuit board (`src/components/Factory.tsx`), each kind of service in its own district and shape, every block a crate that part of Appwrite is built from: the API's twelve largest modules as towers of cubes (counting a crate when at least five of a module's files import it), the workers as cards of chips in slots fed by queue lanes from a bus, realtime as a stack of discs, MQTT as a hexagonal stack and the schedulers as cans. On a loop the board is populated block by block, the most shared crates light up across it, it opens into an exploded view and clears; hover a block to trace its crate across the services, click it to open the crate. It stands still under reduced motion. The library list follows, the same as **Libraries** (`/libraries`) shows on its own (`src/components/Catalog.tsx`). Below a library's overview, and on an Appwrite service, a trail above the page (`src/components/Crumbs.tsx`) says where it sits.
+
+The **Map** (`/map`) draws the whole ecosystem as a chord: every library and Appwrite, grouped by category, with a ribbon between each pair that depends on one another, through Rust (Cargo manifests), PHP (`composer.json`) or both. Hover a library to see what it depends on and what depends on it, click it for its panel, search to find one; `/map#<lib>` opens it on a library, as each Dependencies page's "See it on the map" does. Switch to Categories for the same picture rolled up. Outside migration mode the map draws only the Rust crates, Appwrite and the Rust edges between them, and each Dependencies page lists only the Rust dependents; migration mode adds the PHP packages, the PHP edges and each dependent's conversion status.
+
+The **Changelog** (`/changelog`) is a dated log of the crates, the docs, and the PHP to Rust migration. Each entry is a Markdown file in `content/changelog/` (YAML frontmatter: `title`, `date`, optional `tag`, and comma-separated `packages` for filtering). Newest first.
+
+**Contributing** (`/contributing`) is how to build, test and benchmark the crates, and how to work on this site and keep the Migration dashboard's task board and facts current, written in `content/contributing.md`: one section per `## ` heading. A section whose heading names PHP (comparing with PHP, benchmarks against it, the Appwrite API on both runtimes) shows only in migration mode, in a migration card. Each crate's README ends with the same commands for that crate, written by `bin/monorepo crates absorb`.
+
+Outside migration mode the site reads as a plain Rust library site: everything about PHP (comparisons, benchmarks, PHP APIs and sources, conversion status) is hidden. The exception is `php-std`, a Rust crate in its own right, whose PHP functions inventory always shows. Menu items that only appear in migration mode carry the migration marking (the `nav-migration` class: the migration cards' tint and a yellow rule), set through the `migration` prop of a menu section or the `item(true)` row class in `src/components/Sidebar.tsx`; the header's Appwrite migration link carries it too.
+
+## Share cards
+
+Every page carries Open Graph and Twitter tags (`src/lib/share.ts`). The site-wide cover is `public/og.png`: the logo and the tagline, drawn by hand. Each library and category has its own card, with its category, title, crate, description and counts, rendered by `bun run og` (`scripts/og.tsx`: satori lays it out in the site's fonts from `scripts/og/fonts`, resvg rasterises it) into `public/og/`, which is not committed; `bun run build` runs it first. Image addresses are absolute, on the site's public address (`SITE` in `src/lib/share.ts`, <https://utopia-docs.appwrite.network> for now).
+
+## Run
+
+From the repository root, generate the data (PHP signatures are read in the `appwrite-dev` image; without Docker the docs are generated without them), then start the app:
+
+```bash
+bin/compat crates
+cd apps/crates
+bun install
+bun run dev
+```
+
+The app serves on <http://localhost:3200>. `bun run generate` regenerates the data from here; `bin/compat appwrite` regenerates only the Appwrite migration (`data/appwrite.json`), which needs neither Docker nor a dev stack: E2E runs and benchmarks are read from the files committed in the repository. `bun run build` then `bun run start` serves a production build. The data lands in `apps/crates/data` (not committed).
+
+## Where the content comes from
+
+Everything is generated from each library's own data and metadata; nothing is written in this app:
+
+| Content | Source |
+|---|---|
+| Libraries | `packages/*`, the `utopia-php/*` packages in `composer.lock`, `crates/utopia/*` and `crates/support/*` |
+| Category | `extra.utopia.category` in the package's `composer.json` (or `[package.metadata.utopia]` in a Rust-only crate's `Cargo.toml`); category titles and descriptions in [`crates/categories.json`](../../crates/categories.json) |
+| Status | converted (`tests/compat/<lib>` is complete), in progress (a compat spec), started (a crate) or planned |
+| Benchmarks vs PHP | `tests/compat/<lib>/bench.json`, written by `bin/compat bench <lib> --write`: the library's `/<lib>/benchmarks` page, in its menu in migration mode |
+| Sync with PHP | git history of `packages/<lib>/src` since the commit in the crate's `php-sync` marker (below) |
+| Getting started | `guide.md` next to the crate's `Cargo.toml` (below) |
+| Tasks | the crate's task binaries (`src/bin/<task>.rs`): their `//!` docs (first paragraph, `sh` examples, and the `# Commands`, `# Arguments`, `# Environment` and `# Exit codes` lists as tables), `tasks` in `tests/compat/<lib>/spec.json` (the files each writes), and the PHP package's tasks as `bin/compat coverage` discovers them; the PHP command, and the PHP tasks waived or pending, in migration mode (see [tests/compat](../../tests/compat/README.md#tasks)) |
+| Dependencies | the crate's `[dependencies]`, `[dev-dependencies]` and `[build-dependencies]`, resolved through the root `[workspace.dependencies]` (with the comment above each entry as its note) and `Cargo.lock`; the PHP package's `require` and `require-dev` (its `composer.json`, else `composer.lock`) in migration mode |
+| Used by and the map | the Utopia crates depending on it (their manifests), the Utopia PHP packages requiring it (`packages/*/composer.json` and `composer.lock`), and Appwrite: the `crates/appwrite/*` crates depending on it, and the PHP server requiring it in the root `composer.json` or importing its namespace in `app/` and `src/`; all of it in `data/graph.json` |
+| The home page's board | `components` on the Appwrite node of `data/graph.json`: each part of Appwrite (an API module in `src/Appwrite/Platform/Modules`, a worker, the schedulers, the realtime and MQTT servers) with the libraries its files import, and the Utopia dependencies of its Rust crate (`crates/appwrite/<name>`); only libraries with a crate are drawn |
+| Overview | the crate's `//!` docs, else the PHP README |
+| Namespaces and items | module and item doc comments, read with `syn` |
+| PHP API | the package's public classes and methods by reflection |
+| Examples | code blocks in doc comments (below) |
+| Build times | `tests/compat/build.json`, written by `bin/compat build --write`: each crate's compile time in the latest 10 runs ([tests/compat](../../tests/compat/README.md#build-times)) |
+| Appwrite services and routes | the action classes of `src/Appwrite/Platform/Modules/*/Http` registered by each module's services, and the `Http::get(...)` routes left in `app/controllers`, read statically (method, path, aliases, SDK method, scope, groups); titles from `app/config/services.php` |
+| Served by Rust | the `route!`/`Route` declarations in `crates/appwrite/*` that `crates/appwrite/server` registers, and the Traefik routers to the `appwrite-rust` container in the compose files |
+| E2E suites | test classes and methods in `tests/e2e/Services/<Suite>` (trait tests included); the workflow steps that set `_APP_E2E_ENDPOINT` run them against Rust |
+| E2E runs | `tests/e2e/results/<suite>.<runtime>.json`, written by `bin/compat appwrite e2e <Suite> --write` (`--side php` for PHP) on a running dev stack |
+| Appwrite benchmarks | `tests/benchmarks/results/<service>.json`, written by `RESULTS=tests/benchmarks/results/users.json tests/benchmarks/users-compare.sh` |
+| Hooks to reproduce | every `Http::init`/`shutdown`/`error`/`options`/`wildcard` hook and hook action class, read from the code (groups, injections, labels read, errors thrown, headers set); what each does and where `appwrite-core` reproduces it from [`crates/appwrite/hooks.json`](../../crates/appwrite/hooks.json) |
+
+## Writing examples
+
+Put an example in a doc comment as a Rust code block, and its PHP twin right after it:
+
+````rust
+/// `getHost()`.
+///
+/// ```
+/// use utopia_dsn::Dsn;
+///
+/// let dsn = Dsn::parse("redis://cache:6379")?;
+/// assert_eq!(dsn.host(), "cache");
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+///
+/// ```php
+/// use Utopia\DSN\DSN;
+///
+/// echo (new DSN('redis://cache:6379'))->getHost(), "\n"; // cache
+/// ```
+pub fn host(&self) -> &str
+````
+
+The Rust block is a doctest: `cargo test` compiles and runs it. The page shows it as written and copies the complete program (rustdoc's rules: `# ` lines hidden, wrapped in `fn main`). The PHP block gets `<?php` and Composer's autoloader when it lacks them. `bin/compat examples` runs both; CI runs it too, so every example a reader copies runs.
+
+## Writing a getting started guide
+
+A converted library gets a **Getting started** section from `guide.md` next to its `Cargo.toml`: a short introduction, then one `## ` section per task ("Read options from the query string"), each with a sentence of context, a Rust example and its PHP twin, written exactly as above. The page keeps the guide's order and lists its sections under "On this page". `bin/monorepo crates absorb` writes the same guide into each crate's GitHub README (Rust examples only; PHP twins and PHP-named sections left out).
+
+The crate compiles the guide into its doctests, so `cargo test` runs every Rust example in it:
+
+```rust
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
+```
+
+`bin/compat examples` runs the guide's PHP examples with the rest. See [`crates/utopia/dsn/guide.md`](../../crates/utopia/dsn/guide.md).
+
+## Keeping up with PHP
+
+The PHP libraries keep changing while they are ported. Each crate records the PHP commit it last matched as `php-sync` in its `Cargo.toml`:
+
+```toml
+[package.metadata.utopia]
+php-sync = "b85cf6c95b416fbf393216a07e16d48c162cac1c"
+```
+
+On every generation, each library page shows how far the crate is behind:
+- the PHP commits to `packages/<lib>/src` since the sync point, with authors and links;
+- the size of the change, and the releases tagged since;
+- commits to the library on `origin/main` that this branch has not merged yet, as last fetched.
+
+The home page's **Behind PHP** filter lists the crates with something to catch up on. A crate without a marker is measured from when it was created, and marked as an estimate.
+
+After porting the changes, record the new sync point:
+
+```bash
+bin/compat sync <lib>
+```
+
+It first runs the library's compat cases and refuses to record unless they all match. A crate without compat cases needs `--force`.

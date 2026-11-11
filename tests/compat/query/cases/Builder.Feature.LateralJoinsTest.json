@@ -1,0 +1,750 @@
+{
+  "source": "packages/query/tests/Builder/Feature/LateralJoinsTest.php",
+  "cases": [
+    {
+      "name": "testJoinLateralEmitsJoinLateralAndOnTrueForPostgreSQL",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "joinLateral",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "o"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM \"users\" JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"users\" JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true",
+        [],
+        [],
+        "SELECT * FROM \"users\" JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true",
+        "SELECT * FROM \"users\" JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true"
+      ]
+    },
+    {
+      "name": "testLeftJoinLateralEmitsLeftJoinLateral",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "leftJoinLateral",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "o"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM \"users\" LEFT JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"users\" LEFT JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true",
+        [],
+        [],
+        "SELECT * FROM \"users\" LEFT JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true",
+        "SELECT * FROM \"users\" LEFT JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true"
+      ]
+    },
+    {
+      "name": "testJoinLateralWithLeftTypeEmitsLeftVariant",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "joinLateral",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "o",
+              {
+                "$enum": "Builder\\JoinType::Left"
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM \"users\" LEFT JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"users\" LEFT JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true",
+        [],
+        [],
+        "SELECT * FROM \"users\" LEFT JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true",
+        "SELECT * FROM \"users\" LEFT JOIN LATERAL (SELECT \"id\" FROM \"orders\") AS \"o\" ON true"
+      ]
+    },
+    {
+      "name": "testJoinLateralPreservesSubqueryBindingsInOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "total",
+              100
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "status",
+              [
+                "shipped"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "joinLateral",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "o"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "total",
+            "values": [
+              100
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "status",
+            "values": [
+              "shipped"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT * FROM \"users\" JOIN LATERAL (SELECT * FROM \"orders\" WHERE \"total\" > ? AND \"status\" IN (?)) AS \"o\" ON true",
+            "bindings": [
+              100,
+              "shipped"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"users\" JOIN LATERAL (SELECT * FROM \"orders\" WHERE \"total\" > ? AND \"status\" IN (?)) AS \"o\" ON true",
+        [
+          100,
+          "shipped"
+        ],
+        [
+          100,
+          "shipped"
+        ],
+        "SELECT * FROM \"users\" JOIN LATERAL (SELECT * FROM \"orders\" WHERE \"total\" > ? AND \"status\" IN (?)) AS \"o\" ON true",
+        [
+          100,
+          "shipped"
+        ]
+      ]
+    },
+    {
+      "name": "testMySQLUsesBacktickQuotingForLateralAlias",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "joinLateral",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 1
+              },
+              "o"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `users` JOIN LATERAL (SELECT `id` FROM `orders`) AS `o` ON true",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` JOIN LATERAL (SELECT `id` FROM `orders`) AS `o` ON true",
+        [],
+        [],
+        "SELECT * FROM `users` JOIN LATERAL (SELECT `id` FROM `orders`) AS `o` ON true",
+        "SELECT * FROM `users` JOIN LATERAL (SELECT `id` FROM `orders`) AS `o` ON true"
+      ]
+    }
+  ]
+}

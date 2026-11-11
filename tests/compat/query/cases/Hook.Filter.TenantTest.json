@@ -1,0 +1,861 @@
+{
+  "source": "packages/query/tests/Hook/Filter/TenantTest.php",
+  "cases": [
+    {
+      "name": "testTenantSingleId",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "t1"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "tenant_id IN (?)",
+            "bindings": [
+              "t1"
+            ]
+          }
+        },
+        "tenant_id IN (?)",
+        [
+          "t1"
+        ]
+      ]
+    },
+    {
+      "name": "testTenantMultipleIds",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "t1",
+                "t2",
+                "t3"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "tenant_id IN (?, ?, ?)",
+            "bindings": [
+              "t1",
+              "t2",
+              "t3"
+            ]
+          }
+        },
+        "tenant_id IN (?, ?, ?)",
+        [
+          "t1",
+          "t2",
+          "t3"
+        ]
+      ]
+    },
+    {
+      "name": "testTenantCustomColumn",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "t1"
+              ],
+              "organization_id"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "organization_id IN (?)",
+            "bindings": [
+              "t1"
+            ]
+          }
+        },
+        "organization_id IN (?)",
+        [
+          "t1"
+        ]
+      ]
+    },
+    {
+      "name": "testPermissionWithRoles",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM mydb_documents_perms WHERE role IN (?, ?) AND type = ?)",
+              [
+                "role:admin",
+                "role:user",
+                "read"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_documents_perms WHERE role IN (?, ?) AND type = ?)",
+            "bindings": [
+              "role:admin",
+              "role:user",
+              "read"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM mydb_documents_perms WHERE role IN (?, ?) AND type = ?)",
+        [
+          "role:admin",
+          "role:user",
+          "read"
+        ]
+      ]
+    },
+    {
+      "name": "testPermissionEmptyRoles",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "1 = 0"
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "1 = 0",
+            "bindings": []
+          }
+        },
+        "1 = 0",
+        []
+      ]
+    },
+    {
+      "name": "testPermissionCustomType",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM mydb_documents_perms WHERE role IN (?) AND type = ?)",
+              [
+                "role:admin",
+                "write"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_documents_perms WHERE role IN (?) AND type = ?)",
+            "bindings": [
+              "role:admin",
+              "write"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM mydb_documents_perms WHERE role IN (?) AND type = ?)",
+        [
+          "role:admin",
+          "write"
+        ]
+      ]
+    },
+    {
+      "name": "testPermissionCustomDocumentColumn",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "doc_id IN (SELECT DISTINCT document_id FROM mydb_documents_perms WHERE role IN (?) AND type = ?)",
+              [
+                "role:admin",
+                "read"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "doc_id IN (SELECT DISTINCT document_id FROM mydb_documents_perms WHERE role IN (?) AND type = ?)",
+            "bindings": [
+              "role:admin",
+              "read"
+            ]
+          }
+        },
+        "doc_id IN (SELECT DISTINCT document_id FROM mydb_documents_perms WHERE role IN (?) AND type = ?)"
+      ]
+    },
+    {
+      "name": "testPermissionCustomColumns",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "uid IN (SELECT DISTINCT resource_id FROM acl WHERE principal IN (?) AND access = ?)",
+              [
+                "admin",
+                "read"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "uid IN (SELECT DISTINCT resource_id FROM acl WHERE principal IN (?) AND access = ?)",
+            "bindings": [
+              "admin",
+              "read"
+            ]
+          }
+        },
+        "uid IN (SELECT DISTINCT resource_id FROM acl WHERE principal IN (?) AND access = ?)",
+        [
+          "admin",
+          "read"
+        ]
+      ]
+    },
+    {
+      "name": "testPermissionStaticTable",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM permissions WHERE role IN (?) AND type = ?)",
+              [
+                "user:123",
+                "read"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM permissions WHERE role IN (?) AND type = ?)",
+            "bindings": [
+              "user:123",
+              "read"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM permissions WHERE role IN (?) AND type = ?)"
+      ]
+    },
+    {
+      "name": "testPermissionWithColumns",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM mydb_users_perms WHERE role IN (?) AND type = ? AND (column IS NULL OR column IN (?, ?)))",
+              [
+                "role:admin",
+                "read",
+                "email",
+                "phone"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_users_perms WHERE role IN (?) AND type = ? AND (column IS NULL OR column IN (?, ?)))",
+            "bindings": [
+              "role:admin",
+              "read",
+              "email",
+              "phone"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM mydb_users_perms WHERE role IN (?) AND type = ? AND (column IS NULL OR column IN (?, ?)))",
+        [
+          "role:admin",
+          "read",
+          "email",
+          "phone"
+        ]
+      ]
+    },
+    {
+      "name": "testPermissionWithSingleColumn",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM employees_perms WHERE role IN (?) AND type = ? AND (column IS NULL OR column IN (?)))",
+              [
+                "role:user",
+                "read",
+                "salary"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM employees_perms WHERE role IN (?) AND type = ? AND (column IS NULL OR column IN (?)))",
+            "bindings": [
+              "role:user",
+              "read",
+              "salary"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM employees_perms WHERE role IN (?) AND type = ? AND (column IS NULL OR column IN (?)))",
+        [
+          "role:user",
+          "read",
+          "salary"
+        ]
+      ]
+    },
+    {
+      "name": "testPermissionWithEmptyColumns",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM mydb_users_perms WHERE role IN (?) AND type = ? AND column IS NULL)",
+              [
+                "role:admin",
+                "read"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_users_perms WHERE role IN (?) AND type = ? AND column IS NULL)",
+            "bindings": [
+              "role:admin",
+              "read"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM mydb_users_perms WHERE role IN (?) AND type = ? AND column IS NULL)",
+        [
+          "role:admin",
+          "read"
+        ]
+      ]
+    },
+    {
+      "name": "testPermissionWithoutColumnsOmitsClause",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM mydb_users_perms WHERE role IN (?) AND type = ?)",
+              [
+                "role:admin",
+                "read"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM mydb_users_perms WHERE role IN (?) AND type = ?)",
+            "bindings": [
+              "role:admin",
+              "read"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM mydb_users_perms WHERE role IN (?) AND type = ?)"
+      ]
+    },
+    {
+      "name": "testPermissionCustomColumnColumn",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM acl WHERE role IN (?) AND type = ? AND (field IS NULL OR field IN (?)))",
+              [
+                "role:admin",
+                "read",
+                "email"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\Condition",
+          "id": 1,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM acl WHERE role IN (?) AND type = ? AND (field IS NULL OR field IN (?)))",
+            "bindings": [
+              "role:admin",
+              "read",
+              "email"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM acl WHERE role IN (?) AND type = ? AND (field IS NULL OR field IN (?)))",
+        [
+          "role:admin",
+          "read",
+          "email"
+        ]
+      ]
+    },
+    {
+      "name": "testPermissionWithSubqueryFilter",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "t1"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "perms"
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "new": "Builder\\Condition",
+            "args": [
+              "id IN (SELECT DISTINCT document_id FROM perms WHERE role IN (?) AND type = ? AND tenant_id IN (?))",
+              [
+                "role:admin",
+                "read",
+                "t1"
+              ]
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "tenant_id IN (?)",
+            "bindings": [
+              "t1"
+            ]
+          }
+        },
+        "tenant_id IN (?)",
+        [
+          "t1"
+        ],
+        {
+          "$value": "Builder\\Condition",
+          "id": 3,
+          "props": {
+            "expression": "id IN (SELECT DISTINCT document_id FROM perms WHERE role IN (?) AND type = ? AND tenant_id IN (?))",
+            "bindings": [
+              "role:admin",
+              "read",
+              "t1"
+            ]
+          }
+        },
+        "id IN (SELECT DISTINCT document_id FROM perms WHERE role IN (?) AND type = ? AND tenant_id IN (?))",
+        [
+          "role:admin",
+          "read",
+          "t1"
+        ]
+      ]
+    },
+    {
+      "name": "testTenantInvalidColumnNameThrows",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "t1"
+              ],
+              "123bad"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Invalid column name: 123bad"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testTenantEmptyTenantIdsReturnsNoMatch",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              []
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "get": "expression",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Condition",
+          "id": 2,
+          "props": {
+            "expression": "1 = 0",
+            "bindings": []
+          }
+        },
+        "1 = 0",
+        []
+      ]
+    }
+  ]
+}

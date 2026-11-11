@@ -1,0 +1,155 @@
+{
+  "lib": "http",
+  "environment": {
+    "date": "2026-10-18T14:20:27Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "match",
+      "description": "Match a document path with three params against a router of 40 API routes",
+      "php": {
+        "ns": 9234.582331174837,
+        "min": 8739.400092506938,
+        "max": 10903.195189639224,
+        "samples": 15,
+        "calls": 2162,
+        "cpu": 9249.398704902867,
+        "peak": 45152.0,
+        "retained": 0.011594202898550725,
+        "rss": 107286528.0
+      },
+      "rust": {
+        "ns": 1417.6552532499823,
+        "min": 1384.708531647368,
+        "max": 1451.3894295659586,
+        "samples": 15,
+        "calls": 14077,
+        "cpu": 1415.7873694679265,
+        "rss": 22171648.0,
+        "allocations": 14.000052094433,
+        "bytes": 808.0133030238451,
+        "peak": 1650.0,
+        "retained": 0.007833108380099927
+      },
+      "speedup": 6.513983078752403,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "request",
+      "description": "Parse a JSON POST request (9 headers, a cookie, a query string) and read a header, the cookie, the query and the body params",
+      "php": {
+        "ns": 4063.555778089325,
+        "min": 3890.204486280793,
+        "max": 4654.332866012417,
+        "samples": 15,
+        "calls": 4993,
+        "cpu": 4116.14927565258,
+        "peak": 8880.0,
+        "retained": 0.0050203618399092065,
+        "rss": 107286528.0
+      },
+      "rust": {
+        "ns": 2518.2622971442947,
+        "min": 2490.108818719336,
+        "max": 2670.9700591269343,
+        "samples": 15,
+        "calls": 7949,
+        "cpu": 2524.8318949972745,
+        "rss": 22171648.0,
+        "allocations": 56.00009225479096,
+        "bytes": 6665.023558518891,
+        "peak": 6224.0,
+        "retained": 0.013871765840566947
+      },
+      "speedup": 1.6136348396659834,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "response",
+      "description": "Build a 201 response with a header, a session cookie and a JSON user of 18 fields",
+      "php": {
+        "ns": 2349.0033870590983,
+        "min": 2302.9081990189206,
+        "max": 2531.1600093436114,
+        "samples": 15,
+        "calls": 8562,
+        "cpu": 2365.428638168652,
+        "peak": 6080.0,
+        "retained": 0.002927664875807833,
+        "rss": 107286528.0
+      },
+      "rust": {
+        "ns": 1486.259210908036,
+        "min": 1451.1169132579055,
+        "max": 1563.998912097476,
+        "samples": 15,
+        "calls": 13788,
+        "cpu": 1491.6015859201239,
+        "rss": 22171648.0,
+        "allocations": 36.00005318634562,
+        "bytes": 4987.41295812784,
+        "peak": 3758.0,
+        "retained": 0.007997292331495987
+      },
+      "speedup": 1.580480288915394,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "dispatch",
+      "description": "Run a GET request through an app of 40 routes: match, validate three path params, an init hook and a JSON action",
+      "php": {
+        "ns": 22200.186516853933,
+        "min": 21617.977528089887,
+        "max": 22464.51235955056,
+        "samples": 15,
+        "calls": 890,
+        "cpu": 22054.606741573032,
+        "peak": 27616.0,
+        "retained": 0.028164794007490637,
+        "rss": 107286528.0
+      },
+      "rust": {
+        "ns": 4887.558719758064,
+        "min": 4791.6980846774195,
+        "max": 5479.849042338709,
+        "samples": 15,
+        "calls": 3968,
+        "cpu": 4940.93160282258,
+        "rss": 22171648.0,
+        "allocations": 101.00018481182796,
+        "bytes": 8700.986945564517,
+        "peak": 5773.0,
+        "retained": 0.027788978494623657
+      },
+      "speedup": 4.542183079480803,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

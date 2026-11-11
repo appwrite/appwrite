@@ -1,0 +1,44 @@
+{
+  "ops": {
+    "csv.str_getcsv": {
+      "doc": "str_getcsv($input, $separator, $enclosure, $escape)",
+      "covers": ["str_getcsv()"],
+      "fuzz": [
+        {
+          "name": "lines",
+          "args": { "gen": "ref", "name": "csv_args" },
+          "iterations": 5000
+        }
+      ]
+    },
+    "csv.fgetcsv": {
+      "doc": "Every fgetcsv($handle, 0, $separator, $enclosure, $escape) record of a file holding $input, until false",
+      "covers": ["fgetcsv()"],
+      "fuzz": [
+        {
+          "name": "files",
+          "args": { "gen": "ref", "name": "csv_args" },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "csv_args": {
+      "gen": "object",
+      "fields": {
+        "input": {
+          "gen": "one_of",
+          "of": [
+            { "gen": "string", "min": 0, "max": 40, "alphabet": "ab ,;|\t\"\\\r\n" },
+            { "gen": "repeat", "part": { "gen": "pick", "from": ["a", "b c", "\"", "\"\"", ",", ";", " ", "\t", "\r", "\n", "\r\n", "\\", "\\\"", "é", "\u0000", "\u000b"] }, "sep": "", "min": 0, "max": 30 },
+            { "gen": "string", "min": 0, "max": 20, "tricky": 0.5 }
+          ]
+        },
+        "separator": { "gen": "pick", "from": [",", ";", "\t", "|"] },
+        "enclosure": { "gen": "pick", "from": ["\"", "'"] },
+        "escape": { "gen": "pick", "from": ["\"", "\\", ""] }
+      }
+    }
+  }
+}

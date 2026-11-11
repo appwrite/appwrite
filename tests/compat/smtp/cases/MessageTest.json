@@ -1,0 +1,1566 @@
+{
+  "source": "packages/smtp/tests/MessageTest.php",
+  "cases": [
+    {
+      "name": "renders the header block",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "blind recipients never reach the headers",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "bcc": [
+            {
+              "email": "eve@example.test"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "omits empty headers",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "carries custom headers",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "headers": {
+            "X-Mailer": "Utopia"
+          }
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nX-Mailer: Utopia\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nX-Mailer: Utopia\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "custom headers in order, empty ones omitted",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "headers": {
+            "X-B": "two",
+            "X-A": "one",
+            "X-Empty": ""
+          }
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nX-B: two\r\nX-A: one\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nX-B: two\r\nX-A: one\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "non-ASCII subject becomes an encoded word",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hellö",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: =?UTF-8?B?SGVsbMO2?=\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: =?UTF-8?B?SGVsbMO2?=\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "an empty subject is omitted",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "cc and reply-to",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "cc": [
+            {
+              "email": "ada@example.test",
+              "name": "Ada"
+            }
+          ],
+          "reply_to": [
+            {
+              "email": "help@example.test"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nCc: \"Ada\" <ada@example.test>\r\nReply-To: <help@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nCc: \"Ada\" <ada@example.test>\r\nReply-To: <help@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "text alone is a single part",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "no body at all is an empty text part",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          ""
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "markup alone is a single part",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "html": "<p>Body</p>"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<p>Body</p>",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "<p>Body</p>"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "both bodies become an alternative",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "html": "<p>Body</p>"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<p>Body</p>\r\n--=_BOUNDARY1--\r\n",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY1\"\r\n\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body",
+          "\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "<p>Body</p>",
+          "\r\n",
+          "--=_BOUNDARY1--\r\n"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "an attachment wraps the body in a mixed part",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "attachments": [
+            {
+              "content": "hello",
+              "name": "notes.txt",
+              "type": "text/plain"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"notes.txt\"\r\n\r\naGVsbG8=\r\n\r\n--=_BOUNDARY1--\r\n",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body",
+          "\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"notes.txt\"\r\n\r\n",
+          "aGVsbG8=\r\n",
+          "\r\n",
+          "--=_BOUNDARY1--\r\n"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "an inline attachment wraps the body in a related part",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "html": "<img src=\"cid:logo\">",
+          "attachments": [
+            {
+              "content": "binary",
+              "name": "logo.png",
+              "type": "image/png",
+              "cid": "logo"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/related; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY2\"\r\n\r\n--=_BOUNDARY2\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY2\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<img src=3D\"cid:logo\">\r\n--=_BOUNDARY2--\r\n\r\n--=_BOUNDARY1\r\nContent-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: inline; filename=\"logo.png\"\r\nContent-ID: <logo>\r\n\r\nYmluYXJ5\r\n\r\n--=_BOUNDARY1--\r\n",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/related; boundary=\"=_BOUNDARY1\"\r\n\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY2\"\r\n\r\n",
+          "--=_BOUNDARY2\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body",
+          "\r\n",
+          "--=_BOUNDARY2\r\n",
+          "Content-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "<img src=3D\"cid:logo\">",
+          "\r\n",
+          "--=_BOUNDARY2--\r\n",
+          "\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: inline; filename=\"logo.png\"\r\nContent-ID: <logo>\r\n\r\n",
+          "YmluYXJ5\r\n",
+          "\r\n",
+          "--=_BOUNDARY1--\r\n"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "both kinds of attachment nest related inside mixed",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "html": "<img src=\"cid:logo\">",
+          "attachments": [
+            {
+              "content": "binary",
+              "name": "logo.png",
+              "type": "image/png",
+              "cid": "logo"
+            },
+            {
+              "content": "hello",
+              "name": "notes.txt",
+              "type": "text/plain"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: multipart/related; boundary=\"=_BOUNDARY2\"\r\n\r\n--=_BOUNDARY2\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY3\"\r\n\r\n--=_BOUNDARY3\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY3\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<img src=3D\"cid:logo\">\r\n--=_BOUNDARY3--\r\n\r\n--=_BOUNDARY2\r\nContent-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: inline; filename=\"logo.png\"\r\nContent-ID: <logo>\r\n\r\nYmluYXJ5\r\n\r\n--=_BOUNDARY2--\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"notes.txt\"\r\n\r\naGVsbG8=\r\n\r\n--=_BOUNDARY1--\r\n",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: multipart/related; boundary=\"=_BOUNDARY2\"\r\n\r\n",
+          "--=_BOUNDARY2\r\n",
+          "Content-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY3\"\r\n\r\n",
+          "--=_BOUNDARY3\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body",
+          "\r\n",
+          "--=_BOUNDARY3\r\n",
+          "Content-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "<img src=3D\"cid:logo\">",
+          "\r\n",
+          "--=_BOUNDARY3--\r\n",
+          "\r\n",
+          "--=_BOUNDARY2\r\n",
+          "Content-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: inline; filename=\"logo.png\"\r\nContent-ID: <logo>\r\n\r\n",
+          "YmluYXJ5\r\n",
+          "\r\n",
+          "--=_BOUNDARY2--\r\n",
+          "\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: text/plain\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"notes.txt\"\r\n\r\n",
+          "aGVsbG8=\r\n",
+          "\r\n",
+          "--=_BOUNDARY1--\r\n"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "a non-ASCII filename uses the parameter encoding of RFC 2231",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "attachments": [
+            {
+              "content": "x",
+              "name": "résumé.txt"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename*=UTF-8''r%C3%A9sum%C3%A9.txt\r\n\r\neA==\r\n\r\n--=_BOUNDARY1--\r\n",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body",
+          "\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename*=UTF-8''r%C3%A9sum%C3%A9.txt\r\n\r\n",
+          "eA==\r\n",
+          "\r\n",
+          "--=_BOUNDARY1--\r\n"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "a filename with quotes",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "attachments": [
+            {
+              "content": "x",
+              "name": "my \"notes\".txt"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"my \\\"notes\\\".txt\"\r\n\r\neA==\r\n\r\n--=_BOUNDARY1--\r\n",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body",
+          "\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"my \\\"notes\\\".txt\"\r\n\r\n",
+          "eA==\r\n",
+          "\r\n",
+          "--=_BOUNDARY1--\r\n"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "an empty attachment is still a part",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "attachments": [
+            {
+              "content": "",
+              "name": "empty.bin"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY1\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"empty.bin\"\r\n\r\n\r\n\r\n--=_BOUNDARY1--\r\n",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body",
+          "\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"empty.bin\"\r\n\r\n",
+          "\r\n",
+          "\r\n",
+          "--=_BOUNDARY1--\r\n"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "streaming and rendering agree",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "html": "<p>Body</p>",
+          "attachments": [
+            {
+              "content": "hello",
+              "name": "notes.txt"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n--=_BOUNDARY1\r\nContent-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY2\"\r\n\r\n--=_BOUNDARY2\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n--=_BOUNDARY2\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<p>Body</p>\r\n--=_BOUNDARY2--\r\n\r\n--=_BOUNDARY1\r\nContent-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"notes.txt\"\r\n\r\naGVsbG8=\r\n\r\n--=_BOUNDARY1--\r\n",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"=_BOUNDARY1\"\r\n\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: multipart/alternative;\r\n boundary=\"=_BOUNDARY2\"\r\n\r\n",
+          "--=_BOUNDARY2\r\n",
+          "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body",
+          "\r\n",
+          "--=_BOUNDARY2\r\n",
+          "Content-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "<p>Body</p>",
+          "\r\n",
+          "--=_BOUNDARY2--\r\n",
+          "\r\n",
+          "--=_BOUNDARY1\r\n",
+          "Content-Type: application/octet-stream\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"notes.txt\"\r\n\r\n",
+          "aGVsbG8=\r\n",
+          "\r\n",
+          "--=_BOUNDARY1--\r\n"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "an offset date",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": -12600
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 06:00:00 -0330\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 06:00:00 -0330\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 06:00:00 -0330"
+      }
+    },
+    {
+      "name": "a positive offset date",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 0,
+            "offset": 20700
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 01 Jan 1970 05:45:00 +0545\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 01 Jan 1970 05:45:00 +0545\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 01 Jan 1970 05:45:00 +0545"
+      }
+    },
+    {
+      "name": "detects an international address",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jäne@example.test"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: =?UTF-8?B?PGrDpG5lQGV4YW1wbGUudGVzdD4=?=\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: =?UTF-8?B?PGrDpG5lQGV4YW1wbGUudGVzdD4=?=\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": true,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "an international To is encoded whole",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "jöhn@example.test",
+              "name": "John"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: =?UTF-8?B?IkpvaG4iIDxqw7ZobkBleGFtcGxlLnRlc3Q+?=\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: =?UTF-8?B?IkpvaG4iIDxqw7ZobkBleGFtcGxlLnRlc3Q+?=\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": true,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "a long To list is folded",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "recipient0@example.test",
+              "name": "Recipient Number 0"
+            },
+            {
+              "email": "recipient1@example.test",
+              "name": "Recipient Number 1"
+            },
+            {
+              "email": "recipient2@example.test",
+              "name": "Recipient Number 2"
+            },
+            {
+              "email": "recipient3@example.test",
+              "name": "Recipient Number 3"
+            },
+            {
+              "email": "recipient4@example.test",
+              "name": "Recipient Number 4"
+            },
+            {
+              "email": "recipient5@example.test",
+              "name": "Recipient Number 5"
+            },
+            {
+              "email": "recipient6@example.test",
+              "name": "Recipient Number 6"
+            },
+            {
+              "email": "recipient7@example.test",
+              "name": "Recipient Number 7"
+            },
+            {
+              "email": "recipient8@example.test",
+              "name": "Recipient Number 8"
+            },
+            {
+              "email": "recipient9@example.test",
+              "name": "Recipient Number 9"
+            },
+            {
+              "email": "recipient10@example.test",
+              "name": "Recipient Number 10"
+            },
+            {
+              "email": "recipient11@example.test",
+              "name": "Recipient Number 11"
+            },
+            {
+              "email": "recipient12@example.test",
+              "name": "Recipient Number 12"
+            },
+            {
+              "email": "recipient13@example.test",
+              "name": "Recipient Number 13"
+            },
+            {
+              "email": "recipient14@example.test",
+              "name": "Recipient Number 14"
+            },
+            {
+              "email": "recipient15@example.test",
+              "name": "Recipient Number 15"
+            },
+            {
+              "email": "recipient16@example.test",
+              "name": "Recipient Number 16"
+            },
+            {
+              "email": "recipient17@example.test",
+              "name": "Recipient Number 17"
+            },
+            {
+              "email": "recipient18@example.test",
+              "name": "Recipient Number 18"
+            },
+            {
+              "email": "recipient19@example.test",
+              "name": "Recipient Number 19"
+            },
+            {
+              "email": "recipient20@example.test",
+              "name": "Recipient Number 20"
+            },
+            {
+              "email": "recipient21@example.test",
+              "name": "Recipient Number 21"
+            },
+            {
+              "email": "recipient22@example.test",
+              "name": "Recipient Number 22"
+            },
+            {
+              "email": "recipient23@example.test",
+              "name": "Recipient Number 23"
+            },
+            {
+              "email": "recipient24@example.test",
+              "name": "Recipient Number 24"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"Recipient Number 0\" <recipient0@example.test>, \"Recipient Number 1\"\r\n <recipient1@example.test>, \"Recipient Number 2\" <recipient2@example.test>,\r\n \"Recipient Number 3\" <recipient3@example.test>, \"Recipient Number 4\"\r\n <recipient4@example.test>, \"Recipient Number 5\" <recipient5@example.test>,\r\n \"Recipient Number 6\" <recipient6@example.test>, \"Recipient Number 7\"\r\n <recipient7@example.test>, \"Recipient Number 8\" <recipient8@example.test>,\r\n \"Recipient Number 9\" <recipient9@example.test>, \"Recipient Number 10\"\r\n <recipient10@example.test>, \"Recipient Number 11\" <recipient11@example.test>,\r\n \"Recipient Number 12\" <recipient12@example.test>, \"Recipient Number 13\"\r\n <recipient13@example.test>, \"Recipient Number 14\" <recipient14@example.test>,\r\n \"Recipient Number 15\" <recipient15@example.test>, \"Recipient Number 16\"\r\n <recipient16@example.test>, \"Recipient Number 17\" <recipient17@example.test>,\r\n \"Recipient Number 18\" <recipient18@example.test>, \"Recipient Number 19\"\r\n <recipient19@example.test>, \"Recipient Number 20\" <recipient20@example.test>,\r\n \"Recipient Number 21\" <recipient21@example.test>, \"Recipient Number 22\"\r\n <recipient22@example.test>, \"Recipient Number 23\" <recipient23@example.test>,\r\n \"Recipient Number 24\" <recipient24@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: \"Recipient Number 0\" <recipient0@example.test>, \"Recipient Number 1\"\r\n <recipient1@example.test>, \"Recipient Number 2\" <recipient2@example.test>,\r\n \"Recipient Number 3\" <recipient3@example.test>, \"Recipient Number 4\"\r\n <recipient4@example.test>, \"Recipient Number 5\" <recipient5@example.test>,\r\n \"Recipient Number 6\" <recipient6@example.test>, \"Recipient Number 7\"\r\n <recipient7@example.test>, \"Recipient Number 8\" <recipient8@example.test>,\r\n \"Recipient Number 9\" <recipient9@example.test>, \"Recipient Number 10\"\r\n <recipient10@example.test>, \"Recipient Number 11\" <recipient11@example.test>,\r\n \"Recipient Number 12\" <recipient12@example.test>, \"Recipient Number 13\"\r\n <recipient13@example.test>, \"Recipient Number 14\" <recipient14@example.test>,\r\n \"Recipient Number 15\" <recipient15@example.test>, \"Recipient Number 16\"\r\n <recipient16@example.test>, \"Recipient Number 17\" <recipient17@example.test>,\r\n \"Recipient Number 18\" <recipient18@example.test>, \"Recipient Number 19\"\r\n <recipient19@example.test>, \"Recipient Number 20\" <recipient20@example.test>,\r\n \"Recipient Number 21\" <recipient21@example.test>, \"Recipient Number 22\"\r\n <recipient22@example.test>, \"Recipient Number 23\" <recipient23@example.test>,\r\n \"Recipient Number 24\" <recipient24@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "a long text line is wrapped",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghij",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij=\r\nabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcde=\r\nfghijabcdefghijabcdefghij"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "a dot opening a line is left to the client",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "before\r\n.\r\nafter",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nbefore\r\n.\r\nafter",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "before\r\n.\r\nafter"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "binary text is quoted-printable",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": {
+            "$bytes": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="
+          },
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n=00=01=02=03=04=05=06=07=08=09\r\n=0B=0C\r\n=0E=0F=10=11=12=13=14=15=16=17=18=19=1A=1B=1C=1D=1E=1F !\"#$%&'()*+,-./01234=\r\n56789:;<=3D>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}=\r\n~=7F=80=81=82=83=84=85=86=87=88=89=8A=8B=8C=8D=8E=8F=90=91=92=93=94=95=\r\n=96=97=98=99=9A=9B=9C=9D=9E=9F=A0=A1=A2=A3=A4=A5=A6=A7=A8=A9=AA=AB=AC=AD=\r\n=AE=AF=B0=B1=B2=B3=B4=B5=B6=B7=B8=B9=BA=BB=BC=BD=BE=BF=C0=C1=C2=C3=C4=C5=\r\n=C6=C7=C8=C9=CA=CB=CC=CD=CE=CF=D0=D1=D2=D3=D4=D5=D6=D7=D8=D9=DA=DB=DC=DD=\r\n=DE=DF=E0=E1=E2=E3=E4=E5=E6=E7=E8=E9=EA=EB=EC=ED=EE=EF=F0=F1=F2=F3=\r\n=F4=F5=F6=F7=F8=F9=FA=FB=FC=FD=FE=FF",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "=00=01=02=03=04=05=06=07=08=09\r\n=0B=0C\r\n=0E=0F=10=11=12=13=14=15=16=17=18=19=1A=1B=1C=1D=1E=1F !\"#$%&'()*+,-./01234=\r\n56789:;<=3D>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}=\r\n~=7F=80=81=82=83=84=85=86=87=88=89=8A=8B=8C=8D=8E=8F=90=91=92=93=94=95=\r\n=96=97=98=99=9A=9B=9C=9D=9E=9F=A0=A1=A2=A3=A4=A5=A6=A7=A8=A9=AA=AB=AC=AD=\r\n=AE=AF=B0=B1=B2=B3=B4=B5=B6=B7=B8=B9=BA=BB=BC=BD=BE=BF=C0=C1=C2=C3=C4=C5=\r\n=C6=C7=C8=C9=CA=CB=CC=CD=CE=CF=D0=D1=D2=D3=D4=D5=D6=D7=D8=D9=DA=DB=DC=DD=\r\n=DE=DF=E0=E1=E2=E3=E4=E5=E6=E7=E8=E9=EA=EB=EC=ED=EE=EF=F0=F1=F2=F3=\r\n=F4=F5=F6=F7=F8=F9=FA=FB=FC=FD=FE=FF"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "default date and message id",
+      "steps": [
+        {
+          "op": "message.render",
+          "args": {
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Hello",
+              "text": "Body"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/string",
+              "/chunks/0",
+              "/message_id",
+              "/date"
+            ],
+            "reason": "the date is now and the message id random"
+          },
+          "expect": {
+            "string": "<masked>",
+            "chunks": [
+              "<masked>",
+              "Body"
+            ],
+            "international": false,
+            "message_id": "<masked>",
+            "date": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a message with no recipients",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "A message needs at least one recipient"
+        }
+      }
+    },
+    {
+      "name": "bcc alone is enough",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "bcc": [
+            {
+              "email": "eve@example.test"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nSubject: Hello\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "rejects a header injected through the subject",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello\r\nBcc: eve@example.test",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "A subject must not span lines"
+        }
+      }
+    },
+    {
+      "name": "a NUL in the subject is allowed",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hel\u0000lo",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test"
+        }
+      },
+      "expect": {
+        "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hel\u0000lo\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+        "chunks": [
+          "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hel\u0000lo\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+          "Body"
+        ],
+        "international": false,
+        "message_id": "fixed@example.test",
+        "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+      }
+    },
+    {
+      "name": "rejects a custom header the message owns",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "headers": {
+            "Bcc": "eve@example.test"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The message owns the Bcc header"
+        }
+      }
+    },
+    {
+      "name": "reserved names ignore case",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "headers": {
+            "content-TYPE": "text/evil"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The message owns the content-TYPE header"
+        }
+      }
+    },
+    {
+      "name": "rejects a header injected through a custom header",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "headers": {
+            "X-Mailer": "Utopia\r\nBcc: eve@example.test"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The X-Mailer header must not span lines"
+        }
+      }
+    },
+    {
+      "name": "rejects a line break in a custom header name",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "headers": {
+            "X-\nEvil": "x"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The X-\nEvil header must not span lines"
+        }
+      }
+    },
+    {
+      "name": "a custom header too long to fold fails when rendered",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "headers": {
+            "X-Token": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The X-Token header has an unbreakable run of 999 octets"
+        }
+      }
+    },
+    {
+      "name": "an attachment type too long to fold fails when rendered",
+      "op": "message.render",
+      "args": {
+        "message": {
+          "from": {
+            "email": "jane@example.test",
+            "name": "Jane Doe"
+          },
+          "to": [
+            {
+              "email": "john@example.test"
+            }
+          ],
+          "subject": "Hello",
+          "text": "Body",
+          "date": {
+            "timestamp": 1786613400,
+            "offset": 0
+          },
+          "message_id": "fixed@example.test",
+          "attachments": [
+            {
+              "content": "x",
+              "name": "a.bin",
+              "type": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "The Content-Type header has an unbreakable run of 999 octets"
+        }
+      }
+    }
+  ]
+}

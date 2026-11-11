@@ -1,0 +1,1078 @@
+{
+  "source": "packages/agents/tests/ConversationTest.php",
+  "cases": [
+    {
+      "name": "message accepts attachments and assigns role",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "images",
+              "maxAttachmentsPerMessage": 10,
+              "maxAttachmentBytes": 5000000,
+              "maxTotalAttachmentBytes": 20000000,
+              "allowedAttachmentMimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-1"
+            },
+            "message": "What is in this image?",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "What is in this image?",
+                "mime": "text/plain",
+                "hasAttachments": true,
+                "attachments": [
+                  {
+                    "role": "user",
+                    "content": {
+                      "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                    },
+                    "mime": "image/png",
+                    "hasAttachments": false,
+                    "attachments": []
+                  }
+                ]
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "send passes attachments to adapter",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "images",
+              "maxAttachmentsPerMessage": 10,
+              "maxAttachmentBytes": 5000000,
+              "maxTotalAttachmentBytes": 20000000,
+              "allowedAttachmentMimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-2"
+            },
+            "message": "Analyze this file",
+            "attachments": [
+              {
+                "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.send",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "content": "ok",
+            "role": "user"
+          }
+        },
+        {
+          "op": "fake.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "sendCalls": 1,
+            "last": {
+              "role": "user",
+              "content": "Analyze this file",
+              "mime": "text/plain",
+              "hasAttachments": true,
+              "attachments": [
+                {
+                  "role": "user",
+                  "content": {
+                    "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  },
+                  "mime": "image/gif",
+                  "hasAttachments": false,
+                  "attachments": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Analyze this file",
+                "mime": "text/plain",
+                "hasAttachments": true,
+                "attachments": [
+                  {
+                    "role": "user",
+                    "content": {
+                      "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    },
+                    "mime": "image/gif",
+                    "hasAttachments": false,
+                    "attachments": []
+                  }
+                ]
+              },
+              {
+                "role": "assistant",
+                "content": "ok",
+                "mime": "text/plain",
+                "hasAttachments": false,
+                "attachments": []
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects too many attachments",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "images",
+              "maxAttachmentsPerMessage": 1,
+              "maxAttachmentBytes": 5000000,
+              "maxTotalAttachmentBytes": 20000000,
+              "allowedAttachmentMimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-3"
+            },
+            "message": "Analyze",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Too many attachments in this message"
+            }
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects oversized attachment",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "images",
+              "maxAttachmentsPerMessage": 10,
+              "maxAttachmentBytes": 4,
+              "maxTotalAttachmentBytes": 20000000,
+              "allowedAttachmentMimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-4"
+            },
+            "message": "Analyze",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Attachment exceeds per-file size limit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects disallowed mime type",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "images",
+              "maxAttachmentsPerMessage": 10,
+              "maxAttachmentBytes": 5000000,
+              "maxTotalAttachmentBytes": 20000000,
+              "allowedAttachmentMimeTypes": [
+                "image/jpeg"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-5"
+            },
+            "message": "Analyze",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Attachment MIME type is not allowed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects unsupported adapter attachment when compatibility checks enabled",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "none",
+              "maxAttachmentsPerMessage": 10,
+              "maxAttachmentBytes": 5000000,
+              "maxTotalAttachmentBytes": 20000000,
+              "allowedAttachmentMimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-6"
+            },
+            "message": "Analyze",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Attachment type is not supported by this adapter"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "adapter can relax limits",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "response": "ok",
+              "attachments": "images"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-7"
+            },
+            "message": "Analyze",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "user",
+                "content": "Analyze",
+                "mime": "text/plain",
+                "hasAttachments": true,
+                "attachments": [
+                  {
+                    "role": "user",
+                    "content": {
+                      "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                    },
+                    "mime": "image/png",
+                    "hasAttachments": false,
+                    "attachments": []
+                  }
+                ]
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects attachments when total payload exceeds limit",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "images",
+              "maxAttachmentsPerMessage": 10,
+              "maxAttachmentBytes": 5000000,
+              "maxTotalAttachmentBytes": 80,
+              "allowedAttachmentMimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-8"
+            },
+            "message": "Analyze",
+            "attachments": [
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              },
+              {
+                "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Attachments exceed total payload size limit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects an empty attachment",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "images",
+              "maxAttachmentsPerMessage": 10,
+              "maxAttachmentBytes": 5000000,
+              "maxTotalAttachmentBytes": 20000000,
+              "allowedAttachmentMimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-9"
+            },
+            "message": "Analyze",
+            "attachments": [
+              ""
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Attachment payload cannot be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects an attachment whose type cannot be detected",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "images",
+              "maxAttachmentsPerMessage": 10,
+              "maxAttachmentBytes": 5000000,
+              "maxTotalAttachmentBytes": 20000000,
+              "allowedAttachmentMimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "user-10"
+            },
+            "message": "Analyze",
+            "attachments": [
+              "0"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Attachment MIME type cannot be detected"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "attachments the message already has are checked and take the role",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "fake",
+            "fake": {
+              "attachments": "images",
+              "maxAttachmentsPerMessage": 2,
+              "maxAttachmentBytes": 5000000,
+              "maxTotalAttachmentBytes": 20000000,
+              "allowedAttachmentMimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ],
+              "response": "ok"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.new",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "assistant",
+              "id": "bot"
+            },
+            "message": {
+              "content": "two",
+              "attachments": [
+                {
+                  "content": {
+                    "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                  },
+                  "role": "other"
+                }
+              ]
+            },
+            "attachments": [
+              {
+                "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "conversation.message",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            },
+            "from": {
+              "kind": "user",
+              "id": "u"
+            },
+            "message": {
+              "content": "three",
+              "attachments": [
+                {
+                  "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                },
+                {
+                  "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                }
+              ]
+            },
+            "attachments": [
+              {
+                "$bytes": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=="
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Too many attachments in this message"
+            }
+          }
+        },
+        {
+          "op": "conversation.inspect",
+          "args": {
+            "conversation": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "messages": [
+              {
+                "role": "assistant",
+                "content": "two",
+                "mime": "text/plain",
+                "hasAttachments": true,
+                "attachments": [
+                  {
+                    "role": "assistant",
+                    "content": {
+                      "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII="
+                    },
+                    "mime": "image/png",
+                    "hasAttachments": false,
+                    "attachments": []
+                  },
+                  {
+                    "role": "assistant",
+                    "content": {
+                      "$bytes": "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    },
+                    "mime": "image/gif",
+                    "hasAttachments": false,
+                    "attachments": []
+                  }
+                ]
+              }
+            ],
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "listened": null
+          }
+        }
+      ]
+    }
+  ]
+}

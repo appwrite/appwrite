@@ -1,0 +1,2977 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Relationships/LinkPreservedDatesTest.php"
+  ],
+  "cases": [
+    {
+      "name": "LinkPreservedDatesTest::testLinkingChildrenThroughTheirParentKeepsTheirUpdatedAtUnderPreservedDates",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o6374"
+          },
+          "bind": "s14230",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o6375"
+          },
+          "bind": "s14231",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o6375"
+              },
+              "cache": "none"
+            },
+            "as": "o6376"
+          },
+          "bind": "s14232",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6376"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o6374"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6376"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "link_dates"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6376"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "link_dates_u000000000183"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o6377"
+          },
+          "bind": "s14236",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6376"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o6377"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6374"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6376"
+                      },
+                      "method": "create",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "name",
+                        "size": 64
+                      },
+                      "as": "o6378"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "authors",
+                        "attributes": [
+                          {
+                            "$obj": "o6378"
+                          }
+                        ]
+                      },
+                      "as": "o6379"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6376"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o6379"
+                        }
+                      },
+                      "as": "o6380"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "name",
+                        "size": 64
+                      },
+                      "as": "o6381"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "books",
+                        "attributes": [
+                          {
+                            "$obj": "o6381"
+                          }
+                        ]
+                      },
+                      "as": "o6382"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6376"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o6382"
+                        }
+                      },
+                      "as": "o6383"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Relationship",
+                      "method": "oneToMany",
+                      "args": {
+                        "relatedCollection": "books",
+                        "key": "books",
+                        "twoWay": true,
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      },
+                      "as": "o6384"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6376"
+                      },
+                      "method": "createRelationship",
+                      "args": {
+                        "collection": "authors",
+                        "relationship": {
+                          "$obj": "o6384"
+                        }
+                      },
+                      "as": "o6385"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6376"
+                      },
+                      "method": "withPreserveDates",
+                      "args": {
+                        "preserve": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "$id": "author3",
+                                    "name": "Linus",
+                                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                    "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                  }
+                                },
+                                "as": "o6386"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6376"
+                                },
+                                "method": "createDocument",
+                                "args": {
+                                  "collection": "authors",
+                                  "document": {
+                                    "$obj": "o6386"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "$id": "book4",
+                                    "name": "book4",
+                                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                    "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                  }
+                                },
+                                "as": "o6387"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6376"
+                                },
+                                "method": "createDocument",
+                                "args": {
+                                  "collection": "books",
+                                  "document": {
+                                    "$obj": "o6387"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "$id": "book5",
+                                    "name": "book5",
+                                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                    "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                  }
+                                },
+                                "as": "o6388"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6376"
+                                },
+                                "method": "createDocument",
+                                "args": {
+                                  "collection": "books",
+                                  "document": {
+                                    "$obj": "o6388"
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14238",
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true,
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "name",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "authors",
+                        "name": "authors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "authors",
+                        "name": "authors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "name",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "books",
+                        "name": "books",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "books",
+                        "name": "books",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "books",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      }
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "books",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "author3",
+                                  "name": "Linus",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "author3",
+                                  "name": "Linus",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$collection": "authors",
+                                  "$permissions": [],
+                                  "$sequence": "1",
+                                  "books": []
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book4",
+                                  "name": "book4",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book4",
+                                  "name": "book4",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$collection": "books",
+                                  "$permissions": [],
+                                  "$sequence": "1"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book5",
+                                  "name": "book5",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book5",
+                                  "name": "book5",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$collection": "books",
+                                  "$permissions": [],
+                                  "$sequence": "2"
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6374"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6376"
+                      },
+                      "method": "withPreserveDates",
+                      "args": {
+                        "preserve": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "books": [
+                                      "book4",
+                                      "book5"
+                                    ]
+                                  }
+                                },
+                                "as": "o6389"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6376"
+                                },
+                                "method": "updateDocument",
+                                "args": {
+                                  "collection": "authors",
+                                  "id": "author3",
+                                  "document": {
+                                    "$obj": "o6389"
+                                  }
+                                },
+                                "as": "o6390"
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14239",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "Linus",
+                "$sequence": "1",
+                "$id": "author3",
+                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "authors",
+                "books": [
+                  {
+                    "$document": {
+                      "name": "book4",
+                      "$id": "book4",
+                      "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                      "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                      "$permissions": [],
+                      "$sequence": "1",
+                      "$collection": "books"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "book5",
+                      "$id": "book5",
+                      "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                      "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                      "$permissions": [],
+                      "$sequence": "2",
+                      "$collection": "books"
+                    }
+                  }
+                ]
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": {
+                        "$document": {
+                          "name": "Linus",
+                          "$sequence": "1",
+                          "$id": "author3",
+                          "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "authors",
+                          "books": [
+                            {
+                              "$document": {
+                                "name": "book4",
+                                "$id": "book4",
+                                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                "$permissions": [],
+                                "$sequence": "1",
+                                "$collection": "books"
+                              }
+                            },
+                            {
+                              "$document": {
+                                "name": "book5",
+                                "$id": "book5",
+                                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                "$permissions": [],
+                                "$sequence": "2",
+                                "$collection": "books"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "books": [
+                                    "book4",
+                                    "book5"
+                                  ]
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "name": "Linus",
+                                  "$sequence": "1",
+                                  "$id": "author3",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$collection": "authors",
+                                  "books": [
+                                    {
+                                      "$document": {
+                                        "name": "book4",
+                                        "$id": "book4",
+                                        "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                        "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                        "$permissions": [],
+                                        "$sequence": "1",
+                                        "$collection": "books"
+                                      }
+                                    },
+                                    {
+                                      "$document": {
+                                        "name": "book5",
+                                        "$id": "book5",
+                                        "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                        "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                        "$permissions": [],
+                                        "$sequence": "2",
+                                        "$collection": "books"
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6374"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6376"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "books",
+                        "id": "book4"
+                      },
+                      "as": "o6391"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14240",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "book4",
+                "$sequence": "1",
+                "$id": "book4",
+                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                "$permissions": [],
+                "$collection": "books",
+                "author": {
+                  "$document": {
+                    "name": "Linus",
+                    "$id": "author3",
+                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$sequence": "1",
+                    "$collection": "authors"
+                  }
+                }
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "book4",
+                        "$sequence": "1",
+                        "$id": "book4",
+                        "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                        "$permissions": [],
+                        "$collection": "books",
+                        "author": {
+                          "$document": {
+                            "name": "Linus",
+                            "$id": "author3",
+                            "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$sequence": "1",
+                            "$collection": "authors"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6391"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "author"
+            },
+            "as": "o6392"
+          },
+          "bind": "s14241",
+          "expect": {
+            "$document": {
+              "name": "Linus",
+              "$id": "author3",
+              "$createdAt": "2020-01-01T00:00:00.000+00:00",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "authors"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6392"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "author3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6391"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": "2020-01-01T00:00:00.000+00:00"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6374"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6376"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "books",
+                        "id": "book5"
+                      },
+                      "as": "o6393"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14244",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "book5",
+                "$sequence": "2",
+                "$id": "book5",
+                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                "$permissions": [],
+                "$collection": "books",
+                "author": {
+                  "$document": {
+                    "name": "Linus",
+                    "$id": "author3",
+                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$sequence": "1",
+                    "$collection": "authors"
+                  }
+                }
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "book5",
+                        "$sequence": "2",
+                        "$id": "book5",
+                        "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                        "$permissions": [],
+                        "$collection": "books",
+                        "author": {
+                          "$document": {
+                            "name": "Linus",
+                            "$id": "author3",
+                            "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$sequence": "1",
+                            "$collection": "authors"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6393"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "author"
+            },
+            "as": "o6394"
+          },
+          "bind": "s14245",
+          "expect": {
+            "$document": {
+              "name": "Linus",
+              "$id": "author3",
+              "$createdAt": "2020-01-01T00:00:00.000+00:00",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "authors"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6394"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "author3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6393"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": "2020-01-01T00:00:00.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "LinkPreservedDatesTest::testLinkingWithoutPreservedDatesStillStampsTheChildren",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o6395"
+          },
+          "bind": "s14248",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o6396"
+          },
+          "bind": "s14249",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o6396"
+              },
+              "cache": "none"
+            },
+            "as": "o6397"
+          },
+          "bind": "s14250",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6397"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o6395"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6397"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "link_dates"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6397"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "link_dates_u000000000184"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o6398"
+          },
+          "bind": "s14254",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6397"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o6398"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6395"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6397"
+                      },
+                      "method": "create",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "name",
+                        "size": 64
+                      },
+                      "as": "o6399"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "authors",
+                        "attributes": [
+                          {
+                            "$obj": "o6399"
+                          }
+                        ]
+                      },
+                      "as": "o6400"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6397"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o6400"
+                        }
+                      },
+                      "as": "o6401"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "name",
+                        "size": 64
+                      },
+                      "as": "o6402"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "books",
+                        "attributes": [
+                          {
+                            "$obj": "o6402"
+                          }
+                        ]
+                      },
+                      "as": "o6403"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6397"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o6403"
+                        }
+                      },
+                      "as": "o6404"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Relationship",
+                      "method": "oneToMany",
+                      "args": {
+                        "relatedCollection": "books",
+                        "key": "books",
+                        "twoWay": true,
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      },
+                      "as": "o6405"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6397"
+                      },
+                      "method": "createRelationship",
+                      "args": {
+                        "collection": "authors",
+                        "relationship": {
+                          "$obj": "o6405"
+                        }
+                      },
+                      "as": "o6406"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6397"
+                      },
+                      "method": "withPreserveDates",
+                      "args": {
+                        "preserve": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "$id": "author3",
+                                    "name": "Linus",
+                                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                    "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                  }
+                                },
+                                "as": "o6407"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6397"
+                                },
+                                "method": "createDocument",
+                                "args": {
+                                  "collection": "authors",
+                                  "document": {
+                                    "$obj": "o6407"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "$id": "book4",
+                                    "name": "book4",
+                                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                    "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                  }
+                                },
+                                "as": "o6408"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6397"
+                                },
+                                "method": "createDocument",
+                                "args": {
+                                  "collection": "books",
+                                  "document": {
+                                    "$obj": "o6408"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "$id": "book5",
+                                    "name": "book5",
+                                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                    "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                  }
+                                },
+                                "as": "o6409"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6397"
+                                },
+                                "method": "createDocument",
+                                "args": {
+                                  "collection": "books",
+                                  "document": {
+                                    "$obj": "o6409"
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14256",
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true,
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "name",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "authors",
+                        "name": "authors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "authors",
+                        "name": "authors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "name",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "books",
+                        "name": "books",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "books",
+                        "name": "books",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "books",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      }
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "books",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "author3",
+                                  "name": "Linus",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "author3",
+                                  "name": "Linus",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$collection": "authors",
+                                  "$permissions": [],
+                                  "$sequence": "1",
+                                  "books": []
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book4",
+                                  "name": "book4",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book4",
+                                  "name": "book4",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$collection": "books",
+                                  "$permissions": [],
+                                  "$sequence": "1"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book5",
+                                  "name": "book5",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book5",
+                                  "name": "book5",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$collection": "books",
+                                  "$permissions": [],
+                                  "$sequence": "2"
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6395"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "books": [
+                            "book4"
+                          ]
+                        }
+                      },
+                      "as": "o6410"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6397"
+                      },
+                      "method": "updateDocument",
+                      "args": {
+                        "collection": "authors",
+                        "id": "author3",
+                        "document": {
+                          "$obj": "o6410"
+                        }
+                      },
+                      "as": "o6411"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14257",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "Linus",
+                "$sequence": "1",
+                "$id": "author3",
+                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "authors",
+                "books": [
+                  {
+                    "$document": {
+                      "name": "book4",
+                      "$id": "book4",
+                      "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$sequence": "1",
+                      "$collection": "books"
+                    }
+                  }
+                ]
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "books": [
+                          "book4"
+                        ]
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Linus",
+                        "$sequence": "1",
+                        "$id": "author3",
+                        "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "authors",
+                        "books": [
+                          {
+                            "$document": {
+                              "name": "book4",
+                              "$id": "book4",
+                              "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                              "$updatedAt": "<now>",
+                              "$permissions": [],
+                              "$sequence": "1",
+                              "$collection": "books"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6395"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6397"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "books",
+                        "id": "book4"
+                      },
+                      "as": "o6412"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14258",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "book4",
+                "$sequence": "1",
+                "$id": "book4",
+                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "books",
+                "author": {
+                  "$document": {
+                    "name": "Linus",
+                    "$id": "author3",
+                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$sequence": "1",
+                    "$collection": "authors"
+                  }
+                }
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "book4",
+                        "$sequence": "1",
+                        "$id": "book4",
+                        "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "books",
+                        "author": {
+                          "$document": {
+                            "name": "Linus",
+                            "$id": "author3",
+                            "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$sequence": "1",
+                            "$collection": "authors"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6412"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": "<now>"
+        }
+      ]
+    },
+    {
+      "name": "LinkPreservedDatesTest::testUnlinkingUnderPreservedDatesStillStampsTheChild",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o6413"
+          },
+          "bind": "s14260",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o6414"
+          },
+          "bind": "s14261",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o6414"
+              },
+              "cache": "none"
+            },
+            "as": "o6415"
+          },
+          "bind": "s14262",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6415"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o6413"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6415"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "link_dates"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6415"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "link_dates_u000000000185"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o6416"
+          },
+          "bind": "s14266",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6415"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o6416"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6413"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6415"
+                      },
+                      "method": "create",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "name",
+                        "size": 64
+                      },
+                      "as": "o6417"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "authors",
+                        "attributes": [
+                          {
+                            "$obj": "o6417"
+                          }
+                        ]
+                      },
+                      "as": "o6418"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6415"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o6418"
+                        }
+                      },
+                      "as": "o6419"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Attribute",
+                      "method": "string",
+                      "args": {
+                        "key": "name",
+                        "size": 64
+                      },
+                      "as": "o6420"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Collection",
+                      "method": "create",
+                      "args": {
+                        "id": "books",
+                        "attributes": [
+                          {
+                            "$obj": "o6420"
+                          }
+                        ]
+                      },
+                      "as": "o6421"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6415"
+                      },
+                      "method": "createCollection",
+                      "args": {
+                        "collection": {
+                          "$obj": "o6421"
+                        }
+                      },
+                      "as": "o6422"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Relationship",
+                      "method": "oneToMany",
+                      "args": {
+                        "relatedCollection": "books",
+                        "key": "books",
+                        "twoWay": true,
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      },
+                      "as": "o6423"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6415"
+                      },
+                      "method": "createRelationship",
+                      "args": {
+                        "collection": "authors",
+                        "relationship": {
+                          "$obj": "o6423"
+                        }
+                      },
+                      "as": "o6424"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6415"
+                      },
+                      "method": "withPreserveDates",
+                      "args": {
+                        "preserve": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "$id": "author3",
+                                    "name": "Linus",
+                                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                    "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                  }
+                                },
+                                "as": "o6425"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6415"
+                                },
+                                "method": "createDocument",
+                                "args": {
+                                  "collection": "authors",
+                                  "document": {
+                                    "$obj": "o6425"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "$id": "book4",
+                                    "name": "book4",
+                                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                    "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                  }
+                                },
+                                "as": "o6426"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6415"
+                                },
+                                "method": "createDocument",
+                                "args": {
+                                  "collection": "books",
+                                  "document": {
+                                    "$obj": "o6426"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "$id": "book5",
+                                    "name": "book5",
+                                    "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                    "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                  }
+                                },
+                                "as": "o6427"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6415"
+                                },
+                                "method": "createDocument",
+                                "args": {
+                                  "collection": "books",
+                                  "document": {
+                                    "$obj": "o6427"
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14268",
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true,
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "name",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "authors",
+                        "name": "authors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "authors",
+                        "name": "authors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Attribute",
+                      "fields": {
+                        "key": "name",
+                        "type": {
+                          "$enum": "Query\\Schema\\ColumnType::String"
+                        },
+                        "size": 64,
+                        "required": false,
+                        "default": null,
+                        "signed": true,
+                        "array": false,
+                        "format": null,
+                        "filters": [],
+                        "relationship": null,
+                        "side": null
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "books",
+                        "name": "books",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "books",
+                        "name": "books",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "books",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      }
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "books",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "author3",
+                                  "name": "Linus",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "author3",
+                                  "name": "Linus",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$collection": "authors",
+                                  "$permissions": [],
+                                  "$sequence": "1",
+                                  "books": []
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book4",
+                                  "name": "book4",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book4",
+                                  "name": "book4",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$collection": "books",
+                                  "$permissions": [],
+                                  "$sequence": "1"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book5",
+                                  "name": "book5",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00"
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "$id": "book5",
+                                  "name": "book5",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$collection": "books",
+                                  "$permissions": [],
+                                  "$sequence": "2"
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6413"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6415"
+                      },
+                      "method": "withPreserveDates",
+                      "args": {
+                        "preserve": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "books": [
+                                      "book4"
+                                    ]
+                                  }
+                                },
+                                "as": "o6428"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6415"
+                                },
+                                "method": "updateDocument",
+                                "args": {
+                                  "collection": "authors",
+                                  "id": "author3",
+                                  "document": {
+                                    "$obj": "o6428"
+                                  }
+                                },
+                                "as": "o6429"
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14269",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "Linus",
+                "$sequence": "1",
+                "$id": "author3",
+                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "authors",
+                "books": [
+                  {
+                    "$document": {
+                      "name": "book4",
+                      "$id": "book4",
+                      "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                      "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                      "$permissions": [],
+                      "$sequence": "1",
+                      "$collection": "books"
+                    }
+                  }
+                ]
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": {
+                        "$document": {
+                          "name": "Linus",
+                          "$sequence": "1",
+                          "$id": "author3",
+                          "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "authors",
+                          "books": [
+                            {
+                              "$document": {
+                                "name": "book4",
+                                "$id": "book4",
+                                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                "$permissions": [],
+                                "$sequence": "1",
+                                "$collection": "books"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "books": [
+                                    "book4"
+                                  ]
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "name": "Linus",
+                                  "$sequence": "1",
+                                  "$id": "author3",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$collection": "authors",
+                                  "books": [
+                                    {
+                                      "$document": {
+                                        "name": "book4",
+                                        "$id": "book4",
+                                        "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                        "$updatedAt": "2020-01-01T00:00:00.000+00:00",
+                                        "$permissions": [],
+                                        "$sequence": "1",
+                                        "$collection": "books"
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6413"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6415"
+                      },
+                      "method": "withPreserveDates",
+                      "args": {
+                        "preserve": true,
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.new",
+                              "args": {
+                                "class": "Document",
+                                "args": {
+                                  "input": {
+                                    "books": []
+                                  }
+                                },
+                                "as": "o6430"
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o6415"
+                                },
+                                "method": "updateDocument",
+                                "args": {
+                                  "collection": "authors",
+                                  "id": "author3",
+                                  "document": {
+                                    "$obj": "o6430"
+                                  }
+                                },
+                                "as": "o6431"
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14270",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "Linus",
+                "$sequence": "1",
+                "$id": "author3",
+                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "authors",
+                "books": []
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": {
+                        "$document": {
+                          "name": "Linus",
+                          "$sequence": "1",
+                          "$id": "author3",
+                          "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "authors",
+                          "books": []
+                        }
+                      },
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "books": []
+                                }
+                              },
+                              {
+                                "$document": {
+                                  "name": "Linus",
+                                  "$sequence": "1",
+                                  "$id": "author3",
+                                  "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$collection": "authors",
+                                  "books": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6413"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o6415"
+                      },
+                      "method": "getDocument",
+                      "args": {
+                        "collection": "books",
+                        "id": "book4"
+                      },
+                      "as": "o6432"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s14271",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "book4",
+                "$sequence": "1",
+                "$id": "book4",
+                "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "books",
+                "author": null
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "book4",
+                        "$sequence": "1",
+                        "$id": "book4",
+                        "$createdAt": "2020-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "books",
+                        "author": null
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6432"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": "<now>"
+        }
+      ]
+    }
+  ]
+}

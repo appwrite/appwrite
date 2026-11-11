@@ -1,0 +1,609 @@
+{
+  "source": "packages/auth/tests/Algorithms/ScryptModifiedTest.php",
+  "cases": [
+    {
+      "name": "hash",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scryptMod"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted hash: verified by both runtimes below"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/salt",
+              "/saltSeparator",
+              "/signerKey"
+            ],
+            "reason": "random defaults"
+          },
+          "expect": {
+            "type": "scryptMod",
+            "salt": "<masked>",
+            "saltSeparator": "<masked>",
+            "signerKey": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom options",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scryptMod"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": "Y3VzdG9tLXNhbHQ="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSaltSeparator",
+            "value": "Y3VzdG9tLXNlcGFyYXRvcg=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSignerKey",
+            "value": "Y3VzdG9tLXNpZ25lci1rZXk="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "expect": "N71Jg67l20Bq4u4JN0gdvss="
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "scryptMod",
+            "salt": "Y3VzdG9tLXNhbHQ=",
+            "saltSeparator": "Y3VzdG9tLXNlcGFyYXRvcg==",
+            "signerKey": "Y3VzdG9tLXNpZ25lci1rZXk="
+          }
+        }
+      ]
+    },
+    {
+      "name": "verifies the Appwrite fixture",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scryptMod"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": "UxLMreBr6tYyjQ=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSaltSeparator",
+            "value": "Bw=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSignerKey",
+            "value": "XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite"
+          },
+          "expect": "UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ=="
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ=="
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": {
+              "$bytes": "YXBw/3dyaXRl"
+            }
+          },
+          "expect": "mhaSP1vCFqvmOL1p6yHqcyRsyZMy+CxfqyjGOrzy18oZYUoInARWHuxhemc6cSabWKOoaR/A05SlFzc75DhCZA=="
+        }
+      ]
+    },
+    {
+      "name": "setter validation",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scryptMod"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": "0"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": "not base64!"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt must be base64 encoded"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": "abc==="
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt must be base64 encoded"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": "abc=\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSaltSeparator",
+            "value": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt separator must be base64 encoded"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSaltSeparator",
+            "value": "a-b"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt separator must be base64 encoded"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSaltSeparator",
+            "value": "Bw=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSignerKey",
+            "value": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Signer key cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSignerKey",
+            "value": "0"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Signer key cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSignerKey",
+            "value": "a b"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Signer key must be base64 encoded"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSignerKey",
+            "value": "QUJD"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/salt"
+            ],
+            "reason": "random default salt"
+          },
+          "expect": {
+            "type": "scryptMod",
+            "salt": "<masked>",
+            "saltSeparator": "Bw==",
+            "signerKey": "QUJD"
+          }
+        }
+      ]
+    },
+    {
+      "name": "stored options are checked when hashing",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scryptMod"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "salt",
+            "value": "c2FsdA=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "saltSeparator",
+            "value": "Bw=="
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "signerKey",
+            "value": "!!!"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": ""
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "signerKey",
+            "value": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Signer key must be a string"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "signerKey",
+            "value": "a2V5"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "salt",
+            "value": null
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt and salt separator must be strings"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "name",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scryptMod"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.name",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": "scryptMod"
+        }
+      ]
+    }
+  ]
+}

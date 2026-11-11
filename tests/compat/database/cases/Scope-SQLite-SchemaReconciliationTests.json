@@ -1,0 +1,2356 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/SchemaReconciliationTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SQLiteTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SchemaReconciliationTests::testEveryAttributeReadsBackAsTheColumnTypeTheAdapterCreates",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::SchemaIntrospection"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "reconcileTypes",
+                "name": "reconcileTypes",
+                "attributes": [
+                  {
+                    "$id": "short",
+                    "key": "short",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "long",
+                    "key": "long",
+                    "type": "string",
+                    "size": 20000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "list",
+                    "key": "list",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "total",
+                    "key": "total",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "active",
+                    "key": "active",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "born",
+                    "key": "born",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "reconcileTypes",
+              "name": "reconcileTypes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "short",
+                    "key": "short",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "long",
+                    "key": "long",
+                    "type": "string",
+                    "size": 20000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "list",
+                    "key": "list",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "total",
+                    "key": "total",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "active",
+                    "key": "active",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "born",
+                    "key": "born",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_schema_attributes",
+          "args": {
+            "collection": "reconcileTypes"
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_id",
+                "type": "INTEGER",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_uid",
+                "type": "VARCHAR(36)",
+                "length": 36,
+                "nullable": false
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_createdAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_updatedAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_permissions",
+                "type": "MEDIUMTEXT",
+                "length": 16777215,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "short",
+                "type": "VARCHAR(64)",
+                "length": 64,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "long",
+                "type": "TEXT",
+                "length": 65535,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "list",
+                "type": "LONGTEXT",
+                "length": 4294967295,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "count",
+                "type": "INT",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "total",
+                "type": "BIGINT",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "ratio",
+                "type": "DOUBLE",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "active",
+                "type": "TINYINT",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "born",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "short",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "VARCHAR(64)"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "long",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 20000,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "TEXT"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "list",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": true,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "LONGTEXT"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "count",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "size": null,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "INT"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "total",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::BigInteger"
+                  },
+                  "size": null,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "ratio",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::Double"
+                  },
+                  "size": null,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "DOUBLE"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "active",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::Boolean"
+                  },
+                  "size": null,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "TINYINT"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "born",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::Datetime"
+                  },
+                  "size": null,
+                  "required": false,
+                  "default": null,
+                  "signed": false,
+                  "array": false,
+                  "format": null,
+                  "filters": [
+                    "datetime"
+                  ],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "DATETIME(3)"
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "reconcileTypes"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "SchemaReconciliationTests::testAnOrphanColumnOfTheRequestedTypeIsReused",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::SchemaIntrospection"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "reconcileReusedColumn"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "reconcileReusedColumn",
+                "name": "reconcileReusedColumn",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "reconcileReusedColumn",
+              "name": "reconcileReusedColumn",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "createAttribute",
+            "args": {
+              "collection": "reconcileReusedColumn",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "nick",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "reconcileReusedColumn",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "nick",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "nick",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "reconcileReusedColumn"
+          },
+          "expect": {
+            "$document": {
+              "name": "reconcileReusedColumn",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "nick",
+                    "key": "nick",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "reconcileReusedColumn",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "nick",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "VARCHAR(64)"
+        },
+        {
+          "op": "database.get_schema_attributes",
+          "args": {
+            "collection": "reconcileReusedColumn"
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_id",
+                "type": "INTEGER",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_uid",
+                "type": "VARCHAR(36)",
+                "length": 36,
+                "nullable": false
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_createdAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_updatedAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_permissions",
+                "type": "MEDIUMTEXT",
+                "length": 16777215,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "nick",
+                "type": "VARCHAR(64)",
+                "length": 64,
+                "nullable": true
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "reconcileReusedColumn",
+            "document": {
+              "$document": {
+                "$id": "one",
+                "nick": "kept"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "one",
+              "nick": "kept",
+              "$collection": "reconcileReusedColumn",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "reconcileReusedColumn",
+            "id": "one"
+          },
+          "expect": {
+            "$document": {
+              "nick": "kept",
+              "$sequence": "1",
+              "$id": "one",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "reconcileReusedColumn"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "reconcileReusedColumn"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "SchemaReconciliationTests::testARelationshipRenameThatFailsPartWayConvergesOnRetry",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::SchemaIntrospection"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "halfRenamedBooks",
+                "name": "halfRenamedBooks",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "halfRenamedBooks",
+              "name": "halfRenamedBooks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "halfRenamedAuthors",
+                "name": "halfRenamedAuthors",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "halfRenamedAuthors",
+              "name": "halfRenamedAuthors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "halfRenamedBooks",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "halfRenamedAuthors",
+                "type": {
+                  "$enum": "RelationshipType::OneToOne"
+                },
+                "twoWay": true,
+                "key": "author",
+                "twoWayKey": "book",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "halfRenamedAuthors",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "author",
+              "twoWayKey": "book",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "halfRenamedAuthors",
+            "document": {
+              "$document": {
+                "$id": "herbert",
+                "name": "Herbert"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "herbert",
+              "name": "Herbert",
+              "$collection": "halfRenamedAuthors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "halfRenamedBooks",
+            "document": {
+              "$document": {
+                "$id": "dune",
+                "name": "Dune",
+                "author": "herbert"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "name": "Dune",
+              "$collection": "halfRenamedBooks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "author": {
+                "$document": {
+                  "name": "Herbert",
+                  "$id": "herbert",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "halfRenamedAuthors"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "createAttribute",
+            "args": {
+              "collection": "halfRenamedAuthors",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "novel",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.update_relationship",
+          "args": {
+            "collection": "halfRenamedBooks",
+            "key": "author",
+            "update": {
+              "$value": "Relationship\\Update",
+              "fields": {
+                "key": "writer",
+                "twoWayKey": "novel",
+                "twoWay": null,
+                "onDelete": null
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to update relationship 'author': SQLSTATE[HY000]: General error: 1 error in table compat_halfRenamedAuthors after rename: duplicate column name: novel"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "deleteAttribute",
+            "args": {
+              "collection": "halfRenamedAuthors",
+              "key": "novel"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.update_relationship",
+          "args": {
+            "collection": "halfRenamedBooks",
+            "key": "author",
+            "update": {
+              "$value": "Relationship\\Update",
+              "fields": {
+                "key": "writer",
+                "twoWayKey": "novel",
+                "twoWay": null,
+                "onDelete": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "halfRenamedAuthors",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "writer",
+              "twoWayKey": "novel",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "halfRenamedBooks",
+            "id": "dune"
+          },
+          "expect": {
+            "$document": {
+              "name": "Dune",
+              "$sequence": "1",
+              "$id": "dune",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "halfRenamedBooks",
+              "writer": {
+                "$document": {
+                  "name": "Herbert",
+                  "$id": "herbert",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "halfRenamedAuthors"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "halfRenamedAuthors",
+            "id": "herbert"
+          },
+          "expect": {
+            "$document": {
+              "name": "Herbert",
+              "$sequence": "1",
+              "$id": "herbert",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "halfRenamedAuthors",
+              "novel": {
+                "$document": {
+                  "name": "Dune",
+                  "$id": "dune",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "halfRenamedBooks"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "halfRenamedBooks"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "halfRenamedAuthors"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "SchemaReconciliationTests::testAnOrphanColumnOfAnotherTypeIsReplacedOrRefusedUnderSharedTables",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::SchemaIntrospection"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "reconcileReplacedColumn"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "reconcileReplacedColumn",
+                "name": "reconcileReplacedColumn",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "reconcileReplacedColumn",
+              "name": "reconcileReplacedColumn",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "createAttribute",
+            "args": {
+              "collection": "reconcileReplacedColumn",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "nick",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "size": null,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "reconcileReplacedColumn",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "nick",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "nick",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "reconcileReplacedColumn"
+          },
+          "expect": {
+            "$document": {
+              "name": "reconcileReplacedColumn",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "nick",
+                    "key": "nick",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "reconcileReplacedColumn",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "nick",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
+          },
+          "expect": "VARCHAR(64)"
+        },
+        {
+          "op": "database.get_schema_attributes",
+          "args": {
+            "collection": "reconcileReplacedColumn"
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_id",
+                "type": "INTEGER",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_uid",
+                "type": "VARCHAR(36)",
+                "length": 36,
+                "nullable": false
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_createdAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_updatedAt",
+                "type": "DATETIME(3)",
+                "length": null,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "_permissions",
+                "type": "MEDIUMTEXT",
+                "length": 16777215,
+                "nullable": true
+              }
+            },
+            {
+              "$value": "Schema\\Column",
+              "fields": {
+                "name": "nick",
+                "type": "VARCHAR(64)",
+                "length": 64,
+                "nullable": true
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "reconcileReplacedColumn"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "SchemaReconciliationTests::testAnOrphanIndexOfTheRequestedDefinitionIsReused",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::SchemaIntrospection"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "reconcileReusedIndex"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "reconcileReusedIndex",
+                "name": "reconcileReusedIndex",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "reconcileReusedIndex",
+              "name": "reconcileReusedIndex",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "createIndex",
+            "args": {
+              "collection": "reconcileReusedIndex",
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "lookup",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Key"
+                  },
+                  "attributes": [
+                    "name"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_schema_indexes",
+          "args": {
+            "collection": "reconcileReusedIndex"
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "lookup",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "name"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_updated_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_updatedAt"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_created_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_createdAt"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_index1",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "columns": [
+                  "_uid"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "reconcileReusedIndex",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "lookup",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "lookup",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "reconcileReusedIndex"
+          },
+          "expect": {
+            "$document": {
+              "name": "reconcileReusedIndex",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "lookup",
+                    "key": "lookup",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "reconcileReusedIndex",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_schema_indexes",
+          "args": {
+            "collection": "reconcileReusedIndex"
+          },
+          "expect": [
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "lookup",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "name"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_updated_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_updatedAt"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_created_at",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "columns": [
+                  "_createdAt"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            },
+            {
+              "$value": "Schema\\Index",
+              "fields": {
+                "name": "_index1",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "columns": [
+                  "_uid"
+                ],
+                "lengths": [
+                  null
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "reconcileReusedIndex"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

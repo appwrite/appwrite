@@ -1,0 +1,802 @@
+{
+  "source": "packages/queue/tests/E2E/Base.php",
+  "cases": [
+    {
+      "name": "events: init, job, shutdown in order with groups",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "name": "ada",
+                  "n": 3
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "groups": [
+                  "mails"
+                ],
+                "params": [
+                  {
+                    "key": "name"
+                  },
+                  {
+                    "key": "n",
+                    "validator": "integer"
+                  }
+                ],
+                "inject": [
+                  "message",
+                  "greeting"
+                ]
+              }
+            ],
+            "hooks": {
+              "init": [
+                {
+                  "inject": [
+                    "message"
+                  ]
+                },
+                {
+                  "groups": [
+                    "mails"
+                  ],
+                  "params": [
+                    {
+                      "key": "name"
+                    }
+                  ]
+                },
+                {
+                  "groups": [
+                    "other"
+                  ]
+                }
+              ],
+              "shutdown": [
+                {
+                  "inject": [
+                    "message"
+                  ]
+                },
+                {
+                  "groups": [
+                    "mails"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "init0",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "init1",
+              [
+                "ada"
+              ]
+            ],
+            [
+              "job:work",
+              [
+                "ada",
+                3,
+                "message:p1",
+                "hello"
+              ]
+            ],
+            [
+              "shutdown0",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "shutdown1",
+              []
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a job with hooks off skips the star hooks only",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "hook": false,
+                "groups": [
+                  "mails"
+                ]
+              }
+            ],
+            "hooks": {
+              "init": [
+                {
+                  "groups": [
+                    "*"
+                  ]
+                },
+                {
+                  "groups": [
+                    "mails"
+                  ]
+                }
+              ],
+              "shutdown": [
+                {
+                  "groups": [
+                    "*"
+                  ]
+                },
+                {
+                  "groups": [
+                    "mails"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "init1",
+              []
+            ],
+            [
+              "job:work",
+              []
+            ],
+            [
+              "shutdown1",
+              []
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "param aliases and defaults",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "userName": "ada",
+                  "empty": "",
+                  "nothing": null
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "params": [
+                  {
+                    "key": "name",
+                    "aliases": [
+                      "user",
+                      "userName"
+                    ]
+                  },
+                  {
+                    "key": "empty",
+                    "default": "fallback",
+                    "optional": true
+                  },
+                  {
+                    "key": "nothing",
+                    "default": 7,
+                    "validator": "integer",
+                    "optional": true
+                  },
+                  {
+                    "key": "missing",
+                    "optional": true
+                  }
+                ]
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              [
+                "ada",
+                "fallback",
+                7,
+                null
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a param failing its validator fails the job",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": "seven"
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "params": [
+                  {
+                    "key": "n",
+                    "validator": "integer"
+                  }
+                ]
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "error0",
+              [
+                "error:Exception:Invalid n: Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a missing required param fails the job",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "params": [
+                  {
+                    "key": "n",
+                    "validator": "integer"
+                  }
+                ]
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "error0",
+              [
+                "error:Exception:Param n is not optional.",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an unknown injection fails the job",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "inject": [
+                  "nowhere"
+                ]
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "error0",
+              [
+                "error:Utopia\\DI\\Exceptions\\NotFoundException:Dependency nowhere not found",
+                "message:p1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failing init hook fails the job",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work"
+              }
+            ],
+            "hooks": {
+              "init": [
+                {
+                  "fail": {
+                    "class": "RuntimeException",
+                    "message": "init down"
+                  }
+                }
+              ],
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "init0",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:init down"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failing worker start hook skips the queues",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work"
+              }
+            ],
+            "hooks": {
+              "workerStart": [
+                {
+                  "fail": {
+                    "class": "RuntimeException",
+                    "message": "boot"
+                  }
+                }
+              ],
+              "workerStop": [
+                {
+                  "groups": [
+                    "*"
+                  ]
+                }
+              ],
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "workerStart0",
+              []
+            ],
+            [
+              "workerStop0",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boot"
+              ]
+            ],
+            [
+              "start",
+              [
+                "error:RuntimeException:boot"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failing worker stop hook is ignored",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work"
+              }
+            ],
+            "hooks": {
+              "workerStop": [
+                {
+                  "fail": {
+                    "class": "RuntimeException",
+                    "message": "bye"
+                  }
+                }
+              ],
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              []
+            ],
+            [
+              "workerStop0",
+              []
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "close"
+          ]
+        }
+      ]
+    }
+  ]
+}

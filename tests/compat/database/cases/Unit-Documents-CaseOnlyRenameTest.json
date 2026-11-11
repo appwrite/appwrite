@@ -1,0 +1,4006 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/CaseOnlyRenameTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CaseOnlyRenameTest::testCaseOnlyRenameIsPerformed#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o5848"
+          },
+          "bind": "s10196",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o5848"
+              },
+              "cache": "none"
+            },
+            "as": "o5849"
+          },
+          "bind": "s10197",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o5850"
+          },
+          "bind": "s10198",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o5850"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "case_rename"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "case_rename_u000000000238"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o5851"
+          },
+          "bind": "s10202",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5852"
+          },
+          "bind": "s10203",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5852"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5851"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32,
+              "required": false
+            },
+            "as": "o5853"
+          },
+          "bind": "s10207",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5854"
+          },
+          "bind": "s10208",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o5854"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5855"
+          },
+          "bind": "s10210",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o5855"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "renames",
+              "attributes": [
+                {
+                  "$obj": "o5853"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o5856"
+          },
+          "bind": "s10212",
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o5856"
+              }
+            },
+            "as": "o5857"
+          },
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5858"
+          },
+          "bind": "s10214",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o5858"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "abc",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "renamed"
+              }
+            },
+            "as": "o5859"
+          },
+          "bind": "s10216",
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "renamed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "renames",
+              "document": {
+                "$obj": "o5859"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "renamed",
+              "$collection": "renames",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ABC"
+              }
+            },
+            "as": "o5860"
+          },
+          "bind": "s10218",
+          "expect": {
+            "$document": {
+              "$id": "ABC"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "renames",
+              "id": "abc",
+              "document": {
+                "$obj": "o5860"
+              }
+            },
+            "as": "o5861"
+          },
+          "bind": "s10219",
+          "expect": {
+            "$document": {
+              "name": "renamed",
+              "$sequence": "1",
+              "$id": "ABC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "renames"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5861"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "find",
+            "args": {
+              "collection": "renames"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "renamed",
+                "$id": "ABC",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "renames"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "renamed",
+                "$id": "ABC",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "renames"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5849"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "renames",
+              "id": "ABC"
+            },
+            "as": "o5862"
+          },
+          "bind": "s10223",
+          "expect": {
+            "$document": {
+              "name": "renamed",
+              "$sequence": "1",
+              "$id": "ABC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "renames"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5862"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5862"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "renamed"
+        }
+      ]
+    },
+    {
+      "name": "CaseOnlyRenameTest::testCaseOnlyRenameIsPerformed#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o5863"
+          },
+          "bind": "s10226",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o5863"
+              },
+              "cache": "none"
+            },
+            "as": "o5864"
+          },
+          "bind": "s10227",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o5865"
+          },
+          "bind": "s10228",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o5865"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "case_rename"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "case_rename_u000000000239"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o5866"
+          },
+          "bind": "s10232",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5867"
+          },
+          "bind": "s10233",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5867"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5866"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32,
+              "required": false
+            },
+            "as": "o5868"
+          },
+          "bind": "s10237",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5869"
+          },
+          "bind": "s10238",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o5869"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5870"
+          },
+          "bind": "s10240",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o5870"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "renames",
+              "attributes": [
+                {
+                  "$obj": "o5868"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o5871"
+          },
+          "bind": "s10242",
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o5871"
+              }
+            },
+            "as": "o5872"
+          },
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5873"
+          },
+          "bind": "s10244",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o5873"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "abc",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "renamed"
+              }
+            },
+            "as": "o5874"
+          },
+          "bind": "s10246",
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "renamed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "renames",
+              "document": {
+                "$obj": "o5874"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "renamed",
+              "$collection": "renames",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ABC"
+              }
+            },
+            "as": "o5875"
+          },
+          "bind": "s10248",
+          "expect": {
+            "$document": {
+              "$id": "ABC"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "renames",
+              "id": "abc",
+              "document": {
+                "$obj": "o5875"
+              }
+            },
+            "as": "o5876"
+          },
+          "bind": "s10249",
+          "expect": {
+            "$document": {
+              "name": "renamed",
+              "$sequence": "1",
+              "$id": "ABC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "renames"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5876"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "find",
+            "args": {
+              "collection": "renames"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "renamed",
+                "$id": "ABC",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "renames"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "renamed",
+                "$id": "ABC",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "renames"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5864"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "renames",
+              "id": "ABC"
+            },
+            "as": "o5877"
+          },
+          "bind": "s10253",
+          "expect": {
+            "$document": {
+              "name": "renamed",
+              "$sequence": "1",
+              "$id": "ABC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "renames"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5877"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5877"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "renamed"
+        }
+      ]
+    },
+    {
+      "name": "CaseOnlyRenameTest::testCaseOnlyRenameKeepsDocumentLevelPermissionsWithTheDocument#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o5878"
+          },
+          "bind": "s10256",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o5878"
+              },
+              "cache": "none"
+            },
+            "as": "o5879"
+          },
+          "bind": "s10257",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o5880"
+          },
+          "bind": "s10258",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o5880"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "case_rename"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "case_rename_u000000000240"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o5881"
+          },
+          "bind": "s10262",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5882"
+          },
+          "bind": "s10263",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5882"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5881"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32,
+              "required": false
+            },
+            "as": "o5883"
+          },
+          "bind": "s10267",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5884"
+          },
+          "bind": "s10268",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o5884"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5885"
+          },
+          "bind": "s10270",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o5885"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "renames",
+              "attributes": [
+                {
+                  "$obj": "o5883"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o5886"
+          },
+          "bind": "s10272",
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o5886"
+              }
+            },
+            "as": "o5887"
+          },
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "alice"
+            },
+            "as": "o5888"
+          },
+          "bind": "s10274",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o5888"
+              }
+            }
+          },
+          "expect": "read(\"user:alice\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "alice"
+            },
+            "as": "o5889"
+          },
+          "bind": "s10276",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o5889"
+              }
+            }
+          },
+          "expect": "update(\"user:alice\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "abc",
+                "$permissions": [
+                  "read(\"user:alice\")",
+                  "update(\"user:alice\")"
+                ],
+                "name": "private"
+              }
+            },
+            "as": "o5890"
+          },
+          "bind": "s10278",
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"user:alice\")",
+                "update(\"user:alice\")"
+              ],
+              "name": "private"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "renames",
+              "document": {
+                "$obj": "o5890"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"user:alice\")",
+                "update(\"user:alice\")"
+              ],
+              "name": "private",
+              "$collection": "renames",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ABC"
+              }
+            },
+            "as": "o5891"
+          },
+          "bind": "s10280",
+          "expect": {
+            "$document": {
+              "$id": "ABC"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "renames",
+              "id": "abc",
+              "document": {
+                "$obj": "o5891"
+              }
+            },
+            "as": "o5892"
+          },
+          "expect": {
+            "$document": {
+              "name": "private",
+              "$sequence": "1",
+              "$id": "ABC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"user:alice\")",
+                "update(\"user:alice\")"
+              ],
+              "$collection": "renames"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5881"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "alice"
+            },
+            "as": "o5893"
+          },
+          "bind": "s10284",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5893"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:alice"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5881"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:alice"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "renames",
+              "id": "ABC"
+            },
+            "as": "o5894"
+          },
+          "bind": "s10287",
+          "expect": {
+            "$document": {
+              "name": "private",
+              "$sequence": "1",
+              "$id": "ABC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"user:alice\")",
+                "update(\"user:alice\")"
+              ],
+              "$collection": "renames"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5894"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5879"
+            },
+            "method": "find",
+            "args": {
+              "collection": "renames"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "private",
+                "$id": "ABC",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:alice\")",
+                  "update(\"user:alice\")"
+                ],
+                "$collection": "renames"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "private",
+                "$id": "ABC",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"user:alice\")",
+                  "update(\"user:alice\")"
+                ],
+                "$collection": "renames"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        }
+      ]
+    },
+    {
+      "name": "CaseOnlyRenameTest::testCaseOnlyRenameKeepsDocumentLevelPermissionsWithTheDocument#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o5895"
+          },
+          "bind": "s10291",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o5895"
+              },
+              "cache": "none"
+            },
+            "as": "o5896"
+          },
+          "bind": "s10292",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o5897"
+          },
+          "bind": "s10293",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o5897"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "case_rename"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "case_rename_u000000000241"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o5898"
+          },
+          "bind": "s10297",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5899"
+          },
+          "bind": "s10298",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5899"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5898"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32,
+              "required": false
+            },
+            "as": "o5900"
+          },
+          "bind": "s10302",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5901"
+          },
+          "bind": "s10303",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o5901"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5902"
+          },
+          "bind": "s10305",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o5902"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "renames",
+              "attributes": [
+                {
+                  "$obj": "o5900"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o5903"
+          },
+          "bind": "s10307",
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o5903"
+              }
+            },
+            "as": "o5904"
+          },
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "alice"
+            },
+            "as": "o5905"
+          },
+          "bind": "s10309",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o5905"
+              }
+            }
+          },
+          "expect": "read(\"user:alice\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "alice"
+            },
+            "as": "o5906"
+          },
+          "bind": "s10311",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o5906"
+              }
+            }
+          },
+          "expect": "update(\"user:alice\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "abc",
+                "$permissions": [
+                  "read(\"user:alice\")",
+                  "update(\"user:alice\")"
+                ],
+                "name": "private"
+              }
+            },
+            "as": "o5907"
+          },
+          "bind": "s10313",
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"user:alice\")",
+                "update(\"user:alice\")"
+              ],
+              "name": "private"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "renames",
+              "document": {
+                "$obj": "o5907"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"user:alice\")",
+                "update(\"user:alice\")"
+              ],
+              "name": "private",
+              "$collection": "renames",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ABC"
+              }
+            },
+            "as": "o5908"
+          },
+          "bind": "s10315",
+          "expect": {
+            "$document": {
+              "$id": "ABC"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "renames",
+              "id": "abc",
+              "document": {
+                "$obj": "o5908"
+              }
+            },
+            "as": "o5909"
+          },
+          "expect": {
+            "$document": {
+              "name": "private",
+              "$sequence": "1",
+              "$id": "ABC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"user:alice\")",
+                "update(\"user:alice\")"
+              ],
+              "$collection": "renames"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5898"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "alice"
+            },
+            "as": "o5910"
+          },
+          "bind": "s10319",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5910"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:alice"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5898"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:alice"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "renames",
+              "id": "ABC"
+            },
+            "as": "o5911"
+          },
+          "bind": "s10322",
+          "expect": {
+            "$document": {
+              "name": "private",
+              "$sequence": "1",
+              "$id": "ABC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"user:alice\")",
+                "update(\"user:alice\")"
+              ],
+              "$collection": "renames"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5911"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5896"
+            },
+            "method": "find",
+            "args": {
+              "collection": "renames"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "private",
+                "$id": "ABC",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:alice\")",
+                  "update(\"user:alice\")"
+                ],
+                "$sequence": "1",
+                "$collection": "renames"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "private",
+                "$id": "ABC",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"user:alice\")",
+                  "update(\"user:alice\")"
+                ],
+                "$sequence": "1",
+                "$collection": "renames"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "ABC"
+        }
+      ]
+    },
+    {
+      "name": "CaseOnlyRenameTest::testRenameOntoAnotherDocumentIdInDifferentCaseStillConflicts#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o5912"
+          },
+          "bind": "s10326",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o5912"
+              },
+              "cache": "none"
+            },
+            "as": "o5913"
+          },
+          "bind": "s10327",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o5914"
+          },
+          "bind": "s10328",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5913"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o5914"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5913"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "case_rename"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5913"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "case_rename_u000000000242"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5913"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o5915"
+          },
+          "bind": "s10332",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5916"
+          },
+          "bind": "s10333",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5916"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5915"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5913"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32,
+              "required": false
+            },
+            "as": "o5917"
+          },
+          "bind": "s10337",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5918"
+          },
+          "bind": "s10338",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o5918"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5919"
+          },
+          "bind": "s10340",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o5919"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "renames",
+              "attributes": [
+                {
+                  "$obj": "o5917"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o5920"
+          },
+          "bind": "s10342",
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5913"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o5920"
+              }
+            },
+            "as": "o5921"
+          },
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "abc"
+              }
+            },
+            "as": "o5922"
+          },
+          "bind": "s10344",
+          "expect": {
+            "$document": {
+              "$id": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5913"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "renames",
+              "document": {
+                "$obj": "o5922"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$collection": "renames",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "name": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "xyz"
+              }
+            },
+            "as": "o5923"
+          },
+          "bind": "s10346",
+          "expect": {
+            "$document": {
+              "$id": "xyz"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5913"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "renames",
+              "document": {
+                "$obj": "o5923"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "xyz",
+              "$collection": "renames",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "name": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "XYZ"
+              }
+            },
+            "as": "o5924"
+          },
+          "bind": "s10348",
+          "expect": {
+            "$document": {
+              "$id": "XYZ"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5913"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "renames",
+              "id": "abc",
+              "document": {
+                "$obj": "o5924"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CaseOnlyRenameTest::testRenameOntoAnotherDocumentIdInDifferentCaseStillConflicts#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o5925"
+          },
+          "bind": "s10350",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o5925"
+              },
+              "cache": "none"
+            },
+            "as": "o5926"
+          },
+          "bind": "s10351",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o5927"
+          },
+          "bind": "s10352",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5926"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o5927"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5926"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "case_rename"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5926"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "case_rename_u000000000243"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5926"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o5928"
+          },
+          "bind": "s10356",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5929"
+          },
+          "bind": "s10357",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5929"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5928"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5926"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32,
+              "required": false
+            },
+            "as": "o5930"
+          },
+          "bind": "s10361",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5931"
+          },
+          "bind": "s10362",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o5931"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5932"
+          },
+          "bind": "s10364",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o5932"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "renames",
+              "attributes": [
+                {
+                  "$obj": "o5930"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o5933"
+          },
+          "bind": "s10366",
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5926"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o5933"
+              }
+            },
+            "as": "o5934"
+          },
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "abc"
+              }
+            },
+            "as": "o5935"
+          },
+          "bind": "s10368",
+          "expect": {
+            "$document": {
+              "$id": "abc"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5926"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "renames",
+              "document": {
+                "$obj": "o5935"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$collection": "renames",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "name": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "xyz"
+              }
+            },
+            "as": "o5936"
+          },
+          "bind": "s10370",
+          "expect": {
+            "$document": {
+              "$id": "xyz"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5926"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "renames",
+              "document": {
+                "$obj": "o5936"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "xyz",
+              "$collection": "renames",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "name": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "XYZ"
+              }
+            },
+            "as": "o5937"
+          },
+          "bind": "s10372",
+          "expect": {
+            "$document": {
+              "$id": "XYZ"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5926"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "renames",
+              "id": "abc",
+              "document": {
+                "$obj": "o5937"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CaseOnlyRenameTest::testCaseOnlyRenameMovesSqlPermissionRowsToTheNewId",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o5938"
+          },
+          "bind": "s10374",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o5938"
+              },
+              "cache": "none"
+            },
+            "as": "o5939"
+          },
+          "bind": "s10375",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o5940"
+          },
+          "bind": "s10376",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5939"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o5940"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5939"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "case_rename"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5939"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "case_rename_u000000000244"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5939"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o5941"
+          },
+          "bind": "s10380",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5942"
+          },
+          "bind": "s10381",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5942"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5941"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5939"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32,
+              "required": false
+            },
+            "as": "o5943"
+          },
+          "bind": "s10385",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5944"
+          },
+          "bind": "s10386",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o5944"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5945"
+          },
+          "bind": "s10388",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o5945"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "renames",
+              "attributes": [
+                {
+                  "$obj": "o5943"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o5946"
+          },
+          "bind": "s10390",
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5939"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o5946"
+              }
+            },
+            "as": "o5947"
+          },
+          "expect": {
+            "$document": {
+              "$id": "renames",
+              "name": "renames",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "alice"
+            },
+            "as": "o5948"
+          },
+          "bind": "s10392",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o5948"
+              }
+            }
+          },
+          "expect": "read(\"user:alice\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "abc",
+                "$permissions": [
+                  "read(\"user:alice\")"
+                ]
+              }
+            },
+            "as": "o5949"
+          },
+          "bind": "s10394",
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"user:alice\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5939"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "renames",
+              "document": {
+                "$obj": "o5949"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "abc",
+              "$permissions": [
+                "read(\"user:alice\")"
+              ],
+              "$collection": "renames",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "name": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "ABC"
+              }
+            },
+            "as": "o5950"
+          },
+          "bind": "s10396",
+          "expect": {
+            "$document": {
+              "$id": "ABC"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5939"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "renames",
+              "id": "abc",
+              "document": {
+                "$obj": "o5950"
+              }
+            },
+            "as": "o5951"
+          },
+          "expect": {
+            "$document": {
+              "name": null,
+              "$sequence": "1",
+              "$id": "ABC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"user:alice\")"
+              ],
+              "$collection": "renames"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5939"
+            },
+            "method": "getNamespace",
+            "args": {}
+          },
+          "expect": "case_rename_u000000000244"
+        }
+      ]
+    }
+  ]
+}

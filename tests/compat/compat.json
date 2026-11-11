@@ -1,0 +1,360 @@
+{
+  "drivers": {
+    "php": [
+      "bin/compat-php"
+    ],
+    "rust": []
+  },
+  "services": {
+    "redis": {
+      "php": "redis://redis:6379",
+      "rust": "redis://localhost:9513",
+      "runner": "redis://localhost:9513"
+    },
+    "postgres": {
+      "php": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@postgresql:5432/${_APP_DB_SCHEMA}",
+      "rust": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@localhost:9512/${_APP_DB_SCHEMA}",
+      "runner": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@localhost:9512/${_APP_DB_SCHEMA}"
+    },
+    "database-postgres": {
+      "php": "postgres://root:password@compat-database-postgres:5432/root",
+      "rust": "postgres://root:password@localhost:16432/root",
+      "rust-container": "postgres://root:password@compat-database-postgres:5432/root",
+      "runner": "postgres://root:password@localhost:16432/root"
+    },
+    "database-postgres-mirror": {
+      "php": "postgres://root:password@compat-database-postgres:5432/mirror",
+      "rust": "postgres://root:password@localhost:16432/mirror",
+      "rust-container": "postgres://root:password@compat-database-postgres:5432/mirror",
+      "runner": "postgres://root:password@localhost:16432/mirror"
+    },
+    "database-redis": {
+      "php": "redis://compat-database-redis:6379/0",
+      "rust": "redis://localhost:16479/1",
+      "rust-container": "redis://compat-database-redis:6379/1",
+      "runner": "redis://localhost:16479"
+    },
+    "database-redis-mirror": {
+      "php": "redis://compat-database-redis:6379/4",
+      "rust": "redis://localhost:16479/5",
+      "rust-container": "redis://compat-database-redis:6379/5",
+      "runner": "redis://localhost:16479"
+    },
+    "database-redis-shared": {
+      "php": "redis://compat-database-redis:6379/2",
+      "rust": "redis://localhost:16479/2",
+      "rust-container": "redis://compat-database-redis:6379/2",
+      "runner": "redis://localhost:16479/2"
+    },
+    "database-redis-adapter": {
+      "php": "redis://compat-database-redis:6379/3",
+      "rust": "redis://localhost:16479/3",
+      "rust-container": "redis://compat-database-redis:6379/3",
+      "runner": "redis://localhost:16479/3"
+    },
+    "database-mariadb": {
+      "php": "mysql://root:password@compat-database-mariadb:3306",
+      "rust": "mysql://root:password@localhost:16306",
+      "rust-container": "mysql://root:password@compat-database-mariadb:3306",
+      "runner": "mysql://root:password@localhost:16306"
+    },
+    "database-mysql": {
+      "php": "mysql://root:password@compat-database-mysql:3306",
+      "rust": "mysql://root:password@localhost:16307",
+      "rust-container": "mysql://root:password@compat-database-mysql:3306",
+      "runner": "mysql://root:password@localhost:16307"
+    },
+    "migration-api": {
+      "php": "http://compat-migration-api:8080",
+      "rust": "http://127.0.0.1:17820",
+      "rust-container": "http://compat-migration-api:8080",
+      "runner": "http://127.0.0.1:17820"
+    },
+    "migration-silent": {
+      "php": "compat-migration-api:8081",
+      "rust": "127.0.0.1:17823",
+      "rust-container": "compat-migration-api:8081",
+      "runner": "127.0.0.1:17823"
+    },
+    "migration-nhost-db": {
+      "php": "compat-migration-nhost-db:5432",
+      "rust": "127.0.0.1:17821",
+      "rust-container": "compat-migration-nhost-db:5432",
+      "runner": "127.0.0.1:17821"
+    },
+    "migration-supabase-db": {
+      "php": "compat-migration-supabase-db:5432",
+      "rust": "127.0.0.1:17822",
+      "rust-container": "compat-migration-supabase-db:5432",
+      "runner": "127.0.0.1:17822"
+    },
+    "mongo": {
+      "php": "mongodb://root:password@compat-mongo:27017",
+      "rust": "mongodb://root:password@localhost:16017",
+      "rust-container": "mongodb://root:password@compat-mongo:27017",
+      "runner": "mongodb://root:password@localhost:16017"
+    },
+    "database-mongo": {
+      "php": "mongodb://root:password@compat-database-mongo:27017",
+      "rust": "mongodb://root:password@localhost:16018",
+      "rust-container": "mongodb://root:password@compat-database-mongo:27017",
+      "runner": "mongodb://root:password@localhost:16018"
+    },
+    "domains-http": {
+      "php": "http://compat-domains-http:8080",
+      "rust": "http://localhost:9590",
+      "runner": "http://localhost:9590"
+    },
+    "agents-http": {
+      "php": "http://compat-agents-http:8080",
+      "rust": "http://127.0.0.1:16640",
+      "runner": "http://127.0.0.1:16640"
+    },
+    "emails-http": {
+      "php": "http://compat-emails-http:8080",
+      "rust": "http://localhost:9591",
+      "runner": "http://localhost:9591"
+    },
+    "cache-redis": {
+      "php": "redis://redis:6379/11",
+      "rust": "redis://localhost:9513/6",
+      "runner": "redis://localhost:9513"
+    },
+    "cache-memcached": {
+      "php": "memcached://compat-cache-memcached:11211",
+      "rust": "memcached://localhost:16392",
+      "runner": "memcached://localhost:16392"
+    },
+    "cache-hazelcast": {
+      "php": "memcached://compat-cache-hazelcast:5701",
+      "rust": "memcached://localhost:16393",
+      "runner": "memcached://localhost:16393"
+    },
+    "cache-redis-mux": {
+      "php": "redis://redis:6379/10",
+      "rust": "redis://localhost:9513/15",
+      "runner": "redis://localhost:9513"
+    },
+    "cache-cluster": {
+      "php": "redis-cluster://compat-cache-cluster-php:17000,compat-cache-cluster-php:17001,compat-cache-cluster-php:17002",
+      "rust": "redis-cluster://127.0.0.1:17100,127.0.0.1:17101,127.0.0.1:17102",
+      "rust-container": "redis-cluster://compat-cache-cluster-php:17000,compat-cache-cluster-php:17001,compat-cache-cluster-php:17002",
+      "runner": "redis-cluster://127.0.0.1:17100,127.0.0.1:17101,127.0.0.1:17102"
+    },
+    "cache-redis-shared": {
+      "php": "redis://redis:6379/11",
+      "rust": "redis://localhost:9513/11",
+      "runner": "redis://localhost:9513/11"
+    },
+    "cache-shard-a": {
+      "php": "redis://redis:6379/12",
+      "rust": "redis://localhost:9513/7",
+      "runner": "redis://localhost:9513"
+    },
+    "cache-shard-b": {
+      "php": "redis://redis:6379/13",
+      "rust": "redis://localhost:9513/8",
+      "runner": "redis://localhost:9513"
+    },
+    "cache-shard-c": {
+      "php": "redis://redis:6379/14",
+      "rust": "redis://localhost:9513/9",
+      "runner": "redis://localhost:9513"
+    },
+    "abuse-redis": {
+      "php": "redis://redis:6379/3",
+      "rust": "redis://localhost:9513/4",
+      "runner": "redis://localhost:9513"
+    },
+    "abuse-redis-shared": {
+      "php": "redis://redis:6379/5",
+      "rust": "redis://localhost:9513/5",
+      "runner": "redis://localhost:9513/5"
+    },
+    "abuse-redis-fuzz": {
+      "php": "redis://redis:6379/1",
+      "rust": "redis://localhost:9513/2",
+      "runner": "redis://localhost:9513/1"
+    },
+    "abuse-cluster": {
+      "php": "redis-cluster://compat-abuse-cluster-php:17400,compat-abuse-cluster-php:17401,compat-abuse-cluster-php:17402",
+      "rust": "redis-cluster://127.0.0.1:17500,127.0.0.1:17501,127.0.0.1:17502",
+      "rust-container": "redis-cluster://compat-abuse-cluster-php:17400,compat-abuse-cluster-php:17401,compat-abuse-cluster-php:17402",
+      "runner": "redis-cluster://127.0.0.1:17500,127.0.0.1:17501,127.0.0.1:17502"
+    },
+    "audit-clickhouse": {
+      "php": "http://default:clickhouse@compat-audit-clickhouse:8123",
+      "rust": "http://default:clickhouse@127.0.0.1:16823",
+      "rust-container": "http://default:clickhouse@compat-audit-clickhouse:8123",
+      "runner": "http://default:clickhouse@127.0.0.1:16823"
+    },
+    "queue-redis-auth": {
+      "php": "redis://compat-queue-redis-auth:6379",
+      "rust": "redis://localhost:16480",
+      "runner": "redis://localhost:16480"
+    },
+    "queue-redis-cluster": {
+      "php": "redis-cluster://compat-queue-cluster-php:17000,compat-queue-cluster-php:17001,compat-queue-cluster-php:17002",
+      "rust": "redis-cluster://127.0.0.1:17200,127.0.0.1:17201,127.0.0.1:17202",
+      "rust-container": "redis-cluster://compat-queue-cluster-php:17000,compat-queue-cluster-php:17001,compat-queue-cluster-php:17002",
+      "runner": "redis-cluster://127.0.0.1:17200,127.0.0.1:17201,127.0.0.1:17202"
+    },
+    "client-http": {
+      "php": "compat-client-http:8080",
+      "rust": "127.0.0.1:16610",
+      "rust-container": "compat-client-http:8080",
+      "runner": "127.0.0.1:16610"
+    },
+    "client-https": {
+      "php": "compat-client-http:8443",
+      "rust": "localhost:16611",
+      "rust-container": "compat-client-http:8443",
+      "runner": "localhost:16611"
+    },
+    "client-other": {
+      "php": "host.docker.internal:16610",
+      "rust": "localhost:16610",
+      "runner": "localhost:16610"
+    },
+    "client-other-tls": {
+      "php": "host.docker.internal:16611",
+      "rust": "[::1]:16611",
+      "runner": "[::1]:16611"
+    },
+    "client-range": {
+      "php": "172.16.238.0/24",
+      "rust": "127.0.0.0/8",
+      "runner": "127.0.0.0/8"
+    },
+    "storage-minio": {
+      "php": "http://compat-storage-minio:9000",
+      "rust": "http://localhost:16805",
+      "runner": "http://localhost:16805"
+    },
+    "queue-nats": {
+      "php": "nats://compat-queue-nats:4222",
+      "rust": "nats://localhost:14422",
+      "runner": "nats://localhost:14422"
+    },
+    "dns-php-server": {
+      "php": "compat-dns-php:5300",
+      "rust": "127.0.0.1:17760",
+      "rust-container": "compat-dns-php:5300",
+      "runner": "127.0.0.1:17760"
+    },
+    "dns-rust-server": {
+      "php": "host.docker.internal:17770",
+      "rust": "0.0.0.0:17770",
+      "runner": "0.0.0.0:17770"
+    },
+    "smtp": {
+      "php": "compat-smtp-mailpit:1025",
+      "rust": "127.0.0.1:16620",
+      "rust-container": "compat-smtp-mailpit-rust:1025",
+      "runner": "127.0.0.1:16620"
+    },
+    "smtp-api": {
+      "php": "http://compat-smtp-mailpit:8025",
+      "rust": "http://127.0.0.1:16621",
+      "rust-container": "http://compat-smtp-mailpit-rust:8025",
+      "runner": "http://127.0.0.1:16621"
+    },
+    "smtp-implicit": {
+      "php": "compat-smtp-implicit:1025",
+      "rust": "127.0.0.1:16622",
+      "rust-container": "compat-smtp-implicit-rust:1025",
+      "runner": "127.0.0.1:16622"
+    },
+    "smtp-implicit-api": {
+      "php": "http://compat-smtp-implicit:8025",
+      "rust": "http://127.0.0.1:16623",
+      "rust-container": "http://compat-smtp-implicit-rust:8025",
+      "runner": "http://127.0.0.1:16623"
+    },
+    "nats": {
+      "php": "nats://compat-nats:4222",
+      "rust": "nats://localhost:16901",
+      "rust-container": "nats://compat-nats:4222",
+      "runner": "nats://localhost:16901"
+    },
+    "nats-tls": {
+      "php": "tls://compat-nats-tls:4222",
+      "rust": "tls://localhost:16902",
+      "rust-container": "tls://compat-nats-tls:4222",
+      "runner": "tls://localhost:16902"
+    },
+    "nats-ws": {
+      "php": "ws://compat-nats-ws:8080",
+      "rust": "ws://localhost:16903",
+      "rust-container": "ws://compat-nats-ws:8080",
+      "runner": "ws://localhost:16903"
+    },
+    "mqtt-tcp": {
+      "php": "compat-mqtt-broker:1883",
+      "rust": "127.0.0.1:16700",
+      "runner": "127.0.0.1:16700"
+    },
+    "mqtt-ws": {
+      "php": "compat-mqtt-broker:8083",
+      "rust": "127.0.0.1:16701",
+      "runner": "127.0.0.1:16701"
+    },
+    "mqtt-tls": {
+      "php": "compat-mqtt-broker:8883",
+      "rust": "127.0.0.1:16702",
+      "runner": "127.0.0.1:16702"
+    },
+    "mqtt-host": {
+      "php": "host.docker.internal",
+      "rust": "127.0.0.1",
+      "runner": "127.0.0.1"
+    },
+    "cdn-http": {
+      "php": "http://compat-cdn-http:8080",
+      "rust": "http://127.0.0.1:16710",
+      "rust-container": "http://compat-cdn-http:8080",
+      "runner": "http://127.0.0.1:16710"
+    },
+    "orchestration-php": {
+      "php": "http://compat-orchestration-php:8080",
+      "rust": "http://127.0.0.1:16906",
+      "runner": "http://127.0.0.1:16906"
+    },
+    "messaging-http": {
+      "php": "http://compat-messaging-http:8080",
+      "rust": "http://127.0.0.1:16730",
+      "rust-container": "http://compat-messaging-http:8080",
+      "runner": "http://127.0.0.1:16730"
+    },
+    "messaging-smtp": {
+      "php": "compat-messaging-mailpit:1025",
+      "rust": "127.0.0.1:16731",
+      "rust-container": "compat-messaging-mailpit:1025",
+      "runner": "127.0.0.1:16731"
+    },
+    "messaging-mailpit": {
+      "php": "http://compat-messaging-mailpit:8025",
+      "rust": "http://127.0.0.1:16732",
+      "rust-container": "http://compat-messaging-mailpit:8025",
+      "runner": "http://127.0.0.1:16732"
+    },
+    "vcs-http": {
+      "php": "http://compat-vcs-http:8080",
+      "rust": "http://localhost:16950",
+      "rust-container": "http://compat-vcs-http:8080",
+      "runner": "http://localhost:16950"
+    },
+    "vcs-https": {
+      "php": "https://compat-vcs-http:8443",
+      "rust": "https://localhost:16951",
+      "rust-container": "https://compat-vcs-http:8443",
+      "runner": "https://localhost:16951"
+    },
+    "usage-clickhouse": {
+      "php": "http://default:clickhouse@compat-usage-clickhouse:8123",
+      "rust": "http://default:clickhouse@127.0.0.1:16833",
+      "rust-container": "http://default:clickhouse@compat-usage-clickhouse:8123",
+      "runner": "http://default:clickhouse@127.0.0.1:16833"
+    }
+  }
+}

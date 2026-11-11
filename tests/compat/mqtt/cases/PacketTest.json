@@ -1,0 +1,837 @@
+{
+  "source": "packages/mqtt/tests/PacketTest.php",
+  "cases": [
+    {
+      "name": "testVariableLengthRoundTrips 0",
+      "steps": [
+        {
+          "op": "length.encode",
+          "args": {
+            "length": 0
+          },
+          "bind": "e",
+          "expect": "\u0000"
+        },
+        {
+          "op": "length.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            },
+            "offset": 0
+          },
+          "expect": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testVariableLengthRoundTrips 127",
+      "steps": [
+        {
+          "op": "length.encode",
+          "args": {
+            "length": 127
+          },
+          "bind": "e",
+          "expect": ""
+        },
+        {
+          "op": "length.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            },
+            "offset": 0
+          },
+          "expect": [
+            127,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testVariableLengthRoundTrips 128",
+      "steps": [
+        {
+          "op": "length.encode",
+          "args": {
+            "length": 128
+          },
+          "bind": "e",
+          "expect": {
+            "$bytes": "gAE="
+          }
+        },
+        {
+          "op": "length.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            },
+            "offset": 0
+          },
+          "expect": [
+            128,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testVariableLengthRoundTrips 16383",
+      "steps": [
+        {
+          "op": "length.encode",
+          "args": {
+            "length": 16383
+          },
+          "bind": "e",
+          "expect": {
+            "$bytes": "/38="
+          }
+        },
+        {
+          "op": "length.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            },
+            "offset": 0
+          },
+          "expect": [
+            16383,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testVariableLengthRoundTrips 16384",
+      "steps": [
+        {
+          "op": "length.encode",
+          "args": {
+            "length": 16384
+          },
+          "bind": "e",
+          "expect": {
+            "$bytes": "gIAB"
+          }
+        },
+        {
+          "op": "length.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            },
+            "offset": 0
+          },
+          "expect": [
+            16384,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testVariableLengthRoundTrips 2097151",
+      "steps": [
+        {
+          "op": "length.encode",
+          "args": {
+            "length": 2097151
+          },
+          "bind": "e",
+          "expect": {
+            "$bytes": "//9/"
+          }
+        },
+        {
+          "op": "length.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            },
+            "offset": 0
+          },
+          "expect": [
+            2097151,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testVariableLengthRoundTrips 2097152",
+      "steps": [
+        {
+          "op": "length.encode",
+          "args": {
+            "length": 2097152
+          },
+          "bind": "e",
+          "expect": {
+            "$bytes": "gICAAQ=="
+          }
+        },
+        {
+          "op": "length.decode",
+          "args": {
+            "data": {
+              "$ref": "e"
+            },
+            "offset": 0
+          },
+          "expect": [
+            2097152,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testStringRoundTrips",
+      "steps": [
+        {
+          "op": "string.encode",
+          "args": {
+            "value": "appwrite/push/user-1"
+          },
+          "bind": "s",
+          "expect": "\u0000\u0014appwrite/push/user-1"
+        },
+        {
+          "op": "string.read",
+          "args": {
+            "data": {
+              "$ref": "s"
+            },
+            "offset": 0
+          },
+          "expect": [
+            "appwrite/push/user-1",
+            22
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testParseReadsFixedHeaderAndName",
+      "steps": [
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "p",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "p",
+              "path": "/1"
+            }
+          },
+          "expect": {
+            "type": 13,
+            "flags": 0,
+            "body": "",
+            "name": "pingresp",
+            "qos": 0,
+            "dup": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQosIsReadFromFlags",
+      "steps": [
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "sport/tennis",
+            "payload": "hi",
+            "qos": 1,
+            "packet_id": 7
+          },
+          "bind": "b",
+          "expect": "2\u0012\u0000\fsport/tennis\u0000\u0007hi"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 3,
+            "flags": 2,
+            "body": "\u0000\fsport/tennis\u0000\u0007hi",
+            "name": "publish",
+            "qos": 1,
+            "dup": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPingPackets",
+      "op": "packet.ping",
+      "args": {},
+      "expect": [
+        {
+          "$bytes": "wAA="
+        },
+        {
+          "$bytes": "0AA="
+        }
+      ]
+    },
+    {
+      "name": "testCleanStartReadsTheFlagBitInBothVersions",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "c",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "b0",
+          "expect": "\u0010\u001e\u0000\u0004MQTT\u0005\u0002\u0000<\u0010&\u0000\tprojectId\u0000\u0002p1\u0000\u0001c"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b0"
+            }
+          },
+          "bind": "p0",
+          "expect": {
+            "type": 1,
+            "flags": 0,
+            "body": "\u0000\u0004MQTT\u0005\u0002\u0000<\u0010&\u0000\tprojectId\u0000\u0002p1\u0000\u0001c",
+            "name": "connect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "packet.clean_start",
+          "args": {
+            "body": {
+              "$ref": "p0",
+              "path": "/body"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "c",
+            "keep_alive": 60,
+            "clean_start": false,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "b1",
+          "expect": "\u0010\u001e\u0000\u0004MQTT\u0005\u0000\u0000<\u0010&\u0000\tprojectId\u0000\u0002p1\u0000\u0001c"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b1"
+            }
+          },
+          "bind": "p1",
+          "expect": {
+            "type": 1,
+            "flags": 0,
+            "body": "\u0000\u0004MQTT\u0005\u0000\u0000<\u0010&\u0000\tprojectId\u0000\u0002p1\u0000\u0001c",
+            "name": "connect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "packet.clean_start",
+          "args": {
+            "body": {
+              "$ref": "p1",
+              "path": "/body"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "c",
+            "keep_alive": 60,
+            "clean_session": true
+          },
+          "bind": "b2",
+          "expect": "\u0010\r\u0000\u0004MQTT\u0004\u0002\u0000<\u0000\u0001c"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b2"
+            }
+          },
+          "bind": "p2",
+          "expect": {
+            "type": 1,
+            "flags": 0,
+            "body": "\u0000\u0004MQTT\u0004\u0002\u0000<\u0000\u0001c",
+            "name": "connect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "packet.clean_start",
+          "args": {
+            "body": {
+              "$ref": "p2",
+              "path": "/body"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "c",
+            "keep_alive": 60,
+            "clean_session": false
+          },
+          "bind": "b3",
+          "expect": "\u0010\r\u0000\u0004MQTT\u0004\u0000\u0000<\u0000\u0001c"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b3"
+            }
+          },
+          "bind": "p3",
+          "expect": {
+            "type": 1,
+            "flags": 0,
+            "body": "\u0000\u0004MQTT\u0004\u0000\u0000<\u0000\u0001c",
+            "name": "connect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "packet.clean_start",
+          "args": {
+            "body": {
+              "$ref": "p3",
+              "path": "/body"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testClientIdIsReadPastTheV5PropertyBlock",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "device-tv",
+            "keep_alive": 60,
+            "clean_start": false,
+            "properties": [
+              {
+                "id": 21,
+                "value": "appwrite-jwt"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": "\u00105\u0000\u0004MQTT\u0005\u0000\u0000<\u001f\u0015\u0000\fappwrite-jwt&\u0000\tprojectId\u0000\u0002p1\u0000\tdevice-tv"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 1,
+            "flags": 0,
+            "body": "\u0000\u0004MQTT\u0005\u0000\u0000<\u001f\u0015\u0000\fappwrite-jwt&\u0000\tprojectId\u0000\u0002p1\u0000\tdevice-tv",
+            "name": "connect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "packet.client_id",
+          "args": {
+            "body": {
+              "$ref": "p",
+              "path": "/body"
+            }
+          },
+          "expect": "device-tv"
+        }
+      ]
+    },
+    {
+      "name": "testClientIdIsReadDirectlyOnV3",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "device-tv",
+            "keep_alive": 60,
+            "clean_session": true
+          },
+          "bind": "b",
+          "expect": "\u0010\u0015\u0000\u0004MQTT\u0004\u0002\u0000<\u0000\tdevice-tv"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 1,
+            "flags": 0,
+            "body": "\u0000\u0004MQTT\u0004\u0002\u0000<\u0000\tdevice-tv",
+            "name": "connect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "packet.client_id",
+          "args": {
+            "body": {
+              "$ref": "p",
+              "path": "/body"
+            }
+          },
+          "expect": "device-tv"
+        }
+      ]
+    },
+    {
+      "name": "testEmptyClientIdReadsAsEmptyString",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "",
+            "keep_alive": 60,
+            "clean_start": true
+          },
+          "bind": "b",
+          "expect": "\u0010\r\u0000\u0004MQTT\u0005\u0002\u0000<\u0000\u0000\u0000"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 1,
+            "flags": 0,
+            "body": "\u0000\u0004MQTT\u0005\u0002\u0000<\u0000\u0000\u0000",
+            "name": "connect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "packet.client_id",
+          "args": {
+            "body": {
+              "$ref": "p",
+              "path": "/body"
+            }
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "testReadInt16DecodesTwoBigEndianBytes",
+      "steps": [
+        {
+          "op": "int16.read",
+          "args": {
+            "data": "\u00124",
+            "offset": 0
+          },
+          "expect": [
+            4660,
+            2
+          ]
+        },
+        {
+          "op": "int16.read",
+          "args": {
+            "data": {
+              "$bytes": "//8ABw=="
+            },
+            "offset": 2
+          },
+          "expect": [
+            7,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testDupFlagRoundTripsOnBothVersions",
+      "steps": [
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "t",
+            "payload": "p",
+            "qos": 1,
+            "packet_id": 7,
+            "dup": true
+          },
+          "bind": "b0",
+          "expect": ":\u0007\u0000\u0001t\u0000\u0007\u0000p"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b0"
+            }
+          },
+          "bind": "p0",
+          "expect": {
+            "type": 3,
+            "flags": 10,
+            "body": "\u0000\u0001t\u0000\u0007\u0000p",
+            "name": "publish",
+            "qos": 1,
+            "dup": true
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "t",
+            "payload": "p",
+            "qos": 1,
+            "packet_id": 7
+          },
+          "bind": "b1",
+          "expect": "2\u0007\u0000\u0001t\u0000\u0007\u0000p"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b1"
+            }
+          },
+          "bind": "p1",
+          "expect": {
+            "type": 3,
+            "flags": 2,
+            "body": "\u0000\u0001t\u0000\u0007\u0000p",
+            "name": "publish",
+            "qos": 1,
+            "dup": false
+          }
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "t",
+            "payload": "p",
+            "qos": 1,
+            "packet_id": 7,
+            "dup": true
+          },
+          "bind": "b2",
+          "expect": ":\u0006\u0000\u0001t\u0000\u0007p"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b2"
+            }
+          },
+          "bind": "p2",
+          "expect": {
+            "type": 3,
+            "flags": 10,
+            "body": "\u0000\u0001t\u0000\u0007p",
+            "name": "publish",
+            "qos": 1,
+            "dup": true
+          }
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "t",
+            "payload": "p",
+            "qos": 1,
+            "packet_id": 7
+          },
+          "bind": "b3",
+          "expect": "2\u0006\u0000\u0001t\u0000\u0007p"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b3"
+            }
+          },
+          "bind": "p3",
+          "expect": {
+            "type": 3,
+            "flags": 2,
+            "body": "\u0000\u0001t\u0000\u0007p",
+            "name": "publish",
+            "qos": 1,
+            "dup": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDupIsMaskedOnQos0",
+      "steps": [
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "t",
+            "payload": "p",
+            "qos": 0,
+            "packet_id": 0,
+            "dup": true
+          },
+          "bind": "a",
+          "expect": "0\u0005\u0000\u0001t\u0000p"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "a"
+            }
+          },
+          "bind": "pa",
+          "expect": {
+            "type": 3,
+            "flags": 0,
+            "body": "\u0000\u0001t\u0000p",
+            "name": "publish",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "t",
+            "payload": "p",
+            "qos": 0,
+            "packet_id": 0,
+            "dup": true
+          },
+          "bind": "b",
+          "expect": "0\u0004\u0000\u0001tp"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "pb",
+          "expect": {
+            "type": 3,
+            "flags": 0,
+            "body": "\u0000\u0001tp",
+            "name": "publish",
+            "qos": 0,
+            "dup": false
+          }
+        }
+      ]
+    }
+  ]
+}

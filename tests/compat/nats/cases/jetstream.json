@@ -1,0 +1,796 @@
+{
+  "source": "jetstream",
+  "cases": [
+    {
+      "name": "acknowledgements are published to the reply subject",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jsmsg.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "orders",
+            "data": "x",
+            "reply": "$JS.ACK.S.C.1.2.3.1700000000000000000.5"
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jsmsg.get",
+          "args": {
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "subject": "orders",
+            "data": "x",
+            "headers": null,
+            "reply": true
+          }
+        },
+        {
+          "op": "jsmsg.metadata",
+          "args": {
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "stream": "S",
+            "consumer": "C",
+            "delivered": 1,
+            "stream_seq": 2,
+            "consumer_seq": 3,
+            "timestamp": "1700000000000000000",
+            "pending": 5,
+            "domain": null
+          }
+        },
+        {
+          "op": "jsmsg.ack",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "jsmsg.nak",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "jsmsg.nak",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            },
+            "delay": 0.5
+          },
+          "expect": null
+        },
+        {
+          "op": "jsmsg.in_progress",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "jsmsg.term",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "jsmsg.term",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            },
+            "reason": "bad input"
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.writes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\n",
+            "PING\r\n",
+            "PUB $JS.ACK.S.C.1.2.3.1700000000000000000.5 0\r\n\r\n",
+            "PUB $JS.ACK.S.C.1.2.3.1700000000000000000.5 4\r\n-NAK\r\n",
+            "PUB $JS.ACK.S.C.1.2.3.1700000000000000000.5 24\r\n-NAK {\"delay\":500000000}\r\n",
+            "PUB $JS.ACK.S.C.1.2.3.1700000000000000000.5 4\r\n+WPI\r\n",
+            "PUB $JS.ACK.S.C.1.2.3.1700000000000000000.5 5\r\n+TERM\r\n",
+            "PUB $JS.ACK.S.C.1.2.3.1700000000000000000.5 15\r\n+TERM bad input\r\n"
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a message without reply subject cannot be acknowledged",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "requestTimeout": 0.02
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jsmsg.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "x"
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jsmsg.ack",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Cannot acknowledge: message has no reply subject"
+            }
+          }
+        },
+        {
+          "op": "jsmsg.nak",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Cannot acknowledge: message has no reply subject"
+            }
+          }
+        },
+        {
+          "op": "jsmsg.term",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Cannot acknowledge: message has no reply subject"
+            }
+          }
+        },
+        {
+          "op": "jsmsg.in_progress",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Cannot acknowledge: message has no reply subject"
+            }
+          }
+        },
+        {
+          "op": "jsmsg.ack_sync",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Cannot acknowledge: message has no reply subject"
+            }
+          }
+        },
+        {
+          "op": "jsmsg.metadata",
+          "args": {
+            "msg": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Message has no reply subject for metadata parsing"
+            }
+          }
+        },
+        {
+          "op": "jsmsg.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "reply": "_INBOX.x"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jsmsg.metadata",
+          "args": {
+            "msg": {
+              "$ref": "n"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Cannot parse JetStream reply subject: _INBOX.x"
+            }
+          }
+        },
+        {
+          "op": "jsmsg.ack_sync",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "n"
+            },
+            "timeout": 0.02
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "Request timed out after 0.02s"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a batch built message by message",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "batch.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "messages": [
+              {
+                "subject": "a",
+                "data": "1",
+                "reply": "$JS.ACK.S.C.1.2.3.1700000000000000000.5"
+              },
+              {
+                "data": "2"
+              }
+            ]
+          },
+          "expect": {
+            "count": 2,
+            "listed": 2,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "a",
+                "data": "1",
+                "headers": null,
+                "reply": true
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "foo",
+                "data": "2",
+                "headers": null,
+                "reply": false
+              }
+            ]
+          }
+        },
+        {
+          "op": "batch.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "messages": []
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "control messages are answered and swallowed",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "push.handle_control",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "message": {
+              "subject": "d",
+              "reply": "_FC.1",
+              "headers": [
+                [
+                  "status",
+                  "100",
+                  "FlowControl Request"
+                ]
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "push.handle_control",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "message": {
+              "subject": "d",
+              "headers": [
+                [
+                  "status",
+                  "100",
+                  "Idle Heartbeat"
+                ],
+                [
+                  "set",
+                  "Nats-Consumer-Stalled",
+                  "_STALL.2"
+                ]
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "push.handle_control",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "message": {
+              "subject": "d",
+              "headers": [
+                [
+                  "status",
+                  "100",
+                  "Idle Heartbeat"
+                ]
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "push.handle_control",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "message": {
+              "subject": "d",
+              "reply": "",
+              "headers": [
+                [
+                  "status",
+                  "100"
+                ]
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "push.handle_control",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "message": {
+              "subject": "d",
+              "reply": "_FC.3",
+              "headers": [
+                [
+                  "status",
+                  "404"
+                ]
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "push.handle_control",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "message": {
+              "subject": "d",
+              "reply": "_FC.4"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "fake.writes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\n",
+            "PING\r\n",
+            "PUB _FC.1 0\r\n\r\n",
+            "PUB _STALL.2 0\r\n\r\n"
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "delete a consumer",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "DC_${ns}",
+              "subjects": [
+                "dc.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "DC_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "dc.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "DC_${ns}",
+            "config": {
+              "durableName": "gone"
+            }
+          },
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "DC_${ns}",
+              "name": "gone",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "gone",
+                "durable_name": "gone",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "js.delete_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "DC_${ns}",
+            "name": "gone"
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "DC_${ns}",
+            "name": "gone"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "consumer not found"
+            }
+          }
+        },
+        {
+          "op": "js.get_consumer_names",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "DC_${ns}"
+          },
+          "expect": []
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "DC_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

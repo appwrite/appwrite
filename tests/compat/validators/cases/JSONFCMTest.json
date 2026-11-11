@@ -1,0 +1,976 @@
+{
+  "source": "packages/validators/tests/JSON/FCMTest.php",
+  "cases": [
+    {
+      "name": "testAcceptsEncodedServiceAccount",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "{\"type\":\"service_account\",\"project_id\":\"test-project\",\"private_key_id\":\"test-private-key-id\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\\ntest\\n-----END PRIVATE KEY-----\\n\",\"client_email\":\"test@appwrite.iam.gserviceaccount.com\",\"client_id\":\"1234567890\",\"auth_uri\":\"https:\\/\\/accounts.google.com\\/o\\/oauth2\\/auth\",\"token_uri\":\"https:\\/\\/oauth2.googleapis.com\\/token\",\"auth_provider_x509_cert_url\":\"https:\\/\\/www.googleapis.com\\/oauth2\\/v1\\/certs\",\"client_x509_cert_url\":\"https:\\/\\/www.googleapis.com\\/robot\\/v1\\/metadata\\/x509\\/test%40appwrite.iam.gserviceaccount.com\",\"universe_domain\":\"googleapis.com\"}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsDecodedServiceAccounts",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "$object": {
+                "type": "service_account",
+                "project_id": "test-project",
+                "private_key_id": "test-private-key-id",
+                "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+                "client_email": "test@appwrite.iam.gserviceaccount.com",
+                "client_id": "1234567890",
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+                "universe_domain": "googleapis.com"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testAcceptsOnlyOperationalFieldsAndUnknownFields",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "custom_field": "allowed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testRejectsMissingOrEmptyRequiredFields #type",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsMissingOrEmptyRequiredFields #project ID",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON must include a non-empty 'project_id' field, which identifies the Firebase project receiving messages."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsMissingOrEmptyRequiredFields #private key",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON must include a non-empty 'private_key' field, which signs the OAuth access-token request."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsMissingOrEmptyRequiredFields #client email",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsMissingOrEmptyRequiredFields #token URI",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON must include a non-empty 'token_uri' field, which identifies the OAuth token endpoint."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsMissingOrEmptyRequiredFields #blank project ID",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": " \t\n",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON must include a non-empty 'project_id' field, which identifies the Firebase project receiving messages."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsMissingOrEmptyRequiredFields #non-string client email",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": 123,
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsInvalidFieldValues #credential type",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "authorized_user",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON field 'type' must be 'service_account'."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsInvalidFieldValues #client email",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "not-an-email",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON field 'client_email' must contain a valid email address."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsInvalidFieldValues #private key",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "not-a-private-key",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON field 'private_key' must contain a PEM-encoded private key."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsInvalidFieldValues #HTTP token URI",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "http://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON field 'token_uri' must contain a valid HTTPS URL."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsInvalidFieldValues #invalid auth URI",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "not-a-url",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON field 'auth_uri' must contain a valid HTTPS URL."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsInvalidFieldValues #empty optional field",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON field 'private_key_id' must be a non-empty string when provided."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsInvalidFieldValues #non-string optional field",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": 123,
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON field 'client_id' must be a non-empty string when provided."
+        }
+      ]
+    },
+    {
+      "name": "testRejectsInvalidJSONShapes",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "not-json"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[]"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "null"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[\"credentials\"]"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": [
+              "credentials"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": true
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDescriptionResetsBetweenValidations",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": []
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "FCM service account JSON must include a non-empty 'type' field, which identifies the credentials as a Google service account."
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {
+              "type": "service_account",
+              "project_id": "test-project",
+              "private_key_id": "test-private-key-id",
+              "private_key": "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+              "client_email": "test@appwrite.iam.gserviceaccount.com",
+              "client_id": "1234567890",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test%40appwrite.iam.gserviceaccount.com",
+              "universe_domain": "googleapis.com"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "Value must be valid Google service account JSON for FCM"
+        }
+      ]
+    },
+    {
+      "name": "testContract",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "JSON\\FCM",
+            "args": {}
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "object"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "Value must be valid Google service account JSON for FCM"
+        }
+      ]
+    }
+  ]
+}

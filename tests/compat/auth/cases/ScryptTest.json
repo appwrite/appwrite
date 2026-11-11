@@ -1,0 +1,863 @@
+{
+  "source": "packages/auth/tests/Algorithms/ScryptTest.php",
+  "cases": [
+    {
+      "name": "hash",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted hash: verified by both runtimes below"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "default salt is generated",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "salt"
+          },
+          "bind": "salt",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random salt"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.matches",
+          "args": {
+            "pattern": "/^[0-9a-f]{32}$/",
+            "value": {
+              "$ref": "salt"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "h2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.get_option",
+          "args": {
+            "hash": {
+              "$ref": "h2"
+            },
+            "key": "salt"
+          },
+          "bind": "salt2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random salt"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "salt"
+            },
+            "b": {
+              "$ref": "salt2"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/salt"
+            ],
+            "reason": "random salt"
+          },
+          "expect": {
+            "type": "scrypt",
+            "costCpu": 8,
+            "costMemory": 14,
+            "costParallel": 1,
+            "length": 64,
+            "salt": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom options",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCpuCost",
+            "value": 16
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setMemoryCost",
+            "value": 15
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setParallelCost",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setLength",
+            "value": 128
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": "custom-salt"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "expect": "5dcf52520eb2ddb86f55e0ce1e68183cac68a66cac92530a6b22937fd69fdcbaac299abd0a4918f36f53c9c0a9b1c7ef1481ec80f74b856ae72403d21569ffccb13281904e7da812a9144a499c9ac6f73a928856eb31d2e882989a3ed60bc48f79a9e0d7f893276f608eddfb5b68b694f08f7076d874a02bf1fa9d9e1e19ac0e"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "scrypt",
+            "costCpu": 16,
+            "costMemory": 15,
+            "costParallel": 2,
+            "length": 128,
+            "salt": "custom-salt"
+          }
+        }
+      ]
+    },
+    {
+      "name": "setter validation",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCpuCost",
+            "value": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CPU cost must be > 1 and a power of 2"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCpuCost",
+            "value": 3
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CPU cost must be > 1 and a power of 2"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCpuCost",
+            "value": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CPU cost must be > 1 and a power of 2"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCpuCost",
+            "value": -8
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CPU cost must be > 1 and a power of 2"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setMemoryCost",
+            "value": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Memory cost must be >= 1"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setParallelCost",
+            "value": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Parallel cost must be >= 1"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setLength",
+            "value": 15
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Length must be >= 16 bytes"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": "0"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt cannot be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "verifies the Appwrite fixture",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setSalt",
+            "value": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setCpuCost",
+            "value": 16384
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setMemoryCost",
+            "value": 13
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setParallelCost",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "3fdef49701bc4cfaacd551fe017283513284b4731e6945c263246ef948d3cf63b5d269c31fd697246085111a428245e24a4ddc6b64c687bc60a8910dbafc1d5b"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "stored options are checked when hashing",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "salt",
+            "value": "s"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "costCpu",
+            "value": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "scrypt(): Argument #3 ($N) must be a power of 2"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "costCpu",
+            "value": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "scrypt(): Argument #3 ($N) must be greater than 1"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "costCpu",
+            "value": 8
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": "eeef72691745a010da415a072f986deac14e6aa8b3fc2d46c0e72fbc6f5fe370fb858babec105e5c90551465ad6753f558c4b8d72ede2444b97f486990fb2d8b"
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "length",
+            "value": 8
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "scrypt(): Argument #6 ($key_length) must be greater than or equal to 16"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "length",
+            "value": 16
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": "eeef72691745a010da415a072f986dea"
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "costMemory",
+            "value": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "scrypt(): Argument #4 ($r) must be greater than 0"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "costMemory",
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": "6a924beaf81e926e022ec1ddbdccd534"
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "costParallel",
+            "value": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "scrypt(): Argument #5 ($p) must be greater than 0"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "costParallel",
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": "6a924beaf81e926e022ec1ddbdccd534"
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "costCpu",
+            "value": "8"
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Scrypt cost and length options must be integers"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "costCpu",
+            "value": 8
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": "6a924beaf81e926e022ec1ddbdccd534"
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "salt",
+            "value": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Salt must be a string"
+            }
+          }
+        },
+        {
+          "op": "hash.set_option",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "key": "salt",
+            "value": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": "d8b666ea6fc5dfc0d0f4289753cbc15f"
+        }
+      ]
+    },
+    {
+      "name": "name",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "scrypt"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.name",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": "scrypt"
+        }
+      ]
+    }
+  ]
+}

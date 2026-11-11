@@ -1,0 +1,72 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Indexes/UnknownIndexTypeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "UnknownIndexTypeTest::testAnUnknownTypeIsRefusedAs7xDid",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "i",
+                "type": "nope",
+                "attributes": [
+                  "name"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Unknown index type: nope. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot, trigram, ttl"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "UnknownIndexTypeTest::testAMissingTypeIsAKeyIndex",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "i",
+                "attributes": [
+                  "name"
+                ]
+              }
+            },
+            "as": "o502"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "i",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

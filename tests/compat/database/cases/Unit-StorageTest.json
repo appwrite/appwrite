@@ -1,0 +1,198 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/StorageTest.php"
+  ],
+  "cases": [
+    {
+      "name": "StorageTest::test_column_mapping",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "column",
+            "args": {
+              "attribute": "$id"
+            }
+          },
+          "expect": "_uid"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "column",
+            "args": {
+              "attribute": "$sequence"
+            }
+          },
+          "expect": "_id"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "column",
+            "args": {
+              "attribute": "$internalId"
+            }
+          },
+          "expect": "$internalId"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "column",
+            "args": {
+              "attribute": "title"
+            }
+          },
+          "expect": "title"
+        }
+      ]
+    },
+    {
+      "name": "StorageTest::test_maps_invert",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attributeMap",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_uid",
+            "$sequence": "_id",
+            "$collection": "_collection",
+            "$tenant": "_tenant",
+            "$createdAt": "_createdAt",
+            "$updatedAt": "_updatedAt",
+            "$deletedAt": "_deletedAt",
+            "$permissions": "_permissions",
+            "$distance": "_distance"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attribute",
+            "args": {
+              "column": "_uid"
+            }
+          },
+          "expect": "$id"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attribute",
+            "args": {
+              "column": "_id"
+            }
+          },
+          "expect": "$sequence"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attribute",
+            "args": {
+              "column": "_collection"
+            }
+          },
+          "expect": "$collection"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attribute",
+            "args": {
+              "column": "_tenant"
+            }
+          },
+          "expect": "$tenant"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attribute",
+            "args": {
+              "column": "_createdAt"
+            }
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attribute",
+            "args": {
+              "column": "_updatedAt"
+            }
+          },
+          "expect": "$updatedAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attribute",
+            "args": {
+              "column": "_deletedAt"
+            }
+          },
+          "expect": "$deletedAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attribute",
+            "args": {
+              "column": "_permissions"
+            }
+          },
+          "expect": "$permissions"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "attribute",
+            "args": {
+              "column": "_distance"
+            }
+          },
+          "expect": "$distance"
+        }
+      ]
+    },
+    {
+      "name": "StorageTest::test_permissions_table",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Storage",
+            "method": "permissionsTable",
+            "args": {
+              "collection": "movies"
+            }
+          },
+          "expect": "movies_perms"
+        }
+      ]
+    }
+  ]
+}

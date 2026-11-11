@@ -1,0 +1,4052 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/QueryConversionTest.php"
+  ],
+  "cases": [
+    {
+      "name": "QueryConversionTest::testUnparseableDatetimeQueryValueIsAQueryException#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1124"
+          },
+          "bind": "s4827",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1124"
+              },
+              "cache": "none"
+            },
+            "as": "o1125"
+          },
+          "bind": "s4828",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1125"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "conversion"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1125"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "conversion_u000000000001"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1125"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "occurredAt"
+            },
+            "as": "o1126"
+          },
+          "bind": "s4832",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "occurredAt",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "tags",
+              "size": 16,
+              "array": true
+            },
+            "as": "o1127"
+          },
+          "bind": "s4833",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "tags",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1128"
+          },
+          "bind": "s4834",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1128"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1129"
+          },
+          "bind": "s4836",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1129"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "events",
+              "attributes": [
+                {
+                  "$obj": "o1126"
+                },
+                {
+                  "$obj": "o1127"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o1130"
+          },
+          "bind": "s4838",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1125"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1130"
+              }
+            },
+            "as": "o1131"
+          },
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1125"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "events"
+            },
+            "as": "o1132"
+          },
+          "bind": "s4840",
+          "expect": {
+            "$document": {
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "events",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "occurredAt",
+              "values": [
+                "not-a-date"
+              ]
+            },
+            "as": "o1133"
+          },
+          "bind": "s4841",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "not-a-date"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1125"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1132"
+              },
+              "query": {
+                "$obj": "o1133"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Failed to parse time string (not-a-date) at position 0 (n): The timezone could not be found in the database"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1125"
+            },
+            "method": "skipValidation",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Query",
+                      "method": "equal",
+                      "args": {
+                        "attribute": "occurredAt",
+                        "values": [
+                          "not-a-date"
+                        ]
+                      },
+                      "as": "o1134"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1125"
+                      },
+                      "method": "find",
+                      "args": {
+                        "collection": "events",
+                        "queries": [
+                          {
+                            "$obj": "o1134"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s4843",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Failed to parse time string (not-a-date) at position 0 (n): The timezone could not be found in the database"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryConversionTest::testUnparseableDatetimeQueryValueIsAQueryException#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1135"
+          },
+          "bind": "s4844",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1135"
+              },
+              "cache": "none"
+            },
+            "as": "o1136"
+          },
+          "bind": "s4845",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1136"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "conversion"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1136"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "conversion_u000000000002"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1136"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "occurredAt"
+            },
+            "as": "o1137"
+          },
+          "bind": "s4849",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "occurredAt",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "tags",
+              "size": 16,
+              "array": true
+            },
+            "as": "o1138"
+          },
+          "bind": "s4850",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "tags",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1139"
+          },
+          "bind": "s4851",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1139"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1140"
+          },
+          "bind": "s4853",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1140"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "events",
+              "attributes": [
+                {
+                  "$obj": "o1137"
+                },
+                {
+                  "$obj": "o1138"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o1141"
+          },
+          "bind": "s4855",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1136"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1141"
+              }
+            },
+            "as": "o1142"
+          },
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1136"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "events"
+            },
+            "as": "o1143"
+          },
+          "bind": "s4857",
+          "expect": {
+            "$document": {
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "events",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "occurredAt",
+              "values": [
+                "not-a-date"
+              ]
+            },
+            "as": "o1144"
+          },
+          "bind": "s4858",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "not-a-date"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1136"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1143"
+              },
+              "query": {
+                "$obj": "o1144"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Failed to parse time string (not-a-date) at position 0 (n): The timezone could not be found in the database"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1136"
+            },
+            "method": "skipValidation",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Query",
+                      "method": "equal",
+                      "args": {
+                        "attribute": "occurredAt",
+                        "values": [
+                          "not-a-date"
+                        ]
+                      },
+                      "as": "o1145"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1136"
+                      },
+                      "method": "find",
+                      "args": {
+                        "collection": "events",
+                        "queries": [
+                          {
+                            "$obj": "o1145"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s4860",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Failed to parse time string (not-a-date) at position 0 (n): The timezone could not be found in the database"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryConversionTest::testAttributeWithoutAStringTypeIsRefused#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1146"
+          },
+          "bind": "s4861",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1146"
+              },
+              "cache": "none"
+            },
+            "as": "o1147"
+          },
+          "bind": "s4862",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1147"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "conversion"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1147"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "conversion_u000000000003"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1147"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "untyped",
+                "type": 5,
+                "array": true
+              }
+            },
+            "as": "o1148"
+          },
+          "bind": "s4866",
+          "expect": {
+            "$document": {
+              "$id": "untyped",
+              "type": 5,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": [
+                  {
+                    "$obj": "o1148"
+                  }
+                ]
+              }
+            },
+            "as": "o1149"
+          },
+          "bind": "s4867",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "untyped",
+                    "type": 5,
+                    "array": true
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "untyped",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1150"
+          },
+          "bind": "s4868",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "untyped",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1147"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1149"
+              },
+              "query": {
+                "$obj": "o1150"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Attribute type must be a string, int given"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryConversionTest::testAttributeWithoutAStringTypeIsRefused#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1151"
+          },
+          "bind": "s4870",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1151"
+              },
+              "cache": "none"
+            },
+            "as": "o1152"
+          },
+          "bind": "s4871",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1152"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "conversion"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1152"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "conversion_u000000000004"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1152"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "untyped",
+                "type": 5,
+                "array": true
+              }
+            },
+            "as": "o1153"
+          },
+          "bind": "s4875",
+          "expect": {
+            "$document": {
+              "$id": "untyped",
+              "type": 5,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": [
+                  {
+                    "$obj": "o1153"
+                  }
+                ]
+              }
+            },
+            "as": "o1154"
+          },
+          "bind": "s4876",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "untyped",
+                    "type": 5,
+                    "array": true
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "untyped",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1155"
+          },
+          "bind": "s4877",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "untyped",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1152"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1154"
+              },
+              "query": {
+                "$obj": "o1155"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Attribute type must be a string, int given"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryConversionTest::testConvertQueryMatchesConvertQueries#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1174"
+          },
+          "bind": "s4927",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1174"
+              },
+              "cache": "none"
+            },
+            "as": "o1175"
+          },
+          "bind": "s4928",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "conversion"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "conversion_u000000000011"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "occurredAt"
+            },
+            "as": "o1176"
+          },
+          "bind": "s4932",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "occurredAt",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "tags",
+              "size": 16,
+              "array": true
+            },
+            "as": "o1177"
+          },
+          "bind": "s4933",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "tags",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1178"
+          },
+          "bind": "s4934",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1178"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1179"
+          },
+          "bind": "s4936",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1179"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "events",
+              "attributes": [
+                {
+                  "$obj": "o1176"
+                },
+                {
+                  "$obj": "o1177"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o1180"
+          },
+          "bind": "s4938",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1180"
+              }
+            },
+            "as": "o1181"
+          },
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "events"
+            },
+            "as": "o1182"
+          },
+          "bind": "s4940",
+          "expect": {
+            "$document": {
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "events",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1183"
+          },
+          "bind": "s4941",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1182"
+              },
+              "query": {
+                "$obj": "o1183"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00.000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1184"
+          },
+          "bind": "s4943",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "convertQueries",
+            "args": {
+              "collection": {
+                "$obj": "o1182"
+              },
+              "queries": [
+                {
+                  "$obj": "o1184"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "occurredAt",
+                "values": [
+                  "2026-09-30 10:00:00.000"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1183"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1183"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "occurredAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1184"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1183"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1183"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "occurredAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1184"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1183"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1183"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "occurredAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1184"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1183"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1183"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "occurredAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "containsAny",
+            "args": {
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1185"
+          },
+          "bind": "s4956",
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1182"
+              },
+              "query": {
+                "$obj": "o1185"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "containsAny",
+            "args": {
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1186"
+          },
+          "bind": "s4958",
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "convertQueries",
+            "args": {
+              "collection": {
+                "$obj": "o1182"
+              },
+              "queries": [
+                {
+                  "$obj": "o1186"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "containsAny",
+                "attribute": "tags",
+                "values": [
+                  "a"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "tags"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1186"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "tags"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1186"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "tags"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1186"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "a"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "a"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1185"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "tags"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1187"
+          },
+          "bind": "s4971",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1182"
+              },
+              "query": {
+                "$obj": "o1187"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00.000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1188"
+          },
+          "bind": "s4973",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "convertQueries",
+            "args": {
+              "collection": {
+                "$obj": "o1182"
+              },
+              "queries": [
+                {
+                  "$obj": "o1188"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "$createdAt",
+                "values": [
+                  "2026-09-30 10:00:00.000"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1187"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1187"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1188"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1187"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1187"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1188"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1187"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1187"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1188"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1187"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1187"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "containsAny",
+            "args": {
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1189"
+          },
+          "bind": "s4986",
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1182"
+              },
+              "query": {
+                "$obj": "o1189"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1189"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "getAdapter",
+            "args": {}
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1174"
+            },
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o1190"
+          },
+          "bind": "s4991",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "events",
+              "attribute": {
+                "$obj": "o1190"
+              }
+            },
+            "as": "o1191"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "events"
+            },
+            "as": "o1192"
+          },
+          "bind": "s4993",
+          "expect": {
+            "$document": {
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "meta",
+                    "key": "meta",
+                    "type": "object",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "object"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "events",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.level",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1193"
+          },
+          "bind": "s4994",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.level",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1192"
+              },
+              "query": {
+                "$obj": "o1193"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.level",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1193"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "object"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1194"
+          },
+          "bind": "s4997",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1182"
+              },
+              "query": {
+                "$obj": "o1194"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00.000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1194"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "QueryConversionTest::testConvertQueryMatchesConvertQueries#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1195"
+          },
+          "bind": "s5000",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1195"
+              },
+              "cache": "none"
+            },
+            "as": "o1196"
+          },
+          "bind": "s5001",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "conversion"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "conversion_u000000000012"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "occurredAt"
+            },
+            "as": "o1197"
+          },
+          "bind": "s5005",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "occurredAt",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "tags",
+              "size": 16,
+              "array": true
+            },
+            "as": "o1198"
+          },
+          "bind": "s5006",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "tags",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1199"
+          },
+          "bind": "s5007",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1199"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1200"
+          },
+          "bind": "s5009",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1200"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "events",
+              "attributes": [
+                {
+                  "$obj": "o1197"
+                },
+                {
+                  "$obj": "o1198"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o1201"
+          },
+          "bind": "s5011",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1201"
+              }
+            },
+            "as": "o1202"
+          },
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "events"
+            },
+            "as": "o1203"
+          },
+          "bind": "s5013",
+          "expect": {
+            "$document": {
+              "name": "events",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "occurredAt",
+                    "key": "occurredAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "events",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1204"
+          },
+          "bind": "s5014",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1203"
+              },
+              "query": {
+                "$obj": "o1204"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00.000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1205"
+          },
+          "bind": "s5016",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "convertQueries",
+            "args": {
+              "collection": {
+                "$obj": "o1203"
+              },
+              "queries": [
+                {
+                  "$obj": "o1205"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "occurredAt",
+                "values": [
+                  "2026-09-30 10:00:00.000"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1204"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1204"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "occurredAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1205"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1204"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1204"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "occurredAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1205"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1204"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1204"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "occurredAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1205"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1204"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1204"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "occurredAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "containsAny",
+            "args": {
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1206"
+          },
+          "bind": "s5029",
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1203"
+              },
+              "query": {
+                "$obj": "o1206"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "containsAny",
+            "args": {
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1207"
+          },
+          "bind": "s5031",
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "convertQueries",
+            "args": {
+              "collection": {
+                "$obj": "o1203"
+              },
+              "queries": [
+                {
+                  "$obj": "o1207"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "containsAny",
+                "attribute": "tags",
+                "values": [
+                  "a"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1206"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1206"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "tags"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1207"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1206"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1206"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "tags"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1207"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1206"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1206"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "tags"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1207"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "a"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1206"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "a"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1206"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "tags"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1208"
+          },
+          "bind": "s5044",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1203"
+              },
+              "query": {
+                "$obj": "o1208"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00.000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1209"
+          },
+          "bind": "s5046",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "$createdAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "convertQueries",
+            "args": {
+              "collection": {
+                "$obj": "o1203"
+              },
+              "queries": [
+                {
+                  "$obj": "o1209"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "$createdAt",
+                "values": [
+                  "2026-09-30 10:00:00.000"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1208"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1208"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1209"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1208"
+            },
+            "method": "getAttributeType",
+            "args": {}
+          },
+          "expect": "datetime"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1208"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1209"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1208"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1208"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1209"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1208"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1208"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "containsAny",
+            "args": {
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1210"
+          },
+          "bind": "s5059",
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1203"
+              },
+              "query": {
+                "$obj": "o1210"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1210"
+            },
+            "method": "onArray",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "getAdapter",
+            "args": {}
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1195"
+            },
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            },
+            "as": "o1211"
+          },
+          "bind": "s5064",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1196"
+            },
+            "method": "convertQuery",
+            "args": {
+              "collection": {
+                "$obj": "o1203"
+              },
+              "query": {
+                "$obj": "o1211"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "occurredAt",
+              "values": [
+                "2026-09-30 10:00:00.000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1211"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "2026-09-30 10:00:00.000"
+          ]
+        }
+      ]
+    }
+  ]
+}

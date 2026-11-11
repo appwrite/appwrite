@@ -1,0 +1,276 @@
+{
+  "source": "packages/storage/tests/Device/S3/ContentLengthTest.php",
+  "cases": [
+    {
+      "name": "a streamed write sends its exact content length",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "etag",
+                    "\"abc\""
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "bucket-root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "file.txt",
+            "data": "hello world",
+            "content_type": "text/plain"
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "PUT",
+              "url": "https://s3.example.com/file.txt",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "11",
+                "content-md5": "XrY7u+Ae7tCTyyK7j1rNww==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+                "x-amz-date": "<masked>"
+              },
+              "body": "hello world"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an empty-body multipart POST sends a zero content length",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><InitiateMultipartUploadResult><UploadId>test-upload-id</UploadId></InitiateMultipartUploadResult>",
+                "headers": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "bucket-root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.prepare",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "file.txt",
+            "content_type": "text/plain",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "parts": [],
+            "chunks": 0,
+            "content_type": "text/plain",
+            "uploadId": "test-upload-id"
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "url": "https://s3.example.com/file.txt?uploads=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a file body sends its length",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "etag",
+                    "\"abc\""
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "bucket-root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "kitten.jpg",
+            "file": "packages/storage/tests/resources/disk-a/kitten-2.jpg",
+            "content_type": "image/jpeg"
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/0/body",
+              "/*/headers/authorization",
+              "/*/headers/date",
+              "/*/headers/x-amz-date"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": [
+            {
+              "method": "PUT",
+              "url": "https://s3.example.com/kitten.jpg",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "131958",
+                "content-md5": "gXAv3u8uVbGiJhe85JUctQ==",
+                "content-type": "image/jpeg",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "02ae32cd5ab5f0a1681e6b3daf9b8dc4bea1fae9d03c0eaf44a5f9cf062dc7a5",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<masked>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

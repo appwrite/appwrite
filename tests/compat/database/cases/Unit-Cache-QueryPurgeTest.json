@@ -1,0 +1,3350 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Cache/QueryPurgeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "QueryPurgeTest::testColdLocalQueryPurgeInvalidatesAWarmRemoteRegion",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o632"
+          },
+          "bind": "s1348",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o633"
+          },
+          "bind": "s1349",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o634"
+          },
+          "bind": "s1350",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o634"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o633"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o632"
+              },
+              "cache": "memory"
+            },
+            "as": "o635"
+          },
+          "bind": "s1353",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o633"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000032"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o632"
+              },
+              "cache": "memory"
+            },
+            "as": "o636"
+          },
+          "bind": "s1357",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o636"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o633"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o636"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o636"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000032"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Query",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o637"
+          },
+          "bind": "s1362",
+          "expect": {
+            "$queryCache": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "setQueryCache",
+            "args": {
+              "queryCache": {
+                "$obj": "o637"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o638"
+          },
+          "bind": "s1364",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o638"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o639"
+          },
+          "bind": "s1366",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o639"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o640"
+          },
+          "bind": "s1368",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o640"
+              }
+            },
+            "as": "o641"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first"
+              }
+            },
+            "as": "o642"
+          },
+          "bind": "s1370",
+          "expect": {
+            "$document": {
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o642"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o643"
+          },
+          "bind": "s1372",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o643"
+              },
+              "cache": "memory"
+            },
+            "as": "o644"
+          },
+          "bind": "s1373",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "getQueryCacheKey",
+            "args": {
+              "collectionId": "posts"
+            }
+          },
+          "expect": "default-cache-:purge:posts_u000000000032::collection:posts:query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o644"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "default-cache-:purge:posts_u000000000032::collection:posts:query",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": 1
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "getCache",
+            "args": {}
+          },
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "getCache",
+            "args": {}
+          },
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "purgeCachedQueries",
+            "args": {
+              "collection": "posts"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o644"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "default-cache-:purge:posts_u000000000032::collection:posts:query",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": 2
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryPurgeTest::testPurgeCachedQueriesDropsTheResultsFindCached",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o645"
+          },
+          "bind": "s1380",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o646"
+          },
+          "bind": "s1381",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o647"
+          },
+          "bind": "s1382",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o647"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o646"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o645"
+              },
+              "cache": "memory"
+            },
+            "as": "o648"
+          },
+          "bind": "s1385",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o646"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000033"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o645"
+              },
+              "cache": "memory"
+            },
+            "as": "o649"
+          },
+          "bind": "s1389",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o646"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000033"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Query",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o650"
+          },
+          "bind": "s1394",
+          "expect": {
+            "$queryCache": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "setQueryCache",
+            "args": {
+              "queryCache": {
+                "$obj": "o650"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o651"
+          },
+          "bind": "s1396",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o651"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o652"
+          },
+          "bind": "s1398",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o652"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o653"
+          },
+          "bind": "s1400",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o653"
+              }
+            },
+            "as": "o654"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first"
+              }
+            },
+            "as": "o655"
+          },
+          "bind": "s1402",
+          "expect": {
+            "$document": {
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o655"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "$id"
+            },
+            "as": "o656"
+          },
+          "bind": "s1404",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o656"
+                }
+              ]
+            }
+          },
+          "bind": "s1405",
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "first",
+                "$createdAt": {
+                  "$ref": "s1405",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1405",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second"
+              }
+            },
+            "as": "o657"
+          },
+          "bind": "s1407",
+          "expect": {
+            "$document": {
+              "$id": "second"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o657"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "$id"
+            },
+            "as": "o658"
+          },
+          "bind": "s1409",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o658"
+                }
+              ]
+            }
+          },
+          "bind": "s1410",
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "first",
+                "$createdAt": {
+                  "$ref": "s1410",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1410",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "purgeCachedQueries",
+            "args": {
+              "collection": "posts"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "$id"
+            },
+            "as": "o659"
+          },
+          "bind": "s1413",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o659"
+                }
+              ]
+            }
+          },
+          "bind": "s1414",
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            {
+              "$document": {
+                "$id": "second",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "2",
+                "$collection": "posts"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "first",
+                "$createdAt": {
+                  "$ref": "s1414",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1414",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "second",
+                "$createdAt": {
+                  "$ref": "s1414",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1414",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "2",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "second"
+        }
+      ]
+    },
+    {
+      "name": "QueryPurgeTest::testPurgeCachedQueriesReachesTheNamespaceItNames",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Query",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o660"
+          },
+          "bind": "s1417",
+          "expect": {
+            "$queryCache": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o661"
+          },
+          "bind": "s1418",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o662"
+          },
+          "bind": "s1419",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o663"
+          },
+          "bind": "s1420",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o662"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o661"
+              },
+              "cache": "memory"
+            },
+            "as": "o664"
+          },
+          "bind": "s1423",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o664"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o662"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o664"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o664"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000034"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o661"
+              },
+              "cache": "memory"
+            },
+            "as": "o665"
+          },
+          "bind": "s1427",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o665"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o662"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o665"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o665"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000034"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o664"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o664"
+            },
+            "method": "setQueryCache",
+            "args": {
+              "queryCache": {
+                "$obj": "o660"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o666"
+          },
+          "bind": "s1433",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o666"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o667"
+          },
+          "bind": "s1435",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o667"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o668"
+          },
+          "bind": "s1437",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o664"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o668"
+              }
+            },
+            "as": "o669"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first"
+              }
+            },
+            "as": "o670"
+          },
+          "bind": "s1439",
+          "expect": {
+            "$document": {
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o664"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o670"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o671"
+          },
+          "bind": "s1441",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o671"
+              },
+              "cache": "memory"
+            },
+            "as": "o672"
+          },
+          "bind": "s1442",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o672"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o672"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "caller_u000000000035"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o672"
+            },
+            "method": "setQueryCache",
+            "args": {
+              "queryCache": {
+                "$obj": "o660"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o672"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "$id"
+            },
+            "as": "o673"
+          },
+          "bind": "s1447",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o664"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o673"
+                }
+              ]
+            }
+          },
+          "bind": "s1448",
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "first",
+                "$createdAt": {
+                  "$ref": "s1448",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1448",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second"
+              }
+            },
+            "as": "o674"
+          },
+          "bind": "s1450",
+          "expect": {
+            "$document": {
+              "$id": "second"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o665"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o674"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o672"
+            },
+            "method": "purgeCachedQueries",
+            "args": {
+              "collection": "posts",
+              "namespace": "posts_u000000000034"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "$id"
+            },
+            "as": "o675"
+          },
+          "bind": "s1453",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o664"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o675"
+                }
+              ]
+            }
+          },
+          "bind": "s1454",
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            {
+              "$document": {
+                "$id": "second",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "2",
+                "$collection": "posts"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "first",
+                "$createdAt": {
+                  "$ref": "s1454",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1454",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "second",
+                "$createdAt": {
+                  "$ref": "s1454",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1454",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "2",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "second"
+        }
+      ]
+    },
+    {
+      "name": "QueryPurgeTest::testPurgeCachedQueriesReportsAQueryCacheItCouldNotPurge",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Query",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o676"
+          },
+          "bind": "s1457",
+          "expect": {
+            "$queryCache": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o677"
+          },
+          "bind": "s1458",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o678"
+          },
+          "bind": "s1459",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o679"
+          },
+          "bind": "s1460",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o679"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o678"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o677"
+              },
+              "cache": "memory"
+            },
+            "as": "o680"
+          },
+          "bind": "s1463",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o680"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o678"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o680"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o680"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000036"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o677"
+              },
+              "cache": "memory"
+            },
+            "as": "o681"
+          },
+          "bind": "s1467",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o681"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o678"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o681"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o681"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000036"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o680"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o680"
+            },
+            "method": "setQueryCache",
+            "args": {
+              "queryCache": {
+                "$obj": "o676"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o682"
+          },
+          "bind": "s1473",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o682"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o683"
+          },
+          "bind": "s1475",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o683"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o684"
+          },
+          "bind": "s1477",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o680"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o684"
+              }
+            },
+            "as": "o685"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first"
+              }
+            },
+            "as": "o686"
+          },
+          "bind": "s1479",
+          "expect": {
+            "$document": {
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o680"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o686"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o680"
+            },
+            "method": "purgeCachedQueries",
+            "args": {
+              "collection": "posts"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QueryPurgeTest::testPurgeCachedCollectionInvalidatesCachedFinds",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o687"
+          },
+          "bind": "s1482",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o688"
+          },
+          "bind": "s1483",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o689"
+          },
+          "bind": "s1484",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o689"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o688"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o687"
+              },
+              "cache": "memory"
+            },
+            "as": "o690"
+          },
+          "bind": "s1487",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o688"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000037"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o687"
+              },
+              "cache": "memory"
+            },
+            "as": "o691"
+          },
+          "bind": "s1491",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o691"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o688"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o691"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o691"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000037"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Query",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o692"
+          },
+          "bind": "s1496",
+          "expect": {
+            "$queryCache": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "setQueryCache",
+            "args": {
+              "queryCache": {
+                "$obj": "o692"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o693"
+          },
+          "bind": "s1498",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o693"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o694"
+          },
+          "bind": "s1500",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o694"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o695"
+          },
+          "bind": "s1502",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o695"
+              }
+            },
+            "as": "o696"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first"
+              }
+            },
+            "as": "o697"
+          },
+          "bind": "s1504",
+          "expect": {
+            "$document": {
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o697"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "$id"
+            },
+            "as": "o698"
+          },
+          "bind": "s1506",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o698"
+                }
+              ]
+            }
+          },
+          "bind": "s1507",
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "first",
+                "$createdAt": {
+                  "$ref": "s1507",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1507",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second"
+              }
+            },
+            "as": "o699"
+          },
+          "bind": "s1509",
+          "expect": {
+            "$document": {
+              "$id": "second"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o691"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o699"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "purgeCachedCollection",
+            "args": {
+              "collection": "posts"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "$id"
+            },
+            "as": "o700"
+          },
+          "bind": "s1512",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o690"
+            },
+            "method": "find",
+            "args": {
+              "collection": "posts",
+              "queries": [
+                {
+                  "$obj": "o700"
+                }
+              ]
+            }
+          },
+          "bind": "s1513",
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            {
+              "$document": {
+                "$id": "second",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "2",
+                "$collection": "posts"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "first",
+                "$createdAt": {
+                  "$ref": "s1513",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1513",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "second",
+                "$createdAt": {
+                  "$ref": "s1513",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$updatedAt": {
+                  "$ref": "s1513",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
+                },
+                "$permissions": [],
+                "$sequence": "2",
+                "$collection": "posts"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "second"
+        }
+      ]
+    },
+    {
+      "name": "QueryPurgeTest::testPurgeCachedQueriesReturnsFalseWhenTheCacheFails",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o701"
+          },
+          "bind": "s1516",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o701"
+              },
+              "cache": "memory"
+            },
+            "as": "o702"
+          },
+          "bind": "s1517",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o702"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o702"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000038"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o702"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o702"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o703"
+          },
+          "bind": "s1521",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o704"
+          },
+          "bind": "s1522",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o704"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o703"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o705"
+          },
+          "bind": "s1525",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o705"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o706"
+          },
+          "bind": "s1527",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o702"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o706"
+              }
+            },
+            "as": "o707"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o702"
+            },
+            "method": "purgeCachedQueries",
+            "args": {
+              "collection": "posts"
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

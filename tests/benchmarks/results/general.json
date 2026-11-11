@@ -1,0 +1,218 @@
+{
+  "service": "general",
+  "file": "tests/benchmarks/results/general.json",
+  "workload": {
+    "script": "tests/benchmarks/api/general.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "general-20261012-004417"
+  },
+  "environment": {
+    "date": "2026-10-11T23:46:36Z",
+    "commit": "1d27503a17",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3000,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 4.715,
+        "p50": 3.347,
+        "p90": 9.922,
+        "p95": 15.515,
+        "p99": 35.869,
+        "max": 97.249
+      },
+      "cpu_ms_per_request": 2.142,
+      "db_cpu_ms_per_request": 1.489,
+      "memory_mib": {
+        "baseline": 3400.7,
+        "avg": 3408.8,
+        "peak": 3418.1
+      },
+      "endpoints": {
+        "general.ping.get": {
+          "route": "GET /v1/ping",
+          "note": "an API key request; the first ping of a project also records it",
+          "count": 1488,
+          "rps": 24.8,
+          "avg": 6.791,
+          "p50": 3.993,
+          "p90": 13.47,
+          "p95": 19.451,
+          "p99": 42.157,
+          "max": 97.249
+        },
+        "general.robots.get": {
+          "route": "GET /robots.txt",
+          "count": 584,
+          "rps": 9.73,
+          "avg": 2.274,
+          "p50": 1.047,
+          "p90": 4.478,
+          "p95": 7.466,
+          "p99": 21.869,
+          "max": 34.996
+        },
+        "general.humans.get": {
+          "route": "GET /humans.txt",
+          "count": 325,
+          "rps": 5.42,
+          "avg": 2.417,
+          "p50": 1.054,
+          "p90": 4.714,
+          "p95": 7.422,
+          "p99": 18.795,
+          "max": 43.632
+        },
+        "general.acme.get": {
+          "route": "GET /.well-known/acme-challenge/*",
+          "note": "measured on its not-found path: a challenge file exists only while a certificate is being issued",
+          "count": 305,
+          "rps": 5.08,
+          "avg": 4.266,
+          "p50": 1.954,
+          "p90": 8.058,
+          "p95": 16.354,
+          "p99": 34.187,
+          "max": 51.097
+        },
+        "general.authorize.get": {
+          "route": "GET /_appwrite/authorize",
+          "note": "sets the preview cookie and redirects (301, not followed)",
+          "count": 298,
+          "rps": 4.97,
+          "avg": 2.097,
+          "p50": 1.043,
+          "p90": 4.882,
+          "p95": 8.167,
+          "p99": 13.675,
+          "max": 15.463
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 3363.4,
+      "requests": 201805,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 14.742,
+        "p50": 9.33,
+        "p90": 33.877,
+        "p95": 47.78,
+        "p99": 85.03,
+        "max": 925.873
+      },
+      "cpu_ms_per_request": 1.878,
+      "db_cpu_ms_per_request": 0.368,
+      "memory_mib": {
+        "baseline": 3417.1,
+        "avg": 3259.6,
+        "peak": 3464.2
+      },
+      "endpoints": {
+        "general.ping.get": {
+          "route": "GET /v1/ping",
+          "note": "an API key request; the first ping of a project also records it",
+          "count": 100741,
+          "rps": 1679.02,
+          "avg": 22.941,
+          "p50": 16.463,
+          "p90": 45.921,
+          "p95": 61.538,
+          "p99": 100.927,
+          "max": 925.873
+        },
+        "general.robots.get": {
+          "route": "GET /robots.txt",
+          "count": 40266,
+          "rps": 671.1,
+          "avg": 5.71,
+          "p50": 3.184,
+          "p90": 12.7,
+          "p95": 19.194,
+          "p99": 38.34,
+          "max": 175.713
+        },
+        "general.humans.get": {
+          "route": "GET /humans.txt",
+          "count": 20227,
+          "rps": 337.12,
+          "avg": 5.804,
+          "p50": 3.229,
+          "p90": 12.942,
+          "p95": 19.403,
+          "p99": 39.758,
+          "max": 184.417
+        },
+        "general.acme.get": {
+          "route": "GET /.well-known/acme-challenge/*",
+          "note": "measured on its not-found path: a challenge file exists only while a certificate is being issued",
+          "count": 20402,
+          "rps": 340.03,
+          "avg": 9.85,
+          "p50": 5.935,
+          "p90": 21.07,
+          "p95": 31.107,
+          "p99": 59.126,
+          "max": 193.485
+        },
+        "general.authorize.get": {
+          "route": "GET /_appwrite/authorize",
+          "note": "sets the preview cookie and redirects (301, not followed)",
+          "count": 20169,
+          "rps": 336.15,
+          "avg": 5.737,
+          "p50": 3.206,
+          "p90": 12.84,
+          "p95": 19.079,
+          "p99": 37.947,
+          "max": 198.268
+        }
+      }
+    }
+  ]
+}

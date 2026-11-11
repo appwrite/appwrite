@@ -1,0 +1,545 @@
+{
+  "source": "packages/mqtt/tests/V5Test.php",
+  "cases": [
+    {
+      "name": "testConnackWithEmptyProperties",
+      "op": "v5.connack",
+      "args": {
+        "code": 0
+      },
+      "expect": " \u0003\u0000\u0000\u0000"
+    },
+    {
+      "name": "testAckEncoders",
+      "steps": [
+        {
+          "op": "v5.puback",
+          "args": {
+            "packet_id": "\u0000\u0007"
+          },
+          "expect": "@\u0002\u0000\u0007"
+        },
+        {
+          "op": "v5.suback",
+          "args": {
+            "packet_id": "\u0000\u0001",
+            "codes": "\u0001"
+          },
+          "expect": {
+            "$bytes": "kAQAAQAB"
+          }
+        },
+        {
+          "op": "v5.unsuback",
+          "args": {
+            "packet_id": "\u0000\u0001",
+            "count": 1
+          },
+          "expect": {
+            "$bytes": "sAQAAQAA"
+          }
+        },
+        {
+          "op": "v5.disconnect",
+          "args": {
+            "code": 135
+          },
+          "expect": {
+            "$bytes": "4AKHAA=="
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPublishCarriesPropertiesBeforePayload",
+      "steps": [
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "sport/tennis",
+            "payload": "hello",
+            "qos": 1,
+            "packet_id": 7,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "k",
+                      "v"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": "2\u001d\u0000\fsport/tennis\u0000\u0007\u0007&\u0000\u0001k\u0000\u0001vhello"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 3,
+            "flags": 2,
+            "body": "\u0000\fsport/tennis\u0000\u0007\u0007&\u0000\u0001k\u0000\u0001vhello",
+            "name": "publish",
+            "qos": 1,
+            "dup": false
+          }
+        },
+        {
+          "op": "publish.decode",
+          "args": {
+            "data": {
+              "$ref": "b"
+            },
+            "protocol": 5
+          },
+          "expect": {
+            "topic": "sport/tennis",
+            "payload": "hello",
+            "qos": 1,
+            "dup": false,
+            "retain": false,
+            "packet_id": 7,
+            "properties": [
+              [
+                38,
+                {
+                  "pair": [
+                    [
+                      "k",
+                      "v"
+                    ]
+                  ]
+                }
+              ]
+            ],
+            "user": [
+              [
+                "k",
+                "v"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "p",
+              "path": "/body"
+            },
+            "offset": 16
+          },
+          "expect": {
+            "properties": [
+              [
+                38,
+                {
+                  "pair": [
+                    [
+                      "k",
+                      "v"
+                    ]
+                  ]
+                }
+              ]
+            ],
+            "offset": 24,
+            "user": [
+              [
+                "k",
+                "v"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testConnackReasonAndPropertiesRoundTrip",
+      "steps": [
+        {
+          "op": "v5.connack",
+          "args": {
+            "code": 0,
+            "properties": [
+              {
+                "id": 31,
+                "value": "welcome"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": " \r\u0000\u0000\n\u001f\u0000\u0007welcome"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 2,
+            "flags": 0,
+            "body": "\u0000\u0000\n\u001f\u0000\u0007welcome",
+            "name": "connack",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "p",
+              "path": "/body"
+            },
+            "offset": 2
+          },
+          "expect": {
+            "properties": [
+              [
+                31,
+                "welcome"
+              ]
+            ],
+            "offset": 13,
+            "user": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testConnectCarriesAuthPropertiesAndClientId",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-1",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "appwrite-jwt"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": "\u00104\u0000\u0004MQTT\u0005\u0002\u0000<\u001f\u0015\u0000\fappwrite-jwt&\u0000\tprojectId\u0000\u0002p1\u0000\bclient-1"
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 1,
+            "flags": 0,
+            "body": "\u0000\u0004MQTT\u0005\u0002\u0000<\u001f\u0015\u0000\fappwrite-jwt&\u0000\tprojectId\u0000\u0002p1\u0000\bclient-1",
+            "name": "connect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "connect.decode",
+          "args": {
+            "body": {
+              "$ref": "p",
+              "path": "/body"
+            }
+          },
+          "expect": {
+            "protocol_level": 5,
+            "client_id": "client-1",
+            "clean_start": true,
+            "keep_alive": 60,
+            "username": null,
+            "password": null,
+            "will": null,
+            "auth_method": "appwrite-jwt",
+            "auth_data": null,
+            "properties": [
+              [
+                21,
+                "appwrite-jwt"
+              ],
+              [
+                38,
+                {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              ]
+            ],
+            "user": [
+              [
+                "projectId",
+                "p1"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "p",
+              "path": "/body"
+            },
+            "offset": 10
+          },
+          "expect": {
+            "properties": [
+              [
+                21,
+                "appwrite-jwt"
+              ],
+              [
+                38,
+                {
+                  "pair": [
+                    [
+                      "projectId",
+                      "p1"
+                    ]
+                  ]
+                }
+              ]
+            ],
+            "offset": 42,
+            "user": [
+              [
+                "projectId",
+                "p1"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSubscribeAndUnsubscribeAreFlagged",
+      "steps": [
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "sensors/+/temp"
+            ],
+            "qos": 1
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "ghQAAQAADnNlbnNvcnMvKy90ZW1wAQ=="
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "s"
+            }
+          },
+          "bind": "ps",
+          "expect": {
+            "type": 8,
+            "flags": 2,
+            "body": "\u0000\u0001\u0000\u0000\u000esensors/+/temp\u0001",
+            "name": "subscribe",
+            "qos": 1,
+            "dup": false
+          }
+        },
+        {
+          "op": "properties.skip",
+          "args": {
+            "data": {
+              "$ref": "ps",
+              "path": "/body"
+            },
+            "offset": 2
+          },
+          "expect": 3
+        },
+        {
+          "op": "subscribe.decode",
+          "args": {
+            "body": {
+              "$ref": "ps",
+              "path": "/body"
+            },
+            "protocol": 5
+          },
+          "expect": {
+            "packet_id": 1,
+            "filters": [
+              [
+                "sensors/+/temp",
+                1
+              ]
+            ],
+            "properties": []
+          }
+        },
+        {
+          "op": "v5.unsubscribe",
+          "args": {
+            "packet_id": 2,
+            "filters": [
+              "sensors/+/temp"
+            ]
+          },
+          "bind": "u",
+          "expect": {
+            "$bytes": "ohMAAgAADnNlbnNvcnMvKy90ZW1w"
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "u"
+            }
+          },
+          "bind": "pu",
+          "expect": {
+            "type": 10,
+            "flags": 2,
+            "body": "\u0000\u0002\u0000\u0000\u000esensors/+/temp",
+            "name": "unsubscribe",
+            "qos": 1,
+            "dup": false
+          }
+        },
+        {
+          "op": "unsubscribe.decode",
+          "args": {
+            "body": {
+              "$ref": "pu",
+              "path": "/body"
+            },
+            "protocol": 5
+          },
+          "expect": {
+            "packet_id": 2,
+            "filters": [
+              "sensors/+/temp"
+            ],
+            "properties": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAuthCarriesMethodInProperties",
+      "steps": [
+        {
+          "op": "v5.auth",
+          "args": {
+            "code": 0,
+            "properties": [
+              {
+                "id": 21,
+                "value": "appwrite-jwt"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$bytes": "8BEADxUADGFwcHdyaXRlLWp3dA=="
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 15,
+            "flags": 0,
+            "body": "\u0000\u000f\u0015\u0000\fappwrite-jwt",
+            "name": "auth",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "p",
+              "path": "/body"
+            },
+            "offset": 1
+          },
+          "expect": {
+            "properties": [
+              [
+                21,
+                "appwrite-jwt"
+              ]
+            ],
+            "offset": 17,
+            "user": []
+          }
+        },
+        {
+          "op": "auth.decode",
+          "args": {
+            "body": {
+              "$ref": "p",
+              "path": "/body"
+            }
+          },
+          "expect": {
+            "reason_code": 0,
+            "method": "appwrite-jwt",
+            "data": "",
+            "properties": [
+              [
+                21,
+                "appwrite-jwt"
+              ]
+            ],
+            "user": []
+          }
+        }
+      ]
+    }
+  ]
+}

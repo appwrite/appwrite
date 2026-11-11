@@ -1,0 +1,626 @@
+{
+  "source": "packages/agents/tests/AgentTest.php",
+  "cases": [
+    {
+      "name": "constructor",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "model": "o3-mini"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [],
+            "schema": null,
+            "adapter": "openai"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set description",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "model": "o3-mini"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test agent description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "Test agent description",
+            "instructions": [],
+            "schema": null,
+            "adapter": "openai"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set instructions",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "model": "o3-mini"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Instruction 1",
+                "This is instruction 1"
+              ],
+              [
+                "Instruction 2",
+                "This is instruction 2"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [
+              [
+                "Instruction 1",
+                "This is instruction 1"
+              ],
+              [
+                "Instruction 2",
+                "This is instruction 2"
+              ]
+            ],
+            "schema": null,
+            "adapter": "openai"
+          }
+        }
+      ]
+    },
+    {
+      "name": "add instruction",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "model": "o3-mini"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.add_instruction",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "name": "Instruction 1",
+            "content": "This is instruction 1"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [
+              [
+                "Instruction 1",
+                "This is instruction 1"
+              ]
+            ],
+            "schema": null,
+            "adapter": "openai"
+          }
+        },
+        {
+          "op": "agent.add_instruction",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "name": "Instruction 1",
+            "content": "Updated content"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [
+              [
+                "Instruction 1",
+                "Updated content"
+              ]
+            ],
+            "schema": null,
+            "adapter": "openai"
+          }
+        },
+        {
+          "op": "agent.add_instruction",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "name": "Instruction 2",
+            "content": "This is instruction 2"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [
+              [
+                "Instruction 1",
+                "Updated content"
+              ],
+              [
+                "Instruction 2",
+                "This is instruction 2"
+              ]
+            ],
+            "schema": null,
+            "adapter": "openai"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fluent interface",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "model": "o3-mini"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_description",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "description": "Test Description"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Instruction 1",
+                "Content 1"
+              ],
+              [
+                "Instruction 2",
+                "Content 2"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.add_instruction",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "name": "Instruction 3",
+            "content": "Content 3"
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "Test Description",
+            "instructions": [
+              [
+                "Instruction 1",
+                "Content 1"
+              ],
+              [
+                "Instruction 2",
+                "Content 2"
+              ],
+              [
+                "Instruction 3",
+                "Content 3"
+              ]
+            ],
+            "schema": null,
+            "adapter": "openai"
+          }
+        }
+      ]
+    },
+    {
+      "name": "instructions given as lines",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "model": "o3-mini"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_instructions",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "one",
+                  "two"
+                ]
+              ],
+              [
+                "Tone",
+                "brief"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [
+              [
+                "Rules",
+                [
+                  "one",
+                  "two"
+                ]
+              ],
+              [
+                "Tone",
+                "brief"
+              ]
+            ],
+            "schema": null,
+            "adapter": "openai"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set schema on an adapter without structured output throws",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "xai"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "description": "ok"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Result",
+            "description": "Result",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "ok"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.set_schema",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Schema is not supported for this model"
+            }
+          }
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [],
+            "schema": null,
+            "adapter": "xai"
+          }
+        }
+      ]
+    },
+    {
+      "name": "embed without embedding support throws",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "openai",
+            "args": {
+              "model": "o3-mini"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "text": "hi"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "This adapter does not support embedding/embedding API."
+            }
+          }
+        },
+        {
+          "op": "agent.bulk_embed",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            },
+            "texts": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "This adapter does not support embedding/embedding API."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

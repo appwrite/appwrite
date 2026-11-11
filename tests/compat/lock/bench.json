@@ -1,0 +1,155 @@
+{
+  "lib": "lock",
+  "environment": {
+    "date": "2026-10-18T14:20:52Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "mutex",
+      "description": "Acquire and release an uncontended in-process mutex",
+      "php": {
+        "ns": 79.55652961574945,
+        "min": 77.82055219493989,
+        "max": 88.28516335702179,
+        "samples": 15,
+        "calls": 257228,
+        "cpu": 80.22091944371012,
+        "peak": 3008.0,
+        "retained": 0.00009744921496363796,
+        "rss": 107802624.0
+      },
+      "rust": {
+        "ns": 46.63223827743596,
+        "min": 46.35504991754379,
+        "max": 53.305237487911874,
+        "samples": 15,
+        "calls": 428106,
+        "cpu": 47.15982178868473,
+        "rss": 22028288.0,
+        "allocations": 1.000001712971398,
+        "bytes": 312.0004374306052,
+        "peak": 1650.0,
+        "retained": 0.00025756860839760867
+      },
+      "speedup": 1.706041411575233,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "semaphore",
+      "description": "Acquire and release one permit of an in-process semaphore of four",
+      "php": {
+        "ns": 78.48872084428224,
+        "min": 77.07326323448028,
+        "max": 82.09928133840563,
+        "samples": 15,
+        "calls": 258397,
+        "cpu": 78.6902840719255,
+        "peak": 3008.0,
+        "retained": 0.00009700835020014422,
+        "rss": 107802624.0
+      },
+      "rust": {
+        "ns": 46.33313410909124,
+        "min": 45.74268364178873,
+        "max": 47.46299105543985,
+        "samples": 15,
+        "calls": 438367,
+        "cpu": 46.56021948124136,
+        "rss": 22028288.0,
+        "allocations": 1.0000016728753154,
+        "bytes": 312.00042719152367,
+        "peak": 1650.0,
+        "retained": 0.00025153961558846053
+      },
+      "speedup": 1.6940084532050166,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "with_lock",
+      "description": "Run a section under an uncontended in-process mutex",
+      "php": {
+        "ns": 144.6066012488849,
+        "min": 141.3116289027654,
+        "max": 153.70532738626227,
+        "samples": 15,
+        "calls": 140125,
+        "cpu": 145.28123699078205,
+        "peak": 3008.0,
+        "retained": 0.00017888789771037763,
+        "rss": 107802624.0
+      },
+      "rust": {
+        "ns": 51.802507197541864,
+        "min": 50.64691893566753,
+        "max": 57.90158668680687,
+        "samples": 15,
+        "calls": 387285,
+        "cpu": 53.677538591304426,
+        "rss": 22028288.0,
+        "allocations": 1.0000018935237185,
+        "bytes": 320.0004835371023,
+        "peak": 1650.0,
+        "retained": 0.00028471711185991367
+      },
+      "speedup": 2.7914981160554095,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "distributed",
+      "description": "Acquire and release an uncontended Redis lock: SET NX EX, then the release script",
+      "php": {
+        "ns": 101292.93401015228,
+        "min": 68839.46700507615,
+        "max": 109940.1421319797,
+        "samples": 15,
+        "calls": 197,
+        "cpu": 35839.932318104904,
+        "peak": 123288.0,
+        "retained": 0.1272419627749577,
+        "rss": 107802624.0
+      },
+      "rust": {
+        "ns": 102215.13157894737,
+        "min": 52114.47368421053,
+        "max": 105165.13157894737,
+        "samples": 15,
+        "calls": 190,
+        "cpu": 34540.3049122807,
+        "rss": 22028288.0,
+        "allocations": 31.004912280701756,
+        "bytes": 4344.019298245614,
+        "peak": 2187.0,
+        "retained": 0.5803508771929825
+      },
+      "speedup": 0.9909778762248834,
+      "bound": "Two Redis round trips, the same on both runtimes, dominate the call",
+      "compat": null
+    }
+  ]
+}

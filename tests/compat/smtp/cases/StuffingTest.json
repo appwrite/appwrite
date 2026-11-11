@@ -1,0 +1,2679 @@
+{
+  "source": "packages/smtp/tests/StuffingTest.php",
+  "cases": [
+    {
+      "name": "doubles a dot opening the message",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": ".hidden",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\n..hidden\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "..hidden",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "doubles a dot opening a line",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "one\r\n.two",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\none\r\n..two\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "one",
+              "..two",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "leaves a dot inside a line alone",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "version 1.2",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nversion 1.2\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "version 1.2",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "doubles a dot split from its line ending by a chunk boundary",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "one\r\n",
+              ".two"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\none\r\n..two\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "one",
+              "..two",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "doubles a dot when the chunk boundary falls inside the line ending",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "one\r",
+              "\n.two"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\none\r\n..two\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "one",
+              "..two",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "normalises bare line feeds",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "one\ntwo",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\none\r\ntwo\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "one",
+              "two",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "normalises a line ending split across chunks",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "one\r",
+              "\ntwo"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\none\r\ntwo\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "one",
+              "two",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "does not add a blank line when the content already ends with one",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "body\r\n",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nbody\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "body",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "terminates an empty message",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "terminates a message ending mid line ending",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "body",
+              "\r"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nbody\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "body",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "skips empty chunks",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "one",
+              "",
+              "two"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nonetwo\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "onetwo",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a held CR followed by a lone CR",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "a\r",
+              "\r",
+              "b"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\na\r\n\r\nb\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "a",
+              "b",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a held CR followed by an empty chunk",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "a\r",
+              "",
+              ".b"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\na\r\n..b\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "a",
+              "..b",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "only CRs",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "\r",
+              "\r",
+              "\r"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\n\r\n\r\n\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a lone dot line",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": ".\r\n.\r\n.",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\n..\r\n..\r\n..\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "..",
+              "..",
+              "..",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "dots after bare CRs and LFs",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "a\r.b\n.c\r\n.d",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\na\r\n..b\r\n..c\r\n..d\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "a",
+              "..b",
+              "..c",
+              "..d",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a chunk that is only a dot after CRLF",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "x\r\n",
+              ".",
+              ".",
+              "\r\n"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nx\r\n...\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "x",
+              "...",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "non-ASCII content declares 8BITMIME only when offered",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test",
+                "250 mail.example.test",
+                "250 Sender ok",
+                "250 Recipient ok",
+                "354 Go ahead",
+                "250 Ok"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "héllo",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nhéllo\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "héllo",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8BITMIME is declared for non-ASCII content",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test ESMTP",
+                "250-mail.example.test",
+                "250-8BITMIME",
+                "250 SIZE 100",
+                "250 2.1.0 Sender ok",
+                "250 2.1.5 Recipient ok",
+                "354 End data with <CR><LF>.<CR><LF>",
+                "250 2.0.0 Ok: queued as ABC123"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "héllo",
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "ABC123",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test> SIZE=6 BODY=8BITMIME\r\nRCPT TO:<john@example.test>\r\nDATA\r\nhéllo\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test> SIZE=6 BODY=8BITMIME",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "héllo",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8BITMIME is not declared for chunks",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "220 mail.example.test ESMTP",
+                "250-mail.example.test",
+                "250-8BITMIME",
+                "250 SIZE 100",
+                "250 2.1.0 Sender ok",
+                "250 2.1.5 Recipient ok",
+                "354 End data with <CR><LF>.<CR><LF>",
+                "250 2.0.0 Ok: queued as ABC123"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": [
+              "héllo"
+            ],
+            "catch": true
+          },
+          "expect": {
+            "ok": {
+              "message_id": "ABC123",
+              "accepted": [
+                "john@example.test"
+              ],
+              "rejected": [],
+              "complete": true
+            }
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "written": "EHLO localhost\r\nMAIL FROM:<jane@example.test>\r\nRCPT TO:<john@example.test>\r\nDATA\r\nhéllo\r\n.\r\n",
+            "commands": [
+              "EHLO localhost",
+              "MAIL FROM:<jane@example.test>",
+              "RCPT TO:<john@example.test>",
+              "DATA",
+              "héllo",
+              "."
+            ],
+            "connected": true,
+            "closed": false,
+            "handshakes": 0,
+            "tls": false,
+            "waits": [
+              [
+                "connect",
+                10.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "write",
+                30.0
+              ],
+              [
+                "read",
+                30.0
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

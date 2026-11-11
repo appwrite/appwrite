@@ -1,0 +1,1926 @@
+{
+  "source": "fixed clocks",
+  "cases": [
+    {
+      "name": "time limit: windows, resets and counters",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:tl:{ip}",
+            "limit": 2,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "params": {
+              "{ip}": "203.0.113.7"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1699999997
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000039
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000039
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000010
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000040
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000041
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000041
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "now": 1700000041
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "redis.ttl",
+          "args": {
+            "key": "abuse__${ns}:tl:203.0.113.7__1699999980",
+            "max": 60
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.get",
+          "args": {
+            "key": "abuse__${ns}:tl:203.0.113.7__1700000040"
+          },
+          "expect": "0"
+        }
+      ]
+    },
+    {
+      "name": "time limit: zero limit stores nothing",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:zero",
+            "limit": 0,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: negative limit is always limited",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:neg",
+            "limit": -1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": true,
+            "limit": -1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": true,
+            "limit": -1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": true,
+            "limit": -1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: a reset past the integer range",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:max",
+            "limit": 0,
+            "seconds": 10
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 9223372036854775807
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP's TypeError message ends with the PHP file and line that called Result's constructor; the class is compared"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:max",
+            "limit": 1,
+            "seconds": 10
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "m"
+            },
+            "now": 9223372036854775807
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP's TypeError message ends with the PHP file and line that called Result's constructor; the class is compared"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: huge limit",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:huge",
+            "limit": 9223372036854775807,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 9223372036854775807,
+            "remaining": 9223372036854775806,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 9223372036854775807,
+            "remaining": 9223372036854775805,
+            "reset": 1700000040
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: the most negative limit",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:min",
+            "limit": -9223372036854775808,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": true,
+            "limit": -9223372036854775808,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: negative time",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:past",
+            "limit": 3,
+            "seconds": 7
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": -100
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": -91
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": -100
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": -91
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: a counter that is not a number fails the script",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:junk",
+            "limit": 5,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.set",
+          "args": {
+            "key": "abuse__${ns}:junk__1699999980",
+            "value": "abc"
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Redis script failed."
+            }
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": 1700000040
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: a numeric counter written by someone else",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "${ns}:float",
+            "limit": 5,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.set",
+          "args": {
+            "key": "abuse__${ns}:float__1699999980",
+            "value": " 2.9"
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 2,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "redis.set",
+          "args": {
+            "key": "abuse__${ns}:float__1699999980",
+            "value": "1e1"
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": true,
+            "limit": 5,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": true,
+            "limit": 5,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        }
+      ]
+    },
+    {
+      "name": "sliding window: weighted estimate across windows",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "sliding_window",
+            "store": "pool",
+            "key": "${ns}:sw",
+            "limit": 4,
+            "window": 60,
+            "ttl": 120
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 3,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999981
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 2,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999982
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999983
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999984
+          },
+          "expect": {
+            "limited": true,
+            "limit": 4,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000040
+          },
+          "expect": {
+            "limited": true,
+            "limit": 4,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000040
+          },
+          "expect": {
+            "limited": true,
+            "limit": 4,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000047
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000055
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000055
+          },
+          "expect": {
+            "limited": true,
+            "limit": 4,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000099
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 2,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000099
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 2,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000160
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 3,
+            "reset": 1700000220
+          }
+        },
+        {
+          "op": "redis.ttl",
+          "args": {
+            "key": "abuse__{${ns}:sw}__1700000040",
+            "max": 120
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "sliding window: reset clears both buckets",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "sliding_window",
+            "store": "pool",
+            "key": "${ns}:swr",
+            "limit": 2,
+            "window": 10,
+            "ttl": 20
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1699999990
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1699999990
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999990
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000000
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999990
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999990
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1700000000
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999995
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1700000000
+          }
+        }
+      ]
+    },
+    {
+      "name": "sliding window: zero limit",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "sliding_window",
+            "store": "pool",
+            "key": "${ns}:swz",
+            "limit": 0,
+            "window": 10,
+            "ttl": 20
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1699999990
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1699999990
+          }
+        }
+      ]
+    },
+    {
+      "name": "sliding window: thirds of a window",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "sliding_window",
+            "store": "pool",
+            "key": "${ns}:sw3",
+            "limit": 10,
+            "window": 3,
+            "ttl": 6
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 9,
+            "reset": 1699999983
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 8,
+            "reset": 1699999983
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 7,
+            "reset": 1699999983
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999984
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 7,
+            "reset": 1699999986
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999984
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 7,
+            "reset": 1699999986
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999985
+          },
+          "expect": {
+            "limited": false,
+            "limit": 10,
+            "remaining": 7,
+            "reset": 1699999986
+          }
+        }
+      ]
+    },
+    {
+      "name": "sliding window: a bucket that is not a number",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "sliding_window",
+            "store": "pool",
+            "key": "${ns}:swj",
+            "limit": 4,
+            "window": 60,
+            "ttl": 120
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.set",
+          "args": {
+            "key": "abuse__{${ns}:swj}__1699999980",
+            "value": "zz"
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Redis script failed."
+            }
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999980
+          },
+          "expect": {
+            "limited": false,
+            "limit": 4,
+            "remaining": 3,
+            "reset": 1700000040
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: refill, balance and stored hash",
+      "steps": [
+        {
+          "op": "redis.clear",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "${ns}:tb",
+            "tokens": 3,
+            "refill_rate": 0.5
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.25
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000003
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.5
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": 1700000005
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.75
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000007
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000001.0
+          },
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000007
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000002.0
+          },
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000007
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000002.0
+          },
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000007
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000100.123456
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000101
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000100.123456
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000103
+          }
+        },
+        {
+          "op": "redis.ttl",
+          "args": {
+            "key": "abuse__${ns}:tb",
+            "max": 7
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "abuse__${ns}:tb": {
+              "tokens": "2",
+              "last_refill": "1700000100.1235"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: the clock going back does not refill",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "${ns}:tbb",
+            "tokens": 2,
+            "refill_rate": 10.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.0
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1700000001
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999990.0
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1699999991
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999990.0
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1699999991
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1699999000.0
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1699999001
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: a fractional refill rate",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "${ns}:tbf",
+            "tokens": 5,
+            "refill_rate": 0.3333333333333333
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.1
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": 1700000004
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.1
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 3,
+            "reset": 1700000007
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000003.3
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 3,
+            "reset": 1700000007
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000007.77
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": 1700000011
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: reset deletes the bucket",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "${ns}:tbr",
+            "tokens": 1,
+            "refill_rate": 0.001
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.0
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700001000
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.0
+          },
+          "expect": {
+            "limited": true,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700001000
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.0
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.0
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700001000
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: zero tokens is unlimited",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "${ns}:tbz",
+            "tokens": 0,
+            "refill_rate": -1.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.9
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1700000000
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": -1.5
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": -1
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: a huge capacity",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "${ns}:tbh",
+            "tokens": 9223372036854775807,
+            "refill_rate": 1.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.0
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Redis script failed."
+            }
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.0
+          },
+          "expect": {
+            "limited": false,
+            "limit": 9223372036854775807,
+            "remaining": 0,
+            "reset": 1699975424
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: a bucket that is not a hash",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "${ns}:tbj",
+            "tokens": 3,
+            "refill_rate": 1.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.set",
+          "args": {
+            "key": "abuse__${ns}:tbj",
+            "value": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.0
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Redis script failed."
+            }
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "now": 1700000000.0
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Redis script failed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "run: a time limit as the fuzzer drives it",
+      "steps": [
+        {
+          "op": "limit.run",
+          "args": {
+            "algo": "time_limit",
+            "store": "pool",
+            "key": "ip:{ip}",
+            "params": {
+              "{ip}": "203.0.113.7"
+            },
+            "limit": 2,
+            "seconds": 60,
+            "now": 1699999987,
+            "steps": [
+              "peek",
+              "check",
+              "check",
+              "check",
+              "peek"
+            ]
+          },
+          "expect": {
+            "key": "${ns}:ip:203.0.113.7",
+            "verdicts": [
+              {
+                "limited": false,
+                "limit": 2,
+                "remaining": 1,
+                "reset": 1700000040
+              },
+              {
+                "limited": false,
+                "limit": 2,
+                "remaining": 1,
+                "reset": 1700000040
+              },
+              {
+                "limited": false,
+                "limit": 2,
+                "remaining": 0,
+                "reset": 1700000040
+              },
+              {
+                "limited": true,
+                "limit": 2,
+                "remaining": 0,
+                "reset": 1700000040
+              },
+              {
+                "limited": true,
+                "limit": 2,
+                "remaining": 0,
+                "reset": 1700000040
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "run: a sliding window as the fuzzer drives it",
+      "steps": [
+        {
+          "op": "limit.run",
+          "args": {
+            "algo": "sliding_window",
+            "store": "pool",
+            "key": "{a}",
+            "params": {
+              "{a}": "{b}",
+              "{b}": "x"
+            },
+            "limit": 1,
+            "window": 10,
+            "ttl": 20,
+            "now": 1699999983,
+            "steps": [
+              "check",
+              "check"
+            ]
+          },
+          "expect": {
+            "key": "${ns}:{b}",
+            "verdicts": [
+              {
+                "limited": false,
+                "limit": 1,
+                "remaining": 0,
+                "reset": 1699999990
+              },
+              {
+                "limited": true,
+                "limit": 1,
+                "remaining": 0,
+                "reset": 1699999990
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "run: a token bucket as the fuzzer drives it",
+      "steps": [
+        {
+          "op": "limit.run",
+          "args": {
+            "algo": "token_bucket",
+            "store": "pool",
+            "key": "k",
+            "params": {},
+            "tokens": 2,
+            "refill_rate": 0.3333333333333333,
+            "now": 1700000000.9876542,
+            "steps": [
+              "check",
+              "peek",
+              "check",
+              "check"
+            ]
+          },
+          "expect": {
+            "key": "${ns}:k",
+            "verdicts": [
+              {
+                "limited": false,
+                "limit": 2,
+                "remaining": 1,
+                "reset": 1700000004
+              },
+              {
+                "limited": false,
+                "limit": 2,
+                "remaining": 0,
+                "reset": 1700000004
+              },
+              {
+                "limited": false,
+                "limit": 2,
+                "remaining": 0,
+                "reset": 1700000007
+              },
+              {
+                "limited": true,
+                "limit": 2,
+                "remaining": 0,
+                "reset": 1700000007
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "run: an invalid limit",
+      "steps": [
+        {
+          "op": "limit.run",
+          "args": {
+            "algo": "sliding_window",
+            "store": "pool",
+            "key": "k",
+            "params": {},
+            "limit": 1,
+            "window": 10,
+            "ttl": 5,
+            "now": 1699999980,
+            "steps": [
+              "check"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "ttl must be at least twice the windowSize so the previous window bucket outlives the current window"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a limit on the real clock rejects a fixed time",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "k",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        }
+      ]
+    }
+  ]
+}

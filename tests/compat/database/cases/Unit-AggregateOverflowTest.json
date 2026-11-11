@@ -1,0 +1,7469 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/AggregateOverflowTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#sum native",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o124"
+          },
+          "bind": "s254",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": false
+                  }
+                }
+              }
+            },
+            "as": "o130"
+          },
+          "bind": "s260",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o130"
+              },
+              "cache": "none"
+            },
+            "as": "o131"
+          },
+          "bind": "s261",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000005"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o132"
+          },
+          "bind": "s264",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o132"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o133"
+          },
+          "bind": "s266",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o133"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o134"
+          },
+          "bind": "s269",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o135"
+          },
+          "bind": "s270",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o135"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o136"
+          },
+          "bind": "s272",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o136"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o134"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o137"
+          },
+          "bind": "s274",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o137"
+              }
+            },
+            "as": "o138"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o139"
+          },
+          "bind": "s276",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o139"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o140"
+          },
+          "bind": "s278",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o140"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o141"
+          },
+          "bind": "s280",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o141"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o142"
+          },
+          "bind": "s282",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o142"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o124"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#avg native",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "avg",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o125"
+          },
+          "bind": "s255",
+          "expect": {
+            "$query": {
+              "method": "avg",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": false
+                  }
+                }
+              }
+            },
+            "as": "o143"
+          },
+          "bind": "s285",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o143"
+              },
+              "cache": "none"
+            },
+            "as": "o144"
+          },
+          "bind": "s286",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000006"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o145"
+          },
+          "bind": "s289",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o145"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o146"
+          },
+          "bind": "s291",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o146"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o147"
+          },
+          "bind": "s294",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o148"
+          },
+          "bind": "s295",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o148"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o149"
+          },
+          "bind": "s297",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o149"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o147"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o150"
+          },
+          "bind": "s299",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o150"
+              }
+            },
+            "as": "o151"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o152"
+          },
+          "bind": "s301",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o152"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o153"
+          },
+          "bind": "s303",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o153"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o154"
+          },
+          "bind": "s305",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o154"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o155"
+          },
+          "bind": "s307",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o155"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o125"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#default alias native",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading"
+            },
+            "as": "o126"
+          },
+          "bind": "s256",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": false
+                  }
+                }
+              }
+            },
+            "as": "o156"
+          },
+          "bind": "s310",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o156"
+              },
+              "cache": "none"
+            },
+            "as": "o157"
+          },
+          "bind": "s311",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000007"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o158"
+          },
+          "bind": "s314",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o158"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o159"
+          },
+          "bind": "s316",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o159"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o160"
+          },
+          "bind": "s319",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o161"
+          },
+          "bind": "s320",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o161"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o162"
+          },
+          "bind": "s322",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o162"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o160"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o163"
+          },
+          "bind": "s324",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o163"
+              }
+            },
+            "as": "o164"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o165"
+          },
+          "bind": "s326",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o165"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o166"
+          },
+          "bind": "s328",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o166"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o167"
+          },
+          "bind": "s330",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o167"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o168"
+          },
+          "bind": "s332",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o168"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o126"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#sum stringified",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o127"
+          },
+          "bind": "s257",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": true
+                  }
+                }
+              }
+            },
+            "as": "o169"
+          },
+          "bind": "s335",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o169"
+              },
+              "cache": "none"
+            },
+            "as": "o170"
+          },
+          "bind": "s336",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000008"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o171"
+          },
+          "bind": "s339",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o171"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o172"
+          },
+          "bind": "s341",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o172"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o173"
+          },
+          "bind": "s344",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o174"
+          },
+          "bind": "s345",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o174"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o175"
+          },
+          "bind": "s347",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o175"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o173"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o176"
+          },
+          "bind": "s349",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o176"
+              }
+            },
+            "as": "o177"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o178"
+          },
+          "bind": "s351",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o178"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o179"
+          },
+          "bind": "s353",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o179"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o180"
+          },
+          "bind": "s355",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o180"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o181"
+          },
+          "bind": "s357",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o181"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o170"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o127"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#avg stringified",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "avg",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o128"
+          },
+          "bind": "s258",
+          "expect": {
+            "$query": {
+              "method": "avg",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": true
+                  }
+                }
+              }
+            },
+            "as": "o182"
+          },
+          "bind": "s360",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o182"
+              },
+              "cache": "none"
+            },
+            "as": "o183"
+          },
+          "bind": "s361",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000009"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o184"
+          },
+          "bind": "s364",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o184"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o185"
+          },
+          "bind": "s366",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o185"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o186"
+          },
+          "bind": "s369",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o187"
+          },
+          "bind": "s370",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o187"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o188"
+          },
+          "bind": "s372",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o188"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o186"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o189"
+          },
+          "bind": "s374",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o189"
+              }
+            },
+            "as": "o190"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o191"
+          },
+          "bind": "s376",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o191"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o192"
+          },
+          "bind": "s378",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o192"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o193"
+          },
+          "bind": "s380",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o193"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o194"
+          },
+          "bind": "s382",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o194"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o128"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#default alias stringified",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading"
+            },
+            "as": "o129"
+          },
+          "bind": "s259",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": true
+                  }
+                }
+              }
+            },
+            "as": "o195"
+          },
+          "bind": "s385",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o195"
+              },
+              "cache": "none"
+            },
+            "as": "o196"
+          },
+          "bind": "s386",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000010"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o197"
+          },
+          "bind": "s389",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o197"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o198"
+          },
+          "bind": "s391",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o198"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o199"
+          },
+          "bind": "s394",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o200"
+          },
+          "bind": "s395",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o200"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o201"
+          },
+          "bind": "s397",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o201"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o199"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o202"
+          },
+          "bind": "s399",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o202"
+              }
+            },
+            "as": "o203"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o204"
+          },
+          "bind": "s401",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o204"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o205"
+          },
+          "bind": "s403",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o205"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o206"
+          },
+          "bind": "s405",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o206"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o207"
+          },
+          "bind": "s407",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o207"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o129"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#sum native",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o208"
+          },
+          "bind": "s410",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": false
+                  }
+                }
+              }
+            },
+            "as": "o214"
+          },
+          "bind": "s416",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o214"
+              },
+              "cache": "none"
+            },
+            "as": "o215"
+          },
+          "bind": "s417",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000011"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o216"
+          },
+          "bind": "s420",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o216"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o217"
+          },
+          "bind": "s422",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o217"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o218"
+          },
+          "bind": "s425",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o219"
+          },
+          "bind": "s426",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o219"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o220"
+          },
+          "bind": "s428",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o220"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o218"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o221"
+          },
+          "bind": "s430",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o221"
+              }
+            },
+            "as": "o222"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o223"
+          },
+          "bind": "s432",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o223"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o224"
+          },
+          "bind": "s434",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o224"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o225"
+          },
+          "bind": "s436",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o225"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o226"
+          },
+          "bind": "s438",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o226"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o215"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o208"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#avg native",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "avg",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o209"
+          },
+          "bind": "s411",
+          "expect": {
+            "$query": {
+              "method": "avg",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": false
+                  }
+                }
+              }
+            },
+            "as": "o227"
+          },
+          "bind": "s441",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o227"
+              },
+              "cache": "none"
+            },
+            "as": "o228"
+          },
+          "bind": "s442",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o228"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o228"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000012"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o229"
+          },
+          "bind": "s445",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o228"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o229"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o230"
+          },
+          "bind": "s447",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o228"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o230"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o228"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o231"
+          },
+          "bind": "s450",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o232"
+          },
+          "bind": "s451",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o232"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o233"
+          },
+          "bind": "s453",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o233"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o231"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o234"
+          },
+          "bind": "s455",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o228"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o234"
+              }
+            },
+            "as": "o235"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o236"
+          },
+          "bind": "s457",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o236"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o237"
+          },
+          "bind": "s459",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o228"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o237"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o238"
+          },
+          "bind": "s461",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o238"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o239"
+          },
+          "bind": "s463",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o228"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o239"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o228"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o209"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#default alias native",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading"
+            },
+            "as": "o210"
+          },
+          "bind": "s412",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": false
+                  }
+                }
+              }
+            },
+            "as": "o240"
+          },
+          "bind": "s466",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o240"
+              },
+              "cache": "none"
+            },
+            "as": "o241"
+          },
+          "bind": "s467",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000013"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o242"
+          },
+          "bind": "s470",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o242"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o243"
+          },
+          "bind": "s472",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o243"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o244"
+          },
+          "bind": "s475",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o245"
+          },
+          "bind": "s476",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o245"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o246"
+          },
+          "bind": "s478",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o246"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o244"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o247"
+          },
+          "bind": "s480",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o247"
+              }
+            },
+            "as": "o248"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o249"
+          },
+          "bind": "s482",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o249"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o250"
+          },
+          "bind": "s484",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o250"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o251"
+          },
+          "bind": "s486",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o251"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o252"
+          },
+          "bind": "s488",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o252"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o210"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#sum stringified",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o211"
+          },
+          "bind": "s413",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": true
+                  }
+                }
+              }
+            },
+            "as": "o253"
+          },
+          "bind": "s491",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o253"
+              },
+              "cache": "none"
+            },
+            "as": "o254"
+          },
+          "bind": "s492",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000014"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o255"
+          },
+          "bind": "s495",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o255"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o256"
+          },
+          "bind": "s497",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o256"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o257"
+          },
+          "bind": "s500",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o258"
+          },
+          "bind": "s501",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o258"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o259"
+          },
+          "bind": "s503",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o259"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o257"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o260"
+          },
+          "bind": "s505",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o260"
+              }
+            },
+            "as": "o261"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o262"
+          },
+          "bind": "s507",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o262"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o263"
+          },
+          "bind": "s509",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o263"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o264"
+          },
+          "bind": "s511",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o264"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o265"
+          },
+          "bind": "s513",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o265"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o211"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#avg stringified",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "avg",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o212"
+          },
+          "bind": "s414",
+          "expect": {
+            "$query": {
+              "method": "avg",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": true
+                  }
+                }
+              }
+            },
+            "as": "o266"
+          },
+          "bind": "s516",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o266"
+              },
+              "cache": "none"
+            },
+            "as": "o267"
+          },
+          "bind": "s517",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000015"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o268"
+          },
+          "bind": "s520",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o268"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o269"
+          },
+          "bind": "s522",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o269"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o270"
+          },
+          "bind": "s525",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o271"
+          },
+          "bind": "s526",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o271"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o272"
+          },
+          "bind": "s528",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o272"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o270"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o273"
+          },
+          "bind": "s530",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o273"
+              }
+            },
+            "as": "o274"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o275"
+          },
+          "bind": "s532",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o275"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o276"
+          },
+          "bind": "s534",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o276"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o277"
+          },
+          "bind": "s536",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o277"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o278"
+          },
+          "bind": "s538",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o278"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o212"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#default alias stringified",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading"
+            },
+            "as": "o213"
+          },
+          "bind": "s415",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": true
+                  }
+                }
+              }
+            },
+            "as": "o279"
+          },
+          "bind": "s541",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o279"
+              },
+              "cache": "none"
+            },
+            "as": "o280"
+          },
+          "bind": "s542",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000016"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o281"
+          },
+          "bind": "s545",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o281"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o282"
+          },
+          "bind": "s547",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o282"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o283"
+          },
+          "bind": "s550",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o284"
+          },
+          "bind": "s551",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o284"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o285"
+          },
+          "bind": "s553",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o285"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o283"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o286"
+          },
+          "bind": "s555",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o286"
+              }
+            },
+            "as": "o287"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o288"
+          },
+          "bind": "s557",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o288"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o289"
+          },
+          "bind": "s559",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o289"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o290"
+          },
+          "bind": "s561",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o290"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": -1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o291"
+          },
+          "bind": "s563",
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o291"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": -1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o280"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o213"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testAnAggregateThatOverflowsInOneGroupIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": false
+                  }
+                }
+              }
+            },
+            "as": "o292"
+          },
+          "bind": "s566",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o292"
+              },
+              "cache": "none"
+            },
+            "as": "o293"
+          },
+          "bind": "s567",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000017"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o294"
+          },
+          "bind": "s570",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o294"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o295"
+          },
+          "bind": "s572",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o295"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o296"
+          },
+          "bind": "s575",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o297"
+          },
+          "bind": "s576",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o297"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o298"
+          },
+          "bind": "s578",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o298"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o296"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o299"
+          },
+          "bind": "s580",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o299"
+              }
+            },
+            "as": "o300"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o301"
+          },
+          "bind": "s582",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o301"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o302"
+          },
+          "bind": "s584",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o302"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o303"
+          },
+          "bind": "s586",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o303"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o304"
+          },
+          "bind": "s588",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o304"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o305"
+          },
+          "bind": "s590",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o305"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o306"
+          },
+          "bind": "s592",
+          "expect": {
+            "$document": {
+              "reading": 1.0,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o306"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1.0,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o307"
+          },
+          "bind": "s594",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "reading"
+              ]
+            },
+            "as": "o308"
+          },
+          "bind": "s595",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "reading"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o293"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o307"
+                },
+                {
+                  "$obj": "o308"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AggregateOverflowTest::testTheLargestFiniteSumIsStillAnswered",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "options": {
+                    "17": false
+                  }
+                }
+              }
+            },
+            "as": "o309"
+          },
+          "bind": "s597",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o309"
+              },
+              "cache": "none"
+            },
+            "as": "o310"
+          },
+          "bind": "s598",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o310"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_overflow"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o310"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_overflow_u000000000018"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o311"
+          },
+          "bind": "s601",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o310"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o311"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o312"
+          },
+          "bind": "s603",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o310"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o312"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o310"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "reading",
+              "required": true
+            },
+            "as": "o313"
+          },
+          "bind": "s606",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reading",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o314"
+          },
+          "bind": "s607",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o314"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o315"
+          },
+          "bind": "s609",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o315"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "readings",
+              "attributes": [
+                {
+                  "$obj": "o313"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o316"
+          },
+          "bind": "s611",
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o310"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o316"
+              }
+            },
+            "as": "o317"
+          },
+          "expect": {
+            "$document": {
+              "$id": "readings",
+              "name": "readings",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "reading",
+                    "key": "reading",
+                    "type": "double",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o318"
+          },
+          "bind": "s613",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o318"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "reading": 1e+308,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319"
+          },
+          "bind": "s615",
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o310"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "readings",
+              "document": {
+                "$obj": "o319"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "reading": 1e+308,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "readings",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o320"
+          },
+          "bind": "s617",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "avg",
+            "args": {
+              "attribute": "reading",
+              "alias": "mean"
+            },
+            "as": "o321"
+          },
+          "bind": "s618",
+          "expect": {
+            "$query": {
+              "method": "avg",
+              "attribute": "reading",
+              "values": [],
+              "alias": "mean"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o310"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "readings",
+              "queries": [
+                {
+                  "$obj": "o320"
+                },
+                {
+                  "$obj": "o321"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "total": 1e+308,
+              "mean": 1e+308
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

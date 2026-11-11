@@ -1,0 +1,26 @@
+[package]
+name = "utopia-mongo"
+description = "MongoDB client: commands, CRUD, indexes, sessions and transactions with causal consistency, on the official driver."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/mongo"
+publish.workspace = true
+
+[dependencies]
+base64.workspace = true
+bson.workspace = true
+futures-util.workspace = true
+getrandom.workspace = true
+hex.workspace = true
+hmac.workspace = true
+mongodb.workspace = true
+php-std.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+utopia-async.workspace = true
+
+
+[package.metadata.utopia]
+category = "data"

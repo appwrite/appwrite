@@ -1,0 +1,809 @@
+{
+  "source": "packages/schedule/tests/E2E/RedisStoreTest.php",
+  "cases": [
+    {
+      "name": "an empty store holds no claim",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the first claim takes the key and no later one can",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "first",
+              "expiresAt": 100.5,
+              "coveredUntil": null,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "second",
+              "expiresAt": 200.0,
+              "coveredUntil": null,
+              "syncedUntil": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "first",
+            "expiresAt": 100.5,
+            "coveredUntil": null,
+            "syncedUntil": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "every field of the claim round trips",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "leader",
+              "expiresAt": 100.5,
+              "coveredUntil": 1787022060.0,
+              "syncedUntil": 1787022000.0
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "leader",
+            "expiresAt": 100.5,
+            "coveredUntil": 1787022060.0,
+            "syncedUntil": 1787022000.0
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": "leader",
+            "claim": {
+              "token": "leader",
+              "expiresAt": 200.0,
+              "coveredUntil": 1787022120.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "leader",
+            "expiresAt": 200.0,
+            "coveredUntil": 1787022120.0,
+            "syncedUntil": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "a stale token cannot overwrite its successor",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "leader",
+              "expiresAt": 100.0,
+              "coveredUntil": 1787022060.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": "leader",
+            "claim": {
+              "token": "standby",
+              "expiresAt": 200.0,
+              "coveredUntil": 1787022120.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": "leader",
+            "claim": {
+              "token": "leader",
+              "expiresAt": 300.0,
+              "coveredUntil": 1787022000.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "standby",
+            "expiresAt": 200.0,
+            "coveredUntil": 1787022120.0,
+            "syncedUntil": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "a released claim keeps its watermark",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "leader",
+              "expiresAt": 100.0,
+              "coveredUntil": 1787022060.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": "leader",
+            "claim": {
+              "token": "",
+              "expiresAt": 0.0,
+              "coveredUntil": 1787022060.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "",
+            "expiresAt": 0.0,
+            "coveredUntil": 1787022060.0,
+            "syncedUntil": null
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "next",
+              "expiresAt": 400.0,
+              "coveredUntil": null,
+              "syncedUntil": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": "",
+            "claim": {
+              "token": "next",
+              "expiresAt": 400.0,
+              "coveredUntil": 1787022060.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "next",
+            "expiresAt": 400.0,
+            "coveredUntil": 1787022060.0,
+            "syncedUntil": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "the key never expires",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "leader",
+              "expiresAt": 1.0,
+              "coveredUntil": 1787022060.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.ttl",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "expect": -1
+        }
+      ]
+    },
+    {
+      "name": "the store keeps working when its connection is killed",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim",
+            "name": "${ns}-store"
+          },
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "leader",
+              "expiresAt": 300.0,
+              "coveredUntil": 1787022060.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.kill",
+          "args": {
+            "name": "${ns}-store"
+          },
+          "expect": 1
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "leader",
+            "expiresAt": 300.0,
+            "coveredUntil": 1787022060.0,
+            "syncedUntil": null
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "other",
+              "expiresAt": 400.0,
+              "coveredUntil": null,
+              "syncedUntil": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": "leader",
+            "claim": {
+              "token": "leader",
+              "expiresAt": 500.0,
+              "coveredUntil": 1787022120.0,
+              "syncedUntil": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "leader",
+            "expiresAt": 500.0,
+            "coveredUntil": 1787022120.0,
+            "syncedUntil": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "microsecond moments round trip at fixed precision",
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.swap",
+          "args": {
+            "store": {
+              "$ref": "store"
+            },
+            "expected": null,
+            "claim": {
+              "token": "leader",
+              "expiresAt": 1787022060.123456,
+              "coveredUntil": 1787022060.1234567,
+              "syncedUntil": 0.1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "leader",
+            "expiresAt": 1787022060.123456,
+            "coveredUntil": 1787022060.123457,
+            "syncedUntil": 0.1
+          }
+        }
+      ]
+    },
+    {
+      "name": "two schedulers sharing redis elect one leader",
+      "steps": [
+        {
+          "op": "clock.new",
+          "args": {
+            "start": "2026-08-18 03:00:30.000000"
+          },
+          "bind": "clock",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.redis",
+          "args": {
+            "key": "${ns}:claim"
+          },
+          "bind": "store",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "source.new",
+          "args": {
+            "rows": [
+              {
+                "id": "fn",
+                "version": "v1"
+              }
+            ],
+            "trigger": {
+              "cron": "* * * * *"
+            }
+          },
+          "bind": "source",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 60,
+            "lease": 240,
+            "token": "a"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.new",
+          "args": {
+            "source": {
+              "$ref": "source"
+            },
+            "clock": {
+              "$ref": "clock"
+            },
+            "store": {
+              "$ref": "store"
+            },
+            "tick": 60,
+            "lease": 240,
+            "token": "b"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.reconcile",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "a",
+            "expiresAt": 1787022270.0,
+            "coveredUntil": 1787022030.0,
+            "syncedUntil": 1787022030.0
+          }
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 60.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:01:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022060.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "clock.advance",
+          "args": {
+            "clock": {
+              "$ref": "clock"
+            },
+            "seconds": 300.0
+          },
+          "expect": null
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": [
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:02:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022120.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:03:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022180.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:04:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022240.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:05:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022300.000000"
+            },
+            {
+              "id": "fn",
+              "due": "2026-08-18 03:06:00.000000 GMT+0000",
+              "payload": null,
+              "version": "v1",
+              "key": "fn@1787022360.000000"
+            }
+          ]
+        },
+        {
+          "op": "scheduler.commit",
+          "args": {
+            "scheduler": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "store.load",
+          "args": {
+            "store": {
+              "$ref": "store"
+            }
+          },
+          "expect": {
+            "token": "b",
+            "expiresAt": 1787022630.0,
+            "coveredUntil": 1787022390.0,
+            "syncedUntil": 1787022030.0
+          }
+        },
+        {
+          "op": "scheduler.tick",
+          "args": {
+            "scheduler": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "only one of many contenders takes a fresh claim",
+      "op": "store.race",
+      "args": {
+        "key": "${ns}:claim",
+        "contenders": 8,
+        "rounds": 5
+      },
+      "state": [],
+      "expect": 5
+    }
+  ]
+}

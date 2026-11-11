@@ -1,0 +1,243 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Indexes/LegacyJunctionIndexTest.php"
+  ],
+  "cases": [
+    {
+      "name": "LegacyJunctionIndexTest::testA7xJunctionIndexIsReadUnderItsStoredId",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "_index_tags",
+                "key": "index_tags",
+                "type": "key",
+                "attributes": [
+                  "tags"
+                ]
+              }
+            },
+            "as": "o351"
+          },
+          "bind": "s579",
+          "expect": {
+            "$document": {
+              "$id": "_index_tags",
+              "key": "index_tags",
+              "type": "key",
+              "attributes": [
+                "tags"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o351"
+              }
+            },
+            "as": "o352"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "_index_tags",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "tags"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "LegacyJunctionIndexTest::testAnyOtherIndexKeepsItsKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "index_tags",
+                "key": "index_tags",
+                "type": "key",
+                "attributes": [
+                  "tags"
+                ]
+              }
+            },
+            "as": "o353"
+          },
+          "bind": "s581",
+          "expect": {
+            "$document": {
+              "$id": "index_tags",
+              "key": "index_tags",
+              "type": "key",
+              "attributes": [
+                "tags"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o353"
+              }
+            },
+            "as": "o354"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "index_tags",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "tags"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "renamed",
+                "key": "title",
+                "type": "key",
+                "attributes": [
+                  "tags"
+                ]
+              }
+            },
+            "as": "o355"
+          },
+          "bind": "s583",
+          "expect": {
+            "$document": {
+              "$id": "renamed",
+              "key": "title",
+              "type": "key",
+              "attributes": [
+                "tags"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o355"
+              }
+            },
+            "as": "o356"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "tags"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "_index_books",
+                "key": "_index_books",
+                "type": "key",
+                "attributes": [
+                  "books"
+                ]
+              }
+            },
+            "as": "o357"
+          },
+          "bind": "s585",
+          "expect": {
+            "$document": {
+              "$id": "_index_books",
+              "key": "_index_books",
+              "type": "key",
+              "attributes": [
+                "books"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o357"
+              }
+            },
+            "as": "o358"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "_index_books",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "books"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

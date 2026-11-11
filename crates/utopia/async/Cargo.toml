@@ -1,0 +1,43 @@
+[package]
+name = "utopia-async"
+description = "Promises, timers and parallel work on an async engine behind one adapter (Tokio), with the tasks, sockets, files, processes and signals every crate uses through it."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/async"
+publish.workspace = true
+
+[features]
+default = ["tokio"]
+# The Tokio adapter: a work-stealing scheduler, epoll/kqueue I/O, timers, a
+# blocking pool, processes and signals.
+tokio = ["tokio/rt", "tokio/rt-multi-thread", "tokio/time", "tokio/net", "tokio/fs", "tokio/process", "tokio/signal", "tokio/io-std", "dep:socket2"]
+# hyper's runtime traits on the engine: an executor, a timer, an I/O wrapper
+# and a client connector (`utopia_async::hyper`).
+hyper = ["dep:http", "dep:hyper", "dep:hyper-util", "dep:tower-service"]
+
+[dependencies]
+futures-util.workspace = true
+pin-project-lite.workspace = true
+thiserror.workspace = true
+# The engine-independent building blocks re-exported by `io` and `sync` (the
+# I/O traits and their combinators, mutexes, semaphores, channels) and the
+# `select!`/`join!` macros: they run on any engine. The `tokio` feature adds
+# the engine itself.
+tokio = { workspace = true, features = ["sync", "io-util", "macros"] }
+utopia-async-macros = { path = "macros", version = "0.1.0" }
+socket2 = { workspace = true, optional = true }
+http = { workspace = true, optional = true }
+hyper = { workspace = true, optional = true }
+hyper-util = { workspace = true, optional = true, features = ["client-legacy"] }
+tower-service = { workspace = true, optional = true }
+
+[dev-dependencies]
+bytes.workspace = true
+http-body-util.workspace = true
+hyper-util = { workspace = true, features = ["client-legacy", "http1"] }
+tower-service.workspace = true
+
+[package.metadata.utopia]
+category = "platform"

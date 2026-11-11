@@ -1,0 +1,265 @@
+{
+    "utopia:{ns}:db:cols": [
+        "set",
+        [
+            "notes",
+            "other"
+        ]
+    ],
+    "utopia:{ns}:db:doc:notes:doc1": [
+        "string",
+        "{\"$id\":\"Doc1\",\"$permissions\":[\"read(\\\"any\\\")\",\"update(\\\"user:a\\\")\",\"delete(\\\"user:a\\\")\",\"read(\\\"user:a\\\")\"],\"$createdAt\":\"2026-01-01 00:00:00.000\",\"$updatedAt\":\"2026-01-02 00:00:00.000\",\"title\":\"héllo\\/ \\\"world\\\" ✓ <tag> & 'q'\",\"count\":7,\"big\":\"18446744073709551615\",\"meta\":{\"x\":[1,2],\"y\":[],\"z\":1.0,\"w\":{\"$id\":\"nested\",\"v\":0.5}},\"$sequence\":\"1\",\"labels\":[\"a\",\"b\"]}"
+    ],
+    "utopia:{ns}:db:doc:notes:doc2": [
+        "string",
+        "{\"$id\":\"doc2\",\"$permissions\":[\"read(\\\"any\\\")\"],\"title\":\"two!!\",\"count\":11,\"$sequence\":\"2\",\"labels\":[\"z\"]}"
+    ],
+    "utopia:{ns}:db:doc:notes:doc5": [
+        "string",
+        "{\"$id\":\"doc5\",\"$sequence\":\"40\",\"$permissions\":[\"write(\\\"any\\\")\"],\"title\":\"five\"}"
+    ],
+    "utopia:{ns}:db:grants:notes": [
+        "set",
+        [
+            "utopia:{ns}:db:perm:doc:notes:doc4",
+            "utopia:{ns}:db:perm:notes:d:user:a",
+            "utopia:{ns}:db:perm:notes:r:any",
+            "utopia:{ns}:db:perm:notes:r:user:a",
+            "utopia:{ns}:db:perm:notes:r:users",
+            "utopia:{ns}:db:perm:notes:u:user:a"
+        ]
+    ],
+    "utopia:{ns}:db:idx:notes": [
+        "set",
+        [
+            "doc1",
+            "doc2",
+            "doc5"
+        ]
+    ],
+    "utopia:{ns}:db:meta:notes": [
+        "hash",
+        [
+            [
+                "indexes",
+                "[{\"$id\":\"u_title\",\"key\":\"u_title\",\"type\":\"unique\",\"attributes\":[\"title\"],\"lengths\":[64],\"orders\":[]},{\"$id\":\"k_count\",\"key\":\"k_count\",\"type\":\"key\",\"attributes\":[\"count\"],\"lengths\":[],\"orders\":[\"DESC\"]},{\"$id\":\"k_big2\",\"key\":\"k_big2\",\"type\":\"key\",\"attributes\":[\"big\"],\"lengths\":[],\"orders\":[]}]"
+            ],
+            [
+                "attrs",
+                "[{\"$id\":\"title\",\"key\":\"title\",\"type\":\"string\",\"size\":64,\"signed\":true,\"array\":false,\"required\":false},{\"$id\":\"count\",\"key\":\"count\",\"type\":\"integer\",\"size\":0,\"signed\":true,\"array\":false,\"required\":false},{\"$id\":\"big\",\"key\":\"big\",\"type\":\"bigint\",\"size\":0,\"signed\":true,\"array\":false,\"required\":false},{\"$id\":\"labels\",\"key\":\"labels\",\"type\":\"string\",\"size\":16,\"signed\":true,\"array\":true,\"required\":false},{\"$id\":\"meta\",\"key\":\"meta\",\"type\":\"object\",\"size\":0,\"signed\":true,\"array\":false,\"required\":false},{\"$id\":\"renamed\",\"key\":\"renamed\",\"type\":\"string\",\"size\":20,\"signed\":true,\"array\":false,\"required\":true},{\"$id\":\"partner\",\"key\":\"partner\",\"type\":\"relationship\",\"size\":0,\"signed\":true,\"array\":false,\"required\":false}]"
+            ],
+            [
+                "docCount",
+                "0"
+            ],
+            [
+                "schema",
+                "{\"$id\":\"notes\",\"name\":\"notes\",\"attributes\":[{\"$id\":\"title\",\"key\":\"title\",\"type\":\"string\",\"size\":64,\"signed\":true,\"array\":false,\"required\":false},{\"$id\":\"count\",\"key\":\"count\",\"type\":\"integer\",\"size\":0,\"signed\":true,\"array\":false,\"required\":false},{\"$id\":\"big\",\"key\":\"big\",\"type\":\"bigint\",\"size\":0,\"signed\":true,\"array\":false,\"required\":false},{\"$id\":\"tags\",\"key\":\"tags\",\"type\":\"string\",\"size\":16,\"signed\":true,\"array\":true,\"required\":false},{\"$id\":\"meta\",\"key\":\"meta\",\"type\":\"object\",\"size\":0,\"signed\":true,\"array\":false,\"required\":false},{\"$id\":\"ratio\",\"key\":\"ratio\",\"type\":\"float\",\"size\":0,\"signed\":true,\"array\":false,\"required\":false}],\"indexes\":[{\"$id\":\"u_title\",\"key\":\"u_title\",\"type\":\"unique\",\"attributes\":[\"title\"],\"lengths\":[64],\"orders\":[]},{\"$id\":\"k_count\",\"key\":\"k_count\",\"type\":\"key\",\"attributes\":[\"count\"],\"lengths\":[],\"orders\":[\"DESC\"]}]}"
+            ],
+            [
+                "sizeBytes",
+                "0"
+            ]
+        ]
+    ],
+    "utopia:{ns}:db:meta:other": [
+        "hash",
+        [
+            [
+                "indexes",
+                "[]"
+            ],
+            [
+                "docCount",
+                "0"
+            ],
+            [
+                "attrs",
+                "[{\"$id\":\"partnerOf\",\"key\":\"partnerOf\",\"type\":\"relationship\",\"size\":0,\"signed\":true,\"array\":false,\"required\":false}]"
+            ],
+            [
+                "sizeBytes",
+                "0"
+            ],
+            [
+                "schema",
+                "{\"$id\":\"other\",\"name\":\"other\",\"attributes\":[],\"indexes\":[]}"
+            ]
+        ]
+    ],
+    "utopia:{ns}:db:perm:doc:notes:doc1": [
+        "hash",
+        [
+            [
+                "user:a",
+                "d,r,u"
+            ],
+            [
+                "any",
+                "r"
+            ]
+        ]
+    ],
+    "utopia:{ns}:db:perm:doc:notes:doc2": [
+        "hash",
+        [
+            [
+                "any",
+                "r"
+            ]
+        ]
+    ],
+    "utopia:{ns}:db:perm:notes:d:user:a": [
+        "set",
+        [
+            "doc1"
+        ]
+    ],
+    "utopia:{ns}:db:perm:notes:r:any": [
+        "set",
+        [
+            "doc1",
+            "doc2"
+        ]
+    ],
+    "utopia:{ns}:db:perm:notes:r:user:a": [
+        "set",
+        [
+            "doc1"
+        ]
+    ],
+    "utopia:{ns}:db:perm:notes:u:user:a": [
+        "set",
+        [
+            "doc1"
+        ]
+    ],
+    "utopia:{ns}:db:seq:notes": [
+        "string",
+        "40"
+    ],
+    "utopia:{ns}:dbs": [
+        "set",
+        [
+            "db"
+        ]
+    ],
+    "utopia:{ns}_shared:db:cols": [
+        "set",
+        [
+            "notes"
+        ]
+    ],
+    "utopia:{ns}_shared:db:doc:t:3:notes:a": [
+        "string",
+        "{\"$id\":\"a\",\"$tenant\":3,\"$permissions\":[\"read(\\\"any\\\")\"],\"title\":\"x\",\"$sequence\":\"1\"}"
+    ],
+    "utopia:{ns}_shared:db:doc:t:4:notes:b": [
+        "string",
+        "{\"$id\":\"b\",\"$tenant\":4,\"$permissions\":[\"read(\\\"team:t\\/owner\\\")\"],\"title\":\"x\",\"$sequence\":\"1\"}"
+    ],
+    "utopia:{ns}_shared:db:doc:t:_:_metadata:notes": [
+        "string",
+        "{\"$id\":\"notes\",\"$permissions\":[],\"name\":\"notes\",\"$sequence\":\"1\"}"
+    ],
+    "utopia:{ns}_shared:db:grants:notes": [
+        "set",
+        [
+            "utopia:{ns}_shared:db:perm:t:3:doc:notes:a",
+            "utopia:{ns}_shared:db:perm:t:3:notes:r:any",
+            "utopia:{ns}_shared:db:perm:t:4:doc:notes:b",
+            "utopia:{ns}_shared:db:perm:t:4:notes:r:team:t/owner"
+        ]
+    ],
+    "utopia:{ns}_shared:db:idx:t:3:notes": [
+        "set",
+        [
+            "a"
+        ]
+    ],
+    "utopia:{ns}_shared:db:idx:t:4:notes": [
+        "set",
+        [
+            "b"
+        ]
+    ],
+    "utopia:{ns}_shared:db:idx:t:_:_metadata": [
+        "set",
+        [
+            "notes"
+        ]
+    ],
+    "utopia:{ns}_shared:db:meta:notes": [
+        "hash",
+        [
+            [
+                "indexes",
+                "[{\"$id\":\"u\",\"key\":\"u\",\"type\":\"unique\",\"attributes\":[\"title\"],\"lengths\":[],\"orders\":[]}]"
+            ],
+            [
+                "attrs",
+                "[{\"$id\":\"title\",\"key\":\"title\",\"type\":\"string\",\"size\":64,\"signed\":true,\"array\":false,\"required\":false}]"
+            ],
+            [
+                "docCount",
+                "0"
+            ],
+            [
+                "schema",
+                "{\"$id\":\"notes\",\"name\":\"notes\",\"attributes\":[{\"$id\":\"title\",\"key\":\"title\",\"type\":\"string\",\"size\":64,\"signed\":true,\"array\":false,\"required\":false}],\"indexes\":[{\"$id\":\"u\",\"key\":\"u\",\"type\":\"unique\",\"attributes\":[\"title\"],\"lengths\":[],\"orders\":[]}]}"
+            ],
+            [
+                "sizeBytes",
+                "0"
+            ]
+        ]
+    ],
+    "utopia:{ns}_shared:db:perm:t:3:doc:notes:a": [
+        "hash",
+        [
+            [
+                "any",
+                "r"
+            ]
+        ]
+    ],
+    "utopia:{ns}_shared:db:perm:t:3:notes:r:any": [
+        "set",
+        [
+            "a"
+        ]
+    ],
+    "utopia:{ns}_shared:db:perm:t:4:doc:notes:b": [
+        "hash",
+        [
+            [
+                "team:t/owner",
+                "r"
+            ]
+        ]
+    ],
+    "utopia:{ns}_shared:db:perm:t:4:notes:r:team:t/owner": [
+        "set",
+        [
+            "b"
+        ]
+    ],
+    "utopia:{ns}_shared:db:seq:t:3:notes": [
+        "string",
+        "1"
+    ],
+    "utopia:{ns}_shared:db:seq:t:4:notes": [
+        "string",
+        "1"
+    ],
+    "utopia:{ns}_shared:db:seq:t:_:_metadata": [
+        "string",
+        "1"
+    ],
+    "utopia:{ns}_shared:dbs": [
+        "set",
+        [
+            "db"
+        ]
+    ]
+}

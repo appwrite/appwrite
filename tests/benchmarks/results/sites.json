@@ -1,0 +1,713 @@
+{
+  "service": "sites",
+  "file": "tests/benchmarks/results/sites.json",
+  "workload": {
+    "script": "tests/benchmarks/api/sites.js",
+    "duration": "60s",
+    "hashing": false,
+    "error_budget": 0.05,
+    "seed": 200,
+    "run": "sites-20261012-033745"
+  },
+  "environment": {
+    "date": "2026-10-12T02:42:17Z",
+    "commit": "049c7e4163",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 10,
+      "rps": 9.8,
+      "requests": 589,
+      "failures": 0,
+      "errors": 0,
+      "dropped": 5,
+      "latency": {
+        "avg": 504.097,
+        "p50": 17.01,
+        "p90": 74.235,
+        "p95": 121.314,
+        "p99": 15397.072,
+        "max": 24963.207
+      },
+      "cpu_ms_per_request": 9.633,
+      "db_cpu_ms_per_request": 10.51,
+      "memory_mib": {
+        "baseline": 3698.7,
+        "avg": 3705.2,
+        "peak": 3710.0
+      },
+      "endpoints": {
+        "sites.get": {
+          "route": "GET /v1/sites/:siteId",
+          "count": 106,
+          "rps": 1.77,
+          "avg": 11.499,
+          "p50": 10.557,
+          "p90": 17.817,
+          "p95": 21.169,
+          "p99": 28.472,
+          "max": 28.888
+        },
+        "sites.list": {
+          "route": "GET /v1/sites",
+          "count": 56,
+          "rps": 0.93,
+          "avg": 63.506,
+          "p50": 56.631,
+          "p90": 94.418,
+          "p95": 109.301,
+          "p99": 142.312,
+          "max": 155.904
+        },
+        "sites.search": {
+          "route": "GET /v1/sites",
+          "note": "full-text search",
+          "count": 25,
+          "rps": 0.42,
+          "avg": 67.098,
+          "p50": 61.657,
+          "p90": 98.106,
+          "p95": 105.634,
+          "p99": 117.46,
+          "max": 120.997
+        },
+        "sites.create": {
+          "route": "POST /v1/sites",
+          "count": 12,
+          "rps": 0.2,
+          "avg": 16.072,
+          "p50": 14.182,
+          "p90": 26.936,
+          "p95": 27.603,
+          "p99": 27.79,
+          "max": 27.837
+        },
+        "sites.update": {
+          "route": "PUT /v1/sites/:siteId",
+          "count": 25,
+          "rps": 0.42,
+          "avg": 24.74,
+          "p50": 21.267,
+          "p90": 45.856,
+          "p95": 48.217,
+          "p99": 54.679,
+          "max": 56.534
+        },
+        "sites.delete": {
+          "route": "DELETE /v1/sites/:siteId",
+          "count": 11,
+          "rps": 0.18,
+          "avg": 16.833,
+          "p50": 16.216,
+          "p90": 23.63,
+          "p95": 26.952,
+          "p99": 29.61,
+          "max": 30.275
+        },
+        "sites.deployment.update": {
+          "route": "PATCH /v1/sites/:siteId/deployment",
+          "count": 13,
+          "rps": 0.22,
+          "avg": 32.065,
+          "p50": 30.122,
+          "p90": 44.224,
+          "p95": 47.394,
+          "p99": 49.957,
+          "max": 50.598
+        },
+        "sites.deployments.list": {
+          "route": "GET /v1/sites/:siteId/deployments",
+          "count": 31,
+          "rps": 0.52,
+          "avg": 15.739,
+          "p50": 15.646,
+          "p90": 20.987,
+          "p95": 28.245,
+          "p99": 35.751,
+          "max": 37.017
+        },
+        "sites.deployments.create": {
+          "route": "POST /v1/sites/:siteId/deployments",
+          "note": "uploads a 1 KB archive in one request; queues a build in the executor",
+          "count": 7,
+          "rps": 0.12,
+          "avg": 13376.315,
+          "p50": 15342.399,
+          "p90": 20674.12,
+          "p95": 22818.664,
+          "p99": 24534.298,
+          "max": 24963.207
+        },
+        "sites.deployments.get": {
+          "route": "GET /v1/sites/:siteId/deployments/:deploymentId",
+          "count": 41,
+          "rps": 0.68,
+          "avg": 11.178,
+          "p50": 10.441,
+          "p90": 16.119,
+          "p95": 18.246,
+          "p99": 24.741,
+          "max": 28.188
+        },
+        "sites.deployments.delete": {
+          "route": "DELETE /v1/sites/:siteId/deployments/:deploymentId",
+          "count": 9,
+          "rps": 0.15,
+          "avg": 14.25,
+          "p50": 13.609,
+          "p90": 22.825,
+          "p95": 24.706,
+          "p99": 26.211,
+          "max": 26.587
+        },
+        "sites.deployments.download": {
+          "route": "GET /v1/sites/:siteId/deployments/:deploymentId/download",
+          "count": 13,
+          "rps": 0.22,
+          "avg": 12.337,
+          "p50": 12.504,
+          "p90": 15.533,
+          "p95": 17.849,
+          "p99": 20.579,
+          "max": 21.262
+        },
+        "sites.deployments.status.update": {
+          "route": "PATCH /v1/sites/:siteId/deployments/:deploymentId/status",
+          "note": "cancels a build that was just queued",
+          "count": 11,
+          "rps": 0.18,
+          "avg": 13820.258,
+          "p50": 12185.993,
+          "p90": 17669.849,
+          "p95": 19140.947,
+          "p99": 20317.825,
+          "max": 20612.045
+        },
+        "sites.deployments.duplicate.create": {
+          "route": "POST /v1/sites/:siteId/deployments/duplicate",
+          "note": "copies the source and queues a build in the executor",
+          "count": 9,
+          "rps": 0.15,
+          "avg": 4066.162,
+          "p50": 1956.251,
+          "p90": 8578.023,
+          "p95": 8701.626,
+          "p99": 8800.508,
+          "max": 8825.229
+        },
+        "sites.deployments.vcs.create": {
+          "route": "POST /v1/sites/:siteId/deployments/vcs",
+          "note": "measured on its not-found path: a VCS deployment needs a Git installation, which only a provider (GitHub) can create",
+          "count": 12,
+          "rps": 0.2,
+          "avg": 12.168,
+          "p50": 10.401,
+          "p90": 13.959,
+          "p95": 24.63,
+          "p99": 34.959,
+          "max": 37.541
+        },
+        "sites.logs.list": {
+          "route": "GET /v1/sites/:siteId/logs",
+          "count": 36,
+          "rps": 0.6,
+          "avg": 44.067,
+          "p50": 40.132,
+          "p90": 68.064,
+          "p95": 70.128,
+          "p99": 83.554,
+          "max": 89.393
+        },
+        "sites.logs.get": {
+          "route": "GET /v1/sites/:siteId/logs/:logId",
+          "count": 35,
+          "rps": 0.58,
+          "avg": 21.686,
+          "p50": 17.723,
+          "p90": 33.99,
+          "p95": 43.257,
+          "p99": 56.802,
+          "max": 58.596
+        },
+        "sites.logs.delete": {
+          "route": "DELETE /v1/sites/:siteId/logs/:logId",
+          "count": 8,
+          "rps": 0.13,
+          "avg": 90.338,
+          "p50": 88.755,
+          "p90": 99.121,
+          "p95": 105.661,
+          "p99": 110.892,
+          "max": 112.2
+        },
+        "sites.variables.list": {
+          "route": "GET /v1/sites/:siteId/variables",
+          "count": 28,
+          "rps": 0.47,
+          "avg": 16.607,
+          "p50": 13.832,
+          "p90": 29.635,
+          "p95": 31.213,
+          "p99": 34.094,
+          "max": 35.119
+        },
+        "sites.variables.create": {
+          "route": "POST /v1/sites/:siteId/variables",
+          "count": 11,
+          "rps": 0.18,
+          "avg": 32.488,
+          "p50": 31.889,
+          "p90": 43.991,
+          "p95": 50.138,
+          "p99": 55.056,
+          "max": 56.286
+        },
+        "sites.variables.get": {
+          "route": "GET /v1/sites/:siteId/variables/:variableId",
+          "count": 17,
+          "rps": 0.28,
+          "avg": 13.963,
+          "p50": 11.576,
+          "p90": 24.452,
+          "p95": 28.523,
+          "p99": 34.401,
+          "max": 35.871
+        },
+        "sites.variables.update": {
+          "route": "PUT /v1/sites/:siteId/variables/:variableId",
+          "count": 15,
+          "rps": 0.25,
+          "avg": 33.861,
+          "p50": 34.424,
+          "p90": 49.271,
+          "p95": 56.781,
+          "p99": 65.475,
+          "max": 67.648
+        },
+        "sites.variables.delete": {
+          "route": "DELETE /v1/sites/:siteId/variables/:variableId",
+          "count": 10,
+          "rps": 0.17,
+          "avg": 33.258,
+          "p50": 34.543,
+          "p90": 44.683,
+          "p95": 53.028,
+          "p99": 59.704,
+          "max": 61.373
+        },
+        "sites.frameworks.list": {
+          "route": "GET /v1/sites/frameworks",
+          "count": 14,
+          "rps": 0.23,
+          "avg": 7.524,
+          "p50": 7.285,
+          "p90": 10.47,
+          "p95": 12.101,
+          "p99": 14.102,
+          "max": 14.602
+        },
+        "sites.specifications.list": {
+          "route": "GET /v1/sites/specifications",
+          "count": 8,
+          "rps": 0.13,
+          "avg": 12.9,
+          "p50": 9.392,
+          "p90": 21.316,
+          "p95": 26.345,
+          "p99": 30.368,
+          "max": 31.374
+        },
+        "sites.templates.list": {
+          "route": "GET /v1/sites/templates",
+          "count": 15,
+          "rps": 0.25,
+          "avg": 9.027,
+          "p50": 8.007,
+          "p90": 14.31,
+          "p95": 15.643,
+          "p99": 17.761,
+          "max": 18.29
+        },
+        "sites.templates.get": {
+          "route": "GET /v1/sites/templates/:templateId",
+          "count": 11,
+          "rps": 0.18,
+          "avg": 9.209,
+          "p50": 6.271,
+          "p90": 20.783,
+          "p95": 24.558,
+          "p99": 27.578,
+          "max": 28.333
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 10,
+      "rps": 4.2,
+      "requests": 255,
+      "failures": 0,
+      "errors": 10,
+      "dropped": 0,
+      "latency": {
+        "avg": 1288.146,
+        "p50": 22.218,
+        "p90": 575.588,
+        "p95": 3779.577,
+        "p99": 30342.657,
+        "max": 31798.702
+      },
+      "cpu_ms_per_request": 12.843,
+      "db_cpu_ms_per_request": 24.86,
+      "memory_mib": {
+        "baseline": 3705.9,
+        "avg": 3702.8,
+        "peak": 3711.0
+      },
+      "endpoints": {
+        "sites.get": {
+          "route": "GET /v1/sites/:siteId",
+          "count": 38,
+          "rps": 0.63,
+          "avg": 68.479,
+          "p50": 14.046,
+          "p90": 60.34,
+          "p95": 206.53,
+          "p99": 1004.043,
+          "max": 1245.31
+        },
+        "sites.list": {
+          "route": "GET /v1/sites",
+          "count": 28,
+          "rps": 0.47,
+          "avg": 104.931,
+          "p50": 89.697,
+          "p90": 125.029,
+          "p95": 133.374,
+          "p99": 449.508,
+          "max": 565.026
+        },
+        "sites.search": {
+          "route": "GET /v1/sites",
+          "note": "full-text search",
+          "count": 9,
+          "rps": 0.15,
+          "avg": 129.161,
+          "p50": 127.444,
+          "p90": 183.16,
+          "p95": 241.336,
+          "p99": 287.877,
+          "max": 299.512
+        },
+        "sites.create": {
+          "route": "POST /v1/sites",
+          "count": 3,
+          "rps": 0.05,
+          "avg": 25.884,
+          "p50": 24.966,
+          "p90": 36.718,
+          "p95": 38.187,
+          "p99": 39.362,
+          "max": 39.656
+        },
+        "sites.update": {
+          "route": "PUT /v1/sites/:siteId",
+          "count": 10,
+          "rps": 0.17,
+          "avg": 27.993,
+          "p50": 25.435,
+          "p90": 38.421,
+          "p95": 41.713,
+          "p99": 44.347,
+          "max": 45.006
+        },
+        "sites.delete": {
+          "route": "DELETE /v1/sites/:siteId",
+          "count": 6,
+          "rps": 0.1,
+          "avg": 27.711,
+          "p50": 21.543,
+          "p90": 49.245,
+          "p95": 51.49,
+          "p99": 53.286,
+          "max": 53.735
+        },
+        "sites.deployment.update": {
+          "route": "PATCH /v1/sites/:siteId/deployment",
+          "count": 2,
+          "rps": 0.03,
+          "avg": 33.289,
+          "p50": 33.289,
+          "p90": 42.276,
+          "p95": 43.399,
+          "p99": 44.297,
+          "max": 44.522
+        },
+        "sites.deployments.list": {
+          "route": "GET /v1/sites/:siteId/deployments",
+          "count": 11,
+          "rps": 0.18,
+          "avg": 13.587,
+          "p50": 10.406,
+          "p90": 21.084,
+          "p95": 25.788,
+          "p99": 29.552,
+          "max": 30.493
+        },
+        "sites.deployments.create": {
+          "route": "POST /v1/sites/:siteId/deployments",
+          "note": "uploads a 1 KB archive in one request; queues a build in the executor",
+          "errors": 3,
+          "count": 5,
+          "rps": 0.08,
+          "avg": 22202.848,
+          "p50": 30245.484,
+          "p90": 31237.251,
+          "p95": 31517.976,
+          "p99": 31742.557,
+          "max": 31798.702
+        },
+        "sites.deployments.get": {
+          "route": "GET /v1/sites/:siteId/deployments/:deploymentId",
+          "count": 24,
+          "rps": 0.4,
+          "avg": 21.847,
+          "p50": 9.821,
+          "p90": 24.979,
+          "p95": 105.74,
+          "p99": 161.095,
+          "max": 173.552
+        },
+        "sites.deployments.delete": {
+          "route": "DELETE /v1/sites/:siteId/deployments/:deploymentId",
+          "errors": 2,
+          "count": 4,
+          "rps": 0.07,
+          "avg": 22.276,
+          "p50": 21.934,
+          "p90": 23.636,
+          "p95": 23.854,
+          "p99": 24.028,
+          "max": 24.072
+        },
+        "sites.deployments.download": {
+          "route": "GET /v1/sites/:siteId/deployments/:deploymentId/download",
+          "count": 6,
+          "rps": 0.1,
+          "avg": 11.31,
+          "p50": 9.676,
+          "p90": 15.136,
+          "p95": 15.537,
+          "p99": 15.858,
+          "max": 15.938
+        },
+        "sites.deployments.status.update": {
+          "route": "PATCH /v1/sites/:siteId/deployments/:deploymentId/status",
+          "note": "cancels a build that was just queued",
+          "errors": 2,
+          "count": 3,
+          "rps": 0.05,
+          "avg": 28379.707,
+          "p50": 30019.836,
+          "p90": 30030.695,
+          "p95": 30032.053,
+          "p99": 30033.139,
+          "max": 30033.41
+        },
+        "sites.deployments.duplicate.create": {
+          "route": "POST /v1/sites/:siteId/deployments/duplicate",
+          "note": "copies the source and queues a build in the executor",
+          "errors": 3,
+          "count": 4,
+          "rps": 0.07,
+          "avg": 24906.613,
+          "p50": 30245.607,
+          "p90": 30589.04,
+          "p95": 30651.405,
+          "p99": 30701.297,
+          "max": 30713.77
+        },
+        "sites.deployments.vcs.create": {
+          "route": "POST /v1/sites/:siteId/deployments/vcs",
+          "note": "measured on its not-found path: a VCS deployment needs a Git installation, which only a provider (GitHub) can create",
+          "count": 2,
+          "rps": 0.03,
+          "avg": 18.727,
+          "p50": 18.727,
+          "p90": 25.233,
+          "p95": 26.046,
+          "p99": 26.696,
+          "max": 26.859
+        },
+        "sites.logs.list": {
+          "route": "GET /v1/sites/:siteId/logs",
+          "count": 12,
+          "rps": 0.2,
+          "avg": 369.094,
+          "p50": 192.734,
+          "p90": 749.975,
+          "p95": 834.296,
+          "p99": 913.286,
+          "max": 933.034
+        },
+        "sites.logs.get": {
+          "route": "GET /v1/sites/:siteId/logs/:logId",
+          "count": 23,
+          "rps": 0.38,
+          "avg": 522.681,
+          "p50": 111.692,
+          "p90": 1711.704,
+          "p95": 2957.482,
+          "p99": 3214.779,
+          "max": 3251.2
+        },
+        "sites.logs.delete": {
+          "route": "DELETE /v1/sites/:siteId/logs/:logId",
+          "count": 6,
+          "rps": 0.1,
+          "avg": 1045.623,
+          "p50": 223.622,
+          "p90": 2797.543,
+          "p95": 3904.999,
+          "p99": 4790.965,
+          "max": 5012.456
+        },
+        "sites.variables.list": {
+          "route": "GET /v1/sites/:siteId/variables",
+          "count": 10,
+          "rps": 0.17,
+          "avg": 19.255,
+          "p50": 13.091,
+          "p90": 33.651,
+          "p95": 40.78,
+          "p99": 46.482,
+          "max": 47.908
+        },
+        "sites.variables.create": {
+          "route": "POST /v1/sites/:siteId/variables",
+          "count": 2,
+          "rps": 0.03,
+          "avg": 34.513,
+          "p50": 34.513,
+          "p90": 47.794,
+          "p95": 49.454,
+          "p99": 50.782,
+          "max": 51.114
+        },
+        "sites.variables.get": {
+          "route": "GET /v1/sites/:siteId/variables/:variableId",
+          "count": 10,
+          "rps": 0.17,
+          "avg": 10.044,
+          "p50": 9.668,
+          "p90": 13.199,
+          "p95": 13.876,
+          "p99": 14.418,
+          "max": 14.553
+        },
+        "sites.variables.update": {
+          "route": "PUT /v1/sites/:siteId/variables/:variableId",
+          "count": 6,
+          "rps": 0.1,
+          "avg": 44.495,
+          "p50": 33.882,
+          "p90": 72.959,
+          "p95": 90.018,
+          "p99": 103.665,
+          "max": 107.077
+        },
+        "sites.variables.delete": {
+          "route": "DELETE /v1/sites/:siteId/variables/:variableId",
+          "count": 2,
+          "rps": 0.03,
+          "avg": 49.759,
+          "p50": 49.759,
+          "p90": 56.921,
+          "p95": 57.817,
+          "p99": 58.533,
+          "max": 58.712
+        },
+        "sites.frameworks.list": {
+          "route": "GET /v1/sites/frameworks",
+          "count": 10,
+          "rps": 0.17,
+          "avg": 30.389,
+          "p50": 12.434,
+          "p90": 51.212,
+          "p95": 116.77,
+          "p99": 169.217,
+          "max": 182.329
+        },
+        "sites.specifications.list": {
+          "route": "GET /v1/sites/specifications",
+          "count": 3,
+          "rps": 0.05,
+          "avg": 13.725,
+          "p50": 9.955,
+          "p90": 21.8,
+          "p95": 23.28,
+          "p99": 24.465,
+          "max": 24.761
+        },
+        "sites.templates.list": {
+          "route": "GET /v1/sites/templates",
+          "count": 9,
+          "rps": 0.15,
+          "avg": 6.979,
+          "p50": 6.472,
+          "p90": 8.843,
+          "p95": 9.038,
+          "p99": 9.195,
+          "max": 9.234
+        },
+        "sites.templates.get": {
+          "route": "GET /v1/sites/templates/:templateId",
+          "count": 7,
+          "rps": 0.12,
+          "avg": 96.456,
+          "p50": 5.593,
+          "p90": 260.99,
+          "p95": 449.713,
+          "p99": 600.691,
+          "max": 638.436
+        }
+      }
+    }
+  ]
+}

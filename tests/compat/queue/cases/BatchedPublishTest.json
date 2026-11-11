@@ -1,0 +1,203 @@
+{
+  "source": "packages/queue/tests/BatchedPublishTest.php",
+  "cases": [
+    {
+      "name": "many payloads cost one command, in order, each with its own pid",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "mail",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "to": "a@example.com"
+              },
+              {
+                "to": "b@example.com"
+              },
+              {
+                "to": "c@example.com"
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.mail",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0003\",\"queue\":\"mail\",\"timestamp\":1700000000,\"payload\":{\"to\":\"c@example.com\"}}",
+            "{\"pid\":\"pid0002\",\"queue\":\"mail\",\"timestamp\":1700000000,\"payload\":{\"to\":\"b@example.com\"}}",
+            "{\"pid\":\"pid0001\",\"queue\":\"mail\",\"timestamp\":1700000000,\"payload\":{\"to\":\"a@example.com\"}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an empty batch touches nothing",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "mail",
+              "namespace": "${ns}"
+            },
+            "payloads": []
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "EXISTS",
+              "${ns}.queue.mail"
+            ]
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "publish keeps nested payloads as one message",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "mail",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "recipients": [
+                {
+                  "to": "a"
+                },
+                {
+                  "to": "b"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.mail",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0001\",\"queue\":\"mail\",\"timestamp\":1700000000,\"payload\":{\"recipients\":[{\"to\":\"a\"},{\"to\":\"b\"}]}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the envelope is byte-identical for awkward payloads",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "mail",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "url": "https://a.io/x?y=1&z=<2>",
+              "uni": "Ünïcödé ✓ 🎉",
+              "f": 0.1,
+              "big": 1e+25,
+              "neg": -0.0,
+              "e": {},
+              "l": [],
+              "n": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.mail",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0001\",\"queue\":\"mail\",\"timestamp\":1700000000,\"payload\":{\"url\":\"https:\\/\\/a.io\\/x?y=1&z=<2>\",\"uni\":\"\\u00dcn\\u00efc\\u00f6d\\u00e9 \\u2713 \\ud83c\\udf89\",\"f\":0.1,\"big\":1.0e+25,\"neg\":-0,\"e\":{},\"l\":[],\"n\":null}}"
+          ]
+        }
+      ]
+    }
+  ]
+}

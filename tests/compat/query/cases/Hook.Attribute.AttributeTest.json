@@ -1,0 +1,123 @@
+{
+  "source": "packages/query/tests/Hook/Attribute/AttributeTest.php",
+  "cases": [
+    {
+      "name": "testMappedAttribute",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Attribute\\Map",
+            "args": [
+              {
+                "$id": "_uid",
+                "$createdAt": "_createdAt"
+              }
+            ]
+          },
+          {
+            "call": "resolve",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "$id"
+            ]
+          },
+          {
+            "call": "resolve",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "$createdAt"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Hook\\Attribute\\Map",
+          "id": 1,
+          "props": []
+        },
+        "_uid",
+        "_createdAt"
+      ]
+    },
+    {
+      "name": "testUnmappedPassthrough",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Attribute\\Map",
+            "args": [
+              {
+                "$id": "_uid"
+              }
+            ]
+          },
+          {
+            "call": "resolve",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "resolve",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "status"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Hook\\Attribute\\Map",
+          "id": 1,
+          "props": []
+        },
+        "name",
+        "status"
+      ]
+    },
+    {
+      "name": "testEmptyMap",
+      "op": "hook",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Attribute\\Map",
+            "args": [
+              []
+            ]
+          },
+          {
+            "call": "resolve",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "anything"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Hook\\Attribute\\Map",
+          "id": 1,
+          "props": []
+        },
+        "anything"
+      ]
+    }
+  ]
+}

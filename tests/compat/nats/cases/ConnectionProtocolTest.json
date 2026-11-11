@@ -1,0 +1,1019 @@
+{
+  "source": "packages/nats/tests/ConnectionProtocolTest.php",
+  "cases": [
+    {
+      "name": "connect negotiates headers when supported",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "headers": true
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": true,
+            "no_responders": true
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "connect disables headers when not supported",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "headers": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": false,
+            "no_responders": false
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "publish with headers uses HPUB",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "headers": true
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "subj",
+            "data": "hello",
+            "headers": [
+              [
+                "set",
+                "X-Key",
+                "value"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "HPUB subj"
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.writes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\n",
+            "PING\r\n",
+            "HPUB subj 26 31\r\nNATS/1.0\r\nX-Key: value\r\n\r\nhello\r\n"
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "publish with headers is refused when the server lacks support",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "headers": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "subj",
+            "data": "hello",
+            "headers": [
+              [
+                "set",
+                "X-Key",
+                "value"
+              ]
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Server does not support message headers"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "max payload includes header bytes",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "headers": true,
+              "max_payload": 40
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "subj",
+            "data": "hello",
+            "headers": [
+              [
+                "set",
+                "X-Long-Header",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              ]
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 64 exceeds server maximum of 40"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a payload exactly at the maximum passes",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "max_payload": 5
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "s",
+            "data": "12345"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "s",
+            "data": "123456"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 6 exceeds server maximum of 5"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "tls_available is parsed",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "tls_available": true,
+              "tls_required": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.server_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "server_id": "FAKE",
+            "server_name": "fake",
+            "version": "2.10.0",
+            "proto": 1,
+            "host": "127.0.0.1",
+            "port": 4222,
+            "headers": true,
+            "auth_required": false,
+            "tls_required": false,
+            "tls_available": true,
+            "max_payload": 1048576,
+            "connect_urls": [],
+            "nonce": null,
+            "jetstream": true,
+            "client_id": null,
+            "client_ip": null
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "headers with only a status are sent with PUB",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "s",
+            "data": "x",
+            "headers": [
+              [
+                "status",
+                "503"
+              ]
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.writes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "CONNECT {\"verbose\":false,\"pedantic\":false,\"lang\":\"php\",\"version\":\"0.1.0\",\"protocol\":1,\"echo\":true,\"headers\":true,\"no_responders\":true}\r\n",
+            "PING\r\n",
+            "PUB s 1\r\nx\r\n"
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the CONNECT payload: name, verbose, pedantic and echo",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "name": "billing",
+              "verbose": true,
+              "pedantic": true,
+              "echo": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "verbose": true,
+            "pedantic": true,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": false,
+            "headers": true,
+            "no_responders": true,
+            "name": "billing"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "credentials from the URL",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "servers": "nats://alice:s%40cret@127.0.0.1:4222"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": true,
+            "no_responders": true,
+            "user": "alice",
+            "pass": "s@cret"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "servers": [
+                "nats://t0ken@127.0.0.1:4222"
+              ]
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": true,
+            "no_responders": true,
+            "auth_token": "t0ken"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "d"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "token, user and password options",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "token": "tok"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": true,
+            "no_responders": true,
+            "auth_token": "tok"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "user": "u",
+              "pass": "p"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": true,
+            "no_responders": true,
+            "user": "u",
+            "pass": "p"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "d"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "NKey authentication signs the nonce",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "nonce": "abc"
+            },
+            "options": {
+              "nkey": "UEXPLICIT",
+              "nkeySeed": "SUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": true,
+            "no_responders": true,
+            "nkey": "UEXPLICIT",
+            "sig": "BKDSER2NAFSRDIJ2J2KW4MNW72BB4HXYMCASOIXWVHDMTIYZ3NB7TQWNIAQEM2RM4JWDVAOKGXVSR63F2ZAAXP547PT4N2NP5HOZADA"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "NKey authentication without a nonce fails to connect",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "nkey": "U",
+              "nkeySeed": "SUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to connect to any NATS server"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a credentials file",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "credentials",
+            "contents": "-----BEGIN NATS USER JWT-----\nthe.jwt\n------END NATS USER JWT------\n-----BEGIN USER NKEY SEED-----\nSUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY\n------END USER NKEY SEED------\n",
+            "nonce": "n"
+          },
+          "expect": {
+            "fields": {
+              "jwt": "the.jwt",
+              "nkey": "UAX2HRTQ4H5S6EX3NM6AJIYBJXDCP6P3T3AJTBAMXYJ2Q6H7OPQ53Z6W",
+              "sig": "ADIK45EKTUOBVEPZKBKNE6VJZGG65SPZEOAZDQVXFMUHHWRSMCZEH3SDB7YJ3UYDPLGOHHMXBD3RL6AHSP75JV7P5REDV6AOD7AHEDY"
+            }
+          }
+        },
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "nonce": "xyz"
+            },
+            "options": {
+              "credentialsFile": "/tmp/compat-fs/${ns}/user.creds"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": true,
+            "no_responders": true,
+            "jwt": "the.jwt",
+            "nkey": "UAX2HRTQ4H5S6EX3NM6AJIYBJXDCP6P3T3AJTBAMXYJ2Q6H7OPQ53Z6W",
+            "sig": "X5763NA34SYPL2OMWX4YAXX2JIBINGOAQAMDAVLL6FXLKUST6IBYJZTQZKZOO6IINM7RIGWEOCKZE5ZMXUSIHUNGL2425LLZJQLBCDA"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a missing credentials file fails before connecting",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "credentialsFile": "/tmp/compat-fs/${ns}/missing.creds"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+              "message": "Credentials file not found: /tmp/compat-fs/${ns}/missing.creds"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a -ERR during the handshake fails the connect",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "CONNECT"
+                },
+                "do": [
+                  {
+                    "push": "-ERR 'Authorization Violation'\r\n"
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to connect to any NATS server"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a fake transport is never upgraded to TLS",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "info": {
+              "tls_required": true
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "connects": 1,
+            "tls_upgrades": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the transport factory gets the scheme",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "servers": "tls://127.0.0.1:4443"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "tls"
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "servers": "h:1"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ]
+          ]
+        },
+        {
+          "op": "conn.options",
+          "args": {
+            "conn": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "servers": [
+              "h:1"
+            ],
+            "name": "",
+            "inbox_prefix": "_INBOX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verbose servers answer +OK before PONG",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB"
+                },
+                "do": [
+                  {
+                    "push": "+OK\r\n"
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "s",
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an invalid server URL",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "servers": "nats://:99999"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to connect to any NATS server"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

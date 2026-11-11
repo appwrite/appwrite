@@ -1,0 +1,23 @@
+[package]
+name = "utopia-orchestration"
+description = "Container orchestration on Docker, through the Docker CLI or the Engine API on its Unix socket: images, containers, executions, networks and usage statistics."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/orchestration"
+publish.workspace = true
+
+[dependencies]
+bytes.workspace = true
+http-body-util.workspace = true
+hyper = { workspace = true, features = ["client", "http1"] }
+php-std.workspace = true
+thiserror.workspace = true
+utopia-async = { workspace = true, features = ["hyper"] }
+utopia-console.workspace = true
+
+
+[package.metadata.utopia]
+category = "integrations"
+php-sync = "6d5d6397b9ccb837bfc4e1cd73921aef24af4726"

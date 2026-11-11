@@ -1,0 +1,810 @@
+{
+  "source": "packages/cache/tests/EnvelopeTest.php",
+  "cases": [
+    {
+      "name": "testEncodeWrapsDataAndTime",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": "hello",
+            "time": 1700000000
+          },
+          "expect": "{\"time\":1700000000,\"data\":\"hello\"}"
+        }
+      ]
+    },
+    {
+      "name": "testEncodeArrayPayload",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": {
+              "a": 1
+            },
+            "time": 42
+          },
+          "expect": "{\"time\":42,\"data\":{\"a\":1}}"
+        }
+      ]
+    },
+    {
+      "name": "testDecodeReturnsDataWhenFresh",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": {
+              "x": 1
+            },
+            "time": 100
+          },
+          "bind": "e",
+          "expect": "{\"time\":100,\"data\":{\"x\":1}}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 130
+          },
+          "expect": {
+            "$array": [
+              [
+                "x",
+                1
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDecodeReturnsFalseWhenStale",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": "value",
+            "time": 100
+          },
+          "bind": "e",
+          "expect": "{\"time\":100,\"data\":\"value\"}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 161
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDecodeBoundaryIsExclusive",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": "value",
+            "time": 100
+          },
+          "bind": "e",
+          "expect": "{\"time\":100,\"data\":\"value\"}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 160
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 159
+          },
+          "expect": "value"
+        }
+      ]
+    },
+    {
+      "name": "testDecodeTreatsMalformedJsonAsMiss",
+      "steps": [
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "not json",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "null",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDecodeRejectsMissingFields",
+      "steps": [
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "{\"time\":100}",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "{\"data\":\"x\"}",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "{}",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDecodeRejectsNonIntegerTime",
+      "steps": [
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "{\"time\":\"100\",\"data\":\"x\"}",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "{\"time\":1.5,\"data\":\"x\"}",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDecodePreservesNullData",
+      "steps": [
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "{\"time\":100,\"data\":null}",
+            "ttl": 60,
+            "now": 130
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testDecodePreservesNestedArrayData",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": {
+              "a": {
+                "b": {
+                  "c": "deep"
+                }
+              },
+              "list": [
+                1,
+                2,
+                3
+              ]
+            },
+            "time": 100
+          },
+          "bind": "e",
+          "expect": "{\"time\":100,\"data\":{\"a\":{\"b\":{\"c\":\"deep\"}},\"list\":[1,2,3]}}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 130
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                {
+                  "$array": [
+                    [
+                      "b",
+                      {
+                        "$array": [
+                          [
+                            "c",
+                            "deep"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "list",
+                [
+                  1,
+                  2,
+                  3
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDecodePreservesEmptyObjects",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": {
+              "empty": {},
+              "nested": {
+                "empty": {}
+              },
+              "list": [
+                {},
+                {
+                  "x": 1
+                }
+              ],
+              "emptyArray": []
+            },
+            "time": 100
+          },
+          "bind": "e",
+          "expect": "{\"time\":100,\"data\":{\"empty\":{},\"nested\":{\"empty\":{}},\"list\":[{},{\"x\":1}],\"emptyArray\":[]}}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 130
+          },
+          "expect": {
+            "$array": [
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ],
+              [
+                "nested",
+                {
+                  "$array": [
+                    [
+                      "empty",
+                      {
+                        "$object": []
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "list",
+                [
+                  {
+                    "$object": []
+                  },
+                  {
+                    "$array": [
+                      [
+                        "x",
+                        1
+                      ]
+                    ]
+                  }
+                ]
+              ],
+              [
+                "emptyArray",
+                []
+              ]
+            ]
+          }
+        },
+        {
+          "op": "envelope.touch",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "time": 120
+          },
+          "bind": "t",
+          "expect": "{\"time\":120,\"data\":{\"empty\":{},\"nested\":{\"empty\":{}},\"list\":[{},{\"x\":1}],\"emptyArray\":[]}}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "t"
+            },
+            "ttl": 60,
+            "now": 130
+          },
+          "expect": {
+            "$array": [
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ],
+              [
+                "nested",
+                {
+                  "$array": [
+                    [
+                      "empty",
+                      {
+                        "$object": []
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "list",
+                [
+                  {
+                    "$object": []
+                  },
+                  {
+                    "$array": [
+                      [
+                        "x",
+                        1
+                      ]
+                    ]
+                  }
+                ]
+              ],
+              [
+                "emptyArray",
+                []
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTouchRewritesTime",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": "value",
+            "time": 100
+          },
+          "bind": "e",
+          "expect": "{\"time\":100,\"data\":\"value\"}"
+        },
+        {
+          "op": "envelope.touch",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "time": 200
+          },
+          "bind": "t",
+          "expect": "{\"time\":200,\"data\":\"value\"}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "t"
+            },
+            "ttl": 60,
+            "now": 250
+          },
+          "expect": "value"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 250
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testTouchPreservesArrayData",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": {
+              "x": 1,
+              "y": [
+                2,
+                3
+              ]
+            },
+            "time": 100
+          },
+          "bind": "e",
+          "expect": "{\"time\":100,\"data\":{\"x\":1,\"y\":[2,3]}}"
+        },
+        {
+          "op": "envelope.touch",
+          "args": {
+            "value": {
+              "$ref": "e"
+            },
+            "time": 200
+          },
+          "bind": "t",
+          "expect": "{\"time\":200,\"data\":{\"x\":1,\"y\":[2,3]}}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "t"
+            },
+            "ttl": 60,
+            "now": 230
+          },
+          "expect": {
+            "$array": [
+              [
+                "x",
+                1
+              ],
+              [
+                "y",
+                [
+                  2,
+                  3
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTouchReturnsFalseOnMalformedJson",
+      "steps": [
+        {
+          "op": "envelope.touch",
+          "args": {
+            "value": "not json",
+            "time": 200
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testTouchReturnsFalseWhenDataKeyMissing",
+      "steps": [
+        {
+          "op": "envelope.touch",
+          "args": {
+            "value": "{\"time\":100}",
+            "time": 200
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.touch",
+          "args": {
+            "value": "{}",
+            "time": 200
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testTouchAcceptsEnvelopeWithoutPriorTimeField",
+      "steps": [
+        {
+          "op": "envelope.touch",
+          "args": {
+            "value": "{\"data\":\"x\"}",
+            "time": 200
+          },
+          "bind": "t",
+          "expect": "{\"data\":\"x\",\"time\":200}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": {
+              "$ref": "t"
+            },
+            "ttl": 60,
+            "now": 230
+          },
+          "expect": "x"
+        }
+      ]
+    },
+    {
+      "name": "testRoundTripsThroughAnyCodec",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "codec": "igbinary",
+            "data": {
+              "a": {
+                "b": "deep"
+              },
+              "empty": {}
+            },
+            "time": 100
+          },
+          "bind": "e",
+          "expect": "\u0000\u0000\u0000\u0002\u0014\u0002\u0011\u0004time\u0006d\u0011\u0004data\u0014\u0002\u0011\u0001a\u0014\u0001\u0011\u0001b\u0011\u0004deep\u0011\u0005empty\u0017\bstdClass\u0014\u0000"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "codec": "igbinary",
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 130
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                {
+                  "$array": [
+                    [
+                      "b",
+                      "deep"
+                    ]
+                  ]
+                }
+              ],
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "codec": "igbinary",
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 161
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.touch",
+          "args": {
+            "codec": "igbinary",
+            "value": {
+              "$ref": "e"
+            },
+            "time": 200
+          },
+          "bind": "t",
+          "expect": {
+            "$bytes": "AAAAAhQCEQR0aW1lBsgRBGRhdGEUAhEBYRQBEQFiEQRkZWVwEQVlbXB0eRcIc3RkQ2xhc3MUAA=="
+          }
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "codec": "igbinary",
+            "value": {
+              "$ref": "t"
+            },
+            "ttl": 60,
+            "now": 250
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                {
+                  "$array": [
+                    [
+                      "b",
+                      "deep"
+                    ]
+                  ]
+                }
+              ],
+              [
+                "empty",
+                {
+                  "$object": []
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPayloadFromAnotherCodecIsAMiss",
+      "steps": [
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": "value",
+            "time": 100
+          },
+          "bind": "e",
+          "expect": "{\"time\":100,\"data\":\"value\"}"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "codec": "igbinary",
+            "value": {
+              "$ref": "e"
+            },
+            "ttl": 60,
+            "now": 130
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.touch",
+          "args": {
+            "codec": "igbinary",
+            "value": {
+              "$ref": "e"
+            },
+            "time": 200
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "false data, overflowing time, unencodable data",
+      "steps": [
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "{\"time\":100,\"data\":false}",
+            "ttl": 60,
+            "now": 130
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "{\"time\":9223372036854775807,\"data\":\"x\"}",
+            "ttl": 60,
+            "now": 130
+          },
+          "expect": "x"
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "[1,2]",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "envelope.decode",
+          "args": {
+            "value": "{\"data\":\"x\",\"time\":1,\"extra\":[]}",
+            "ttl": 60,
+            "now": 0
+          },
+          "expect": "x"
+        },
+        {
+          "op": "envelope.touch",
+          "args": {
+            "value": "{\"data\":\"x\",\"time\":1,\"extra\":{}}",
+            "time": 5
+          },
+          "expect": "{\"data\":\"x\",\"time\":5,\"extra\":{}}"
+        },
+        {
+          "op": "envelope.encode",
+          "args": {
+            "data": {
+              "$bytes": "/w=="
+            },
+            "time": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonException",
+              "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7223 @@
+{
+  "source": "packages/emails/tests/EmailTest.php",
+  "cases": [
+    {
+      "name": "valid email",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": "test@company.org"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": "test"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": "company.org"
+        },
+        {
+          "op": "email.is_valid",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.provider",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": "company.org"
+        },
+        {
+          "op": "email.subdomain",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": ""
+        },
+        {
+          "op": "email.has_subdomain",
+          "args": {
+            "email": "test@company.org"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "email with subdomain",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@mail.company.org"
+          },
+          "expect": "user@mail.company.org"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "user@mail.company.org"
+          },
+          "expect": "user"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "user@mail.company.org"
+          },
+          "expect": "mail.company.org"
+        },
+        {
+          "op": "email.provider",
+          "args": {
+            "email": "user@mail.company.org"
+          },
+          "expect": "company.org"
+        },
+        {
+          "op": "email.subdomain",
+          "args": {
+            "email": "user@mail.company.org"
+          },
+          "expect": "mail"
+        },
+        {
+          "op": "email.has_subdomain",
+          "args": {
+            "email": "user@mail.company.org"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "gmail email",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": "user"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": "gmail.com"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.provider",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": "gmail.com"
+        }
+      ]
+    },
+    {
+      "name": "disposable email",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": "user@10minutemail.com"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": "user"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": "10minutemail.com"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "email with special characters",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@company.org"
+          },
+          "expect": "user.name+tag@company.org"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "user.name+tag@company.org"
+          },
+          "expect": "user.name+tag"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "user.name+tag@company.org"
+          },
+          "expect": "company.org"
+        },
+        {
+          "op": "email.is_valid",
+          "args": {
+            "email": "user.name+tag@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "user.name+tag@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user.name+tag@company.org"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "email with hyphens",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name@example-domain.com"
+          },
+          "expect": "user-name@example-domain.com"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "user-name@example-domain.com"
+          },
+          "expect": "user-name"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "user-name@example-domain.com"
+          },
+          "expect": "example-domain.com"
+        },
+        {
+          "op": "email.is_valid",
+          "args": {
+            "email": "user-name@example-domain.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "user-name@example-domain.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user-name@example-domain.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "email with underscores",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user_name@company.org"
+          },
+          "expect": "user_name@company.org"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "user_name@company.org"
+          },
+          "expect": "user_name"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "user_name@company.org"
+          },
+          "expect": "company.org"
+        },
+        {
+          "op": "email.is_valid",
+          "args": {
+            "email": "user_name@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "user_name@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user_name@company.org"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "email with numbers",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user123@example123.com"
+          },
+          "expect": "user123@example123.com"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "user123@example123.com"
+          },
+          "expect": "user123"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "user123@example123.com"
+          },
+          "expect": "example123.com"
+        },
+        {
+          "op": "email.is_valid",
+          "args": {
+            "email": "user123@example123.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "user123@example123.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user123@example123.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "email with multiple dots",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name.last@company.org"
+          },
+          "expect": "user.name.last@company.org"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "user.name.last@company.org"
+          },
+          "expect": "user.name.last"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "user.name.last@company.org"
+          },
+          "expect": "company.org"
+        },
+        {
+          "op": "email.is_valid",
+          "args": {
+            "email": "user.name.last@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "user.name.last@company.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user.name.last@company.org"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "email with multiple subdomains",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@mail.sub.company.org"
+          },
+          "expect": "user@mail.sub.company.org"
+        },
+        {
+          "op": "email.local",
+          "args": {
+            "email": "user@mail.sub.company.org"
+          },
+          "expect": "user"
+        },
+        {
+          "op": "email.domain",
+          "args": {
+            "email": "user@mail.sub.company.org"
+          },
+          "expect": "mail.sub.company.org"
+        },
+        {
+          "op": "email.provider",
+          "args": {
+            "email": "user@mail.sub.company.org"
+          },
+          "expect": "company.org"
+        },
+        {
+          "op": "email.subdomain",
+          "args": {
+            "email": "user@mail.sub.company.org"
+          },
+          "expect": "mail.sub"
+        },
+        {
+          "op": "email.has_subdomain",
+          "args": {
+            "email": "user@mail.sub.company.org"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "email formatted",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@mail.company.org"
+          },
+          "expect": "user@mail.company.org"
+        },
+        {
+          "op": "email.formatted",
+          "args": {
+            "email": "user@mail.company.org",
+            "format": "full"
+          },
+          "expect": "user@mail.company.org"
+        },
+        {
+          "op": "email.formatted",
+          "args": {
+            "email": "user@mail.company.org",
+            "format": "local"
+          },
+          "expect": "user"
+        },
+        {
+          "op": "email.formatted",
+          "args": {
+            "email": "user@mail.company.org",
+            "format": "domain"
+          },
+          "expect": "mail.company.org"
+        },
+        {
+          "op": "email.formatted",
+          "args": {
+            "email": "user@mail.company.org",
+            "format": "provider"
+          },
+          "expect": "company.org"
+        },
+        {
+          "op": "email.provider",
+          "args": {
+            "email": "user@mail.company.org"
+          },
+          "expect": "company.org"
+        },
+        {
+          "op": "email.formatted",
+          "args": {
+            "email": "user@mail.company.org",
+            "format": "subdomain"
+          },
+          "expect": "mail"
+        },
+        {
+          "op": "email.subdomain",
+          "args": {
+            "email": "user@mail.company.org"
+          },
+          "expect": "mail"
+        }
+      ]
+    },
+    {
+      "name": "email normalization",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "  USER@COMPANY.ORG  "
+          },
+          "expect": "user@company.org"
+        }
+      ]
+    },
+    {
+      "name": "invalid email empty",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Email address cannot be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid email no at",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "invalid-email"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "'invalid-email' must be a valid email address"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid email multiple at",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@example@com"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "'user@example@com' must be a valid email address"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid email no local",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "@example.com"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "'@example.com' must be a valid email address"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid email no domain",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "'user@' must be a valid email address"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid email consecutive dots",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user..name@example.com"
+          },
+          "expect": "user..name@example.com"
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "user..name@example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email starts with dot",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": ".user@example.com"
+          },
+          "expect": ".user@example.com"
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": ".user@example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email ends with dot",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.@example.com"
+          },
+          "expect": "user.@example.com"
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "user.@example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email local too long",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com"
+          },
+          "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com"
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain too long",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+          },
+          "expect": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain consecutive dots",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@example..com"
+          },
+          "expect": "user@example..com"
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user@example..com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain consecutive hyphens",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@example--com.com"
+          },
+          "expect": "user@example--com.com"
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user@example--com.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain starts with dot",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@.example.com"
+          },
+          "expect": "user@.example.com"
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user@.example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain ends with dot",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@example.com."
+          },
+          "expect": "user@example.com."
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user@example.com."
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain starts with hyphen",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@-example.com"
+          },
+          "expect": "user@-example.com"
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user@-example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain ends with hyphen",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@example-.com"
+          },
+          "expect": "user@example-.com"
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user@example-.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain no tld",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@example"
+          },
+          "expect": "user@example"
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user@example"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email domain invalid characters",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@example!.com"
+          },
+          "expect": "user@example!.com"
+        },
+        {
+          "op": "email.has_valid_domain",
+          "args": {
+            "email": "user@example!.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "invalid email local invalid characters",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user!@example.com"
+          },
+          "expect": "user!@example.com"
+        },
+        {
+          "op": "email.has_valid_local",
+          "args": {
+            "email": "user!@example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "free email providers",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": "user@yahoo.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": "user@hotmail.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": "user@outlook.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": "user@live.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@aol.com"
+          },
+          "expect": "user@aol.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@aol.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@aol.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@aol.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@aol.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@aol.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@aol.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@aol.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": "user@icloud.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": "user@protonmail.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@zoho.com"
+          },
+          "expect": "user@zoho.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@zoho.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@zoho.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@zoho.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@zoho.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@zoho.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@zoho.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@zoho.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@yandex.com"
+          },
+          "expect": "user@yandex.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@yandex.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@yandex.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@yandex.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@yandex.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@yandex.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@yandex.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@yandex.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@mail.com"
+          },
+          "expect": "user@mail.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@mail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@mail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@mail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@mail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@mail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@mail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@mail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@gmx.com"
+          },
+          "expect": "user@gmx.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@gmx.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmx.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@gmx.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@gmx.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmx.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@gmx.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@gmx.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@web.de"
+          },
+          "expect": "user@web.de"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@web.de"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@web.de"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@web.de"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@web.de"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@web.de"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@web.de"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@web.de"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@tutanota.com"
+          },
+          "expect": "user@tutanota.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@tutanota.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@tutanota.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@tutanota.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@tutanota.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@tutanota.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@tutanota.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@tutanota.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": "user@fastmail.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@hey.com"
+          },
+          "expect": "user@hey.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@hey.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@hey.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@hey.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@hey.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@hey.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@hey.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@hey.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "disposable email providers",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": "user@10minutemail.com"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@10minutemail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@tempmail.org"
+          },
+          "expect": "user@tempmail.org"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@tempmail.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@tempmail.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@tempmail.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@tempmail.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@guerrillamail.com"
+          },
+          "expect": "user@guerrillamail.com"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@guerrillamail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@guerrillamail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@guerrillamail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@guerrillamail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@guerrillamail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@guerrillamail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@mailinator.com"
+          },
+          "expect": "user@mailinator.com"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@mailinator.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@mailinator.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@mailinator.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@mailinator.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@mailinator.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@mailinator.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@yopmail.com"
+          },
+          "expect": "user@yopmail.com"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@yopmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@yopmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@yopmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@yopmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@yopmail.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@yopmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@temp-mail.org"
+          },
+          "expect": "user@temp-mail.org"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@temp-mail.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@temp-mail.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@temp-mail.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@temp-mail.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@temp-mail.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@temp-mail.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@throwaway.email"
+          },
+          "expect": "user@throwaway.email"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@throwaway.email"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@throwaway.email"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@throwaway.email"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@throwaway.email"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@getnada.com"
+          },
+          "expect": "user@getnada.com"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@getnada.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@getnada.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@getnada.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@getnada.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@maildrop.cc"
+          },
+          "expect": "user@maildrop.cc"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@maildrop.cc"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@maildrop.cc"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@maildrop.cc"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@maildrop.cc"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@maildrop.cc"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@maildrop.cc"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@sharklasers.com"
+          },
+          "expect": "user@sharklasers.com"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@sharklasers.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@sharklasers.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@sharklasers.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@sharklasers.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@sharklasers.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@sharklasers.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@test.com"
+          },
+          "expect": "user@test.com"
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@test.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@test.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@test.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@test.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@test.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@test.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "corporate email providers",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@company.com"
+          },
+          "expect": "user@company.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@company.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@company.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@company.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@company.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@company.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@business.org"
+          },
+          "expect": "user@business.org"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@business.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@business.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@business.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@business.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@business.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@enterprise.net"
+          },
+          "expect": "user@enterprise.net"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@enterprise.net"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@enterprise.net"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@enterprise.net"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@enterprise.net"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@enterprise.net"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@corporation.co.uk"
+          },
+          "expect": "user@corporation.co.uk"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@corporation.co.uk"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@corporation.co.uk"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@corporation.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@corporation.co.uk"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@corporation.co.uk"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@organization.org"
+          },
+          "expect": "user@organization.org"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@organization.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@organization.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@organization.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@organization.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@organization.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@firm.com"
+          },
+          "expect": "user@firm.com"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@firm.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@firm.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@firm.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@firm.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@firm.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@office.net"
+          },
+          "expect": "user@office.net"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@office.net"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@office.net"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@office.net"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@office.net"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@office.net"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@work.org"
+          },
+          "expect": "user@work.org"
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@work.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@work.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_corporate",
+          "args": {
+            "email": "user@work.org"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.is_free",
+          "args": {
+            "email": "user@work.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.is_disposable",
+          "args": {
+            "email": "user@work.org"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get unique gmail aliases",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@gmail.com"
+          },
+          "expect": "user.name@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@gmail.com"
+          },
+          "expect": "user.name+tag@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+spam@gmail.com"
+          },
+          "expect": "user.name+spam@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+spam@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+newsletter@gmail.com"
+          },
+          "expect": "user.name+newsletter@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+newsletter@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+work@gmail.com"
+          },
+          "expect": "user.name+work@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+work@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+personal@gmail.com"
+          },
+          "expect": "user.name+personal@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+personal@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+test123@gmail.com"
+          },
+          "expect": "user.name+test123@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+test123@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+anything@gmail.com"
+          },
+          "expect": "user.name+anything@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+anything@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+verylongtag@gmail.com"
+          },
+          "expect": "user.name+verylongtag@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+verylongtag@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag.with.dots@gmail.com"
+          },
+          "expect": "user.name+tag.with.dots@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag.with.dots@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag-with-hyphens@gmail.com"
+          },
+          "expect": "user.name+tag-with-hyphens@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag-with-hyphens@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag_with_underscores@gmail.com"
+          },
+          "expect": "user.name+tag_with_underscores@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag_with_underscores@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag123@gmail.com"
+          },
+          "expect": "user.name+tag123@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag123@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@googlemail.com"
+          },
+          "expect": "user.name+tag@googlemail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@googlemail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@googlemail.com"
+          },
+          "expect": "user.name+tag@googlemail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@googlemail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+spam@googlemail.com"
+          },
+          "expect": "user.name+spam@googlemail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+spam@googlemail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@googlemail.com"
+          },
+          "expect": "user.name@googlemail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@googlemail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@gmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e+tag@gmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e+tag@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e+tag@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@gmail.com"
+          },
+          "expect": "user+@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.@gmail.com"
+          },
+          "expect": "user.@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": ".user@gmail.com"
+          },
+          "expect": ".user@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": ".user@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user..name@gmail.com"
+          },
+          "expect": "user..name@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user..name@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        }
+      ]
+    },
+    {
+      "name": "get unique outlook aliases",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@outlook.com"
+          },
+          "expect": "user.name+tag@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+spam@outlook.com"
+          },
+          "expect": "user.name+spam@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+spam@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+newsletter@outlook.com"
+          },
+          "expect": "user.name+newsletter@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+newsletter@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+work@outlook.com"
+          },
+          "expect": "user.name+work@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+work@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+personal@outlook.com"
+          },
+          "expect": "user.name+personal@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+personal@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+test123@outlook.com"
+          },
+          "expect": "user.name+test123@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+test123@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+anything@outlook.com"
+          },
+          "expect": "user.name+anything@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+anything@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+verylongtag@outlook.com"
+          },
+          "expect": "user.name+verylongtag@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+verylongtag@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag.with.dots@outlook.com"
+          },
+          "expect": "user.name+tag.with.dots@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag.with.dots@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag-with-hyphens@outlook.com"
+          },
+          "expect": "user.name+tag-with-hyphens@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag-with-hyphens@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag_with_underscores@outlook.com"
+          },
+          "expect": "user.name+tag_with_underscores@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag_with_underscores@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag123@outlook.com"
+          },
+          "expect": "user.name+tag123@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag123@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@hotmail.com"
+          },
+          "expect": "user.name+tag@hotmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@hotmail.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+spam@hotmail.com"
+          },
+          "expect": "user.name+spam@hotmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+spam@hotmail.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@hotmail.com"
+          },
+          "expect": "user.name@hotmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@hotmail.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@live.com"
+          },
+          "expect": "user.name+tag@live.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@live.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+spam@live.com"
+          },
+          "expect": "user.name+spam@live.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+spam@live.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@live.com"
+          },
+          "expect": "user.name@live.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@live.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@outlook.co.uk"
+          },
+          "expect": "user.name+tag@outlook.co.uk"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@outlook.co.uk"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@hotmail.co.uk"
+          },
+          "expect": "user.name+tag@hotmail.co.uk"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@hotmail.co.uk"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@live.co.uk"
+          },
+          "expect": "user.name+tag@live.co.uk"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@live.co.uk"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@outlook.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@outlook.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@outlook.com"
+          },
+          "expect": "user+@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@outlook.com"
+          },
+          "expect": "user@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.@outlook.com"
+          },
+          "expect": "user.@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.@outlook.com"
+          },
+          "expect": "user.@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": ".user@outlook.com"
+          },
+          "expect": ".user@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": ".user@outlook.com"
+          },
+          "expect": ".user@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@hotmail.com"
+          },
+          "expect": "user.name@hotmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@hotmail.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@live.com"
+          },
+          "expect": "user.name@live.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@live.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@outlook.co.uk"
+          },
+          "expect": "user.name@outlook.co.uk"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@outlook.co.uk"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@hotmail.co.uk"
+          },
+          "expect": "user.name@hotmail.co.uk"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@hotmail.co.uk"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@live.co.uk"
+          },
+          "expect": "user.name@live.co.uk"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@live.co.uk"
+          },
+          "expect": "user.name@outlook.com"
+        }
+      ]
+    },
+    {
+      "name": "get unique yahoo aliases",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name@yahoo.com"
+          },
+          "expect": "user-name@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name@yahoo.com"
+          },
+          "expect": "user-name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-tag@yahoo.com"
+          },
+          "expect": "user-name-tag@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-tag@yahoo.com"
+          },
+          "expect": "user-name-tag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-spam@yahoo.com"
+          },
+          "expect": "user-name-spam@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-spam@yahoo.com"
+          },
+          "expect": "user-name-spam@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-newsletter@yahoo.com"
+          },
+          "expect": "user-name-newsletter@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-newsletter@yahoo.com"
+          },
+          "expect": "user-name-newsletter@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-work@yahoo.com"
+          },
+          "expect": "user-name-work@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-work@yahoo.com"
+          },
+          "expect": "user-name-work@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-personal@yahoo.com"
+          },
+          "expect": "user-name-personal@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-personal@yahoo.com"
+          },
+          "expect": "user-name-personal@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-test123@yahoo.com"
+          },
+          "expect": "user-name-test123@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-test123@yahoo.com"
+          },
+          "expect": "user-name-test123@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-anything@yahoo.com"
+          },
+          "expect": "user-name-anything@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-anything@yahoo.com"
+          },
+          "expect": "user-name-anything@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-verylongtag@yahoo.com"
+          },
+          "expect": "user-name-verylongtag@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-verylongtag@yahoo.com"
+          },
+          "expect": "user-name-verylongtag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-tag.with.dots@yahoo.com"
+          },
+          "expect": "user-name-tag.with.dots@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-tag.with.dots@yahoo.com"
+          },
+          "expect": "user-name-tag.with.dots@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-tag-with-hyphens@yahoo.com"
+          },
+          "expect": "user-name-tag-with-hyphens@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-tag-with-hyphens@yahoo.com"
+          },
+          "expect": "user-name-tag-with-hyphens@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-tag_with_underscores@yahoo.com"
+          },
+          "expect": "user-name-tag_with_underscores@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-tag_with_underscores@yahoo.com"
+          },
+          "expect": "user-name-tag_with_underscores@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-tag123@yahoo.com"
+          },
+          "expect": "user-name-tag123@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-tag123@yahoo.com"
+          },
+          "expect": "user-name-tag123@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u-s-e-r-n-a-m-e@yahoo.com"
+          },
+          "expect": "u-s-e-r-n-a-m-e@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u-s-e-r-n-a-m-e@yahoo.com"
+          },
+          "expect": "u-s-e-r-n-a-m-e@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u-s-e-r-n-a-m-e-tag@yahoo.com"
+          },
+          "expect": "u-s-e-r-n-a-m-e-tag@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u-s-e-r-n-a-m-e-tag@yahoo.com"
+          },
+          "expect": "u-s-e-r-n-a-m-e-tag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-tag@yahoo.co.uk"
+          },
+          "expect": "user-name-tag@yahoo.co.uk"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-tag@yahoo.co.uk"
+          },
+          "expect": "user-name-tag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-tag@yahoo.ca"
+          },
+          "expect": "user-name-tag@yahoo.ca"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-tag@yahoo.ca"
+          },
+          "expect": "user-name-tag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-tag@ymail.com"
+          },
+          "expect": "user-name-tag@ymail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-tag@ymail.com"
+          },
+          "expect": "user-name-tag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name-tag@rocketmail.com"
+          },
+          "expect": "user-name-tag@rocketmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name-tag@rocketmail.com"
+          },
+          "expect": "user-name-tag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-@yahoo.com"
+          },
+          "expect": "user-@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-@yahoo.com"
+          },
+          "expect": "user-@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@yahoo.com"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@yahoo.com"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name@yahoo.com"
+          },
+          "expect": "user-name@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name@yahoo.com"
+          },
+          "expect": "user-name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@yahoo.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@yahoo.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u-s-e-r-n-a-m-e@yahoo.com"
+          },
+          "expect": "u-s-e-r-n-a-m-e@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u-s-e-r-n-a-m-e@yahoo.com"
+          },
+          "expect": "u-s-e-r-n-a-m-e@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.@yahoo.com"
+          },
+          "expect": "user.@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.@yahoo.com"
+          },
+          "expect": "user.@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": ".user@yahoo.com"
+          },
+          "expect": ".user@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": ".user@yahoo.com"
+          },
+          "expect": ".user@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@yahoo.co.uk"
+          },
+          "expect": "user.name@yahoo.co.uk"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@yahoo.co.uk"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@yahoo.ca"
+          },
+          "expect": "user.name@yahoo.ca"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@yahoo.ca"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@ymail.com"
+          },
+          "expect": "user.name@ymail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@ymail.com"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@rocketmail.com"
+          },
+          "expect": "user.name@rocketmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@rocketmail.com"
+          },
+          "expect": "user.name@yahoo.com"
+        }
+      ]
+    },
+    {
+      "name": "get unique icloud aliases",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@icloud.com"
+          },
+          "expect": "user.name+tag@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+spam@icloud.com"
+          },
+          "expect": "user.name+spam@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+spam@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+newsletter@icloud.com"
+          },
+          "expect": "user.name+newsletter@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+newsletter@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+work@icloud.com"
+          },
+          "expect": "user.name+work@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+work@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+personal@icloud.com"
+          },
+          "expect": "user.name+personal@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+personal@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+test123@icloud.com"
+          },
+          "expect": "user.name+test123@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+test123@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+anything@icloud.com"
+          },
+          "expect": "user.name+anything@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+anything@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+verylongtag@icloud.com"
+          },
+          "expect": "user.name+verylongtag@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+verylongtag@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag.with.dots@icloud.com"
+          },
+          "expect": "user.name+tag.with.dots@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag.with.dots@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag-with-hyphens@icloud.com"
+          },
+          "expect": "user.name+tag-with-hyphens@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag-with-hyphens@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag_with_underscores@icloud.com"
+          },
+          "expect": "user.name+tag_with_underscores@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag_with_underscores@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag123@icloud.com"
+          },
+          "expect": "user.name+tag123@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag123@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@me.com"
+          },
+          "expect": "user.name+tag@me.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@me.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@mac.com"
+          },
+          "expect": "user.name+tag@mac.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@mac.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@icloud.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@icloud.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@icloud.com"
+          },
+          "expect": "user+@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@icloud.com"
+          },
+          "expect": "user@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.@icloud.com"
+          },
+          "expect": "user.@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.@icloud.com"
+          },
+          "expect": "user.@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": ".user@icloud.com"
+          },
+          "expect": ".user@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": ".user@icloud.com"
+          },
+          "expect": ".user@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@me.com"
+          },
+          "expect": "user.name@me.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@me.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@mac.com"
+          },
+          "expect": "user.name@mac.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@mac.com"
+          },
+          "expect": "user.name@icloud.com"
+        }
+      ]
+    },
+    {
+      "name": "get unique protonmail aliases",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@protonmail.com"
+          },
+          "expect": "user.name+tag@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+spam@protonmail.com"
+          },
+          "expect": "user.name+spam@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+spam@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+newsletter@protonmail.com"
+          },
+          "expect": "user.name+newsletter@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+newsletter@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+work@protonmail.com"
+          },
+          "expect": "user.name+work@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+work@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+personal@protonmail.com"
+          },
+          "expect": "user.name+personal@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+personal@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+test123@protonmail.com"
+          },
+          "expect": "user.name+test123@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+test123@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+anything@protonmail.com"
+          },
+          "expect": "user.name+anything@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+anything@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+verylongtag@protonmail.com"
+          },
+          "expect": "user.name+verylongtag@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+verylongtag@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag.with.dots@protonmail.com"
+          },
+          "expect": "user.name+tag.with.dots@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag.with.dots@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag-with-hyphens@protonmail.com"
+          },
+          "expect": "user.name+tag-with-hyphens@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag-with-hyphens@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag_with_underscores@protonmail.com"
+          },
+          "expect": "user.name+tag_with_underscores@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag_with_underscores@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag123@protonmail.com"
+          },
+          "expect": "user.name+tag123@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag123@protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@protonmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@protonmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e+tag@protonmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e+tag@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e+tag@protonmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@protonmail.com"
+          },
+          "expect": "user+@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@protonmail.com"
+          },
+          "expect": "user@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.@protonmail.com"
+          },
+          "expect": "user.@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.@protonmail.com"
+          },
+          "expect": "user.@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": ".user@protonmail.com"
+          },
+          "expect": ".user@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": ".user@protonmail.com"
+          },
+          "expect": ".user@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@proton.me"
+          },
+          "expect": "user.name+tag@proton.me"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@proton.me"
+          },
+          "expect": "user.name@proton.me"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@pm.me"
+          },
+          "expect": "user.name+tag@pm.me"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@pm.me"
+          },
+          "expect": "user.name@pm.me"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@proton.me"
+          },
+          "expect": "user.name@proton.me"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@proton.me"
+          },
+          "expect": "user.name@proton.me"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@pm.me"
+          },
+          "expect": "user.name@pm.me"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@pm.me"
+          },
+          "expect": "user.name@pm.me"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@protonmail.ch"
+          },
+          "expect": "user.name@protonmail.ch"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@protonmail.ch"
+          },
+          "expect": "user.name@protonmail.ch"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@protonmail.ch"
+          },
+          "expect": "user.name+tag@protonmail.ch"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@protonmail.ch"
+          },
+          "expect": "user.name@protonmail.ch"
+        }
+      ]
+    },
+    {
+      "name": "get unique fastmail aliases",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@fastmail.com"
+          },
+          "expect": "user.name@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@fastmail.com"
+          },
+          "expect": "user.name@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@fastmail.com"
+          },
+          "expect": "user.name+tag@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@fastmail.com"
+          },
+          "expect": "user.name+tag@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+spam@fastmail.com"
+          },
+          "expect": "user.name+spam@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+spam@fastmail.com"
+          },
+          "expect": "user.name+spam@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+newsletter@fastmail.com"
+          },
+          "expect": "user.name+newsletter@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+newsletter@fastmail.com"
+          },
+          "expect": "user.name+newsletter@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+work@fastmail.com"
+          },
+          "expect": "user.name+work@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+work@fastmail.com"
+          },
+          "expect": "user.name+work@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+personal@fastmail.com"
+          },
+          "expect": "user.name+personal@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+personal@fastmail.com"
+          },
+          "expect": "user.name+personal@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+test123@fastmail.com"
+          },
+          "expect": "user.name+test123@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+test123@fastmail.com"
+          },
+          "expect": "user.name+test123@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+anything@fastmail.com"
+          },
+          "expect": "user.name+anything@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+anything@fastmail.com"
+          },
+          "expect": "user.name+anything@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+verylongtag@fastmail.com"
+          },
+          "expect": "user.name+verylongtag@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+verylongtag@fastmail.com"
+          },
+          "expect": "user.name+verylongtag@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag.with.dots@fastmail.com"
+          },
+          "expect": "user.name+tag.with.dots@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag.with.dots@fastmail.com"
+          },
+          "expect": "user.name+tag.with.dots@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag-with-hyphens@fastmail.com"
+          },
+          "expect": "user.name+tag-with-hyphens@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag-with-hyphens@fastmail.com"
+          },
+          "expect": "user.name+tag-with-hyphens@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag_with_underscores@fastmail.com"
+          },
+          "expect": "user.name+tag_with_underscores@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag_with_underscores@fastmail.com"
+          },
+          "expect": "user.name+tag_with_underscores@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag123@fastmail.com"
+          },
+          "expect": "user.name+tag123@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag123@fastmail.com"
+          },
+          "expect": "user.name+tag123@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@fastmail.fm"
+          },
+          "expect": "user.name+tag@fastmail.fm"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@fastmail.fm"
+          },
+          "expect": "user.name+tag@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@fastmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@fastmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e+tag@fastmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e+tag@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e+tag@fastmail.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e+tag@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@fastmail.com"
+          },
+          "expect": "user+@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@fastmail.com"
+          },
+          "expect": "user+@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.@fastmail.com"
+          },
+          "expect": "user.@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.@fastmail.com"
+          },
+          "expect": "user.@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": ".user@fastmail.com"
+          },
+          "expect": ".user@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": ".user@fastmail.com"
+          },
+          "expect": ".user@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@fastmail.fm"
+          },
+          "expect": "user.name@fastmail.fm"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@fastmail.fm"
+          },
+          "expect": "user.name@fastmail.com"
+        }
+      ]
+    },
+    {
+      "name": "get unique other domains",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@example.com"
+          },
+          "expect": "user.name@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@example.com"
+          },
+          "expect": "user.name@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@example.com"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@example.com"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+spam@example.com"
+          },
+          "expect": "user.name+spam@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+spam@example.com"
+          },
+          "expect": "user.name+spam@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+newsletter@example.com"
+          },
+          "expect": "user.name+newsletter@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+newsletter@example.com"
+          },
+          "expect": "user.name+newsletter@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+work@example.com"
+          },
+          "expect": "user.name+work@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+work@example.com"
+          },
+          "expect": "user.name+work@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+personal@example.com"
+          },
+          "expect": "user.name+personal@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+personal@example.com"
+          },
+          "expect": "user.name+personal@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+test123@example.com"
+          },
+          "expect": "user.name+test123@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+test123@example.com"
+          },
+          "expect": "user.name+test123@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+anything@example.com"
+          },
+          "expect": "user.name+anything@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+anything@example.com"
+          },
+          "expect": "user.name+anything@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+verylongtag@example.com"
+          },
+          "expect": "user.name+verylongtag@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+verylongtag@example.com"
+          },
+          "expect": "user.name+verylongtag@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag.with.dots@example.com"
+          },
+          "expect": "user.name+tag.with.dots@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag.with.dots@example.com"
+          },
+          "expect": "user.name+tag.with.dots@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag-with-hyphens@example.com"
+          },
+          "expect": "user.name+tag-with-hyphens@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag-with-hyphens@example.com"
+          },
+          "expect": "user.name+tag-with-hyphens@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag_with_underscores@example.com"
+          },
+          "expect": "user.name+tag_with_underscores@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag_with_underscores@example.com"
+          },
+          "expect": "user.name+tag_with_underscores@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag123@example.com"
+          },
+          "expect": "user.name+tag123@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag123@example.com"
+          },
+          "expect": "user.name+tag123@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@example.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e@example.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e+tag@example.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e+tag@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "u.s.e.r.n.a.m.e+tag@example.com"
+          },
+          "expect": "u.s.e.r.n.a.m.e+tag@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name@example.com"
+          },
+          "expect": "user-name@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name@example.com"
+          },
+          "expect": "user-name@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name+tag@example.com"
+          },
+          "expect": "user-name+tag@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name+tag@example.com"
+          },
+          "expect": "user-name+tag@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@example.com"
+          },
+          "expect": "user+@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@example.com"
+          },
+          "expect": "user+@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.@example.com"
+          },
+          "expect": "user.@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.@example.com"
+          },
+          "expect": "user.@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": ".user@example.com"
+          },
+          "expect": ".user@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": ".user@example.com"
+          },
+          "expect": ".user@example.com"
+        }
+      ]
+    },
+    {
+      "name": "get unique edge cases",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@gmail.com"
+          },
+          "expect": "user+@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@outlook.com"
+          },
+          "expect": "user+@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@outlook.com"
+          },
+          "expect": "user@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@yahoo.com"
+          },
+          "expect": "user+@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@yahoo.com"
+          },
+          "expect": "user+@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@icloud.com"
+          },
+          "expect": "user+@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@icloud.com"
+          },
+          "expect": "user@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@protonmail.com"
+          },
+          "expect": "user+@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@protonmail.com"
+          },
+          "expect": "user@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@fastmail.com"
+          },
+          "expect": "user+@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@fastmail.com"
+          },
+          "expect": "user+@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+@example.com"
+          },
+          "expect": "user+@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+@example.com"
+          },
+          "expect": "user+@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "+user@gmail.com"
+          },
+          "expect": "+user@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "+user@gmail.com"
+          },
+          "expect": "+user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "+user@outlook.com"
+          },
+          "expect": "+user@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "+user@outlook.com"
+          },
+          "expect": "+user@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "+user@yahoo.com"
+          },
+          "expect": "+user@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "+user@yahoo.com"
+          },
+          "expect": "+user@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "+user@icloud.com"
+          },
+          "expect": "+user@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "+user@icloud.com"
+          },
+          "expect": "+user@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "+user@protonmail.com"
+          },
+          "expect": "+user@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "+user@protonmail.com"
+          },
+          "expect": "+user@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "+user@fastmail.com"
+          },
+          "expect": "+user@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "+user@fastmail.com"
+          },
+          "expect": "+user@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "+user@example.com"
+          },
+          "expect": "+user@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "+user@example.com"
+          },
+          "expect": "+user@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag+more@gmail.com"
+          },
+          "expect": "user+tag+more@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag+more@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag+more@outlook.com"
+          },
+          "expect": "user+tag+more@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag+more@outlook.com"
+          },
+          "expect": "user@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag+more@yahoo.com"
+          },
+          "expect": "user+tag+more@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag+more@yahoo.com"
+          },
+          "expect": "user+tag+more@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag+more@icloud.com"
+          },
+          "expect": "user+tag+more@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag+more@icloud.com"
+          },
+          "expect": "user@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag+more@protonmail.com"
+          },
+          "expect": "user+tag+more@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag+more@protonmail.com"
+          },
+          "expect": "user@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag+more@fastmail.com"
+          },
+          "expect": "user+tag+more@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag+more@fastmail.com"
+          },
+          "expect": "user+tag+more@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag+more@example.com"
+          },
+          "expect": "user+tag+more@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag+more@example.com"
+          },
+          "expect": "user+tag+more@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag!@gmail.com"
+          },
+          "expect": "user+tag!@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag!@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag#@gmail.com"
+          },
+          "expect": "user+tag#@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag#@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag$@gmail.com"
+          },
+          "expect": "user+tag$@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag$@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag%@gmail.com"
+          },
+          "expect": "user+tag%@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag%@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag&@gmail.com"
+          },
+          "expect": "user+tag&@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag&@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag*@gmail.com"
+          },
+          "expect": "user+tag*@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag*@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag(@gmail.com"
+          },
+          "expect": "user+tag(@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag(@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag)@gmail.com"
+          },
+          "expect": "user+tag)@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag)@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag=@gmail.com"
+          },
+          "expect": "user+tag=@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag=@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag[@gmail.com"
+          },
+          "expect": "user+tag[@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag[@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag]@gmail.com"
+          },
+          "expect": "user+tag]@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag]@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag{@gmail.com"
+          },
+          "expect": "user+tag{@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag{@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag}@gmail.com"
+          },
+          "expect": "user+tag}@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag}@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag|@gmail.com"
+          },
+          "expect": "user+tag|@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag|@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag\\@gmail.com"
+          },
+          "expect": "user+tag\\@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag\\@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag/@gmail.com"
+          },
+          "expect": "user+tag/@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag/@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag?@gmail.com"
+          },
+          "expect": "user+tag?@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag?@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag<@gmail.com"
+          },
+          "expect": "user+tag<@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag<@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag>@gmail.com"
+          },
+          "expect": "user+tag>@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag>@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag,@gmail.com"
+          },
+          "expect": "user+tag,@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag,@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag;@gmail.com"
+          },
+          "expect": "user+tag;@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag;@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag:@gmail.com"
+          },
+          "expect": "user+tag:@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag:@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag\"@gmail.com"
+          },
+          "expect": "user+tag\"@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag\"@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag'@gmail.com"
+          },
+          "expect": "user+tag'@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag'@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag~@gmail.com"
+          },
+          "expect": "user+tag~@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag~@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user+tag`@gmail.com"
+          },
+          "expect": "user+tag`@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user+tag`@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        }
+      ]
+    },
+    {
+      "name": "get unique case sensitivity",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME+TAG@GMAIL.COM"
+          },
+          "expect": "user.name+tag@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME+TAG@GMAIL.COM"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name+Tag@Gmail.Com"
+          },
+          "expect": "user.name+tag@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name+Tag@Gmail.Com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@Gmail.com"
+          },
+          "expect": "user.name+tag@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@Gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME+TAG@OUTLOOK.COM"
+          },
+          "expect": "user.name+tag@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME+TAG@OUTLOOK.COM"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name+Tag@Outlook.Com"
+          },
+          "expect": "user.name+tag@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name+Tag@Outlook.Com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@Outlook.com"
+          },
+          "expect": "user.name+tag@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@Outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME@OUTLOOK.COM"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME@OUTLOOK.COM"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name@Outlook.Com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name@Outlook.Com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@Outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@Outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER-NAME+TAG@YAHOO.COM"
+          },
+          "expect": "user-name+tag@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER-NAME+TAG@YAHOO.COM"
+          },
+          "expect": "user-name+tag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User-Name+Tag@Yahoo.Com"
+          },
+          "expect": "user-name+tag@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User-Name+Tag@Yahoo.Com"
+          },
+          "expect": "user-name+tag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name+tag@Yahoo.com"
+          },
+          "expect": "user-name+tag@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name+tag@Yahoo.com"
+          },
+          "expect": "user-name+tag@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME+TAG@ICLOUD.COM"
+          },
+          "expect": "user.name+tag@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME+TAG@ICLOUD.COM"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name+Tag@Icloud.Com"
+          },
+          "expect": "user.name+tag@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name+Tag@Icloud.Com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@Icloud.com"
+          },
+          "expect": "user.name+tag@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@Icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME+TAG@PROTONMAIL.COM"
+          },
+          "expect": "user.name+tag@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME+TAG@PROTONMAIL.COM"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name+Tag@Protonmail.Com"
+          },
+          "expect": "user.name+tag@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name+Tag@Protonmail.Com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@Protonmail.com"
+          },
+          "expect": "user.name+tag@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@Protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME+TAG@FASTMAIL.COM"
+          },
+          "expect": "user.name+tag@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME+TAG@FASTMAIL.COM"
+          },
+          "expect": "user.name+tag@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name+Tag@Fastmail.Com"
+          },
+          "expect": "user.name+tag@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name+Tag@Fastmail.Com"
+          },
+          "expect": "user.name+tag@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@Fastmail.com"
+          },
+          "expect": "user.name+tag@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@Fastmail.com"
+          },
+          "expect": "user.name+tag@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME+TAG@EXAMPLE.COM"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME+TAG@EXAMPLE.COM"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name+Tag@Example.Com"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name+Tag@Example.Com"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@Example.com"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@Example.com"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME@YAHOO.COM"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME@YAHOO.COM"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name@Yahoo.Com"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name@Yahoo.Com"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@Yahoo.com"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@Yahoo.com"
+          },
+          "expect": "user.name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME@ICLOUD.COM"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME@ICLOUD.COM"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name@Icloud.Com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name@Icloud.Com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@Icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@Icloud.com"
+          },
+          "expect": "user.name@icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME@PROTONMAIL.COM"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME@PROTONMAIL.COM"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name@Protonmail.Com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name@Protonmail.Com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@Protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@Protonmail.com"
+          },
+          "expect": "user.name@protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME@FASTMAIL.COM"
+          },
+          "expect": "user.name@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME@FASTMAIL.COM"
+          },
+          "expect": "user.name@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name@Fastmail.Com"
+          },
+          "expect": "user.name@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name@Fastmail.Com"
+          },
+          "expect": "user.name@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@Fastmail.com"
+          },
+          "expect": "user.name@fastmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@Fastmail.com"
+          },
+          "expect": "user.name@fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "USER.NAME@EXAMPLE.COM"
+          },
+          "expect": "user.name@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "USER.NAME@EXAMPLE.COM"
+          },
+          "expect": "user.name@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "User.Name@Example.Com"
+          },
+          "expect": "user.name@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "User.Name@Example.Com"
+          },
+          "expect": "user.name@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@Example.com"
+          },
+          "expect": "user.name@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@Example.com"
+          },
+          "expect": "user.name@example.com"
+        }
+      ]
+    },
+    {
+      "name": "is normalization supported",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@googlemail.com"
+          },
+          "expect": "user@googlemail.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@googlemail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": "user@outlook.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": "user@hotmail.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": "user@live.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@outlook.co.uk"
+          },
+          "expect": "user@outlook.co.uk"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@outlook.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@hotmail.co.uk"
+          },
+          "expect": "user@hotmail.co.uk"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@hotmail.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@live.co.uk"
+          },
+          "expect": "user@live.co.uk"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@live.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": "user@yahoo.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@yahoo.co.uk"
+          },
+          "expect": "user@yahoo.co.uk"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@yahoo.co.uk"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@yahoo.ca"
+          },
+          "expect": "user@yahoo.ca"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@yahoo.ca"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@ymail.com"
+          },
+          "expect": "user@ymail.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@ymail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@rocketmail.com"
+          },
+          "expect": "user@rocketmail.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@rocketmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": "user@icloud.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@me.com"
+          },
+          "expect": "user@me.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@me.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@mac.com"
+          },
+          "expect": "user@mac.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@mac.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": "user@protonmail.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@proton.me"
+          },
+          "expect": "user@proton.me"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@proton.me"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@pm.me"
+          },
+          "expect": "user@pm.me"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@pm.me"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@protonmail.ch"
+          },
+          "expect": "user@protonmail.ch"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@protonmail.ch"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": "user@fastmail.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@fastmail.fm"
+          },
+          "expect": "user@fastmail.fm"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@fastmail.fm"
+          },
+          "expect": true
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@example.com"
+          },
+          "expect": "user@example.com"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@test.org"
+          },
+          "expect": "user@test.org"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@test.org"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@company.net"
+          },
+          "expect": "user@company.net"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@company.net"
+          },
+          "expect": false
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@business.co.uk"
+          },
+          "expect": "user@business.co.uk"
+        },
+        {
+          "op": "email.is_canonical_supported",
+          "args": {
+            "email": "user@business.co.uk"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": "user@gmail.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@gmail.com"
+          },
+          "expect": "gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@googlemail.com"
+          },
+          "expect": "user@googlemail.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@googlemail.com"
+          },
+          "expect": "gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": "user@outlook.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@outlook.com"
+          },
+          "expect": "outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": "user@hotmail.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@hotmail.com"
+          },
+          "expect": "outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": "user@live.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@live.com"
+          },
+          "expect": "outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@outlook.co.uk"
+          },
+          "expect": "user@outlook.co.uk"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@outlook.co.uk"
+          },
+          "expect": "outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@hotmail.co.uk"
+          },
+          "expect": "user@hotmail.co.uk"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@hotmail.co.uk"
+          },
+          "expect": "outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@live.co.uk"
+          },
+          "expect": "user@live.co.uk"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@live.co.uk"
+          },
+          "expect": "outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": "user@yahoo.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@yahoo.com"
+          },
+          "expect": "yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@yahoo.co.uk"
+          },
+          "expect": "user@yahoo.co.uk"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@yahoo.co.uk"
+          },
+          "expect": "yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@yahoo.ca"
+          },
+          "expect": "user@yahoo.ca"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@yahoo.ca"
+          },
+          "expect": "yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@ymail.com"
+          },
+          "expect": "user@ymail.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@ymail.com"
+          },
+          "expect": "yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@rocketmail.com"
+          },
+          "expect": "user@rocketmail.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@rocketmail.com"
+          },
+          "expect": "yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": "user@icloud.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@icloud.com"
+          },
+          "expect": "icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@me.com"
+          },
+          "expect": "user@me.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@me.com"
+          },
+          "expect": "icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@mac.com"
+          },
+          "expect": "user@mac.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@mac.com"
+          },
+          "expect": "icloud.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": "user@protonmail.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@protonmail.com"
+          },
+          "expect": "protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@proton.me"
+          },
+          "expect": "user@proton.me"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@proton.me"
+          },
+          "expect": "protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@pm.me"
+          },
+          "expect": "user@pm.me"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@pm.me"
+          },
+          "expect": "protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@protonmail.ch"
+          },
+          "expect": "user@protonmail.ch"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@protonmail.ch"
+          },
+          "expect": "protonmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": "user@fastmail.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@fastmail.com"
+          },
+          "expect": "fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@fastmail.fm"
+          },
+          "expect": "user@fastmail.fm"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@fastmail.fm"
+          },
+          "expect": "fastmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@example.com"
+          },
+          "expect": "user@example.com"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@example.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@test.org"
+          },
+          "expect": "user@test.org"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@test.org"
+          },
+          "expect": null
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@company.net"
+          },
+          "expect": "user@company.net"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@company.net"
+          },
+          "expect": null
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user@business.co.uk"
+          },
+          "expect": "user@business.co.uk"
+        },
+        {
+          "op": "email.canonical_domain",
+          "args": {
+            "email": "user@business.co.uk"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "get unique with different providers",
+      "steps": [
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@gmail.com"
+          },
+          "expect": "user.name+tag@gmail.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@gmail.com"
+          },
+          "expect": "username@gmail.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@outlook.com"
+          },
+          "expect": "user.name+tag@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@outlook.com"
+          },
+          "expect": "user.name@outlook.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name+tag@example.com"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name+tag@example.com"
+          },
+          "expect": "user.name+tag@example.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user-name@yahoo.com"
+          },
+          "expect": "user-name@yahoo.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user-name@yahoo.com"
+          },
+          "expect": "user-name@yahoo.com"
+        },
+        {
+          "op": "email.get",
+          "args": {
+            "email": "user.name@example.com"
+          },
+          "expect": "user.name@example.com"
+        },
+        {
+          "op": "email.canonical",
+          "args": {
+            "email": "user.name@example.com"
+          },
+          "expect": "user.name@example.com"
+        }
+      ]
+    }
+  ]
+}

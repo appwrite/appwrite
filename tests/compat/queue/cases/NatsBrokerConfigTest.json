@@ -1,0 +1,279 @@
+{
+  "source": "packages/queue/tests/NatsBrokerConfigTest.php",
+  "cases": [
+    {
+      "name": "backoff must be non-empty",
+      "op": "nats.broker",
+      "args": {
+        "backoff": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "backoff must be a non-empty list of positive delays (seconds)"
+        }
+      }
+    },
+    {
+      "name": "backoff entries must be positive",
+      "op": "nats.broker",
+      "args": {
+        "ack_wait": 30.0,
+        "backoff": [
+          30.0,
+          -1.0
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "backoff must be a non-empty list of positive delays (seconds)"
+        }
+      }
+    },
+    {
+      "name": "the first backoff entry must equal ackWait",
+      "op": "nats.broker",
+      "args": {
+        "ack_wait": 30.0,
+        "backoff": [
+          10.5,
+          20.0
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "JetStream requires the first backoff entry to equal ackWait: got backoff[0]=10.5, ackWait=30"
+        }
+      }
+    },
+    {
+      "name": "maxDeliver must exceed the backoff count",
+      "op": "nats.broker",
+      "args": {
+        "ack_wait": 30.0,
+        "backoff": [
+          30.0,
+          60.0
+        ],
+        "max_deliver": 2
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "JetStream requires maxDeliver (2) to exceed the number of backoff entries (2)"
+        }
+      }
+    },
+    {
+      "name": "deadMaxAge must be positive",
+      "op": "nats.broker",
+      "args": {
+        "dead_max_age": 0.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "deadMaxAge must be a positive number of seconds, or null to keep dead messages forever"
+        }
+      }
+    },
+    {
+      "name": "a valid backoff constructs",
+      "op": "nats.broker",
+      "args": {
+        "ack_wait": 1.0,
+        "backoff": [
+          1.0,
+          2.0,
+          4.0
+        ],
+        "max_deliver": 5
+      },
+      "expect": {
+        "$handle": "*"
+      }
+    },
+    {
+      "name": "duplicateWindow must be positive",
+      "op": "nats.broker",
+      "args": {
+        "duplicate_window": 0.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "duplicateWindow must be a positive number of seconds"
+        }
+      }
+    },
+    {
+      "name": "duplicateWindow rejects negative values",
+      "op": "nats.broker",
+      "args": {
+        "duplicate_window": -1.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "duplicateWindow must be a positive number of seconds"
+        }
+      }
+    },
+    {
+      "name": "maxAge must be positive",
+      "op": "nats.broker",
+      "args": {
+        "max_age": 0.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxAge must be a positive number of seconds, or null to derive it from the queue's jobTtl"
+        }
+      }
+    },
+    {
+      "name": "maxMsgSize must be positive",
+      "op": "nats.broker",
+      "args": {
+        "max_msg_size": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxMsgSize must be a positive number of bytes, or null for no limit"
+        }
+      }
+    },
+    {
+      "name": "maxMsgs rejects zero",
+      "op": "nats.broker",
+      "args": {
+        "max_msgs": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxMsgs must be a positive limit, or -1 for unlimited"
+        }
+      }
+    },
+    {
+      "name": "maxBytes rejects values below unlimited",
+      "op": "nats.broker",
+      "args": {
+        "max_bytes": -2
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxBytes must be a positive limit, or -1 for unlimited"
+        }
+      }
+    },
+    {
+      "name": "unlimited is accepted for both size limits",
+      "op": "nats.broker",
+      "args": {
+        "max_msgs": -1,
+        "max_bytes": -1
+      },
+      "expect": {
+        "$handle": "*"
+      }
+    },
+    {
+      "name": "discard new requires a limit to apply to",
+      "op": "nats.broker",
+      "args": {
+        "discard_new": true
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "discard: New requires a maxMsgs or maxBytes limit — on an unlimited stream it never applies"
+        }
+      }
+    },
+    {
+      "name": "discard new constructs with a limit",
+      "op": "nats.broker",
+      "args": {
+        "discard_new": true,
+        "max_msgs": 10
+      },
+      "expect": {
+        "$handle": "*"
+      }
+    },
+    {
+      "name": "maxAckPending must be at least one",
+      "op": "nats.broker",
+      "args": {
+        "max_ack_pending": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxAckPending must be at least 1, or null for the server default"
+        }
+      }
+    },
+    {
+      "name": "maxWaiting must be at least one",
+      "op": "nats.broker",
+      "args": {
+        "max_waiting": 0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxWaiting must be at least 1, or null for the server default"
+        }
+      }
+    },
+    {
+      "name": "inactiveThreshold must be positive",
+      "op": "nats.broker",
+      "args": {
+        "inactive_threshold": 0.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "inactiveThreshold must be a positive number of seconds, or null to keep durable consumers forever"
+        }
+      }
+    },
+    {
+      "name": "releaseDelay must not be negative",
+      "op": "nats.broker",
+      "args": {
+        "release_delay": -1.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "releaseDelay must be zero or a positive number of seconds"
+        }
+      }
+    },
+    {
+      "name": "size and in-flight knobs construct together",
+      "op": "nats.broker",
+      "args": {
+        "max_msgs": 100,
+        "max_bytes": 1048576,
+        "max_msg_size": 1024,
+        "discard_new": true,
+        "max_ack_pending": 10,
+        "max_waiting": 5
+      },
+      "expect": {
+        "$handle": "*"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1373 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Collections/GetCollectionThrowsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "GetCollectionThrowsTest::testGetCollectionThrowsForAMissingCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o491"
+          },
+          "bind": "s1005",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o491"
+              },
+              "cache": "none"
+            },
+            "as": "o492"
+          },
+          "bind": "s1006",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o493"
+          },
+          "bind": "s1007",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o493"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "get_collection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "get_collection_u000000000026"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o492"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "missing"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetCollectionThrowsTest::testGetCollectionReturnsAnExistingCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o494"
+          },
+          "bind": "s1013",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o494"
+              },
+              "cache": "none"
+            },
+            "as": "o495"
+          },
+          "bind": "s1014",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o496"
+          },
+          "bind": "s1015",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o495"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o496"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o495"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "get_collection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o495"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "get_collection_u000000000027"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o495"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books"
+            },
+            "as": "o497"
+          },
+          "bind": "s1020",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o495"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o497"
+              }
+            },
+            "as": "o498"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o495"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o499"
+          },
+          "bind": "s1022",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o499"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "books"
+        }
+      ]
+    },
+    {
+      "name": "GetCollectionThrowsTest::testUpdateCollectionThrowsForAMissingCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o500"
+          },
+          "bind": "s1024",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o500"
+              },
+              "cache": "none"
+            },
+            "as": "o501"
+          },
+          "bind": "s1025",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o502"
+          },
+          "bind": "s1026",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o501"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o502"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o501"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "get_collection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o501"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "get_collection_u000000000028"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o501"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "documentSecurity": false
+            },
+            "as": "o503"
+          },
+          "bind": "s1031",
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": null,
+              "documentSecurity": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o501"
+            },
+            "method": "updateCollection",
+            "args": {
+              "collection": "missing",
+              "update": {
+                "$obj": "o503"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetCollectionThrowsTest::testDeleteCollectionThrowsForAMissingCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o504"
+          },
+          "bind": "s1033",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o504"
+              },
+              "cache": "none"
+            },
+            "as": "o505"
+          },
+          "bind": "s1034",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o506"
+          },
+          "bind": "s1035",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o506"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "get_collection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "get_collection_u000000000029"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o505"
+            },
+            "method": "deleteCollection",
+            "args": {
+              "collection": "missing"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetCollectionThrowsTest::testSizeOfAMissingCollectionThrows",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o507"
+          },
+          "bind": "s1041",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o507"
+              },
+              "cache": "none"
+            },
+            "as": "o508"
+          },
+          "bind": "s1042",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o509"
+          },
+          "bind": "s1043",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o508"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o509"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o508"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "get_collection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o508"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "get_collection_u000000000030"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o508"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o508"
+            },
+            "method": "getSizeOfCollection",
+            "args": {
+              "collection": "missing"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetCollectionThrowsTest::testUpdateCollectionChangesOnlyTheGivenFields",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o510"
+          },
+          "bind": "s1049",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o510"
+              },
+              "cache": "none"
+            },
+            "as": "o511"
+          },
+          "bind": "s1050",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o512"
+          },
+          "bind": "s1051",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o511"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o512"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o511"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "get_collection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o511"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "get_collection_u000000000031"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o511"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o513"
+          },
+          "bind": "s1056",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o513"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "permissions": [
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o514"
+          },
+          "bind": "s1058",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o511"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o514"
+              }
+            },
+            "as": "o515"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "documentSecurity": false
+            },
+            "as": "o516"
+          },
+          "bind": "s1060",
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": null,
+              "documentSecurity": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o511"
+            },
+            "method": "updateCollection",
+            "args": {
+              "collection": "books",
+              "update": {
+                "$obj": "o516"
+              }
+            },
+            "as": "o517"
+          },
+          "bind": "s1061",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "documentSecurity",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o517"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o511"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o518"
+          },
+          "bind": "s1064",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o518"
+            },
+            "method": "documentSecurity",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o511"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o519"
+          },
+          "bind": "s1066",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o519"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GetCollectionThrowsTest::testUpdateCollectionReplacesPermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o520"
+          },
+          "bind": "s1068",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o520"
+              },
+              "cache": "none"
+            },
+            "as": "o521"
+          },
+          "bind": "s1069",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o522"
+          },
+          "bind": "s1070",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o522"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "get_collection"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "get_collection_u000000000032"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "documentSecurity": false
+            },
+            "as": "o523"
+          },
+          "bind": "s1075",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o523"
+              }
+            },
+            "as": "o524"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o525"
+          },
+          "bind": "s1077",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o525"
+              }
+            }
+          },
+          "expect": "read(\"users\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Collection\\Update",
+            "args": {
+              "permissions": [
+                "read(\"users\")"
+              ]
+            },
+            "as": "o526"
+          },
+          "bind": "s1079",
+          "expect": {
+            "$value": "Collection\\Update",
+            "fields": {
+              "permissions": [
+                "read(\"users\")"
+              ],
+              "documentSecurity": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "updateCollection",
+            "args": {
+              "collection": "books",
+              "update": {
+                "$obj": "o526"
+              }
+            },
+            "as": "o527"
+          },
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"users\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o521"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o528"
+          },
+          "bind": "s1081",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"users\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o528"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"users\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o528"
+            },
+            "method": "documentSecurity",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

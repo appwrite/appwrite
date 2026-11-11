@@ -1,0 +1,805 @@
+{
+  "source": "packages/auth/tests/Algorithms/Argon2Test.php",
+  "cases": [
+    {
+      "name": "hash and verify with the defaults",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted hash: verified by both runtimes below"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "out"
+            },
+            "start": 0,
+            "length": 31
+          },
+          "expect": "$argon2id$v=19$m=65536,t=4,p=3$"
+        },
+        {
+          "op": "hash.options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": {
+            "type": "argon2",
+            "memory_cost": 65536,
+            "time_cost": 4,
+            "threads": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "memory cost",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setMemoryCost",
+            "value": 66560
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted hash: verified by both runtimes below"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "out"
+            },
+            "start": 0,
+            "length": 31
+          },
+          "expect": "$argon2id$v=19$m=66560,t=4,p=3$"
+        }
+      ]
+    },
+    {
+      "name": "time cost",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setTimeCost",
+            "value": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted hash: verified by both runtimes below"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "out"
+            },
+            "start": 0,
+            "length": 31
+          },
+          "expect": "$argon2id$v=19$m=65536,t=5,p=3$"
+        }
+      ]
+    },
+    {
+      "name": "threads",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setThreads",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted hash: verified by both runtimes below"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "test123",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "out"
+            },
+            "start": 0,
+            "length": 31
+          },
+          "expect": "$argon2id$v=19$m=65536,t=4,p=2$"
+        }
+      ]
+    },
+    {
+      "name": "name",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.name",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            }
+          },
+          "expect": "argon2"
+        }
+      ]
+    },
+    {
+      "name": "small costs",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setMemoryCost",
+            "value": 8
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setTimeCost",
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setThreads",
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": ""
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted hash: verified by both runtimes below"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "wrongpassword",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "out"
+            },
+            "start": 0,
+            "length": 27
+          },
+          "expect": "$argon2id$v=19$m=8,t=1,p=1$"
+        }
+      ]
+    },
+    {
+      "name": "invalid costs fail when hashing",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setMemoryCost",
+            "value": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "Memory cost is outside of allowed memory range"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setMemoryCost",
+            "value": 8
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setThreads",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "Memory cost is too small"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setThreads",
+            "value": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "Invalid number of threads"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setThreads",
+            "value": -1
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "Invalid number of threads"
+            }
+          }
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setThreads",
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.setter",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "method": "setTimeCost",
+            "value": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "Time cost is outside of allowed time range"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "option values are cast like password_hash does",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.set_options",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "options": {
+              "memory_cost": "1024",
+              "time_cost": "1x",
+              "threads": true
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "hash.hash",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x"
+          },
+          "bind": "out",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "salted"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "fixture.substr",
+          "args": {
+            "value": {
+              "$ref": "out"
+            },
+            "start": 0,
+            "length": 29
+          },
+          "expect": "$argon2id$v=19$m=1024,t=1,p=1"
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x",
+            "hash_value": {
+              "$ref": "out"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "verifies PHP fixtures",
+      "steps": [
+        {
+          "op": "hash.new",
+          "args": {
+            "algo": "argon2"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI"
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "$argon2id$v=19$m=65536,t=4,p=3$azFVSGhPaXVBYnZMblNRaw$Pzm3TowCIbab0S5GL2id3OhZMexfFvutVSDoZ8D/Z8o"
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "$argon2d$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI"
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexIx"
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "$argon2i$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI"
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "$argon2i$v=19$m=020,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI"
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "appwrite",
+            "hash_value": "$2a$15$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq"
+          },
+          "expect": true
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x",
+            "hash_value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "hash.verify",
+          "args": {
+            "hash": {
+              "$ref": "h"
+            },
+            "value": "x",
+            "hash_value": "abc"
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

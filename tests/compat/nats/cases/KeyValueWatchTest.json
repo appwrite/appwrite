@@ -1,0 +1,1204 @@
+{
+  "source": "packages/nats/tests/E2E/KeyValueWatchTest.php",
+  "cases": [
+    {
+      "name": "history returns every revision in order",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvw_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "color",
+            "value": "red"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "color",
+            "value": "green"
+          },
+          "expect": 2
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "color",
+            "value": "blue"
+          },
+          "expect": 3
+        },
+        {
+          "op": "kv.delete",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "color"
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.history",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "color"
+          },
+          "expect": [
+            {
+              "bucket": "kvw_${ns}",
+              "key": "color",
+              "value": "red",
+              "revision": 1,
+              "created": true,
+              "operation": "PUT"
+            },
+            {
+              "bucket": "kvw_${ns}",
+              "key": "color",
+              "value": "green",
+              "revision": 2,
+              "created": true,
+              "operation": "PUT"
+            },
+            {
+              "bucket": "kvw_${ns}",
+              "key": "color",
+              "value": "blue",
+              "revision": 3,
+              "created": true,
+              "operation": "PUT"
+            },
+            {
+              "bucket": "kvw_${ns}",
+              "key": "color",
+              "value": "",
+              "revision": 4,
+              "created": true,
+              "operation": "DEL"
+            }
+          ]
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvw_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "getRevision fetches a specific sequence",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvw_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "name",
+            "value": "alice"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "name",
+            "value": "bob"
+          },
+          "expect": 2
+        },
+        {
+          "op": "kv.get_revision",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "name",
+            "seq": 1
+          },
+          "expect": {
+            "bucket": "kvw_${ns}",
+            "key": "name",
+            "value": "alice",
+            "revision": 1,
+            "created": true,
+            "operation": "PUT"
+          }
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvw_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "getRevision rejects a sequence of another key",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvw_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "alpha",
+            "value": "a-value"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "beta",
+            "value": "b-value"
+          },
+          "expect": 2
+        },
+        {
+          "op": "kv.get_revision",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "beta",
+            "seq": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Revision not found for key: beta"
+            }
+          }
+        },
+        {
+          "op": "kv.get_revision",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "beta",
+            "seq": 99
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "no message found"
+            }
+          }
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvw_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "watch calls back on put",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvw_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.watch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "pattern": "greeting"
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "greeting",
+            "value": "hello"
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "w"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "entry",
+              {
+                "bucket": "kvw_${ns}",
+                "key": "greeting",
+                "value": "hello",
+                "revision": 1,
+                "created": true,
+                "operation": "PUT"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvw_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "watch calls back on delete",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvw_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "flag",
+            "value": "on"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.watch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "pattern": "flag"
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.delete",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "flag"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "w"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "entry",
+              {
+                "bucket": "kvw_${ns}",
+                "key": "flag",
+                "value": "",
+                "revision": 2,
+                "created": true,
+                "operation": "DEL"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvw_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "get, create, update, purge, keys and status",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvw_${ns}",
+              "history": 5
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "missing"
+          },
+          "expect": {
+            "bucket": "kvw_${ns}",
+            "key": "missing",
+            "value": "",
+            "revision": 0,
+            "created": false,
+            "operation": "PUT"
+          }
+        },
+        {
+          "op": "kv.create",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v1"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.create",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "again"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Key already exists: k"
+            }
+          }
+        },
+        {
+          "op": "kv.update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v2",
+            "revision": 1
+          },
+          "expect": 2
+        },
+        {
+          "op": "kv.update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "stale",
+            "revision": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Wrong last revision for key: k"
+            }
+          }
+        },
+        {
+          "op": "kv.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k"
+          },
+          "expect": {
+            "bucket": "kvw_${ns}",
+            "key": "k",
+            "value": "v2",
+            "revision": 2,
+            "created": true,
+            "operation": "PUT"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "other",
+            "value": "x"
+          },
+          "expect": 3
+        },
+        {
+          "op": "kv.keys",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": [
+            "k",
+            "other"
+          ]
+        },
+        {
+          "op": "kv.purge",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "other"
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "other"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Key not found: other"
+            }
+          }
+        },
+        {
+          "op": "kv.delete",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Key not found: k"
+            }
+          }
+        },
+        {
+          "op": "kv.status",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": {
+            "bucket": "kvw_${ns}",
+            "values": 4,
+            "bytes_gt_0": true,
+            "history": 5,
+            "ttl": 0.0,
+            "stream": "KV_kvw_${ns}"
+          }
+        },
+        {
+          "op": "kv.bucket",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": "kvw_${ns}"
+        },
+        {
+          "op": "kv.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "bad key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Invalid key: bad key"
+            }
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "a*",
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Invalid key: a*"
+            }
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "",
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Invalid key: "
+            }
+          }
+        },
+        {
+          "op": "kv.history",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "a>"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Invalid key: a>"
+            }
+          }
+        },
+        {
+          "op": "js.get_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvw_${ns}"
+          },
+          "bind": "again",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.get",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "again"
+            },
+            "key": "other"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Key not found: other"
+            }
+          }
+        },
+        {
+          "op": "js.get_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "nope_${ns}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "stream not found"
+            }
+          }
+        },
+        {
+          "op": "kv.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvw_${ns}"
+          },
+          "bind": "raw",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.bucket",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "raw"
+            }
+          },
+          "expect": "kvw_${ns}"
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvw_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

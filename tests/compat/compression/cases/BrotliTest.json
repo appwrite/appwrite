@@ -1,0 +1,128 @@
+{
+  "source": "packages/compression/tests/Algorithms/BrotliTest.php",
+  "cases": [
+    {
+      "name": "name",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        }
+      },
+      "expect": {
+        "class": "Brotli",
+        "name": "brotli",
+        "encoding": "br",
+        "supported": true,
+        "level": 11
+      }
+    },
+    {
+      "name": "errors when setting level",
+      "op": "describe",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": -1
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Level must be between 0 and 11"
+        }
+      }
+    },
+    {
+      "name": "compress text",
+      "op": "compress",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": {
+          "$bytes": "CwqAVGhpcyBpcyBhIGRlbW8gc3RyaW5nAw=="
+        },
+        "warning": null
+      }
+    },
+    {
+      "name": "round trip text",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli"
+        },
+        "data": "This is a demo string"
+      },
+      "expect": {
+        "value": "This is a demo string",
+        "warning": null,
+        "smaller": false
+      }
+    },
+    {
+      "name": "round trip large text",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 8
+        },
+        "file": "packages/compression/tests/resources/disk-a/lorem.txt",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 386795,
+          "sha256": "46afc5648fa06a19441aaadf963f67964b3f6e6f4d2e10af833783a0e9a68db5"
+        },
+        "warning": null,
+        "smaller": true
+      }
+    },
+    {
+      "name": "round trip JPG image",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 8
+        },
+        "file": "packages/compression/tests/resources/disk-a/kitten-1.jpg",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 599639,
+          "sha256": "ac20844d0d8a7e2ffeb17322f279ef8651b300d9bd86b69512aa933678153d3e"
+        },
+        "warning": null,
+        "smaller": false
+      }
+    },
+    {
+      "name": "round trip PNG image",
+      "op": "roundtrip",
+      "args": {
+        "algorithm": {
+          "class": "Brotli",
+          "set_level": 8
+        },
+        "file": "packages/compression/tests/resources/disk-b/kitten-1.png",
+        "digest": true
+      },
+      "expect": {
+        "value": {
+          "length": 3038056,
+          "sha256": "07b78c11dab6ab70719e9ed46f5ef7ad5c20b27259be3a3af2968964934edace"
+        },
+        "warning": null,
+        "smaller": false
+      }
+    }
+  ]
+}

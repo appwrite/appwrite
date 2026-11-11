@@ -1,0 +1,184 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "inet_pton IPv4",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": "127.0.0.1"
+      },
+      "expect": "\u0000\u0000\u0001"
+    },
+    {
+      "name": "inet_pton loopback IPv6",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": "::1"
+      },
+      "expect": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001"
+    },
+    {
+      "name": "inet_pton IPv4-mapped",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": "::ffff:192.0.2.1"
+      },
+      "expect": {
+        "$bytes": "AAAAAAAAAAAAAP//wAACAQ=="
+      }
+    },
+    {
+      "name": "inet_pton full IPv6",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": "2001:db8:85a3:0:0:8a2e:370:7334"
+      },
+      "expect": {
+        "$bytes": "IAENuIWjAAAAAIouA3BzNA=="
+      }
+    },
+    {
+      "name": "inet_pton two double colons",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": "1::2::3"
+      },
+      "expect": false
+    },
+    {
+      "name": "inet_pton nine groups",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": "1:2:3:4:5:6:7:8:9"
+      },
+      "expect": false
+    },
+    {
+      "name": "inet_pton zone index",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": "fe80::1%eth0"
+      },
+      "expect": false
+    },
+    {
+      "name": "inet_pton neither dot nor colon",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": "localhost"
+      },
+      "expect": false
+    },
+    {
+      "name": "inet_pton empty",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": ""
+      },
+      "expect": false
+    },
+    {
+      "name": "inet_pton NUL byte",
+      "op": "net.inet_pton",
+      "args": {
+        "ip": {
+          "$bytes": "OjoxAA=="
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "inet_pton(): Argument #1 ($ip) must not contain any null bytes"
+        }
+      }
+    },
+    {
+      "name": "inet_ntop IPv4",
+      "op": "net.inet_ntop",
+      "args": {
+        "packed": {
+          "$bytes": "fwAAAQ=="
+        }
+      },
+      "expect": "127.0.0.1"
+    },
+    {
+      "name": "inet_ntop loopback IPv6",
+      "op": "net.inet_ntop",
+      "args": {
+        "packed": {
+          "$bytes": "AAAAAAAAAAAAAAAAAAAAAQ=="
+        }
+      },
+      "expect": "::1"
+    },
+    {
+      "name": "inet_ntop all zeros",
+      "op": "net.inet_ntop",
+      "args": {
+        "packed": {
+          "$bytes": "AAAAAAAAAAAAAAAAAAAAAA=="
+        }
+      },
+      "expect": "::"
+    },
+    {
+      "name": "inet_ntop IPv4-mapped",
+      "op": "net.inet_ntop",
+      "args": {
+        "packed": {
+          "$bytes": "AAAAAAAAAAAAAP//AQIDBA=="
+        }
+      },
+      "expect": "::ffff:1.2.3.4"
+    },
+    {
+      "name": "inet_ntop two zero runs: the first wins",
+      "op": "net.inet_ntop",
+      "args": {
+        "packed": {
+          "$bytes": "AAAAAAABAAAAAAABAAAAAA=="
+        }
+      },
+      "expect": "::1:0:0:1:0:0"
+    },
+    {
+      "name": "inet_ntop longer second zero run",
+      "op": "net.inet_ntop",
+      "args": {
+        "packed": {
+          "$bytes": "AAEAAAACAAAAAAAAAAMABA=="
+        }
+      },
+      "expect": "1:0:2::3:4"
+    },
+    {
+      "name": "inet_ntop single zero group is not compressed",
+      "op": "net.inet_ntop",
+      "args": {
+        "packed": {
+          "$bytes": "AAEAAAACAAMABAAFAAYABw=="
+        }
+      },
+      "expect": "1:0:2:3:4:5:6:7"
+    },
+    {
+      "name": "inet_ntop wrong length",
+      "op": "net.inet_ntop",
+      "args": {
+        "packed": {
+          "$bytes": "AAAAAAA="
+        }
+      },
+      "expect": false
+    },
+    {
+      "name": "inet_ntop empty",
+      "op": "net.inet_ntop",
+      "args": {
+        "packed": ""
+      },
+      "expect": false
+    }
+  ]
+}

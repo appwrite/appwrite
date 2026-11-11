@@ -1,0 +1,435 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/OffsetTest.php"
+  ],
+  "cases": [
+    {
+      "name": "OffsetTest::test_value_success",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Offset",
+            "args": {
+              "maxOffset": 5000
+            },
+            "as": "o2068"
+          },
+          "bind": "s3133",
+          "expect": {
+            "$value": "Validator\\Query\\Offset",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 1
+            },
+            "as": "o2069"
+          },
+          "bind": "s3134",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2068"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2069"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 0
+            },
+            "as": "o2070"
+          },
+          "bind": "s3136",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2068"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2070"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 5000
+            },
+            "as": "o2071"
+          },
+          "bind": "s3138",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                5000
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2068"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2071"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "OffsetTest::test_value_failure",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Offset",
+            "args": {
+              "maxOffset": 5000
+            },
+            "as": "o2072"
+          },
+          "bind": "s3140",
+          "expect": {
+            "$value": "Validator\\Query\\Offset",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": -1
+            },
+            "as": "o2073"
+          },
+          "bind": "s3141",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2073"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid offset: Value must be a valid range between 0 and 5,000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 5001
+            },
+            "as": "o2074"
+          },
+          "bind": "s3144",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                5001
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2074"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Offset"
+              },
+              "attribute": "",
+              "values": [
+                "foo"
+              ]
+            },
+            "as": "o2075"
+          },
+          "bind": "s3146",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                "foo"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2075"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid offset: Value must be a valid number"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "attr",
+              "values": [
+                "v"
+              ]
+            },
+            "as": "o2076"
+          },
+          "bind": "s3149",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "attr",
+              "values": [
+                "v"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2076"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "attr"
+            },
+            "as": "o2077"
+          },
+          "bind": "s3151",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "attr",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2077"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "attr"
+            },
+            "as": "o2078"
+          },
+          "bind": "s3153",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "attr",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2078"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 100
+            },
+            "as": "o2079"
+          },
+          "bind": "s3155",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                100
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2072"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o2079"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

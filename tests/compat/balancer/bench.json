@@ -1,0 +1,186 @@
+{
+  "lib": "balancer",
+  "environment": {
+    "date": "2026-10-18T14:18:20Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "round_robin",
+      "description": "Choose the next of 8 options with RoundRobin",
+      "php": {
+        "ns": 94.45403632326982,
+        "min": 90.16669396371313,
+        "max": 133.13092118432786,
+        "samples": 15,
+        "calls": 219804,
+        "cpu": 96.02676323755104,
+        "peak": 3008.0,
+        "retained": 0.00011404099409777195,
+        "rss": 107683840.0
+      },
+      "rust": {
+        "ns": 41.424092526989135,
+        "min": 39.75135155554809,
+        "max": 42.68006959251859,
+        "samples": 15,
+        "calls": 476488,
+        "cpu": 41.34484422133051,
+        "rss": 22171648.0,
+        "allocations": 3.0000015390384087,
+        "bytes": 160.00039301444457,
+        "peak": 1650.0,
+        "retained": 0.00023141541165080058
+      },
+      "speedup": 2.2801715272755816,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "filtered",
+      "description": "Choose the first of 8 options passing two filters (online, cpu < 50)",
+      "php": {
+        "ns": 896.9624553571429,
+        "min": 885.8835714285714,
+        "max": 965.2139285714286,
+        "samples": 15,
+        "calls": 22400,
+        "cpu": 906.452380952381,
+        "peak": 3008.0,
+        "retained": 0.0011190476190476191,
+        "rss": 107683840.0
+      },
+      "rust": {
+        "ns": 109.6250598392647,
+        "min": 106.40641702194763,
+        "max": 111.97686402829483,
+        "samples": 15,
+        "calls": 177559,
+        "cpu": 109.67298156293589,
+        "rss": 22171648.0,
+        "allocations": 2.000004130082583,
+        "bytes": 64.00105467290685,
+        "peak": 1650.0,
+        "retained": 0.000621014235643739
+      },
+      "speedup": 8.182093188111315,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "random",
+      "description": "Choose a random one of 8 options",
+      "php": {
+        "ns": 92.41033400732914,
+        "min": 88.91221092944468,
+        "max": 94.83143409347564,
+        "samples": 15,
+        "calls": 224037,
+        "cpu": 91.44501429079423,
+        "peak": 3008.0,
+        "retained": 0.00011188628068875528,
+        "rss": 107683840.0
+      },
+      "rust": {
+        "ns": 41.12208810640424,
+        "min": 40.698374471957926,
+        "max": 42.142328766838645,
+        "samples": 15,
+        "calls": 481259,
+        "cpu": 41.15714642912306,
+        "rss": 22171648.0,
+        "allocations": 3.000001523781027,
+        "bytes": 160.0003891182641,
+        "peak": 1650.0,
+        "retained": 0.00022912125626048897
+      },
+      "speedup": 2.2472189099010613,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "group",
+      "description": "Run a group of a filtered balancer that chooses nothing and a RoundRobin fallback",
+      "php": {
+        "ns": 1145.9254943700632,
+        "min": 1109.1581984202567,
+        "max": 1254.3181894571733,
+        "samples": 15,
+        "calls": 17851,
+        "cpu": 1155.6514107519654,
+        "peak": 123288.0,
+        "retained": 0.00140421638376935,
+        "rss": 107683840.0
+      },
+      "rust": {
+        "ns": 176.6071578578929,
+        "min": 171.3036751837592,
+        "max": 187.91783339166957,
+        "samples": 15,
+        "calls": 114280,
+        "cpu": 179.00154999416637,
+        "rss": 22171648.0,
+        "allocations": 3.000006416987516,
+        "bytes": 160.0016386652666,
+        "peak": 1650.0,
+        "retained": 0.000964881577412204
+      },
+      "speedup": 6.488556343181362,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "option_state",
+      "description": "Read a state value of an option with three values",
+      "php": {
+        "ns": 34.62221375204376,
+        "min": 33.53177409229198,
+        "max": 36.056801170034426,
+        "samples": 15,
+        "calls": 579812,
+        "cpu": 34.641918414934494,
+        "peak": 89048.0,
+        "retained": 0.000043232404066605494,
+        "rss": 107683840.0
+      },
+      "rust": {
+        "ns": 5.785744071652016,
+        "min": 5.548431078029792,
+        "max": 6.636195592597707,
+        "samples": 15,
+        "calls": 3585105,
+        "cpu": 5.8422781108689055,
+        "rss": 22171648.0,
+        "allocations": 2.0455002945055537e-7,
+        "bytes": 0.00005223463933878273,
+        "peak": 1650.0,
+        "retained": 0.000030756886246474416
+      },
+      "speedup": 5.984055520478286,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

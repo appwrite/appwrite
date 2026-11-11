@@ -1,0 +1,1130 @@
+{
+  "source": "packages/query/tests/Builder/Feature/ClickHouse/GroupByTimeBucketTest.php",
+  "cases": [
+    {
+      "name": "testGroupByTimeBucketEmitsToStartOfFunction with data set \"1m\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "count"
+            ]
+          },
+          {
+            "call": "groupByTimeBucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "1m"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfMinute(`time`)",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfMinute(`time`)",
+        [],
+        [],
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfMinute(`time`)",
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfMinute(`time`)"
+      ]
+    },
+    {
+      "name": "testGroupByTimeBucketEmitsToStartOfFunction with data set \"5m\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "count"
+            ]
+          },
+          {
+            "call": "groupByTimeBucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "5m"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfFiveMinutes(`time`)",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfFiveMinutes(`time`)",
+        [],
+        [],
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfFiveMinutes(`time`)",
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfFiveMinutes(`time`)"
+      ]
+    },
+    {
+      "name": "testGroupByTimeBucketEmitsToStartOfFunction with data set \"15m\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "count"
+            ]
+          },
+          {
+            "call": "groupByTimeBucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "15m"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfFifteenMinutes(`time`)",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfFifteenMinutes(`time`)",
+        [],
+        [],
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfFifteenMinutes(`time`)",
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfFifteenMinutes(`time`)"
+      ]
+    },
+    {
+      "name": "testGroupByTimeBucketEmitsToStartOfFunction with data set \"1h\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "count"
+            ]
+          },
+          {
+            "call": "groupByTimeBucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "1h"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfHour(`time`)",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfHour(`time`)",
+        [],
+        [],
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfHour(`time`)",
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfHour(`time`)"
+      ]
+    },
+    {
+      "name": "testGroupByTimeBucketEmitsToStartOfFunction with data set \"1d\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "count"
+            ]
+          },
+          {
+            "call": "groupByTimeBucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "1d"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfDay(`time`)",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfDay(`time`)",
+        [],
+        [],
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfDay(`time`)",
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfDay(`time`)"
+      ]
+    },
+    {
+      "name": "testGroupByTimeBucketEmitsToStartOfFunction with data set \"1w\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "count"
+            ]
+          },
+          {
+            "call": "groupByTimeBucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "1w"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfWeek(`time`)",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfWeek(`time`)",
+        [],
+        [],
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfWeek(`time`)",
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfWeek(`time`)"
+      ]
+    },
+    {
+      "name": "testGroupByTimeBucketEmitsToStartOfFunction with data set \"1M\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "count"
+            ]
+          },
+          {
+            "call": "groupByTimeBucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "1M"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfMonth(`time`)",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfMonth(`time`)",
+        [],
+        [],
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfMonth(`time`)",
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY toStartOfMonth(`time`)"
+      ]
+    },
+    {
+      "name": "testGroupByTimeBucketComposesWithSelectRawAndOrderRaw",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "selectRaw",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "toStartOfHour(`time`) AS `bucket`"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "count"
+            ]
+          },
+          {
+            "call": "groupByTimeBucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "1h"
+            ]
+          },
+          {
+            "call": "orderByRaw",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`bucket` ASC"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `count`, toStartOfHour(`time`) AS `bucket` FROM `events` GROUP BY toStartOfHour(`time`) ORDER BY `bucket` ASC",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `count`, toStartOfHour(`time`) AS `bucket` FROM `events` GROUP BY toStartOfHour(`time`) ORDER BY `bucket` ASC",
+        [],
+        [],
+        "SELECT COUNT(*) AS `count`, toStartOfHour(`time`) AS `bucket` FROM `events` GROUP BY toStartOfHour(`time`) ORDER BY `bucket` ASC",
+        "SELECT COUNT(*) AS `count`, toStartOfHour(`time`) AS `bucket` FROM `events` GROUP BY toStartOfHour(`time`) ORDER BY `bucket` ASC"
+      ]
+    },
+    {
+      "name": "testGroupByTimeBucketComposesWithPlainGroupBy",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "count"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "tenant"
+              ]
+            ]
+          },
+          {
+            "call": "groupByTimeBucket",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "1d"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `count` FROM `events` GROUP BY `tenant`, toStartOfDay(`time`)",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `count` FROM `events` GROUP BY `tenant`, toStartOfDay(`time`)"
+      ]
+    },
+    {
+      "name": "testGroupByTimeBucketRejectsUnknownInterval",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "groupByTimeBucket",
+            "class": "Query",
+            "args": [
+              "time",
+              "2h"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid groupByTimeBucket interval: 2h. Allowed: 1m, 5m, 15m, 1h, 1d, 1w, 1M"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testQueryGroupByTimeBucketParsedQueryShape",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "groupByTimeBucket",
+            "class": "Query",
+            "args": [
+              "time",
+              "1h"
+            ]
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "get": "timeBuckets",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "groupBy",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GroupByTimeBucket"
+            },
+            "attribute": "time",
+            "values": [
+              "1h"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 2,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": null,
+            "offset": null,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": [
+              {
+                "attribute": "time",
+                "interval": "1h"
+              }
+            ]
+          }
+        },
+        [
+          {
+            "attribute": "time",
+            "interval": "1h"
+          }
+        ],
+        []
+      ]
+    }
+  ]
+}

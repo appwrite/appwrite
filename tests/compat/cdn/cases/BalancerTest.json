@@ -1,0 +1,1840 @@
+{
+  "source": "packages/cdn/tests/Cache/Adapter/BalancerTest.php",
+  "cases": [
+    {
+      "name": "fans out to every matching option",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-edge",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "fastly-edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "fastly-edge"
+            },
+            "provider": "fastly",
+            "edge": true
+          },
+          "bind": "o-fastly-edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-run",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "fastly-run",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "fastly-run"
+            },
+            "provider": "fastly",
+            "edge": false
+          },
+          "bind": "o-fastly-run",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "cloudflare"
+            },
+            "provider": "cloudflare",
+            "edge": false
+          },
+          "bind": "o-cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "o-fastly-edge"
+              },
+              {
+                "$ref": "o-fastly-run"
+              },
+              {
+                "$ref": "o-cloudflare"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/index.html"
+            ]
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "domain-example.com"
+            ]
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            {
+              "call": "fastly-edge:domain",
+              "args": [
+                "example.com"
+              ]
+            },
+            {
+              "call": "fastly-run:domain",
+              "args": [
+                "example.com"
+              ]
+            },
+            {
+              "call": "cloudflare:domain",
+              "args": [
+                "example.com"
+              ]
+            },
+            {
+              "call": "fastly-edge:paths",
+              "args": [
+                "example.com",
+                [
+                  "/index.html"
+                ]
+              ]
+            },
+            {
+              "call": "fastly-run:paths",
+              "args": [
+                "example.com",
+                [
+                  "/index.html"
+                ]
+              ]
+            },
+            {
+              "call": "cloudflare:paths",
+              "args": [
+                "example.com",
+                [
+                  "/index.html"
+                ]
+              ]
+            },
+            {
+              "call": "fastly-edge:keys",
+              "args": [
+                [
+                  "domain-example.com"
+                ]
+              ]
+            },
+            {
+              "call": "fastly-run:keys",
+              "args": [
+                [
+                  "domain-example.com"
+                ]
+              ]
+            },
+            {
+              "call": "cloudflare:keys",
+              "args": [
+                [
+                  "domain-example.com"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "zone purge reaches every matching option",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-edge",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "fastly-edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "fastly-edge"
+            },
+            "provider": "fastly",
+            "edge": true
+          },
+          "bind": "o-fastly-edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-run",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "fastly-run",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "fastly-run"
+            },
+            "provider": "fastly",
+            "edge": false
+          },
+          "bind": "o-fastly-run",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "cloudflare"
+            },
+            "provider": "cloudflare",
+            "edge": false
+          },
+          "bind": "o-cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "o-fastly-edge"
+              },
+              {
+                "$ref": "o-fastly-run"
+              },
+              {
+                "$ref": "o-cloudflare"
+              }
+            ],
+            "filters": [
+              {
+                "edge": false
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeZone"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            {
+              "call": "fastly-run:zone",
+              "args": []
+            },
+            {
+              "call": "cloudflare:zone",
+              "args": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "filters narrow the options purged",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-edge",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "fastly-edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "fastly-edge"
+            },
+            "provider": "fastly",
+            "edge": true
+          },
+          "bind": "o-fastly-edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-run",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "fastly-run",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "fastly-run"
+            },
+            "provider": "fastly",
+            "edge": false
+          },
+          "bind": "o-fastly-run",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "cloudflare"
+            },
+            "provider": "cloudflare",
+            "edge": false
+          },
+          "bind": "o-cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "o-fastly-edge"
+              },
+              {
+                "$ref": "o-fastly-run"
+              },
+              {
+                "$ref": "o-cloudflare"
+              }
+            ],
+            "filters": [
+              {
+                "provider": "fastly"
+              },
+              {
+                "edge": true
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            {
+              "call": "fastly-edge:domain",
+              "args": [
+                "example.com"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "custom domains reach both providers",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-edge",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "fastly-edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "fastly-edge"
+            },
+            "provider": "fastly",
+            "edge": true
+          },
+          "bind": "o-fastly-edge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-run",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "fastly-run",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "fastly-run"
+            },
+            "provider": "fastly",
+            "edge": false
+          },
+          "bind": "o-fastly-run",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "cloudflare"
+            },
+            "provider": "cloudflare",
+            "edge": false
+          },
+          "bind": "o-cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "o-fastly-edge"
+              },
+              {
+                "$ref": "o-fastly-run"
+              },
+              {
+                "$ref": "o-cloudflare"
+              }
+            ],
+            "filters": [
+              {
+                "edge": false
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeDomain",
+            "domain": "customer.example.com"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            {
+              "call": "fastly-run:domain",
+              "args": [
+                "customer.example.com"
+              ]
+            },
+            {
+              "call": "cloudflare:domain",
+              "args": [
+                "customer.example.com"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "one failing provider still purges the others",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly",
+            "log": {
+              "$ref": "calls"
+            },
+            "fails": true
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "provider": "fastly"
+          },
+          "bind": "of",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "cf"
+            },
+            "provider": "cloudflare"
+          },
+          "bind": "ocf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "of"
+              },
+              {
+                "$ref": "ocf"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "domain-example.com"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Purge",
+              "message": "Cache cache key purging failed for fastly.",
+              "errors": [
+                {
+                  "class": "RuntimeException",
+                  "message": "fastly purge failed."
+                }
+              ],
+              "previous": {
+                "class": "RuntimeException",
+                "message": "fastly purge failed."
+              }
+            }
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            {
+              "call": "fastly:keys",
+              "args": [
+                [
+                  "domain-example.com"
+                ]
+              ]
+            },
+            {
+              "call": "cloudflare:keys",
+              "args": [
+                [
+                  "domain-example.com"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every failing provider is reported once by name",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-a",
+            "log": {
+              "$ref": "calls"
+            },
+            "fails": true
+          },
+          "bind": "f1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f1"
+            },
+            "provider": "fastly"
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-b",
+            "log": {
+              "$ref": "calls"
+            },
+            "fails": true
+          },
+          "bind": "f2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f2"
+            },
+            "provider": "fastly"
+          },
+          "bind": "o2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "cf",
+            "log": {
+              "$ref": "calls"
+            },
+            "fails": true
+          },
+          "bind": "f3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f3"
+            },
+            "provider": "cloudflare"
+          },
+          "bind": "o3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "method": "purgeZone"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Purge",
+              "message": "Cache zone purging failed for fastly, cloudflare.",
+              "errors": [
+                {
+                  "class": "RuntimeException",
+                  "message": "fastly-a purge failed."
+                },
+                {
+                  "class": "RuntimeException",
+                  "message": "fastly-b purge failed."
+                },
+                {
+                  "class": "RuntimeException",
+                  "message": "cf purge failed."
+                }
+              ],
+              "previous": {
+                "class": "RuntimeException",
+                "message": "fastly-a purge failed."
+              }
+            }
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "method": "purgePaths",
+            "domain": "Example.com",
+            "paths": [
+              "/a"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Purge",
+              "message": "Cache path purging failed for fastly, cloudflare.",
+              "errors": [
+                {
+                  "class": "RuntimeException",
+                  "message": "fastly-a purge failed."
+                },
+                {
+                  "class": "RuntimeException",
+                  "message": "fastly-b purge failed."
+                },
+                {
+                  "class": "RuntimeException",
+                  "message": "cf purge failed."
+                }
+              ],
+              "previous": {
+                "class": "RuntimeException",
+                "message": "fastly-a purge failed."
+              }
+            }
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            {
+              "call": "fastly-a:zone",
+              "args": []
+            },
+            {
+              "call": "fastly-b:zone",
+              "args": []
+            },
+            {
+              "call": "cf:zone",
+              "args": []
+            },
+            {
+              "call": "fastly-a:paths",
+              "args": [
+                "example.com",
+                [
+                  "/a"
+                ]
+              ]
+            },
+            {
+              "call": "fastly-b:paths",
+              "args": [
+                "example.com",
+                [
+                  "/a"
+                ]
+              ]
+            },
+            {
+              "call": "cf:paths",
+              "args": [
+                "example.com",
+                [
+                  "/a"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unsupported options are skipped but still purge the rest",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly-no-service",
+            "log": {
+              "$ref": "calls"
+            },
+            "supports_keys": false
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "provider": "fastly"
+          },
+          "bind": "of",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "cf"
+            },
+            "provider": "cloudflare"
+          },
+          "bind": "ocf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "of"
+              },
+              {
+                "$ref": "ocf"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "domain-example.com"
+            ]
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            {
+              "call": "cloudflare:keys",
+              "args": [
+                [
+                  "domain-example.com"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fails when every option is unsupported",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly",
+            "log": {
+              "$ref": "calls"
+            },
+            "supports_keys": false
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "provider": "fastly"
+          },
+          "bind": "of",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "of"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "domain-example.com"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+              "message": "Cache cache key purging is not supported by any matching option."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "unsupported and failing options together report the failure",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly",
+            "log": {
+              "$ref": "calls"
+            },
+            "supports_keys": false
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "provider": "fastly"
+          },
+          "bind": "of",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            },
+            "fails": true
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "cf"
+            },
+            "provider": "cloudflare"
+          },
+          "bind": "ocf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "of"
+              },
+              {
+                "$ref": "ocf"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "k"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Purge",
+              "message": "Cache cache key purging failed for cloudflare.",
+              "errors": [
+                {
+                  "class": "RuntimeException",
+                  "message": "cloudflare purge failed."
+                }
+              ],
+              "previous": {
+                "class": "RuntimeException",
+                "message": "cloudflare purge failed."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "fails when no option matches the filters",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "provider": "fastly"
+          },
+          "bind": "of",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "of"
+              }
+            ],
+            "filters": [
+              {
+                "provider": "cloudflare"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Configuration",
+              "message": "No cache options matched the balancer filters."
+            }
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "method": "purgeKeys",
+            "keys": []
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "method": "purgeZone"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Configuration",
+              "message": "No cache options matched the balancer filters."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a balancer without options fails",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": []
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Configuration",
+              "message": "No cache options matched the balancer filters."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty purges touch no provider",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "provider": "fastly"
+          },
+          "bind": "of",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "of"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "b"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": []
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeKeys",
+            "keys": []
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "rejects invalid domain",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly",
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "provider": "fastly"
+          },
+          "bind": "of",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "of"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "method": "purgeDomain",
+            "domain": "https://example.com"
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+            }
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "b"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "nope"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Every cache path must be a string beginning with \"/\"."
+            }
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}
