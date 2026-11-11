@@ -205,7 +205,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       reviews: false,
       projectEnvironments: false,
-      projectTransfers: true,
+      projectTransfers: false,
       alerts: false,
       multiRegion: true,
       edgeNetwork: true,
