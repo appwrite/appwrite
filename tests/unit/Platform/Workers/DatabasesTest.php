@@ -530,6 +530,21 @@ final class DatabasesTest extends TestCase
         $this->assertSame([], $this->triggers);
     }
 
+    public function testConcurrentCreateIndexDeliveryLeavesTheBuiltIndexAvailable(): void
+    {
+        $dbForDatabases = $this->databases($this->libraryIndex('title_key', ['title']));
+        $index = $this->store($this->indexDocument('title_key', 'processing'));
+        $built = $this->indexDocument('title_key', 'available');
+        $this->replaceOnRead(2, $built);
+
+        $this->process(DATABASE_TYPE_CREATE_INDEX, $index->getArrayCopy(), [], $this->projectDatabase(), $dbForDatabases);
+
+        $this->assertSame(['title_key'], $this->libraryIndexKeys($dbForDatabases));
+        $this->assertSame($built->getArrayCopy(), $this->stored[$index->getId()]->getArrayCopy());
+        $this->assertSame([], $this->statusWrites);
+        $this->assertSame([], $this->triggers);
+    }
+
     public function testRedeliveredCreateIndexJobForAnAvailableIndexIsSkipped(): void
     {
         $dbForDatabases = $this->databases($this->libraryIndex('title_key', ['title']));

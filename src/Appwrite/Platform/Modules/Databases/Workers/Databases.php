@@ -449,8 +449,7 @@ class Databases extends Action
         }
 
         $stored = $dbForProject->getDocument('indexes', $index->getId());
-        $stale = $this->staleness($index, $stored)
-            ?? ($stored->getAttribute('status') === 'processing' ? null : 'status ' . $stored->getAttribute('status'));
+        $stale = $this->creationStaleness($index, $stored);
 
         if ($stale !== null) {
             Span::add('database.index.stale', $stale);
@@ -497,8 +496,10 @@ class Databases extends Action
                 throw $e;
             }
 
-            if ($this->isSuperseded($dbForProject, $stored)) {
-                Span::add('database.index.superseded', $e->getMessage());
+            $stale = $this->creationStaleness($stored, $dbForProject->getDocument('indexes', $stored->getId()));
+
+            if ($stale !== null) {
+                Span::add('database.index.superseded', $stale . ': ' . $e->getMessage());
                 $superseded = true;
                 return;
             }
@@ -589,6 +590,12 @@ class Databases extends Action
         }
 
         return null;
+    }
+
+    private function creationStaleness(Document $queued, Document $stored): ?string
+    {
+        return $this->staleness($queued, $stored)
+            ?? ($stored->getAttribute('status') === 'processing' ? null : 'status ' . $stored->getAttribute('status'));
     }
 
     private function isSuperseded(Database $dbForProject, Document $stored): bool
