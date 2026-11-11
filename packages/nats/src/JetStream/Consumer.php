@@ -71,6 +71,7 @@ final class Consumer
 
         $payload = json_encode($request, JSON_THROW_ON_ERROR);
 
+        $this->conn->settle($timeout);
         $inbox = $this->conn->newInbox();
         $sub = $this->conn->subscribe($inbox);
 
@@ -81,7 +82,6 @@ final class Consumer
         // it: PHP replaces an in-flight exception with one raised from finally.
         $pending = null;
         try {
-            $this->conn->settle();
             $this->conn->publish($requestSubject, $payload, $inbox);
             $this->collectBatch($sub, $messageBatch, $batch, $timeout, $ends ? self::FETCH_REPLY_WAIT : self::FETCH_DRAIN_WAIT);
         } catch (\Throwable $error) {

@@ -100,12 +100,10 @@ final class Connection
     private int $outstandingPings = 0;
     private float $lastPingTime = 0.0;
 
-    // Mux inbox for request-reply
     private ?Subscription $inboxSub = null;
     private string $inboxPrefix = '';
     private bool $collecting = false;
 
-    // Reconnection
     /** @var list<string> */
     private array $serverPool = [];
     private string $currentServer = '';
@@ -258,7 +256,7 @@ final class Connection
         if ($requests === []) {
             return;
         }
-        $this->settle();
+        $this->settle($timeout);
         $pending = [];
         $publishing = $written = false;
         $this->collecting = true;
@@ -343,18 +341,17 @@ final class Connection
      */
     public function requestMany(string $subject, string $data = '', array $opts = []): array
     {
-        $this->assertReadable();
-        $this->ensureConnected();
-
         $max = $opts['max'] ?? null;
         $timeout = $opts['timeout'] ?? $this->options->requestTimeout;
         $stall = $opts['stall'] ?? null;
+
+        $this->settle($timeout);
+        $this->ensureConnected();
 
         // Dedicated inbox subscription so replies never touch the mux inbox used
         // by the single-reply request().
         $inbox = Inbox::create($this->options->inboxPrefix);
         $sub = $this->subscribe($inbox);
-        $this->settle();
         $this->publish($subject, $data, $inbox);
 
         $deadline = microtime(true) + $timeout;
@@ -437,56 +434,59 @@ final class Connection
     }
 
     /**
-     * Act on whatever the server has already sent this connection, without
-     * waiting for more: answer its PINGs, take its INFO, reconnect if it has
-     * closed the socket. A connection nobody reads between calls -- a pooled
-     * one, say -- must settle before a write whose outcome it then waits for,
-     * or that write lands in a socket the server has already closed and can
-     * only be reported as ambiguous. Bounded by the request timeout.
-     *
+     * Act on what the server has already sent, reconnecting if it closed the socket.
      * Reads the socket, so the caller must hold the connection exclusively.
-     *
-     * @throws ConnectionException when the connection is gone and cannot be rebuilt
      */
-    public function settle(): void
+    public function settle(?float $timeout = null): void
     {
         $this->assertReadable();
-        $deadline = hrtime(true) / 1e9 + $this->options->requestTimeout;
+        $this->absorb($timeout ?? $this->options->requestTimeout);
+    }
 
-        while ($this->status === self::STATUS_CONNECTED && $this->hasReceived()) {
+    /**
+     * @return NatsException|null the first -ERR read that left the connection usable
+     */
+    private function absorb(float $timeout): ?NatsException
+    {
+        $deadline = hrtime(true) / 1e9 + $timeout;
+        $kept = null;
+
+        while ($this->status === self::STATUS_CONNECTED && $this->pending()) {
             $remaining = $deadline - hrtime(true) / 1e9;
             if ($remaining <= 0) {
-                return;
+                break;
             }
 
             try {
-                $operation = $this->receive($remaining);
+                $received = $this->receive($remaining, headerTimeout: min($remaining, self::TICK_READ_TIMEOUT));
             } catch (ConnectionException $error) {
                 $this->recycleDeadConnection(false);
                 throw $error;
             }
-            if ($operation === null) {
+            if ($received === null) {
+                break;
+            }
+
+            [$operation, $data] = $received;
+            if ($operation !== ServerOp::Err) {
+                $this->dispatchOp($operation, $data);
                 continue;
             }
 
-            [$op, $data] = $operation;
-            if ($op !== ServerOp::Err) {
-                $this->dispatchOp($op, $data);
-                continue;
-            }
-
-            // An -ERR read here answers an earlier command, so it is not this
-            // caller's failure unless it has left the connection unusable.
-            $error = $this->receiveError($data);
+            $error = $this->serverError($data);
             if (!$this->isConnected()) {
                 throw $error;
             }
+            $kept ??= $error;
         }
+
+        return $kept;
     }
 
-    private function hasReceived(): bool
+    private function pending(): bool
     {
-        return $this->parser->hasCompleteLine()
+        return $this->parser->isPoisoned()
+            || $this->parser->hasCompleteLine()
             || ($this->transport instanceof Pollable && $this->transport->poll());
     }
 
@@ -512,16 +512,11 @@ final class Connection
         return $operation === null ? null : $this->dispatchOp(...$operation);
     }
 
-    /**
-     * Read the next server operation. With $reconnect, a timeout yields null
-     * and a lost connection is rebuilt before yielding null.
-     *
-     * @return array{0: ServerOp, 1: mixed}|null
-     */
-    private function receive(?float $timeout, bool $reconnect = true): ?array
+    /** @return array{0: ServerOp, 1: mixed}|null */
+    private function receive(?float $timeout, bool $reconnect = true, ?float $headerTimeout = null): ?array
     {
         try {
-            return $this->parser->next($timeout);
+            return $this->parser->next($timeout, $headerTimeout);
         } catch (TimeoutException $error) {
             if (!$reconnect) {
                 throw $error;
@@ -566,9 +561,10 @@ final class Connection
 
     public function flush(?float $timeout = null): void
     {
-        $this->settle();
-        $this->ensureConnected();
+        $this->assertReadable();
         $timeout ??= $this->options->connectTimeout;
+        $error = $this->absorb($timeout);
+        $this->ensureConnected();
 
         $this->send($this->writer->ping());
         $deadline = microtime(true) + $timeout;
@@ -579,12 +575,15 @@ final class Connection
                 throw new TimeoutException('Flush timed out');
             }
 
-            [$op, $data] = $this->parser->next($remaining);
-            if ($op === ServerOp::Pong) {
+            [$operation, $data] = $this->parser->next($remaining);
+            if ($operation === ServerOp::Pong) {
                 $this->outstandingPings = 0;
+                if ($error instanceof NatsException) {
+                    throw $error;
+                }
                 return;
             }
-            $this->dispatchOp($op, $data);
+            $this->dispatchOp($operation, $data);
         }
     }
 
@@ -683,8 +682,6 @@ final class Connection
     {
         return $this->status;
     }
-
-    // --- Internal ---
 
     private function doConnect(): void
     {
@@ -933,14 +930,10 @@ final class Connection
 
     private function handleError(mixed $data): never
     {
-        throw $this->receiveError($data);
+        throw $this->serverError($data);
     }
 
-    /**
-     * Act on a server -ERR -- recycle a connection it closed, report it to
-     * onError -- and return the typed error for the caller to raise.
-     */
-    private function receiveError(mixed $data): NatsException
+    private function serverError(mixed $data): NatsException
     {
         $message = \is_string($data) ? $data : 'Unknown server error';
         $error = self::mapServerError($message);

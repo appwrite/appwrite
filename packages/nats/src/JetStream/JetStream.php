@@ -57,8 +57,6 @@ final class JetStream
         }, $timeout ?? 5.0);
     }
 
-    // --- Stream Management ---
-
     public function createStream(StreamConfig $config): Stream
     {
         $data = $this->apiRequest("STREAM.CREATE.{$config->name}", $config->toArray());
@@ -124,8 +122,6 @@ final class JetStream
         $payload = $subject !== null ? ['filter' => $subject] : null;
         $this->apiRequest("STREAM.PURGE.{$name}", $payload);
     }
-
-    // --- Consumer Management ---
 
     public function createConsumer(string $stream, ConsumerConfig $config): Consumer
     {
@@ -217,8 +213,6 @@ final class JetStream
         return new OrderedConsumer($this->conn, $this, $stream, $deliverPolicy, $filterSubject, $idleHeartbeat);
     }
 
-    // --- Stream Message Operations ---
-
     public function getMessage(string $stream, int $seq): StreamMessage
     {
         $data = $this->apiRequest("STREAM.MSG.GET.{$stream}", ['seq' => $seq]);
@@ -239,8 +233,6 @@ final class JetStream
         }
         $this->apiRequest("STREAM.MSG.DELETE.{$stream}", $payload);
     }
-
-    // --- Publishing ---
 
     /**
      * @param int|string|null $ttl Per-message TTL (ADR-43). An int is interpreted as
@@ -334,6 +326,8 @@ final class JetStream
     private function publishWindow(array $chunk, ?float $timeout): array
     {
         $options = $this->conn->getOptions();
+        $timeout ??= $options->requestTimeout;
+        $this->conn->settle($timeout);
 
         // Every message replies to its own subject beneath a shared prefix. The server
         // acknowledges in whatever order it durably stores the messages, so the trailing
@@ -342,7 +336,6 @@ final class JetStream
         $sub = $this->conn->subscribe($inbox . '.*');
 
         try {
-            $this->conn->settle();
             foreach ($chunk as $index => $message) {
                 /** @var array{subject: string, data?: string, headers?: Headers, msgId?: string, expectedLastMsgId?: string, expectedLastSeq?: int, expectedLastSubjectSeq?: int, expectedStream?: string, ttl?: int|string} $message */
                 $this->conn->publish(
@@ -361,7 +354,7 @@ final class JetStream
                 );
             }
 
-            $deadline = microtime(true) + ($timeout ?? $options->requestTimeout);
+            $deadline = microtime(true) + $timeout;
             $acks = [];
 
             while (\count($acks) < \count($chunk)) {
@@ -438,8 +431,6 @@ final class JetStream
         return \count($headers) > 0 ? $headers : null;
     }
 
-    // --- Key-Value ---
-
     public function createKeyValue(KeyValueConfig $config): KeyValue
     {
         $streamConfig = $config->toStreamConfig();
@@ -459,8 +450,6 @@ final class JetStream
         $this->deleteStream("KV_{$bucket}");
     }
 
-    // --- Object Store ---
-
     public function getObjectStore(string $bucket): \Utopia\NATS\ObjectStore\ObjectStore
     {
         // Verify the object-store stream exists.
@@ -473,14 +462,10 @@ final class JetStream
         $this->deleteStream("OBJ_{$bucket}");
     }
 
-    // --- Account Info ---
-
     public function accountInfo(): AccountInfo
     {
         return AccountInfo::fromArray($this->apiRequest('INFO'));
     }
-
-    // --- Internal ---
 
     /**
      * @return array<string, mixed>

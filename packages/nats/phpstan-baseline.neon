@@ -1609,12 +1609,6 @@ parameters:
 			path: tests/ConsumerPullRequestTest.php
 
 		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: tests/ConsumerPullRequestTest.php
-
-		-
 			message: '#^Cannot call method ack\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -1953,12 +1947,6 @@ parameters:
 		-
 			message: '#^Cannot access offset ''version'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Protocol/ParserTest.php
-
-		-
-			message: '#^Method Utopia\\NATS\\Transport\\Transport@anonymous/tests/Protocol/ParserTest\.php\:17\:\:upgradeTls\(\) has parameter \$options with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: tests/Protocol/ParserTest.php
 

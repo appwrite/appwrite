@@ -30,12 +30,19 @@ final class Parser
         return str_contains($this->buffer, "\n");
     }
 
+    /** Whether a failed frame read has left the stream unparseable, so the next read raises at once. */
+    public function isPoisoned(): bool
+    {
+        return $this->poisoned;
+    }
+
     /**
-     * Read and parse the next server operation.
+     * Read and parse the next server operation. $headerTimeout bounds the wait
+     * for the operation line, and $timeout every read of a frame body.
      *
      * @return array{0: ServerOp, 1: mixed} Tuple of [operation, parsed data]
      */
-    public function next(?float $timeout = null): array
+    public function next(?float $timeout = null, ?float $headerTimeout = null): array
     {
         // Once a frame body has been partially consumed the buffer no longer
         // starts on a frame boundary, so nothing after that point can be parsed.
@@ -43,7 +50,7 @@ final class Parser
             throw new ConnectionException('Parser desynced from the stream; the connection must be rebuilt');
         }
 
-        $line = $this->readLine($timeout);
+        $line = $this->readLine($headerTimeout ?? $timeout);
         $line = rtrim($line, "\r\n");
 
         if ($line === '') {
