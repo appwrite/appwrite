@@ -211,9 +211,7 @@ class CSV extends Destination
                 $csvData = $this->resourceToCSVData($resource);
 
                 if (!$this->csvHeadersWritten) {
-                    foreach (\array_keys($csvData) as $column) {
-                        $this->recordHeader((string) $column);
-                    }
+                    $this->expandHeadersFromRow($csvData);
 
                     $pendingRows[] = $csvData;
                     $pendingSize += $this->estimateLineBytes($csvData);
@@ -222,6 +220,11 @@ class CSV extends Destination
                         $flushPending();
                     }
                 } else {
+                    if (empty($this->allowedColumns) && $this->expandHeadersFromRow($csvData)) {
+                        $flushBuffer();
+                        $this->rewriteCSVWithExpandedHeaders($log, $handle);
+                    }
+
                     $dataValues = $this->alignCSVData($csvData);
                     $buffer['lines'][] = $dataValues;
                     $buffer['size'] += $this->estimateLineBytes($dataValues);
@@ -253,6 +256,105 @@ class CSV extends Destination
         }
 
         $callback($resources);
+    }
+
+    /**
+     * Record any previously unseen columns from a CSV row.
+     *
+     * @param array<string, string> $csvData
+     */
+    private function expandHeadersFromRow(array $csvData): bool
+    {
+        $expanded = false;
+        foreach (\array_keys($csvData) as $column) {
+            $columnName = (string) $column;
+            if (!isset($this->csvHeaderSet[$columnName])) {
+                $this->recordHeader($columnName);
+                $expanded = true;
+            }
+        }
+
+        return $expanded;
+    }
+
+    /**
+     * Rewrite an already-flushed CSV file so late schemaless columns appear in the
+     * header and earlier rows are padded to the expanded width.
+     *
+     * @param resource|null $handle
+     * @throws \Exception
+     */
+    private function rewriteCSVWithExpandedHeaders(string $log, mixed &$handle): void
+    {
+        if (\is_resource($handle)) {
+            \fclose($handle);
+            $handle = null;
+        }
+
+        if (!\file_exists($log)) {
+            return;
+        }
+
+        $readHandle = \fopen($log, 'r');
+        if ($readHandle === false) {
+            throw new \Exception("Failed to open CSV file for header expansion: $log", MigrationException::CODE_INTERNAL);
+        }
+
+        $tmpLog = $log . '.tmp';
+        $writeHandle = \fopen($tmpLog, 'w');
+        if ($writeHandle === false) {
+            \fclose($readHandle);
+            throw new \Exception("Failed to open temporary CSV file for writing: $tmpLog", MigrationException::CODE_INTERNAL);
+        }
+
+        $expectedColumnCount = \count($this->csvHeaders);
+        $isFirstRecord = true;
+
+        try {
+            while (($row = \fgetcsv($readHandle, 0, $this->delimiter, $this->enclosure, '')) !== false) {
+                if ($row === [null]) {
+                    continue;
+                }
+
+                if ($isFirstRecord) {
+                    $isFirstRecord = false;
+                    if ($this->includeHeaders) {
+                        if (!$this->writeCSVLine($writeHandle, $this->csvHeaders)) {
+                            throw new \Exception("Failed to write expanded CSV headers to file: $tmpLog", MigrationException::CODE_INTERNAL);
+                        }
+                        continue;
+                    }
+                }
+
+                $normalizedRow = \array_map(
+                    static fn (?string $value): string => $value ?? '',
+                    $row
+                );
+                $paddedRow = \array_pad($normalizedRow, $expectedColumnCount, '');
+                if (!$this->writeCSVLine($writeHandle, $paddedRow)) {
+                    throw new \Exception("Failed to write padded CSV row to file: $tmpLog", MigrationException::CODE_INTERNAL);
+                }
+            }
+
+            \fclose($readHandle);
+            $readHandle = null;
+            \fclose($writeHandle);
+            $writeHandle = null;
+
+            if (!\rename($tmpLog, $log)) {
+                throw new \Exception("Failed to replace CSV file after header expansion: $log", MigrationException::CODE_INTERNAL);
+            }
+        } finally {
+            if (\is_resource($readHandle)) {
+                \fclose($readHandle);
+            }
+            if (\is_resource($writeHandle)) {
+                \fclose($writeHandle);
+            }
+            if (\file_exists($tmpLog)) {
+                @\unlink($tmpLog);
+            }
+        }
     }
 
     private function recordHeader(string $column): void
