@@ -29,6 +29,13 @@ export function getOrganizationSchema() {
       contactType: 'customer support',
       email: 'support@appwrite.io',
     },
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'HaSheizaf St 4',
+      addressLocality: "Ra'anana",
+      postalCode: '4366411',
+      addressCountry: 'IL',
+    },
     sameAs: ORGANIZATION_PROFILES,
   }
 }
