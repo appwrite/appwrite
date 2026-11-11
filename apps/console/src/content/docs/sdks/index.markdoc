@@ -496,7 +496,7 @@ You can discover the available enums in each SDK at the source.
 * {% only_dark %}{% icon_image src="/images/platforms/dark/python.svg" alt="Python logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/python.svg" alt="Python logo" size="m" /%}{% /only_light %}
 * Python SDK `27.2.0`
-* [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python/tree/27.0.0/appwrite/enums)
+* [appwrite/sdk-for-python](https://github.com/appwrite/sdk-for-python/tree/27.2.0/appwrite/enums)
 *
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/dart.svg" alt="Dart logo" size="m" /%}{% /only_dark %}
