@@ -31,6 +31,22 @@ class CSV extends Destination
     protected array $allowedColumns = [];
 
     /**
+     * Ordered CSV column names locked in once headers are flushed.
+     *
+     * @var list<string>
+     */
+    private array $csvHeaders = [];
+
+    /**
+     * @var array<string, bool>
+     */
+    private array $csvHeaderSet = [];
+
+    private bool $csvHeadersWritten = false;
+
+    private string $exportedResourceType = UtopiaResource::TYPE_ROW;
+
+    /**
      * @throws Authorization
      * @throws Structure
      * @throws Conflict
@@ -96,6 +112,7 @@ class CSV extends Destination
     {
         return [
             UtopiaResource::TYPE_ROW,
+            UtopiaResource::TYPE_DOCUMENT,
         ];
     }
 
@@ -115,6 +132,18 @@ class CSV extends Destination
         $buffer = ['lines' => [], 'size' => 0];  // Buffer for batching writes
         $bufferBytes = 1024 * 1024; // 1MB
         $log = $this->local->getRoot() . '/' . $this->outputFile . '.csv';
+        /** @var list<array<string, string>> $pendingRows */
+        $pendingRows = [];
+        $pendingSize = 0;
+
+        if (!$this->csvHeadersWritten && !empty($this->allowedColumns) && empty($this->csvHeaders)) {
+            foreach (['$id', '$permissions', '$createdAt', '$updatedAt'] as $systemColumn) {
+                $this->recordHeader($systemColumn);
+            }
+            foreach (\array_keys($this->allowedColumns) as $column) {
+                $this->recordHeader((string) $column);
+            }
+        }
 
         $flushBuffer = function () use ($log, &$handle, &$buffer) {
             if (empty($buffer['lines'])) {
@@ -148,34 +177,69 @@ class CSV extends Destination
             }
         };
 
+        $flushPending = function () use (&$pendingRows, &$pendingSize, &$buffer, $flushBuffer) {
+            if ($this->csvHeadersWritten) {
+                return;
+            }
+
+            if ($this->includeHeaders && !empty($this->csvHeaders)) {
+                $buffer['lines'][] = $this->csvHeaders;
+                $buffer['size'] += $this->estimateLineBytes($this->csvHeaders);
+            }
+
+            foreach ($pendingRows as $pendingRow) {
+                $dataValues = $this->alignCSVData($pendingRow);
+                $buffer['lines'][] = $dataValues;
+                $buffer['size'] += $this->estimateLineBytes($dataValues);
+            }
+
+            $this->csvHeadersWritten = true;
+            $pendingRows = [];
+            $pendingSize = 0;
+
+            $flushBuffer();
+        };
+
         try {
             foreach ($resources as $resource) {
                 if (!($resource instanceof Row)) {
                     continue;
                 }
 
+                $this->exportedResourceType = $resource->getName();
+                /** @var array<string, string> $csvData */
                 $csvData = $this->resourceToCSVData($resource);
 
-                // Write headers if this is the first row of the file
-                if (!isset($csvHeader) && $this->includeHeaders) {
-                    $headers = \array_keys($csvData);
-                    $buffer['lines'][] = $headers;
-                    $buffer['size'] += \strlen(\implode($this->delimiter, $headers)) + 2; // Approximate size
-                    $csvHeader = true;
-                }
+                if (!$this->csvHeadersWritten) {
+                    foreach (\array_keys($csvData) as $column) {
+                        $this->recordHeader((string) $column);
+                    }
 
-                $dataValues = \array_values($csvData);
-                $buffer['lines'][] = $dataValues;
-                $buffer['size'] += \strlen(\implode($this->delimiter, $dataValues)) + 2; // Approximate size
+                    $pendingRows[] = $csvData;
+                    $pendingSize += $this->estimateLineBytes($csvData);
 
-                if ($buffer['size'] >= $bufferBytes) {
-                    $flushBuffer();
+                    if ($pendingSize >= $bufferBytes) {
+                        $flushPending();
+                    }
+                } else {
+                    $dataValues = $this->alignCSVData($csvData);
+                    $buffer['lines'][] = $dataValues;
+                    $buffer['size'] += $this->estimateLineBytes($dataValues);
+
+                    if ($buffer['size'] >= $bufferBytes) {
+                        $flushBuffer();
+                    }
                 }
 
                 $resource->setStatus(UtopiaResource::STATUS_SUCCESS);
                 if (isset($this->cache)) {
                     $this->cache->update($resource);
                 }
+            }
+
+            // Flush any pending initial-batch rows along with the consolidated header
+            if (!empty($pendingRows)) {
+                $flushPending();
             }
 
             // Flush any remaining buffered lines
@@ -189,6 +253,40 @@ class CSV extends Destination
         }
 
         $callback($resources);
+    }
+
+    private function recordHeader(string $column): void
+    {
+        if (!isset($this->csvHeaderSet[$column])) {
+            $this->csvHeaderSet[$column] = true;
+            $this->csvHeaders[] = $column;
+        }
+    }
+
+    /**
+     * Align an associative CSV row to the established header column order.
+     *
+     * @param array<string, string> $csvData
+     * @return list<string>
+     */
+    private function alignCSVData(array $csvData): array
+    {
+        $aligned = [];
+        foreach ($this->csvHeaders as $column) {
+            $aligned[] = $csvData[$column] ?? '';
+        }
+
+        return $aligned;
+    }
+
+    /**
+     * Approximate CSV line byte length for batch flushing.
+     *
+     * @param array<string> $fields
+     */
+    private function estimateLineBytes(array $fields): int
+    {
+        return \strlen(\implode($this->delimiter, $fields)) + 2;
     }
 
     /**
@@ -226,7 +324,7 @@ class CSV extends Destination
             // Clean up the temporary directory
             if (!$this->local->deletePath('') || $this->local->exists($this->local->getRoot())) {
                 $this->addWarning(new Warning(
-                    UtopiaResource::TYPE_ROW,
+                    $this->exportedResourceType,
                     Transfer::GROUP_DATABASES,
                     'Error cleaning up: ' . $this->local->getRoot(),
                     $this->resourceChildId ?? $this->resourceId
