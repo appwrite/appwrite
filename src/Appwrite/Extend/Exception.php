@@ -532,7 +532,7 @@ class Exception extends \Exception
         };
     }
 
-    private static function fromHttp(\Throwable $error): self
+    private static function fromHttp(HttpException $error): self
     {
         $exception = new self(self::GENERAL_UNKNOWN, $error->getMessage(), $error->getCode(), $error);
 

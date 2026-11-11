@@ -8,8 +8,11 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
+use RuntimeException;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
+use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -31,14 +34,14 @@ final class ErrorHookTest extends TestCase
 
     public function testUnknownErrorRespondsServerError(): void
     {
-        $response = $this->respond(new \RuntimeException('Unexpected'));
+        $response = $this->respond(new RuntimeException('Unexpected'));
 
         $this->assertSame(500, $response->getStatusCode());
         $this->assertSame(Exception::GENERAL_UNKNOWN, $response->getPayload()['type'] ?? null);
         $this->assertSame('Server Error', $response->getPayload()['message'] ?? null);
     }
 
-    private function respond(\Throwable $error): Response
+    private function respond(Throwable $error): Response
     {
         require_once __DIR__ . '/../../../app/controllers/general.php';
 
@@ -86,7 +89,7 @@ final class ErrorHookTest extends TestCase
     private function errorHook(): Hook
     {
         /** @var list<Hook> $hooks */
-        $hooks = (new \ReflectionProperty(Http::class, 'errors'))->getValue();
+        $hooks = (new ReflectionProperty(Http::class, 'errors'))->getValue();
 
         foreach ($hooks as $hook) {
             if (\in_array('localeCodes', $hook->getDependencies(), true)) {

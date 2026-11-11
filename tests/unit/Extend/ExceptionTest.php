@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Extend;
 
 use Appwrite\Extend\Exception;
+use Iterator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Utopia\Cache\Exception\Unavailable;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
@@ -17,9 +19,9 @@ use Utopia\VCS\Exception\OwnerNotFound;
 final class ExceptionTest extends TestCase
 {
     /**
-     * @return \Iterator<string, array{OwnerNotFound}>
+     * @return Iterator<string, array{OwnerNotFound}>
      */
-    public static function missingInstallations(): \Iterator
+    public static function missingInstallations(): Iterator
     {
         yield 'with not found code' => [new OwnerNotFound('Installation not found', 404)];
         yield 'without code' => [new OwnerNotFound('Installation not found')];
@@ -80,9 +82,9 @@ final class ExceptionTest extends TestCase
     }
 
     /**
-     * @return \Iterator<string, array{int, string}>
+     * @return Iterator<string, array{int, string}>
      */
-    public static function httpErrors(): \Iterator
+    public static function httpErrors(): Iterator
     {
         yield 'not found' => [404, Exception::GENERAL_ROUTE_NOT_FOUND];
         yield 'bad request' => [400, Exception::GENERAL_ARGUMENT_INVALID];
@@ -104,7 +106,7 @@ final class ExceptionTest extends TestCase
 
     public function testUnknownErrorIsNotMapped(): void
     {
-        $this->assertNull(Exception::tryFrom(new \RuntimeException('Unexpected')));
+        $this->assertNull(Exception::tryFrom(new RuntimeException('Unexpected')));
     }
 
     public function testAppwriteExceptionIsNotMapped(): void
