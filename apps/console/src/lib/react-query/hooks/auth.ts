@@ -1265,6 +1265,29 @@ export function useUpdateDenyRealtimeGuestsPolicy(
   })
 }
 
+/**
+ * Hook to update the account switching (account devices) policy.
+ */
+export function useUpdateAccountDevicesPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateAccountDevicesPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
 export type AuthEmailPoliciesInput = {
   denyFreeEmail: boolean
   denyAliasedEmail: boolean

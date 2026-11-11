@@ -1,0 +1,78 @@
+---
+layout: integration
+title: Storage with DigitalOcean Spaces
+description: Store files from your self-hosted Appwrite instance in DigitalOcean Spaces
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/storage-digitalocean-spaces/cover.avif
+category: storage
+product:
+    vendor: DigitalOcean
+    description: "DigitalOcean Spaces is S3-compatible object storage with a built-in CDN from DigitalOcean."
+platform:
+    - 'Self-hosted'
+---
+
+[DigitalOcean Spaces](https://www.digitalocean.com/products/spaces) is an S3-compatible object storage service with a built-in CDN. Each Spaces bucket lives in a DigitalOcean datacenter region, such as `nyc3` or `fra1`, and is addressed as `<bucket>.<region>.digitaloceanspaces.com`.
+
+# How does the integration work?
+
+By default, self-hosted Appwrite Storage keeps uploaded files on your server's local disk. The `dospaces` storage adapter stores them in a Spaces bucket instead, so file storage scales separately from your server and survives a server rebuild. Appwrite builds the bucket address from the bucket name and region you configure.
+
+{% info title="Self-hosted only" %}
+Storage adapters configure a self-hosted Appwrite instance. Appwrite Cloud manages file storage for you.
+{% /info %}
+
+# How to implement
+
+To store Appwrite files in DigitalOcean Spaces, there are several steps you must complete:
+
+## Step 1: Create a Spaces bucket and an access key
+
+In the DigitalOcean Control Panel, create a Spaces bucket in the region closest to your Appwrite server. Note the bucket name and the region slug from its endpoint, for example `nyc3` from `nyc3.digitaloceanspaces.com`.
+
+Then create a Spaces access key that can read and write the bucket. Save the **access key** and **secret key**. DigitalOcean shows the secret only once.
+
+## Step 2: Configure the Spaces adapter in Appwrite
+
+For this step, you must [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Open the `.env` file of your Appwrite installation and set the storage variables:
+
+```env
+_APP_STORAGE_DEVICE=dospaces
+_APP_STORAGE_S3_ACCESS_KEY=<ACCESS_KEY>
+_APP_STORAGE_S3_SECRET=<SECRET_KEY>
+_APP_STORAGE_S3_REGION=nyc3
+_APP_STORAGE_S3_BUCKET=<BUCKET_NAME>
+```
+
+`_APP_STORAGE_DEVICE=dospaces` selects the DigitalOcean Spaces adapter, and the `_APP_STORAGE_S3_*` variables hold its credentials, region, and bucket.
+
+{% info title="Upgrading an older configuration" %}
+Older installations set `_APP_STORAGE_DO_SPACES_ACCESS_KEY`, `_APP_STORAGE_DO_SPACES_SECRET`, `_APP_STORAGE_DO_SPACES_REGION`, and `_APP_STORAGE_DO_SPACES_BUCKET`. Appwrite 2.0 and later still read them as a fallback when `_APP_STORAGE_S3_ACCESS_KEY`, `_APP_STORAGE_S3_SECRET`, and `_APP_STORAGE_S3_BUCKET` are not all set, but they are deprecated, and the Open Runtimes orchestrator that builds Functions and Sites doesn't read them. Move the values to the `_APP_STORAGE_S3_*` variables.
+{% /info %}
+
+Recreate the containers and check that the variables are applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+Changing the storage device doesn't move files Appwrite has already stored, so configure it before you store production files.
+
+## Step 3: Test the adapter
+
+Open your project in the Appwrite Console, go to **Storage**, create a bucket, and upload a file. The file then appears in your Spaces bucket in the DigitalOcean Control Panel.
+
+# Read more about DigitalOcean Spaces and Appwrite Storage
+
+If you would like to learn more about DigitalOcean Spaces and Appwrite Storage, we have some resources that you should visit:
+
+- [Storage configuration for self-hosted Appwrite](/docs/advanced/self-hosting/configuration/storage)
+- [Storage environment variables](/docs/advanced/self-hosting/configuration/environment-variables#storage)
+- [Appwrite Storage](/docs/products/storage)
+- [DigitalOcean Spaces documentation](https://docs.digitalocean.com/products/spaces/)

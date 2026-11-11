@@ -5,23 +5,29 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Database\Provisioner;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Storage\Encryption as FileEncryption;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
+use Utopia\Psr7\Stream;
+use Utopia\Storage\Cipher;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 /**
  * Re-encrypts values stored under an older `_APP_OPENSSL_KEY_V{version}` with
  * the current one, so the old key can be retired. Covers the platform
- * database, every project database in this region, and the columns users
- * created with encryption. Each value is read raw to see its version, so a
- * second run only touches what the first missed.
+ * database, every project database in this region, the columns users
+ * created with encryption, and encrypted storage files. Each value is read
+ * raw to see its version, so a second run only touches what the first missed.
  */
 class Encryption extends Action
 {
@@ -37,6 +43,7 @@ class Encryption extends Action
             ->param('commit', false, new Boolean(true), 'Write the re-encrypted values. Without it, only count them.', true)
             ->param('after', '', new Text(36, 0), 'Resume after this project ID, the last one a previous run reported done.', true)
             ->param('batch', 100, new Range(1, 1000), 'Documents read per query.', true)
+            ->param('only', '', new WhiteList(['', 'documents', 'files'], true), 'Re-encrypt only stored documents or only storage files.', true)
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('databaseFactory')
@@ -45,9 +52,13 @@ class Encryption extends Action
 
     /**
      * @param callable(Document): Database $getProjectDB
+     * @param (callable(Document): Device)|null $getDeviceForFiles
      */
-    public function action(bool|string $commit, string $after, int|string $batch, Database $dbForPlatform, callable $getProjectDB, Provisioner $databaseFactory): void
+    public function action(bool|string $commit, string $after, int|string $batch, string $only, Database $dbForPlatform, callable $getProjectDB, Provisioner $databaseFactory, ?callable $getDeviceForFiles = null): void
     {
+        $documents = $only !== 'files';
+        $files = $only !== 'documents';
+        $getDeviceForFiles ??= fn (Document $project): Device => getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
         $commit = \strval($commit) === 'true' || $commit === true;
         $batch = (int) $batch;
         $version = EncryptionKey::version();
@@ -64,8 +75,14 @@ class Encryption extends Action
         $total = 0;
 
         if ($after === '') {
-            foreach (\array_keys($collections['console'] ?? []) as $collection) {
-                $total += $this->collection($dbForPlatform, $collection, $version, $commit, $batch);
+            if ($documents) {
+                foreach (\array_keys($collections['console'] ?? []) as $collection) {
+                    $total += $this->collection($dbForPlatform, $collection, $version, $commit, $batch);
+                }
+            }
+            // The console keeps buckets of its own, such as `default` for files uploaded to the console
+            if ($files) {
+                $total += $this->files($dbForPlatform, $getDeviceForFiles(new Document(['$id' => 'console'])), $version, $commit, $batch);
             }
             Console::log('Project console done');
         }
@@ -89,6 +106,16 @@ class Encryption extends Action
             $dbForProject = $getProjectDB($project);
             $count = 0;
 
+            if ($files) {
+                $count += $this->files($dbForProject, $getDeviceForFiles($project), $version, $commit, $batch);
+            }
+
+            if (!$documents) {
+                $total += $count;
+                Console::log('Project ' . $project->getId() . ' done, ' . $count . ' documents');
+                continue;
+            }
+
             foreach (\array_keys($collections['projects'] ?? []) as $collection) {
                 $count += $this->collection($dbForProject, $collection, $version, $commit, $batch);
             }
@@ -98,6 +125,11 @@ class Encryption extends Action
                 // can have encrypted columns. Schemaless and vector collections have none, and a dedicated engine
                 // (a type such as `postgresql` on Cloud) keeps its tables outside Appwrite's metadata entirely.
                 if (!\in_array($database->getAttribute('type', ''), ['', DATABASE_TYPE_LEGACY, DATABASE_TYPE_TABLESDB], true)) {
+                    continue;
+                }
+
+                // A database row can outlive its `database_<sequence>` collection, and then has no tables to walk
+                if ($dbForProject->findCollection('database_' . $database->getSequence()) === null) {
                     continue;
                 }
 
@@ -193,6 +225,97 @@ class Encryption extends Action
 
         if ($count > 0) {
             Console::log('  ' . $collection . ': ' . $count);
+        }
+
+        return $count;
+    }
+
+    /**
+     * Re-encrypt every file in the project's buckets stored under an older key version, returning how many there were.
+     */
+    private function files(Database $dbForProject, Device $device, string $version, bool $commit, int $batch): int
+    {
+        $count = 0;
+
+        foreach ($dbForProject->cursor('buckets', batchSize: $batch) as $bucket) {
+            $collection = 'bucket_' . $bucket->getSequence();
+            if ($dbForProject->findCollection($collection) === null) {
+                continue;
+            }
+
+            $stale = [Query::isNotNull('openSSLCipher'), Query::notEqual('openSSLVersion', $version)];
+
+            foreach ($dbForProject->cursor($collection, $stale, batchSize: $batch) as $file) {
+                if ($file->getAttribute('openSSLCipher', '') === '') {
+                    continue;
+                }
+
+                if (!$commit) {
+                    $count++;
+                    continue;
+                }
+
+                $metadata = $file->getAttribute('metadata', []);
+                $old = (string) $file->getAttribute('path', '');
+                $path = null;
+
+                try {
+                    if ($file->getAttribute('openSSLCipher') === Cipher::NAME) {
+                        // Only the file's own key is under the old version: wrap it again, the stored bytes stay as they are
+                        $metadata['encryption'] = [
+                            'key' => \base64_encode(FileEncryption::cipher($metadata['encryption'] ?? throw new \RuntimeException('no file key'))->wrap(EncryptionKey::current())),
+                            'version' => $version,
+                        ];
+                        $updates = ['metadata' => $metadata, 'openSSLVersion' => $version];
+                    } else {
+                        // One envelope over the whole file: stored again the way uploads are stored now, under a key of
+                        // its own, so a later rotation only has to wrap that key again
+                        $metadata['encryption'] = FileEncryption::create();
+                        $data = FileEncryption::cipher($metadata['encryption'])->encrypt(new FileEncryption($file)->decrypt((string) $device->read($old)), 0, true);
+
+                        // Written beside the old object, not over it: until the document points here, a reader still
+                        // holds the old IV and tag, and those only decrypt the old bytes. The extension stays, previews read it.
+                        $extension = \pathinfo($old, PATHINFO_EXTENSION);
+                        $path = \dirname($old) . '/' . Id::unique() . ($extension === '' ? '' : '.' . $extension);
+                        $device->write($path, new Stream($data), (string) $file->getAttribute('mimeType', ''));
+
+                        $updates = [
+                            'path' => $path,
+                            'metadata' => $metadata,
+                            'sizeActual' => \strlen($data),
+                            'openSSLVersion' => $version,
+                            'openSSLCipher' => Cipher::NAME,
+                            'openSSLTag' => null,
+                            'openSSLIV' => null,
+                        ];
+                    }
+
+                    $updated = $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument($collection, $file->getId(), new Document($updates)));
+                } catch (\Throwable $error) {
+                    Console::warning('  ' . $collection . '/' . $file->getId() . ': ' . $error->getMessage() . ', skipped');
+                    if ($path !== null && $device->exists($path)) {
+                        $device->delete($path);
+                    }
+                    continue;
+                }
+
+                // Deleted while it was being rewritten: the new object is the only thing left of it
+                if ($updated->isEmpty()) {
+                    if ($path !== null) {
+                        $device->delete($path);
+                    }
+                    continue;
+                }
+
+                if ($path !== null) {
+                    $device->delete($old);
+                }
+                $count++;
+            }
+        }
+
+        if ($count > 0) {
+            Console::log('  files: ' . $count);
         }
 
         return $count;

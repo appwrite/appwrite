@@ -67,7 +67,7 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse', [
-                Limit::attempts(['url', 'userId'], 10),
+                Limit::attempts(['projectId', 'url', 'userId'], 10),
                 Limit::attempts(['url', 'ip'], 10),
             ])
             ->inject('request')

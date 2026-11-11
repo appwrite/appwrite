@@ -1311,6 +1311,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 が本日 Product Hunt でローンチ',
   'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
   'Share your take': 'フィードバックを送る',
+  'Just launched': '新登場',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'Appwrite の MCP1：すべての MCP サーバーを 1 つの URL で',
+  'MCP1 by Appwrite is live': 'Appwrite の MCP1 が登場',
+  'Try MCP1': 'MCP1 を試す',
   'Created by': '作成者',
   'Authorized resources': '認可済みリソース',
   'No scopes granted': '付与されたスコープはありません',

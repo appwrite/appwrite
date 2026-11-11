@@ -1,0 +1,27 @@
+---
+layout: changelog
+title: Send push notifications without Firebase with Appwrite Push
+date: 2026-11-06
+cover: /images/blog/announcing-appwrite-push/cover.avif
+tags: messaging, sdk
+---
+
+[Appwrite Push](/docs/products/messaging/appwrite-push) is a new push provider in Appwrite Messaging. It sends notifications to your apps straight from Appwrite, so you don't need a Firebase project or your users' device tokens.
+
+With Appwrite Push:
+
+- You create the provider in the Console without any credentials.
+- Your app subscribes with the Appwrite SDK after the user signs in.
+- A message you send to a user reaches every device they're signed in on. If the user also has FCM or APNs targets, register an [Appwrite push target](/docs/products/messaging/appwrite-push#push-target) on one of their devices.
+- Devices that were offline get the messages they missed when they reconnect, for up to 7 days.
+- On Android, messages arrive even while the app is closed. On iOS, Appwrite Push works with APNs to show messages while the app is suspended.
+
+Appwrite Push works with the Web, Flutter, React Native, Android, and Apple SDKs, and you send messages the same way you send them through FCM or APNs.
+
+{% arrow_link href="/blog/post/announcing-appwrite-push" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/messaging/appwrite-push" %}
+Set up Appwrite Push
+{% /arrow_link %}

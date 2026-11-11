@@ -92,6 +92,8 @@ export function ManualUploadView() {
   const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
+  // Domain follows the site name until the user edits it
+  const domainEditedRef = useRef(!!formData.domain)
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
   const [uploadFile, setUploadFile] = useState<File | null>(
     formData.uploadFile || null,
@@ -113,7 +115,7 @@ export function ManualUploadView() {
 
   // Generate domain when site name changes
   useEffect(() => {
-    if (siteName && !domain) {
+    if (siteName && !domainEditedRef.current) {
       setDomain(generateDomain(siteName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -547,6 +549,9 @@ export function ManualUploadView() {
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={() => {
+              domainEditedRef.current = true
+            }}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">

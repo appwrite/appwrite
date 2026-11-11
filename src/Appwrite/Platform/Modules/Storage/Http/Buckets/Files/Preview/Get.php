@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Preview;
 use Appwrite\Abuse\Limit;
 use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Extend\Exception;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Storage\Config\CacheControl;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
@@ -14,6 +13,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Storage\Encryption;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
@@ -224,14 +224,7 @@ class Get extends Action
         $downloadTime = \microtime(true) - $startTime;
 
         if (!empty($cipher)) { // Decrypt
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
+            $source = (new Encryption($file))->decrypt($source);
         }
 
         $decryptionTime = \microtime(true) - $startTime - $downloadTime;

@@ -1,0 +1,102 @@
+---
+layout: integration
+title: Profile photos with Libravatar
+description: Show your users' Libravatar profile photos with one Appwrite Avatars call
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/avatars-libravatar/cover.avif
+category: auth
+product:
+    vendor: Libravatar
+    description: "Libravatar is a free and open source avatar service that links a profile photo to an email address or OpenID."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Libravatar](https://www.libravatar.org) is a free and open source avatar service. Like Gravatar, it links a profile photo to an email address, so every site or app that looks up the hash of that address shows the same picture.
+
+# How does the integration work?
+
+Appwrite Avatars looks up Libravatar for you through the [user photos](/docs/products/avatars/user-photos) endpoint. One `getPhoto` call returns the best available profile photo for a user, and Libravatar is one of the sources Appwrite checks. It comes after a photo from the user's OAuth2 identity and Gravatar, and before initials and a built-in placeholder. Users who keep their photo on Libravatar instead of Gravatar still get it.
+
+Appwrite queries libravatar.org with the SHA-256 hash of the user's trimmed, lowercase email address, so you don't need a Libravatar account or API key. When Libravatar has no photo for a hash, Appwrite moves on to the next source, so the call always returns an image.
+
+{% info title="Self-hosted requirements" %}
+`getPhoto` is available in self-hosted Appwrite 2.0 and later. Your server needs outbound internet access to reach Libravatar.
+{% /info %}
+
+# How to implement
+
+To show Libravatar photos with Appwrite Avatars, there are several steps you must complete:
+
+## Step 1: Show the signed-in user's photo
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. Pass `current()` as the `userId` to get the photo of the user who is signed in. If they have a Libravatar for their email address and no higher-priority photo, such as one from an OAuth2 identity or Gravatar, Appwrite returns their Libravatar.
+
+```js
+import { Client, Avatars } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const avatars = new Avatars(client);
+
+const result = avatars.getPhoto({
+    userId: 'current()',
+    width: 128,
+    height: 128
+});
+
+console.log(result); // Resource URL
+```
+
+The Web SDK returns a URL that you can use as the `src` of an `<img>` tag. Pass another user's ID instead of `current()` to show their photo, for example next to a comment or in a member list.
+
+## Step 2: Show photos for people who aren't users yet
+
+To show an avatar for someone who doesn't have an account in your project, such as an invitee, pass an `emailHash` and a `name`. The `emailHash` is the SHA-256 hash of the email address, trimmed and lowercased, as a 64-character hex string. Appwrite only accepts the hash, so the address itself never appears in a URL.
+
+```js
+async function hashEmail(email) {
+    const data = new TextEncoder().encode(email.trim().toLowerCase());
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('');
+}
+
+const result = avatars.getPhoto({
+    emailHash: await hashEmail('walter@example.com'),
+    name: 'Walter White',
+    width: 128,
+    height: 128
+});
+```
+
+Appwrite looks the hash up on Gravatar and Libravatar, renders the name as initials if neither has a photo, and falls back to the placeholder.
+
+## Step 3: Limit the image rating
+
+Use the `rating` parameter to set the highest image rating Appwrite accepts from Gravatar and Libravatar: `g`, `pg`, `r`, or `x`. It defaults to `g`, the most restrictive rating.
+
+```js
+const result = avatars.getPhoto({
+    userId: 'current()',
+    rating: 'pg'
+});
+```
+
+Appwrite sends every photo with `Cache-Control: private, no-store`, so a user's new photo shows up the next time the image loads.
+
+# Read more about Libravatar and Appwrite Avatars
+
+If you would like to learn more about Libravatar and Appwrite Avatars, we have some resources that you should visit:
+
+- [Libravatar](https://www.libravatar.org)
+- [User photos with Appwrite Avatars](/docs/products/avatars/user-photos)
+- [Announcing user photos: A profile picture for every user](/blog/post/announcing-user-photos)
+- [Appwrite Avatars API reference](/docs/references/cloud/client-web/avatars)

@@ -105,6 +105,7 @@ import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
+import { ConsoleAccountSwitcherDialog } from '@/components/global/shared/ConsoleAccountSwitcherDialog'
 import { ImpersonateConsoleUserDialog } from '@/components/global/shared/ImpersonateConsoleUserDialog'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
@@ -446,6 +447,7 @@ export function ConsoleHeader({
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false)
+  const [switchAccountDialogOpen, setSwitchAccountDialogOpen] = useState(false)
   const projectConnectDialog = useProjectConnectDialog()
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
@@ -2087,6 +2089,18 @@ export function ConsoleHeader({
                         <Eye className="h-4 w-4" />
                         <span>{headerCopy.accountMenu.impersonate}</span>
                       </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                        onSelect={() => {
+                          window.setTimeout(() => {
+                            setSwitchAccountDialogOpen(true)
+                          }, 0)
+                        }}
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>{t('Switch account')}</span>
+                      </DropdownMenuItem>
                     </>
                   )}
 
@@ -2108,6 +2122,10 @@ export function ConsoleHeader({
               <ImpersonateConsoleUserDialog
                 open={impersonateDialogOpen}
                 onOpenChange={setImpersonateDialogOpen}
+              />
+              <ConsoleAccountSwitcherDialog
+                open={switchAccountDialogOpen}
+                onOpenChange={setSwitchAccountDialogOpen}
               />
             </>
           )}

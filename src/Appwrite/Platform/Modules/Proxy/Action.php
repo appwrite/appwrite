@@ -219,12 +219,15 @@ class Action extends PlatformAction
 
         $validators = [];
         $mainValidator = null; // Validator to use for error description
+        $checks = []; // Every record check, to explain the one the domain actually has
+        $checkApex = null; // First A, else AAAA check, to explain an apex
 
         if (\count($targetCNAMEs) > 0) {
             $cnameValidators = [];
             foreach ($targetCNAMEs as $targetCNAME) {
                 $cnameValidators[] = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
             }
+            $checks = $cnameValidators;
 
             $validator = new AnyOf($cnameValidators);
             $validators[] = $validator;
@@ -240,6 +243,8 @@ class Action extends PlatformAction
             if ((new IP(IP::V4))->isValid($targetA)) {
                 $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
                 $validators[] = $validator;
+                $checks[] = $validator;
+                $checkApex ??= $validator;
 
                 if (\is_null($mainValidator)) {
                     $mainValidator = $validator;
@@ -251,6 +256,8 @@ class Action extends PlatformAction
         if ((new IP(IP::V6))->isValid($targetAAAA)) {
             $validator = new $dnsValidatorClass($targetAAAA, Record::TYPE_AAAA, $dnsServers);
             $validators[] = $validator;
+            $checks[] = $validator;
+            $checkApex ??= $validator;
 
             if (\is_null($mainValidator)) {
                 $mainValidator = $validator;
@@ -267,7 +274,18 @@ class Action extends PlatformAction
         if (!$validator->isValid($domain->get())) {
             Span::add('dns.timing', \microtime(true) - $validationStart);
             Span::add('dns.domain', $domain->get());
-            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
+
+            // Explain the record the domain has, such as an A record with the wrong address, rather than
+            // a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A or AAAA.
+            $explained = $domain->get() === $domain->getApex() ? ($checkApex ?? $mainValidator) : $mainValidator;
+            foreach ($checks as $check) {
+                if ($check->count > 0 || $check->reason !== '') {
+                    $explained = $check;
+                    break;
+                }
+            }
+
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $explained->getDescription());
         }
     }
 
