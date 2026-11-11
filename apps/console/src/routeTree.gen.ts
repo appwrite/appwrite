@@ -21,6 +21,7 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DocsDotmdRouteImport } from './routes/docs[.]md'
 import { Route as ForAgentsDotmdRouteImport } from './routes/for-agents[.]md'
 import { Route as GeneratorRouteImport } from './routes/generator'
+import { Route as IndexDotmdRouteImport } from './routes/index[.]md'
 import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
@@ -541,6 +542,11 @@ const ForAgentsDotmdRoute = ForAgentsDotmdRouteImport.update({
 const GeneratorRoute = GeneratorRouteImport.update({
   id: '/generator',
   path: '/generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexDotmdRoute = IndexDotmdRouteImport.update({
+  id: '/index.md',
+  path: '/index.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IntegrationsDotmdRoute = IntegrationsDotmdRouteImport.update({
@@ -3465,6 +3471,7 @@ export interface FileRoutesByFullPath {
   '/docs.md': typeof DocsDotmdRoute
   '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
+  '/index.md': typeof IndexDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
@@ -3938,6 +3945,7 @@ export interface FileRoutesByTo {
   '/discord': typeof DiscordRoute
   '/docs.md': typeof DocsDotmdRoute
   '/for-agents.md': typeof ForAgentsDotmdRoute
+  '/index.md': typeof IndexDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
@@ -4365,6 +4373,7 @@ export interface FileRoutesById {
   '/docs.md': typeof DocsDotmdRoute
   '/for-agents.md': typeof ForAgentsDotmdRoute
   '/generator': typeof GeneratorRouteWithChildren
+  '/index.md': typeof IndexDotmdRoute
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
@@ -4843,6 +4852,7 @@ export interface FileRouteTypes {
     | '/docs.md'
     | '/for-agents.md'
     | '/generator'
+    | '/index.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
@@ -5316,6 +5326,7 @@ export interface FileRouteTypes {
     | '/discord'
     | '/docs.md'
     | '/for-agents.md'
+    | '/index.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
@@ -5742,6 +5753,7 @@ export interface FileRouteTypes {
     | '/docs.md'
     | '/for-agents.md'
     | '/generator'
+    | '/index.md'
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
@@ -6222,6 +6234,7 @@ export interface RootRouteChildren {
   DocsDotmdRoute: typeof DocsDotmdRoute
   ForAgentsDotmdRoute: typeof ForAgentsDotmdRoute
   GeneratorRoute: typeof GeneratorRouteWithChildren
+  IndexDotmdRoute: typeof IndexDotmdRoute
   IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
@@ -6342,6 +6355,13 @@ declare module '@tanstack/react-router' {
       path: '/generator'
       fullPath: '/generator'
       preLoaderRoute: typeof GeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/index.md': {
+      id: '/index.md'
+      path: '/index.md'
+      fullPath: '/index.md'
+      preLoaderRoute: typeof IndexDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/integrations.md': {
@@ -11622,6 +11642,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsDotmdRoute: DocsDotmdRoute,
   ForAgentsDotmdRoute: ForAgentsDotmdRoute,
   GeneratorRoute: GeneratorRouteWithChildren,
+  IndexDotmdRoute: IndexDotmdRoute,
   IntegrationsDotmdRoute: IntegrationsDotmdRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,

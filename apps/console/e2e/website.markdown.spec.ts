@@ -79,6 +79,27 @@ test.describe('markdown exports (read-only)', () => {
     expect(body.length).toBeLessThan(100_000)
   })
 
+  test('homepage negotiates markdown and advertises agent links', async ({
+    request,
+  }) => {
+    const markdown = await request.get('/', {
+      headers: { Accept: 'text/markdown' },
+    })
+    expect(markdown.status()).toBe(200)
+    expect(markdown.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    expect(markdown.headers()['vary']).toContain('Accept')
+    expect(await markdown.text()).toMatch(/^# Appwrite/)
+
+    const html = await request.get('/', { headers: { Accept: 'text/html' } })
+    expect(html.headers()['content-type']).toMatch(/text\/html/)
+    expect(html.headers()['vary']).toContain('Accept')
+    expect(html.headers()['link']).toContain('rel="api-catalog"')
+
+    const index = await request.get('/index.md')
+    expect(index.status()).toBe(200)
+    expect(index.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+  })
+
   test('setup.md serves MCP install instructions', async ({ request }) => {
     const response = await request.get('/setup.md')
     expect(response.status()).toBe(200)

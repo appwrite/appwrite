@@ -158,6 +158,13 @@ export function buildMcpServerCard(origin: string = 'https://appwrite.io') {
     $schema: MCP_SERVER_CARD_SCHEMA,
     name: APPWRITE_MCP_SERVER_CARD_NAME,
     title: 'Appwrite',
+    icons: [
+      {
+        src: `${origin}/apple-touch-icon.png`,
+        mimeType: 'image/png',
+        sizes: ['180x180'],
+      },
+    ],
     description:
       'Backend API for auth, databases, storage, functions, messaging, and hosting.',
     version: '1.0.0',
@@ -237,6 +244,7 @@ export function buildApiCatalogDocument(
         'service-doc': [
           { href: `${origin}/docs/apis/rest`, type: 'text/html' },
         ],
+        item: [{ href: 'https://cloud.appwrite.io/v1' }],
       },
     ],
   }
