@@ -227,6 +227,8 @@ class Origin extends Git
      *
      * Signs an EdDSA app JWT and exchanges it for an installation access
      * token (oit_...).
+     *
+     * @throws OwnerNotFound when the installation no longer exists
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
@@ -245,6 +247,9 @@ class Origin extends Git
 
         $responseBody = $response['body'] ?? [];
         $statusCode = $response['headers']['status-code'] ?? 0;
+        if ($statusCode === 404) {
+            throw new OwnerNotFound("Installation '{$this->installationId}' was not found.", 404);
+        }
         if (!\is_array($responseBody) || !\array_key_exists('token', $responseBody)) {
             $safeBody = \is_array($responseBody) ? json_encode(array_intersect_key($responseBody, array_flip(['code', 'message']))) : '';
             throw new Exception('Failed to retrieve access token from Origin API. Status: ' . $statusCode . '. Response: ' . $safeBody, (int) $statusCode);

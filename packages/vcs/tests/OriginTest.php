@@ -712,6 +712,29 @@ final class OriginTest extends TestCase
         }
     }
 
+    public function testRefreshForADeletedInstallationThrowsOwnerNotFound(): void
+    {
+        $seed = random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES);
+        $expiring = $this->appJwt(time() + self::EXPIRING_IN, sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed)));
+
+        $adapter = $this->cachedOrigin(
+            new Cache(new Memory()),
+            ['jwtToken' => $expiring, 'accessToken' => 'oit_old'],
+            $seed,
+            [self::MINT_PATH => [404, ['code' => 'not_found', 'message' => 'installation not found']]],
+        );
+
+        try {
+            $adapter->getAuthenticatedApp();
+            $this->fail('Expected refreshing the tokens of a deleted installation to throw OwnerNotFound');
+        } catch (OwnerNotFound $error) {
+            $this->assertSame(404, $error->getCode());
+            $this->assertSame("Installation '" . self::INSTALLATION_ID . "' was not found.", $error->getMessage());
+        }
+
+        $this->assertSame([self::MINT_PATH], array_column($adapter->requests, 'path'), 'The refresh must stop at the failed mint');
+    }
+
     public function testLiveAdapterSuite(): void
     {
         $this->markTestSkipped(
