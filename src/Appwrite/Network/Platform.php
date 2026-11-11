@@ -2,6 +2,9 @@
 
 namespace Appwrite\Network;
 
+use Utopia\Database\Document;
+use Utopia\Domains\Domain;
+
 class Platform
 {
     public const TYPE_UNKNOWN = 'unknown';
@@ -207,5 +210,194 @@ class Platform
             }
         }
         return array_unique($schemes);
+    }
+
+    /**
+     * Find the broadest registered Web platform domain that is a strict parent of `$hostname`
+     * and shares the same valid public registerable domain.
+     *
+     * Returns `null` when `$hostname` is empty, local, an IP address, a platform host, or
+     * when `$project` has no matching strict parent Web platform.
+     *
+     * @param array<int, string> $localHosts
+     * @param array<int, string> $platformHostnames
+     */
+    public static function findParentWebDomain(
+        string $hostname,
+        Document $project,
+        array $localHosts = [],
+        array $platformHostnames = [],
+    ): ?string {
+        $hostname = \strtolower(\trim($hostname));
+        $normalizedLocalHosts = self::normalizeHosts($localHosts);
+
+        if (self::isHostOnlyCookieTarget($hostname, $normalizedLocalHosts)) {
+            return null;
+        }
+
+        if ($project->getAttribute('$id', '') === 'console') {
+            return null;
+        }
+
+        if (self::isPlatformHost($hostname, $platformHostnames, $normalizedLocalHosts)) {
+            return null;
+        }
+
+        $hostRegisterable = self::registerableDomain($hostname);
+        if ($hostRegisterable === '') {
+            return null;
+        }
+
+        $matchedParent = null;
+        foreach ($project->getAttribute('platforms', []) as $platform) {
+            $type = self::mapDeprecatedType(\strtolower(\trim((string) ($platform['type'] ?? self::TYPE_UNKNOWN))));
+            if ($type !== self::TYPE_WEB) {
+                continue;
+            }
+
+            $candidate = \strtolower(\trim((string) ($platform['hostname'] ?? '')));
+            if ($candidate === '' || \str_contains($candidate, '*')) {
+                continue;
+            }
+
+            if (!\str_ends_with($hostname, '.' . $candidate)) {
+                continue;
+            }
+
+            if (self::registerableDomain($candidate) !== $hostRegisterable) {
+                continue;
+            }
+
+            if ($matchedParent === null || \strlen($candidate) < \strlen($matchedParent)) {
+                $matchedParent = $candidate;
+            }
+        }
+
+        return $matchedParent;
+    }
+
+    /**
+     * Resolve the cookie Domain attribute for the current request and project.
+     *
+     * Returns `null` for localhost, migration hosts, and IP addresses (host-only cookies).
+     * For regular projects served on a verified project-owned custom API domain, scopes
+     * the cookie to a matching parent Web platform domain when registered; otherwise
+     * falls back to `.$hostname`.
+     *
+     * @param array<int, string> $localHosts
+     * @param array<int, string> $platformHostnames
+     */
+    public static function getCookieDomain(
+        string $hostname,
+        Document $project,
+        array $localHosts = [],
+        array $platformHostnames = [],
+        bool $consoleRootSession = false,
+        ?Document $hostRule = null,
+    ): ?string {
+        $hostname = \strtolower(\trim($hostname));
+        $normalizedLocalHosts = self::normalizeHosts($localHosts);
+
+        if (self::isHostOnlyCookieTarget($hostname, $normalizedLocalHosts)) {
+            return null;
+        }
+
+        if ($project->getAttribute('$id', '') === 'console') {
+            if ($consoleRootSession) {
+                $registerable = self::registerableDomain($hostname);
+                if ($registerable !== '') {
+                    return '.' . $registerable;
+                }
+            }
+
+            return '.' . $hostname;
+        }
+
+        $parentDomain = self::findParentWebDomain($hostname, $project, $localHosts, $platformHostnames);
+        $projectSequence = $project->getSequence();
+
+        if (
+            $parentDomain !== null
+            && $hostRule !== null
+            && !$hostRule->isEmpty()
+            && \strtolower(\trim((string) $hostRule->getAttribute('domain', ''))) === $hostname
+            && $hostRule->getAttribute('type', '') === 'api'
+            && $hostRule->getAttribute('status', '') === 'verified'
+            && $projectSequence !== null
+            && $projectSequence !== ''
+            && (string) $hostRule->getAttribute('projectInternalId', '') === $projectSequence
+        ) {
+            return '.' . $parentDomain;
+        }
+
+        return '.' . $hostname;
+    }
+
+    /**
+     * @param array<int, mixed> $hosts
+     * @return array<int, string>
+     */
+    private static function normalizeHosts(array $hosts): array
+    {
+        return \array_map(
+            static fn (mixed $host): string => \strtolower(\trim((string) $host)),
+            $hosts,
+        );
+    }
+
+    /**
+     * Returns the lowercased registerable domain when valid and under a known public suffix.
+     */
+    private static function registerableDomain(string $hostname): string
+    {
+        $domain = new Domain($hostname);
+        if (!$domain->isKnown() || $domain->getName() === '') {
+            return '';
+        }
+
+        return \strtolower($domain->getRegisterable());
+    }
+
+    /**
+     * @param array<int, string> $normalizedLocalHosts
+     */
+    private static function isHostOnlyCookieTarget(string $hostname, array $normalizedLocalHosts): bool
+    {
+        return $hostname === ''
+            || \in_array($hostname, $normalizedLocalHosts, true)
+            || \filter_var(\trim($hostname, '[]'), FILTER_VALIDATE_IP) !== false;
+    }
+
+    /**
+     * Checks whether `$hostname` matches a configured platform hostname or shares
+     * a known non-local platform host's registerable domain.
+     *
+     * @param array<int, string> $platformHostnames
+     * @param array<int, string> $normalizedLocalHosts
+     */
+    private static function isPlatformHost(string $hostname, array $platformHostnames, array $normalizedLocalHosts): bool
+    {
+        $hostRegisterable = self::registerableDomain($hostname);
+
+        foreach ($platformHostnames as $platformHost) {
+            $normalized = \strtolower(\trim((string) $platformHost));
+            if ($normalized === '') {
+                continue;
+            }
+
+            if ($hostname === $normalized) {
+                return true;
+            }
+
+            if (\in_array($normalized, $normalizedLocalHosts, true) || \filter_var(\trim($normalized, '[]'), FILTER_VALIDATE_IP) !== false) {
+                continue;
+            }
+
+            if ($hostRegisterable !== '' && self::registerableDomain($normalized) === $hostRegisterable) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
