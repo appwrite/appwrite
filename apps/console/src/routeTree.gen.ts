@@ -30,6 +30,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as ApiChangelogDotjsonRouteImport } from './routes/_api/changelog[.]json'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
+import { Route as ApiOpenapiDotjsonRouteImport } from './routes/_api/openapi[.]json'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
 import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
@@ -585,6 +586,11 @@ const ApiChangelogDotjsonRoute = ApiChangelogDotjsonRouteImport.update({
 const ApiHelloRoute = ApiHelloRouteImport.update({
   id: '/_api/hello',
   path: '/hello',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOpenapiDotjsonRoute = ApiOpenapiDotjsonRouteImport.update({
+  id: '/_api/openapi.json',
+  path: '/openapi.json',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthJoinRoute = AuthJoinRouteImport.update({
@@ -3468,6 +3474,7 @@ export interface FileRoutesByFullPath {
   '/transfer': typeof TransferRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
   '/hello': typeof ApiHelloRoute
+  '/openapi.json': typeof ApiOpenapiDotjsonRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
   '/recovery': typeof AuthRecoveryRoute
@@ -3940,6 +3947,7 @@ export interface FileRoutesByTo {
   '/transfer': typeof TransferRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
   '/hello': typeof ApiHelloRoute
+  '/openapi.json': typeof ApiOpenapiDotjsonRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
   '/recovery': typeof AuthRecoveryRoute
@@ -4366,6 +4374,7 @@ export interface FileRoutesById {
   '/transfer': typeof TransferRoute
   '/_api/changelog.json': typeof ApiChangelogDotjsonRoute
   '/_api/hello': typeof ApiHelloRoute
+  '/_api/openapi.json': typeof ApiOpenapiDotjsonRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
   '/_auth/recovery': typeof AuthRecoveryRoute
@@ -4843,6 +4852,7 @@ export interface FileRouteTypes {
     | '/transfer'
     | '/changelog.json'
     | '/hello'
+    | '/openapi.json'
     | '/join'
     | '/mfa'
     | '/recovery'
@@ -5315,6 +5325,7 @@ export interface FileRouteTypes {
     | '/transfer'
     | '/changelog.json'
     | '/hello'
+    | '/openapi.json'
     | '/join'
     | '/mfa'
     | '/recovery'
@@ -5740,6 +5751,7 @@ export interface FileRouteTypes {
     | '/transfer'
     | '/_api/changelog.json'
     | '/_api/hello'
+    | '/_api/openapi.json'
     | '/_auth/join'
     | '/_auth/mfa'
     | '/_auth/recovery'
@@ -6219,6 +6231,7 @@ export interface RootRouteChildren {
   TransferRoute: typeof TransferRoute
   ApiChangelogDotjsonRoute: typeof ApiChangelogDotjsonRoute
   ApiHelloRoute: typeof ApiHelloRoute
+  ApiOpenapiDotjsonRoute: typeof ApiOpenapiDotjsonRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
   CliInstallDotshRoute: typeof CliInstallDotshRoute
   DomainsContinueRoute: typeof DomainsContinueRoute
@@ -6392,6 +6405,13 @@ declare module '@tanstack/react-router' {
       path: '/hello'
       fullPath: '/hello'
       preLoaderRoute: typeof ApiHelloRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/openapi.json': {
+      id: '/_api/openapi.json'
+      path: '/openapi.json'
+      fullPath: '/openapi.json'
+      preLoaderRoute: typeof ApiOpenapiDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/join': {
@@ -11611,6 +11631,7 @@ const rootRouteChildren: RootRouteChildren = {
   TransferRoute: TransferRoute,
   ApiChangelogDotjsonRoute: ApiChangelogDotjsonRoute,
   ApiHelloRoute: ApiHelloRoute,
+  ApiOpenapiDotjsonRoute: ApiOpenapiDotjsonRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,
   CliInstallDotshRoute: CliInstallDotshRoute,
   DomainsContinueRoute: DomainsContinueRoute,

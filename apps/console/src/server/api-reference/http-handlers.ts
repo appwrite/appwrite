@@ -127,8 +127,9 @@ export async function handleReferenceOpenApiSpecRequest(
 ): Promise<Response> {
   return handleReferenceError(async () => {
     const url = new URL(request.url)
-    const version = url.searchParams.get('version') ?? ''
-    const mode = url.searchParams.get('mode') ?? ''
+    // Bare requests (/openapi.json) get the Cloud server spec.
+    const version = url.searchParams.get('version') ?? 'cloud'
+    const mode = url.searchParams.get('mode') ?? 'server'
 
     if (!isReferenceVersion(version) || (mode !== 'client' && mode !== 'server')) {
       return badRequestResponse('Invalid OpenAPI spec parameters')

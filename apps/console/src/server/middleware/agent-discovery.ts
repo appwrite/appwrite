@@ -3,10 +3,14 @@ import {
   AI_CATALOG_CONTENT_TYPE,
   APPWRITE_AI_CATALOG_PATH,
   APPWRITE_AGENT_SKILLS_DISCOVERY_PATH,
+  APPWRITE_API_CATALOG_PATH,
+  API_CATALOG_CONTENT_TYPE,
+  DISCOVERY_CORS_HEADERS,
   APPWRITE_MCP_SERVER_CARD_PATH,
   MCP_SERVER_CARD_CONTENT_TYPE,
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
+  buildApiCatalogDocument,
   buildMcpServerCard,
   discoveryJsonResponse,
   serializeDiscoveryJson,
@@ -24,6 +28,10 @@ const DISCOVERY_HANDLERS: Record<
   [APPWRITE_AI_CATALOG_PATH]: {
     contentType: AI_CATALOG_CONTENT_TYPE,
     body: () => serializeDiscoveryJson(buildAiCatalogDocument()),
+  },
+  [APPWRITE_API_CATALOG_PATH]: {
+    contentType: API_CATALOG_CONTENT_TYPE,
+    body: () => serializeDiscoveryJson(buildApiCatalogDocument()),
   },
   [APPWRITE_AGENT_SKILLS_DISCOVERY_PATH]: {
     contentType: 'application/json; charset=utf-8',
@@ -54,5 +62,13 @@ export const agentDiscoveryMiddleware = createMiddleware({
   }
 
   trackServerPageview(request, { format: 'json' })
-  throw discoveryJsonResponse(handler.body(), handler.contentType)
+  const response = discoveryJsonResponse(handler.body(), handler.contentType)
+  if (pathname === APPWRITE_API_CATALOG_PATH) {
+    // RFC 9727 §2: GET and HEAD carry the api-catalog relation.
+    response.headers.set(
+      'Link',
+      `<${APPWRITE_API_CATALOG_PATH}>; rel="api-catalog"`,
+    )
+  }
+  throw response
 })
