@@ -1,0 +1,71 @@
+---
+layout: integration
+title: MCP with VS Code and GitHub Copilot
+description: Connect GitHub Copilot in VS Code to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-vscode/cover.avif
+category: mcp
+product:
+    vendor: Microsoft
+    description: "Visual Studio Code is Microsoft's code editor, and GitHub Copilot adds AI chat and an agent mode that can use MCP servers."
+platform:
+    - 'Cloud'
+---
+
+[Visual Studio Code](https://code.visualstudio.com) is Microsoft's code editor. [GitHub Copilot](https://github.com/features/copilot) adds AI assistance to it, and Copilot Chat's **Agent Mode** can call tools from MCP servers to complete multi-step tasks in your workspace.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects Copilot Chat to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that uses the HTTP transport and signs you in with OAuth, so there is nothing to install and no API key to create.
+
+Once connected, Copilot can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation while it codes. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+{% info title="Self-hosted Appwrite" %}
+The hosted MCP server authenticates against Appwrite Cloud. If you self-host Appwrite, use the [local MCP server](/docs/advanced/self-hosting/mcp) instead. It runs on your machine over stdio and connects to your instance with an API key.
+{% /info %}
+
+# How to implement
+
+To connect VS Code and GitHub Copilot to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: VS Code prompts you to sign in to Appwrite when the server starts.
+
+## Step 2: Add the Appwrite MCP server to VS Code
+
+Open the **Command Palette** (`CTRL + Shift + P` on Windows, `CMD + Shift + P` on macOS) and run `MCP: Open User Configuration`. Add the Appwrite server to the `mcp.json` file:
+
+```json
+{
+  "servers": {
+    "appwrite": {
+      "url": "https://mcp.appwrite.io/",
+      "type": "http"
+    }
+  }
+}
+```
+
+When the server starts, VS Code asks you to authenticate. Sign in to your Appwrite account in the browser window that opens and authorize access. Copilot Chat then connects to the server and loads its tools.
+
+## Step 3: Test the integration
+
+Open **Copilot Chat**, switch to **Agent Mode**, and try prompts like:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `Show me how to authenticate users with OAuth`
+
+# Read more about VS Code and the Appwrite MCP server
+
+If you would like to learn more about VS Code and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Use Appwrite with VS Code](/docs/tooling/ai/agents/vscode)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [Appwrite quick start prompts](/docs/tooling/ai/quickstart-prompts)
+- [GitHub Copilot](https://github.com/features/copilot)

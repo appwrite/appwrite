@@ -1340,6 +1340,22 @@ return [
                 'required' => false,
                 'question' => '',
             ],
+            [
+                'name' => '_APP_CONNECTIONS_STORAGE_CACHE',
+                'description' => 'DSN of the storage device for cached API responses, such as s3://key:secret@host/bucket?region=us-east-1. Empty keeps them on the local filesystem. Takes effect with _APP_STORAGE_CACHE_PERCENT.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_CACHE_PERCENT',
+                'description' => 'Percentage of cached API responses, from 0 to 100, stored on the _APP_CONNECTIONS_STORAGE_CACHE device. The rest stay on the local filesystem.',
+                'introduction' => '2.8.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [

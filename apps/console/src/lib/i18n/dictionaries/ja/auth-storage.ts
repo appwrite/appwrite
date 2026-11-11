@@ -466,8 +466,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     'このオプションを有効にすると、新しいセッションが作成された際にユーザーにメールが送信されます。',
   'Encrypt files stored in this bucket':
     'このバケットに保存されたファイルを暗号化',
-  "Encrypt files stored in this bucket. For file size above 20MB encryption is skipped even if it's enabled. This change will only apply to new files uploaded after the update.":
-    'このバケットに保存されたファイルを暗号化します。20MB を超えるファイルは有効でも暗号化がスキップされます。この変更は更新後にアップロードされる新しいファイルにのみ適用されます。',
+  'Encrypt files stored in this bucket. This change will only apply to new files uploaded after the update.':
+    'このバケットに保存されたファイルを暗号化します。この変更は更新後にアップロードされる新しいファイルにのみ適用されます。',
   Encryption: '暗号化',
   'Encryption setting has been updated': '暗号化設定を更新しました',
   "Enhance the user's account security by requiring a second sign-in method.":

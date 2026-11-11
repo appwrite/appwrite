@@ -214,10 +214,13 @@ class Action extends PlatformAction
 
         $validators = [];
         $mainValidator = null; // Validator to use for error description
+        $checks = []; // Every record check, to explain the one the domain actually has
+        $checkApex = null; // First A, else AAAA check, to explain an apex
 
         foreach ($targetCNAMEs as $targetCNAME) {
             $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
             $validators[] = $validator;
+            $checks[] = $validator;
 
             // A failure reports the last target, as the AnyOf over them did
             $mainValidator = $validator;
@@ -231,6 +234,8 @@ class Action extends PlatformAction
             if ((new IP(IP::V4))->isValid($targetA)) {
                 $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
                 $validators[] = $validator;
+                $checks[] = $validator;
+                $checkApex ??= $validator;
 
                 if (\is_null($mainValidator)) {
                     $mainValidator = $validator;
@@ -242,6 +247,8 @@ class Action extends PlatformAction
         if ((new IP(IP::V6))->isValid($targetAAAA)) {
             $validator = new $dnsValidatorClass($targetAAAA, Record::TYPE_AAAA, $dnsServers);
             $validators[] = $validator;
+            $checks[] = $validator;
+            $checkApex ??= $validator;
 
             if (\is_null($mainValidator)) {
                 $mainValidator = $validator;
@@ -249,9 +256,9 @@ class Action extends PlatformAction
         }
 
         // Query CAA and every target at once, so slow resolvers wait in parallel rather than add up
-        $checks = $validators;
+        $queries = $validators;
         if (!\is_null($caaValidator)) {
-            $checks['caa'] = $caaValidator;
+            $queries['caa'] = $caaValidator;
         }
 
         $validationStart = \microtime(true);
@@ -259,12 +266,12 @@ class Action extends PlatformAction
         $results = [];
         $errors = [];
 
-        foreach ($checks as $key => $check) {
+        foreach ($queries as $key => $query) {
             $wg->add();
 
-            \go(function () use ($check, $key, $domain, $wg, &$results, &$errors) {
+            \go(function () use ($query, $key, $domain, $wg, &$results, &$errors) {
                 try {
-                    $results[$key] = $check->isValid($domain->get());
+                    $results[$key] = $query->isValid($domain->get());
                 } catch (\Throwable $error) {
                     // Uncaught in a coroutine it would end the process, so the caller handles it instead
                     $errors[$key] = $error;
@@ -299,7 +306,18 @@ class Action extends PlatformAction
 
             Span::add('dns.timing', \microtime(true) - $validationStart);
             Span::add('dns.domain', $domain->get());
-            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
+
+            // Explain the record the domain has, such as an A record with the wrong address, rather than
+            // a CNAME it was never meant to have. An apex cannot hold a CNAME, so it is told about A or AAAA.
+            $explained = $domain->get() === $domain->getApex() ? ($checkApex ?? $mainValidator) : $mainValidator;
+            foreach ($checks as $check) {
+                if ($check->count > 0 || $check->reason !== '') {
+                    $explained = $check;
+                    break;
+                }
+            }
+
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $explained->getDescription());
         }
     }
 

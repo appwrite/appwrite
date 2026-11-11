@@ -54,7 +54,10 @@ use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
+use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Adapter\Storage;
 use Utopia\Cache\Cache;
+use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -684,6 +687,15 @@ return function (Container $context): void {
     }, ['projectId', 'dbForPlatform', 'console', 'authorization']);
 
     $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request, Document $project, Document $console, string $mode) {
+        /**
+         * The session the request is acting on, identified either by its secret or, failing
+         * that, by the sessionId claim inside an x-appwrite-jwt header.
+         *
+         * The JWT branch identifies a session without proving possession of its secret, so this
+         * resource is not evidence that the caller holds the session. A route that trades the
+         * session for another credential has to verify the secret itself with
+         * `$user->sessionVerify()`, the way `POST /v1/account/jwts` does.
+         */
         if ($user->isEmpty()) {
             return;
         }
@@ -776,6 +788,17 @@ return function (Container $context): void {
             || ! $proofForToken->verify($deviceSecret, $device->getAttribute('secret'))
             || DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($device->getAttribute('expire')))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
         ) {
+            return null;
+        }
+
+        // The sessions a device holds come from a subquery cached with the device, but a session can
+        // be deleted by paths that never touch the device: another browser, the Users API, account
+        // deletion, the expired-session cleanup. Read the verified device again past the cache, so it
+        // never lists a session that is gone. Only the endpoints that inject authDevice pay for it.
+        $dbForProject->purgeCachedDocument('devices', $deviceId);
+        $device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
+
+        if ($device->isEmpty()) {
             return null;
         }
 
@@ -1243,6 +1266,21 @@ return function (Container $context): void {
     $context->set('deviceForMigrations', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId())), ['project', 'telemetry']);
     $context->set('deviceForFunctions', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId())), ['project', 'telemetry']);
     $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())), ['project', 'telemetry']);
+
+    // Where a route's cached response lives: [the cache for this key, what to read on its miss].
+    // Without a connection, or at the default 0 percent, every key stays on the filesystem.
+    // The hash keeps a key on one side, so raising the percentage moves keys gradually.
+    $context->set('responseCache', fn (Document $project, HttpClientPool $cacheClient) => function (string $key) use ($project, $cacheClient): array {
+        $root = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId();
+        $filesystem = new Cache(new Filesystem($root));
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
+
+        if ($connection === '' || \crc32($key) % 100 >= (int) System::getEnv('_APP_STORAGE_CACHE_PERCENT', '0')) {
+            return [$filesystem, null];
+        }
+
+        return [new Cache(new Storage(getDevice($root, $connection, $cacheClient))), $filesystem];
+    }, ['project', 'cacheClient']);
 
     $context->set('embedder', fn () => new AppwriteAdapter(
         endpoint: System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'),

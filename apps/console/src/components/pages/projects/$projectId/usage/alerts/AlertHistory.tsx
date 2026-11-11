@@ -26,7 +26,7 @@ import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { AlertDelivery } from '../_components/AlertDelivery'
-import { AlertDrawer } from './AlertDrawer'
+import { AlertDrawer, acknowledgedBy } from './AlertDrawer'
 
 type Filter = 'all' | Alert['status']
 
@@ -230,6 +230,7 @@ export function AlertHistory({
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         alert={selected}
+        onAlertChange={setSelected}
       />
     </div>
   )
@@ -284,6 +285,11 @@ function AlertEntry({ alert, now, width, time, onOpen }: AlertEntryProps) {
             >
               {firing ? t('Firing') : t('Resolved')}
             </span>
+            {firing && alert.acknowledgedAt && (
+              <span className="shrink-0 truncate text-[11px] text-muted-foreground">
+                {acknowledgedBy(alert, t)}
+              </span>
+            )}
           </span>
           <span className="mt-0.5 flex flex-wrap text-[12px] text-muted-foreground sm:block sm:truncate">
             {/* Each part stays whole with the dot after it, so a narrow screen wraps between parts. */}

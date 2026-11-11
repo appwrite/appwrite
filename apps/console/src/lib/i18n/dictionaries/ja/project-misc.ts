@@ -705,6 +705,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Identified users, ranked by visitors': '識別されたユーザー (訪問者数順)',
   'No identified users in this range': 'この期間に識別されたユーザーはいません',
   'Event properties': 'イベントの属性',
+  'Models and tools': 'モデルとツール',
+  'Calls by model and by tool': 'モデル別・ツール別の呼び出し数',
+  'No calls in this range': 'この期間の呼び出しはありません',
   'Values of the props sent with your events':
     'イベントと一緒に送信された props の値',
   'No event props in this range': 'この期間にイベントの props はありません',
@@ -806,6 +809,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
   'What visitors are browsing with': '訪問者の利用環境',
+  'What visitors are using': '訪問者の利用デバイス',
   'Human visitors versus bots': '人間の訪問者とボットの比較',
   'AI agents and crawlers': 'AI エージェントとクローラー',
   Agents: 'エージェント',
@@ -1903,8 +1907,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'すべてのプロジェクトプロトコルが有効になります。',
   'All protocols for': 'すべてのプロトコル:',
   'All services for': 'すべてのサービス:',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'このドメインを削除してもよろしいですか? この操作は元に戻せません。',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'すべてのプロトコルを無効にしてもよろしいですか? 再有効化されるまで、これらのプロトコル経由のクライアントアクセスが無効になります。',
   'Are you sure you want to disconnect this git installation?':
@@ -3689,8 +3691,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'まだ受け取られていないリンクです。期限切れのリンクでは受け取れません。期限より前に無効にするには、リンクを削除してください。',
   'The project already belongs to this organization.':
     'プロジェクトはすでにこの組織に属しています。',
-  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
-    'このプロジェクトを転送できるのは、プロジェクトを管理できるロールを持つ組織メンバーだけです。組織のオーナーに転送を依頼するか、ロールの変更を依頼してください。',
+  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'このプロジェクトを転送できるのは組織のオーナーだけです。組織のオーナーに転送を依頼するか、ロールの変更を依頼してください。',
   'No permission': '権限なし',
   "You don't have permission to transfer projects in this organization.":
     'この組織でプロジェクトを転送する権限がありません。',
@@ -3903,6 +3905,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'View monitors': 'モニターを表示',
   'Waiting for recovery': '回復待ち',
   Watches: '監視対象',
+  Acknowledge: '確認済みにする',
+  'Acknowledged by {name}': '{name} が確認済み',
+  'Acknowledged by a member': 'メンバーが確認済み',
+  'Acknowledged with an API key': 'API キーで確認済み',
+  'Failed to acknowledge the alert': 'アラートを確認済みにできませんでした',
+  'Failed to undo the acknowledgement': '確認済みを取り消せませんでした',
+  'Let your team know someone is on it. It keeps firing until usage recovers.':
+    '誰かが対応中であることをチームに知らせます。使用量が回復するまでアラートは発生し続けます。',
+  'Nobody has acknowledged this alert':
+    'このアラートはまだ誰も確認していません',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':

@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { useParams, useNavigate, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
+  AlertCircle,
   Loader2,
   Globe,
   FileText,
@@ -35,7 +36,11 @@ import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
-import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
+import { CheckDomain } from '@/components/pages/projects/$projectId/settings/domains/CheckDomain'
+import {
+  getRuleStatusBadgeConfig,
+  isWaitingForDns,
+} from '@/lib/utils/status-badge'
 import {
   canRetryRule,
   canViewRuleLogs,
@@ -46,6 +51,7 @@ import type { Models } from '@appwrite.io/console'
 import { queryParamToMap } from '@/lib/table-filters'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useVisitUrl } from '@/hooks/use-visit-url'
 
@@ -88,6 +94,7 @@ export function View() {
     data: domainsData,
     isLoading: domainsLoading,
     isFetching: domainsFetching,
+    error: domainsError,
     refetch: refetchDomains} = useQuery(
     siteDomainsQueryOptions(
       projectId,
@@ -163,6 +170,28 @@ export function View() {
   }
 
   const hasFilters = filterMap.size > 0 || !!searchValue
+  const domainsErrorContent = (
+    <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+      <EmptyState
+        icon={AlertCircle}
+        title={t('Failed to load domains')}
+        description={getErrorMessage(domainsError)}
+        variant="card"
+        iconSize="md"
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void refetchDomains()
+            }}
+          >
+            {t('Try again')}
+          </Button>
+        }
+      />
+    </div>
+  )
   const domainsContent =
     rules.length === 0 ? (
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
@@ -259,7 +288,13 @@ export function View() {
                                   {t('View logs')}
                                 </Button>
                               )}
-                            {canRetryRule(rule) && (
+                            <CheckDomain
+                              projectId={projectId ?? ''}
+                              region={project?.region}
+                              rule={rule}
+                              organizationDomainId={getOrganizationDomainId(rule)}
+                            />
+                            {canRetryRule(rule) && !isWaitingForDns(rule) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -370,7 +405,7 @@ export function View() {
 
   return (
     <>
-      {domainsContent}
+      {domainsError ? domainsErrorContent : domainsContent}
       {selectedRule && (
         <>
           <VerifyDomain

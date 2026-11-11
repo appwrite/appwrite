@@ -429,7 +429,7 @@ class Certificates extends Action
             $logs .= $waiting && $e instanceof CertificateException && $e->isBlocked()
                 ? "\033[90m[{$date}] \033[33mSSL certificate is waiting on domain verification: \033[0m\n"
                 : "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
-            $logs .= \mb_strcut($e->getMessage(), 0, 500000) . "\n"; // Limit to 500kb
+            $logs .= \rtrim(\mb_strcut($e->getMessage(), 0, 500000)) . "\n"; // Limit to 500kb
 
             // Update attributes on certificate document
             $certificate->setAttributes([

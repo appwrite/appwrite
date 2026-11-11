@@ -25,14 +25,14 @@ trait Sequences
 
     private function emitSequenceCall(string $function, string $sequence, string $alias): static
     {
-        if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $sequence)) {
+        if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $sequence)) {
             throw new ValidationException('Invalid sequence name: ' . $sequence);
         }
 
         $expression = $function . '(' . $this->quote($sequence) . ')';
 
         if ($alias !== '') {
-            if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $alias)) {
+            if (! \preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $alias)) {
                 throw new ValidationException('Invalid sequence alias: ' . $alias);
             }
             $expression .= ' AS ' . $this->quote($alias);

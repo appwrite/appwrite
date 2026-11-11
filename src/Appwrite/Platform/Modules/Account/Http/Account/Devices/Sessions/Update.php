@@ -127,6 +127,11 @@ class Update extends Action
             'secret' => $proofForToken->hash($secret),
         ])));
 
+        // Signed out by another request after the device was read
+        if ($session->isEmpty()) {
+            throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
+        }
+
         $authorization->skip(fn () => $dbForProject->updateDocument('devices', $authDevice->getId(), new Document([
             'activeSessionId' => $session->getId(),
             'activeSessionInternalId' => $session->getSequence(),

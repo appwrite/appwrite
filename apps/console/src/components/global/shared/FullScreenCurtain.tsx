@@ -38,8 +38,10 @@ export function FullScreenCurtain({
       role={role}
       aria-modal={role === 'dialog' ? true : undefined}
       aria-live={role === 'alert' ? 'assertive' : undefined}
+      // A modal dialog open underneath turns off pointer events on the body,
+      // which would leave the curtain's buttons unclickable
       className={cn(
-        'fixed inset-0 z-[120] flex h-[100dvh] max-h-[100dvh] w-full items-center justify-center overflow-y-auto bg-background/95 backdrop-blur-sm',
+        'pointer-events-auto fixed inset-0 z-[120] flex h-[100dvh] max-h-[100dvh] w-full items-center justify-center overflow-y-auto bg-background/95 backdrop-blur-sm',
         className,
       )}
     >

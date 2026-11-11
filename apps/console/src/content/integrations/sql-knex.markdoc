@@ -1,0 +1,130 @@
+---
+layout: integration
+title: Knex.js with managed PostgreSQL and MySQL
+description: Use the Knex.js query builder and migrations with an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-knex/cover.avif
+category: databases
+product:
+    vendor: Knex.js
+    description: 'Knex.js is an open-source SQL query builder for Node.js with a migration CLI and support for PostgreSQL and MySQL.'
+platform:
+    - 'Cloud'
+---
+
+[Knex.js](https://knexjs.org/) is a SQL query builder for Node.js. It gives you a chainable API for queries, connection pooling, and a CLI for versioned migrations, and libraries such as Objection.js are built on top of it.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Knex connects to them through its regular `pg` and `mysql2` clients, so the query builder and migration CLI work with no Appwrite-specific configuration.
+
+Runtime traffic goes through the database's connection pooler, while the Knex CLI runs migrations over a direct connection to the engine.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To use Knex.js with an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database, click **Credentials**, and copy the connection string from the **DSN** or **.env** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Set the connection strings
+
+Use the pooled URL for runtime traffic and the direct URL for migrations:
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+
+`mysql.get()` returns the string on port `3306`. Copy it and change only the port to `6033` for the pooled URL.
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Install and configure Knex
+
+{% tabs %}
+{% tabsitem #config-postgresql title="PostgreSQL" %}
+```bash
+npm install knex pg
+```
+
+```ts
+import knex from 'knex';
+
+export const db = knex({
+    client: 'pg',
+    connection: process.env.DATABASE_URL,
+    pool: { min: 0, max: 10 }
+});
+```
+
+The connection string already carries `sslmode=require`. With discrete connection fields instead, set `ssl: { rejectUnauthorized: true }`.
+{% /tabsitem %}
+
+{% tabsitem #config-mysql title="MySQL" %}
+```bash
+npm install knex mysql2
+```
+
+```ts
+import knex from 'knex';
+
+export const db = knex({
+    client: 'mysql2',
+    connection: {
+        uri: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: true }
+    },
+    pool: { min: 0, max: 10 }
+});
+```
+{% /tabsitem %}
+{% /tabs %}
+
+On serverless, keep `pool.max` at `1` or a few connections per instance, and create the Knex instance once at module scope. Call `db.destroy()` on shutdown.
+
+## Step 4: Run migrations
+
+Add a `knexfile.js` whose `connection` reads `DIRECT_URL` and whose `migrations` block sets your migrations directory, then create and apply migrations over the direct port (`5432` or `3306`):
+
+```bash
+npx knex migrate:make create_users --knexfile knexfile.js
+npx knex migrate:latest --knexfile knexfile.js
+```
+
+Migrations issue DDL that needs a session-level connection, so never run them through the transaction-mode pooler. The primary user, `admin` or `admin.<hash>`, owns the database and can run schema changes.
+
+## Step 5: Test the integration
+
+Insert a row and read it back with the query builder. On PostgreSQL, `.returning()` gives you the inserted row. On MySQL, `insert` returns the new ID, so select the row back with it.
+
+Advisory locks, `LISTEN`/`NOTIFY`, user variables, temporary tables, and `SET LOCAL` need the direct port or a session-mode pooler. To test migrations in CI, run `knex migrate:latest` against a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch.
+
+# Read more about Knex.js and Appwrite Databases
+
+If you would like to learn more about Knex.js and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Knex with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/knex)
+- [Use Knex with a native MySQL database](/docs/products/databases/mysql/integrations/knex)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Knex.js documentation](https://knexjs.org/guide/)

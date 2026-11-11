@@ -1,0 +1,93 @@
+---
+layout: integration
+title: MariaDB Connector/Node.js with managed MySQL
+description: Query an Appwrite native MySQL database from Node.js with MariaDB Connector/Node.js
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-mariadb-connector/cover.avif
+category: databases
+product:
+    vendor: MariaDB
+    description: 'MariaDB Connector/Node.js is the promise-based Node.js driver maintained by MariaDB for MariaDB and MySQL databases.'
+platform:
+    - 'Cloud'
+---
+
+[MariaDB Connector/Node.js](https://mariadb.com/docs/connectors/mariadb-connector-nodejs) is a maintained JavaScript driver for MariaDB and MySQL databases, published on npm as `mariadb`. Its default API is promise-based, and it includes a connection pool. Prisma's MySQL driver adapter, `@prisma/adapter-mariadb`, uses it underneath.
+
+# How does the integration work?
+
+An Appwrite native MySQL database is a standard MySQL engine that Appwrite provisions in your project's region, with its own hostname, credentials, and TLS. MariaDB Connector/Node.js speaks the MySQL wire protocol, so it connects to the database like any other MySQL server, with no Appwrite-specific adapter.
+
+Long-running servers can connect to the engine directly on port `3306`. Serverless functions should connect through the database's connection pooler on port `6033`.
+
+{% info title="Available on Appwrite Cloud" %}
+Native MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To query an Appwrite native MySQL database with MariaDB Connector/Node.js, there are several steps you must complete:
+
+## Step 1: Create a native MySQL database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+Read the connection values from the database object with `mysql.get()` and an API key that has the `databases.read` scope. The username is `admin.<hash>`, where the hash matches the one in the hostname, and the database name is always `default`. Keep the password in an environment variable.
+
+## Step 2: Create a pool
+
+Install the driver with `npm install mariadb`, then create a pool and borrow connections from it:
+
+```js
+import mariadb from 'mariadb';
+
+const pool = mariadb.createPool({
+    host: 'db-<hash>.<region>.appwrite.center',
+    port: 3306,
+    user: 'admin.<hash>',
+    password: process.env.DB_PASSWORD,
+    database: 'default',
+    ssl: true,
+    connectionLimit: 10,
+    connectTimeout: 5000
+});
+```
+
+With `ssl: true`, the connector verifies the server certificate against Node's trusted root CAs. The certificate is signed by a public CA. If your runtime image doesn't ship a current trust store, pass `ssl: { ca: fs.readFileSync('./ca-bundle.crt') }` instead.
+
+Every connection in `connectionLimit`, across every running instance, counts against your specification's connection cap. Size it to that cap divided by your replica count, and leave headroom for migrations and admin tools.
+
+## Step 3: Use the pooler from serverless runtimes
+
+On serverless platforms, set `port: 6033` to connect through the pooler, keep `connectionLimit` at `1` or `2`, and create the pool at module scope so warm invocations reuse it. The pooler defaults to transaction mode, so keep prepared statements, temporary tables, user variables, and named locks on the direct port `3306`, or switch the pooler to session mode. Run migrations and dump or restore tools on the direct port.
+
+## Step 4: Test the connection
+
+Borrow a connection, run a parameterized query, and release it:
+
+```js
+let connection;
+
+try {
+    connection = await pool.getConnection();
+    const rows = await connection.query('SELECT NOW() AS time, ? AS greeting', ['hello']);
+    console.log(rows[0]);
+} finally {
+    if (connection) connection.release();
+}
+```
+
+If the connection times out, check the database's IP allowlist and raise `connectTimeout` to absorb cold starts on smaller specifications.
+
+# Read more about MariaDB Connector/Node.js and Appwrite Databases
+
+If you would like to learn more about MariaDB Connector/Node.js and Appwrite Databases, we have some resources that you should visit:
+
+- [Node.js drivers for native MySQL databases](/docs/products/databases/mysql/integrations/drivers)
+- [Connect to a native MySQL database](/docs/products/databases/mysql/connections)
+- [MySQL connection pooling](/docs/products/databases/mysql/connection-pooling)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [MariaDB Connector/Node.js documentation](https://mariadb.com/docs/connectors/mariadb-connector-nodejs)

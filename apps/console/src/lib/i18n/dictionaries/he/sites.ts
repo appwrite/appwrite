@@ -174,11 +174,22 @@ export const heSitesDictionary: Record<string, string> = {
   'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
+  'Waiting for DNS': 'ממתין ל-DNS',
+  'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
+    'Appwrite בודק את רשומות ה-DNS כל כמה דקות במשך 3 ימים לאחר הוספת הדומיין. לחצו על "בדוק עכשיו" כדי לבדוק מיד.',
+  'Appwrite stopped checking 3 days after the domain was added. Fix the DNS records, then Retry.':
+    'Appwrite הפסיק לבדוק 3 ימים לאחר הוספת הדומיין. תקנו את רשומות ה-DNS ולאחר מכן לחצו על "ניסיון חוזר".',
+  'Last check:': 'בדיקה אחרונה:',
+  'Check now': 'בדוק עכשיו',
+  'Not verified yet. Appwrite keeps checking.':
+    'עדיין לא אומת. Appwrite ממשיך לבדוק.',
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
   'Certificate blocked': 'הנפקת התעודה חסומה',
   'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
-    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה ביומנים ולאחר מכן נסו שוב.',
+    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים ולאחר מכן נסו שוב.',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs.':
+    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים.',
   'Renewal blocked': 'חידוש התעודה חסום',
   'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
@@ -411,6 +422,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Verify domain ownership': 'אימות בעלות על הדומיין',
   'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
     'הדומיין הזה כבר מפנה ל-Appwrite. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות.',
+  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
+    'הדומיין הזה נמצא בשימוש בפרויקט אחר. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות כדי להעביר אותו לכאן.',
   Required: 'שדה חובה',
   Invalid: 'לא תקין',
   'Invalid URL': 'כתובת URL לא תקינה',

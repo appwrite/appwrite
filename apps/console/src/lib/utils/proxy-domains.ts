@@ -95,6 +95,32 @@ export function getRecordName(domain: string): string {
   return normalized.slice(0, -(apex.length + 1))
 }
 
+export type VerificationMethod = 'cname' | 'nameservers' | 'a' | 'aaaa'
+
+/**
+ * Ways a rule's domain can be pointed at Appwrite, the one to show first
+ * leading. Most providers refuse a CNAME on an apex domain, so an apex leads
+ * with the nameservers (Cloud only), then the A and AAAA records the server
+ * also accepts, and keeps the CNAME last for providers that flatten it.
+ */
+export function getVerificationMethods(input: {
+  domain: string
+  cloud: boolean
+  cname?: string
+  a?: string
+  aaaa?: string
+  nameservers: string[]
+}): VerificationMethod[] {
+  const apex = getRecordName(input.domain) === '@'
+  const methods: VerificationMethod[] = []
+  if (input.cname && !apex) methods.push('cname')
+  if (input.cloud && input.nameservers.length > 0) methods.push('nameservers')
+  if (input.a && (!input.cloud || apex)) methods.push('a')
+  if (input.aaaa && (!input.cloud || apex)) methods.push('aaaa')
+  if (input.cname && apex) methods.push('cname')
+  return methods
+}
+
 /**
  * TXT record that proves a project owns a domain: the project ID at
  * `_appwrite.<domain>`, named relative to the registrable domain.
@@ -132,16 +158,6 @@ export function isCloud(): boolean {
 }
 
 /**
- * Check if domain is a built-in site subdomain (e.g. *.appwrite.site)
- * Skip apex registration for these per spec
- */
-export function isBuiltInSiteSubdomain(domain: string): boolean {
-  if (!domain?.trim()) return false
-  const d = domain.trim().toLowerCase()
-  return d.endsWith('.appwrite.site') || d.includes('_app_domain_sites')
-}
-
-/**
  * Ensure apex domain exists in organization (Cloud only).
  * Call before creating proxy rules for custom domains.
  * Ignores domain_already_exists as non-fatal.
@@ -149,10 +165,9 @@ export function isBuiltInSiteSubdomain(domain: string): boolean {
 export async function ensureApexDomainInOrganization(
   teamId: string,
   domain: string,
-  options?: { skipForSites?: boolean; region?: string },
+  options?: { region?: string },
 ): Promise<void> {
   if (!isCloud() || !teamId || !domain?.trim()) return
-  if (options?.skipForSites && isBuiltInSiteSubdomain(domain)) return
 
   // A zone Appwrite serves is not the organization's to register, as the
   // server's isAppwriteOwned holds. Cloud's zones are listed so the check holds

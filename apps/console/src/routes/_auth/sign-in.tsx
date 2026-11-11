@@ -60,7 +60,10 @@ const searchSchema = z.object({
   // Operator account switching: when an operator is already signed in, this keeps
   // the sign-in form (instead of bouncing to the console) so a second account can
   // join the account switching device. See ConsoleAccountSwitcherDialog.
-  addAccount: z.string().optional(),
+  // The router JSON-parses search values, so `?addAccount=1` arrives as the
+  // number 1. Keep it a number (a string would be re-serialized as `"1"` in the
+  // URL), and never fail the sign-in page over this flag.
+  addAccount: z.coerce.number().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_auth/sign-in')({
@@ -74,7 +77,7 @@ export const Route = createFileRoute('/_auth/sign-in')({
     if (account) {
       // Operator adding another account to the switcher: keep the sign-in form
       // rather than bouncing the already-signed-in operator back to the console.
-      if ((location.search as { addAccount?: string }).addAccount === '1') {
+      if ((location.search as { addAccount?: number }).addAccount === 1) {
         return
       }
       if (requiresConsoleEmailVerification(account)) {

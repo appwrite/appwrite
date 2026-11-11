@@ -10,6 +10,12 @@ use Utopia\Query\Schema\IndexType;
 use Utopia\Query\Schema\Order;
 use Utopia\Query\Schema\Table;
 
+/**
+ * DDL takes no bound parameters, so string literals (comments, defaults, enum
+ * values) are inlined with `\` and `'` escaped. That is only safe over a
+ * connection charset in which byte 0x5C cannot occur inside a multibyte
+ * character (utf8mb4, latin1), not GBK, BIG5, SJIS/CP932 or GB18030.
+ */
 abstract class Schema
 {
     /** @var (Closure(Statement): (array<mixed>|int))|null */
@@ -399,7 +405,7 @@ abstract class Schema
 
             if (isset($index->collations[$col])) {
                 $collation = $index->collations[$col];
-                if (! \preg_match('/^[A-Za-z0-9_]+$/', $collation)) {
+                if (! \preg_match('/^[A-Za-z0-9_]+$/D', $collation)) {
                     throw new ValidationException('Invalid collation: ' . $collation);
                 }
                 $part .= ' COLLATE ' . $collation;

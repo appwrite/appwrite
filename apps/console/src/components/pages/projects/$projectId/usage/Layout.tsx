@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import {
   refetchProjectBandwidthUsageQueries,
   refetchProjectDatabaseUsageQueries,
@@ -67,6 +67,7 @@ import { categorySupportsChartInterval } from './category-filter-state'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import {
+  alertsInfiniteQueryOptions,
   useMonitors,
   useProject,
   useOrganizationPlan,
@@ -503,9 +504,24 @@ function UsageLayoutContent({
   )
   const { features, isCloud, isSelfHosted } = useConsoleProfile()
   const { monitors } = useMonitors(features.alerts ? projectId : null)
+  // An acknowledged alert has someone on it, so it leaves the count while it keeps firing.
+  const { data: firing } = useInfiniteQuery(
+    alertsInfiniteQueryOptions(features.alerts ? projectId : null, {
+      status: 'firing',
+    }),
+  )
+  const acknowledged = new Set(
+    firing?.pages
+      .flatMap((page) => page.alerts)
+      .filter((alert) => alert.acknowledgedAt)
+      .map((alert) => alert.$id),
+  )
   const firingAlerts = features.alerts
     ? monitors.filter(
-        (monitor) => monitor.enabled && monitor.status === 'firing',
+        (monitor) =>
+          monitor.enabled &&
+          monitor.status === 'firing' &&
+          !acknowledged.has(monitor.alertId),
       ).length
     : null
   const alertMetric = features.alerts

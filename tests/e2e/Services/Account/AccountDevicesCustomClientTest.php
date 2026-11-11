@@ -152,6 +152,9 @@ final class AccountDevicesCustomClientTest extends Scope
         $sessionOneId = $response['body']['$id'];
         $userOneId = $response['body']['userId'];
 
+        // Joining a session rotates the device secret, so the browser carries the re-issued cookie on
+        $deviceCookie = $response['cookies'][$deviceKey];
+
         $response = $this->getDevice($deviceCookie);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -169,6 +172,8 @@ final class AccountDevicesCustomClientTest extends Scope
         $sessionTwoId = $response['body']['$id'];
         $userTwoId = $response['body']['userId'];
         $this->assertNotEquals($userOneId, $userTwoId);
+
+        $deviceCookie = $response['cookies'][$deviceKey];
 
         $response = $this->getDevice($deviceCookie);
 
@@ -293,6 +298,80 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals('user_device_not_found', $response['body']['type']);
     }
 
+    public function testDeviceSecretRotatesWhenASessionJoins(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+
+        $emailOne = \uniqid() . 'rotate1@localhost.test';
+        $emailTwo = \uniqid() . 'rotate2@localhost.test';
+        $password = 'password';
+        $this->createUserWithPassword($emailOne, $password, 'Rotate One');
+        $this->createUserWithPassword($emailTwo, $password, 'Rotate Two');
+
+        // A device whose secret a third party knows, planted in the browser before anyone signs in
+        $planted = $this->createDevice()['cookie'];
+
+        /**
+         * Test for SUCCESS - a session joining the device is handed a different device secret
+         */
+        $response = $this->signIn($planted, $emailOne, $password);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertArrayHasKey($deviceKey, $response['cookies']);
+        $sessionOneId = $response['body']['$id'];
+        $rotated = $response['cookies'][$deviceKey];
+        $this->assertNotEquals($planted, $rotated);
+
+        /**
+         * Test for FAILURE - the secret known before the sign-in no longer resolves the device
+         */
+        $response = $this->getDevice($planted);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_device_not_found', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - so it cannot mint a session cookie for the account that just signed in
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $deviceKey . '=' . $planted,
+            'x-appwrite-project' => $projectId,
+        ], [
+            'sessionId' => $sessionOneId,
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_device_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS - the browser, which received the new secret, keeps the device
+         */
+        $response = $this->getDevice($rotated);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($sessionOneId, $response['body']['activeSessionId']);
+
+        /**
+         * Test for SUCCESS - and every later sign-in rotates again, retiring the previous secret
+         */
+        $response = $this->signIn($rotated, $emailTwo, $password);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $again = $response['cookies'][$deviceKey];
+        $this->assertNotEquals($rotated, $again);
+
+        $this->assertEquals(404, $this->getDevice($rotated)['headers']['status-code']);
+
+        $response = $this->getDevice($again);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(2, $response['body']['sessions']);
+    }
+
     public function testDeviceHoldsOneSessionPerUser(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -308,6 +387,7 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(201, $first['headers']['status-code']);
         $firstSessionId = $first['body']['$id'];
         $firstSessionCookie = $first['cookies'][$sessionKey];
+        $device['cookie'] = $first['cookies']['a_device_' . $projectId];
 
         /**
          * Test for SUCCESS - signing in again as the same user replaces the session instead of adding one
@@ -316,6 +396,7 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(201, $second['headers']['status-code']);
         $secondSessionId = $second['body']['$id'];
         $this->assertNotEquals($firstSessionId, $secondSessionId);
+        $device['cookie'] = $second['cookies']['a_device_' . $projectId];
 
         $response = $this->getDevice($device['cookie']);
 
@@ -349,6 +430,184 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
     }
 
+    public function testDeviceHidesProviderTokens(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $sessionKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $device = $this->createDevice();
+        $deviceCookie = $deviceKey . '=' . $device['cookie'];
+
+        // Drive the mock provider back to the success URL, sending the device cookie on every hop as a browser would
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $deviceCookie,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // The cookies set when the flow started ride along on the Appwrite hops; the provider never sees them
+        $headers = ['x-appwrite-project' => $projectId];
+        $appwriteHeaders = $headers + ['cookie' => \implode('; ', [$deviceCookie, ...\array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies'])])];
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? $headers : $appwriteHeaders, followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+        $this->assertArrayHasKey($sessionKey, $response['cookies']);
+
+        // The OAuth2 session joined the device, rotating its secret: keep the re-issued cookie
+        $device['cookie'] = $response['cookies'][$deviceKey];
+
+        // The OAuth2 session holds provider tokens, so the empty values below are redaction, not absence
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionKey . '=' . $response['cookies'][$sessionKey],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('123456', $response['body']['providerAccessToken']);
+        $oauthSessionId = $response['body']['$id'];
+
+        $email = \uniqid() . 'provider@localhost.test';
+        $this->createUserWithPassword($email, 'password');
+        $response = $this->signIn($device['cookie'], $email, 'password');
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $device['cookie'] = $response['cookies'][$deviceKey];
+        $deviceCookie = $deviceKey . '=' . $device['cookie'];
+
+        /**
+         * Test for SUCCESS - neither device response carries another account's provider tokens
+         */
+        $responses = [
+            $this->getDevice($device['cookie']),
+            $this->client->call(Client::METHOD_POST, '/account/devices', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => $deviceCookie,
+            ]),
+        ];
+
+        foreach ($responses as $response) {
+            $this->assertContains($response['headers']['status-code'], [200, 201]);
+            $this->assertCount(2, $response['body']['sessions']);
+            $this->assertContains($oauthSessionId, \array_column($response['body']['sessions'], '$id'));
+
+            foreach ($response['body']['sessions'] as $session) {
+                $this->assertSame('', $session['providerAccessToken']);
+                $this->assertSame('', $session['providerRefreshToken']);
+            }
+        }
+    }
+
+    public function testDeviceDropsSessionsDeletedElsewhere(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $sessionKey = 'a_session_' . $projectId;
+
+        $emailOne = \uniqid() . 'elsewhere1@localhost.test';
+        $emailTwo = \uniqid() . 'elsewhere2@localhost.test';
+        $password = 'password';
+        $this->createUserWithPassword($emailOne, $password);
+        $userTwoId = $this->createUserWithPassword($emailTwo, $password);
+
+        $device = $this->createDevice();
+
+        $first = $this->signIn($device['cookie'], $emailOne, $password);
+        $this->assertEquals(201, $first['headers']['status-code']);
+        $firstSessionId = $first['body']['$id'];
+        $device['cookie'] = $first['cookies']['a_device_' . $projectId];
+
+        $second = $this->signIn($device['cookie'], $emailTwo, $password);
+        $this->assertEquals(201, $second['headers']['status-code']);
+        $secondSessionId = $second['body']['$id'];
+        $device['cookie'] = $second['cookies']['a_device_' . $projectId];
+
+        // Read the device once so it is cached holding both sessions
+        $response = $this->getDevice($device['cookie']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(2, $response['body']['sessions']);
+
+        /**
+         * Test for SUCCESS - user one signs out of the device's (inactive) session from another browser
+         */
+        $elsewhere = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $emailOne,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $elsewhere['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $firstSessionId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $sessionKey . '=' . $elsewhere['cookies'][$sessionKey],
+            'x-appwrite-project' => $projectId,
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS - the device no longer lists the deleted session
+         */
+        $response = $this->getDevice($device['cookie']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+        $this->assertEquals($secondSessionId, $response['body']['sessions'][0]['$id']);
+        $this->assertEquals($userTwoId, $response['body']['sessions'][0]['userId']);
+
+        /**
+         * Test for FAILURE - switching to the deleted session is a not-found, not a server error
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_device_' . $projectId . '=' . $device['cookie'],
+            'x-appwrite-project' => $projectId,
+        ], [
+            'sessionId' => $firstSessionId,
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_device_session_not_found', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS - a session deleted through the Users API also leaves the device
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userTwoId . '/sessions/' . $secondSessionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->getDevice($device['cookie']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals([], $response['body']['sessions']);
+    }
+
     public function testDeviceLivesAsLongAsItsNewestSession(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -369,19 +628,22 @@ final class AccountDevicesCustomClientTest extends Scope
         $short = $this->signIn($device['cookie'], $email, $password, ['duration' => 60]);
         $this->assertEquals(201, $short['headers']['status-code']);
         $this->assertLessThan($deviceExpire, $short['body']['expire']);
+        $device['cookie'] = $short['cookies'][$deviceKey];
 
         $response = $this->getDevice($device['cookie']);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($deviceExpire, $response['body']['expire']);
 
         /**
-         * Test for SUCCESS - a session that outlives the device extends it, and the cookie is re-issued to match
+         * Test for SUCCESS - a session that outlives the device extends it, and the cookie is re-issued
+         * with the rotated secret to match
          */
         $long = $this->signIn($device['cookie'], $email, $password);
         $this->assertEquals(201, $long['headers']['status-code']);
         $this->assertGreaterThan($deviceExpire, $long['body']['expire']);
         $this->assertArrayHasKey($deviceKey, $long['cookies']);
-        $this->assertEquals($device['cookie'], $long['cookies'][$deviceKey]);
+        $this->assertNotEquals($device['cookie'], $long['cookies'][$deviceKey]);
+        $device['cookie'] = $long['cookies'][$deviceKey];
 
         $response = $this->getDevice($device['cookie']);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -402,6 +664,8 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals(200, $refreshed['headers']['status-code']);
         $this->assertGreaterThan($deviceExpire, $refreshed['body']['expire']);
         $this->assertArrayHasKey($deviceKey, $refreshed['cookies']);
+        // No session joined the device, so the secret stands and only the expiry moved
+        $this->assertEquals($device['cookie'], $refreshed['cookies'][$deviceKey]);
 
         $response = $this->getDevice($device['cookie']);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -451,7 +715,9 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertIsArray($fallback);
         $this->assertArrayHasKey($sessionKey, $fallback);
         $this->assertArrayHasKey($deviceKey, $fallback);
-        $this->assertEquals($deviceFallback, $fallback[$deviceKey]);
+        // Joining a session rotated the device secret, so the entry carries the new one
+        $this->assertNotEquals($deviceFallback, $fallback[$deviceKey]);
+        $deviceFallback = $fallback[$deviceKey];
         $sessionExpire = $response['body']['expire'];
 
         /**
@@ -486,6 +752,111 @@ final class AccountDevicesCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['sessions']);
+    }
+
+    /**
+     * A JWT names the session it was minted from, but holding one is not proof of that
+     * session's secret: it is a short-lived, non-exchangeable delegation that function
+     * runtimes and app backends routinely hold. Adopting the named session would let any
+     * holder trade the token for the device secret, and the device session endpoint would
+     * then hand back a full, long-lived session secret for the account.
+     */
+    public function testDeviceDoesNotAdoptTheSessionNamedInAJwt(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $sessionKey = 'a_session_' . $projectId;
+
+        $email = \uniqid() . 'jwtdevice@localhost.test';
+        $password = 'password';
+        $this->createUserWithPassword($email, $password);
+
+        // A plain sign-in, no device cookie: the session lands on no device, the default
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $sessionId = $session['body']['$id'];
+        $sessionCookie = $session['cookies'][$sessionKey];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $sessionKey . '=' . $sessionCookie,
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+        $this->assertNotEmpty($jwt['body']['jwt']);
+
+        /**
+         * Test for SUCCESS - a JWT-only caller still gets a device, but the session the token
+         * names is not adopted into it
+         */
+        $device = $this->client->call(Client::METHOD_POST, '/account/devices', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertEquals(201, $device['headers']['status-code']);
+        $this->assertEquals([], $device['body']['sessions']);
+        $this->assertEquals('', $device['body']['activeSessionId']);
+        $this->assertArrayHasKey($deviceKey, $device['cookies']);
+
+        $deviceCookie = $device['cookies'][$deviceKey];
+
+        /**
+         * Test for FAILURE - so the device secret cannot be traded for a session cookie
+         */
+        $switch = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $deviceKey . '=' . $deviceCookie,
+            'x-appwrite-project' => $projectId,
+        ], [
+            'sessionId' => $sessionId,
+        ]);
+
+        $this->assertEquals(404, $switch['headers']['status-code']);
+        $this->assertEquals('user_device_session_not_found', $switch['body']['type']);
+        $this->assertArrayNotHasKey($sessionKey, $switch['cookies']);
+
+        /**
+         * Test for SUCCESS - and the session secret the browser holds was not rotated away
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $sessionKey . '=' . $sessionCookie,
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($email, $account['body']['email']);
+
+        /**
+         * Test for SUCCESS - the session secret itself does adopt, so signing in before the
+         * device exists still puts that account on the device
+         */
+        $adopted = $this->client->call(Client::METHOD_POST, '/account/devices', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $sessionKey . '=' . $sessionCookie,
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertEquals(201, $adopted['headers']['status-code']);
+        $this->assertCount(1, $adopted['body']['sessions']);
+        $this->assertEquals($sessionId, $adopted['body']['sessions'][0]['$id']);
+        $this->assertEquals($sessionId, $adopted['body']['activeSessionId']);
     }
 
     public function testAccountDevicesPolicy(): void
