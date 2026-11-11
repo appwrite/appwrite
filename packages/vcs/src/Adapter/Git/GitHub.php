@@ -46,7 +46,7 @@ class GitHub extends Git
      * A GitHub App JWT with fewer seconds than this left is signed afresh
      * before use, so a request in flight never carries an expired one.
      */
-    public const GITHUB_APP_JWT_RENEWAL_MARGIN = 60;
+    public const GITHUB_APP_JWT_REFRESH_MARGIN = 60;
 
     /**
      * Seconds an installation access token is shared through the cache.
@@ -163,7 +163,7 @@ class GitHub extends Git
             return $this->jwtToken;
         }
 
-        if ($this->jwtExpiresAt - time() < self::GITHUB_APP_JWT_RENEWAL_MARGIN) {
+        if ($this->jwtExpiresAt - time() < self::GITHUB_APP_JWT_REFRESH_MARGIN) {
             $now = time();
             $this->jwtExpiresAt = $now + self::GITHUB_APP_JWT_EXPIRY;
             $this->jwtToken = new JWT($this->signingKey, 'RS256')->encode([

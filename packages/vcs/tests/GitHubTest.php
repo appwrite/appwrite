@@ -585,11 +585,11 @@ final class GitHubTest extends Base
         $this->assertSame($requests->getArrayCopy()[0]['headers'], $requests->getArrayCopy()[1]['headers'], 'A fresh JWT must be reused');
 
         $expiry = new \ReflectionProperty(GitHub::class, 'jwtExpiresAt');
-        $expiry->setValue($adapter, time() + GitHub::GITHUB_APP_JWT_RENEWAL_MARGIN - 1);
+        $expiry->setValue($adapter, time() + GitHub::GITHUB_APP_JWT_REFRESH_MARGIN - 1);
         $invoke($adapter);
 
         $claims = $this->verifiedClaims($requests->getArrayCopy()[2]['headers'], $key['public']);
-        $this->assertGreaterThan(time() + GitHub::GITHUB_APP_JWT_RENEWAL_MARGIN, $expiry->getValue($adapter), 'An aged JWT must be signed afresh');
+        $this->assertGreaterThan(time() + GitHub::GITHUB_APP_JWT_REFRESH_MARGIN, $expiry->getValue($adapter), 'An aged JWT must be signed afresh');
         $this->assertSame($expiry->getValue($adapter), $claims['exp']);
         $this->assertGreaterThanOrEqual($first['exp'], $claims['exp']);
     }
@@ -625,7 +625,7 @@ final class GitHubTest extends Base
 
         $this->assertCount(1, $requests);
         $claims = $this->verifiedClaims($requests->getArrayCopy()[0]['headers'], $key['public']);
-        $this->assertGreaterThan(time() + GitHub::GITHUB_APP_JWT_RENEWAL_MARGIN, $claims['exp']);
+        $this->assertGreaterThan(time() + GitHub::GITHUB_APP_JWT_REFRESH_MARGIN, $claims['exp']);
         $this->assertSame(5678, $claims['iss']);
     }
 
