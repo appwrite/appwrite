@@ -10,6 +10,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UriInterface;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client as SwooleClient;
 use Swoole\Coroutine\System;
@@ -67,9 +68,21 @@ class Client implements Adapter
 
     private const string SETTING_SSL_PROTOCOLS = 'ssl_protocols';
 
+    private const float DEFAULT_IDLE_TIMEOUT = 4.0;
+
+    private const float KEEP_ALIVE_MARGIN = 1.0;
+
+    private const string HEADER_KEEP_ALIVE = 'keep-alive';
+
+    private const string KEEP_ALIVE_TIMEOUT_PATTERN = '/(?:^|[\s,;])timeout\s*=\s*"?(\d+)"?\s*(?:[,;]|$)/i';
+
+    private const int NANOSECONDS_PER_SECOND = 1_000_000_000;
+
     private readonly ResponseBuilder $responseBuilder;
 
     private bool $reuseConnections = false;
+
+    private float $idleTimeout = self::DEFAULT_IDLE_TIMEOUT;
 
     private bool $followRedirects = false;
 
@@ -81,13 +94,9 @@ class Client implements Adapter
      * it to null does not take it off. A client that has streamed would hand
      * every later response body to the stale sink and buffer nothing.
      */
-    private ?SwooleClient $connection = null;
+    private Slot $buffered;
 
-    private string $connectionKey = '';
-
-    private ?SwooleClient $streamConnection = null;
-
-    private string $streamConnectionKey = '';
+    private Slot $streamed;
 
     private Destinations $destinations;
 
@@ -107,6 +116,7 @@ class Client implements Adapter
 
         $this->responseBuilder = new ResponseBuilder($responseFactory, $streamFactory);
         $this->destinations = new Anywhere();
+        $this->forgetConnection();
     }
 
     public function __clone(): void
@@ -185,6 +195,19 @@ class Client implements Adapter
     {
         $clone = clone $this;
         $clone->reuseConnections = $enabled;
+
+        return $clone;
+    }
+
+    /**
+     * How long a reused connection may sit idle before it is redialled instead.
+     * A server's Keep-Alive timeout hint can shorten it, never extend it: the
+     * hint says nothing about load balancers or NAT between here and the server.
+     */
+    public function withIdleTimeout(float $seconds): static
+    {
+        $clone = clone $this;
+        $clone->idleTimeout = $this->seconds($seconds);
 
         return $clone;
     }
@@ -280,7 +303,7 @@ class Client implements Adapter
      */
     private function releaseSink(): void
     {
-        $this->streamConnection?->set(['write_func' => static function (): void {
+        $this->streamed->client?->set(['write_func' => static function (): void {
         }]);
     }
 
@@ -306,17 +329,7 @@ class Client implements Adapter
         // delivers it undecoded — so a stream must ask for identity instead.
         $streaming = $sink !== null;
 
-        $started = \microtime(true);
-        $client = $this->connect($request, $streaming);
-
         $settings = $this->settings + [self::SETTING_HTTP2 => false];
-
-        // Resolving the host in connect() spends part of the connect timeout; the socket
-        // gets what is left, so a slow lookup and a slow connect cannot each take it whole
-        $budget = $settings[self::SETTING_CONNECT_TIMEOUT];
-        if ((\is_int($budget) || \is_float($budget)) && $budget > 0) {
-            $settings[self::SETTING_CONNECT_TIMEOUT] = \max(0.001, $budget - (\microtime(true) - $started));
-        }
 
         // Through a proxy the connected address is the proxy's, so drop any proxy
         // unless the destination permits one.
@@ -377,19 +390,34 @@ class Client implements Adapter
 
             // Swoole generates its own multipart Content-Type (with its own
             // boundary) when files are attached, so drop ours to avoid a clash.
-            if ($multipart instanceof \Utopia\Psr7\Request\Multipart\Body) {
+            if ($multipart instanceof Body) {
                 $headers = $this->withoutContentType($headers);
             }
 
             // Read once: an IPv6 retry sends the same bytes, and a stream may not rewind
-            $data = $multipart instanceof \Utopia\Psr7\Request\Multipart\Body ? '' : (string) $body;
+            $data = $multipart instanceof Body ? '' : (string) $body;
 
             // An HTTP/1.1 origin may refuse a body-carrying method with no length (411)
-            if ($data === '' && !$multipart instanceof \Utopia\Psr7\Request\Multipart\Body && !$request->hasHeader(Header::CONTENT_LENGTH) && \in_array($request->getMethod(), [Method::POST, Method::PUT, Method::PATCH], true)) {
+            if ($data === '' && !$multipart instanceof Body && !$request->hasHeader(Header::CONTENT_LENGTH) && \in_array($request->getMethod(), [Method::POST, Method::PUT, Method::PATCH], true)) {
                 $headers[Header::CONTENT_LENGTH] = '0';
             }
         } catch (Throwable $throwable) {
             throw new InvalidArgumentException($throwable->getMessage(), (int) $throwable->getCode(), $throwable);
+        }
+
+        // Prepared before connecting: a slow body read after the idle check would let
+        // the connection outlast the margin its deadline keeps.
+        $started = \microtime(true);
+        $client = $this->connect($request, $streaming);
+        // Spent until this request completes, so a connection whose request failed is redialled
+        $slot = $this->slot($streaming);
+        $slot->deadline = 0;
+
+        // Resolving the host in connect() spends part of the connect timeout; the socket
+        // gets what is left, so a slow lookup and a slow connect cannot each take it whole
+        $budget = $settings[self::SETTING_CONNECT_TIMEOUT];
+        if ((\is_int($budget) || \is_float($budget)) && $budget > 0) {
+            $settings[self::SETTING_CONNECT_TIMEOUT] = \max(0.001, $budget - (\microtime(true) - $started));
         }
 
         $send = function (SwooleClient $client, array $settings) use ($request, $headers, $multipart, $data): bool {
@@ -408,7 +436,7 @@ class Client implements Adapter
 
                 // Swoole never clears requestBody and only clears uploadFiles after a
                 // successful response, so clear whichever this request omits.
-                if ($multipart instanceof \Utopia\Psr7\Request\Multipart\Body) {
+                if ($multipart instanceof Body) {
                     $client->requestBody = null;
                     $this->attachMultipart($client, $multipart);
                 } else {
@@ -501,6 +529,10 @@ class Client implements Adapter
             }
         }
 
+        if ($this->reuseConnections) {
+            $slot->deadline = $this->idleDeadline($headers);
+        }
+
         return $response;
     }
 
@@ -557,9 +589,14 @@ class Client implements Adapter
     }
 
     /**
-     * Swoole binds a client to its origin at construction and re-checks the
-     * socket before each request, reconnecting if it was dropped — so a cached
-     * client is reused per origin and stays usable even after an error.
+     * Swoole binds a client to its origin at construction and peeks the socket
+     * before each request, reconnecting if a close has already arrived, so a
+     * cached client is reused per origin. That peek cannot see a close crossing
+     * the request on the wire, nor an idle flow a middlebox dropped silently,
+     * and a request sent then fails and is not resent. So a reused connection
+     * idle past its deadline (the idle timeout, or the server's Keep-Alive
+     * timeout less a second when sooner), or whose last request failed, is
+     * closed and redialled.
      *
      * The object is cached for every hop of a single perform(), including
      * when keep-alive is off, so a 50-hop follow does not leave 50 clients
@@ -573,10 +610,10 @@ class Client implements Adapter
         $secure = $uri->getScheme() === 'https';
         $key = $uri->getHost() . ':' . $this->port($request) . ':' . ($secure ? 's' : 'p');
 
-        $connection = $streaming ? $this->streamConnection : $this->connection;
-        $connectionKey = $streaming ? $this->streamConnectionKey : $this->connectionKey;
+        $slot = $this->slot($streaming);
+        $connection = $slot->client;
 
-        if ($address === null && $connection instanceof SwooleClient && $connectionKey === $key) {
+        if ($address === null && $connection instanceof SwooleClient && $slot->key === $key) {
             $socket = $connection->socket ?? null;
             if ($secure && $socket instanceof Coroutine\Socket) {
                 // SSL_peek can fail with errno=0 after an abrupt TLS EOF. Swoole's
@@ -588,12 +625,7 @@ class Client implements Adapter
                 }
             }
 
-            // A client built with a hostname re-resolves it itself when it reconnects. One built
-            // with an address would keep dialing that address after the host moved, so a pooled
-            // connection that must reconnect is rebuilt with a fresh one.
-            $socket = $connection->socket ?? null;
-            $dialsHostname = $connection->host === \trim($uri->getHost(), '[]');
-            if (!$this->reuseConnections || $dialsHostname || ($connection->connected && $socket instanceof Coroutine\Socket && $socket->checkLiveness())) {
+            if ($this->reusable($slot, $connection, $uri)) {
                 return $connection;
             }
 
@@ -614,15 +646,26 @@ class Client implements Adapter
             throw new AdapterInitializationException($request, $throwable->getMessage(), (int) $throwable->getCode(), $throwable);
         }
 
-        if ($streaming) {
-            $this->streamConnection = $client;
-            $this->streamConnectionKey = $key;
-        } else {
-            $this->connection = $client;
-            $this->connectionKey = $key;
-        }
+        $slot->client = $client;
+        $slot->key = $key;
+        $slot->deadline = 0;
 
         return $client;
+    }
+
+    private function reusable(Slot $slot, SwooleClient $connection, UriInterface $uri): bool
+    {
+        if ($this->reuseConnections && $this->now() >= $slot->deadline) {
+            return false;
+        }
+
+        // A client built with a hostname re-resolves it itself when it reconnects. One built
+        // with an address would keep dialing that address after the host moved, so a pooled
+        // connection that must reconnect is rebuilt with a fresh one.
+        $socket = $connection->socket ?? null;
+        $dialsHostname = $connection->host === \trim($uri->getHost(), '[]');
+
+        return !$this->reuseConnections || $dialsHostname || ($connection->connected && $socket instanceof Coroutine\Socket && $socket->checkLiveness());
     }
 
     /**
@@ -670,10 +713,55 @@ class Client implements Adapter
 
     private function forgetConnection(): void
     {
-        $this->connection = null;
-        $this->connectionKey = '';
-        $this->streamConnection = null;
-        $this->streamConnectionKey = '';
+        $this->buffered = new Slot();
+        $this->streamed = new Slot();
+    }
+
+    private function slot(bool $streaming): Slot
+    {
+        return $streaming ? $this->streamed : $this->buffered;
+    }
+
+    /**
+     * When a connection that just answered stops being safe to reuse: after the idle
+     * timeout, or a second before the server's advertised Keep-Alive timeout when that
+     * is sooner, so the server never closes it while a request is on the way.
+     *
+     * @param array<string, array<int, string>> $headers
+     */
+    private function idleDeadline(array $headers): int
+    {
+        $idle = $this->idleTimeout;
+
+        foreach ($headers as $name => $values) {
+            if (strcasecmp($name, self::HEADER_KEEP_ALIVE) !== 0) {
+                continue;
+            }
+
+            foreach ($values as $value) {
+                if (preg_match(self::KEEP_ALIVE_TIMEOUT_PATTERN, $value, $matches) === 1) {
+                    $idle = \min($idle, \max(0.0, (float) $matches[1] - self::KEEP_ALIVE_MARGIN));
+                }
+            }
+        }
+
+        $now = $this->now();
+        if ($now === 0) {
+            return 0;
+        }
+
+        $deadline = $now + $idle * self::NANOSECONDS_PER_SECOND;
+
+        return $deadline >= PHP_INT_MAX ? PHP_INT_MAX : (int) $deadline;
+    }
+
+    /**
+     * Monotonic nanoseconds, or 0 should the clock be unavailable: every deadline
+     * then reads as passed, so a connection is redialled rather than risked.
+     */
+    private function now(): int
+    {
+        return (int) \hrtime(true);
     }
 
     private function port(RequestInterface $request): int

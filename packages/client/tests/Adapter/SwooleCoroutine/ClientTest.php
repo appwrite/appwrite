@@ -4,21 +4,27 @@ declare(strict_types=1);
 
 namespace Utopia\Client\Tests\Adapter\SwooleCoroutine;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Psr\Http\Message\StreamInterface;
+use RuntimeException;
 use Swoole\Coroutine;
 use Throwable;
 use Utopia\Client\Adapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Exception\AdapterPreconditionException;
 use Utopia\Client\Exception\NetworkException;
 use Utopia\Client\Exception\TlsException;
 use Utopia\Client\Tests\Adapter\AdapterContract;
 use Utopia\Client\Tests\Server\Http;
+use Utopia\Client\Tests\Server\Tally;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
+use ValueError;
 
 final class ClientTest extends AdapterContract
 {
@@ -268,6 +274,348 @@ final class ClientTest extends AdapterContract
         });
 
         return $received;
+    }
+
+    public function testItRedialsAConnectionIdlePastTheServersKeepAliveHint(): void
+    {
+        $tally = $this->serveKeepAlive('Keep-Alive: timeout=2', 1.0, function (int $port): void {
+            $client = $this->createAdapter()->withConnectionReuse();
+            $uri = 'http://127.0.0.1:' . $port . '/';
+
+            $this->assertEchoed($client, $uri, 'first');
+            $this->assertEchoed($client, $uri, 'second');
+            Coroutine::sleep(1.5);
+            $this->assertEchoed($client, $uri, 'third');
+        });
+
+        $this->assertSame(2, $tally->connections);
+        $this->assertSame(3, $tally->served);
+        $this->assertSame(0, $tally->resets);
+    }
+
+    public function testItRedialsAConnectionIdlePastTheDefaultWithoutAKeepAliveHint(): void
+    {
+        $tally = $this->serveKeepAlive(null, 4.1, function (int $port): void {
+            $client = $this->createAdapter()->withConnectionReuse();
+            $uri = 'http://127.0.0.1:' . $port . '/';
+
+            $this->assertEchoed($client, $uri, 'first');
+            Coroutine::sleep(4.2);
+            $this->assertEchoed($client, $uri, 'second');
+        });
+
+        $this->assertSame(2, $tally->connections);
+        $this->assertSame(2, $tally->served);
+        $this->assertSame(0, $tally->resets);
+    }
+
+    public function testItRedialsAnIdleConnectionDialledByAddress(): void
+    {
+        $tally = $this->serveKeepAlive('Keep-Alive: timeout=2', 1.0, function (int $port): void {
+            $client = $this->createAdapter(destinations: new PublicInternet(new IPRange('127.0.0.0/8')))->withConnectionReuse();
+            $uri = 'http://localhost:' . $port . '/';
+
+            $this->assertEchoed($client, $uri, 'first');
+            $this->assertEchoed($client, $uri, 'second');
+            Coroutine::sleep(1.5);
+            $this->assertEchoed($client, $uri, 'third');
+        });
+
+        $this->assertSame(2, $tally->connections);
+        $this->assertSame(3, $tally->served);
+        $this->assertSame(0, $tally->resets);
+    }
+
+    public function testItRedialsAStreamConnectionIdlePastTheServersKeepAliveHint(): void
+    {
+        $tally = $this->serveKeepAlive('Keep-Alive: timeout=2', 1.0, function (int $port): void {
+            $client = $this->createAdapter()->withConnectionReuse();
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/');
+
+            $stream = function () use ($client, $request): void {
+                $received = [];
+                $response = $client->stream($request, function (string $chunk) use (&$received): void {
+                    $received[] = $chunk;
+                });
+
+                $this->assertSame(200, $response->getStatusCode());
+                $this->assertSame(['ok'], $received);
+            };
+
+            $stream();
+            $stream();
+            Coroutine::sleep(1.5);
+            $stream();
+        });
+
+        $this->assertSame(2, $tally->connections);
+        $this->assertSame(3, $tally->served);
+        $this->assertSame(0, $tally->resets);
+    }
+
+    public function testItClosesAConnectionIdlePastTheConfiguredIdleTimeout(): void
+    {
+        $tally = $this->serveKeepAlive(null, 0.4, function (int $port): void {
+            $client = new Client()->withConnectionReuse()->withIdleTimeout(0.3);
+            $uri = 'http://127.0.0.1:' . $port . '/';
+
+            $this->assertEchoed($client, $uri, 'first');
+            $this->assertEchoed($client, $uri, 'second');
+            Coroutine::sleep(0.5);
+            $this->assertEchoed($client, $uri, 'third');
+        });
+
+        $this->assertSame(2, $tally->connections);
+        $this->assertSame(3, $tally->served);
+        $this->assertSame(0, $tally->resets);
+    }
+
+    public function testAKeepAliveHintCannotExtendTheIdleTimeout(): void
+    {
+        $tally = $this->serveKeepAlive('Keep-Alive: timeout=10', 0.4, function (int $port): void {
+            $client = new Client()->withConnectionReuse()->withIdleTimeout(0.3);
+            $uri = 'http://127.0.0.1:' . $port . '/';
+
+            $this->assertEchoed($client, $uri, 'first');
+            Coroutine::sleep(0.5);
+            $this->assertEchoed($client, $uri, 'second');
+        });
+
+        $this->assertSame(2, $tally->connections);
+        $this->assertSame(2, $tally->served);
+        $this->assertSame(0, $tally->resets);
+    }
+
+    public function testItRejectsANegativeIdleTimeout(): void
+    {
+        $this->expectException(ValueError::class);
+
+        new Client()->withIdleTimeout(-1.0);
+    }
+
+    public function testItRedialsAStreamConnectionWhoseLastRequestFailed(): void
+    {
+        $tally = $this->serveKeepAlive(null, \INF, function (int $port): void {
+            $client = $this->createAdapter()->withConnectionReuse();
+            $factory = new Request\Factory();
+
+            $failure = null;
+            try {
+                $client->stream($factory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/split'), static function (): never {
+                    throw new RuntimeException('The sink failed.');
+                });
+            } catch (NetworkException $networkException) {
+                $failure = $networkException;
+            }
+
+            $this->assertInstanceOf(NetworkException::class, $failure);
+
+            $received = [];
+            $response = $client->stream($factory->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/'), function (string $chunk) use (&$received): void {
+                $received[] = $chunk;
+            });
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('ok', \implode('', $received));
+        });
+
+        $this->assertSame(2, $tally->connections);
+        $this->assertSame(2, $tally->served);
+    }
+
+    /**
+     * @return array<string, array{string, float, int}>
+     */
+    public static function keepAliveHints(): array
+    {
+        return [
+            'zero' => ['Keep-Alive: timeout=0', 0.01, 2],
+            'within the margin' => ['Keep-Alive: timeout=1', 0.01, 2],
+            'quoted, before the deadline' => ['Keep-Alive: timeout="2"', 0.01, 1],
+            'quoted, after the deadline' => ['Keep-Alive: timeout="2"', 1.2, 2],
+            'header case' => ['KEEP-ALIVE: Timeout=2', 1.2, 2],
+            'with max' => ['Keep-Alive: timeout=2, max=100', 1.2, 2],
+            'malformed' => ['Keep-Alive: timeout=2x', 1.2, 1],
+        ];
+    }
+
+    #[DataProvider('keepAliveHints')]
+    public function testItReadsTheKeepAliveTimeoutHint(string $keepAlive, float $gap, int $connections): void
+    {
+        $tally = $this->serveKeepAlive($keepAlive, \INF, function (int $port) use ($gap): void {
+            $client = $this->createAdapter()->withConnectionReuse();
+            $uri = 'http://127.0.0.1:' . $port . '/';
+
+            $this->assertEchoed($client, $uri, 'first');
+            Coroutine::sleep($gap);
+            $this->assertEchoed($client, $uri, 'second');
+        });
+
+        $this->assertSame($connections, $tally->connections);
+        $this->assertSame(2, $tally->served);
+    }
+
+    public function testASameOriginRedirectKeepsOneReusedConnection(): void
+    {
+        $tally = $this->serveKeepAlive(null, \INF, function (int $port): void {
+            $client = $this->createAdapter()->withConnectionReuse()->withFollowRedirects();
+            $request = new Request\Factory()->createRequest(Method::GET, 'http://127.0.0.1:' . $port . '/redirect');
+
+            $response = $client->sendRequest($request);
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('ok', (string) $response->getBody());
+        });
+
+        $this->assertSame(1, $tally->connections);
+        $this->assertSame(2, $tally->served);
+    }
+
+    private function assertEchoed(Adapter $client, string $uri, string $body): void
+    {
+        $request = new Request\Factory()->createRequest(Method::POST, $uri)
+            ->withHeader('Content-Length', (string) \strlen($body))
+            ->withBody(new Stream\Factory()->createStream($body));
+
+        $response = $client->sendRequest($request);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame($body, (string) $response->getBody());
+    }
+
+    /**
+     * Runs $exchange against a keep-alive server on loopback that echoes each request
+     * body (or "ok" for none), sending the $keepAlive header line when given, and
+     * redirecting /redirect to /. /split answers with half its body, pauses, then sends
+     * the rest. A connection left idle past $dropAfter seconds since its last response is
+     * dropped the way a middlebox drops a flow: nothing reaches the client until its next
+     * request arrives, which is answered with a reset.
+     *
+     * @param callable(int): void $exchange
+     */
+    private function serveKeepAlive(?string $keepAlive, float $dropAfter, callable $exchange): Tally
+    {
+        $tally = new Tally();
+
+        $this->runAdapter(function () use ($keepAlive, $dropAfter, $exchange, $tally): void {
+            $server = new Coroutine\Socket(AF_INET, SOCK_STREAM, 0);
+            $server->bind('127.0.0.1', 0);
+            $server->listen();
+
+            $accepted = [];
+
+            Coroutine::create(static function () use ($server, $keepAlive, $dropAfter, $tally, &$accepted): void {
+                while (true) {
+                    $connection = $server->accept(0.05);
+                    if (!$connection instanceof Coroutine\Socket) {
+                        if ($server->errCode === SOCKET_ETIMEDOUT) {
+                            continue;
+                        }
+
+                        return;
+                    }
+
+                    $accepted[] = $connection;
+                    $tally->connections++;
+
+                    Coroutine::create(static function () use ($connection, $keepAlive, $dropAfter, $tally): void {
+                        $buffer = '';
+                        $answeredAt = null;
+
+                        while (true) {
+                            $peeked = $connection->peek(1);
+                            if ($peeked === '') {
+                                break;
+                            }
+
+                            if ($peeked === false) {
+                                if ($connection->errCode !== SOCKET_EAGAIN) {
+                                    break;
+                                }
+
+                                Coroutine::sleep(0.01);
+
+                                continue;
+                            }
+
+                            if ($answeredAt !== null && \microtime(true) - $answeredAt >= $dropAfter) {
+                                $connection->setOption(SOL_SOCKET, SO_LINGER, ['l_onoff' => 1, 'l_linger' => 0]);
+                                $tally->resets++;
+
+                                break;
+                            }
+
+                            $chunk = $connection->recv(65536, 1.0);
+                            if (!\is_string($chunk) || $chunk === '') {
+                                break;
+                            }
+
+                            $buffer .= $chunk;
+                            $parts = \explode("\r\n\r\n", $buffer, 2);
+                            if (\count($parts) < 2) {
+                                continue;
+                            }
+
+                            $lines = \explode("\r\n", $parts[0]);
+                            $length = 0;
+                            foreach ($lines as $line) {
+                                if (\stripos($line, 'content-length:') === 0) {
+                                    $length = (int) \trim(\substr($line, 15));
+                                }
+                            }
+
+                            if (\strlen($parts[1]) < $length) {
+                                continue;
+                            }
+
+                            $body = \substr($parts[1], 0, $length);
+                            $buffer = \substr($parts[1], $length);
+                            $path = \explode(' ', $lines[0])[1] ?? '';
+                            $redirect = $path === '/redirect';
+                            $echo = match ($path) {
+                                '/redirect' => '',
+                                '/split' => 'first-half',
+                                default => $body === '' ? 'ok' : $body,
+                            };
+
+                            $connection->sendAll(
+                                ($redirect ? "HTTP/1.1 302 Found\r\nLocation: /\r\n" : "HTTP/1.1 200 OK\r\n")
+                                . 'Content-Length: ' . \strlen($echo . ($path === '/split' ? 'second-half' : '')) . "\r\nConnection: keep-alive\r\n"
+                                . ($keepAlive === null ? '' : $keepAlive . "\r\n")
+                                . "\r\n" . $echo,
+                            );
+
+                            if ($path === '/split') {
+                                Coroutine::sleep(0.2);
+                                $connection->sendAll('second-half');
+                            }
+
+                            $tally->served++;
+                            $answeredAt = \microtime(true);
+                        }
+
+                        $connection->close();
+                    });
+                }
+            });
+
+            try {
+                $bound = $server->getsockname();
+                $port = \is_array($bound) ? $bound['port'] ?? null : null;
+                if (!\is_int($port)) {
+                    throw new RuntimeException('Unable to read the keep-alive server port.');
+                }
+
+                $exchange($port);
+            } finally {
+                $server->close();
+                foreach ($accepted as $connection) {
+                    $connection->close();
+                }
+            }
+        });
+
+        return $tally;
     }
 
     public function testItReconnectsBeforePostingToAnAbruptlyClosedIdleTlsConnection(): void

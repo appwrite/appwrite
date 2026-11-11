@@ -15,18 +15,6 @@ This project follows semantic versioning.
 - `Utopia\Client\Destinations` decides where a client may connect. `Client` takes one as an optional second constructor argument and through `withDestinations()`; the default is `Anywhere`.
 - `Destinations\Anywhere` (any address, any proxy), `Destinations\PublicInternet` (refuses private, reserved and special-use ranges, except the `IPRange`s it is given), and `Destinations\IPRange` (validated in its constructor).
 - `Utopia\Client\PHPStan\DisallowRawCurlExtension`, a PHPStan extension that reports `curl_init()` and `curl_multi_init()` outside the cURL adapter.
-
-### Removed
-
-- Remove the `Utopia\Client` and `Utopia\Psr18\StreamingClientInterface` aliases that 0.5 kept for the old names. Use `Utopia\Client\Client` and `Utopia\Client\Psr18\StreamingClientInterface`.
-
-### Changed
-
-- Move `Utopia\Client` to `Utopia\Client\Client` and `Utopia\Psr18\StreamingClientInterface` to `Utopia\Client\Psr18\StreamingClientInterface`, so the package declares a single `Utopia\Client\` prefix. The old names remained available as aliases in 0.5.
-- Require `utopia-php/psr7` `^0.2.1` so `Request\Factory::multipart` always sets `Content-Type` with the body boundary.
-
-### Added
-
 - `withFollowRedirects()` takes an optional `int $maxHops` (default `Redirect::MAX_HOPS`, 50) that caps how many redirects are followed before a `ProtocolException`. Callers need no change; custom `Adapter` implementations must add the parameter to their `withFollowRedirects()` signature.
 - Initial PSR-18 HTTP client wrapper: `Utopia\Client`.
 - Immutable client defaults for headers, base URI, basic auth, and bearer auth.
@@ -47,3 +35,17 @@ This project follows semantic versioning.
 - Opt-in W3C Trace Context propagation via `withTracePropagation()` (off by default): forwards the active `utopia-php/span` trace downstream as a `traceparent` header.
 - `Utopia\Client\Decorator` base class for composing adapter decorators.
 - PHP 8.4+ tooling with Pint, PHPStan level 10, Rector, PHPUnit, Composer audit, and GitHub Actions CI.
+- `withIdleTimeout()` on the Swoole adapter: how long a reused connection may sit idle before it is redialled (4 seconds by default). A server's `Keep-Alive` timeout hint can shorten it but never extend it.
+
+### Changed
+
+- Move `Utopia\Client` to `Utopia\Client\Client` and `Utopia\Psr18\StreamingClientInterface` to `Utopia\Client\Psr18\StreamingClientInterface`, so the package declares a single `Utopia\Client\` prefix. The old names remained available as aliases in 0.5.
+- Require `utopia-php/psr7` `^0.2.1` so `Request\Factory::multipart` always sets `Content-Type` with the body boundary.
+
+### Removed
+
+- Remove the `Utopia\Client` and `Utopia\Psr18\StreamingClientInterface` aliases that 0.5 kept for the old names. Use `Utopia\Client\Client` and `Utopia\Client\Psr18\StreamingClientInterface`.
+
+### Fixed
+
+- The Swoole adapter no longer sends on a reused connection idle longer than the server's `Keep-Alive` timeout less a second, or the idle timeout, whichever is sooner. The server or a middlebox could drop such a connection as the request went out, which surfaced as `ConnectionException` "Connection reset by peer"; the connection is now closed and redialled first. A connection whose last request failed is redialled too.
