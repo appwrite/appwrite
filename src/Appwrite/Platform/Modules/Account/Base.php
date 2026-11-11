@@ -97,9 +97,11 @@ abstract class Base extends Action
         }
 
         $protocol = self::resolveRequestProtocol($request, $forceHttps);
-        $rewritten = \preg_replace('#^https?://#i', $protocol . '://', $redirectBase, 1);
-        if ($rewritten !== null) {
-            $redirectBase = $rewritten;
+        $lowerRedirectBase = \strtolower($redirectBase);
+        if (\str_starts_with($lowerRedirectBase, 'https://')) {
+            $redirectBase = $protocol . '://' . \substr($redirectBase, 8);
+        } elseif (\str_starts_with($lowerRedirectBase, 'http://')) {
+            $redirectBase = $protocol . '://' . \substr($redirectBase, 7);
         }
 
         if (\parse_url($redirectBase, PHP_URL_PORT) !== null) {

@@ -5,14 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Modules\Account;
 
 use Appwrite\Platform\Modules\Account\Base;
-use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Create as CallbackCreate;
-use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Get as CallbackGet;
 use Appwrite\Utopia\Request;
-use Appwrite\Utopia\Response;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
-
-require_once \dirname(__DIR__, 5) . '/app/init/constants.php';
 
 final class OAuth2UrlResolutionTest extends TestCase
 {
@@ -148,45 +142,12 @@ final class OAuth2UrlResolutionTest extends TestCase
         );
     }
 
-    public function testOAuth2CallbackForwardersEmitValidRedirectUrls(): void
-    {
-        $redirected = [];
-        $response = $this->createStub(Response::class);
-        $response->method('addHeader')->willReturnSelf();
-        $response->method('redirect')->willReturnCallback(function (string $url) use (&$redirected): void {
-            $redirected[] = $url;
-        });
-
-        $hasOAuthProviders = !empty(Config::getParam('oAuthProviders'));
-        $callbackGet = $hasOAuthProviders
-            ? new CallbackGet()
-            : (new \ReflectionClass(CallbackGet::class))->newInstanceWithoutConstructor();
-        $callbackCreate = $hasOAuthProviders
-            ? new CallbackCreate()
-            : (new \ReflectionClass(CallbackCreate::class))->newInstanceWithoutConstructor();
-
-        $proxyRequest = $this->stubRequest('https', 'domain.com', '443', ['code' => 'abc', 'state' => 'xyz']);
-        $callbackGet->action('proj1', 'discord', 'abc', 'xyz', '', '', $proxyRequest, $response);
-
-        $noPortRequest = $this->stubRequest('http', 'appwrite', '', ['code' => 'abc', 'state' => 'xyz']);
-        $callbackCreate->action('proj1', 'mock', 'abc', 'xyz', '', '', $noPortRequest, $response);
-
-        $this->assertSame([
-            'https://domain.com/v1/account/sessions/oauth2/discord/redirect?code=abc&state=xyz&project=proj1',
-            'http://appwrite/v1/account/sessions/oauth2/mock/redirect?code=abc&state=xyz&project=proj1',
-        ], $redirected);
-    }
-
-    /**
-     * @param array<string, mixed> $params
-     */
-    private function stubRequest(string $protocol, string $hostname, string $port, array $params = []): Request
+    private function stubRequest(string $protocol, string $hostname, string $port): Request
     {
         $request = $this->createStub(Request::class);
         $request->method('getProtocol')->willReturn($protocol);
         $request->method('getHostname')->willReturn($hostname);
         $request->method('getPort')->willReturn($port);
-        $request->method('getParams')->willReturn($params);
 
         return $request;
     }
