@@ -54,7 +54,10 @@ final class RoutesTest extends TestCase
                 $injections = $route->getInjections();
                 $proven = \array_key_exists('secret', $params) && (\array_key_exists('proofForCode', $injections) || \array_key_exists('proofForToken', $injections));
 
-                if (! $proven && ! \array_key_exists('otp', $params)) {
+                // A console route that stores an `otp`, a mock phone's, sets the code rather than guessing it.
+                $guessed = \array_key_exists('otp', $params) && \in_array($route->getLabel('scope', ''), ['account', 'public'], true);
+
+                if (! $proven && ! $guessed) {
                     continue;
                 }
 
@@ -63,12 +66,10 @@ final class RoutesTest extends TestCase
 
                 /** @var list<Limit> $limits */
                 $limits = $route->getLabel('abuse', []);
-                if ($proven) {
-                    $this->assertNotEmpty($limits, "{$path} verifies a secret against a proof but declares no abuse limit.");
-                }
+                $this->assertNotEmpty($limits, "{$path} verifies a secret but declares no abuse limit.");
 
                 foreach ($limits as $limit) {
-                    $chosen = \array_values(\array_filter($limit->by, fn (string $part): bool => \str_starts_with($part, 'param.')));
+                    $chosen = \array_values(\array_filter($limit->by, fn (string $part): bool => $part === 'userId' || \str_starts_with($part, 'param.')));
                     if ($chosen === []) {
                         continue;
                     }
@@ -84,5 +85,6 @@ final class RoutesTest extends TestCase
         $this->assertContains('POST /v1/account/sessions/token', $verifying);
         $this->assertContains('PUT /v1/account/verifications/email/otp', $verifying);
         $this->assertContains('PUT /v1/account/mfa/challenges', $verifying);
+        $this->assertContains('PUT /v1/account/mfa/authenticators/:type', $verifying);
     }
 }
