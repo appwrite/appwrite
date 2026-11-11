@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Databases;
+namespace Appwrite\Utopia\Cache;
 
 use Utopia\Cache\Cache;
 use Utopia\Cache\Exception\Unavailable;

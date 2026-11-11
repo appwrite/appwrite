@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Databases;
+namespace Tests\Unit\Utopia\Cache;
 
-use Appwrite\Databases\ListCache;
+use Appwrite\Utopia\Cache\ListCache;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;

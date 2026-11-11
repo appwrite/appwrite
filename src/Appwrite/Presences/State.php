@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Utopia\Cache\ListCache;
 use Appwrite\Utopia\Database\Documents\User;
 use Throwable;
 use Utopia\Database\Capability;
@@ -709,44 +710,62 @@ class State
         );
     }
 
+    /**
+     * The version a list read must take before it queries, so what it caches is reachable only while
+     * that version stands. A purge changes it, so rows read before a permission change and cached
+     * after the purge that followed it land where no later read looks.
+     */
+    public function getListCacheVersion(Database $dbForProject): ?string
+    {
+        return $this->getListCache($dbForProject)->getVersion();
+    }
+
     public function getListCacheField(
         Database $dbForProject,
         array $roles,
         array $queries,
         string $type,
-        int $ttl
+        int $ttl,
+        ?string $version
     ): mixed {
-        $cacheField = $this->getListCacheFieldKey($roles, $queries, $type);
-        [$collectionKey] = $dbForProject->getCacheKeys(self::COLLECTION_ID);
-
-        try {
-            return $dbForProject->getCache()->load($collectionKey, $ttl, $cacheField);
-        } catch (\Throwable) {
-            return null;
-        }
+        return $this->getListCache($dbForProject)->load(
+            $this->getListCacheFieldKey($roles, $queries, $type),
+            $ttl,
+            $version,
+        );
     }
 
+    /**
+     * @param ?string $version the version taken before the read, from {@see getListCacheVersion}
+     */
     public function setListCacheField(
         Database $dbForProject,
         array $roles,
         array $queries,
         string $type,
-        mixed $value
+        mixed $value,
+        ?string $version
     ): void {
-        $cacheField = $this->getListCacheFieldKey($roles, $queries, $type);
-        [$collectionKey] = $dbForProject->getCacheKeys(self::COLLECTION_ID);
-
-        try {
-            $dbForProject->getCache()->save($collectionKey, $value, $cacheField);
-        } catch (\Throwable) {
-        }
+        $this->getListCache($dbForProject)->save(
+            [$this->getListCacheFieldKey($roles, $queries, $type) => $value],
+            $version,
+        );
     }
 
     public function purgeListCache(Database $dbForProject): bool
     {
+        return $this->getListCache($dbForProject)->purge();
+    }
+
+    /**
+     * Cached list responses of the presences collection. They share the collection's cache key, so a
+     * schema change drops them too.
+     */
+    private function getListCache(Database $dbForProject): ListCache
+    {
         [$collectionKey] = $dbForProject->getCacheKeys(self::COLLECTION_ID);
 
-        return $dbForProject->getCache()->purge($collectionKey);
+        return new ListCache($dbForProject->getCache(), $collectionKey);
     }
 
     /**
