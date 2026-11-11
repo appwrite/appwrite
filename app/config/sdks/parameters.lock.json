@@ -2029,7 +2029,9 @@
             "deploymentRetention",
             "interval",
             "description",
-            "providerComments"
+            "providerComments",
+            "providerAutoDeploy",
+            "providerCommitStatus"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2174,7 +2176,9 @@
             "deploymentRetention",
             "interval",
             "description",
-            "providerComments"
+            "providerComments",
+            "providerAutoDeploy",
+            "providerCommitStatus"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -3655,7 +3659,9 @@
             "deploymentRetention",
             "scopes",
             "description",
-            "providerComments"
+            "providerComments",
+            "providerAutoDeploy",
+            "providerCommitStatus"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -3792,7 +3798,9 @@
             "deploymentRetention",
             "scopes",
             "description",
-            "providerComments"
+            "providerComments",
+            "providerAutoDeploy",
+            "providerCommitStatus"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -6237,7 +6245,9 @@
             "deploymentRetention",
             "interval",
             "description",
-            "providerComments"
+            "providerComments",
+            "providerAutoDeploy",
+            "providerCommitStatus"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -6372,7 +6382,9 @@
             "deploymentRetention",
             "interval",
             "description",
-            "providerComments"
+            "providerComments",
+            "providerAutoDeploy",
+            "providerCommitStatus"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -7781,7 +7793,9 @@
             "deploymentRetention",
             "scopes",
             "description",
-            "providerComments"
+            "providerComments",
+            "providerAutoDeploy",
+            "providerCommitStatus"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -7908,7 +7922,9 @@
             "deploymentRetention",
             "scopes",
             "description",
-            "providerComments"
+            "providerComments",
+            "providerAutoDeploy",
+            "providerCommitStatus"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
