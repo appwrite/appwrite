@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { GitPullRequest, MessageSquare, CircleCheck } from 'lucide-react'
+import { GitCommitHorizontal, MessageSquare, CircleCheck } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -77,7 +77,7 @@ export function GitSilentModeCard({
   const rows = [
     {
       key: 'autoDeploy',
-      icon: GitPullRequest,
+      icon: GitCommitHorizontal,
       label: t('Deploy on push'),
       description: t(
         'Build every push that matches your branch and path rules. When off, deploy from Create deployment.',
@@ -106,21 +106,25 @@ export function GitSilentModeCard({
     },
   ] as const
 
-  const summary = !settings.autoDeploy
-    ? settings.commitStatus
-      ? t(
-          'Pushes do nothing. Manual deployments from Git report their status on the commit.',
-        )
-      : t('Pushes do nothing. Deploy manually from Create deployment.')
-    : [
-        t('Every matching push builds'),
-        settings.commitStatus
-          ? t('its commit shows the build status')
-          : t('commits show no status'),
-        settings.comments
-          ? t('pull requests get a build comment')
-          : t('pull requests stay quiet'),
-      ].join(', ') + '.'
+  // Only explain the result when it differs from the default, where the switches already say it
+  const summary =
+    settings.autoDeploy && settings.comments && settings.commitStatus
+      ? ''
+      : !settings.autoDeploy
+        ? settings.commitStatus
+          ? t(
+              'Pushes do nothing. Manual deployments from Git report their status on the commit.',
+            )
+          : t('Pushes do nothing. Deploy manually from Create deployment.')
+        : [
+            t('Every matching push builds'),
+            settings.commitStatus
+              ? t('its commit shows the build status')
+              : t('commits show no status'),
+            settings.comments
+              ? t('pull requests get a build comment')
+              : t('pull requests stay quiet'),
+          ].join(', ') + '.'
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -167,7 +171,9 @@ export function GitSilentModeCard({
             )
           })}
         </div>
-        <p className="text-[12px] text-muted-foreground">{summary}</p>
+        {summary && (
+          <p className="text-[12px] text-muted-foreground">{summary}</p>
+        )}
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">
         <Button
