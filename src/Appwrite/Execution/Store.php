@@ -93,6 +93,8 @@ class Store
 
     private readonly RequestFactory $requestFactory;
 
+    private readonly Writer $writer;
+
     private ?string $host = null;
 
     private int $port = 8123;
@@ -118,6 +120,7 @@ class Store
         private readonly int $retention = 1_209_600,
     ) {
         $this->requestFactory = new RequestFactory();
+        $this->writer = new Writer($this->insert(...));
     }
 
     public function setup(): void
@@ -244,12 +247,12 @@ class Store
             $rows[] = $this->snapshot($projectId, $execution, false);
         }
 
-        $this->insert($rows);
+        $this->writer->write($rows);
     }
 
     public function delete(string $projectId, Document $execution): void
     {
-        $this->insert([$this->snapshot($projectId, $execution, true)]);
+        $this->writer->write([$this->snapshot($projectId, $execution, true)]);
     }
 
     public function deleteProject(string $projectId): void
@@ -427,7 +430,7 @@ class Store
         ];
     }
 
-    /** @param array<array<string, mixed>> $rows */
+    /** @param list<array<string, mixed>> $rows */
     private function insert(array $rows): void
     {
         $this->insertRows($this->database() . '.' . self::TABLE, self::COLUMNS, $rows);
@@ -442,7 +445,6 @@ class Store
         $statement = (new ClickHouseBuilder())
             ->from($table)
             ->bulkInsert(Format::JSONEachRow, $rows, $columns);
-        // Async inserts wait up to 200ms for a flush that batches almost nothing for one-row snapshots.
         $url = $this->url() . '?' . \http_build_query(['query' => $statement->query, 'async_insert' => 0]);
         $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
