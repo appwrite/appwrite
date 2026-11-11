@@ -1,0 +1,118 @@
+---
+layout: integration
+title: Phone auth with Inforu
+description: Deliver one-time passwords for phone authentication through Inforu
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/phone-auth-inforu/cover.avif
+category: auth
+product:
+    vendor: Inforu
+    description: "Inforu is an Israeli messaging platform that provides SMS, email, and WhatsApp APIs for businesses."
+platform:
+    - 'Self-hosted'
+---
+
+[Inforu](https://www.inforu.co.il) is a messaging platform from Israel. Its API sends SMS, email, and WhatsApp messages, and it sends each SMS under a sender name or a whitelisted sender number.
+
+# How does the integration work?
+
+If you self-host Appwrite, you can use Inforu to deliver the one-time passwords (OTPs) that Appwrite Auth sends by SMS. Appwrite uses the provider you configure for [phone (SMS) login](/docs/products/auth/phone-sms), phone number verification, SMS challenges for [multi-factor authentication](/docs/products/auth/mfa), and team invitations sent to a phone number.
+
+Appwrite sends each message through Inforu's SMS API and authenticates with basic authentication, built from your Inforu username and API token. It sends recipient numbers in international format without the leading `+`.
+
+{% info title="Phone authentication on Appwrite Cloud" %}
+Appwrite Cloud delivers phone authentication SMS for you, so there is no SMS provider to configure. Messages are billed per message, with [rates](/docs/advanced/billing/phone-otp#rates) that vary by country.
+{% /info %}
+
+# How to implement
+
+To implement the Inforu provider for phone authentication, there are several steps you must complete:
+
+## Step 1: Set up Inforu
+
+First, sign up for an [Inforu](https://www.inforu.co.il) account and create an API token in your account. Save the following information for later use:
+
+| Value | |
+| --- | --- |
+| Username | The username of your Inforu account. |
+| API token | The API token you created in your Inforu account. |
+| Sender | The sender shown to recipients: up to 11 characters with no spaces, or a phone number of up to 14 digits that is on your account's sender whitelist. |
+
+## Step 2: Encode your Inforu credentials
+
+Inforu authenticates API requests with basic authentication, and Appwrite sends the credentials you configure exactly as you provide them. Join your username and API token with a colon and encode the result as Base64:
+
+```bash
+printf '%s' '<USERNAME>:<API_TOKEN>' | base64
+```
+
+Then URL-encode the Base64 string so it can sit inside the provider URL. Replace `+` with `%2B`, `/` with `%2F`, and `=` with `%3D`.
+
+## Step 3: Add Inforu to your Appwrite instance
+
+For this step, you must [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Open the `.env` file of your Appwrite installation and update the following environment variables:
+
+```bash
+_APP_SMS_PROVIDER=sms://<SENDER>:<ENCODED_CREDENTIALS>@inforu
+_APP_SMS_FROM=<SENDER>
+```
+
+Inforu takes the sender from the provider URL and doesn't use `_APP_SMS_FROM`, but Appwrite only turns on SMS delivery when both variables are set, so set it to the same sender.
+
+### Route only Israeli numbers through Inforu (optional)
+
+If some of your users have phone numbers outside Israel, you can keep a second provider for them. `_APP_SMS_PROVIDER` accepts several providers separated by commas. Mark one as the default with `local=default` and assign Inforu to Israel's calling code with `local=972`:
+
+```bash
+_APP_SMS_PROVIDER=sms://<ACCOUNT_SID>:<AUTH_TOKEN>@twilio?local=default,sms://<SENDER>:<ENCODED_CREDENTIALS>@inforu?local=972
+_APP_SMS_FROM=<TWILIO_PHONE_NUMBER>
+```
+
+Appwrite then sends to numbers starting with `+972` through Inforu and to every other number through the default provider. All providers in the list share the same `_APP_SMS_FROM` value.
+
+After you save the `.env` file, recreate your Appwrite stack and confirm the variables were applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+## Step 4: Test the provider
+
+To test the provider, [implement phone (SMS) login](/docs/products/auth/phone-sms) in a web or mobile app. Request a code for your phone number, then create a session with the code you receive:
+
+```js
+import { Client, Account, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<APPWRITE_DOMAIN>/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const token = await account.createPhoneToken({
+    userId: ID.unique(),
+    phone: '+972541234567'
+});
+
+const session = await account.createSession({
+    userId: token.userId,
+    secret: '<SECRET>'
+});
+```
+
+After you sign in, the user appears on the **Auth** page of your project with their phone number as the identifier.
+
+# Read more about Inforu and Appwrite Auth
+
+If you would like to learn more about phone authentication with Inforu and Appwrite Auth, we have some resources that you should visit:
+
+- [Inforu API documentation](https://apidoc.inforu.co.il)
+- [SMS delivery for self-hosted Appwrite](/docs/advanced/self-hosting/configuration/sms)
+- [Phone (SMS) login with Appwrite Auth](/docs/products/auth/phone-sms)
+- [Appwrite Account API reference](/docs/references/cloud/client-web/account)

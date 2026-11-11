@@ -1,0 +1,102 @@
+---
+layout: integration
+title: Sequelize with managed PostgreSQL and MySQL
+description: Use Sequelize models and CLI migrations with an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-sequelize/cover.avif
+category: databases
+product:
+    vendor: Sequelize
+    description: 'Sequelize is an open-source Node.js ORM with models, associations, transactions, and a CLI for migrations.'
+platform:
+    - 'Cloud'
+---
+
+[Sequelize](https://sequelize.org/) is an ORM for Node.js. You define models with typed attributes and associations, query them through a promise-based API, and manage the schema with Sequelize CLI migrations.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Sequelize connects to them through its regular `postgres` and `mysql` dialects, backed by the `pg` and `mysql2` drivers, so models and migrations work with no Appwrite-specific configuration.
+
+Runtime traffic goes through the database's connection pooler, while Sequelize CLI runs migrations over a direct connection to the engine.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans. The steps below use Sequelize 6, the current stable line, because Sequelize 7 is still in alpha and its CLI isn't ready.
+{% /info %}
+
+# How to implement
+
+To use Sequelize with an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database, click **Credentials**, and copy the connection string from the **DSN** or **.env** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Set the connection strings
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Use the pooled `DATABASE_URL` for runtime traffic and `DIRECT_URL` for Sequelize CLI migrations.
+
+## Step 3: Install and configure Sequelize
+
+Install `sequelize` with `pg` and `pg-hstore` for PostgreSQL, or with `mysql2` for MySQL, plus `sequelize-cli` as a dev dependency. Then create one instance at module scope with certificate verification turned on:
+
+```ts
+import { Sequelize } from 'sequelize';
+
+export const sequelize = new Sequelize(process.env.DATABASE_URL!, {
+    dialect: 'postgres', // or 'mysql'
+    dialectOptions: {
+        ssl: { require: true, rejectUnauthorized: true }
+    },
+    logging: false,
+    pool: { max: 10, min: 0, idle: 10000 }
+});
+```
+
+On serverless, keep `pool.max` small, and call `sequelize.close()` on shutdown.
+
+## Step 4: Run migrations
+
+`sequelize-cli init` generates localhost defaults. Replace them with a `.sequelizerc` that points at `config/config.js`, and make every environment in that config read `DIRECT_URL` with the same `dialect` and `dialectOptions.ssl` settings. Then generate and apply migrations over the direct port:
+
+```bash
+npx sequelize-cli migration:generate --name create-users
+npx sequelize-cli db:migrate
+```
+
+Prefer migrations over `sync({ alter: true })` in shared and production environments. The primary user, `admin` or `admin.<hash>`, owns the database and can run schema changes.
+
+## Step 5: Test the integration
+
+Call `await sequelize.authenticate()`, then create a record with your model and read it back with `findAll`. Session-scoped features, such as prepared statements, advisory locks, `LISTEN`/`NOTIFY`, user variables, and temporary tables, need the direct port or a session-mode pooler. To test migrations in CI, run `sequelize-cli db:migrate` against a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch.
+
+# Read more about Sequelize and Appwrite Databases
+
+If you would like to learn more about Sequelize and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Sequelize with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/sequelize)
+- [Use Sequelize with a native MySQL database](/docs/products/databases/mysql/integrations/sequelize)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Sequelize documentation](https://sequelize.org/docs/v6/)

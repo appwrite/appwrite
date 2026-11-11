@@ -93,6 +93,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Certificate blocked': '証明書の発行が保留中',
   'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
     '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してから、再試行してください。',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs.':
+    '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してください。',
   'Renewal blocked': '証明書の更新が保留中',
   'Certificate renewal started': '証明書の更新を開始しました',
   'Certificate expires on {date}.': '証明書の有効期限は{date}です。',
@@ -224,6 +226,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Verify domain ownership': 'ドメイン所有権の検証',
   'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
     'このドメインはすでに Appwrite を指しています。所有者であることを証明するため、この TXT レコードを追加してから検証してください。',
+  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
+    'このドメインは別のプロジェクトで使用されています。所有者であることを証明するため、この TXT レコードを追加してから検証し、このプロジェクトに移動してください。',
   'Invalid URL': '無効な URL',
   'Enter URL': 'URL を入力',
   'Select branch': 'Branch を選択',

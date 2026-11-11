@@ -56,7 +56,7 @@ export const storageProductContent: ProductPageContent = {
     {
       question: 'Can I encrypt files in Storage?',
       answer:
-        'Yes. Turn on encryption per bucket from Settings so new files are stored encrypted at rest. If files are leaked, encrypted objects cannot be read without your keys. Files larger than 20 MB skip encryption even when enabled.',
+        'Yes. Turn on encryption per bucket from Settings so new files are stored encrypted at rest. If files are leaked, encrypted objects cannot be read without your keys.',
       links: [{ label: 'Bucket encryption', href: '/docs/products/storage/buckets' }],
     },
     {

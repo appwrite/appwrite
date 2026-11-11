@@ -8,6 +8,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -67,6 +68,7 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('team')
+            ->inject('targetUser')
             ->inject('authorization')
             ->inject('apiKey')
             ->inject('proofForToken')
@@ -81,11 +83,18 @@ class Create extends Action
         Response $response,
         Database $dbForPlatform,
         Document $team,
+        User $targetUser,
         Authorization $authorization,
         ?Key $apiKey,
         Token $proofForToken,
         AuditContext $auditContext,
     ) {
+        // Same rule as moving a project with PATCH /v1/projects/:projectId/team: only an owner
+        // gives a project away. Organization keys hold no membership, so they are refused too.
+        if (!$targetUser->isOwner($dbForPlatform, $team->getSequence() ?? '')) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Transferring a project requires the owner role on the organization that owns it.');
+        }
+
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         if ($project->isEmpty() || $project->getId() === 'console' || $project->getAttribute('teamInternalId') !== $team->getSequence()) {

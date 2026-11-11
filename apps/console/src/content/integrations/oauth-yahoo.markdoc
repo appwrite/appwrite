@@ -1,0 +1,63 @@
+---
+layout: integration
+title: OAuth with Yahoo
+description: Authenticate users with an existing Yahoo account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-yahoo/cover.avif
+category: auth
+product:
+    vendor: Yahoo
+    description: "Yahoo is a web services company whose accounts sign people in to Yahoo Mail, Yahoo Finance, Yahoo News, and other Yahoo products."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+Yahoo is a web services company whose accounts sign people in to Yahoo Mail, Yahoo Finance, Yahoo News, and other Yahoo products. Yahoo supports OAuth 2.0 and OpenID Connect, so apps can sign people in with the Yahoo account they already use for email and news.
+
+# How does the integration work?
+
+You can use the Yahoo OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account. It can also be more secure, because the user has one less password that could become vulnerable.
+
+Appwrite requests the `openid`, `profile`, and `email` scopes and reads the user's name and email address from Yahoo's OpenID Connect user info endpoint. The email address is marked as verified only when Yahoo reports it as verified. Yahoo also shares the user's profile picture, which Appwrite uses for [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+# How to implement
+
+To implement the Yahoo OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create a Yahoo app
+
+First, sign in to the Yahoo Developer Network and [create an app](https://developer.yahoo.com/apps/create/). Enter an application name and choose a web application. The form asks for a redirect URI, so temporarily add `https://temporary-endpoint.com/`. You will replace it with the URI from Appwrite in the next step.
+
+Under the API permissions, enable the OpenID Connect permissions for **Email** and **Profile**, then create the app. Save the **Client ID (Consumer Key)** and **Client Secret (Consumer Secret)** that Yahoo shows for later use.
+
+## Step 2: Add the Yahoo OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Yahoo** under the **OAuth2 Providers** section.
+
+Enter the client ID in **Client ID, also known as Customer Key** and the client secret in **Client Secret, also known as Customer Secret**. Turn the provider on and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/yahoo/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in your Yahoo app's settings, replace the temporary redirect URI with this URI and save.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Yahoo` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about Yahoo and Appwrite Auth
+
+If you would like to learn more about Yahoo and Appwrite Auth, we have some resources that you should visit:
+
+- [Yahoo OAuth 2.0 guide](https://developer.yahoo.com/oauth2/guide/)
+- [Yahoo OAuth 2.0 authorization code flow](https://developer.yahoo.com/oauth2/guide/flows_authcode/)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

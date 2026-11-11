@@ -511,6 +511,60 @@ final class MqttServerTest extends Scope
         }
     }
 
+    public function testReplacedDeviceSessionIsDisconnected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $sessionKey = 'a_session_' . $projectId;
+        ['userId' => $userId] = $this->createUser();
+        $client = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        // An account switching device holds one session per user: signing in again replaces the held one
+        $device = $this->client->call(Client::METHOD_POST, '/account/devices', $client);
+        $this->assertSame(201, $device['headers']['status-code']);
+        $deviceCookie = $device['cookies'][$deviceKey];
+
+        // Joining a session rotates the device secret, so each sign-in carries the cookie the last one issued
+        $signIn = function () use ($client, $deviceKey, &$deviceCookie, $userId): array {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge($client, [
+                'cookie' => $deviceKey . '=' . $deviceCookie,
+            ]), [
+                'email' => 'mqtt-' . $userId . '@appwrite.io',
+                'password' => 'password',
+            ]);
+
+            $deviceCookie = $response['cookies'][$deviceKey] ?? $deviceCookie;
+
+            return $response;
+        };
+
+        $replaced = $signIn();
+        $this->assertSame(201, $replaced['headers']['status-code']);
+        $kept = $this->createSession($userId);
+
+        $replacedSubscriber = $this->subscribeToUserTopic($projectId, $userId, $replaced['cookies'][$sessionKey], 'e2e-revoke-device-replaced-', 'appwrite-session');
+        $keptSubscriber = $this->subscribeToUserTopic($projectId, $userId, $kept, 'e2e-revoke-device-kept-', 'appwrite-session');
+
+        try {
+            $again = $signIn();
+            $this->assertSame(201, $again['headers']['status-code']);
+            $this->assertNotSame($replaced['body']['$id'], $again['body']['$id']);
+
+            // Test for SUCCESS: the connection opened with the replaced session is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $replacedSubscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a connection whose session was replaced on its device');
+
+            // Test for SUCCESS: a connection on another session of the user, not on the device, stays open.
+            $this->assertTrue($keptSubscriber->ping(), 'a connection on a session still active was disconnected');
+        } finally {
+            $replacedSubscriber->disconnect();
+            $keptSubscriber->disconnect();
+        }
+    }
+
     public function testEnablingMfaDisconnectsSessionMissingFactor(): void
     {
         $projectId = $this->getProject()['$id'];

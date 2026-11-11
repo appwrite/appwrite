@@ -13,17 +13,20 @@ interface ClaimDomainContentProps {
   domain: string
   projectId: string
   verificationError?: DomainVerificationError | null
+  /** Another project holds the domain, rather than it only pointing to Appwrite */
+  claimRequired?: boolean
 }
 
 /**
  * Ownership step for a rule create that was refused: the domain already
- * points to Appwrite, so the project proves it is its own with a TXT record
- * before the create is sent again.
+ * points to Appwrite or is used by another project, so the project proves it
+ * is its own with a TXT record before the create is sent again.
  */
 export function ClaimDomainContent({
   domain,
   projectId,
   verificationError,
+  claimRequired = false,
 }: ClaimDomainContentProps) {
   const t = useT()
 
@@ -42,9 +45,13 @@ export function ClaimDomainContent({
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-3">
           <p className="text-[13px] text-muted-foreground">
-            {t(
-              'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.',
-            )}
+            {claimRequired
+              ? t(
+                  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.',
+                )
+              : t(
+                  'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.',
+                )}
           </p>
           <DnsRecordsTable
             records={[getClaimRecord(domain, projectId)]}

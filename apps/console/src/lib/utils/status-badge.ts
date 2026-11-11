@@ -331,7 +331,12 @@ export function getDomainStatusBadgeConfig(status: string): {
  * server that reports no certificate state.
  */
 export function getRuleStatusBadgeConfig(
-  rule: { status: string; expireAt?: string; certificateStatus?: string },
+  rule: {
+    status: string
+    expireAt?: string
+    certificateStatus?: string
+    logs?: string
+  },
   now: Date = new Date(),
 ): {
   variant: DomainStatusBadgeVariant | 'success' | 'warning'
@@ -347,6 +352,19 @@ export function getRuleStatusBadgeConfig(
       variant: 'warning',
       label: 'Certificate blocked',
       hint: 'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.',
+    }
+  }
+  // Retry is not offered while the rule is still verifying. A retry clears
+  // the logs but not the certificate status, so only logs mean blocked now.
+  if (
+    rule.status === 'verifying' &&
+    rule.certificateStatus === 'blocked' &&
+    !!rule.logs?.length
+  ) {
+    return {
+      variant: 'warning',
+      label: 'Certificate blocked',
+      hint: 'The certificate is waiting on a DNS record. Add the record shown in View logs.',
     }
   }
   // The API reports a rule whose DNS check failed as 'unverified', like a

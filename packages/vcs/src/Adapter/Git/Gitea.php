@@ -988,6 +988,18 @@ class Gitea extends Git
 
         $responseHeaders = $response['headers'] ?? [];
         $responseHeadersStatusCode = $responseHeaders['status-code'] ?? 0;
+        if ($responseHeadersStatusCode === 404) {
+            throw new RepositoryNotFound("Branch not found: {$branch}");
+        }
+        if ($responseHeadersStatusCode >= 500) {
+            // Some versions answer a missing branch with a server error, so the branch itself is checked.
+            $path = \implode('/', \array_map(\rawurlencode(...), \explode('/', $branch)));
+            $lookup = $this->call(self::METHOD_GET, "/repos/{$owner}/{$repositoryName}/branches/{$path}", ['Authorization' => "token $this->accessToken"]);
+            $lookupHeaders = $lookup['headers'] ?? [];
+            if (\is_array($lookupHeaders) && ($lookupHeaders['status-code'] ?? 0) === 404) {
+                throw new RepositoryNotFound("Branch not found: {$branch}");
+            }
+        }
         if ($responseHeadersStatusCode >= 400) {
             throw new Exception("Latest commit response failed with status code {$responseHeadersStatusCode}", $responseHeadersStatusCode);
         }
