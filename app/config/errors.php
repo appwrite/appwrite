@@ -1367,6 +1367,11 @@ return [
         'description' => 'Alert with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::ALERT_RESOLVED => [
+        'name' => Exception::ALERT_RESOLVED,
+        'description' => 'The alert has resolved. Only a firing alert can be acknowledged.',
+        'code' => 400,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',

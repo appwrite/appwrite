@@ -1166,6 +1166,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Most viewed screens': 'המסכים הנצפים ביותר',
   'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
+  'What visitors are using': 'במה המבקרים משתמשים',
   'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
   'AI agents and crawlers': 'סוכני AI וסורקים',
   Agents: 'סוכנים',
@@ -3621,8 +3622,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קישורים שעדיין לא מומשו. לא ניתן לממש קישורים שפג תוקפם. מחקו קישור כדי שיפסיק לפעול מוקדם יותר.',
   'The project already belongs to this organization.':
     'הפרויקט כבר שייך לארגון זה.',
-  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
-    'רק חברי ארגון שהתפקיד שלהם מאפשר לנהל פרויקטים יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
+  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'רק בעלים של הארגון יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
   'No permission': 'אין הרשאה',
   "You don't have permission to transfer projects in this organization.":
     'אין לכם הרשאה להעביר פרויקטים בארגון זה.',
@@ -3831,6 +3832,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'View monitors': 'הצגת המוניטורים',
   'Waiting for recovery': 'ממתין לחזרה לשגרה',
   Watches: 'עוקב אחר',
+  Acknowledge: 'אישור טיפול',
+  'Acknowledged by {name}': 'בטיפול של {name}',
+  'Acknowledged by a member': 'בטיפול של חבר צוות',
+  'Acknowledged with an API key': 'אושר באמצעות מפתח API',
+  'Failed to acknowledge the alert': 'אישור הטיפול בהתראה נכשל',
+  'Failed to undo the acknowledgement': 'ביטול אישור הטיפול נכשל',
+  'Let your team know someone is on it. It keeps firing until usage recovers.':
+    'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהשימוש יחזור לשגרה.',
+  'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
   "You don't have permission to manage monitors.":
     'אין לכם הרשאה לנהל מוניטורים.',
   'between two alerts from this monitor.': 'בין שתי התראות מהמוניטור הזה.',

@@ -5,7 +5,7 @@
  * Handles site details, Git connection options, and template variables.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
@@ -135,6 +135,8 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const [gitConnection, setGitConnection] = useState<'now' | 'later'>('later')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
+  // Domain follows the site name until the user edits it
+  const domainEditedRef = useRef(!!formData.domain)
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
   const [isDeploying, setIsDeploying] = useState(false)
 
@@ -212,7 +214,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
 
   // Generate domain when site name changes
   useEffect(() => {
-    if (siteName && !domain) {
+    if (siteName && !domainEditedRef.current) {
       setDomain(generateDomain(siteName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -717,6 +719,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={() => {
+              domainEditedRef.current = true
+            }}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">

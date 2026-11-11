@@ -358,6 +358,7 @@ class Exception extends \Exception
 
     /** Alerts */
     public const string ALERT_NOT_FOUND = 'alert_not_found';
+    public const string ALERT_RESOLVED = 'alert_resolved';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';

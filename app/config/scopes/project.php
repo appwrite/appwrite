@@ -429,6 +429,10 @@ return [
         'description' => 'Access to read the alerts monitors raise',
         'category' => 'Other',
     ],
+    'alerts.write' => [
+        'description' => 'Access to acknowledge the alerts monitors raise',
+        'category' => 'Other',
+    ],
     'locale.read' => [
         'description' => 'Access to use Locale service',
         'category' => 'Other',

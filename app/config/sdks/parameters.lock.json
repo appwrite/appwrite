@@ -1271,6 +1271,10 @@
             "queries",
             "total"
         ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -5647,6 +5651,10 @@
         "alerts.list": [
             "queries",
             "total"
+        ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [

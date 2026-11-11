@@ -702,6 +702,110 @@ final class AbuseTest extends Scope
     }
 
     #[Group('abuseEnabled')]
+    public function testAbuseRecoveryLimitPerProjectAddress(): void
+    {
+        // An address repeats across projects, so a guest on one project must not spend another project's quota.
+        $email = 'recovery.' . \bin2hex(\random_bytes(8)) . '@example.com';
+        $projects = [$this->getProject(), $this->getProject(true)];
+
+        // Only the first project holds the account; recovery answers 201 either way, so no account is needed
+        // to spend a count.
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projects[0]['$id'],
+            'x-appwrite-key' => $projects[0]['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        // A new IP every request, so the per-IP limit of the route never applies.
+        $headers = fn (array $project): array => [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers($projects[1]), [
+                'email' => $email,
+                'url' => 'http://localhost/recovery',
+            ]);
+            $this->assertSame(201, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers($projects[1]), [
+            'email' => \strtoupper($email),
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the email case must not reset the limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers($projects[0]), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], 'Another project keeps its own limit');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseMfaChallengeLimitPerProjectAccount(): void
+    {
+        // A user ID is project local and chosen by the caller, so the same one can exist in two projects.
+        $userId = 'abuse' . \bin2hex(\random_bytes(8));
+        $projects = [$this->getProject(), $this->getProject(true)];
+        $sessions = [];
+
+        foreach ($projects as $project) {
+            $server = [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ];
+
+            $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+                'userId' => $userId,
+                'email' => 'mfa.' . \bin2hex(\random_bytes(8)) . '@example.com',
+                'password' => 'password-' . \bin2hex(\random_bytes(4)),
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+
+            $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $server);
+            $this->assertSame(201, $session['headers']['status-code']);
+            $sessions[$project['$id']] = $session['body']['secret'];
+        }
+
+        $headers = fn (array $project): array => [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-session' => $sessions[$project['$id']],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers($projects[1]), [
+                'factor' => 'totp',
+            ]);
+            $this->assertSame(201, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers($projects[1]), [
+            'factor' => 'totp',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'An account past the limit is throttled');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $headers($projects[0]), [
+            'factor' => 'totp',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], 'The same user ID in another project keeps its own limit');
+    }
+
+    #[Group('abuseEnabled')]
     public function testAbuseEmailSessionFailuresPerIp(): void
     {
         $email = 'login.' . \bin2hex(\random_bytes(8)) . '@example.com';

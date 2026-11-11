@@ -1,6 +1,7 @@
 {
     "project": [
         "alerts.read",
+        "alerts.write",
         "assistant.read",
         "attributes.read",
         "attributes.write",

@@ -678,6 +678,12 @@ return [
             'resolved' => [
                 '$description' => 'This event triggers when a monitor recovers and its alert resolves.',
             ],
+            'acknowledged' => [
+                '$description' => 'This event triggers when a member acknowledges a firing alert.',
+            ],
+            'unacknowledged' => [
+                '$description' => 'This event triggers when a firing alert\'s acknowledgement is undone.',
+            ],
         ],
     ],
     'reports' => [

@@ -418,6 +418,25 @@ test.describe('analytics property (mocked API)', () => {
     ])
   })
 
+  test('drops browser tabs from a mobile Technology card', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+    await openProperty(page)
+
+    const technology = card(page, 'Technology')
+    await expect(technology.getByText('What visitors are using')).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(technology.getByRole('tab')).toHaveText([
+      'Operating systems',
+      'Devices',
+      'Screen sizes',
+      'OS versions',
+    ])
+    await expect(
+      technology.getByRole('button', { name: /Versions/ }),
+    ).toHaveCount(0)
+  })
+
   test('leads with events on an agent property', async ({ page }) => {
     await mockAppwriteApi(page, { type: AnalyticsPropertyType.Agent })
     await openProperty(page)

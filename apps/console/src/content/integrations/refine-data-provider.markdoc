@@ -1,0 +1,109 @@
+---
+layout: integration
+title: Refine data provider for Appwrite
+description: Build admin panels and internal tools with Refine on top of Appwrite Databases, Auth, and Realtime
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/refine-data-provider/cover.avif
+category: databases
+product:
+    vendor: Refine
+    description: "Refine is an open-source React framework for building data-heavy apps such as admin panels, dashboards, and internal tools."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Refine](https://refine.dev) is an open-source React framework for CRUD-heavy apps like admin panels, dashboards, and internal tools. It keeps your UI separate from your backend through providers: a data provider for reading and writing records, an auth provider for sessions, and a live provider for real-time updates. You pair them with a UI library such as Ant Design, and Refine handles routing, forms, tables, and access to your data.
+
+# How does the integration work?
+
+The `@refinedev/appwrite` package, maintained by the Refine team, connects Refine to Appwrite:
+
+- `dataProvider` maps Refine's list, show, create, edit, and delete operations to the rows of a table in an Appwrite database. Each Refine resource is a table, and the resource name must match the table ID.
+- `liveProvider` uses [Appwrite Realtime](/docs/apis/realtime) so lists and records update when the data changes.
+- The package exports the Appwrite client classes, such as `Appwrite`, `Account`, and `Storage`, that you use to build an auth provider on Appwrite Auth and to upload files to Appwrite Storage.
+
+The package talks to Appwrite through its client SDK, so it works with any Appwrite endpoint, on Appwrite Cloud or a self-hosted instance.
+
+# How to implement
+
+To build a Refine app on Appwrite, there are several steps you must complete:
+
+## Step 1: Prepare your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. Create a project, then under **Add a platform**, add a **Web app** with `localhost` as the **Hostname** so your local app can call Appwrite.
+
+Create a database and a [table](/docs/products/databases/tablesdb/tables) for each resource you want to manage, and note their IDs. Set the table's [permissions](/docs/products/databases/tablesdb/permissions) so the users who sign in to your Refine app can read and write its rows.
+
+## Step 2: Create the Refine app
+
+Create a Refine project with the Appwrite preset:
+
+```bash
+npm create refine-app@latest -- --preset refine-appwrite
+```
+
+To add Appwrite to an existing Refine app instead, install the package and follow [Refine's Appwrite guide](https://refine.dev/core/docs/data/packages/appwrite/):
+
+```bash
+npm install @refinedev/appwrite
+```
+
+## Step 3: Configure the Appwrite client
+
+Copy your project ID from the project's **Settings** page, then set your endpoint and project ID in `src/utility/appwriteClient.ts`:
+
+```ts
+import { Account, Appwrite, Storage } from "@refinedev/appwrite";
+
+const APPWRITE_URL = "<YOUR_API_ENDPOINT>"; // Replace with your Appwrite API endpoint
+const APPWRITE_PROJECT = "<PROJECT_ID>"; // Replace with your project ID
+
+const appwriteClient = new Appwrite();
+
+appwriteClient.setEndpoint(APPWRITE_URL).setProject(APPWRITE_PROJECT);
+const account = new Account(appwriteClient);
+const storage = new Storage(appwriteClient);
+
+export { account, appwriteClient, storage };
+```
+
+## Step 4: Register the providers
+
+Pass the client and your database ID to the data and live providers in `src/App.tsx`, next to your auth provider:
+
+```tsx
+import { Refine } from "@refinedev/core";
+import { dataProvider, liveProvider } from "@refinedev/appwrite";
+import { appwriteClient } from "./utility";
+import { authProvider } from "./authProvider";
+
+<Refine
+    dataProvider={dataProvider(appwriteClient, {
+        databaseId: "<APPWRITE_DATABASE_ID>",
+    })}
+    liveProvider={liveProvider(appwriteClient, {
+        databaseId: "<APPWRITE_DATABASE_ID>",
+    })}
+    authProvider={authProvider}
+    // routerProvider, notificationProvider, and resources
+/>
+```
+
+Name each resource after its table ID. The [Refine quick start](/docs/quick-starts/refine) has the complete `App.tsx`, with login and registration routes built on Refine's `AuthPage`.
+
+## Step 5: Test the integration
+
+Run the app with `npm run dev -- --open --port 3000`. Register a user on the `/register` page, sign in, and open a resource: Refine lists the table's rows, and the create and edit forms write back to Appwrite.
+
+# Read more about Refine and Appwrite
+
+If you would like to learn more about Refine and Appwrite, we have some resources that you should visit:
+
+- [Start with Refine](/docs/quick-starts/refine)
+- [Refine's Appwrite data provider guide](https://refine.dev/core/docs/data/packages/appwrite/)
+- [Appwrite Realtime](/docs/apis/realtime)
+- [Appwrite Databases](/docs/products/databases)

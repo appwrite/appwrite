@@ -1197,8 +1197,7 @@
     "TS6133: 'useEffect' is declared but its value is never read.": 1
   },
   "src/lib/react-query/hooks/functions.ts": {
-    "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'undefined | { live?: boolean | undefined; latestDeploymentId?: string | null | undefined; latestDeploymentStatus?: string | undefined; latestDeploymentCreatedAt?: string | undefined; }'.": 1,
-    "TS2769: No overload matches this call.": 1
+    "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'undefined | { live?: boolean | undefined; latestDeploymentId?: string | null | undefined; latestDeploymentStatus?: string | undefined; latestDeploymentCreatedAt?: string | undefined; }'.": 1
   },
   "src/lib/react-query/hooks/index.ts": {
     "TS2308: Module './users' has already exported a member named 'useUpdateUserStatus'. Consider explicitly re-exporting to resolve the ambiguity.": 1
@@ -1227,7 +1226,7 @@
     "TS2322: Type 'unknown' is not assignable to type 'VCSReferenceType'.": 1,
     "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'undefined | { live?: boolean | undefined; latestDeploymentId?: string | null | undefined; latestDeploymentStatus?: string | undefined; latestDeploymentCreatedAt?: string | undefined; }'.": 1,
     "TS2571: Object is of type 'unknown'.": 2,
-    "TS2769: No overload matches this call.": 3
+    "TS2769: No overload matches this call.": 2
   },
   "src/lib/react-query/hooks/teams.ts": {
     "TS2571: Object is of type 'unknown'.": 1,

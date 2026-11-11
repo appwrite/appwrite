@@ -1,0 +1,98 @@
+---
+layout: integration
+title: Phone auth with Vonage
+description: Deliver one-time passwords for phone authentication through Vonage
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/phone-auth-vonage/cover.avif
+category: auth
+product:
+    vendor: Vonage
+    description: "Vonage is a cloud communications platform that provides APIs for SMS, voice, video, and messaging apps."
+platform:
+    - 'Self-hosted'
+---
+
+[Vonage](https://www.vonage.com/communications-apis/sms/) is a cloud communications platform with APIs for SMS, voice, video, and messaging apps such as WhatsApp. Its SMS API sends text messages from virtual numbers that you buy in the Vonage dashboard.
+
+# How does the integration work?
+
+If you self-host Appwrite, you can use Vonage to deliver the one-time passwords (OTPs) that Appwrite Auth sends by SMS. Appwrite uses the provider you configure for [phone (SMS) login](/docs/products/auth/phone-sms), phone number verification, SMS challenges for [multi-factor authentication](/docs/products/auth/mfa), and team invitations sent to a phone number.
+
+Phone authentication lets users sign in without a password, which suits mobile apps where users already have their phone at hand.
+
+{% info title="Phone authentication on Appwrite Cloud" %}
+Appwrite Cloud delivers phone authentication SMS for you, so there is no SMS provider to configure. Messages are billed per message, with [rates](/docs/advanced/billing/phone-otp#rates) that vary by country.
+{% /info %}
+
+# How to implement
+
+To implement the Vonage provider for phone authentication, there are several steps you must complete:
+
+## Step 1: Set up Vonage
+
+First, [sign up for a Vonage account](https://dashboard.vonage.com/sign-up) and buy a virtual number with SMS capability. Then save the following information from the Vonage dashboard:
+
+| Field name | |
+| --- | --- |
+| API key | Head to **Build & manage** > **API settings** and copy the API key. |
+| API secret | Head to **Build & manage** > **API settings** and copy the API secret. |
+| Sender | Head to **Build & manage** > **Numbers** > **Your numbers** to find the number your SMS messages are sent from. |
+
+## Step 2: Add Vonage to your Appwrite instance
+
+For this step, you must [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Open the `.env` file of your Appwrite installation and update the following environment variables:
+
+```bash
+_APP_SMS_PROVIDER=sms://<API_KEY>:<API_SECRET>@vonage
+_APP_SMS_FROM=<PHONE_NUMBER_OR_BRAND_NAME>
+```
+
+Write a phone number with a leading `+` and the country code, such as `+14155550123`, or use an alphanumeric brand name where Vonage supports one. URL-encode the values in `_APP_SMS_PROVIDER` if they contain characters other than letters and numbers. Appwrite only turns on SMS delivery when both variables are set.
+
+Then recreate your Appwrite stack and confirm the variables were applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+## Step 3: Test the provider
+
+To test the provider, [implement phone (SMS) login](/docs/products/auth/phone-sms) in a web or mobile app. Request a code for your phone number, then create a session with the code you receive:
+
+```js
+import { Client, Account, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<APPWRITE_DOMAIN>/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const token = await account.createPhoneToken({
+    userId: ID.unique(),
+    phone: '+14255550123'
+});
+
+const session = await account.createSession({
+    userId: token.userId,
+    secret: '<SECRET>'
+});
+```
+
+After you sign in, the user appears on the **Auth** page of your project with their phone number as the identifier.
+
+# Read more about Vonage and Appwrite Auth
+
+If you would like to learn more about phone authentication with Vonage and Appwrite Auth, we have some resources that you should visit:
+
+- [Vonage API credentials](https://developer.vonage.com/en/account/secret-management)
+- [SMS delivery for self-hosted Appwrite](/docs/advanced/self-hosting/configuration/sms)
+- [Phone (SMS) login with Appwrite Auth](/docs/products/auth/phone-sms)
+- [SMS with Vonage in Appwrite Messaging](/integrations/sms-vonage)
+- [Appwrite Account API reference](/docs/references/cloud/client-web/account)

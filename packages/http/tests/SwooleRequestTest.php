@@ -214,23 +214,19 @@ final class SwooleRequestTest extends TestCase
     }
 
     /**
-     * A client-supplied `Swoole-Upload-File` part header makes Swoole report any
-     * server path as a ready upload and unlink it when the request is freed
-     * (swoole/swoole-src#6309).
+     * Before v6.2.5, a client-supplied `Swoole-Upload-File` part header makes Swoole
+     * report any server path as a ready upload and unlink it when the request is freed
+     * (swoole/swoole-src#6309). v6.2.5 ignores the header; either way the path must
+     * never reach the app as an upload, and must survive the request.
      */
     public function testSpoofedUploadIsNeutralized(): void
     {
         $swoole = $this->multipartRequest($this->filePart('file', "Swoole-Upload-File: {$this->target}"));
-
-        $this->assertSame($this->target, $this->at($swoole->files, 'file', 'tmp_name'), 'Swoole reports the spoofed path as the upload');
-
         $request = new Request($swoole);
         $file = $request->getFiles('file');
 
-        $this->assertSame('', $file['tmp_name']);
-        $this->assertSame(\UPLOAD_ERR_CANT_WRITE, $file['error']);
-        $this->assertSame(0, $file['size']);
-        $this->assertSame([], $swoole->tmpfiles);
+        $this->assertNotSame($this->target, $file['tmp_name']);
+        $this->assertNotContains($this->target, (array) $swoole->tmpfiles);
 
         unset($request, $swoole);
 
@@ -247,11 +243,14 @@ final class SwooleRequestTest extends TestCase
         $request = new Request($swoole);
         $file = $request->getFiles('file');
 
-        $this->assertSame('', $this->at($file, 'tmp_name', 0, 'part'));
-        $this->assertSame(\UPLOAD_ERR_CANT_WRITE, $this->at($file, 'error', 0, 'part'));
-        $this->assertSame(0, $this->at($file, 'size', 0, 'part'));
-        $this->assertSame([$this->at($file, 'tmp_name', 0, 'other')], $swoole->tmpfiles, 'the genuine sibling stays an upload');
+        $this->assertNotSame($this->target, $this->at($file, 'tmp_name', 0, 'part'));
+        $this->assertNotContains($this->target, (array) $swoole->tmpfiles);
+        $this->assertContains($this->at($file, 'tmp_name', 0, 'other'), (array) $swoole->tmpfiles, 'the genuine sibling stays an upload');
         $this->assertSame(\UPLOAD_ERR_NO_FILE, $request->getFiles('empty')['error'], 'a failed upload keeps its own error');
+
+        unset($request, $swoole);
+
+        $this->assertFileExists($this->target);
     }
 
     public function testUploadMentioningTheMarkerStaysIntact(): void
