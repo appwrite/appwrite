@@ -1,0 +1,79 @@
+---
+layout: integration
+title: Migrate from Supabase
+description: Move users, database data, and files from Supabase to Appwrite
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/migrations-supabase/cover.avif
+category: migrations
+product:
+    vendor: Supabase
+    description: "Supabase is an open-source backend platform built on PostgreSQL, with authentication, storage, and edge functions."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Supabase](https://supabase.com) is an open-source backend platform built on PostgreSQL. A Supabase project bundles a Postgres database with authentication, file storage, and edge functions.
+
+# How does the integration work?
+
+Appwrite Migrations connects to your Supabase database and storage API and copies their resources into an Appwrite project. You choose which resources to move in the migration wizard, and Appwrite runs the migration in the background.
+
+| Resource | Migration |
+| --- | --- |
+| Users | Automatic |
+| Databases | Automatic |
+| Rows | Partial |
+| Files | Automatic |
+| Functions | Manual |
+
+Appwrite Databases support a different feature set than PostgreSQL, so advanced indexes, Postgres functions, and scheduling are not migrated. Users who signed in with an OAuth provider need to sign in again after the migration, because their sessions belong to that provider. Edge functions must be rewritten as [Appwrite Functions](/docs/products/functions) because of syntax and runtime differences.
+
+{% info title="Usage charges" %}
+On Appwrite Cloud, resource usage during a migration doesn't count toward your usage charges. Supabase may still charge for data transfer.
+{% /info %}
+
+# How to implement
+
+To migrate a Supabase project to Appwrite, there are several steps you must complete:
+
+## Step 1: Collect your Supabase credentials
+
+In your Supabase project dashboard, click **Connect** and select **Transaction pooler**, the connection recommended for migrations. From its connection details, collect:
+
+| Field | Where to find it |
+| --- | --- |
+| **Host** | The host of the **Transaction pooler** connection string. |
+| **Port** | The port of the **Transaction pooler** connection string. |
+| **Username** | The username of the **Transaction pooler** connection string. |
+| **Password** | The database password you set when you created the project. Reset it in **Database Settings** if you no longer have it. |
+| **Endpoint** | Your project URL under **Project Settings** > **API**. Appwrite uses it to migrate files. |
+| **API Key** | The secret `service_role` key under **Project Settings** > **API keys**. Appwrite uses it to migrate files. |
+
+## Step 2: Start the migration in Appwrite
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Create a new project, open **Project settings**, and go to the **Migrations** tab. Click **Create migration** and select **Supabase** as the source. Enter the credentials from the previous step, click **Next**, select the resources to migrate, and click **Start migration**.
+
+You can also start a migration from a Server SDK with `createSupabaseMigration`, using an API key with the `migrations.write` scope.
+
+## Step 3: Finish the move
+
+Once the migration completes:
+
+- Add your web, Flutter, Android, and iOS apps as platforms in your Appwrite project. Appwrite rejects requests from apps it doesn't know.
+- Review the [permissions](/docs/advanced/security/permissions) on migrated resources so users can only reach their own data.
+- Rewrite your edge functions on a supported [Appwrite Functions runtime](/docs/products/functions/runtimes).
+
+# Read more about Supabase and Appwrite
+
+If you would like to learn more about migrating from Supabase to Appwrite, we have some resources that you should visit:
+
+- [Migrate from Supabase](/docs/advanced/migrations/supabase)
+- [Appwrite Migrations overview](/docs/advanced/migrations)
+- [Appwrite vs Supabase: a comparison of Backend-as-a-Service platforms](/blog/post/appwrite-compared-to-supabase)
+- [Connect to your Supabase database](https://supabase.com/docs/guides/database/connecting-to-postgres)

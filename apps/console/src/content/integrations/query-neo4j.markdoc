@@ -1,0 +1,87 @@
+---
+layout: integration
+title: Query Neo4j AuraDB
+description: Store and query connected data in a Neo4j AuraDB graph database from an Appwrite Function
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/query-neo4j/cover.avif
+category: databases
+product:
+    vendor: Neo4j
+    description: "Neo4j is a graph database for highly connected data, and AuraDB is its fully managed cloud service."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Neo4j](https://neo4j.com/) is a graph database. It stores data as nodes connected by relationships and queries them with the Cypher language, which makes questions about connections, such as recommendations, fraud rings, or supply chains, fast to answer. AuraDB is Neo4j's fully managed cloud service.
+
+# How does the integration work?
+
+The **Query Neo4j AuraDB** function template shows how to work with a graph database from Appwrite Functions. Each `GET` request to the function:
+
+1. Creates a `Warehouse` node with a random location and capacity.
+2. Links it to a `Category` node, such as `electronics` or `furniture`, with a `STORES` relationship, creating the category only if it doesn't exist yet.
+3. Returns up to 100 warehouse and category pairs as JSON.
+
+The function keeps its driver connection between executions, so warm requests skip the connection setup. Use it as a starting point for your own Cypher queries.
+
+# How to implement
+
+To implement the Neo4j AuraDB integration, there are several steps you must complete:
+
+## Step 1: Create an AuraDB instance
+
+Sign in to the [Neo4j Aura console](https://console.neo4j.io/) and create an AuraDB instance. When Aura shows the instance's credentials, download or copy them, because the password isn't shown again. The credentials include:
+
+| Value | Example |
+| --- | --- |
+| Connection URI | `neo4j+s://<INSTANCE_ID>.databases.neo4j.io` |
+| Username | `neo4j` |
+| Password | The generated password |
+
+Wait until the instance is running before you continue.
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. If you self-host Appwrite, enable a Node.js runtime in `_APP_FUNCTIONS_RUNTIMES` and follow the [Functions configuration guide](/docs/advanced/self-hosting/configuration/functions) so function domains work.
+
+In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **Query Neo4j AuraDB**, and click **Create from template**. Fill in the **Template variables**:
+
+| Variable | Value |
+| --- | --- |
+| `NEO4J_URI` | The connection URI |
+| `NEO4J_USER` | The username |
+| `NEO4J_PASSWORD` | The password |
+
+Choose **Connect your repository** to clone the template into a Git repository where you can write your own queries, or **Connect later** to deploy it right away. Then click **Create and deploy**.
+
+## Step 3: Test the function
+
+Copy the function's domain from the **Domains** tab and send a request:
+
+```bash
+curl https://<FUNCTION_DOMAIN>
+```
+
+The response contains the query's `records`, each with a `Warehouse` node and its `Category` node. Every request adds another warehouse, so the list grows as you call the function. Requests with other methods return `404`.
+
+To see the graph, open your instance in the Aura console and run:
+
+```text
+MATCH (w:Warehouse)-[:STORES]->(c:Category) RETURN w, c
+```
+
+The template allows anyone to execute the function, so anyone who finds its domain can add warehouses to your database. Before you query your own data, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
+# Read more about Neo4j and Appwrite Functions
+
+If you would like to learn more about Neo4j and Appwrite Functions, we have some resources that you should visit:
+
+- [Neo4j AuraDB documentation](https://neo4j.com/docs/aura/)
+- [Connect to Neo4j from JavaScript](https://neo4j.com/docs/javascript-manual/current/connect/)
+- [Integrate SQL, NoSQL, vector, graph, or any database into your Appwrite project](/blog/post/integrate-sql-nosql-vector-graph-or-any-database-into-your-appwrite-project)
+- [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
+- [Query Neo4j AuraDB template source](https://github.com/appwrite/templates/tree/1.2.0/node/query-neo4j-auradb)

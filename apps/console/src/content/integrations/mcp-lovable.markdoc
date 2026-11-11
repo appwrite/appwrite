@@ -1,0 +1,66 @@
+---
+layout: integration
+title: MCP with Lovable
+description: Connect Lovable to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-lovable/cover.avif
+category: mcp
+product:
+    vendor: Lovable
+    description: "Lovable is an AI app builder that creates and edits web apps from prompts in a chat-based editor."
+platform:
+    - 'Cloud'
+---
+
+[Lovable](https://lovable.dev) is an AI app builder. You describe the web app you want, and Lovable builds it and keeps editing it as you chat, with personal connectors that give its agent access to external tools.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects Lovable to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that uses the HTTP transport and signs you in with OAuth, so there is nothing to install and no API key to create.
+
+Once connected, Lovable can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation while it builds your app. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+{% info title="Appwrite Cloud projects" %}
+The hosted MCP server signs in with your Appwrite Cloud account, so Lovable can reach your Cloud projects without any local setup.
+{% /info %}
+
+# How to implement
+
+To connect Lovable to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: Lovable asks you to sign in to Appwrite the first time it connects to the server.
+
+## Step 2: Add the Appwrite MCP server to Lovable
+
+In Lovable, go to **Settings** > **Connectors** > **Personal connectors** and click **New MCP server**. Enter the following details:
+
+| Field | Value |
+| --- | --- |
+| **Server name** | `Appwrite` |
+| **Server URL** | `https://mcp.appwrite.io/` |
+| **Authentication** | OAuth |
+
+Click **Add server**, then complete the sign-in flow in your browser to sign in to your Appwrite account and authorize access. The Appwrite server then appears in your list of personal connectors.
+
+## Step 3: Test the integration
+
+Ask Lovable to work with your project, for example:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I implement file uploads with Appwrite Storage?`
+
+# Read more about Lovable and the Appwrite MCP server
+
+If you would like to learn more about Lovable and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Connect the Appwrite MCP server to Lovable](/docs/tooling/ai/vibe-coding/lovable)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [The Appwrite MCP server is now remote: one URL, no API keys](/blog/post/announcing-remote-appwrite-mcp-server)
+- [Lovable](https://lovable.dev)

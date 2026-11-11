@@ -1,0 +1,64 @@
+---
+layout: integration
+title: OAuth with LinkedIn
+description: Authenticate users with an existing LinkedIn account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-linkedin/cover.avif
+category: auth
+product:
+    vendor: LinkedIn
+    description: "LinkedIn is a professional networking platform where members keep a profile of their work history, connect with colleagues, and follow companies."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+LinkedIn is a professional networking platform owned by Microsoft. Members use it to keep a profile of their work history, connect with colleagues, follow companies, and find jobs. Its **Sign In with LinkedIn using OpenID Connect** product lets apps authenticate members with their LinkedIn accounts and read basic profile details.
+
+# How does the integration work?
+
+You can use the LinkedIn OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account, and it suits professional tools such as recruiting apps, B2B products, and community sites.
+
+Appwrite requests the `openid`, `profile`, and `email` scopes and reads the member's name and email address from LinkedIn's user info endpoint. The email address is marked as verified only when LinkedIn reports it as verified. LinkedIn also shares the member's profile photo, which Appwrite uses for [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+# How to implement
+
+To implement the LinkedIn OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create a LinkedIn app
+
+First, head to the [LinkedIn Developer Portal](https://www.linkedin.com/developers/apps) and click **Create app**. Enter an app name, associate the app with a LinkedIn Page, add a logo, and accept the legal agreement.
+
+Open the **Products** tab and request access to **Sign In with LinkedIn using OpenID Connect**. This product grants the `openid`, `profile`, and `email` scopes that Appwrite requests.
+
+Next, open the **Auth** tab and save the **Client ID** and **Primary Client Secret** for later use. You will add the redirect URL on the same tab in the next step.
+
+## Step 2: Add the LinkedIn OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **LinkedIn** under the **OAuth2 Providers** section.
+
+Enter the **Client ID** and paste either of your app's client secrets into the **Primary Client Secret or Secondary Client Secret** field. Turn the provider on and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/linkedin/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back on the **Auth** tab of your LinkedIn app, add it under **Authorized redirect URLs for your app** and save.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Linkedin` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about LinkedIn and Appwrite Auth
+
+If you would like to learn more about LinkedIn and Appwrite Auth, we have some resources that you should visit:
+
+- [Sign In with LinkedIn using OpenID Connect](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

@@ -923,7 +923,7 @@ export function View({ projectId, initialData }: ViewProps) {
       {/* Custom Header with Project Info */}
       <div className="legacy-theme-header">
         {/* Title Row */}
-        <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+        <div className="w-full px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             {/* Left: Title */}
             <div className="flex min-w-0 items-center gap-3">
@@ -996,118 +996,132 @@ export function View({ projectId, initialData }: ViewProps) {
 
       <PremiumGeoOverviewBanner projectId={projectId} />
 
-      {/* Content area */}
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-        <ConnectAgentCta
-          projectId={projectId}
-          className="mb-6"
-          initialConnected={initialData?.mcpAgentConnected}
-        />
-        {/* Charts card - usage stats (cloud only) */}
-        {visibleOverviewChartTabs.length > 0 && (
-          <div className="@container overflow-hidden rounded-xl border border-border bg-card/50">
-            {/* Filters first, then metric tabs - stacked below @[700px], side-by-side above */}
-            <div className="border-b border-border">
-              <div className="flex min-w-0 flex-col @[700px]:flex-row @[700px]:items-center @[700px]:gap-3 @[700px]:px-5">
-                <div className="order-1 flex w-full min-w-0 flex-col gap-2 px-4 py-2.5 @[520px]:flex-row @[520px]:flex-wrap @[520px]:items-center @[700px]:order-2 @[700px]:w-auto @[700px]:shrink-0 @[700px]:px-0 @[700px]:py-3">
-                  <UsageChartIntervalToggle
-                    value={chartInterval}
-                    onValueChange={setChartInterval}
-                    dateRange={dashboardChartDateRange}
-                    allowedIntervals={planChartIntervals}
-                    className="h-9 w-full @[520px]:w-fit"
-                  />
-                  <DateRangePicker
-                    dateRange={dashboardChartDateRange}
-                    onDateRangeChange={setDashboardChartDateRange}
-                    presetId={dashboardChartDateRangePresetId}
-                    className="h-9 w-full min-w-0 @[520px]:min-w-0 @[520px]:flex-1 @[700px]:w-auto @[700px]:min-w-[180px] @[700px]:flex-none"
-                    popoverContentAlign="end"
-                  />
-                </div>
-                <div
-                  className="order-1 h-px w-full bg-border @[700px]:hidden"
-                  aria-hidden
+      {/* Usage charts (cloud only) - full width, like Firewall and Analytics */}
+      {visibleOverviewChartTabs.length > 0 && (
+        <div className="@container w-full overflow-hidden border-b border-border">
+          {/* Filters first, then metric tabs - stacked below @[700px], side-by-side above */}
+          <div className="border-b border-border">
+            <div className="flex min-w-0 flex-col @[700px]:flex-row @[700px]:items-center @[700px]:gap-3 @[700px]:px-6">
+              <div className="order-1 flex w-full min-w-0 flex-col gap-2 px-4 py-2.5 sm:px-6 @[520px]:flex-row @[520px]:flex-wrap @[520px]:items-center @[700px]:order-2 @[700px]:w-auto @[700px]:shrink-0 @[700px]:px-0 @[700px]:py-3">
+                <UsageChartIntervalToggle
+                  value={chartInterval}
+                  onValueChange={setChartInterval}
+                  dateRange={dashboardChartDateRange}
+                  allowedIntervals={planChartIntervals}
+                  className="h-9 w-full @[520px]:w-fit"
                 />
-                <HorizontalScrollFade
-                  className="order-2 min-w-0 flex-1 px-4 @[700px]:order-1 @[700px]:px-0"
-                  fadeFromClassName="from-card/50"
-                >
-                  <TooltipProvider delayDuration={0}>
-                    <div className="flex min-w-max" role="tablist">
-                      {overviewTabs.map((tab, index) => {
-                        const isActive = activeTab === tab.id
+                <DateRangePicker
+                  dateRange={dashboardChartDateRange}
+                  onDateRangeChange={setDashboardChartDateRange}
+                  presetId={dashboardChartDateRangePresetId}
+                  className="h-9 w-full min-w-0 @[520px]:min-w-0 @[520px]:flex-1 @[700px]:w-auto @[700px]:min-w-[180px] @[700px]:flex-none"
+                  popoverContentAlign="end"
+                />
+              </div>
+              <div
+                className="order-1 h-px w-full bg-border @[700px]:hidden"
+                aria-hidden
+              />
+              <HorizontalScrollFade className="order-2 min-w-0 flex-1 px-4 sm:px-6 @[700px]:order-1 @[700px]:px-0">
+                <TooltipProvider delayDuration={0}>
+                  <div className="flex min-w-max" role="tablist">
+                    {overviewTabs.map((tab, index) => {
+                      const isActive = activeTab === tab.id
 
-                        return (
-                          <div key={tab.id} className="flex">
-                            {index > 0 && (
-                              <div className="my-2.5 w-px bg-border" />
+                      return (
+                        <div key={tab.id} className="flex">
+                          {index > 0 && (
+                            <div className="my-2.5 w-px bg-border" />
+                          )}
+
+                          <button
+                            role="tab"
+                            aria-selected={isActive}
+                            onClick={() => handleOverviewTabChange(tab.id)}
+                            className={cn(
+                              'relative flex min-w-[132px] flex-col gap-0.5 px-3 py-3 text-start cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:ps-0 rounded-sm @[700px]:min-w-[168px] @[700px]:px-4',
+                              'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                              isActive
+                                ? 'text-foreground'
+                                : 'text-muted-foreground hover:text-foreground/80',
                             )}
-
-                            <button
-                              role="tab"
-                              aria-selected={isActive}
-                              onClick={() => handleOverviewTabChange(tab.id)}
+                          >
+                            <OverviewTabMetricContent
+                              tabId={tab.id}
+                              isLoading={tab.isLoading}
+                              value={tab.value}
+                              change={tab.change}
+                              isActive={isActive}
+                            />
+                            <span
                               className={cn(
-                                'relative flex min-w-[132px] flex-col gap-0.5 px-3 py-3 text-start cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:ps-0 rounded-sm @[700px]:min-w-[168px] @[700px]:px-4',
-                                'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                'text-[12px]',
                                 isActive
-                                  ? 'text-foreground'
-                                  : 'text-muted-foreground hover:text-foreground/80',
+                                  ? 'text-muted-foreground'
+                                  : 'text-muted-foreground/70',
                               )}
                             >
-                              <OverviewTabMetricContent
-                                tabId={tab.id}
-                                isLoading={tab.isLoading}
-                                value={tab.value}
-                                change={tab.change}
-                                isActive={isActive}
-                              />
-                              <span
-                                className={cn(
-                                  'text-[12px]',
-                                  isActive
-                                    ? 'text-muted-foreground'
-                                    : 'text-muted-foreground/70',
-                                )}
-                              >
-                                {t(tab.label)}
-                              </span>
+                              {t(tab.label)}
+                            </span>
 
-                              {isActive && (
-                                <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
-                              )}
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </TooltipProvider>
-                </HorizontalScrollFade>
-              </div>
+                            {isActive && (
+                              <div className="absolute bottom-0 start-0 end-0 h-[2px] bg-foreground" />
+                            )}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </TooltipProvider>
+              </HorizontalScrollFade>
             </div>
+          </div>
 
-            {/* Chart content - stacked in one grid cell for stable height across tabs */}
-            <div className={overviewChartTabPanelsContainerClass}>
-            {usageStatsEnabled ? (
-            <div
-              className={cn(
-                bandwidthOverviewChartRowClassName,
-                overviewChartTabPanelVisibilityClass(activeTab === 'bandwidth'),
-              )}
-              aria-hidden={activeTab !== 'bandwidth'}
-            >
-                <div className={overviewChartColumnClass}>
-                  <RequestsChart
+          {/* Chart content - stacked in one grid cell for stable height across tabs */}
+          <div className={overviewChartTabPanelsContainerClass}>
+          {usageStatsEnabled ? (
+          <div
+            className={cn(
+              bandwidthOverviewChartRowClassName,
+              overviewChartTabPanelVisibilityClass(activeTab === 'bandwidth'),
+            )}
+            aria-hidden={activeTab !== 'bandwidth'}
+          >
+              <div className={overviewChartColumnClass}>
+                <RequestsChart
+                  className="h-full min-h-0 flex-1"
+                  isPanelVisible={activeTab === 'bandwidth'}
+                  title="Bandwidth over time"
+                  metric="bandwidth"
+                  dateRange={dashboardChartDateRange}
+                  chartInterval={chartInterval}
+                  chartData={bandwidthChartPoints}
+                  isLoading={showBandwidthChartLoading}
+                  isRefreshing={bandwidthChartLoading.isRefreshing}
+                  isError={isBandwidthError}
+                  onRetry={
+                    shouldSuppressUsageChartRetry(bandwidthErrorCopy)
+                      ? undefined
+                      : () => void refetchBandwidth()
+                  }
+                  upgradeOrgId={bandwidthErrorCopy.isAddonNotFound ? project?.teamId : undefined}
+                  formatValue={formatBandwidthValue}
+                  errorTitle={bandwidthErrorCopy.title}
+                  errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
+                />
+              </div>
+                {showBandwidthUsageBreakdown ? (
+                <div className={overviewBreakdownColumnClass}>
+                  <TopRequests
                     className="h-full min-h-0 flex-1"
-                    isPanelVisible={activeTab === 'bandwidth'}
-                    title="Bandwidth over time"
+                    title="Top bandwidth consumers"
                     metric="bandwidth"
-                    dateRange={dashboardChartDateRange}
-                    chartInterval={chartInterval}
-                    chartData={bandwidthChartPoints}
+                    projectId={projectId}
+                    items={
+                      isBandwidthError ? [] : bandwidthUsage?.topConsumers
+                    }
+                    formatCount={formatBandwidthValue}
                     isLoading={showBandwidthChartLoading}
-                    isRefreshing={bandwidthChartLoading.isRefreshing}
                     isError={isBandwidthError}
                     onRetry={
                       shouldSuppressUsageChartRetry(bandwidthErrorCopy)
@@ -1115,57 +1129,57 @@ export function View({ projectId, initialData }: ViewProps) {
                         : () => void refetchBandwidth()
                     }
                     upgradeOrgId={bandwidthErrorCopy.isAddonNotFound ? project?.teamId : undefined}
-                    formatValue={formatBandwidthValue}
                     errorTitle={bandwidthErrorCopy.title}
                     errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
                   />
                 </div>
-                  {showBandwidthUsageBreakdown ? (
-                  <div className={overviewBreakdownColumnClass}>
-                    <TopRequests
-                      className="h-full min-h-0 flex-1"
-                      title="Top bandwidth consumers"
-                      metric="bandwidth"
-                      projectId={projectId}
-                      items={
-                        isBandwidthError ? [] : bandwidthUsage?.topConsumers
-                      }
-                      formatCount={formatBandwidthValue}
-                      isLoading={showBandwidthChartLoading}
-                      isError={isBandwidthError}
-                      onRetry={
-                        shouldSuppressUsageChartRetry(bandwidthErrorCopy)
-                          ? undefined
-                          : () => void refetchBandwidth()
-                      }
-                      upgradeOrgId={bandwidthErrorCopy.isAddonNotFound ? project?.teamId : undefined}
-                      errorTitle={bandwidthErrorCopy.title}
-                      errorMessage={<UsageChartErrorMessage copy={bandwidthErrorCopy} />}
-                    />
-                  </div>
-                  ) : null}
-              </div>
-            ) : null}
+                ) : null}
+            </div>
+          ) : null}
 
-            {usageStatsEnabled ? (
-            <div
-              className={cn(
-                requestsOverviewChartRowClassName,
-                overviewChartTabPanelVisibilityClass(activeTab === 'requests'),
-              )}
-              aria-hidden={activeTab !== 'requests'}
-            >
-                <div className={overviewChartColumnClass}>
-                  <RequestsChart
+          {usageStatsEnabled ? (
+          <div
+            className={cn(
+              requestsOverviewChartRowClassName,
+              overviewChartTabPanelVisibilityClass(activeTab === 'requests'),
+            )}
+            aria-hidden={activeTab !== 'requests'}
+          >
+              <div className={overviewChartColumnClass}>
+                <RequestsChart
+                  className="h-full min-h-0 flex-1"
+                  isPanelVisible={activeTab === 'requests'}
+                  title="Requests over time"
+                  metric="requests"
+                  dateRange={dashboardChartDateRange}
+                  chartInterval={chartInterval}
+                  chartData={requestsChartPoints}
+                  isLoading={showRequestsChartLoading}
+                  isRefreshing={requestsChartLoading.isRefreshing}
+                  isError={isRequestsError}
+                  onRetry={
+                    shouldSuppressUsageChartRetry(requestsErrorCopy)
+                      ? undefined
+                      : () => void refetchRequests()
+                  }
+                  upgradeOrgId={requestsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
+                  formatValue={formatRequestsValue}
+                  errorTitle={requestsErrorCopy.title}
+                  errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
+                />
+              </div>
+                {showRequestsUsageBreakdown ? (
+                <div className={overviewBreakdownColumnClass}>
+                  <TopRequests
                     className="h-full min-h-0 flex-1"
-                    isPanelVisible={activeTab === 'requests'}
-                    title="Requests over time"
+                    title="Top requested endpoints"
                     metric="requests"
-                    dateRange={dashboardChartDateRange}
-                    chartInterval={chartInterval}
-                    chartData={requestsChartPoints}
+                    projectId={projectId}
+                    items={
+                      isRequestsError ? [] : requestsUsage?.topEndpoints
+                    }
+                    formatCount={formatRequestsValue}
                     isLoading={showRequestsChartLoading}
-                    isRefreshing={requestsChartLoading.isRefreshing}
                     isError={isRequestsError}
                     onRetry={
                       shouldSuppressUsageChartRetry(requestsErrorCopy)
@@ -1173,55 +1187,63 @@ export function View({ projectId, initialData }: ViewProps) {
                         : () => void refetchRequests()
                     }
                     upgradeOrgId={requestsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
-                    formatValue={formatRequestsValue}
                     errorTitle={requestsErrorCopy.title}
                     errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
                   />
                 </div>
-                  {showRequestsUsageBreakdown ? (
-                  <div className={overviewBreakdownColumnClass}>
-                    <TopRequests
-                      className="h-full min-h-0 flex-1"
-                      title="Top requested endpoints"
-                      metric="requests"
-                      projectId={projectId}
-                      items={
-                        isRequestsError ? [] : requestsUsage?.topEndpoints
-                      }
-                      formatCount={formatRequestsValue}
-                      isLoading={showRequestsChartLoading}
-                      isError={isRequestsError}
-                      onRetry={
-                        shouldSuppressUsageChartRetry(requestsErrorCopy)
-                          ? undefined
-                          : () => void refetchRequests()
-                      }
-                      upgradeOrgId={requestsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
-                      errorTitle={requestsErrorCopy.title}
-                      errorMessage={<UsageChartErrorMessage copy={requestsErrorCopy} />}
-                    />
-                  </div>
-                  ) : null}
-              </div>
-            ) : null}
+                ) : null}
+            </div>
+          ) : null}
 
-            {usageStatsEnabled ? (
-            <div
-              className={cn(
-                overviewChartRowClassName,
-                overviewChartTabPanelVisibilityClass(activeTab === 'storage'),
-              )}
-              aria-hidden={activeTab !== 'storage'}
-            >
-                <div className={overviewChartColumnClass}>
-                  <OverviewStorageChart
+          {usageStatsEnabled ? (
+          <div
+            className={cn(
+              overviewChartRowClassName,
+              overviewChartTabPanelVisibilityClass(activeTab === 'storage'),
+            )}
+            aria-hidden={activeTab !== 'storage'}
+          >
+              <div className={overviewChartColumnClass}>
+                <OverviewStorageChart
+                  className="h-full min-h-0 flex-1"
+                  isPanelVisible={activeTab === 'storage'}
+                  dateRange={dashboardChartDateRange}
+                  chartInterval={chartInterval}
+                  chartData={storageChartPoints}
+                  isLoading={showStorageChartLoading}
+                  isRefreshing={storageChartLoading.isRefreshing}
+                  isError={isStorageError}
+                  onRetry={
+                    shouldSuppressUsageChartRetry(storageErrorCopy)
+                      ? undefined
+                      : () => void refetchStorage()
+                  }
+                  upgradeOrgId={storageErrorCopy.isAddonNotFound ? project?.teamId : undefined}
+                  errorTitle={storageErrorCopy.title}
+                  errorMessage={<UsageChartErrorMessage copy={storageErrorCopy} />}
+                />
+              </div>
+                <div className={overviewBreakdownColumnClass}>
+                  <TopRequests
                     className="h-full min-h-0 flex-1"
-                    isPanelVisible={activeTab === 'storage'}
-                    dateRange={dashboardChartDateRange}
-                    chartInterval={chartInterval}
-                    chartData={storageChartPoints}
+                    title={activeStorageBreakdownTitle}
+                    metric="storage"
+                    breakdownVariant="resource"
+                    storageBreakdownKind={storageBreakdownType}
+                    projectId={projectId}
+                    storageLookup={storageBreakdownResources?.resources}
+                    resourceLookup={storageComputeBreakdownResources?.resources}
+                    databaseLookup={storageDatabaseBreakdownResources?.resources}
+                    resourceNamesResolved={storageBreakdownResourceNamesResolved}
+                    headerAddon={
+                      <OverviewStorageBreakdownToggle
+                        value={storageBreakdownType}
+                        onValueChange={setStorageBreakdownType}
+                      />
+                    }
+                    items={activeStorageBreakdownItems}
+                    formatCount={formatStorageValue}
                     isLoading={showStorageChartLoading}
-                    isRefreshing={storageChartLoading.isRefreshing}
                     isError={isStorageError}
                     onRetry={
                       shouldSuppressUsageChartRetry(storageErrorCopy)
@@ -1233,60 +1255,55 @@ export function View({ projectId, initialData }: ViewProps) {
                     errorMessage={<UsageChartErrorMessage copy={storageErrorCopy} />}
                   />
                 </div>
-                  <div className={overviewBreakdownColumnClass}>
-                    <TopRequests
-                      className="h-full min-h-0 flex-1"
-                      title={activeStorageBreakdownTitle}
-                      metric="storage"
-                      breakdownVariant="resource"
-                      storageBreakdownKind={storageBreakdownType}
-                      projectId={projectId}
-                      storageLookup={storageBreakdownResources?.resources}
-                      resourceLookup={storageComputeBreakdownResources?.resources}
-                      databaseLookup={storageDatabaseBreakdownResources?.resources}
-                      resourceNamesResolved={storageBreakdownResourceNamesResolved}
-                      headerAddon={
-                        <OverviewStorageBreakdownToggle
-                          value={storageBreakdownType}
-                          onValueChange={setStorageBreakdownType}
-                        />
-                      }
-                      items={activeStorageBreakdownItems}
-                      formatCount={formatStorageValue}
-                      isLoading={showStorageChartLoading}
-                      isError={isStorageError}
-                      onRetry={
-                        shouldSuppressUsageChartRetry(storageErrorCopy)
-                          ? undefined
-                          : () => void refetchStorage()
-                      }
-                      upgradeOrgId={storageErrorCopy.isAddonNotFound ? project?.teamId : undefined}
-                      errorTitle={storageErrorCopy.title}
-                      errorMessage={<UsageChartErrorMessage copy={storageErrorCopy} />}
-                    />
-                  </div>
-              </div>
-            ) : null}
+            </div>
+          ) : null}
 
-            {usageStatsEnabled ? (
-            <div
-              className={cn(
-                overviewChartRowClassName,
-                overviewChartTabPanelVisibilityClass(activeTab === 'executions'),
-              )}
-              aria-hidden={activeTab !== 'executions'}
-            >
-                <div className={overviewChartColumnClass}>
-                  <RequestsChart
+          {usageStatsEnabled ? (
+          <div
+            className={cn(
+              overviewChartRowClassName,
+              overviewChartTabPanelVisibilityClass(activeTab === 'executions'),
+            )}
+            aria-hidden={activeTab !== 'executions'}
+          >
+              <div className={overviewChartColumnClass}>
+                <RequestsChart
+                  className="h-full min-h-0 flex-1"
+                  isPanelVisible={activeTab === 'executions'}
+                  title={COMPUTE_EXECUTIONS_CHART_TITLE}
+                  metric="executions"
+                  dateRange={dashboardChartDateRange}
+                  chartInterval={chartInterval}
+                  chartData={executionsChartPoints}
+                  isLoading={showExecutionsChartLoading}
+                  isRefreshing={executionsChartLoading.isRefreshing}
+                  isError={isExecutionsError}
+                  onRetry={
+                    shouldSuppressUsageChartRetry(executionsErrorCopy)
+                      ? undefined
+                      : () => void refetchExecutions()
+                  }
+                  upgradeOrgId={executionsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
+                  formatValue={formatExecutionsValue}
+                  errorTitle={executionsErrorCopy.title}
+                  errorMessage={<UsageChartErrorMessage copy={executionsErrorCopy} />}
+                />
+              </div>
+                <div className={overviewBreakdownColumnClass}>
+                  <TopRequests
                     className="h-full min-h-0 flex-1"
-                    isPanelVisible={activeTab === 'executions'}
-                    title={COMPUTE_EXECUTIONS_CHART_TITLE}
+                    title={COMPUTE_EXECUTIONS_BREAKDOWN_TITLE}
                     metric="executions"
-                    dateRange={dashboardChartDateRange}
-                    chartInterval={chartInterval}
-                    chartData={executionsChartPoints}
+                    breakdownVariant="resource"
+                    projectId={projectId}
+                    resourceLookup={executionBreakdownResources?.resources}
+                    resourceNamesResolved={executionBreakdownResourceNamesResolved}
+                    itemCount={OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT}
+                    items={
+                      isExecutionsError ? [] : executionsUsage?.topConsumers
+                    }
+                    formatCount={formatExecutionsValue}
                     isLoading={showExecutionsChartLoading}
-                    isRefreshing={executionsChartLoading.isRefreshing}
                     isError={isExecutionsError}
                     onRetry={
                       shouldSuppressUsageChartRetry(executionsErrorCopy)
@@ -1294,59 +1311,60 @@ export function View({ projectId, initialData }: ViewProps) {
                         : () => void refetchExecutions()
                     }
                     upgradeOrgId={executionsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
-                    formatValue={formatExecutionsValue}
                     errorTitle={executionsErrorCopy.title}
                     errorMessage={<UsageChartErrorMessage copy={executionsErrorCopy} />}
                   />
                 </div>
-                  <div className={overviewBreakdownColumnClass}>
-                    <TopRequests
-                      className="h-full min-h-0 flex-1"
-                      title={COMPUTE_EXECUTIONS_BREAKDOWN_TITLE}
-                      metric="executions"
-                      breakdownVariant="resource"
-                      projectId={projectId}
-                      resourceLookup={executionBreakdownResources?.resources}
-                      resourceNamesResolved={executionBreakdownResourceNamesResolved}
-                      itemCount={OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT}
-                      items={
-                        isExecutionsError ? [] : executionsUsage?.topConsumers
-                      }
-                      formatCount={formatExecutionsValue}
-                      isLoading={showExecutionsChartLoading}
-                      isError={isExecutionsError}
-                      onRetry={
-                        shouldSuppressUsageChartRetry(executionsErrorCopy)
-                          ? undefined
-                          : () => void refetchExecutions()
-                      }
-                      upgradeOrgId={executionsErrorCopy.isAddonNotFound ? project?.teamId : undefined}
-                      errorTitle={executionsErrorCopy.title}
-                      errorMessage={<UsageChartErrorMessage copy={executionsErrorCopy} />}
-                    />
-                  </div>
-              </div>
-            ) : null}
+            </div>
+          ) : null}
 
-            {usageStatsEnabled ? (
-            <div
-              className={cn(
-                overviewChartRowClassName,
-                overviewChartTabPanelVisibilityClass(activeTab === 'gbhours'),
-              )}
-              aria-hidden={activeTab !== 'gbhours'}
-            >
-                <div className={overviewChartColumnClass}>
-                  <RequestsChart
+          {usageStatsEnabled ? (
+          <div
+            className={cn(
+              overviewChartRowClassName,
+              overviewChartTabPanelVisibilityClass(activeTab === 'gbhours'),
+            )}
+            aria-hidden={activeTab !== 'gbhours'}
+          >
+              <div className={overviewChartColumnClass}>
+                <RequestsChart
+                  className="h-full min-h-0 flex-1"
+                  isPanelVisible={activeTab === 'gbhours'}
+                  title="Compute over time"
+                  metric="gbhours"
+                  dateRange={dashboardChartDateRange}
+                  chartInterval={chartInterval}
+                  chartData={gbHoursChartPoints}
+                  isLoading={showGbHoursChartLoading}
+                  isRefreshing={gbHoursChartLoading.isRefreshing}
+                  isError={isGbHoursError}
+                  onRetry={
+                    shouldSuppressUsageChartRetry(gbHoursErrorCopy)
+                      ? undefined
+                      : () => void refetchGbHours()
+                  }
+                  upgradeOrgId={gbHoursErrorCopy.isAddonNotFound ? project?.teamId : undefined}
+                  formatValue={formatGbHoursValue}
+                  errorTitle={gbHoursErrorCopy.title}
+                  errorMessage={<UsageChartErrorMessage copy={gbHoursErrorCopy} />}
+                />
+              </div>
+                <div className={overviewBreakdownColumnClass}>
+                  <TopRequests
                     className="h-full min-h-0 flex-1"
-                    isPanelVisible={activeTab === 'gbhours'}
-                    title="Compute over time"
+                    title="Top compute consumers"
                     metric="gbhours"
-                    dateRange={dashboardChartDateRange}
-                    chartInterval={chartInterval}
-                    chartData={gbHoursChartPoints}
+                    showUnitInfo
+                    breakdownVariant="resource"
+                    projectId={projectId}
+                    resourceLookup={gbHoursBreakdownResources?.resources}
+                    resourceNamesResolved={gbHoursBreakdownResourceNamesResolved}
+                    itemCount={OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT}
+                    items={
+                      isGbHoursError ? [] : gbHoursUsage?.topConsumers
+                    }
+                    formatCount={formatGbHoursValue}
                     isLoading={showGbHoursChartLoading}
-                    isRefreshing={gbHoursChartLoading.isRefreshing}
                     isError={isGbHoursError}
                     onRetry={
                       shouldSuppressUsageChartRetry(gbHoursErrorCopy)
@@ -1354,48 +1372,24 @@ export function View({ projectId, initialData }: ViewProps) {
                         : () => void refetchGbHours()
                     }
                     upgradeOrgId={gbHoursErrorCopy.isAddonNotFound ? project?.teamId : undefined}
-                    formatValue={formatGbHoursValue}
                     errorTitle={gbHoursErrorCopy.title}
                     errorMessage={<UsageChartErrorMessage copy={gbHoursErrorCopy} />}
                   />
                 </div>
-                  <div className={overviewBreakdownColumnClass}>
-                    <TopRequests
-                      className="h-full min-h-0 flex-1"
-                      title="Top compute consumers"
-                      metric="gbhours"
-                      showUnitInfo
-                      breakdownVariant="resource"
-                      projectId={projectId}
-                      resourceLookup={gbHoursBreakdownResources?.resources}
-                      resourceNamesResolved={gbHoursBreakdownResourceNamesResolved}
-                      itemCount={OVERVIEW_COMPUTE_BREAKDOWN_ITEM_COUNT}
-                      items={
-                        isGbHoursError ? [] : gbHoursUsage?.topConsumers
-                      }
-                      formatCount={formatGbHoursValue}
-                      isLoading={showGbHoursChartLoading}
-                      isError={isGbHoursError}
-                      onRetry={
-                        shouldSuppressUsageChartRetry(gbHoursErrorCopy)
-                          ? undefined
-                          : () => void refetchGbHours()
-                      }
-                      upgradeOrgId={gbHoursErrorCopy.isAddonNotFound ? project?.teamId : undefined}
-                      errorTitle={gbHoursErrorCopy.title}
-                      errorMessage={<UsageChartErrorMessage copy={gbHoursErrorCopy} />}
-                    />
-                  </div>
-              </div>
-            ) : null}
             </div>
+          ) : null}
           </div>
-        )}
+        </div>
+      )}
 
-        <ProjectResources
+      {/* Content area */}
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+        <ConnectAgentCta
           projectId={projectId}
-          className={visibleOverviewChartTabs.length > 0 ? 'mt-8' : undefined}
+          className="mb-6"
+          initialConnected={initialData?.mcpAgentConnected}
         />
+        <ProjectResources projectId={projectId} />
 
         <section aria-labelledby="overview-connect-title" className="mt-8">
           <h2
