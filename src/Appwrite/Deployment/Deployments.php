@@ -71,6 +71,13 @@ use Utopia\VCS\Adapter\Git;
  */
 readonly class Deployments
 {
+    /**
+     * Deployment statuses that represent an active or queued build.
+     *
+     * @var list<string>
+     */
+    public const array IN_FLIGHT_STATUSES = ['waiting', 'processing', 'building'];
+
     public function __construct(
         private Jobs $jobs,
         protected Database $dbForProject,
@@ -429,11 +436,116 @@ readonly class Deployments
         // clears its staged source (see payload()). Unlinking follows symlinked
         // parent directories the build could plant, so clean up only inside
         // the builds tree.
+        // A canceled build never completes, so the Jobs worker never moves or
+        // clears its staged source (see payload()). Unlinking follows symlinked
+        // parent directories the build could plant, so clean up only inside
+        // the builds tree.
         $device = static::device($this->project->getId());
         $staged = static::stagedSourcePath($device, $deploymentId);
         if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
             $device->delete($staged);
         }
+    }
+
+    /**
+     * Sparse attributes that mark an in-flight build canceled and append
+     * its closing log line, since no build worker writes one after cancel.
+     *
+     * @return array<string, mixed>
+     */
+    public static function canceledAttributes(Document $deployment, ?int $duration = null): array
+    {
+        if ($duration === null) {
+            $startedAt = $deployment->getAttribute('buildStartedAt', '');
+            $duration = 0;
+            if (!empty($startedAt)) {
+                $startTime = new \DateTime((string) $startedAt);
+                $duration = \max(0, (new \DateTime('now'))->getTimestamp() - $startTime->getTimestamp());
+            }
+        }
+
+        $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+        $limit = \defined('APP_LOG_LENGTH_LIMIT') ? APP_LOG_LENGTH_LIMIT : 1000000;
+
+        return [
+            'buildEndedAt' => DateTime::now(),
+            'buildDuration' => \max(0, $duration),
+            'status' => 'canceled',
+            'buildLogs' => \substr($logs, -$limit),
+        ];
+    }
+
+    /**
+     * Cancel older in-flight VCS builds on the same resource and branch that
+     * have been superseded by $deployment. Only deployments still in flight
+     * are transitioned so completed or already-canceled builds stay untouched.
+     *
+     * @return list<Document> Superseded deployments transitioned to 'canceled'.
+     */
+    public function cancelSuperseded(Document $resource, Document $deployment): array
+    {
+        $branch = (string) $deployment->getAttribute('providerBranch', '');
+        if (
+            $deployment->getAttribute('type') !== 'vcs'
+            || $branch === ''
+            || $deployment->getAttribute('status') === 'canceled'
+        ) {
+            return [];
+        }
+
+        $sequence = $deployment->getSequence();
+        $superseded = [];
+        $cursor = null;
+
+        do {
+            $queries = [
+                Query::equal('resourceId', [$resource->getId()]),
+                Query::equal('resourceType', [$resource->getCollection()]),
+                Query::equal('type', ['vcs']),
+                Query::equal('providerBranch', [$branch]),
+                Query::equal('status', self::IN_FLIGHT_STATUSES),
+                Query::notEqual('$id', $deployment->getId()),
+                ...($sequence !== null && $sequence !== '' ? [Query::lessThan('$sequence', $sequence)] : []),
+                Query::orderAsc('$sequence'),
+                Query::limit(100),
+            ];
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $others = $this->dbForProject->find('deployments', $queries);
+
+            foreach ($others as $other) {
+                $canceled = static::canceledAttributes($other);
+                $updated = $this->dbForProject->updateDocuments(
+                    'deployments',
+                    new Document($canceled),
+                    [
+                        Query::equal('$id', [$other->getId()]),
+                        Query::equal('status', self::IN_FLIGHT_STATUSES),
+                    ],
+                );
+
+                if ($updated === 0) {
+                    continue;
+                }
+
+                $other->setAttributes($canceled);
+
+                try {
+                    $this->cancel($other->getId());
+                } catch (\Throwable) {
+                    // Best-effort cleanup — the deployment is already marked 'canceled'.
+                }
+
+                $superseded[] = $other;
+            }
+
+            $cursor = \end($others) ?: null;
+        } while (\count($others) === 100);
+
+        return $superseded;
     }
 
     /**
