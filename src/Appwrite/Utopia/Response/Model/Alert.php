@@ -63,6 +63,25 @@ class Alert extends Model
                 'required' => false,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('acknowledgedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Date a member acknowledged the alert, in ISO 8601 format. Empty while nobody has.',
+                'default' => null,
+                'required' => false,
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('acknowledgedBy', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the user who acknowledged the alert. Empty while nobody has, or when it was acknowledged with an API key.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('acknowledgedByName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of the user who acknowledged the alert, when they did.',
+                'default' => '',
+                'example' => 'Jane Doe',
+            ])
             ->addRule('rules', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The monitor\'s rules when the alert fired, as query strings.',

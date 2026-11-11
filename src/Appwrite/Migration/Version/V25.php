@@ -582,10 +582,13 @@ class V25 extends Migration
                 case 'monitorAlerts':
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
-                    // Created before monitors could be critical.
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'critical');
-                    } catch (Duplicate) {
+                    // Created before monitors could be critical, or alerts acknowledged.
+                    $attributes = $id === 'monitorAlerts' ? ['critical', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] : ['critical'];
+                    foreach ($attributes as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                        } catch (Duplicate) {
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
