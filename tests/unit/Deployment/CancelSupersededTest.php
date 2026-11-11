@@ -54,6 +54,11 @@ final class CancelSupersededTest extends TestCase
         $this->assertSame(3, $truncatedAttrs['buildDuration']);
         $this->assertSame($limit, \strlen($truncatedAttrs['buildLogs']));
         $this->assertStringEndsWith("Build has been canceled. \033[0m\n", $truncatedAttrs['buildLogs']);
+
+        $withoutLogs = Deployments::canceledAttributes($unstarted, 2, false);
+        $this->assertSame('canceled', $withoutLogs['status']);
+        $this->assertSame(2, $withoutLogs['buildDuration']);
+        $this->assertArrayNotHasKey('buildLogs', $withoutLogs);
     }
 
     public function testCancelSupersededCancelsOnlyOlderInFlightVcsBuildsOnSameResourceAndBranch(): void
@@ -152,7 +157,8 @@ final class CancelSupersededTest extends TestCase
 
         $database = $this->createInMemoryDatabase($store);
         $deletedJobPaths = [];
-        $deployments = $this->createDeploymentsService($database, $project, $deletedJobPaths);
+        $locks = static fn (string $key, int $ttl, callable $callback): mixed => $callback();
+        $deployments = $this->createDeploymentsService($database, $project, $deletedJobPaths, $locks);
 
         $superseded = $deployments->cancelSuperseded($site, $store['d9']);
         $supersededIds = \array_map(static fn (Document $doc): string => $doc->getId(), $superseded);
@@ -251,7 +257,7 @@ final class CancelSupersededTest extends TestCase
         $this->assertStringContainsString('Build has been canceled.', (string) $store['d1']->getAttribute('buildLogs'));
     }
 
-    public function testCancelSupersededFallsBackWhenLockContends(): void
+    public function testCancelSupersededFallsBackWhenLockContendsWithoutClobberingLogs(): void
     {
         $site = new Document(['$id' => 'site1', '$sequence' => '5', '$collection' => 'sites']);
         $project = new Document(['$id' => 'proj1', '$sequence' => '9', 'region' => 'default']);
@@ -265,6 +271,7 @@ final class CancelSupersededTest extends TestCase
                 'type' => 'vcs',
                 'providerBranch' => 'main',
                 'status' => 'building',
+                'buildLogs' => "Concurrent job line\n",
             ]),
             'd2' => new Document([
                 '$id' => 'd2',
@@ -288,6 +295,7 @@ final class CancelSupersededTest extends TestCase
 
         $this->assertCount(1, $superseded);
         $this->assertSame('canceled', $store['d1']->getAttribute('status'));
+        $this->assertSame("Concurrent job line\n", $store['d1']->getAttribute('buildLogs'));
         $this->assertSame(['/v1/jobs/' . Deployments::id('proj1', 'd1')], $deletedJobPaths);
     }
 

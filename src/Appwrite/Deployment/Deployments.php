@@ -453,12 +453,12 @@ readonly class Deployments
     }
 
     /**
-     * Sparse attributes that mark an in-flight build canceled and append
-     * its closing log line, since no build worker writes one after cancel.
+     * Sparse attributes that mark an in-flight build canceled and optionally
+     * append its closing log line (only safe when holding the per-deployment lock).
      *
      * @return array<string, mixed>
      */
-    public static function canceledAttributes(Document $deployment, ?int $duration = null): array
+    public static function canceledAttributes(Document $deployment, ?int $duration = null, bool $includeLogs = true): array
     {
         if ($duration === null) {
             $startedAt = $deployment->getAttribute('buildStartedAt', '');
@@ -469,15 +469,19 @@ readonly class Deployments
             }
         }
 
-        $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
-        $limit = \defined('APP_LOG_LENGTH_LIMIT') ? APP_LOG_LENGTH_LIMIT : 1000000;
-
-        return [
+        $attributes = [
             'buildEndedAt' => DateTime::now(),
             'buildDuration' => \max(0, $duration),
             'status' => 'canceled',
-            'buildLogs' => \substr($logs, -$limit),
         ];
+
+        if ($includeLogs) {
+            $logs = $deployment->getAttribute('buildLogs', '') . "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
+            $limit = \defined('APP_LOG_LENGTH_LIMIT') ? APP_LOG_LENGTH_LIMIT : 1000000;
+            $attributes['buildLogs'] = \substr($logs, -$limit);
+        }
+
+        return $attributes;
     }
 
     /**
@@ -522,14 +526,15 @@ readonly class Deployments
             $others = $this->dbForProject->find('deployments', $queries);
 
             foreach ($others as $other) {
-                $cancelOne = function () use ($other): ?Document {
-                    // Read inside the lock so concurrent Jobs log appends are not lost.
+                $cancelOne = function (bool $includeLogs) use ($other): ?Document {
+                    // Read inside the lock so concurrent Jobs log appends are not lost;
+                    // unlocked fallbacks skip buildLogs completely so they never clobber it.
                     $current = $this->dbForProject->getDocument('deployments', $other->getId());
                     if ($current->isEmpty() || !\in_array($current->getAttribute('status'), self::IN_FLIGHT_STATUSES, true)) {
                         return null;
                     }
 
-                    $canceled = static::canceledAttributes($current);
+                    $canceled = static::canceledAttributes($current, includeLogs: $includeLogs);
                     $updated = $this->dbForProject->updateDocuments(
                         'deployments',
                         new Document($canceled),
@@ -550,12 +555,12 @@ readonly class Deployments
 
                 if ($this->locks !== null) {
                     try {
-                        $canceledDoc = ($this->locks)(static::lock((string) $this->project->getSequence(), $other->getId()), 30, $cancelOne, 10.0);
+                        $canceledDoc = ($this->locks)(static::lock((string) $this->project->getSequence(), $other->getId()), 30, static fn (): ?Document => $cancelOne(true), 10.0);
                     } catch (Contention) {
-                        $canceledDoc = $cancelOne();
+                        $canceledDoc = $cancelOne(false);
                     }
                 } else {
-                    $canceledDoc = $cancelOne();
+                    $canceledDoc = $cancelOne(false);
                 }
 
                 if (!$canceledDoc instanceof Document) {
