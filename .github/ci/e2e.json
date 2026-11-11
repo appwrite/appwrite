@@ -20,7 +20,22 @@
       ".github/PULL_REQUEST_TEMPLATE",
       "LICENSE"
     ],
+    "extension": [
+      "crates/",
+      "Cargo.toml",
+      "Cargo.lock",
+      ".cargo/",
+      "rustfmt.toml",
+      "packages/image/",
+      "Dockerfile",
+      ".dockerignore"
+    ],
     "checks": [
+      "crates/",
+      "Cargo.toml",
+      "Cargo.lock",
+      ".cargo/",
+      "rustfmt.toml",
       ".github/",
       "docs/",
       "tests/unit/",
