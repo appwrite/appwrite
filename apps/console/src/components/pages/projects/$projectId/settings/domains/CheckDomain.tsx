@@ -44,7 +44,7 @@ export function CheckDomain({
       })
       // The API reports a DNS check that has not passed as 'unverified'.
       if (updatedRule.status === 'unverified') {
-        toast.info(t('DNS records not found yet. Appwrite keeps checking.'))
+        toast.info(t('Not verified yet. Appwrite keeps checking.'))
       } else if (updatedRule.status === 'verified') {
         toast.success(
           isSmtpRule(rule)
@@ -55,8 +55,12 @@ export function CheckDomain({
         toast.success(t('Verification in progress'))
       }
     } catch (err) {
+      // The same error covers a missing record, a wrong value and a CAA
+      // conflict, so show what the check found.
       if (getAppwriteErrorInfo(err).type === 'rule_verification_failed') {
-        toast.info(t('DNS records not found yet. Appwrite keeps checking.'))
+        toast.info(t('Not verified yet. Appwrite keeps checking.'), {
+          description: getErrorMessage(err),
+        })
       } else {
         toast.error(getErrorMessage(err))
       }

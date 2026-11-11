@@ -95,8 +95,8 @@ export const jaSitesDictionary: Record<string, string> = {
     'Appwrite はドメインの追加から 3 日後に確認を停止しました。DNS レコードを修正してから、再試行してください。',
   'Last check:': '最終確認:',
   'Check now': '今すぐ確認',
-  'DNS records not found yet. Appwrite keeps checking.':
-    'DNS レコードはまだ見つかりません。Appwrite は確認を続けます。',
+  'Not verified yet. Appwrite keeps checking.':
+    'まだ検証されていません。Appwrite は確認を続けます。',
   'Certificate expired': '証明書の期限切れ',
   'Renewal failed': '証明書の更新に失敗しました',
   'Certificate blocked': '証明書の発行が保留中',

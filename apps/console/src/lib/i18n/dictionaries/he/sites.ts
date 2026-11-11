@@ -181,8 +181,8 @@ export const heSitesDictionary: Record<string, string> = {
     'Appwrite הפסיק לבדוק 3 ימים לאחר הוספת הדומיין. תקנו את רשומות ה-DNS ולאחר מכן לחצו על "ניסיון חוזר".',
   'Last check:': 'בדיקה אחרונה:',
   'Check now': 'בדוק עכשיו',
-  'DNS records not found yet. Appwrite keeps checking.':
-    'רשומות ה-DNS עדיין לא נמצאו. Appwrite ממשיך לבדוק.',
+  'Not verified yet. Appwrite keeps checking.':
+    'עדיין לא אומת. Appwrite ממשיך לבדוק.',
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
   'Certificate blocked': 'הנפקת התעודה חסומה',
