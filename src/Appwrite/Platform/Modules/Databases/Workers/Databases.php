@@ -367,16 +367,20 @@ class Databases extends Action
 
             foreach ($indexes as $index) {
                 /** @var string[] $attributes */
-                $attributes = $index->getAttribute('attributes');
-                $lengths = $index->getAttribute('lengths');
-                $orders = $index->getAttribute('orders');
+                $attributes = $index->getAttribute('attributes', []);
+                $lengths = $index->getAttribute('lengths', []);
+                $orders = $index->getAttribute('orders', []);
 
-                $found = \array_search($key, $attributes);
+                $found = \array_search($key, $attributes, true);
 
                 if ($found !== false) {
-                    $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
-                    $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
-                    $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
+                    // A length and an order belong to the attribute at their own position, so the removed
+                    // attribute takes the ones at its position with it. Pruning by value instead drops every
+                    // length and order equal to them, leaving the index covering more attributes than it has
+                    // lengths or orders.
+                    \array_splice($attributes, $found, 1);
+                    \array_splice($lengths, $found, 1);
+                    \array_splice($orders, $found, 1);
 
                     if (empty($attributes)) {
                         $dbForProject->deleteDocument('indexes', $index->getId());
@@ -520,13 +524,19 @@ class Databases extends Action
         $projectId = $project->getId();
         $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete';
         $key = $index->getAttribute('key');
-        $status = $index->getAttribute('status', '');
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed') {
+            try {
                 $dbForDatabases->deleteIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
+            } catch (NotFound $e) {
+                // An index the schema does not hold -- one that never finished creating, or one the schema
+                // lost while its document stayed behind -- is already in the state the delete asks for, so
+                // the document still goes. Recording it as stuck instead leaves the index undeletable: every
+                // retry takes this same path.
+                Span::add('database.index.not_found', $e->getMessage());
             }
+
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (\Throwable $e) {

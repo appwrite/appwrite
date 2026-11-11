@@ -4574,6 +4574,166 @@ trait DatabasesBase
         $this->assertEquals(400, $create['headers']['status-code']);
     }
 
+    /**
+     * The engine drops a deleted column from every index that covered it, so the index documents have to
+     * follow positionally: the length and the order at the removed column's position go with it, and the
+     * ones of the columns that remain stay where they were.
+     */
+    public function testDeleteIndexedColumn(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Indexed column deletion',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'IndexedColumn',
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        foreach (['first', 'second'] as $key) {
+            $column = $this->createAttribute($databaseId, $containerId, ColumnType::String->value, [
+                'key' => $key,
+                'size' => 128,
+                'required' => false,
+            ]);
+
+            $this->assertEquals(202, $column['headers']['status-code']);
+        }
+
+        $this->waitForAllAttributes($databaseId, $containerId);
+
+        // Equal lengths and equal orders, so that pruning by value cannot pass for pruning by position.
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'pair',
+            'type' => IndexType::Key->value,
+            $this->getIndexAttributesParam() => ['first', 'second'],
+            'lengths' => [64, 64],
+            'orders' => ['ASC', 'ASC'],
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+
+        $this->waitForIndex($databaseId, $containerId, 'pair');
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, $this->getSchemaUrl($databaseId, $containerId, '', 'first'), $headers);
+
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $containerId, $headers) {
+            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'pair'), $headers);
+
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals(['second'], $index['body'][$this->getIndexAttributesParam()]);
+            $this->assertEquals([64], $index['body']['lengths']);
+            $this->assertEquals(['ASC'], $index['body']['orders']);
+        }, 60000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $containerId), $headers);
+    }
+
+    /**
+     * An index the engine never created is deleted by its document alone. The delete must not leave it
+     * stuck on the index being absent from the schema, since absent is the end state it asks for.
+     */
+    public function testDeleteFailedIndex(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Failed index deletion',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'FailedIndex',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $column = $this->createAttribute($databaseId, $containerId, ColumnType::String->value, [
+            'key' => 'email',
+            'size' => 128,
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $column['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $containerId, 'email');
+
+        foreach (['first', 'second'] as $record) {
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => ['email' => 'duplicate@appwrite.io'],
+            ]);
+
+            $this->assertEquals(201, $created['headers']['status-code'], $record);
+        }
+
+        // A unique index over rows that already hold the same value can only fail, and only in the worker.
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'email',
+            'type' => IndexType::Unique->value,
+            $this->getIndexAttributesParam() => ['email'],
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $containerId, $headers) {
+            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'email'), $headers);
+
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals('failed', $index['body']['status']);
+        }, 60000, 500);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, $this->getIndexUrl($databaseId, $containerId, 'email'), $headers);
+
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $containerId, $headers) {
+            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'email'), $headers);
+
+            $this->assertEquals(404, $index['headers']['status-code'], \json_encode($index['body']));
+        }, 60000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $containerId), $headers);
+    }
+
     public function testListIndexes(): void
     {
         $data = $this->setupIndexes();
