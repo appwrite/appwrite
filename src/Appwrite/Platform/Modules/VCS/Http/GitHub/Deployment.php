@@ -114,6 +114,12 @@ trait Deployment
                 }
                 $resourceInternalId = $resource->getSequence();
 
+                if ($resource->getAttribute('providerAutoDeploy', true) === false) {
+                    Span::add("{$logBase}.build.skipped.reason", 'auto deploy off');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
+
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
