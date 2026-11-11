@@ -17,7 +17,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
+import {
+  getRuleStatusBadgeConfig,
+  isWaitingForDns,
+} from '@/lib/utils/status-badge'
 import {
   ExternalLink,
   Loader2,
@@ -45,6 +48,7 @@ import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
 import { ProxyRuleContextMenu } from './domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from './domains/RuleStatusBadge'
+import { CheckDomain } from './domains/CheckDomain'
 import { useVisitUrl } from '@/hooks/use-visit-url'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
@@ -218,7 +222,13 @@ export function Domains({
                                 {t('View logs')}
                               </Button>
                             )}
-                          {canRetryRule(rule) && (
+                          <CheckDomain
+                            projectId={projectId}
+                            region={region}
+                            rule={rule}
+                            organizationDomainId={getOrganizationDomainId(rule)}
+                          />
+                          {canRetryRule(rule) && !isWaitingForDns(rule) && (
                             <Button
                               variant="link"
                               size="sm"
