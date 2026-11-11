@@ -280,6 +280,37 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('MODIFY TTL expiresAt DELETE', $requests);
     }
 
+    public function testCreatesDatabaseWithoutSelectingIt(): void
+    {
+        $client = new CapturingClient();
+
+        $this->store($client)->setup();
+
+        $database = $client->requests[0];
+        $statements = \array_slice($client->requests, 1);
+        $this->assertCount(3, $statements);
+        $this->assertStringContainsString('CREATE DATABASE IF NOT EXISTS `appwrite`', (string) $database->getBody());
+        $this->assertFalse($database->hasHeader('X-ClickHouse-Database'), 'A missing database cannot be selected while creating it');
+        foreach ($statements as $statement) {
+            $this->assertSame('appwrite', $statement->getHeaderLine('X-ClickHouse-Database'));
+        }
+    }
+
+    public function testConnectsWithoutPassword(): void
+    {
+        $client = new CapturingClient();
+        $store = new Store(
+            dsn: 'http://appwrite@clickhouse:8123/appwrite',
+            client: $client,
+        );
+
+        $store->upsert('project', new Document(['$id' => 'execution', 'resourceType' => 'functions', 'status' => 'completed']));
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame('appwrite', $client->requests[0]->getHeaderLine('X-ClickHouse-User'));
+        $this->assertSame('', $client->requests[0]->getHeaderLine('X-ClickHouse-Key'));
+    }
+
     public function testHealthChecksExecutionSchema(): void
     {
         $client = new CapturingClient([

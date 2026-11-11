@@ -126,7 +126,7 @@ class Store
         $database = $this->identifier($this->database);
         $table = $this->table();
 
-        $this->query("CREATE DATABASE IF NOT EXISTS {$database}");
+        $this->query("CREATE DATABASE IF NOT EXISTS {$database}", selectDatabase: false);
         $this->query(<<<SQL
             CREATE TABLE IF NOT EXISTS {$table} (
                 projectId String,
@@ -914,14 +914,14 @@ class Store
     }
 
     /** @param array<string, mixed> $params */
-    private function query(string $sql, array $params = []): string
+    private function query(string $sql, array $params = [], bool $selectDatabase = true): string
     {
         $this->connect();
         $parts = ['query' => $sql];
         foreach ($params as $key => $value) {
             $parts['param_' . $key] = (string) $value;
         }
-        $request = $this->requestFactory->multipart(Method::POST, $this->url(), $parts, $this->headers());
+        $request = $this->requestFactory->multipart(Method::POST, $this->url(), $parts, $this->headers($selectDatabase));
 
         try {
             $response = $this->client()->sendRequest($request);
@@ -966,7 +966,7 @@ class Store
         $this->port = (int) ($dsn->getPort() ?: 8123);
         $this->database = \ltrim($dsn->getPath(), '/') ?: 'default';
         $this->username = $dsn->getUser() ?: 'default';
-        $this->password = $dsn->getPassword();
+        $this->password = $dsn->getPassword() ?? '';
         $this->secure = \strtolower((string) $dsn->getParam('secure', '')) === 'true';
 
         $this->identifier($this->database);
@@ -999,13 +999,17 @@ class Store
     }
 
     /** @return array<string, string> */
-    private function headers(): array
+    private function headers(bool $selectDatabase = true): array
     {
-        return [
+        $headers = [
             'X-ClickHouse-User' => $this->username,
             'X-ClickHouse-Key' => $this->password,
-            'X-ClickHouse-Database' => $this->database,
         ];
+        if ($selectDatabase) {
+            $headers['X-ClickHouse-Database'] = $this->database;
+        }
+
+        return $headers;
     }
 
     private function client(): ClientInterface
