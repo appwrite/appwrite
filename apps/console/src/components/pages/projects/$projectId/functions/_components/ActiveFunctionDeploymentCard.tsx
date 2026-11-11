@@ -194,8 +194,10 @@ export function ActiveFunctionDeploymentCard({
     const filtered =
       domainsData?.rules?.filter(
         (rule) =>
-          // Email (SMTP) rules share the list but have no web URL.
+          // Email (SMTP) rules share the list but have no web URL, and a
+          // domain still verifying does not serve yet.
           !isSmtpRule(rule) &&
+          rule.status === 'verified' &&
           proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
       ) || []
     return filtered
@@ -206,6 +208,7 @@ export function ActiveFunctionDeploymentCard({
     domainsData?.rules?.filter(
       (rule) =>
         !isSmtpRule(rule) &&
+        rule.status === 'verified' &&
         proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
     ).length ?? 0
   const hasMoreDomains = totalActiveDomains > activeDomains.length

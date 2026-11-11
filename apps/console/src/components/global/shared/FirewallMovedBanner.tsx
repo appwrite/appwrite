@@ -6,7 +6,10 @@ import { useScreenshotMode } from '@/components/global/providers/ScreenshotMode'
 import { Button } from '@/components/ui/button'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { analyticsAttrs } from '@/lib/analytics-actions'
-import { canSeeProjectNavItem } from '@/lib/console-access-checks'
+import {
+  canSeeProjectNavItem,
+  canShowProjectSettings,
+} from '@/lib/console-access-checks'
 import {
   FIREWALL_MOVED_BANNER_ID,
   getConsoleBannerById,
@@ -68,6 +71,9 @@ export function FirewallMovedBanner() {
     return null
   }
 
+  // API rules live in project settings, which not every role can open.
+  const canOpenApiFirewall = canShowProjectSettings(access, features)
+
   const dismiss = () => {
     setOptimisticDismissed(true)
     dismissBanner.mutate(FIREWALL_MOVED_BANNER_ID)
@@ -111,16 +117,18 @@ export function FirewallMovedBanner() {
         >
           {t('Got it')}
         </Button>
-        <Button size="sm" className="h-8 text-[13px]" asChild>
-          <Link
-            to="/projects/$projectId/settings/firewall"
-            params={{ projectId }}
-            onClick={dismiss}
-            {...analyticsAttrs(FIREWALL_MOVED_BANNER.event)}
-          >
-            {t('Open API firewall')}
-          </Link>
-        </Button>
+        {canOpenApiFirewall ? (
+          <Button size="sm" className="h-8 text-[13px]" asChild>
+            <Link
+              to="/projects/$projectId/settings/firewall"
+              params={{ projectId }}
+              onClick={dismiss}
+              {...analyticsAttrs(FIREWALL_MOVED_BANNER.event)}
+            >
+              {t('Open API firewall')}
+            </Link>
+          </Button>
+        ) : null}
       </div>
     </div>
   )

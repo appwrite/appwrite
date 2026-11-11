@@ -522,13 +522,23 @@ export function RulesList({
           createDisabled={resolvedCreateDisabled}
           createDisabledTooltip={resolvedCreateDisabledTooltip}
           presets={
-            <AddFirewallPresets
-              projectId={projectId}
-              resourceSelection={resourceSelection}
-              canWrite={canWrite}
-              createDisabled={createDisabled}
-              createDisabledTooltip={resolvedCreateDisabledTooltip}
-            />
+            <>
+              {/* Attack mode is a rule of its own, so it starts from here too. */}
+              <AttackModeButton
+                projectId={projectId}
+                resourceSelection={resourceSelection}
+                canWrite={canWrite}
+                createDisabled={resolvedCreateDisabled}
+                createDisabledTooltip={resolvedCreateDisabledTooltip}
+              />
+              <AddFirewallPresets
+                projectId={projectId}
+                resourceSelection={resourceSelection}
+                canWrite={canWrite}
+                createDisabled={createDisabled}
+                createDisabledTooltip={resolvedCreateDisabledTooltip}
+              />
+            </>
           }
         />
       ) : scopedRules.length === 0 ? (

@@ -721,6 +721,22 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'ファイアウォールのルールは、保護する対象のそばに移りました。各関数とサイトの「ファイアウォール」タブと、API 用のプロジェクト設定のタブです。',
   'Got it': '了解',
   'Open API firewall': 'API のファイアウォールを開く',
+  // Function and site overview cards, filter chips
+  '1 rule': '1 件のルール',
+  '{count} rules': '{count} 件のルール',
+  'vs previous 24 hours': '前の 24 時間と比較',
+  'No blocked traffic yet': 'ブロックされたトラフィックはまだありません',
+  'Denied requests will show up here.':
+    '拒否されたリクエストはここに表示されます。',
+  '24 hours ago': '24 時間前',
+  'No requests yet': 'リクエストはまだありません',
+  'No bandwidth yet': '帯域幅の使用はまだありません',
+  Humans: '人間',
+  Bots: 'ボット',
+  only: 'のみ',
+  On: 'オン',
+  SSR: 'SSR',
+  Static: '静的',
   // Command center: project settings card entries
   'Settings · Project name': '設定 · プロジェクト名',
   'Rename your project': 'プロジェクト名を変更',

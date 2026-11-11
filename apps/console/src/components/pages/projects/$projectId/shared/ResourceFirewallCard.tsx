@@ -187,7 +187,9 @@ export function ResourceFirewallCard({
     value: point.denied,
   }))
   const rulesLabel =
-    rulesTotal === 1 ? t('1 rule') : `${rulesTotal.toLocaleString()} ${t('rules')}`
+    rulesTotal === 1
+      ? t('1 rule')
+      : t('{count} rules').replace('{count}', rulesTotal.toLocaleString())
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-border bg-card/50">

@@ -121,6 +121,7 @@ function UsageMetricColumn({
   formatValue,
   valueLabel,
   emptyTitle,
+  errorTitle,
 }: {
   title: string
   value: string
@@ -132,6 +133,8 @@ function UsageMetricColumn({
   formatValue: (value: number) => string
   valueLabel: string
   emptyTitle: string
+  /** Set when the usage query failed, so a failure never reads as no activity. */
+  errorTitle?: string
 }) {
   const t = useT()
 
@@ -149,9 +152,9 @@ function UsageMetricColumn({
                 USAGE_CHART_FADE_IN_CLASS_NAME,
               )}
             >
-              {value}
+              {errorTitle ? '-' : value}
             </span>
-            <ChangeBadge change={change} />
+            {errorTitle ? null : <ChangeBadge change={change} />}
           </>
         )}
       </div>
@@ -164,6 +167,10 @@ function UsageMetricColumn({
           />
           {loading ? (
             <div className="absolute inset-x-0 bottom-0 top-6 animate-pulse rounded-md bg-muted/40" />
+          ) : errorTitle ? (
+            <div className="absolute inset-0 flex items-center justify-center text-center">
+              <p className="text-[11px] text-muted-foreground">{errorTitle}</p>
+            </div>
           ) : hasActivity ? (
             <div
               className={cn('absolute inset-0', USAGE_CHART_FADE_IN_CLASS_NAME)}
@@ -353,6 +360,9 @@ export function ResourceUsageCards({
           formatValue: formatRequestsValue,
           valueLabel: t('requests'),
           emptyTitle: t('No requests yet'),
+          errorTitle: requestsQuery.isError
+            ? t("Couldn't load requests")
+            : undefined,
         }}
         right={{
           title: t('Bandwidth'),
@@ -365,6 +375,9 @@ export function ResourceUsageCards({
           formatValue: formatBandwidthTotal,
           valueLabel: t('bandwidth'),
           emptyTitle: t('No bandwidth yet'),
+          errorTitle: bandwidthQuery.isError
+            ? t("Couldn't load bandwidth")
+            : undefined,
         }}
       />
       <DualUsageCard
@@ -385,6 +398,9 @@ export function ResourceUsageCards({
           formatValue: formatExecutionsValue,
           valueLabel: t('executions'),
           emptyTitle: t('No executions yet'),
+          errorTitle: executionsQuery.isError
+            ? t("Couldn't load executions")
+            : undefined,
         }}
         right={{
           title: t('GB-hours'),
@@ -397,6 +413,9 @@ export function ResourceUsageCards({
           formatValue: formatGbHoursTotal,
           valueLabel: t('GB-hours'),
           emptyTitle: t('No GB-hours yet'),
+          errorTitle: gbHoursQuery.isError
+            ? t("Couldn't load compute")
+            : undefined,
         }}
       />
     </div>

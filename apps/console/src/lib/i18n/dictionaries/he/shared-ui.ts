@@ -1109,6 +1109,21 @@ export const heSharedUiDictionary: Record<string, string> = {
     'כללי חומת האש נמצאים עכשיו ליד מה שהם מגינים עליו: לשונית חומת אש בכל פונקציה ובכל אתר, ואחת בהגדרות הפרויקט עבור ה-API.',
   'Got it': 'הבנתי',
   'Open API firewall': 'פתיחת חומת האש של ה-API',
+  // Function and site overview cards, filter chips
+  '1 rule': 'כלל אחד',
+  '{count} rules': '{count} כללים',
+  'vs previous 24 hours': 'לעומת 24 השעות הקודמות',
+  'No blocked traffic yet': 'עדיין אין תעבורה חסומה',
+  'Denied requests will show up here.': 'בקשות שנדחו יופיעו כאן.',
+  '24 hours ago': 'לפני 24 שעות',
+  'No requests yet': 'עדיין אין בקשות',
+  'No bandwidth yet': 'עדיין אין תעבורת נתונים',
+  Humans: 'בני אדם',
+  Bots: 'בוטים',
+  only: 'בלבד',
+  On: 'פעיל',
+  SSR: 'SSR',
+  Static: 'סטטי',
   'IP allow/block lists and request rules':
     'רשימות היתר/חסימה של IP וכללי בקשות',
 

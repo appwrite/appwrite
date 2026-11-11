@@ -133,7 +133,9 @@ function FilterChip({
     ? getOperatorsForColumn(column).find((op) => op.key === filterKey.o)
     : undefined
   const operators = editable ? switchableOperators(column, operator) : []
-  const operatorLabel = operator ? t(operator.label) : operatorText.trim()
+  // A fixed tag keeps its own wording, such as "Humans only".
+  const operatorLabel =
+    editable && operator ? t(operator.label) : operatorText.trim()
   const valueEditable = editable && isValueEditable(filterKey, column, operator)
   const options = valueEditable && column ? valueOptions(column) : undefined
   const isRange = !!operator && RANGE_OPERATORS.has(operator.key)

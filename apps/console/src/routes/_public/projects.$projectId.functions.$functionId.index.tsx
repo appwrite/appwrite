@@ -14,6 +14,7 @@ import {
   bandwidthForResourceChartQueryOptions,
   DEFAULT_USAGE_CHART_INTERVAL,
 } from '@/lib/react-query/hooks'
+import { ensureQueryDataIfFound } from '@/lib/react-query/ensure-query-data-if-found'
 import { pageTitle } from '@/lib/utils/page-title'
 import { OVERVIEW_DEPLOYMENTS_LIMIT } from '@/components/pages/projects/$projectId/shared/RecentDeploymentsCard'
 import { OVERVIEW_FIREWALL_RULES_LIMIT } from '@/components/pages/projects/$projectId/shared/ResourceFirewallCard'
@@ -49,8 +50,10 @@ export const Route = createFileRoute(
     )
 
     await Promise.all([
+      // The function can still point at a deleted deployment.
       func.deploymentId
-        ? queryClient.ensureQueryData(
+        ? ensureQueryDataIfFound(
+            queryClient,
             functionDeploymentQueryOptions(
               projectId,
               functionId,
@@ -72,66 +75,65 @@ export const Route = createFileRoute(
           SpecificationType.Runtimes,
         ),
       ),
-      isCloudProfile()
-        ? queryClient.ensureQueryData(
-            firewallRulesQueryOptions(
-              projectId,
-              0,
-              OVERVIEW_FIREWALL_RULES_LIMIT,
-              undefined,
-              'functions',
-              functionId,
-            ),
-          )
-        : Promise.resolve(),
-      isCloudProfile()
-        ? queryClient.ensureQueryData(
-            firewallTrafficOverviewQueryOptions(
-              projectId,
-              undefined,
-              DEFAULT_USAGE_CHART_INTERVAL,
-              undefined,
-              'functions',
-              functionId,
-              '24h',
-            ),
-          )
-        : Promise.resolve(),
-      ...(getActiveProfileFeatures().usageStats
-        ? [
-            queryClient.ensureQueryData(
-              requestsForResourceChartQueryOptions(
-                projectId,
-                functionId,
-                'function',
-                usageDateRange,
-              ),
-            ),
-            queryClient.ensureQueryData(
-              bandwidthForResourceChartQueryOptions(
-                projectId,
-                functionId,
-                'function',
-                usageDateRange,
-              ),
-            ),
-            queryClient.ensureQueryData(
-              functionExecutionsForFunctionChartQueryOptions(
-                projectId,
-                functionId,
-                usageDateRange,
-              ),
-            ),
-            queryClient.ensureQueryData(
-              functionGbHoursForFunctionChartQueryOptions(
-                projectId,
-                functionId,
-                usageDateRange,
-              ),
-            ),
-          ]
-        : []),
     ])
+
+    // Firewall and usage cards fill in after navigation, so a slow or
+    // failing usage API neither delays nor breaks the overview.
+    if (isCloudProfile()) {
+      void queryClient.prefetchQuery(
+        firewallRulesQueryOptions(
+          projectId,
+          0,
+          OVERVIEW_FIREWALL_RULES_LIMIT,
+          undefined,
+          'functions',
+          functionId,
+        ),
+      )
+      void queryClient.prefetchQuery(
+        firewallTrafficOverviewQueryOptions(
+          projectId,
+          undefined,
+          DEFAULT_USAGE_CHART_INTERVAL,
+          undefined,
+          'functions',
+          functionId,
+          '24h',
+        ),
+      )
+    }
+    if (getActiveProfileFeatures().usageStats) {
+      void queryClient.prefetchQuery(
+        requestsForResourceChartQueryOptions(
+          projectId,
+          functionId,
+          'function',
+          usageDateRange,
+        ),
+      )
+      void queryClient.prefetchQuery(
+        bandwidthForResourceChartQueryOptions(
+          projectId,
+          functionId,
+          'function',
+          usageDateRange,
+        ),
+      )
+      void queryClient.prefetchQuery(
+        functionExecutionsForFunctionChartQueryOptions(
+          projectId,
+          functionId,
+          usageDateRange,
+        ),
+      )
+      void queryClient.prefetchQuery(
+        functionGbHoursForFunctionChartQueryOptions(
+          projectId,
+          functionId,
+          usageDateRange,
+        ),
+      )
+    }
 
     return { function: func }
   },
