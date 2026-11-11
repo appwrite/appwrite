@@ -70,6 +70,14 @@ check('focal point out of range', thrown(fn () => $image->crop(2, 2, x: 0.5, y: 
     === 'InvalidArgumentException: Focal point coordinates must be finite and between 0 and 1');
 // Without Composer the package's UnsupportedFormatException cannot be found, so it is an \Exception.
 check('not an image', thrown(fn () => new Image('not an image')) === 'Exception: Unsupported image format');
+// What ImageMagick refuses a negative size with, per operation (thrown as ImagickException with ext-imagick).
+$message = fn (callable $call) => explode(': ', thrown($call), 2)[1] ?? '';
+check('negative crop width', str_starts_with($message(fn () => $image->crop(-1, 2)), 'Image dimension exceeds maximum supported size'));
+check('negative crop height at a gravity', $message(fn () => $image->crop(2, -1, Image::GRAVITY_TOP)) === 'Invalid image geometry');
+check('negative border', str_starts_with($message(fn () => $image->setBorder(-1, '#ff0000')), 'frame is less than image size'));
+check('negative radius', str_starts_with($message(fn () => $image->setBorderRadius(-1)), 'non-conforming drawing primitive'));
+$unknown = (new Image(png(16, 8)))->crop(6, 4, 'no-such-gravity')->output('png');
+check('unknown gravity is a centred focal point', $unknown === (new Image(png(16, 8)))->crop(6, 4, x: 0.5, y: 0.5)->output('png'));
 check('argument type', str_starts_with(thrown(fn () => $image->crop('wide', 2)), 'TypeError: '));
 
 Image::setResourceLimit('memory', 64 * 1024 * 1024);

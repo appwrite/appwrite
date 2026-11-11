@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use php_std::format::{RoundingMode, ceil, dval_to_lval, round};
+use php_std::format::{ceil, dval_to_lval};
 use php_std::value::Number;
 
 use crate::color::Color;
@@ -372,11 +372,9 @@ impl Image {
                 }
                 frame.format = Format::Webp;
             }
+            // PHP scales the quality to 0-9 and sets it on the image, which
+            // ImageMagick's PNG coder never reads (see `encode::png`).
             OutputFormat::Png => {
-                if set {
-                    let scaled = round(Number::Float(quality as f64 / 100.0 * 9.0), 0, RoundingMode::HalfAwayFromZero);
-                    frame.quality = Some(intval(9.0 - scaled));
-                }
                 frame.format = Format::Png;
             }
         }

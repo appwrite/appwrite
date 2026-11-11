@@ -24,6 +24,7 @@ fast_image_resize.workspace = true
 gif.workspace = true
 image.workspace = true
 image-webp.workspace = true
+jpeg-encoder.workspace = true
 kamadak-exif.workspace = true
 libheif-rs = { workspace = true, optional = true }
 php-std.workspace = true

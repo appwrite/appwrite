@@ -43,12 +43,15 @@ pub(crate) struct Frame {
     pub background: Color,
     /// `setImageCompressionQuality()`, as ImageMagick stores it.
     pub quality: Option<i64>,
+    /// The luma sampling factors of the JPEG the frame was read from
+    /// (ImageMagick's `jpeg:sampling-factor` property), which a JPEG output keeps.
+    pub jpeg_sampling: Option<(u8, u8)>,
 }
 
 impl Frame {
     pub(crate) fn new(pixels: RgbaImage, alpha: bool, delay: u32, format: Format) -> Self {
         let page = Page::at_origin(pixels.width(), pixels.height());
-        Frame { pixels, alpha, delay, page, format, background: Color::WHITE, quality: None }
+        Frame { pixels, alpha, delay, page, format, background: Color::WHITE, quality: None, jpeg_sampling: None }
     }
 
     pub(crate) fn width(&self) -> u32 {
@@ -73,6 +76,7 @@ impl Frame {
             format: self.format,
             background: self.background,
             quality: self.quality,
+            jpeg_sampling: self.jpeg_sampling,
         }
     }
 }

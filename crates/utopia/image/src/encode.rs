@@ -2,7 +2,7 @@
 
 use std::io::Write;
 
-use image::{ImageEncoder, RgbaImage};
+use image::RgbaImage;
 
 use crate::error::{Error, Result};
 use crate::frame::{Format, Frame};
@@ -48,16 +48,28 @@ fn rgb(pixels: &RgbaImage) -> Vec<u8> {
     out
 }
 
+/// JPEG as ImageMagick's libjpeg writes it: baseline, with Huffman tables
+/// built for the image. The chroma subsampling is the source's when that was
+/// a JPEG; otherwise 4:4:4 from quality 90 and 4:2:0 below.
 fn jpeg(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     // ImageMagick's JPEG default is 92; 0 means unset.
     let quality = match quality {
         Some(q) if q > 0 => q.min(100) as u8,
         _ => 92,
     };
+    // JPEG's own limit; ImageMagick fails on a larger image too.
+    let (width, height) =
+        (u16::try_from(frame.width()).map_err(failed)?, u16::try_from(frame.height()).map_err(failed)?);
     let mut out = Vec::new();
-    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut out, quality)
-        .write_image(&rgb(&frame.pixels), frame.width(), frame.height(), image::ExtendedColorType::Rgb8)
-        .map_err(failed)?;
+    let mut encoder = jpeg_encoder::Encoder::new(&mut out, quality);
+    let sampling = match frame.jpeg_sampling {
+        Some((horizontal, vertical)) => jpeg_encoder::SamplingFactor::from_factors(horizontal, vertical),
+        None if quality >= 90 => Some(jpeg_encoder::SamplingFactor::F_1_1),
+        None => None,
+    };
+    encoder.set_sampling_factor(sampling.unwrap_or(jpeg_encoder::SamplingFactor::F_2_2));
+    encoder.set_optimized_huffman_tables(true);
+    encoder.encode(&rgb(&frame.pixels), width, height, jpeg_encoder::ColorType::Rgb).map_err(failed)?;
     Ok(out)
 }
 
@@ -281,6 +293,8 @@ fn avif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
 /// AVIF from the pure-Rust encoder (rav1e).
 #[cfg(feature = "ravif")]
 fn ravif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
+    use image::ImageEncoder;
+
     // ImageMagick's AVIF default quality is 50.
     let quality = match quality {
         Some(q) if q >= 0 => q.min(100) as u8,

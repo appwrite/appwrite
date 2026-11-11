@@ -51,7 +51,15 @@ fn single(data: &[u8], format: Format) -> Result<Vec<Frame>> {
     check_pixels(decoded_size.saturating_add(copy))?;
     let decoded = image::DynamicImage::from_decoder(decoder).map_err(|e| corrupt(format, e))?;
     let alpha = decoded.color().has_alpha();
-    Ok(vec![Frame::new(decoded.into_rgba8(), alpha, 0, format)])
+    let mut frame = Frame::new(decoded.into_rgba8(), alpha, 0, format);
+    // ImageMagick keeps the quality and chroma subsampling a JPEG was written
+    // with on the image: an output that sets no quality (`$quality = -1`) is
+    // written at that quality, and a JPEG output with that subsampling.
+    if format == Format::Jpeg {
+        frame.quality = crate::jpeg_source::quality(data);
+        frame.jpeg_sampling = crate::jpeg_source::sampling(data);
+    }
+    Ok(vec![frame])
 }
 
 fn gif(data: &[u8]) -> Result<Vec<Frame>> {

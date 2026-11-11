@@ -47,8 +47,9 @@ How it behaves inside a Swoole worker:
   (the crate's default `ravif` feature) is left out: with its pool, a process that had
   encoded an AVIF and then forked left the child waiting forever on its next encode.
 
-Known differences from ImageMagick: with no quality given (`-1`), WebP is written at
-75, where ImageMagick reuses the quality it estimated from a JPEG source.
+Known differences from ImageMagick: a greyscale JPEG source is written as a colour
+JPEG (about 10% larger; ImageMagick writes one component). A negative size is refused
+with ImageMagick's message for that operation, as the build in Appwrite's image words it.
 
 Not bound: the protected `getSizeByFixedHeight` and `getSizeByFixedWidth`. The class
 cannot be cloned.

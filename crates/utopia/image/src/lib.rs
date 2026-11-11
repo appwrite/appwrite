@@ -69,6 +69,7 @@ mod frame;
 #[cfg(feature = "libheif")]
 mod heif;
 mod image;
+mod jpeg_source;
 mod options;
 mod transform;
 

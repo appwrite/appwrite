@@ -33,6 +33,9 @@ gif = "0.14"
 # is utopia-image's `ravif` feature.
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 image-webp = "0.2"
+# JPEG output as ImageMagick (libjpeg) writes it: 4:2:0 chroma and optimized Huffman
+# tables, neither of which the `image` crate's encoder has. Pure Rust.
+jpeg-encoder = "0.7"
 kamadak-exif = "0.6"
 # libheif (a system library): AVIF and HEIC decoding, HEIC encoding. utopia-image's `libheif` feature.
 libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
