@@ -211,16 +211,8 @@ class Message
     }
 
     /**
-     * Decide in an init hook that this job must not run.
-     *
-     * The remaining init hooks and the job action are not called, and the
-     * message is acknowledged as handled: nothing redelivers or dead-letters it,
-     * and no error hook reports it. Shutdown hooks still run, so per-message
-     * cleanup such as finishing a span happens as it would for a job that ran.
-     *
-     * For work that is unwanted rather than failed, such as a job for a project
-     * that was blocked after the job was queued. Per delivery, like
-     * {@see self::terminal()}.
+     * Set from an init hook to acknowledge the message without running its job.
+     * Shutdown hooks still run; error hooks do not.
      */
     public function skip(bool $skipped = true): self
     {
@@ -229,7 +221,6 @@ class Message
         return $this;
     }
 
-    /** Whether an init hook decided the job must not run. {@see self::skip()} */
     public function isSkipped(): bool
     {
         return $this->skipped;
