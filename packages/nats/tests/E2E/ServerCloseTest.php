@@ -8,7 +8,9 @@ use PHPUnit\Framework\TestCase;
 use Swoole\Runtime;
 use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
+use Utopia\NATS\Tests\Support\ReadAheadTransport;
 use Utopia\NATS\Transport\SwooleTransport;
+use Utopia\NATS\Transport\TcpTransport;
 use Utopia\NATS\Transport\Transport;
 
 use function Swoole\Coroutine\run;
@@ -23,25 +25,22 @@ final class ServerCloseTest extends TestCase
 {
     private const string SUBJECT = '$JS.API.INFO';
     private const float CLOSE_TIMEOUT = 2.0;
-    private const int RELAY_GRACE = 100_000;
 
     private string $url;
-    private string $host;
-    private int $port;
     private int $lameDucks = 0;
     private int $reconnects = 0;
 
     protected function setUp(): void
     {
-        $this->url = getenv('NATS_SYSTEM_URL') ?: 'nats://127.0.0.1:14225';
-        $this->host = parse_url($this->url, PHP_URL_HOST) ?: '127.0.0.1';
-        $this->port = parse_url($this->url, PHP_URL_PORT) ?: 14225;
+        $this->url = getenv('NATS_SYSTEM_URL') ?: 'nats://127.0.0.1:14226';
+        $host = parse_url($this->url, PHP_URL_HOST) ?: '127.0.0.1';
+        $port = parse_url($this->url, PHP_URL_PORT) ?: 14226;
 
-        $probe = @fsockopen($this->host, $this->port, $errno, $errstr, 1.0);
-        if ($probe === false) {
+        $socket = @fsockopen($host, $port, $errno, $errstr, 1.0);
+        if ($socket === false) {
             $this->markTestSkipped("System account server not reachable at {$this->url}");
         }
-        fclose($probe);
+        fclose($socket);
     }
 
     public function testRequestAfterServerCloseReconnects(): void
@@ -75,19 +74,24 @@ final class ServerCloseTest extends TestCase
 
         $this->runInCoroutine(fn () => $this->assertRecovers(
             fn (Connection $client) => $client->request(self::SUBJECT),
-            fn (): Transport => new SwooleTransport(),
+            fn (): SwooleTransport => new SwooleTransport(),
         ));
     }
 
     /**
      * @param \Closure(Connection): mixed $operation
-     * @param (\Closure(string): Transport)|null $transportFactory
+     * @param (\Closure(): Transport)|null $transport
      */
-    private function assertRecovers(\Closure $operation, ?\Closure $transportFactory = null): void
+    private function assertRecovers(\Closure $operation, ?\Closure $transport = null): void
     {
+        $transport ??= static fn (): TcpTransport => new TcpTransport();
+        /** @var list<ReadAheadTransport> $transports */
+        $transports = [];
         $client = Connection::connect(new ConnectionOptions(
             servers: $this->url,
-            transportFactory: $transportFactory,
+            transportFactory: static function () use ($transport, &$transports): Transport {
+                return $transports[] = new ReadAheadTransport($transport());
+            },
             onReconnect: function (): void {
                 $this->reconnects++;
             },
@@ -96,7 +100,6 @@ final class ServerCloseTest extends TestCase
             },
         ));
         $system = Connection::connect(new ConnectionOptions(servers: $this->url, user: 'sys', pass: 'sys'));
-        $probe = $this->openProbe();
 
         try {
             $this->assertStringContainsString('account_info_response', $client->request(self::SUBJECT)->data);
@@ -106,8 +109,7 @@ final class ServerCloseTest extends TestCase
             $this->assertNotNull($clientId, 'The server must assign the client an id');
 
             $this->closeFromServer($system, $server, $clientId);
-            $this->closeFromServer($system, $server, $probe['clientId']);
-            $this->awaitClose($probe['socket']);
+            $this->assertTrue($transports[0]->awaitClose(self::CLOSE_TIMEOUT), 'The server must close the client');
 
             $operation($client);
 
@@ -116,7 +118,6 @@ final class ServerCloseTest extends TestCase
             $this->assertTrue($client->isConnected());
             $this->assertStringContainsString('account_info_response', $client->request(self::SUBJECT)->data);
         } finally {
-            fclose($probe['socket']);
             $system->close();
             $client->close();
         }
@@ -138,45 +139,6 @@ final class ServerCloseTest extends TestCase
             $this->assertIsArray($response);
             $this->assertArrayNotHasKey('error', $response, "{$verb} of client {$clientId} must succeed");
         }
-    }
-
-    /**
-     * A raw connection kicked after the client: once it reads EOF, the
-     * server has closed the client too.
-     *
-     * @return array{socket: resource, clientId: int}
-     */
-    private function openProbe(): array
-    {
-        $socket = stream_socket_client("tcp://{$this->host}:{$this->port}", $errno, $errstr, self::CLOSE_TIMEOUT);
-        $this->assertNotFalse($socket, "Probe connect failed: {$errstr}");
-        stream_set_timeout($socket, (int) self::CLOSE_TIMEOUT);
-
-        $info = (string) fgets($socket);
-        $this->assertStringStartsWith('INFO ', $info);
-        $fields = json_decode(substr($info, 5), true, flags: JSON_THROW_ON_ERROR);
-        $this->assertIsArray($fields);
-        $this->assertIsInt($fields['client_id'] ?? null);
-
-        fwrite($socket, "CONNECT {\"verbose\":false,\"protocol\":1}\r\nPING\r\n");
-        $this->assertSame("PONG\r\n", fgets($socket));
-
-        return ['socket' => $socket, 'clientId' => $fields['client_id']];
-    }
-
-    /** @param resource $socket */
-    private function awaitClose($socket): void
-    {
-        stream_set_timeout($socket, 0, 100_000);
-        $deadline = microtime(true) + self::CLOSE_TIMEOUT;
-        while (!feof($socket) && microtime(true) < $deadline) {
-            fread($socket, 65536);
-        }
-        $this->assertTrue(feof($socket), 'The server must close the kicked probe');
-
-        // Port-publishing proxies (docker-proxy, Docker Desktop) relay each
-        // connection independently, so the client's close can trail the probe's.
-        usleep(self::RELAY_GRACE);
     }
 
     private function requireSwoole(): void
