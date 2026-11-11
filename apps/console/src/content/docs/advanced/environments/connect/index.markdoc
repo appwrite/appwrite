@@ -69,6 +69,10 @@ $client = (new Client())
 
 The [SDKs page](/docs/sdks#environments) shows the same setup for every client and server SDK.
 
+{% info title="SDK versions without setEnvironment" %}
+If the SDK version you use doesn't have `setEnvironment` yet, a server SDK can send the header itself with `addHeader`, for example `client.addHeader('X-Appwrite-Environment', 'staging')` in Node.js or `client.add_header('X-Appwrite-Environment', 'staging')` in Python.
+{% /info %}
+
 Read the environment ID from configuration rather than hard-coding it, so one build of your app can run against production or any environment:
 
 ```client-web
