@@ -19,7 +19,7 @@ import {
 import {
   getPlatformDisplayName,
   getPlatformIdentifier,
-  WILDCARD_HOSTNAME,
+  isWildcardHostname,
   type ProjectPlatform,
 } from '@/lib/utils/platform'
 import { HOSTNAME_PRESETS } from '@/lib/add-app-wizard/platform-map'
@@ -276,7 +276,7 @@ export function PlatformDrawer({
                             )
                           })}
                         </div>
-                        {hostname.trim() === WILDCARD_HOSTNAME && (
+                        {isWildcardHostname(hostname) && (
                           <p className="flex items-start gap-1.5 text-[12px] text-amber-600 dark:text-amber-400">
                             <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                             {t(WILDCARD_WARNING)}

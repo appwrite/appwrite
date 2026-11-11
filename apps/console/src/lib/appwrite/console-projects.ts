@@ -103,8 +103,9 @@ export async function createConsoleProject(params: {
         name: 'Web app',
         hostname: WILDCARD_HOSTNAME,
       })
-  } catch {
+  } catch (error) {
     // The project exists either way; its apps page still offers to add one.
+    console.warn('Could not add the default web platform:', error)
   }
 
   return project
