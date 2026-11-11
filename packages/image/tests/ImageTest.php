@@ -1306,4 +1306,55 @@ final class ImageTest extends TestCase
 
         $call($image);
     }
+
+    public function testRoundedCornersAfterABackgroundAreTransparent(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image->crop(256, 256)->setBackground('#336699')->setBorder(6, '#ff0000')->setBorderRadius(40);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output('png') ?? '');
+
+        // Flattening leaves an alpha channel, so the corner is cut away, and the border is stroked.
+        $this->assertEqualsWithDelta(0, $output->getImagePixelColor(1, 1)->getColorValue(\Imagick::COLOR_ALPHA), 0.01);
+        $edge = $output->getImagePixelColor(128, 3)->getColor();
+        $this->assertGreaterThan(200, $edge['r']);
+        $this->assertLessThan(60, $edge['g']);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function rotatedOutputs(): array
+    {
+        return [
+            'jpg, centre' => ['jpg', Image::GRAVITY_CENTER],
+            'jpg, gravity' => ['jpg', Image::GRAVITY_TOP_LEFT],
+            'webp, gravity' => ['webp', Image::GRAVITY_TOP_LEFT],
+            'png, gravity' => ['png', Image::GRAVITY_TOP_LEFT],
+            'avif, centre' => ['avif', Image::GRAVITY_CENTER],
+            'avif, gravity' => ['avif', Image::GRAVITY_TOP_LEFT],
+        ];
+    }
+
+    /**
+     * The EXIF rotation is applied to the pixels, so the output must not ask a viewer for it again.
+     */
+    #[DataProvider('rotatedOutputs')]
+    public function testARotatedSourceIsTurnedOnce(string $type, string $gravity): void
+    {
+        if ($type === 'avif') {
+            $this->requireEncoder('AVIF');
+        }
+
+        // 20x10, tagged as needing a quarter turn: upright it is 10x20.
+        $image = new Image($this->jpegWithExifOrientation(6));
+        $image->crop(20, 10, $gravity);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output($type, 90) ?? '');
+
+        $this->assertSame([10, 20], [$output->getImageWidth(), $output->getImageHeight()]);
+        $this->assertContains($output->getImageOrientation(), [\Imagick::ORIENTATION_UNDEFINED, \Imagick::ORIENTATION_TOPLEFT]);
+    }
 }

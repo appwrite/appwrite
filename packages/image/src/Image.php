@@ -60,6 +60,10 @@ class Image
             $this->image->readImageBlob($data);
             $this->image->setFormat('');
         } catch (\ImagickException $exception) {
+            // CoderError: while reading, a decoder refusing the data (a bad PNG chunk or zlib stream).
+            if ($exception->getCode() === 450) {
+                throw new CorruptImageException($exception);
+            }
             throw self::failure($exception, 'Failed to process image', $format->value . ' input is not available');
         }
 
@@ -71,6 +75,16 @@ class Image
 
         // Use metadata to fetch rotation. Will be perform right before exporting
         $orientationType = $this->image->getImageProperties()['exif:Orientation'] ?? null;
+
+        // The rotation is applied to the pixels, so the image must stop saying it still needs one:
+        // left in place, the tag is written to JPEG, WebP and PNG output on the crop paths that
+        // keep metadata, and as a rotation of its own to AVIF and HEIC, and a viewer turns the
+        // image a second time.
+        $this->image->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
+        if (! empty($orientationType)) {
+            // PNG writes the tag from the EXIF data itself.
+            $this->image->setImageProperty('exif:Orientation', '1');
+        }
 
         // Reference: https://docs.imgix.com/apis/rendering/rotation/orient
         // Mirror rotations are ignored, because we don't support mirroring

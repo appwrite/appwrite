@@ -406,7 +406,9 @@ pub(crate) fn flatten(frames: &[Frame]) -> Result<Frame> {
         }
     }
     let mut out = first.with_pixels(canvas);
-    out.alpha = background.has_alpha();
+    // ImageMagick's flattened canvas has an alpha channel whatever the background, so a
+    // rounded corner cut from it afterwards is transparent, not black.
+    out.alpha = true;
     out.page = Page::at_origin(width, height);
     Ok(out)
 }

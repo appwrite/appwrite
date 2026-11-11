@@ -37,6 +37,16 @@ pub(crate) fn encode(
     }
 }
 
+/// The grey level of every pixel, with its alpha when `alpha`, if every pixel is
+/// a grey: such an image is written with one colour channel, as ImageMagick does.
+fn gray(pixels: &RgbaImage, alpha: bool) -> Option<Vec<u8>> {
+    let raw = pixels.as_raw();
+    if !raw.chunks_exact(4).all(|px| px[0] == px[1] && px[1] == px[2]) {
+        return None;
+    }
+    Some(raw.chunks_exact(4).flat_map(|px| [px[0], px[3]].into_iter().take(if alpha { 2 } else { 1 })).collect())
+}
+
 fn rgb(pixels: &RgbaImage) -> Vec<u8> {
     let mut out = Vec::with_capacity(pixels.len() / 4 * 3);
     for px in pixels.as_raw().chunks_exact(4) {
@@ -66,7 +76,11 @@ fn jpeg(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     };
     encoder.set_sampling_factor(sampling.unwrap_or(jpeg_encoder::SamplingFactor::F_2_2));
     encoder.set_optimized_huffman_tables(true);
-    encoder.encode(&rgb(&frame.pixels), width, height, jpeg_encoder::ColorType::Rgb).map_err(failed)?;
+    match gray(&frame.pixels, false) {
+        Some(luma) => encoder.encode(&luma, width, height, jpeg_encoder::ColorType::Luma),
+        None => encoder.encode(&rgb(&frame.pixels), width, height, jpeg_encoder::ColorType::Rgb),
+    }
+    .map_err(failed)?;
     Ok(out)
 }
 
@@ -80,16 +94,18 @@ fn png(frame: &Frame) -> Result<Vec<u8>> {
     let mut out = Vec::new();
     {
         let mut encoder = png::Encoder::new(&mut out, frame.width(), frame.height());
-        encoder.set_color(if frame.alpha { png::ColorType::Rgba } else { png::ColorType::Rgb });
+        let (color, data) = match (gray(&frame.pixels, frame.alpha), frame.alpha) {
+            (Some(levels), true) => (png::ColorType::GrayscaleAlpha, levels),
+            (Some(levels), false) => (png::ColorType::Grayscale, levels),
+            (None, true) => (png::ColorType::Rgba, frame.pixels.as_raw().clone()),
+            (None, false) => (png::ColorType::Rgb, rgb(&frame.pixels)),
+        };
+        encoder.set_color(color);
         encoder.set_depth(png::BitDepth::Eight);
         encoder.set_deflate_compression(deflate);
         encoder.set_filter(filter);
         let mut writer = encoder.write_header().map_err(failed)?;
-        if frame.alpha {
-            writer.write_image_data(frame.pixels.as_raw()).map_err(failed)?;
-        } else {
-            writer.write_image_data(&rgb(&frame.pixels)).map_err(failed)?;
-        }
+        writer.write_image_data(&data).map_err(failed)?;
         writer.finish().map_err(failed)?;
     }
     Ok(out)
