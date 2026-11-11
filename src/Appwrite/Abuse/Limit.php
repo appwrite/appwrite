@@ -83,7 +83,9 @@ final readonly class Limit
      * Does a request from this caller count against this limit? A caller trusted with throughput, an API key or a
      * privileged console caller, is exempt from the limits that only pace legitimate work. A limit that is the
      * only cap on guesses at a secret the request carries sets `everyone`, and then it counts for every caller:
-     * a trusted caller is not trusted with the inbox or handset behind a verification code.
+     * a trusted caller is not trusted with the inbox or handset behind a verification code. Every route that
+     * verifies such a secret must set it on each limit kept per a part the caller names, the account or the
+     * challenge it points at; `tests/unit/Abuse/RoutesTest.php` holds the registered routes to that.
      */
     public function counts(bool $trusted): bool
     {
