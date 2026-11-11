@@ -607,7 +607,7 @@ trait Deployment
                     }
                 }
 
-                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerCommitStatus', true) !== false) {
                     // The deployment exists by now, so a refused report is logged like
                     // every later one: failing the push here would make a provider that
                     // retries deliveries deploy the commit again.

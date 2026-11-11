@@ -151,7 +151,7 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
+        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerCommitStatus', true) === false) {
             return;
         }
 
@@ -228,7 +228,7 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
+        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerCommitStatus', true) === false) {
             return;
         }
 
