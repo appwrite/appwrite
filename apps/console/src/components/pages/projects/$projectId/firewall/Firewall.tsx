@@ -133,10 +133,7 @@ export function Firewall({ projectId, resourceSelection }: FirewallProps) {
         canWrite={canWrite}
       />
 
-      <TrafficOverview
-        resourceSelection={resourceSelection}
-        leading={rulesLimitIndicator}
-      />
+      <TrafficOverview resourceSelection={resourceSelection} />
 
       <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6">
         <RulesList
@@ -145,6 +142,7 @@ export function Firewall({ projectId, resourceSelection }: FirewallProps) {
           resourceSelection={resourceSelection}
           createDisabled={isCreateDisabled}
           createDisabledTooltip={createDisabledTooltip}
+          limitIndicator={rulesLimitIndicator}
           onCreate={() =>
             navigate({
               to: '/projects/$projectId/firewall/create',

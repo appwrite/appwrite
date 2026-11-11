@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   Copy,
   ExternalLink,
@@ -94,6 +94,8 @@ interface RulesListProps {
   createDisabled?: boolean
   /** Tooltip when create is disabled. */
   createDisabledTooltip?: string
+  /** Shown next to the search box, such as the plan's rules usage. */
+  limitIndicator?: ReactNode
 }
 
 export function RulesList({
@@ -103,6 +105,7 @@ export function RulesList({
   onCreate,
   createDisabled = false,
   createDisabledTooltip,
+  limitIndicator,
 }: RulesListProps) {
   const t = useT()
   const [searchValue, setSearchValue] = useState('')
@@ -221,14 +224,17 @@ export function RulesList({
   const toolbarRow = (
     <div className={cn(SERVICE_HEADER_CONTAINER, 'min-w-0')}>
       <div className="flex min-w-0 flex-col gap-2 @[640px]:flex-row @[640px]:items-center @[640px]:justify-between @[640px]:gap-3">
-        <div className="relative w-full min-w-0 @[640px]:w-64 @[640px]:shrink-0">
-          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t('Search rules...')}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="h-9 w-full border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
-          />
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative min-w-0 flex-1 @[640px]:w-64 @[640px]:flex-none">
+            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t('Search rules...')}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="h-9 w-full border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
+            />
+          </div>
+          {limitIndicator}
         </div>
         <div className="flex w-full min-w-0 items-center gap-2 @[640px]:w-auto @[640px]:shrink-0">
           <AttackModeButton
