@@ -26,7 +26,7 @@ Transfers need the [owner role](/docs/advanced/security/roles#owner) on both sid
 - Creating a transfer link, deleting one, or moving a project directly requires the owner role on the organization that owns the project.
 - Claiming a transfer link requires the owner role on the organization that receives the project.
 
-Members with other roles see a notice on the **Transfer project** card instead of its actions. Organization API keys can't create or claim transfers, because a key has no owner behind it.
+Members with other roles see a notice on the **Transfer project** card instead of its actions.
 
 # Move a project to another organization {% #move %}
 
@@ -95,7 +95,6 @@ The project moves into the selected organization and opens there. If the recipie
 Appwrite checks both organizations before it moves a project, whether it's a direct move or a claimed link. The transfer is refused, and the project stays where it is, when any of these is true:
 
 - **Unpaid invoice.** Either organization has a failed payment or a payment that's waiting for authentication. Resolve it from the organization's **Billing** settings.
-- **Read-only organization.** Either organization is read-only.
 - **Budget cap reached.** Either organization has reached its [budget cap](/docs/advanced/billing/payments#budget-cap).
 - **Over plan limits.** The project comes from a [Free](/docs/advanced/billing/free) organization and has gone over the plan's limits this billing cycle. Wait for the next cycle, or upgrade the organization that owns it.
 - **Plan doesn't fit the project.** The receiving organization's plan doesn't allow what the project uses, such as its function specifications or number of environments. Upgrade the receiving organization, or reduce what the project uses.

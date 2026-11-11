@@ -6,9 +6,15 @@ cover: /images/changelog/2026-11-12-1.avif
 tags: console
 ---
 
-Appwrite Cloud projects can now be handed to another organization with a single-use transfer link, even when the sender isn't a member of it. An owner creates the link from the **Transfer project** card in the project's settings, chooses whether it lasts 24 hours, 7 days, or 30 days, and can lock it to one recipient organization. An owner of the receiving organization opens the link, sees which project is coming and from where, and claims it into an organization they own.
+Appwrite Cloud projects can now be handed to another organization with a single-use transfer link, even when the sender isn't a member of it.
 
-The project keeps its region, ID, endpoint, data, and keys, so apps built on it keep working. The new organization's members, plan, and billing apply from the moment of the claim. Owners of both organizations can still move a project directly from the same card.
+- An owner creates the link from the **Transfer project** card in the project's settings.
+- Links last 24 hours, 7 days, or 30 days, and can be locked to one recipient organization.
+- An owner of the receiving organization opens the link, sees which project is coming and from where, and claims it into an organization they own.
+
+The project keeps its region, ID, endpoint, data, and keys, so apps built on it keep working. The new organization's members, plan, and billing apply from the moment of the claim.
+
+Owners of both organizations can still move a project directly from the same card.
 
 {% arrow_link href="/blog/post/announcing-project-transfer-links" %}
 Read the announcement
