@@ -261,7 +261,26 @@ fn webp(frames: &[Frame], quality: Option<i64>) -> Result<Vec<u8>> {
     Ok(out)
 }
 
+/// AVIF: through libheif with the `libheif` feature, as ImageMagick writes it,
+/// when it has an AV1 encoder; the pure-Rust encoder (the `ravif` feature)
+/// otherwise, and ImageMagick's empty blob with neither.
 fn avif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
+    #[cfg(feature = "libheif")]
+    if let Some(encoded) = crate::heif::encode(frame, quality, Format::Avif) {
+        return Ok(encoded);
+    }
+    #[cfg(feature = "ravif")]
+    return ravif(frame, quality);
+    #[cfg(not(feature = "ravif"))]
+    {
+        let _ = (frame, quality);
+        Err(Error::imagick(EMPTY))
+    }
+}
+
+/// AVIF from the pure-Rust encoder (rav1e).
+#[cfg(feature = "ravif")]
+fn ravif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     // ImageMagick's AVIF default quality is 50.
     let quality = match quality {
         Some(q) if q >= 0 => q.min(100) as u8,
@@ -284,7 +303,7 @@ fn avif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
 /// HEIC, where libheif has an HEVC encoder; ImageMagick's empty blob otherwise.
 fn heic(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     #[cfg(feature = "libheif")]
-    let encoded = crate::heif::encode(frame, quality);
+    let encoded = crate::heif::encode(frame, quality, Format::Heic);
     #[cfg(not(feature = "libheif"))]
     let encoded: Option<Vec<u8>> = {
         let _ = (frame, quality);

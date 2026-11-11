@@ -30,9 +30,11 @@
 //! encoder exists), AVIF is written but not read, and HEIC is neither read
 //! nor written. Two features add those through the C libraries ImageMagick
 //! itself uses: `libwebp` writes lossy WebP at the requested quality, and
-//! `libheif` reads AVIF and HEIC and writes HEIC where the system's libheif
-//! has an HEVC encoder (Appwrite's PHP image has none, so HEIC output fails
-//! there in PHP too). Pixels match ImageMagick's up to resampling and encoder
+//! `libheif` reads AVIF and HEIC, writes AVIF as ImageMagick does, and writes
+//! HEIC where the system's libheif has an HEVC encoder (Appwrite's PHP image
+//! has none, so HEIC output fails there in PHP too). The pure-Rust AVIF
+//! encoder is the default `ravif` feature; a process that forks, such as a
+//! PHP extension under Swoole, leaves it out and writes AVIF through libheif. Pixels match ImageMagick's up to resampling and encoder
 //! differences; sizes, frames, delays and formats match exactly.
 //!
 //! PHP → Rust:

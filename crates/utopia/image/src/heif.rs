@@ -1,7 +1,7 @@
 //! AVIF and HEIC through libheif, the library ImageMagick reads and writes
 //! them with (the `libheif` feature). What it can do depends on the codecs the
-//! system's libheif was built with: an AV1 decoder for AVIF, libde265 for
-//! HEIC input and an HEVC encoder (x265) for HEIC output.
+//! system's libheif was built with: an AV1 decoder and encoder for AVIF,
+//! libde265 for HEIC input and an HEVC encoder (x265) for HEIC output.
 
 use image::RgbaImage;
 use libheif_rs::{Channel, ColorSpace, CompressionFormat, EncoderQuality, HeifContext, LibHeif, RgbChroma};
@@ -36,12 +36,14 @@ pub(crate) fn decode(data: &[u8], format: Format) -> Result<Vec<Frame>> {
     Ok(vec![Frame::new(pixels, alpha, 0, format)])
 }
 
-/// Encodes `frame` as HEIC. `quality` is the object quality
+/// Encodes `frame` as AVIF or HEIC. `quality` is the object quality
 /// (`setCompressionQuality`): ImageMagick's default is 50, and 100 is lossless.
-/// `None` when libheif has no HEVC encoder, or the encoder fails.
-pub(crate) fn encode(frame: &Frame, quality: Option<i64>) -> Option<Vec<u8>> {
+/// `None` when libheif has no encoder for the format (AV1 or HEVC), or the
+/// encoder fails.
+pub(crate) fn encode(frame: &Frame, quality: Option<i64>, format: Format) -> Option<Vec<u8>> {
+    let codec = if format == Format::Avif { CompressionFormat::Av1 } else { CompressionFormat::Hevc };
     let lib = LibHeif::new();
-    let mut encoder = lib.encoder_for_format(CompressionFormat::Hevc).ok()?;
+    let mut encoder = lib.encoder_for_format(codec).ok()?;
     let quality = match quality {
         Some(q) if q >= 100 => EncoderQuality::LossLess,
         Some(q) if q >= 0 => EncoderQuality::Lossy(q as u8),

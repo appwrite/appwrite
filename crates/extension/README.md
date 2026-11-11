@@ -31,8 +31,21 @@ the parity check: with the extension loaded, all 94 tests of `packages/image/tes
 
 The extension turns on the crate's `libwebp` and `libheif` features, so it needs
 libheif's headers to build (`libheif-dev`) and the library at run time; libwebp is
-built from source. What AVIF and HEIC can do follows the system's libheif, as it does
-for ImageMagick: Appwrite's base image decodes both and has no HEVC encoder.
+built from source. AVIF and HEIC follow the system's libheif, as they do for
+ImageMagick: Appwrite's base image decodes both, encodes AVIF, and has no HEVC encoder
+unless `libheif-x265` is installed (the `UTOPIA_EXTENSION=true` image installs it).
+
+How it behaves inside a Swoole worker:
+
+- **Errors.** An error is thrown as the class the crate names for it. With Composer
+  loaded that is the package's own `UnsupportedFormatException`, and with ext-imagick
+  `ImagickException`; `Utopia\Image\Format` stays the PHP enum.
+- **Panics.** A panic in a Rust codec is caught and thrown as a PHP `Error` whose message
+  starts with `Rust panic:`; the worker keeps running. The release profile must not set
+  `panic = "abort"`.
+- **Threads and forks.** The extension starts no thread pool. The pure-Rust AVIF encoder
+  (the crate's default `ravif` feature) is left out: with its pool, a process that had
+  encoded an AVIF and then forked left the child waiting forever on its next encode.
 
 Known differences from ImageMagick: with no quality given (`-1`), WebP is written at
 75, where ImageMagick reuses the quality it estimated from a JPEG source.

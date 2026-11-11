@@ -14,4 +14,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 ext-php-rs.workspace = true
+# Not the default `ravif`: libheif writes AVIF as ImageMagick does, and rav1e
+# would bring its thread pool (rayon) into a process that forks.
 utopia-image = { workspace = true, features = ["libwebp", "libheif"] }

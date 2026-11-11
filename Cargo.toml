@@ -22,12 +22,16 @@ publish = false
 
 [workspace.dependencies]
 php-std = { path = "crates/support/php-std" }
-utopia-image = { path = "crates/utopia/image" }
+utopia-image = { path = "crates/utopia/image", default-features = false }
 
 ext-php-rs = "0.16"
 fast_image_resize = { version = "6", default-features = false, features = ["std"] }
 gif = "0.14"
-image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp", "avif", "rayon"] }
+# No `rayon`: it gives the AVIF encoder a process-wide thread pool, and a
+# process that forks after using it (Swoole workers do fork) leaves the child
+# waiting forever on threads it does not have. `avif` (the pure-Rust encoder)
+# is utopia-image's `ravif` feature.
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 image-webp = "0.2"
 kamadak-exif = "0.6"
 # libheif (a system library): AVIF and HEIC decoding, HEIC encoding. utopia-image's `libheif` feature.
@@ -37,6 +41,8 @@ thiserror = "2"
 # libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.
 webp = { version = "0.3", default-features = false }
 
+# No `panic = "abort"`: ext-php-rs catches a panic in a method and throws it
+# as a PHP `Error`; aborting would take the Swoole worker down instead.
 [profile.release]
 lto = "fat"
 codegen-units = 1
