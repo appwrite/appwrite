@@ -20,6 +20,13 @@ Appwrite supports multiple source destinations for migrating your data. You can 
 | [Cloud](/docs/advanced/migrations/cloud) | enabled | enabled | enabled | enabled | enabled | enabled |
 | [Self hosted](/docs/advanced/migrations/self-hosted) | enabled | enabled | enabled | enabled | enabled | enabled |
 
+# Hosting platforms {% #hosting-platforms %}
+
+Hosting platforms run your code and databases rather than exposing an API that Migrations can read from, so you move them with standard tools such as Git, `pg_dump`, and `rclone`. These guides walk through each resource:
+
+- [Railway](/docs/advanced/migrations/railway): services, PostgreSQL, MySQL, buckets, volumes, cron jobs, variables, and domains
+- [Vercel](/docs/products/sites/migrations/vercel): sites, variables, redirects, and domains
+
 # Limitations {% #limitations %}
 
 Migrations cannot transfer all data perfectly, so certain fields, such as `$createdAt` and `$updatedAt`, may not be transferred. 
