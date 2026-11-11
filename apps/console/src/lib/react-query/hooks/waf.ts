@@ -17,10 +17,7 @@ import type { FirewallRule } from '@/lib/firewall/types'
 import type { FirewallSchedulePayload } from '@/lib/firewall/schedule'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
-import {
-  DEFAULT_PAGE_SIZE,
-  DEFAULT_STALE_TIME,
-} from './constants'
+import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 import {
   CHALLENGE_DIFFICULTY_DEFAULT,
   CHALLENGE_TTL_DEFAULT,

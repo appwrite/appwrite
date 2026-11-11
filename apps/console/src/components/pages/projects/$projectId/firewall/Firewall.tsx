@@ -116,7 +116,9 @@ export function Firewall({ projectId, resourceSelection }: FirewallProps) {
 
   return (
     <div className="flex-1">
-      {project && organizationPlan !== undefined && totalRulesData !== undefined ? (
+      {project &&
+      organizationPlan !== undefined &&
+      totalRulesData !== undefined ? (
         <PlanLimitWarning
           currentCount={totalRulesCount}
           limit={wafRulesLimit}
