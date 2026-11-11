@@ -116,10 +116,6 @@ class GitHub extends Git
         $this->accessToken = \is_array($parsed) && \is_string($parsed['accessToken'] ?? null) ? $parsed['accessToken'] : '';
     }
 
-    /**
-     * Keeps the app's signing key and issuer, so every App JWT can be signed
-     * by this instance when it is needed rather than trusted from a cache.
-     */
     protected function loadSigningKey(string $privateKey, ?string $appId): void
     {
         $this->signingKey = $this->parsePrivateKey($privateKey);
@@ -152,18 +148,13 @@ class GitHub extends Git
         return $signingKey;
     }
 
-    /**
-     * The App JWT to authenticate as the GitHub App with, signed afresh when the
-     * current one is close to expiring. An adapter given no signing key keeps
-     * the JWT it holds.
-     */
-    private function getJwt(): string
+    protected function appJwt(): string
     {
         if (!$this->signingKey instanceof OpenSSLAsymmetricKey) {
-            return $this->jwtToken;
+            throw new Exception('initializeVariables() must be called before authenticating as the app');
         }
 
-        if ($this->jwtExpiresAt - time() < self::GITHUB_APP_JWT_REFRESH_MARGIN) {
+        if ($this->jwtExpiresAt - time() <= self::GITHUB_APP_JWT_REFRESH_MARGIN) {
             $now = time();
             $this->jwtExpiresAt = $now + self::GITHUB_APP_JWT_EXPIRY;
             $this->jwtToken = new JWT($this->signingKey, 'RS256')->encode([
@@ -322,7 +313,7 @@ class GitHub extends Git
     public function hasAccessToAllRepositories(): bool
     {
         $url = '/app/installations/' . $this->installationId;
-        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => 'Bearer ' . $this->getJwt()]);
+        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => 'Bearer ' . $this->appJwt()]);
         $responseBody = $response['body'] ?? [];
         return ($responseBody['repository_selection'] ?? '') === 'all';
     }
@@ -744,7 +735,7 @@ class GitHub extends Git
     {
         $this->loadSigningKey($privateKey, $appId);
 
-        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->getJwt()]);
+        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->appJwt()]);
         $responseBody = $response['body'] ?? [];
         $statusCode = $response['headers']['status-code'] ?? 0;
         if ($statusCode === 404) {
@@ -756,10 +747,6 @@ class GitHub extends Git
         $this->accessToken = $responseBody['token'] ?? '';
     }
 
-    /**
-     * GitHub's own explanation of a failed request, without anything else the
-     * response carried.
-     */
     private function describeError(mixed $responseBody): string
     {
         return \is_array($responseBody) ? (json_encode(array_intersect_key($responseBody, array_flip(['message', 'documentation_url']))) ?: '') : '';
@@ -778,15 +765,14 @@ class GitHub extends Git
     {
         $params = $repositoryIds === [] ? [] : ['repository_ids' => $repositoryIds];
 
-        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->getJwt()], $params);
+        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->appJwt()], $params);
         $responseBody = $response['body'] ?? [];
         $responseHeaders = $response['headers'] ?? [];
         $statusCode = \is_array($responseHeaders) ? ($responseHeaders['status-code'] ?? 0) : 0;
         $statusCode = \is_int($statusCode) ? $statusCode : 0;
 
         if (!\is_array($responseBody) || !\is_string($responseBody['token'] ?? null) || !\is_string($responseBody['expires_at'] ?? null)) {
-            $safeBody = \is_array($responseBody) ? json_encode(array_intersect_key($responseBody, array_flip(['message', 'documentation_url']))) : '';
-            throw new Exception('Failed to create access token from GitHub API. Status: ' . $statusCode . '. Response: ' . $safeBody, $statusCode);
+            throw new Exception('Failed to create access token from GitHub API. Status: ' . $statusCode . '. Response: ' . $this->describeError($responseBody), $statusCode);
         }
 
         return [
@@ -820,7 +806,7 @@ class GitHub extends Git
     {
         // GitHub doesn't use $repositoryId - only installationId
         $url = '/app/installations/' . $installationId;
-        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => 'Bearer ' . $this->getJwt()]);
+        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => 'Bearer ' . $this->appJwt()]);
         $responseBody = $response['body'] ?? [];
 
         // Only a missing installation is permanent; rate limits and server errors stay retryable failures

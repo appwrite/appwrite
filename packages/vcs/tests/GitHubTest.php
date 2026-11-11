@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Utopia\VCS\Tests;
 
+use Ahc\Jwt\JWT;
+use ArrayObject;
+use Exception;
+use Iterator;
+use OpenSSLAsymmetricKey;
 use PHPUnit\Framework\Attributes\DataProvider;
+use ReflectionProperty;
+use stdClass;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
@@ -328,7 +335,10 @@ final class GitHubTest extends Base
     public function testSearchRepositoriesPrivateProfile(): void
     {
         $adapter = new class (new Cache(new None())) extends GitHub {
-            protected string $jwtToken = 'app-token';
+            protected function appJwt(): string
+            {
+                return 'app-token';
+            }
             protected string $installationId = '1234';
 
             protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
@@ -373,7 +383,10 @@ final class GitHubTest extends Base
     public function testSearchRepositoriesUnknownOwner(): void
     {
         $adapter = new class (new Cache(new None())) extends GitHub {
-            protected string $jwtToken = 'app-token';
+            protected function appJwt(): string
+            {
+                return 'app-token';
+            }
             protected string $installationId = '1234';
 
             protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
@@ -392,9 +405,9 @@ final class GitHubTest extends Base
     }
 
     /**
-     * @return \Iterator<string, array{callable(string): string}>
+     * @return Iterator<string, array{callable(string): string}>
      */
-    public static function encodedPemProvider(): \Iterator
+    public static function encodedPemProvider(): Iterator
     {
         yield 'base64' => [base64_encode(...)];
         yield 'wrapped base64' => [fn (string $pem): string => chunk_split(base64_encode($pem), 76, "\n")];
@@ -421,7 +434,7 @@ final class GitHubTest extends Base
         try {
             $adapter->getOwnerName('1234');
             $this->fail('A failed installation lookup must throw');
-        } catch (\Exception $error) {
+        } catch (Exception $error) {
             $this->assertNotInstanceOf(OwnerNotFound::class, $error);
         }
     }
@@ -460,7 +473,7 @@ final class GitHubTest extends Base
         try {
             $adapter->getOwnerName('1234');
             $this->fail('A failed installation lookup must throw');
-        } catch (\Exception $error) {
+        } catch (Exception $error) {
             $this->assertNotInstanceOf(OwnerNotFound::class, $error);
             $this->assertSame(0, $error->getCode());
             $this->assertStringContainsString('Status: ' . $status, $error->getMessage());
@@ -488,7 +501,7 @@ final class GitHubTest extends Base
         try {
             $adapter->getOwnerName('1234');
             $this->fail('An installation without an account login must throw');
-        } catch (\Exception $error) {
+        } catch (Exception $error) {
             $this->assertNotInstanceOf(OwnerNotFound::class, $error);
             $this->assertSame('Owner name retrieval response is missing account login.', $error->getMessage());
         }
@@ -514,7 +527,7 @@ final class GitHubTest extends Base
         try {
             $adapter->initializeVariables('1234', $this->generatePrivateKey()['pem'], '5678');
             $this->fail('A refused access token must throw');
-        } catch (\Exception $error) {
+        } catch (Exception $error) {
             $this->assertNotInstanceOf(OwnerNotFound::class, $error);
             $this->assertSame(403, $error->getCode());
             $this->assertStringContainsString('This installation has been suspended', $error->getMessage());
@@ -550,18 +563,61 @@ final class GitHubTest extends Base
      * @param callable(GitHub): mixed $invoke
      */
     #[DataProvider('jwtCalls')]
-    public function testJwtCallsResignAnExpiredCachedJwt(callable $invoke): void
+    public function testJwtCallsNeverUseTheCachedJwt(callable $invoke): void
     {
-        $this->assertJwtCallResigns($invoke, time() - 10);
+        $key = $this->generatePrivateKey();
+        $requests = $this->requestLog();
+        $adapter = $this->recordingAdapter($this->cacheWithJwt(time() + 500), 201, $this->appResponse('scoped-token'), $requests);
+
+        $adapter->initializeVariables('1234', $key['pem'], '5678');
+        $this->assertCount(0, $requests, 'A cached access token must be reused');
+
+        $invoke($adapter);
+
+        $this->assertCount(1, $requests);
+        $claims = $this->verifiedClaims($requests->getArrayCopy()[0]['headers'], $key['public']);
+        $this->assertGreaterThan(time() + GitHub::GITHUB_APP_JWT_REFRESH_MARGIN, $claims['exp']);
+        $this->assertSame(5678, $claims['iss']);
     }
 
     /**
      * @param callable(GitHub): mixed $invoke
      */
     #[DataProvider('jwtCalls')]
-    public function testJwtCallsResignACachedJwtAboutToExpire(callable $invoke): void
+    public function testJwtCallsWithoutInitializationThrow(callable $invoke): void
     {
-        $this->assertJwtCallResigns($invoke, time() + 30);
+        $requests = $this->requestLog();
+        $adapter = $this->recordingAdapter(new Cache(new None()), 201, $this->appResponse('scoped-token'), $requests);
+        new ReflectionProperty(GitHub::class, 'installationId')->setValue($adapter, '1234');
+
+        try {
+            $invoke($adapter);
+            $this->fail('An uninitialized adapter must not authenticate as the app');
+        } catch (Exception $error) {
+            $this->assertSame('initializeVariables() must be called before authenticating as the app', $error->getMessage());
+        }
+        $this->assertCount(0, $requests);
+    }
+
+    public function testInitializeVariablesCachesTheJwtForOlderReleases(): void
+    {
+        $cache = new Cache(new Memory());
+        $requests = $this->requestLog();
+        $adapter = $this->recordingAdapter($cache, 201, ['token' => 'installation-token'], $requests);
+
+        $adapter->initializeVariables('1234', $this->generatePrivateKey()['pem'], '5678');
+
+        $this->assertCount(1, $requests);
+        $authorization = $requests->getArrayCopy()[0]['headers']['Authorization'] ?? null;
+        $this->assertIsString($authorization);
+        $entry = $cache->load('1234', GitHub::ACCESS_TOKEN_CACHE_TTL);
+        $this->assertIsString($entry);
+        $cached = json_decode($entry, true);
+        $this->assertIsArray($cached);
+        $this->assertIsString($cached['jwtToken'] ?? null);
+        $this->assertNotSame('', $cached['jwtToken']);
+        $this->assertSame('Bearer ' . $cached['jwtToken'], $authorization);
+        $this->assertSame('installation-token', $cached['accessToken'] ?? null);
     }
 
     /**
@@ -572,20 +628,15 @@ final class GitHubTest extends Base
     {
         $key = $this->generatePrivateKey();
         $requests = $this->requestLog();
-        $adapter = $this->recordingAdapter(new Cache(new None()), 201, [
-            'token' => 'installation-token',
-            'expires_at' => '2026-10-27T16:00:00Z',
-            'repository_selection' => 'all',
-            'account' => ['login' => 'appwrite'],
-        ], $requests);
+        $adapter = $this->recordingAdapter(new Cache(new None()), 201, $this->appResponse('installation-token'), $requests);
         $adapter->initializeVariables('1234', $key['pem'], '5678');
         $first = $this->verifiedClaims($requests->getArrayCopy()[0]['headers'], $key['public']);
 
         $invoke($adapter);
         $this->assertSame($requests->getArrayCopy()[0]['headers'], $requests->getArrayCopy()[1]['headers'], 'A fresh JWT must be reused');
 
-        $expiry = new \ReflectionProperty(GitHub::class, 'jwtExpiresAt');
-        $expiry->setValue($adapter, time() + GitHub::GITHUB_APP_JWT_REFRESH_MARGIN - 1);
+        $expiry = new ReflectionProperty(GitHub::class, 'jwtExpiresAt');
+        $expiry->setValue($adapter, time() + GitHub::GITHUB_APP_JWT_REFRESH_MARGIN);
         $invoke($adapter);
 
         $claims = $this->verifiedClaims($requests->getArrayCopy()[2]['headers'], $key['public']);
@@ -605,34 +656,27 @@ final class GitHubTest extends Base
     }
 
     /**
-     * @param callable(GitHub): mixed $invoke
+     * @return array<string, mixed> a body every call in jwtCalls() accepts
      */
-    private function assertJwtCallResigns(callable $invoke, int $cachedExpiry): void
+    private function appResponse(string $token): array
     {
-        $key = $this->generatePrivateKey();
-        $requests = $this->requestLog();
-        $adapter = $this->recordingAdapter($this->cacheWithJwt($cachedExpiry), 201, [
-            'token' => 'scoped-token',
-            'expires_at' => '2026-10-27T16:00:00Z',
+        return [
+            'token' => $token,
+            'expires_at' => $this->hourFromNow(),
             'repository_selection' => 'all',
             'account' => ['login' => 'appwrite'],
-        ], $requests);
+        ];
+    }
 
-        $adapter->initializeVariables('1234', $key['pem'], '5678');
-        $this->assertCount(0, $requests, 'A cached access token must be reused');
-
-        $invoke($adapter);
-
-        $this->assertCount(1, $requests);
-        $claims = $this->verifiedClaims($requests->getArrayCopy()[0]['headers'], $key['public']);
-        $this->assertGreaterThan(time() + GitHub::GITHUB_APP_JWT_REFRESH_MARGIN, $claims['exp']);
-        $this->assertSame(5678, $claims['iss']);
+    private function hourFromNow(): string
+    {
+        return gmdate('Y-m-d\TH:i:s\Z', time() + 3600);
     }
 
     private function cacheWithJwt(int $expiry): Cache
     {
         $stale = $this->generatePrivateKey();
-        $jwt = new \Ahc\Jwt\JWT($stale['key'], 'RS256')->encode(['iat' => $expiry - 600, 'exp' => $expiry, 'iss' => 5678]);
+        $jwt = new JWT($stale['key'], 'RS256')->encode(['iat' => $expiry - 600, 'exp' => $expiry, 'iss' => 5678]);
 
         $cache = new Cache(new Memory());
         $cache->save('1234', (string) json_encode(['jwtToken' => $jwt, 'accessToken' => 'installation-token']));
@@ -641,12 +685,12 @@ final class GitHubTest extends Base
     }
 
     /**
-     * @return array{key: \OpenSSLAsymmetricKey, pem: string, public: string}
+     * @return array{key: OpenSSLAsymmetricKey, pem: string, public: string}
      */
     private function generatePrivateKey(): array
     {
         $key = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
-        $this->assertInstanceOf(\OpenSSLAsymmetricKey::class, $key);
+        $this->assertInstanceOf(OpenSSLAsymmetricKey::class, $key);
         $this->assertTrue(openssl_pkey_export($key, $pem));
         $this->assertIsString($pem);
         $details = openssl_pkey_get_details($key);
@@ -678,25 +722,25 @@ final class GitHubTest extends Base
     }
 
     /**
-     * @return \ArrayObject<int, array{method: string, path: string, headers: array<mixed>, params: array<mixed>}>
+     * @return ArrayObject<int, array{method: string, path: string, headers: array<mixed>, params: array<mixed>}>
      */
-    private function requestLog(): \ArrayObject
+    private function requestLog(): ArrayObject
     {
-        return new \ArrayObject();
+        return new ArrayObject();
     }
 
     /**
      * @param array<string, mixed> $body
-     * @param \ArrayObject<int, array{method: string, path: string, headers: array<mixed>, params: array<mixed>}> $requests receives every request the adapter sends
+     * @param ArrayObject<int, array{method: string, path: string, headers: array<mixed>, params: array<mixed>}> $requests receives every request the adapter sends
      */
-    private function recordingAdapter(Cache $cache, int $status, array $body, \ArrayObject $requests): GitHub
+    private function recordingAdapter(Cache $cache, int $status, array $body, ArrayObject $requests): GitHub
     {
         return new class ($cache, $status, $body, $requests) extends GitHub {
             /**
              * @param array<string, mixed> $body
-             * @param \ArrayObject<int, array{method: string, path: string, headers: array<mixed>, params: array<mixed>}> $requests
+             * @param ArrayObject<int, array{method: string, path: string, headers: array<mixed>, params: array<mixed>}> $requests
              */
-            public function __construct(Cache $cache, private readonly int $status, private readonly array $body, private readonly \ArrayObject $requests)
+            public function __construct(Cache $cache, private readonly int $status, private readonly array $body, private readonly ArrayObject $requests)
             {
                 parent::__construct($cache);
             }
@@ -719,12 +763,13 @@ final class GitHubTest extends Base
 
     public function testCreateAccessTokenLimitsItToTheRepositories(): void
     {
-        $captured = new \stdClass();
-        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_scoped', 'expires_at' => '2026-10-27T16:00:00Z'], $captured);
+        $captured = new stdClass();
+        $expiresAt = $this->hourFromNow();
+        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_scoped', 'expires_at' => $expiresAt], $captured);
 
         $token = $adapter->createAccessToken([42]);
 
-        $this->assertSame(['token' => 'ghs_scoped', 'expiresAt' => '2026-10-27T16:00:00Z'], $token);
+        $this->assertSame(['token' => 'ghs_scoped', 'expiresAt' => $expiresAt], $token);
         $this->assertSame([
             'method' => 'POST',
             'path' => '/app/installations/1234/access_tokens',
@@ -735,8 +780,8 @@ final class GitHubTest extends Base
 
     public function testCreateAccessTokenWithoutRepositoriesCoversTheInstallation(): void
     {
-        $captured = new \stdClass();
-        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_all', 'expires_at' => '2026-10-27T16:00:00Z'], $captured);
+        $captured = new stdClass();
+        $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_all', 'expires_at' => $this->hourFromNow()], $captured);
 
         $adapter->createAccessToken();
 
@@ -750,12 +795,12 @@ final class GitHubTest extends Base
 
     public function testCreateAccessTokenThrowsWhenGitHubRefuses(): void
     {
-        $adapter = $this->accessTokenResponse(422, ['message' => 'There is at least one repository that does not exist or is not accessible to the parent installation.', 'token' => 'leaked'], new \stdClass());
+        $adapter = $this->accessTokenResponse(422, ['message' => 'There is at least one repository that does not exist or is not accessible to the parent installation.', 'token' => 'leaked'], new stdClass());
 
         try {
             $adapter->createAccessToken([42]);
             $this->fail('Expected the refusal to throw.');
-        } catch (\Exception $error) {
+        } catch (Exception $error) {
             $this->assertSame(422, $error->getCode());
             $this->assertStringContainsString('not accessible', $error->getMessage());
             $this->assertStringNotContainsString('leaked', $error->getMessage());
@@ -764,7 +809,7 @@ final class GitHubTest extends Base
 
     public function testGetCollaboratorPermissionReturnsThePermission(): void
     {
-        $captured = new \stdClass();
+        $captured = new stdClass();
         $adapter = $this->accessTokenResponse(200, ['permission' => 'write', 'role_name' => 'maintain'], $captured);
 
         $this->assertSame('write', $adapter->getCollaboratorPermission('appwrite', 'appwrite', 'octocat'));
@@ -775,35 +820,38 @@ final class GitHubTest extends Base
 
     public function testGetCollaboratorPermissionIsNoneForAnUnknownUser(): void
     {
-        $adapter = $this->accessTokenResponse(404, ['message' => 'Not Found'], new \stdClass());
+        $adapter = $this->accessTokenResponse(404, ['message' => 'Not Found'], new stdClass());
 
         $this->assertSame('none', $adapter->getCollaboratorPermission('appwrite', 'appwrite', 'ghost'));
     }
 
     public function testGetCollaboratorPermissionThrowsWhenGitHubFails(): void
     {
-        $adapter = $this->accessTokenResponse(500, ['message' => 'Server Error'], new \stdClass());
+        $adapter = $this->accessTokenResponse(500, ['message' => 'Server Error'], new stdClass());
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionCode(500);
         $adapter->getCollaboratorPermission('appwrite', 'appwrite', 'octocat');
     }
 
     /**
      * @param array<string, mixed> $body
-     * @param \stdClass $captured its `request` receives the request the adapter sent
+     * @param stdClass $captured its `request` receives the request the adapter sent
      */
-    private function accessTokenResponse(int $status, array $body, \stdClass $captured): GitHub
+    private function accessTokenResponse(int $status, array $body, stdClass $captured): GitHub
     {
         return new class ($status, $body, $captured) extends GitHub {
-            protected string $jwtToken = 'app-token';
+            protected function appJwt(): string
+            {
+                return 'app-token';
+            }
 
             protected string $installationId = '1234';
 
             /**
              * @param array<string, mixed> $body
              */
-            public function __construct(private readonly int $status, private readonly array $body, private readonly \stdClass $captured)
+            public function __construct(private readonly int $status, private readonly array $body, private readonly stdClass $captured)
             {
                 parent::__construct(new Cache(new None()));
             }
@@ -823,7 +871,10 @@ final class GitHubTest extends Base
     private function installationResponse(int $status, array $body): GitHub
     {
         return new class ($status, $body) extends GitHub {
-            protected string $jwtToken = 'app-token';
+            protected function appJwt(): string
+            {
+                return 'app-token';
+            }
 
             /**
              * @param array<string, mixed> $body
