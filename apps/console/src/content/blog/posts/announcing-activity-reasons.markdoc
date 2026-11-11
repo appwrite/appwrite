@@ -44,7 +44,7 @@ Today, we are announcing **reasons in Activity**. Every API request can now carr
 ![Project Activity tab with reasons](/images/blog/announcing-activity-reasons/activity.avif)
 {% /only_light %}
 
-When an agent works on your project through the [Appwrite MCP server](/docs/tooling/ai/mcp-servers), every write it makes now comes with a reason. The server's write tool takes a required `reason` alongside the request, so the agent has to say what it's doing and why before it changes anything. A missing, multi-line, or overlong reason is refused before any request reaches your project, with an error that tells the agent how to fix it.
+When an agent works on your project through the [Appwrite MCP server](/docs/tooling/ai/mcp-servers), every write it makes now comes with a reason. The server's write tool takes a required `reason` alongside the request, so the agent has to say what it's doing and why before it changes anything.
 
 The reason lands in **Activity** next to the change, on an event already marked **Via MCP**. An agent session that cleaned up users, changed a table, and redeployed a function reads as a list of decisions, each with the agent's own explanation, such as "Remove the test users created while debugging sign-up". Reads don't carry a reason, so the log stays focused on what changed.
 
@@ -82,12 +82,6 @@ const client = new sdk.Client()
 ```
 
 Use a separate client for each reason, so a reason meant for one job doesn't follow unrelated requests. A reason is one line of up to 256 characters, in any language. Appwrite percent-decodes the header, so encode the value with `encodeURIComponent` or your language's equivalent. A request with an invalid reason, such as one with a line break or a hidden control character, fails before it runs and changes nothing.
-
-# What makes a good reason
-
-A good reason answers the question a teammate would ask while scrolling the log a week later. "Update rows" repeats what the event already says. "Fix prices imported with the wrong currency from the October CSV" tells the reviewer whether the change was intended and where to look if it wasn't.
-
-For agents, the MCP server's instructions already ask the model for a reason with every write. For scripts and CI, include whatever links the change back to its source: a commit, a ticket, a pipeline run, or the name of the job.
 
 # Know why every change happened
 
