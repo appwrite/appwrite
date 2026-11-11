@@ -6,6 +6,9 @@ namespace Utopia\Image\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Image\Exception\CorruptImageException;
+use Utopia\Image\Exception\ImageException;
+use Utopia\Image\Exception\LimitExceededException;
 use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Image;
 
@@ -1232,5 +1235,75 @@ final class ImageTest extends TestCase
             $this->assertSame(20, $frame->getImageWidth());
             $this->assertSame(20, $frame->getImageHeight());
         }
+    }
+
+    public function testCorruptImageThrows(): void
+    {
+        $png = file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '';
+
+        $this->expectException(CorruptImageException::class);
+        $this->expectExceptionMessage('Corrupt or truncated image');
+
+        new Image(substr($png, 0, 200));
+    }
+
+    public function testUnknownOutputTypeThrows(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+
+        $this->expectException(UnsupportedFormatException::class);
+        $this->expectExceptionMessage('Unsupported output format: bmp');
+
+        $image->output('bmp');
+    }
+
+    public function testDimensionsOverTheLimitThrow(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+
+        $this->expectException(LimitExceededException::class);
+        $this->expectExceptionMessage('Image exceeds the size or memory limits');
+
+        $image->crop(60000, 10);
+    }
+
+    public function testEveryImageFailureIsAnImageException(): void
+    {
+        foreach ([UnsupportedFormatException::class, CorruptImageException::class, LimitExceededException::class] as $class) {
+            $this->assertTrue(is_subclass_of($class, ImageException::class), $class);
+        }
+
+        try {
+            new Image('not an image');
+            $this->fail('Expected an ImageException');
+        } catch (ImageException $exception) {
+            $this->assertInstanceOf(UnsupportedFormatException::class, $exception);
+        }
+    }
+
+    /**
+     * @return array<string, array{\Closure(Image): mixed, string}>
+     */
+    public static function invalidArguments(): array
+    {
+        return [
+            'negative width' => [fn (Image $image) => $image->crop(-1, 10), 'Width and height must not be negative'],
+            'negative height at a gravity' => [fn (Image $image) => $image->crop(10, -1, Image::GRAVITY_TOP), 'Width and height must not be negative'],
+            'negative border' => [fn (Image $image) => $image->setBorder(-1, '#ff0000'), 'Border width must not be negative'],
+            'negative radius' => [fn (Image $image) => $image->setBorderRadius(-1), 'Corner radius must not be negative'],
+            'unknown border colour' => [fn (Image $image) => $image->setBorder(2, 'no-such-colour'), 'Invalid color: no-such-colour'],
+            'unknown background colour' => [fn (Image $image) => $image->setBackground('no-such-colour'), 'Invalid color: no-such-colour'],
+        ];
+    }
+
+    #[DataProvider('invalidArguments')]
+    public function testInvalidArgumentsThrow(\Closure $call, string $message): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+
+        $call($image);
     }
 }

@@ -159,7 +159,7 @@ impl FocalPoint {
 /// use utopia_image::OutputFormat;
 ///
 /// assert_eq!("jpeg".parse::<OutputFormat>()?, OutputFormat::Jpeg);
-/// assert_eq!("bmp".parse::<OutputFormat>().unwrap_err().to_string(), "Invalid output type given");
+/// assert_eq!("bmp".parse::<OutputFormat>().unwrap_err().to_string(), "Unsupported output format: bmp");
 /// # Ok::<(), utopia_image::Error>(())
 /// ```
 ///
@@ -201,7 +201,7 @@ impl FromStr for OutputFormat {
             "webp" => OutputFormat::Webp,
             "avif" => OutputFormat::Avif,
             "heic" => OutputFormat::Heic,
-            _ => return Err(Error::Exception("Invalid output type given".into())),
+            _ => return Err(Error::UnsupportedFormat(format!("Unsupported output format: {s}"))),
         })
     }
 }
@@ -304,12 +304,12 @@ pub(crate) fn pixel_budget() -> u64 {
     Resource::Memory.limit().saturating_add(Resource::Map.limit())
 }
 
-/// Fails like ImageMagick's pixel cache when holding `bytes` more of pixels
-/// would pass [`pixel_budget`]. Called with the size a decoder announces,
+/// Fails when holding `bytes` more of pixels would pass [`pixel_budget`], as
+/// ImageMagick's pixel cache does. Called with the size a decoder announces,
 /// before its buffers are allocated.
 pub(crate) fn check_pixels(bytes: u64) -> Result<()> {
     if bytes > pixel_budget() {
-        return Err(Error::imagick("cache resources exhausted `' @ error/cache.c/OpenPixelCache/4044"));
+        return Err(Error::LimitExceeded);
     }
     Ok(())
 }
@@ -318,9 +318,7 @@ pub(crate) fn check_pixels(bytes: u64) -> Result<()> {
 /// or when one canvas of this size would pass the pixel budget.
 pub(crate) fn check_dimensions(width: u64, height: u64) -> Result<()> {
     if width > MAX_DIMENSION || height > MAX_DIMENSION {
-        return Err(Error::imagick(format!(
-            "width or height exceeds limit `' ({width}x{height}) > ({MAX_DIMENSION}x{MAX_DIMENSION}) @ error/cache.c/OpenPixelCache/3813"
-        )));
+        return Err(Error::LimitExceeded);
     }
     check_pixels(canvas_bytes(width, height))
 }

@@ -13,7 +13,7 @@ use crate::options::{canvas_bytes, check_dimensions, check_pixels};
 /// Decodes the primary image of `data`, with the file's own rotation,
 /// mirroring and cropping applied, as ImageMagick reads it.
 pub(crate) fn decode(data: &[u8], format: Format) -> Result<Vec<Frame>> {
-    let corrupt = |e: libheif_rs::HeifError| Error::imagick(format!("corrupt image `{}': {e}", format.magick()));
+    let corrupt = |e: libheif_rs::HeifError| Error::Corrupt(format!("{}: {e}", format.magick()));
     let context = HeifContext::read_from_bytes(data).map_err(corrupt)?;
     let handle = context.primary_image_handle().map_err(corrupt)?;
     let (width, height) = (handle.width(), handle.height());
@@ -24,7 +24,7 @@ pub(crate) fn decode(data: &[u8], format: Format) -> Result<Vec<Frame>> {
     let decoded = LibHeif::new().decode(&handle, ColorSpace::Rgb(RgbChroma::Rgba), None).map_err(corrupt)?;
     let planes = decoded.planes();
     let Some(plane) = planes.interleaved else {
-        return Err(Error::imagick(format!("insufficient image data in blob `{}'", format.magick())));
+        return Err(Error::Corrupt(format!("{}: no pixel data", format.magick())));
     };
     let row = plane.width as usize * 4;
     let mut pixels = Vec::with_capacity(row * plane.height as usize);
@@ -32,7 +32,7 @@ pub(crate) fn decode(data: &[u8], format: Format) -> Result<Vec<Frame>> {
         pixels.extend_from_slice(&line[..row]);
     }
     let pixels = RgbaImage::from_raw(plane.width, plane.height, pixels)
-        .ok_or_else(|| Error::imagick(format!("insufficient image data in blob `{}'", format.magick())))?;
+        .ok_or_else(|| Error::Corrupt(format!("{}: no pixel data", format.magick())))?;
     Ok(vec![Frame::new(pixels, alpha, 0, format)])
 }
 

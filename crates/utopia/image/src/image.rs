@@ -227,10 +227,8 @@ impl Image {
         let bw = i64::from(self.border_width);
         let (rect_w, rect_h) = if bw > 0 { (w - (bw + 1), h - (bw + 1)) } else { (w - 1, h - 1) };
         if rect_w < bw || rect_h < bw {
-            // ImageMagick refuses a rectangle whose end comes before its start.
-            return Err(Error::imagick(
-                "non-conforming drawing primitive definition `roundrectangle' @ error/draw.c/RenderMVGContent/4708",
-            ));
+            // A rectangle whose end comes before its start: ImageMagick refuses to draw it.
+            return Err(Error::process("border wider than the image"));
         }
         let shape =
             RoundRect { x0: bw as f64, y0: bw as f64, x1: rect_w as f64, y1: rect_h as f64, radius: f64::from(radius) };
@@ -319,7 +317,7 @@ impl Image {
         let text = path.to_string_lossy();
         let dir = php_std::path::dirname(&text);
         if !Path::new(&dir).exists() && (dir.is_empty() || create_dir(&dir).is_err()) {
-            return Err(Error::Exception(format!("Can't create directory {dir}")));
+            return Err(Error::Failed(format!("Can't create directory {dir}")));
         }
         self.prepare(format, quality)?;
         let first = &self.frames[0];

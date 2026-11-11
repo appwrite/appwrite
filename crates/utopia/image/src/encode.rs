@@ -7,11 +7,8 @@ use image::RgbaImage;
 use crate::error::{Error, Result};
 use crate::frame::{Format, Frame};
 
-/// What Imagick reports when an encoder produced nothing.
-const EMPTY: &str = "Failed to get the image contents (empty or invalid image?)";
-
-fn failed(_: impl std::fmt::Display) -> Error {
-    Error::imagick(EMPTY)
+fn failed(e: impl std::fmt::Display) -> Error {
+    Error::write(e)
 }
 
 /// Whether the format keeps every frame in one file (ImageMagick's adjoin).
@@ -144,7 +141,7 @@ fn vp8l(frame: &Frame, width: u32, height: u32) -> Result<Vec<u8>> {
     let (data, color) = if frame.alpha {
         (pixels, image_webp::ColorType::Rgba8)
     } else {
-        let rgba = RgbaImage::from_raw(width, height, pixels).ok_or_else(|| Error::imagick(EMPTY))?;
+        let rgba = RgbaImage::from_raw(width, height, pixels).ok_or_else(|| Error::write("frame size"))?;
         (rgb(&rgba), image_webp::ColorType::Rgb8)
     };
     let mut file = Vec::new();
@@ -213,8 +210,9 @@ fn image_chunks(file: &[u8]) -> Vec<u8> {
 /// consecutive identical frames merge into one with their delays summed, as
 /// libwebp's animation encoder does.
 fn webp(frames: &[Frame], quality: Option<i64>) -> Result<Vec<u8>> {
+    // ImageMagick's WebP coder fails on a quality over 100.
     if quality.is_some_and(|q| q > 100) {
-        return Err(Error::imagick(EMPTY));
+        return Err(Error::write("quality over 100"));
     }
     let first = &frames[0];
     #[cfg(feature = "libwebp")]
@@ -275,7 +273,7 @@ fn webp(frames: &[Frame], quality: Option<i64>) -> Result<Vec<u8>> {
 
 /// AVIF: through libheif with the `libheif` feature, as ImageMagick writes it,
 /// when it has an AV1 encoder; the pure-Rust encoder (the `ravif` feature)
-/// otherwise, and ImageMagick's empty blob with neither.
+/// otherwise, and an unsupported format with neither.
 fn avif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     #[cfg(feature = "libheif")]
     if let Some(encoded) = crate::heif::encode(frame, quality, Format::Avif) {
@@ -286,7 +284,7 @@ fn avif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     #[cfg(not(feature = "ravif"))]
     {
         let _ = (frame, quality);
-        Err(Error::imagick(EMPTY))
+        Err(Error::unavailable("AVIF", "output"))
     }
 }
 
@@ -314,7 +312,7 @@ fn ravif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     Ok(out)
 }
 
-/// HEIC, where libheif has an HEVC encoder; ImageMagick's empty blob otherwise.
+/// HEIC, where libheif has an HEVC encoder; an unsupported format otherwise.
 fn heic(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     #[cfg(feature = "libheif")]
     let encoded = crate::heif::encode(frame, quality, Format::Heic);
@@ -323,12 +321,11 @@ fn heic(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
         let _ = (frame, quality);
         None
     };
-    encoded.ok_or_else(|| Error::imagick(EMPTY))
+    encoded.ok_or_else(|| Error::unavailable("HEIC", "output"))
 }
 
 /// Writes `data` to `path`.
 pub(crate) fn write(path: &std::path::Path, data: &[u8]) -> Result<()> {
-    let mut file = std::fs::File::create(path)
-        .map_err(|e| Error::imagick(format!("unable to open image `{}': {e}", path.display())))?;
-    file.write_all(data).map_err(|e| Error::imagick(e.to_string()))
+    let mut file = std::fs::File::create(path).map_err(|e| Error::write(format_args!("{}: {e}", path.display())))?;
+    file.write_all(data).map_err(Error::write)
 }

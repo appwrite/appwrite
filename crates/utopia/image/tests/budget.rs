@@ -19,7 +19,7 @@ fn oversized_frame_gif() -> Vec<u8> {
 }
 
 fn exhausted(result: utopia_image::Result<Image>) -> bool {
-    result.err().is_some_and(|e| e.to_string().contains("cache resources exhausted"))
+    matches!(result, Err(utopia_image::Error::LimitExceeded))
 }
 
 #[test]

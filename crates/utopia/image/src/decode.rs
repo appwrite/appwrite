@@ -19,17 +19,17 @@ pub(crate) fn decode(data: &[u8], format: Format) -> Result<Vec<Frame>> {
         Format::Avif | Format::Heic => crate::heif::decode(data, format)?,
         #[cfg(not(feature = "libheif"))]
         Format::Avif | Format::Heic => {
-            return Err(Error::imagick(format!("no decode delegate for this image format `{}'", format.magick())));
+            return Err(Error::unavailable(format.magick(), "input"));
         }
     };
     if frames.is_empty() {
-        return Err(Error::imagick(format!("insufficient image data in blob `{}'", format.magick())));
+        return Err(Error::Corrupt(format!("{}: no frames", format.magick())));
     }
     Ok(frames)
 }
 
 fn corrupt(format: Format, e: impl std::fmt::Display) -> Error {
-    Error::imagick(format!("corrupt image `{}': {e}", format.magick()))
+    Error::Corrupt(format!("{}: {e}", format.magick()))
 }
 
 fn single(data: &[u8], format: Format) -> Result<Vec<Frame>> {

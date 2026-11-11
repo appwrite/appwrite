@@ -18,26 +18,18 @@ pub struct Image(utopia_image::Image);
 
 type This<'a> = &'a mut ZendClassObject<Image>;
 
-/// `error` as the exception class the PHP library throws for it. A class PHP
-/// does not have (`ImagickException` without ext-imagick) is an `\Exception`.
+/// `error` as the exception class the PHP library throws for it. The library's
+/// own classes load from its Composer package; without it they are `\Exception`.
 fn thrown(error: Error) -> PhpException {
     let class = ClassEntry::try_find(error.php_class()).unwrap_or_else(ce::exception);
     PhpException::new(error.to_string(), 0, class)
 }
 
-/// A PHP `int` size as the crate's `u32`; a negative one is the error
-/// ImageMagick gives for it there, `refused`.
-fn size(value: i64, refused: &str) -> Result<u32, Error> {
-    u32::try_from(value).map_err(|_| Error::Imagick(refused.into()))
+/// A PHP `int` size as the crate's `u32`; a negative one is an invalid
+/// argument, with the PHP library's message for it.
+fn size(value: i64, negative: &str) -> Result<u32, Error> {
+    u32::try_from(value).map_err(|_| Error::InvalidArgument(negative.into()))
 }
-
-/// What ImageMagick refuses a negative size with, per operation, as the build
-/// in Appwrite's image words it (the source line numbers vary by build).
-const TOO_LARGE: &str = "Image dimension exceeds maximum supported size `' @ error/image.c/SetImageExtent/2733";
-const BAD_GEOMETRY: &str = "Invalid image geometry";
-const BAD_FRAME: &str = "frame is less than image size `' @ error/decorate.c/FrameImage/218";
-const BAD_RADIUS: &str =
-    "non-conforming drawing primitive definition `roundrectangle' @ error/draw.c/RenderMVGContent/4708";
 
 /// The `$type` of `output()` and `save()`.
 fn format(kind: &str) -> Result<OutputFormat, Error> {
@@ -84,13 +76,8 @@ impl Image {
                 Some(gravity) => (gravity, focal),
                 None => (Gravity::Center, focal.or(FocalPoint::new(0.5, 0.5).ok())),
             };
-            // A negative height reaches the crop itself on that path; anything
-            // else negative is refused when the resized image is allocated.
-            let thumbnail = gravity == Gravity::Center && focal.is_none();
-            if !thumbnail && height < 0 {
-                return Err(Error::Imagick(BAD_GEOMETRY.into()));
-            }
-            let (width, height) = (size(width, TOO_LARGE)?, size(height, TOO_LARGE)?);
+            let negative = "Width and height must not be negative";
+            let (width, height) = (size(width, negative)?, size(height, negative)?);
             self_.0.crop(width, height, gravity, focal).map(|_| ())
         });
         cropped.map(|()| self_).map_err(thrown)
@@ -98,13 +85,15 @@ impl Image {
 
     /// `setBorder(int $borderWidth, string $borderColor): self`.
     pub fn set_border<'a>(self_: This<'a>, borderWidth: i64, borderColor: String) -> PhpResult<This<'a>> {
-        let set = size(borderWidth, BAD_FRAME).and_then(|width| self_.0.set_border(width, &borderColor).map(|_| ()));
+        let set = size(borderWidth, "Border width must not be negative")
+            .and_then(|width| self_.0.set_border(width, &borderColor).map(|_| ()));
         set.map(|()| self_).map_err(thrown)
     }
 
     /// `setBorderRadius(int $cornerRadius): self`.
     pub fn set_border_radius(self_: This<'_>, cornerRadius: i64) -> PhpResult<This<'_>> {
-        let set = size(cornerRadius, BAD_RADIUS).and_then(|radius| self_.0.set_border_radius(radius).map(|_| ()));
+        let set = size(cornerRadius, "Corner radius must not be negative")
+            .and_then(|radius| self_.0.set_border_radius(radius).map(|_| ()));
         set.map(|()| self_).map_err(thrown)
     }
 

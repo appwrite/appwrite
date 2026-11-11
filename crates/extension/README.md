@@ -23,11 +23,9 @@ and libclang at build time.
 ## Utopia\Image\Image
 
 Over `crates/utopia/image`, with the signatures of `packages/image/src/Image.php`.
-An error is thrown as the class the crate names for it (`Error::php_class`); a class
-PHP cannot find, such as `ImagickException` without ext-imagick, is an `\Exception`.
 
 `crates/extension/tests/image.php` runs without Composer. The package's own suite is
-the parity check: with the extension loaded, all 94 tests of `packages/image/tests` pass.
+the parity check: with the extension loaded, all 104 tests of `packages/image/tests` pass.
 
 The extension turns on the crate's `libwebp` and `libheif` features, so it needs
 libheif's headers to build (`libheif-dev`) and the library at run time; libwebp is
@@ -37,9 +35,11 @@ unless `libheif-x265` is installed (the `UTOPIA_EXTENSION=true` image installs i
 
 How it behaves inside a Swoole worker:
 
-- **Errors.** An error is thrown as the class the crate names for it. With Composer
-  loaded that is the package's own `UnsupportedFormatException`, and with ext-imagick
-  `ImagickException`; `Utopia\Image\Format` stays the PHP enum.
+- **Errors.** One hierarchy, shared with the PHP library: `Exception\ImageException` and
+  its `UnsupportedFormatException`, `CorruptImageException` and `LimitExceededException`
+  for what an image or the system makes fail, `\InvalidArgumentException` for an argument
+  that could never work. The classes load from the Composer package (without it they are
+  `\Exception`), and `Utopia\Image\Format` stays the PHP enum.
 - **Panics.** A panic in a Rust codec is caught and thrown as a PHP `Error` whose message
   starts with `Rust panic:`; the worker keeps running. The release profile must not set
   `panic = "abort"`.
@@ -47,9 +47,8 @@ How it behaves inside a Swoole worker:
   (the crate's default `ravif` feature) is left out: with its pool, a process that had
   encoded an AVIF and then forked left the child waiting forever on its next encode.
 
-Known differences from ImageMagick: a greyscale JPEG source is written as a colour
-JPEG (about 10% larger; ImageMagick writes one component). A negative size is refused
-with ImageMagick's message for that operation, as the build in Appwrite's image words it.
+Known difference from ImageMagick: a greyscale JPEG source is written as a colour
+JPEG (about 10% larger; ImageMagick writes one component).
 
 Not bound: the protected `getSizeByFixedHeight` and `getSizeByFixedWidth`. The class
 cannot be cloned.

@@ -56,7 +56,7 @@
 //! | `getSizeByFixedHeight()`, `getSizeByFixedWidth()` | [`Image::size_by_fixed_height`], [`Image::size_by_fixed_width`] |
 //! | `Image::setResourceLimit($type, $value)` | [`set_resource_limit`] with [`Resource`] |
 //! | colour strings (`ImagickPixel`) | [`Color`] |
-//! | `ImagickException`, `InvalidArgumentException`, `Exception`, `DivisionByZeroError`, `Exception\UnsupportedFormatException` | [`Error`] ([`Error::UnsupportedFormat`]) |
+//! | `Exception\ImageException` and its `UnsupportedFormatException`, `CorruptImageException` and `LimitExceededException`; `InvalidArgumentException`, `DivisionByZeroError` | [`Error`] |
 
 #![warn(missing_docs)]
 

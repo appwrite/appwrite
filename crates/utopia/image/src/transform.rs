@@ -16,17 +16,17 @@ use crate::options::check_dimensions;
 fn resample(src: &RgbaImage, width: u32, height: u32, filter: FilterType, alpha: bool) -> Result<RgbaImage> {
     check_dimensions(width.into(), height.into())?;
     if width == 0 || height == 0 {
-        return Err(Error::imagick("negative or zero image size `'"));
+        return Err(Error::process("zero image size"));
     }
     if (width, height) == src.dimensions() {
         return Ok(src.clone());
     }
-    let view = images::ImageRef::new(src.width(), src.height(), src.as_raw(), PixelType::U8x4)
-        .map_err(|e| Error::imagick(e.to_string()))?;
+    let view =
+        images::ImageRef::new(src.width(), src.height(), src.as_raw(), PixelType::U8x4).map_err(Error::process)?;
     let mut dst = images::Image::new(width, height, PixelType::U8x4);
     let options = ResizeOptions::new().resize_alg(ResizeAlg::Convolution(filter)).use_alpha(alpha);
-    Resizer::new().resize(&view, &mut dst, &options).map_err(|e| Error::imagick(e.to_string()))?;
-    RgbaImage::from_raw(width, height, dst.into_vec()).ok_or_else(|| Error::imagick("resize failed"))
+    Resizer::new().resize(&view, &mut dst, &options).map_err(Error::process)?;
+    RgbaImage::from_raw(width, height, dst.into_vec()).ok_or_else(|| Error::process("resize failed"))
 }
 
 /// `Imagick::thumbnailImage()`: a resize with ImageMagick's default filter
@@ -91,7 +91,7 @@ pub(crate) fn crop_thumbnail(frame: &mut Frame, width: u32, height: u32) -> Resu
         (round(ratio_y * f64::from(ow)), i64::from(height))
     };
     if new_w <= 0 || new_h <= 0 {
-        return Err(Error::imagick("negative or zero image size `' @ error/resize.c/SampleImage/3959"));
+        return Err(Error::process("zero image size"));
     }
     thumbnail(frame, new_w as u32, new_h as u32)?;
     if new_w == i64::from(width) && new_h == i64::from(height) {

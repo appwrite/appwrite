@@ -98,7 +98,7 @@ impl Format {
         } else if data.get(4..8) == Some(b"ftyp") {
             from_brands(data)
         } else {
-            Err(Error::UnsupportedFormat)
+            Err(Error::unsupported())
         }
     }
 }
@@ -126,7 +126,7 @@ fn from_brands(data: &[u8]) -> Result<Format> {
         }
         offset += BRAND_LENGTH;
     }
-    if heic { Ok(Format::Heic) } else { Err(Error::UnsupportedFormat) }
+    if heic { Ok(Format::Heic) } else { Err(Error::unsupported()) }
 }
 
 /// A big-endian box size of `width` bytes at `offset` (`unpack('N')` or
