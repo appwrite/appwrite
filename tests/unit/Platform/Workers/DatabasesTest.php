@@ -530,6 +530,53 @@ final class DatabasesTest extends TestCase
         $this->assertSame([], $this->triggers);
     }
 
+    public function testCreateIndexIsUndoneWhenTheIndexIsDeletedBeforeItsStatusIsWritten(): void
+    {
+        $dbForDatabases = $this->databases();
+        $index = $this->store($this->indexDocument('title_key', 'processing'));
+        $this->removeOnRead(3, $index->getId());
+        $this->beforeUpdate = static function (): void {
+            throw new \RuntimeException('connection lost');
+        };
+
+        $this->process(DATABASE_TYPE_CREATE_INDEX, $index->getArrayCopy(), [], $this->projectDatabase(), $dbForDatabases);
+
+        $this->assertSame([], $this->libraryIndexKeys($dbForDatabases));
+        $this->assertArrayNotHasKey($index->getId(), $this->stored);
+        $this->assertSame([], $this->statusWrites);
+        $this->assertSame([], $this->triggers);
+    }
+
+    public function testFailedCreateIndexForADeletedIndexLeavesTheExistingLibraryIndex(): void
+    {
+        $dbForDatabases = $this->databases($this->libraryIndex('title_key', ['title']));
+        $index = $this->store($this->indexDocument('title_key', 'processing'));
+        $this->removeOnRead(2, $index->getId());
+
+        $this->process(DATABASE_TYPE_CREATE_INDEX, $index->getArrayCopy(), [], $this->projectDatabase(), $dbForDatabases);
+
+        $this->assertSame(['title_key'], $this->libraryIndexKeys($dbForDatabases));
+        $this->assertSame([], $this->statusWrites);
+        $this->assertSame([], $this->triggers);
+    }
+
+    public function testUndoOfAnIndexAlreadyDroppedElsewhereSucceeds(): void
+    {
+        $index = $this->store($this->indexDocument('title_key', 'processing'));
+        $recreated = $this->indexDocument('title_key', 'processing', sequence: '8');
+        $this->replaceOnRead(2, $recreated);
+
+        $dbForDatabases = $this->createStub(Database::class);
+        $dbForDatabases->method('createIndex')->willReturnArgument(1);
+        $dbForDatabases->method('deleteIndex')->willThrowException(new NotFound('Index not found'));
+
+        $this->process(DATABASE_TYPE_CREATE_INDEX, $index->getArrayCopy(), [], $this->projectDatabase(), $dbForDatabases);
+
+        $this->assertSame($recreated->getArrayCopy(), $this->stored[$index->getId()]->getArrayCopy());
+        $this->assertSame([], $this->statusWrites);
+        $this->assertSame([], $this->triggers);
+    }
+
     public function testConcurrentCreateIndexDeliveryLeavesTheBuiltIndexAvailable(): void
     {
         $dbForDatabases = $this->databases($this->libraryIndex('title_key', ['title']));
@@ -641,10 +688,24 @@ final class DatabasesTest extends TestCase
 
     private function replaceOnRead(int $read, Document $replacement): void
     {
+        $this->onRead($read, function () use ($replacement): void {
+            $this->store($replacement);
+        });
+    }
+
+    private function removeOnRead(int $read, string $id): void
+    {
+        $this->onRead($read, function () use ($id): void {
+            unset($this->stored[$id]);
+        });
+    }
+
+    private function onRead(int $read, \Closure $change): void
+    {
         $reads = 0;
-        $this->beforeRead = function () use (&$reads, $read, $replacement): void {
+        $this->beforeRead = function () use (&$reads, $read, $change): void {
             if (++$reads === $read) {
-                $this->store($replacement);
+                $change();
             }
         };
     }

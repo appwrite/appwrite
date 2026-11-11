@@ -473,6 +473,7 @@ class Databases extends Action
             $stored->getAttribute('orders', []),
         );
         $project = $dbForPlatform->getDocument('projects', $projectId);
+        $built = false;
         $superseded = false;
 
         try {
@@ -483,24 +484,31 @@ class Databases extends Action
                 'lengths' => $lengths,
                 'orders' => $orders,
             ]));
+            $built = true;
             $stored->setAttribute('status', 'available');
             $superseded = $this->isSuperseded($dbForProject, $stored)
                 || $dbForProject->updateDocument('indexes', $stored->getId(), new Document(['status' => 'available']))->isEmpty();
 
             if ($superseded) {
                 Span::add('database.index.orphaned', $stored->getId());
-                $dbForDatabases->deleteIndex($name, $key);
+                $this->dropIndex($dbForDatabases, $name, $key);
             }
         } catch (\Throwable $e) {
             if ($superseded) {
                 throw $e;
             }
 
-            $stale = $this->creationStaleness($stored, $dbForProject->getDocument('indexes', $stored->getId()));
+            $latest = $dbForProject->getDocument('indexes', $stored->getId());
+            $stale = $built ? $this->staleness($stored, $latest) : $this->creationStaleness($stored, $latest);
 
             if ($stale !== null) {
                 Span::add('database.index.superseded', $stale . ': ' . $e->getMessage());
                 $superseded = true;
+
+                if ($built) {
+                    $this->dropIndex($dbForDatabases, $name, $key);
+                }
+
                 return;
             }
 
@@ -590,6 +598,15 @@ class Databases extends Action
         }
 
         return null;
+    }
+
+    private function dropIndex(Database $dbForDatabases, string $name, string $key): void
+    {
+        try {
+            $dbForDatabases->deleteIndex($name, $key);
+        } catch (NotFound $e) {
+            Span::add('database.index.not_found', $e->getMessage());
+        }
     }
 
     private function creationStaleness(Document $queued, Document $stored): ?string
