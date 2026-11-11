@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "32.2.0",
+            "version": "32.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "58b5464354e7226517122cddcf519872a0f3fc62"
+                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/58b5464354e7226517122cddcf519872a0f3fc62",
-                "reference": "58b5464354e7226517122cddcf519872a0f3fc62",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
+                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
                 "shasum": ""
             },
             "require": {
@@ -111,10 +111,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/32.2.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.3.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-11-03T11:11:00+00:00"
+            "time": "2026-11-11T13:02:34+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -1112,23 +1112,23 @@
         },
         {
             "name": "open-runtimes/sdk-for-php",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/open-runtimes/sdk-for-php.git",
-                "reference": "5ee5ee383b834cf55c82f135223aa7762ab33bc2"
+                "reference": "f1335c38ba650dd399387bd3b17cc758ad28b39f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/5ee5ee383b834cf55c82f135223aa7762ab33bc2",
-                "reference": "5ee5ee383b834cf55c82f135223aa7762ab33bc2",
+                "url": "https://api.github.com/repos/open-runtimes/sdk-for-php/zipball/f1335c38ba650dd399387bd3b17cc758ad28b39f",
+                "reference": "f1335c38ba650dd399387bd3b17cc758ad28b39f",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
                 "php": ">=8.4",
-                "utopia-php/client": "^0.5"
+                "utopia-php/client": "^0.5 || ^0.6"
             },
             "require-dev": {
                 "laravel/pint": "^1.22",
@@ -1149,9 +1149,9 @@
             "description": "PHP SDK for the Open Runtimes orchestrator: jobs, deployments, and sandboxes.",
             "support": {
                 "issues": "https://github.com/open-runtimes/sdk-for-php/issues",
-                "source": "https://github.com/open-runtimes/sdk-for-php/tree/2.1.0"
+                "source": "https://github.com/open-runtimes/sdk-for-php/tree/2.2.0"
             },
-            "time": "2026-09-24T12:27:00+00:00"
+            "time": "2026-11-11T14:35:08+00:00"
         },
         {
             "name": "open-telemetry/api",
@@ -4410,16 +4410,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "10.1.1",
+            "version": "10.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "8aef7cc386e40de03f83278ec5bdc484f3a95b32"
+                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/8aef7cc386e40de03f83278ec5bdc484f3a95b32",
-                "reference": "8aef7cc386e40de03f83278ec5bdc484f3a95b32",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0f136bb85cf69e8310db135b3fc2da1360dbf726",
+                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726",
                 "shasum": ""
             },
             "require": {
@@ -4477,9 +4477,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/10.1.1"
+                "source": "https://github.com/utopia-php/database/tree/10.1.2"
             },
-            "time": "2026-11-11T01:37:50+00:00"
+            "time": "2026-11-11T13:40:42+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4908,16 +4908,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.16.2",
+            "version": "5.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "e14850aa47d3f0e6e1fcebe8c94b70d4513ebe39"
+                "reference": "6b6c091a073502b174d3901c29909b4e7f0086ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/e14850aa47d3f0e6e1fcebe8c94b70d4513ebe39",
-                "reference": "e14850aa47d3f0e6e1fcebe8c94b70d4513ebe39",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6b6c091a073502b174d3901c29909b4e7f0086ac",
+                "reference": "6b6c091a073502b174d3901c29909b4e7f0086ac",
                 "shasum": ""
             },
             "require": {
@@ -4955,9 +4955,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.16.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.17.1"
             },
-            "time": "2026-11-06T12:03:07+00:00"
+            "time": "2026-11-11T12:22:04+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -5240,16 +5240,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.32.2",
+            "version": "v1.32.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "35f43b86c3aa960b3167ad147ff8308fb30766c4"
+                "reference": "1cf8e0320bed4b3c6e51df92039a5636c3887728"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/35f43b86c3aa960b3167ad147ff8308fb30766c4",
-                "reference": "35f43b86c3aa960b3167ad147ff8308fb30766c4",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/1cf8e0320bed4b3c6e51df92039a5636c3887728",
+                "reference": "1cf8e0320bed4b3c6e51df92039a5636c3887728",
                 "shasum": ""
             },
             "require": {
@@ -5263,7 +5263,7 @@
                 "composer/semver": "^3.6.0",
                 "friendsofphp/php-cs-fixer": "^3.95.30",
                 "illuminate/view": "^13.42.0",
-                "larastan/larastan": "^3.14.0",
+                "larastan/larastan": "^3.15.0",
                 "laravel-zero/framework": "^13.0.0",
                 "laravel/agent-detector": "^2.0.5",
                 "laravel/prompts": "^0.3.27",
@@ -5306,7 +5306,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2026-11-10T16:21:10+00:00"
+            "time": "2026-11-11T16:45:13+00:00"
         },
         {
             "name": "matthiasmullie/minify",
