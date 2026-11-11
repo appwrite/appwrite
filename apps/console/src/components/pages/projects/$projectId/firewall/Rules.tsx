@@ -58,6 +58,7 @@ import {
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { getRuleRateLimit, getRuleRedirect } from '@/lib/firewall/actions'
 import {
+  firewallTabPath,
   formatConditionSummary,
   parseFirewallConditions,
   type FirewallResourceSelection,
@@ -172,7 +173,9 @@ export function RulesList({
     }
   }
 
-  const firewallHref = buildConsoleUrl(`/projects/${projectId}/firewall`)
+  const firewallHref = buildConsoleUrl(
+    firewallTabPath(projectId, resourceSelection),
+  )
 
   const createButtonClassName =
     'h-9 min-w-0 flex-1 gap-2 px-3 text-[13px] font-medium @[640px]:w-auto @[640px]:flex-none @[640px]:px-4'

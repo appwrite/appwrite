@@ -1101,7 +1101,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'שרת SMTP מותאם אישית לאימיילים יוצאים',
   Advisor: 'יועץ',
   Firewall: 'חומת אש',
-  'Security · Firewall rules': 'אבטחה · כללי חומת אש',
+  'Settings · Firewall': 'הגדרות · חומת אש',
   'IP allow/block lists and request rules':
     'רשימות היתר/חסימה של IP וכללי בקשות',
 

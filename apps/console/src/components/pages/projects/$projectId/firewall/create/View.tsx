@@ -45,7 +45,7 @@ import {
   FIREWALL_RESOURCE_TYPES,
   areFirewallConditionsComplete,
   createEmptyConditionDraft,
-  firewallListSearch,
+  firewallTabPath,
   parseFirewallListSearch,
   serializeFirewallConditions,
   type FirewallConditionDraft,
@@ -171,12 +171,7 @@ export function View() {
     resourceId?: string,
   ) => {
     navigate({
-      to: '/projects/$projectId/firewall',
-      params: { projectId: projectId! },
-      search: firewallListSearch({
-        resourceType,
-        resourceId,
-      }),
+      to: firewallTabPath(projectId!, { resourceType, resourceId }),
     })
   }
 

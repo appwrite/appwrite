@@ -14,7 +14,7 @@ import { canSeeProjectNavItem } from '@/lib/console-access-checks'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
-  firewallListSearch,
+  firewallTabPath,
   type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import { getFirewallActionChartColor } from '@/lib/firewall/actions'
@@ -177,7 +177,6 @@ export function ResourceFirewallCard({
 
   if (!canSeeFirewall) return null
 
-  const firewallSearch = firewallListSearch({ resourceType, resourceId })
   const loading = rulesLoading || (trafficLoading && !overview)
   const denied = overview?.totalDenied ?? 0
   const challenged = overview?.totalChallenged ?? 0
@@ -294,11 +293,7 @@ export function ResourceFirewallCard({
 
       <div className="relative flex h-[68px] items-center justify-end border-t border-border bg-muted/30 px-6">
         <Button variant="secondary" size="sm" className="h-9 text-[13px]" asChild>
-          <Link
-            to="/projects/$projectId/firewall"
-            params={{ projectId }}
-            search={firewallSearch}
-          >
+          <Link to={firewallTabPath(projectId, { resourceType, resourceId })}>
             {t('Configure rules')}
           </Link>
         </Button>

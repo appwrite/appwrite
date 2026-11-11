@@ -19,7 +19,11 @@ import {
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
-import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
+import {
+  canSeeProjectNavItem,
+  canShowFunctionSecuritySettings,
+} from '@/lib/console-access-checks'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AlertCircle, ArrowLeft, Info } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -110,6 +114,7 @@ function FunctionLayoutContent() {
             'deployments',
             'executions',
             'domains',
+            'firewall',
             'variables',
             'security',
             'settings',
@@ -147,6 +152,8 @@ function FunctionLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSecuritySettings = canShowFunctionSecuritySettings(access, features)
+  const showFirewallTab =
+    isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const functionFilterMap = useMemo(() => {
@@ -254,6 +261,19 @@ function FunctionLayoutContent() {
           functionId: functionId as string,
         },
       },
+      ...(showFirewallTab
+        ? [
+            {
+              id: 'firewall' as const,
+              label: t('Firewall'),
+              to: '/projects/$projectId/functions/$functionId/firewall',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
       ...(showSecuritySettings
         ? [
             {
@@ -287,7 +307,7 @@ function FunctionLayoutContent() {
         : []),
     ]
     return base
-  }, [projectId, functionId, showSecuritySettings, t])
+  }, [projectId, functionId, showFirewallTab, showSecuritySettings, t])
 
   // Redirect from variables/security/settings when user lacks permission
   useEffect(() => {
@@ -554,7 +574,7 @@ function FunctionLayoutContent() {
           tabs={tabs}
           activeTab={activeTab}
           fullWidthBorder
-          fullWidth={activeTab === 'executions'}
+          fullWidth={activeTab === 'executions' || activeTab === 'firewall'}
           showToolbarBottomBorder={isExecutionsTabLayout}
           showFilters={activeTab === 'executions' || activeTab === 'domains'}
           filterTrigger={

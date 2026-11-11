@@ -715,7 +715,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Settings · Migrations': '設定 · マイグレーション',
   'Import data from other backends': '他のバックエンドからデータをインポート',
   'Settings · SMTP': '設定 · SMTP',
-  'Security · Firewall rules': 'セキュリティ · ファイアウォールルール',
+  'Settings · Firewall': '設定 · ファイアウォール',
   // Command center: project settings card entries
   'Settings · Project name': '設定 · プロジェクト名',
   'Rename your project': 'プロジェクト名を変更',
