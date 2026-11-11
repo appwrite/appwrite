@@ -15,7 +15,10 @@ const JSON_HEADERS = {
 } as const
 
 function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
+  // Shared caches must not pin a transient error.
+  const headers =
+    status === 200 ? JSON_HEADERS : { ...JSON_HEADERS, 'Cache-Control': 'no-store' }
+  return new Response(JSON.stringify(body), { status, headers })
 }
 
 function notFoundResponse(): Response {
