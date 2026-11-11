@@ -133,16 +133,8 @@ class Get extends Base
         ?Document $authDevice,
         DeletePublisher $publisherForDeletes,
     ): void {
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
-        if ($protocol === 'https' && $port !== '443') {
-            $callbackBase .= ':' . $port;
-        } elseif ($protocol === 'http' && $port !== '80') {
-            $callbackBase .= ':' . $port;
-        }
-
-        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $protocol = self::resolveRequestProtocol($request);
+        $callback = self::resolveRequestOrigin($request) . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
