@@ -9,8 +9,7 @@
 import { MCP_SERVER_NAME, MCP_SERVER_URL } from '../config/mcp.ts'
 
 /** SEP-1649 well-known Server Card location. */
-export const APPWRITE_MCP_SERVER_CARD_PATH =
-  '/.well-known/mcp/server-card.json'
+export const APPWRITE_MCP_SERVER_CARD_PATH = '/.well-known/mcp/server-card.json'
 
 /**
  * Domain-level AI Catalog (current discovery flow). Points clients at the
@@ -20,6 +19,10 @@ export const APPWRITE_AI_CATALOG_PATH = '/.well-known/ai-catalog.json'
 
 /** @deprecated Prefer {@link APPWRITE_MCP_SERVER_CARD_PATH}. */
 export const APPWRITE_MCP_DISCOVERY_PATH = APPWRITE_MCP_SERVER_CARD_PATH
+
+/** RFC 9727 API catalog. */
+export const APPWRITE_API_CATALOG_PATH = '/.well-known/api-catalog'
+export const APPWRITE_OPENAPI_PATH = '/openapi.json'
 
 export const APPWRITE_AGENT_SKILLS_DISCOVERY_PATH =
   '/.well-known/agent-skills/index.json'
@@ -41,6 +44,8 @@ export const APPWRITE_MCP_SERVER_CARD_NAME = 'io.appwrite/mcp'
 
 export const MCP_SERVER_CARD_CONTENT_TYPE =
   'application/mcp-server-card+json; charset=utf-8'
+export const API_CATALOG_CONTENT_TYPE =
+  'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"'
 export const AI_CATALOG_CONTENT_TYPE =
   'application/ai-catalog+json; charset=utf-8'
 
@@ -195,7 +200,9 @@ export function buildMcpServerCard(origin: string = 'https://appwrite.io') {
 }
 
 /** @deprecated Use {@link buildMcpServerCard}. */
-export function buildMcpDiscoveryDocument(origin: string = 'https://appwrite.io') {
+export function buildMcpDiscoveryDocument(
+  origin: string = 'https://appwrite.io',
+) {
   return buildMcpServerCard(origin)
 }
 
@@ -208,6 +215,28 @@ export function buildAiCatalogDocument(origin: string = 'https://appwrite.io') {
         identifier: 'urn:air:appwrite.io:mcp:appwrite',
         type: 'application/mcp-server-card+json',
         url: `${origin}${APPWRITE_MCP_SERVER_CARD_PATH}`,
+      },
+    ],
+  }
+}
+
+/** RFC 9727 Linkset pointing at the REST API, its OpenAPI spec and docs. */
+export function buildApiCatalogDocument(
+  origin: string = 'https://appwrite.io',
+) {
+  return {
+    linkset: [
+      {
+        anchor: 'https://cloud.appwrite.io/v1',
+        'service-desc': [
+          {
+            href: `${origin}${APPWRITE_OPENAPI_PATH}`,
+            type: 'application/json',
+          },
+        ],
+        'service-doc': [
+          { href: `${origin}/docs/apis/rest`, type: 'text/html' },
+        ],
       },
     ],
   }
