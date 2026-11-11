@@ -157,12 +157,21 @@ class Maintenance extends Action
         $due = \array_map(fn (Document $certificate) => $certificate->getId(), $documents);
         try {
             $expiring = $dbForPlatform->find('certificates', [
-                Query::greaterThan('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), -self::CERTIFICATE_EXPIRED_WINDOW)),
+                Query::greaterThan('expireDate', $time),
                 Query::lessThanEqual('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), self::CERTIFICATE_RENEWAL_DEADLINE)),
                 Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)), // At most twice a day, however often maintenance runs
                 Query::orderAsc('expireDate'),
                 Query::limit(100),
             ]);
+            // A separate batch, so expired certificates never take the place of ones still serving
+            $expired = $dbForPlatform->find('certificates', [
+                Query::greaterThan('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), -self::CERTIFICATE_EXPIRED_WINDOW)),
+                Query::lessThanEqual('expireDate', $time),
+                Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)),
+                Query::orderDesc('expireDate'),
+                Query::limit(100),
+            ]);
+            $expiring = \array_merge($expiring, $expired);
         } catch (QueryException $e) {
             // A schema without expireDate (the migration has not run yet) must not stop the renewals above
             Console::warning("[{$time}] Skipping certificates about to expire: " . $e->getMessage());

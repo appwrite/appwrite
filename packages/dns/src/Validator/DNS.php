@@ -11,7 +11,7 @@ use Utopia\Validator\Validator;
 
 class DNS extends Validator
 {
-    protected const string FAILURE_REASON_QUERY = 'DNS %s query to %s timed out or failed.';
+    protected const string FAILURE_REASON_QUERY = 'DNS %s query to %s failed.';
     protected const string FAILURE_REASON_INTERNAL = 'Internal error occurred.';
     protected const string FAILURE_REASON_UNKNOWN = '';
     protected const string DEFAULT_DNS_SERVER = '8.8.8.8';
@@ -164,7 +164,7 @@ class DNS extends Validator
      * @return array<Record>
      * @throws \Exception
      */
-    protected function query(string $value): array
+    private function query(string $value): array
     {
         $dns = new Client($this->dnsServer, timeout: self::TIMEOUT);
         $response = $dns->query(Message::query(new Question($value, $this->type), recursionDesired: true));

@@ -222,7 +222,7 @@ class Action extends PlatformAction
             $validators[] = $validator;
             $checks[] = $validator;
 
-            // A failure reports the last target, as the AnyOf over them did
+            // A failure reports the last CNAME target
             $mainValidator = $validator;
         }
 
