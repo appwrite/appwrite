@@ -1924,4 +1924,124 @@ final class FormatTest extends TestCase
 
         return $methods;
     }
+
+    public function testOpenApiDeclaresChunkedUploadComponentParameters(): void
+    {
+        $spec = (new OpenAPI3(new Container(), [], [], [], [], ['console' => 0], 'console'))->parse();
+
+        $this->assertArrayHasKey('parameters', $spec['components']);
+        $parameters = $spec['components']['parameters'];
+
+        $this->assertArrayHasKey('ContentRange', $parameters);
+        $this->assertSame([
+            'name' => 'Content-Range',
+            'in' => 'header',
+            'required' => false,
+            'description' => 'Byte range of this chunk, as `bytes {start}-{end}/{total}`. Sent on every request when a file is uploaded in chunks.',
+            'schema' => [
+                'type' => 'string',
+                'pattern' => '^bytes \d+-\d+/\d+$',
+                'example' => 'bytes 0-5242879/12582912',
+            ],
+        ], $parameters['ContentRange']);
+
+        $this->assertArrayHasKey('UploadId', $parameters);
+        $this->assertSame([
+            'name' => 'X-Appwrite-ID',
+            'in' => 'header',
+            'required' => false,
+            'description' => 'ID returned by the first chunk. Sent on every later chunk of the same upload.',
+            'schema' => [
+                'type' => 'string',
+                'example' => '<UPLOAD_ID>',
+            ],
+        ], $parameters['UploadId']);
+    }
+
+    public function testChunkedUploadRouteDeclaresContentRangeAndUploadIdHeaderReferences(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/storage/buckets/:bucketId/files'))
+            ->desc('Create file')
+            ->label('sdk', new Method(
+                namespace: 'storage',
+                group: 'files',
+                name: 'createFile',
+                description: 'Create file.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+                type: MethodType::UPLOAD,
+                requestType: ContentType::MULTIPART,
+                chunked: true,
+            ))
+            ->param('bucketId', '', new Text(256), 'Storage bucket unique ID.')
+            ->param('fileId', '', new Text(256), 'File ID.')
+            ->param('file', [], new Text(256), 'Binary file.');
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+        $operation = $spec['paths']['/storage/buckets/{bucketId}/files']['post'];
+
+        $this->assertArrayHasKey('parameters', $operation);
+        $this->assertCount(3, $operation['parameters']);
+
+        $this->assertSame('bucketId', $operation['parameters'][0]['name']);
+        $this->assertSame('path', $operation['parameters'][0]['in']);
+
+        $this->assertSame(['$ref' => '#/components/parameters/ContentRange'], $operation['parameters'][1]);
+        $this->assertSame(['$ref' => '#/components/parameters/UploadId'], $operation['parameters'][2]);
+    }
+
+    public function testNonChunkedUploadRouteOmitsChunkedUploadHeaders(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('PUT', '/v1/avatars/photo'))
+            ->desc('Update photo')
+            ->label('sdk', new Method(
+                namespace: 'avatars',
+                group: null,
+                name: 'updatePhoto',
+                description: 'Update photo.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+                type: MethodType::UPLOAD,
+                requestType: ContentType::MULTIPART,
+            ))
+            ->param('file', [], new Text(256), 'Binary image file.');
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+        $operation = $spec['paths']['/avatars/photo']['put'];
+
+        $this->assertArrayNotHasKey('parameters', $operation);
+    }
+
+    public function testMethodChunkedDefaultsToFalse(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $method = new Method(
+            namespace: 'storage',
+            group: 'files',
+            name: 'createFileDefault',
+            description: 'Create file default.',
+            auth: [AuthType::ADMIN],
+            responses: [],
+        );
+        $this->assertFalse($method->isChunked());
+
+        $chunkedMethod = new Method(
+            namespace: 'storage',
+            group: 'files',
+            name: 'createFileChunked',
+            description: 'Create file chunked.',
+            auth: [AuthType::ADMIN],
+            responses: [],
+            chunked: true,
+        );
+        $this->assertTrue($chunkedMethod->isChunked());
+    }
 }
