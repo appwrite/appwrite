@@ -10,6 +10,13 @@ cargo build --release -p utopia-extension
 php -d extension="$PWD/target/release/libutopia.so" ...   # libutopia.dylib on macOS
 ```
 
+The Appwrite image builds and loads it only when asked; the default build compiles no Rust:
+
+```sh
+docker compose build --build-arg UTOPIA_EXTENSION=true
+docker compose exec appwrite php --ri utopia
+```
+
 Built on [ext-php-rs](https://github.com/extphprs/ext-php-rs); it needs `php-config`
 and libclang at build time.
 

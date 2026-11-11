@@ -12,5 +12,5 @@ use ext_php_rs::prelude::*;
 /// The module PHP loads: every class of the extension.
 #[php_module]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
-    module.class::<image::Image>()
+    module.name("utopia").class::<image::Image>()
 }

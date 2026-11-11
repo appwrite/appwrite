@@ -1,3 +1,7 @@
+# true builds the utopia PHP extension (crates/extension) and loads it, so the
+# Utopia classes it registers run in Rust. See crates/extension/README.md.
+ARG UTOPIA_EXTENSION=false
+
 FROM composer:2 AS composer
 
 # Distrust the compromised eMudhra chains before downloading dependencies.
@@ -123,7 +127,35 @@ RUN chmod +x /usr/local/bin/doctor && \
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
-FROM base AS production
+# The utopia extension, built against the base image's own PHP headers and
+# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
+FROM appwrite/base:2.2.10 AS extension-build
+
+RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
+    rustup-init -y --profile minimal --default-toolchain 1.97.1
+
+WORKDIR /usr/local/src
+
+COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY .cargo ./.cargo
+COPY crates ./crates
+
+RUN . "$HOME/.cargo/env" && \
+    cargo build --release --locked -p utopia-extension && \
+    strip target/release/libutopia.so
+
+# One of the two stages below becomes `runtime`; BuildKit builds only the one
+# UTOPIA_EXTENSION names, so the default build never compiles Rust.
+FROM base AS extension-false
+
+FROM base AS extension-true
+
+COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
+RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
+
+FROM extension-${UTOPIA_EXTENSION} AS runtime
+
+FROM runtime AS production
 
 RUN rm -rf /usr/src/code/app/config/specs && \
     find /usr -name '*.a' -delete 2>/dev/null || true && \
@@ -136,7 +168,7 @@ CMD [ "php", "app/http.php" ]
 
 FROM appwrite/base:2.2.10-xdebug AS xdebug
 
-FROM base AS development
+FROM runtime AS development
 
 # Revalidate bind-mounted source files when development workers reload.
 RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/local/etc/php/conf.d/zzz-opcache-dev.ini

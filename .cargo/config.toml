@@ -2,3 +2,8 @@
 # `php` binary that loads it to resolve; macOS's linker needs telling.
 [target.'cfg(target_os = "macos")']
 rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+# rustup's musl targets link statically by default, and a static target cannot
+# produce the shared library PHP loads (Alpine, the base image).
+[target.'cfg(target_env = "musl")']
+rustflags = ["-C", "target-feature=-crt-static"]
