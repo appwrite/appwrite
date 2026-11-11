@@ -165,9 +165,6 @@ class Origin extends Git
         $this->cache->save($this->cacheKey(), $tokens);
     }
 
-    /**
-     * The app JWT, re-signed first when it is about to expire.
-     */
     protected function appJwt(): string
     {
         $this->refreshExpiringTokens();
@@ -175,9 +172,6 @@ class Origin extends Git
         return $this->jwtToken;
     }
 
-    /**
-     * The installation token, re-minted first when it is about to expire.
-     */
     protected function installationToken(): string
     {
         $this->refreshExpiringTokens();
@@ -185,12 +179,6 @@ class Origin extends Git
         return $this->accessToken;
     }
 
-    /**
-     * One adapter instance can outlive both tokens - a push delivery walking
-     * many repositories runs for minutes - and a cache hit may already be
-     * close to expiry, so freshness is checked on every use. An instance
-     * given tokens without a signing key has nothing to refresh them with.
-     */
     protected function refreshExpiringTokens(): void
     {
         if ($this->privateKey === '' || $this->appId === '') {
@@ -2056,7 +2044,7 @@ class Origin extends Git
         $defaultBranch = \strval($repository['defaultBranch'] ?? 'main');
         $targetBranch = $branch === '' || $branch === '0' ? $defaultBranch : $branch;
 
-        $remote = $this->authenticatedCloneUrl($owner, $repositoryName);
+        $remote = fn (): string => $this->authenticatedCloneUrl($owner, $repositoryName);
         $directory = $this->temporaryDirectory();
 
         try {
@@ -2065,8 +2053,8 @@ class Origin extends Git
             // Base the commit on the branch tip when there is one; a missing
             // target branch grows from the default branch, and an empty
             // repository starts from scratch
-            $hasBase = $this->tryExecute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $targetBranch))
-                || (!\in_array($branch, ['', '0', $defaultBranch], true) && $this->tryExecute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $defaultBranch)));
+            $hasBase = $this->tryExecute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote())->argument('refs/heads/' . $targetBranch))
+                || (!\in_array($branch, ['', '0', $defaultBranch], true) && $this->tryExecute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote())->argument('refs/heads/' . $defaultBranch)));
             if ($hasBase) {
                 $this->execute($this->git($directory)->argument('checkout')->flag('-q')->argument('FETCH_HEAD'), 'Checking out the branch tip');
             }
@@ -2076,7 +2064,7 @@ class Origin extends Git
             $this->execute($this->git($directory)->argument('add')->argument('--')->argument($relative), 'Staging the file');
             $this->execute($this->git($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('commit')->flag('-q')->option('-m', $message), 'Committing the file');
             $commitHash = trim($this->execute($this->git($directory)->argument('rev-parse')->argument('HEAD'), 'Reading the commit hash'));
-            $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument('HEAD:refs/heads/' . $targetBranch), 'Pushing the commit');
+            $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote())->argument('HEAD:refs/heads/' . $targetBranch), 'Pushing the commit');
 
             return [
                 'path' => $relative,
@@ -2098,14 +2086,14 @@ class Origin extends Git
      */
     public function createBranch(string $owner, string $repositoryName, string $newBranchName, string $oldBranchName): array
     {
-        $remote = $this->authenticatedCloneUrl($owner, $repositoryName);
+        $remote = fn (): string => $this->authenticatedCloneUrl($owner, $repositoryName);
         $directory = $this->temporaryDirectory();
 
         try {
             $this->execute($this->git($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
-            $this->execute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $oldBranchName), "Fetching branch {$oldBranchName}");
+            $this->execute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote())->argument('refs/heads/' . $oldBranchName), "Fetching branch {$oldBranchName}");
             $sha = trim($this->execute($this->git($directory)->argument('rev-parse')->argument('FETCH_HEAD'), 'Reading the branch tip'));
-            $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument('FETCH_HEAD:refs/heads/' . $newBranchName), "Creating branch {$newBranchName}");
+            $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote())->argument('FETCH_HEAD:refs/heads/' . $newBranchName), "Creating branch {$newBranchName}");
 
             return [
                 'name' => $newBranchName,
@@ -2127,7 +2115,7 @@ class Origin extends Git
      */
     public function createTag(string $owner, string $repositoryName, string $tagName, string $target, string $message = ''): array
     {
-        $remote = $this->authenticatedCloneUrl($owner, $repositoryName);
+        $remote = fn (): string => $this->authenticatedCloneUrl($owner, $repositoryName);
         $directory = $this->temporaryDirectory();
 
         try {
@@ -2135,8 +2123,8 @@ class Origin extends Git
 
             // Prefer fetching the target object directly; fall back to every
             // branch head for servers that refuse fetch-by-SHA
-            if (!$this->tryExecute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument($target))) {
-                $this->execute($this->git($directory)->argument('fetch')->flag('-q')->argument($remote)->argument('refs/heads/*:refs/remotes/origin/*'), "Fetching commit {$target}");
+            if (!$this->tryExecute($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote())->argument($target))) {
+                $this->execute($this->git($directory)->argument('fetch')->flag('-q')->argument($remote())->argument('refs/heads/*:refs/remotes/origin/*'), "Fetching commit {$target}");
             }
 
             if ($message !== '' && $message !== '0') {
@@ -2144,9 +2132,9 @@ class Origin extends Git
                     $this->git($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('tag')->flag('-a')->argument($tagName)->option('-m', $message)->argument($target),
                     "Creating tag {$tagName}",
                 );
-                $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument('refs/tags/' . $tagName), "Pushing tag {$tagName}");
+                $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote())->argument('refs/tags/' . $tagName), "Pushing tag {$tagName}");
             } else {
-                $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument($target . ':refs/tags/' . $tagName), "Pushing tag {$tagName}");
+                $this->execute($this->git($directory)->argument('push')->flag('-q')->argument($remote())->argument($target . ':refs/tags/' . $tagName), "Pushing tag {$tagName}");
             }
 
             return [

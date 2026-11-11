@@ -2,10 +2,12 @@
 
 namespace Utopia\VCS\Tests;
 
+use Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
+use Utopia\Console\Command;
 use Utopia\VCS\Adapter\Git\Origin;
 use Utopia\VCS\Exception\OwnerNotFound;
 
@@ -53,6 +55,52 @@ class RecordingOrigin extends Origin
         [$status, $body] = $this->answers[$path] ?? [200, []];
 
         return ['headers' => ['status-code' => $status], 'body' => $body];
+    }
+
+    public function runCommand(Command $command): string
+    {
+        return $this->execute($command, 'Running the command');
+    }
+
+    public function cloneUrl(string $owner, string $repositoryName): string
+    {
+        return $this->authenticatedCloneUrl($owner, $repositoryName);
+    }
+}
+
+/**
+ * Origin whose git commands are recorded instead of run, each one outlasting
+ * the credentials it started with, and whose every mint hands out a new
+ * token, so a remote built once and reused shows up as a stale token.
+ */
+class SlowGitOrigin extends Origin
+{
+    /**
+     * @var list<string>
+     */
+    public array $commands = [];
+
+    public int $mints = 0;
+
+    #[\Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+    {
+        if (!str_ends_with($path, '/access_tokens')) {
+            return ['headers' => ['status-code' => 200], 'body' => []];
+        }
+
+        $this->mints++;
+
+        return ['headers' => ['status-code' => 201], 'body' => ['token' => 'oit_' . $this->mints]];
+    }
+
+    #[\Override]
+    protected function execute(Command $command, string $action): string
+    {
+        $this->commands[] = $command->toString();
+        $this->expiresAt = 0;
+
+        return '';
     }
 }
 
@@ -336,10 +384,13 @@ final class OriginTest extends TestCase
         foreach ($cases as $name => [$receipt, $appId]) {
             try {
                 $adapter->verifyReceipt($receipt, $appId);
-                $this->fail("Expected the '{$name}' receipt to be rejected");
-            } catch (\Exception $e) {
-                $this->assertNotEmpty($e->getMessage(), $name);
+            } catch (Exception $error) {
+                $this->assertNotEmpty($error->getMessage(), $name);
+
+                continue;
             }
+
+            $this->fail("Expected the '{$name}' receipt to be rejected");
         }
     }
 
@@ -683,9 +734,9 @@ final class OriginTest extends TestCase
         try {
             $adapter->getOwnerName(self::INSTALLATION_ID);
             $this->fail('Expected a missing installation to throw OwnerNotFound');
-        } catch (OwnerNotFound $e) {
-            $this->assertSame(404, $e->getCode());
-            $this->assertSame("Installation '" . self::INSTALLATION_ID . "' was not found.", $e->getMessage());
+        } catch (OwnerNotFound $error) {
+            $this->assertSame(404, $error->getCode());
+            $this->assertSame("Installation '" . self::INSTALLATION_ID . "' was not found.", $error->getMessage());
         }
     }
 
@@ -703,13 +754,16 @@ final class OriginTest extends TestCase
 
         try {
             $adapter->getOwnerName(self::INSTALLATION_ID);
-            $this->fail('Expected a failed installation lookup to throw');
         } catch (OwnerNotFound) {
             $this->fail('Only a missing installation is OwnerNotFound');
-        } catch (\Exception $e) {
-            $this->assertSame(503, $e->getCode());
-            $this->assertSame('Failed to get installation ' . self::INSTALLATION_ID . ': HTTP 503', $e->getMessage());
+        } catch (Exception $error) {
+            $this->assertSame(503, $error->getCode());
+            $this->assertSame('Failed to get installation ' . self::INSTALLATION_ID . ': HTTP 503', $error->getMessage());
+
+            return;
         }
+
+        $this->fail('Expected a failed installation lookup to throw');
     }
 
     public function testRefreshForADeletedInstallationThrowsOwnerNotFound(): void
@@ -733,6 +787,86 @@ final class OriginTest extends TestCase
         }
 
         $this->assertSame([self::MINT_PATH], array_column($adapter->requests, 'path'), 'The refresh must stop at the failed mint');
+    }
+
+    public function testMintedPairIsCachedWithItsExpiryAndReused(): void
+    {
+        $seed = random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES);
+        $cache = new Cache(new Memory());
+        $tokenExpiresAt = time() + Origin::APP_JWT_EXPIRY - 100;
+
+        $minting = new RecordingOrigin($cache, [
+            self::MINT_PATH => [201, ['token' => 'oit_minted', 'expiresAt' => gmdate('Y-m-d\TH:i:s\Z', $tokenExpiresAt)]],
+        ]);
+        $minting->initializeVariables(self::INSTALLATION_ID, base64_encode($seed), self::APP_ID);
+        $this->assertSame([self::MINT_PATH], array_column($minting->requests, 'path'));
+
+        $entry = $cache->load('origin-' . self::INSTALLATION_ID, Origin::APP_JWT_EXPIRY);
+        $this->assertIsString($entry);
+        $cached = json_decode($entry, true);
+        $this->assertIsArray($cached);
+        $this->assertSame('oit_minted', $cached['accessToken'] ?? null);
+        $this->assertSame($tokenExpiresAt, $cached['expiresAt'] ?? null, 'The cache must record when the minted token expires');
+
+        $jwt = $cached['jwtToken'] ?? null;
+        $this->assertIsString($jwt);
+        $this->assertGreaterThan($tokenExpiresAt, $this->jwtClaims($jwt)['exp'], 'The cached expiry must come from the token, not the JWT');
+
+        $reading = new RecordingOrigin($cache);
+        $reading->initializeVariables(self::INSTALLATION_ID, base64_encode($seed), self::APP_ID);
+        $reading->getAuthenticatedApp();
+        $reading->getRateLimit();
+
+        $this->assertSame(['/app', '/rate_limit'], array_column($reading->requests, 'path'), 'A cached pair must be reused without minting');
+        $this->assertSame('Bearer ' . $jwt, $reading->requests[0]['authorization']);
+        $this->assertSame('Bearer oit_minted', $reading->requests[1]['authorization']);
+    }
+
+    public function testGitCommandsAuthenticateWithTheTokenCurrentWhenTheyRun(): void
+    {
+        $adapter = new SlowGitOrigin(new Cache(new None()));
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::APP_ID);
+        $this->assertSame(1, $adapter->mints);
+
+        $adapter->createBranch(self::OWNER, self::REPOSITORY_NAME, 'new-branch', 'main');
+
+        [$init, $fetch, $revParse, $push] = $adapter->commands;
+        $this->assertStringContainsString("'init'", $init);
+        $this->assertStringContainsString("'fetch'", $fetch);
+        $this->assertStringContainsString("'rev-parse'", $revParse);
+        $this->assertStringContainsString("'push'", $push);
+
+        $this->assertStringContainsString('x-access-token:oit_2@', $fetch, 'The fetch must carry the token minted after the previous command expired it');
+        $this->assertStringContainsString('x-access-token:oit_3@', $push, 'The push must not reuse the token the fetch started with');
+        $this->assertSame(3, $adapter->mints);
+    }
+
+    public function testFailedCommandMasksTheRefreshedToken(): void
+    {
+        $seed = random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES);
+        $expiring = $this->appJwt(time() + self::EXPIRING_IN, sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed)));
+
+        $adapter = $this->cachedOrigin(
+            new Cache(new Memory()),
+            ['jwtToken' => $expiring, 'accessToken' => 'oit_old'],
+            $seed,
+            [self::MINT_PATH => [201, ['token' => 'oit_secret/+']]],
+        );
+
+        $remote = $adapter->cloneUrl(self::OWNER, self::REPOSITORY_NAME);
+        $this->assertStringContainsString('x-access-token:' . urlencode('oit_secret/+') . '@', $remote);
+
+        try {
+            $adapter->runCommand(new Command('ls')->argument($remote));
+        } catch (Exception $error) {
+            $this->assertStringStartsWith('Running the command failed: ', $error->getMessage());
+            $this->assertStringContainsString('x-access-token:***@', $error->getMessage());
+            $this->assertStringNotContainsString('oit_secret', $error->getMessage());
+
+            return;
+        }
+
+        $this->fail('Expected listing a URL as a path to fail');
     }
 
     public function testLiveAdapterSuite(): void
