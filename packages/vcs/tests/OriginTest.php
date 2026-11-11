@@ -3,9 +3,11 @@
 namespace Utopia\VCS\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\VCS\Adapter\Git\Origin;
+use Utopia\VCS\Exception\OwnerNotFound;
 
 /**
  * Origin whose JWKS is a local fixture, so receipt verification runs the
@@ -22,6 +24,35 @@ class FixtureKeysOrigin extends Origin
     protected function jwks(bool $refresh = false): array
     {
         return $this->fixtureKeys;
+    }
+}
+
+/**
+ * Origin whose API calls are recorded and answered per path, so token
+ * minting and the credential each call carries can be read back.
+ */
+class RecordingOrigin extends Origin
+{
+    /**
+     * @var list<array{method: string, path: string, authorization: string}>
+     */
+    public array $requests = [];
+
+    /**
+     * @param array<string, array{int, array<mixed>}> $answers Status and body per path; unlisted paths answer 200 with an empty body
+     */
+    public function __construct(Cache $cache, private readonly array $answers = [])
+    {
+        parent::__construct($cache);
+    }
+
+    #[\Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+    {
+        $this->requests[] = ['method' => $method, 'path' => $path, 'authorization' => $headers['Authorization'] ?? ''];
+        [$status, $body] = $this->answers[$path] ?? [200, []];
+
+        return ['headers' => ['status-code' => $status], 'body' => $body];
     }
 }
 
@@ -473,6 +504,212 @@ final class OriginTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('names no file');
         $this->adapter->createFile('owner', 'repo', './.', 'content');
+    }
+
+    protected const string INSTALLATION_ID = 'i_0123456789';
+    protected const string APP_ID = 'app_0123456789';
+    protected const string MINT_PATH = '/app/installations/i_0123456789/access_tokens';
+
+    /**
+     * Seconds left on a credential that is close enough to expiry to be replaced
+     */
+    protected const int EXPIRING_IN = 30;
+
+    /**
+     * Sign an app JWT the way the adapter does, expiring at $expiresAt.
+     *
+     * @param non-empty-string $secretKey
+     */
+    protected function appJwt(int $expiresAt, string $secretKey): string
+    {
+        return $this->signReceipt(
+            ['alg' => 'EdDSA', 'kid' => self::APP_ID, 'typ' => 'JWT'],
+            ['iss' => self::APP_ID, 'aud' => 'origin-apps', 'iat' => $expiresAt - Origin::APP_JWT_EXPIRY, 'exp' => $expiresAt],
+            $secretKey,
+        );
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    protected function jwtClaims(string $jwt): array
+    {
+        $segments = explode('.', $jwt);
+        $this->assertCount(3, $segments, 'The bearer credential is not a JWT');
+
+        $claims = json_decode((string) base64_decode(strtr($segments[1], '-_', '+/'), true), true);
+        $this->assertIsArray($claims);
+
+        return $claims;
+    }
+
+    protected function bearer(string $authorization): string
+    {
+        $this->assertStringStartsWith('Bearer ', $authorization);
+
+        return substr($authorization, \strlen('Bearer '));
+    }
+
+    /**
+     * An adapter initialised from a cache entry holding the given tokens, the
+     * way a later request finds what an earlier one minted.
+     *
+     * @param array<string, mixed> $cached
+     * @param array<string, array{int, array<mixed>}> $answers
+     */
+    protected function cachedOrigin(Cache $cache, array $cached, string $seed, array $answers = []): RecordingOrigin
+    {
+        $cache->save('origin-' . self::INSTALLATION_ID, (string) json_encode($cached));
+
+        $adapter = new RecordingOrigin($cache, $answers);
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode($seed), self::APP_ID);
+        $this->assertSame([], $adapter->requests, 'A cache hit must not reach the API');
+
+        return $adapter;
+    }
+
+    public function testJwtCallsResignAnExpiredCachedJwt(): void
+    {
+        $seed = random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES);
+        $secretKey = sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed));
+        $expired = $this->appJwt(time() - 10, $secretKey);
+
+        $adapter = $this->cachedOrigin(
+            new Cache(new Memory()),
+            ['jwtToken' => $expired, 'accessToken' => 'oit_old'],
+            $seed,
+            [self::MINT_PATH => [201, ['token' => 'oit_new']]],
+        );
+
+        $signedAfter = time();
+        $adapter->getAuthenticatedApp();
+
+        $this->assertSame(['POST', 'GET'], array_column($adapter->requests, 'method'));
+        $this->assertSame([self::MINT_PATH, '/app'], array_column($adapter->requests, 'path'));
+
+        $jwt = $this->bearer($adapter->requests[1]['authorization']);
+        $this->assertNotSame($expired, $jwt);
+        $this->assertGreaterThanOrEqual($signedAfter + Origin::APP_JWT_EXPIRY, $this->jwtClaims($jwt)['exp'], 'The JWT must be freshly signed');
+        $this->assertSame(self::APP_ID, $this->jwtClaims($jwt)['iss']);
+
+        [$header, $claims, $signature] = explode('.', $jwt);
+        $this->assertSame(
+            rtrim(strtr(base64_encode(sodium_crypto_sign_detached($header . '.' . $claims, $secretKey)), '+/', '-_'), '='),
+            $signature,
+            'The re-signed JWT must be signed with the app key',
+        );
+    }
+
+    public function testAccessTokenIsReMintedWhenItsJwtExpires(): void
+    {
+        $seed = random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES);
+        $cache = new Cache(new Memory());
+        $expiring = $this->appJwt(time() + self::EXPIRING_IN, sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed)));
+
+        $adapter = $this->cachedOrigin(
+            $cache,
+            ['jwtToken' => $expiring, 'accessToken' => 'oit_old'],
+            $seed,
+            [self::MINT_PATH => [201, ['token' => 'oit_new']]],
+        );
+
+        $signedAfter = time();
+        $adapter->getRateLimit();
+
+        $this->assertSame([self::MINT_PATH, '/rate_limit'], array_column($adapter->requests, 'path'));
+
+        $mintJwt = $this->bearer($adapter->requests[0]['authorization']);
+        $this->assertNotSame($expiring, $mintJwt, 'The token must be minted with a fresh JWT');
+        $this->assertGreaterThanOrEqual($signedAfter + Origin::APP_JWT_EXPIRY, $this->jwtClaims($mintJwt)['exp'], 'The JWT must be freshly signed');
+        $this->assertSame('Bearer oit_new', $adapter->requests[1]['authorization']);
+
+        $adapter->getRateLimit();
+        $this->assertCount(3, $adapter->requests, 'A fresh token must be reused, not minted again');
+        $this->assertSame('Bearer oit_new', $adapter->requests[2]['authorization']);
+
+        $entry = $cache->load('origin-' . self::INSTALLATION_ID, Origin::APP_JWT_EXPIRY);
+        $this->assertIsString($entry);
+        $cached = json_decode($entry, true);
+        $this->assertIsArray($cached);
+        $this->assertSame('oit_new', $cached['accessToken'] ?? null, 'The fresh pair must replace the cached one');
+        $this->assertSame($mintJwt, $cached['jwtToken'] ?? null);
+    }
+
+    public function testAccessTokenHonoursAShorterMintedExpiry(): void
+    {
+        $seed = random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES);
+        $adapter = new RecordingOrigin(new Cache(new Memory()), [
+            self::MINT_PATH => [201, ['token' => 'oit_short', 'expiresAt' => gmdate('Y-m-d\TH:i:s\Z', time() + self::EXPIRING_IN)]],
+        ]);
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode($seed), self::APP_ID);
+        $this->assertCount(1, $adapter->requests);
+
+        $adapter->getRateLimit();
+
+        $this->assertSame([self::MINT_PATH, self::MINT_PATH, '/rate_limit'], array_column($adapter->requests, 'path'));
+    }
+
+    public function testFreshCachedTokensAreReusedUnchanged(): void
+    {
+        $seed = random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES);
+        $fresh = $this->appJwt(time() + Origin::APP_JWT_EXPIRY, sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed)));
+
+        $adapter = $this->cachedOrigin(
+            new Cache(new Memory()),
+            ['jwtToken' => $fresh, 'accessToken' => 'oit_cached'],
+            $seed,
+        );
+
+        $adapter->getAuthenticatedApp();
+        $adapter->getRateLimit();
+
+        $this->assertSame(['/app', '/rate_limit'], array_column($adapter->requests, 'path'));
+        $this->assertSame('Bearer ' . $fresh, $adapter->requests[0]['authorization']);
+        $this->assertSame('Bearer oit_cached', $adapter->requests[1]['authorization']);
+    }
+
+    public function testMissingInstallationThrowsOwnerNotFound(): void
+    {
+        $seed = random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES);
+        $fresh = $this->appJwt(time() + Origin::APP_JWT_EXPIRY, sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed)));
+
+        $adapter = $this->cachedOrigin(
+            new Cache(new Memory()),
+            ['jwtToken' => $fresh, 'accessToken' => 'oit_cached'],
+            $seed,
+            ['/app/installations/' . self::INSTALLATION_ID => [404, ['code' => 'not_found', 'message' => 'installation not found']]],
+        );
+
+        try {
+            $adapter->getOwnerName(self::INSTALLATION_ID);
+            $this->fail('Expected a missing installation to throw OwnerNotFound');
+        } catch (OwnerNotFound $e) {
+            $this->assertSame(404, $e->getCode());
+            $this->assertSame("Installation '" . self::INSTALLATION_ID . "' was not found.", $e->getMessage());
+        }
+    }
+
+    public function testFailedInstallationLookupNamesTheInstallation(): void
+    {
+        $seed = random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES);
+        $fresh = $this->appJwt(time() + Origin::APP_JWT_EXPIRY, sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed)));
+
+        $adapter = $this->cachedOrigin(
+            new Cache(new Memory()),
+            ['jwtToken' => $fresh, 'accessToken' => 'oit_cached'],
+            $seed,
+            ['/app/installations/' . self::INSTALLATION_ID => [503, ['code' => 'unavailable']]],
+        );
+
+        try {
+            $adapter->getOwnerName(self::INSTALLATION_ID);
+            $this->fail('Expected a failed installation lookup to throw');
+        } catch (OwnerNotFound) {
+            $this->fail('Only a missing installation is OwnerNotFound');
+        } catch (\Exception $e) {
+            $this->assertSame(503, $e->getCode());
+            $this->assertSame('Failed to get installation ' . self::INSTALLATION_ID . ': HTTP 503', $e->getMessage());
+        }
     }
 
     public function testLiveAdapterSuite(): void

@@ -8,6 +8,7 @@ use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
+use Utopia\VCS\Exception\OwnerNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 /**
@@ -39,6 +40,13 @@ class Origin extends Git
      * app JWT that minted them.
      */
     public const APP_JWT_EXPIRY = 60 * 5;
+
+    /**
+     * Seconds before expiry at which the app JWT and the installation token
+     * are replaced, so a request already in flight still lands inside their
+     * lifetime.
+     */
+    public const APP_JWT_REFRESH_MARGIN = 60;
 
     /**
      * How Origin names the pull request lifecycle it delivers. There is no
@@ -80,6 +88,16 @@ class Origin extends Git
 
     protected string $jwtToken = '';
 
+    /**
+     * Unix time at which the app JWT, and so the installation token it
+     * minted, stops being accepted.
+     */
+    protected int $expiresAt = 0;
+
+    protected string $privateKey = '';
+
+    protected string $appId = '';
+
     protected string $installationId = '';
 
     /**
@@ -112,24 +130,96 @@ class Origin extends Git
     public function initializeVariables(string $installationId, string $privateKey, ?string $appId = null, ?string $accessToken = null, ?string $refreshToken = null): void
     {
         $this->installationId = $installationId;
+        $this->privateKey = $privateKey;
+        $this->appId = $appId ?? '';
 
-        // Cache for 1 minute less than the JWT expiry so we refresh before the token actually expires.
-        $response = $this->cache->load('origin-' . $installationId, self::APP_JWT_EXPIRY - 60);
-        if ($response == false || !\is_string($response)) {
+        $response = $this->cache->load($this->cacheKey(), self::APP_JWT_EXPIRY - self::APP_JWT_REFRESH_MARGIN);
+        if (!\is_string($response) || $response === '') {
             $this->generateAccessToken($privateKey, $appId);
+            $this->saveTokens();
 
-            $tokens = json_encode([
-                'jwtToken' => $this->jwtToken,
-                'accessToken' => $this->accessToken,
-            ]) ?: '{}';
-
-            $this->cache->save('origin-' . $installationId, $tokens);
-        } else {
-            $parsed = json_decode($response, true);
-            $parsed = \is_array($parsed) ? $parsed : [];
-            $this->jwtToken = \strval($parsed['jwtToken'] ?? '');
-            $this->accessToken = \strval($parsed['accessToken'] ?? '');
+            return;
         }
+
+        $parsed = json_decode($response, true);
+        $parsed = \is_array($parsed) ? $parsed : [];
+        $this->jwtToken = \strval($parsed['jwtToken'] ?? '');
+        $this->accessToken = \strval($parsed['accessToken'] ?? '');
+        $expiresAt = $parsed['expiresAt'] ?? null;
+        $this->expiresAt = \is_int($expiresAt) ? $expiresAt : $this->jwtExpiry($this->jwtToken);
+    }
+
+    protected function cacheKey(): string
+    {
+        return 'origin-' . $this->installationId;
+    }
+
+    protected function saveTokens(): void
+    {
+        $tokens = json_encode([
+            'jwtToken' => $this->jwtToken,
+            'accessToken' => $this->accessToken,
+            'expiresAt' => $this->expiresAt,
+        ]) ?: '{}';
+
+        $this->cache->save($this->cacheKey(), $tokens);
+    }
+
+    /**
+     * The app JWT, re-signed first when it is about to expire.
+     */
+    protected function appJwt(): string
+    {
+        $this->refreshExpiringTokens();
+
+        return $this->jwtToken;
+    }
+
+    /**
+     * The installation token, re-minted first when it is about to expire.
+     */
+    protected function installationToken(): string
+    {
+        $this->refreshExpiringTokens();
+
+        return $this->accessToken;
+    }
+
+    /**
+     * One adapter instance can outlive both tokens - a push delivery walking
+     * many repositories runs for minutes - and a cache hit may already be
+     * close to expiry, so freshness is checked on every use. An instance
+     * given tokens without a signing key has nothing to refresh them with.
+     */
+    protected function refreshExpiringTokens(): void
+    {
+        if ($this->privateKey === '' || $this->appId === '') {
+            return;
+        }
+
+        if (time() < $this->expiresAt - self::APP_JWT_REFRESH_MARGIN) {
+            return;
+        }
+
+        $this->generateAccessToken($this->privateKey, $this->appId);
+        $this->saveTokens();
+    }
+
+    /**
+     * The exp claim of an app JWT this adapter signed, or 0 when it carries
+     * none, which marks it as expired.
+     */
+    protected function jwtExpiry(string $jwt): int
+    {
+        $segments = explode('.', $jwt);
+        if (\count($segments) !== 3) {
+            return 0;
+        }
+
+        $claims = json_decode($this->base64UrlDecode($segments[1]), true);
+        $expiry = \is_array($claims) ? $claims['exp'] ?? 0 : 0;
+
+        return \is_int($expiry) ? $expiry : 0;
     }
 
     /**
@@ -161,6 +251,13 @@ class Origin extends Git
         }
 
         $this->accessToken = \strval($responseBody['token'] ?? '');
+        $this->expiresAt = $this->jwtExpiry($this->jwtToken);
+
+        $tokenExpiry = $responseBody['expiresAt'] ?? null;
+        $tokenExpiresAt = \is_string($tokenExpiry) ? strtotime($tokenExpiry) : false;
+        if ($tokenExpiresAt !== false) {
+            $this->expiresAt = min($this->expiresAt, $tokenExpiresAt);
+        }
     }
 
     /**
@@ -471,13 +568,17 @@ class Origin extends Git
     {
         $response = $this->call(
             self::METHOD_GET,
-            '/app/installations/' . $installationId,
-            ['Authorization' => "Bearer {$this->jwtToken}"],
+            '/app/installations/' . rawurlencode($installationId),
+            ['Authorization' => 'Bearer ' . $this->appJwt()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
+        if ($statusCode === 404) {
+            throw new OwnerNotFound("Installation '{$installationId}' was not found.", 404);
+        }
+
         if ($statusCode >= 400) {
-            throw $this->requestFailed('Failed to get installation {$installationId}', $response);
+            throw $this->requestFailed("Failed to get installation {$installationId}", $response);
         }
 
         return \is_array($response['body'] ?? null) ? $response['body'] : [];
@@ -505,7 +606,7 @@ class Origin extends Git
                 $params['pageToken'] = $pageToken;
             }
 
-            $response = $this->call(self::METHOD_GET, '/repos/' . rawurlencode($owner), ['Authorization' => "Bearer {$this->accessToken}"], $params);
+            $response = $this->call(self::METHOD_GET, '/repos/' . rawurlencode($owner), ['Authorization' => 'Bearer ' . $this->installationToken()], $params);
 
             $statusCode = $response['headers']['status-code'] ?? 0;
 
@@ -628,7 +729,7 @@ class Origin extends Git
                 $params['pageToken'] = $pageToken;
             }
 
-            $response = $this->call(self::METHOD_GET, '/installation/repos', ['Authorization' => "Bearer {$this->accessToken}"], $params);
+            $response = $this->call(self::METHOD_GET, '/installation/repos', ['Authorization' => 'Bearer ' . $this->installationToken()], $params);
 
             $statusCode = $response['headers']['status-code'] ?? 0;
             if ($statusCode >= 400) {
@@ -663,7 +764,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             '/repos/' . rawurlencode($owner) . '/' . rawurlencode($repositoryName),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
@@ -671,7 +772,7 @@ class Origin extends Git
             throw new RepositoryNotFound('Repository not found.');
         }
         if ($statusCode >= 400) {
-            throw $this->requestFailed('Failed to get repository {$repositoryName}', $response);
+            throw $this->requestFailed("Failed to get repository {$repositoryName}", $response);
         }
 
         return $this->normalizeRepository(\is_array($response['body'] ?? null) ? $response['body'] : []);
@@ -711,7 +812,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/pulls',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             ['head' => $branch, 'state' => 'open', 'pageSize' => 1],
         );
 
@@ -738,7 +839,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/pulls/' . $pullRequestNumber,
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
@@ -759,7 +860,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . '/pulls',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             [
                 'title' => $title,
                 'head' => $head,
@@ -824,7 +925,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . '/pulls/' . $pullRequestNumber . '/comments',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             ['body' => $comment],
         );
 
@@ -849,7 +950,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/pulls/comments/' . rawurlencode($commentId),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
@@ -870,7 +971,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_PATCH,
             $this->repositoryPath($owner, $repositoryName) . '/pulls/comments/' . rawurlencode($commentId),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             ['body' => $comment],
         );
 
@@ -905,7 +1006,8 @@ class Origin extends Git
      */
     protected function authenticatedCloneUrl(string $owner, string $repositoryName): string
     {
-        $credentials = $this->accessToken === '' || $this->accessToken === '0' ? '' : 'x-access-token:' . urlencode($this->accessToken) . '@';
+        $token = $this->installationToken();
+        $credentials = $token === '' || $token === '0' ? '' : 'x-access-token:' . urlencode($token) . '@';
         $host = substr($this->gitEndpoint, \strlen('https://'));
 
         return 'https://' . $credentials . $host . '/' . urlencode($owner) . '/' . urlencode($repositoryName) . '.git';
@@ -1216,7 +1318,7 @@ class Origin extends Git
             $response = $this->call(
                 self::METHOD_GET,
                 $this->repositoryPath($owner, $repositoryName) . '/branches',
-                ['Authorization' => "Bearer {$this->accessToken}"],
+                ['Authorization' => 'Bearer ' . $this->installationToken()],
                 $params,
             );
 
@@ -1249,7 +1351,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/git/matching-refs',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             ['ref' => 'tags/'],
         );
 
@@ -1308,7 +1410,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . '/check-runs',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             [
                 'headSha' => $SHA,
                 'checkSuite' => [
@@ -1433,7 +1535,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . '/check-runs',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             [
                 'headSha' => $headSha,
                 'checkSuite' => [
@@ -1477,12 +1579,12 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/check-runs/' . rawurlencode($checkRunId),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
         if ($statusCode >= 400) {
-            throw $this->requestFailed('Failed to get check run {$checkRunId}', $response);
+            throw $this->requestFailed("Failed to get check run {$checkRunId}", $response);
         }
 
         return \is_array($response['body'] ?? null) ? $response['body'] : [];
@@ -1563,7 +1665,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . '/check-runs',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             [
                 'headSha' => \strval($existing['sha'] ?? ''),
                 'checkSuite' => array_merge(
@@ -1580,7 +1682,7 @@ class Origin extends Git
 
         $statusCode = $response['headers']['status-code'] ?? 0;
         if ($statusCode >= 400) {
-            throw $this->requestFailed('Failed to update check run {$checkRunId}', $response);
+            throw $this->requestFailed("Failed to update check run {$checkRunId}", $response);
         }
 
         $responseBody = \is_array($response['body'] ?? null) ? $response['body'] : [];
@@ -1600,12 +1702,12 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/check-suites/' . rawurlencode($checkSuiteId),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
         if ($statusCode >= 400) {
-            throw $this->requestFailed('Failed to get check suite {$checkSuiteId}', $response);
+            throw $this->requestFailed("Failed to get check suite {$checkSuiteId}", $response);
         }
 
         return \is_array($response['body'] ?? null) ? $response['body'] : [];
@@ -1671,7 +1773,7 @@ class Origin extends Git
             $refResponse = $this->call(
                 self::METHOD_GET,
                 $this->repositoryPath($owner, $repositoryName) . '/git/ref/heads/' . $this->encodeRef($branch),
-                ['Authorization' => "Bearer {$this->accessToken}"],
+                ['Authorization' => 'Bearer ' . $this->installationToken()],
             );
 
             $refStatusCode = $refResponse['headers']['status-code'] ?? 0;
@@ -1691,7 +1793,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/git/trees/' . $sha . ($recursive ? '?recursive=1' : ''),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
@@ -1732,7 +1834,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/contents',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             $params,
         );
 
@@ -1781,7 +1883,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/contents',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             $params,
         );
 
@@ -1814,7 +1916,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/commits/' . rawurlencode($commitHash),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
@@ -1889,11 +1991,12 @@ class Origin extends Git
     #[\Override]
     public function getRepositoryCloneHeaders(): array
     {
-        if ($this->accessToken === '' || $this->accessToken === '0') {
+        $token = $this->installationToken();
+        if ($token === '' || $token === '0') {
             return [];
         }
 
-        return ['Authorization' => 'Basic ' . base64_encode('x-access-token:' . $this->accessToken)];
+        return ['Authorization' => 'Basic ' . base64_encode('x-access-token:' . $token)];
     }
 
     /**
@@ -2133,7 +2236,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_PATCH,
             $this->repositoryPath($owner, $repositoryName) . '/pulls/' . $pullRequestNumber,
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             $params,
         );
 
@@ -2157,7 +2260,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . '/pulls/' . $pullRequestNumber . '/merge',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
@@ -2244,7 +2347,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . '/pulls/' . $pullRequestNumber . '/reviews',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             $params,
         );
 
@@ -2280,7 +2383,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_PATCH,
             $this->repositoryPath($owner, $repositoryName) . '/pulls/' . $pullRequestNumber . '/reviews/' . rawurlencode($reviewId),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             ['body' => $body],
         );
 
@@ -2303,7 +2406,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_PUT,
             $this->repositoryPath($owner, $repositoryName) . '/pulls/' . $pullRequestNumber . '/reviews/' . rawurlencode($reviewId) . '/dismissals',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             ['message' => $message],
         );
 
@@ -2386,7 +2489,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/compare/' . rawurlencode($base) . '...' . rawurlencode($head),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
@@ -2407,7 +2510,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             $this->repositoryPath($owner, $repositoryName) . '/git/blobs/' . rawurlencode($sha),
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
@@ -2442,7 +2545,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . '/contents:batchGet',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             $params,
         );
 
@@ -2583,7 +2686,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . '/check-runs:batchUpsert',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             [
                 'headSha' => $headSha,
                 'checkSuite' => [
@@ -2616,7 +2719,7 @@ class Origin extends Git
      */
     public function getAuthenticatedApp(): array
     {
-        $response = $this->call(self::METHOD_GET, '/app', ['Authorization' => "Bearer {$this->jwtToken}"]);
+        $response = $this->call(self::METHOD_GET, '/app', ['Authorization' => 'Bearer ' . $this->appJwt()]);
 
         $statusCode = $response['headers']['status-code'] ?? 0;
         if ($statusCode >= 400) {
@@ -2634,7 +2737,7 @@ class Origin extends Git
      */
     public function listInstallations(): array
     {
-        return $this->collectPages('/app/installations', 'installations', [], "Bearer {$this->jwtToken}");
+        return $this->collectPages('/app/installations', 'installations', [], $this->appJwt(...));
     }
 
     /**
@@ -2646,12 +2749,12 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_DELETE,
             '/app/installations/' . rawurlencode($installationId),
-            ['Authorization' => "Bearer {$this->jwtToken}"],
+            ['Authorization' => 'Bearer ' . $this->appJwt()],
         );
 
         $statusCode = $response['headers']['status-code'] ?? 0;
         if ($statusCode >= 400) {
-            throw $this->requestFailed('Failed to delete installation {$installationId}', $response);
+            throw $this->requestFailed("Failed to delete installation {$installationId}", $response);
         }
 
         return true;
@@ -2683,7 +2786,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_GET,
             '/app/webhook/deliveries',
-            ['Authorization' => "Bearer {$this->jwtToken}"],
+            ['Authorization' => 'Bearer ' . $this->appJwt()],
             $params,
         );
 
@@ -2712,7 +2815,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             '/app/webhook/deliveries:batchRedeliver',
-            ['Authorization' => "Bearer {$this->jwtToken}"],
+            ['Authorization' => 'Bearer ' . $this->appJwt()],
             ['deliveryIds' => array_values($deliveryIds)],
         );
 
@@ -2741,7 +2844,7 @@ class Origin extends Git
      */
     public function getRateLimit(): array
     {
-        $response = $this->call(self::METHOD_GET, '/rate_limit', ['Authorization' => "Bearer {$this->accessToken}"]);
+        $response = $this->call(self::METHOD_GET, '/rate_limit', ['Authorization' => 'Bearer ' . $this->installationToken()]);
 
         $statusCode = $response['headers']['status-code'] ?? 0;
         if ($statusCode >= 400) {
@@ -2779,7 +2882,7 @@ class Origin extends Git
         $response = $this->call(
             self::METHOD_POST,
             $this->repositoryPath($owner, $repositoryName) . ':syncMirror',
-            ['Authorization' => "Bearer {$this->accessToken}"],
+            ['Authorization' => 'Bearer ' . $this->installationToken()],
             $params,
         );
 
@@ -2795,11 +2898,12 @@ class Origin extends Git
      * Collects every page of a token-paginated collection.
      *
      * @param array<string, mixed> $params
+     * @param (\Closure(): string)|null $token Bearer token for each page, the installation token by default
      * @return array<mixed>
      */
-    protected function collectPages(string $path, string $field, array $params = [], string $authorization = ''): array
+    protected function collectPages(string $path, string $field, array $params = [], ?\Closure $token = null): array
     {
-        $authorization = $authorization !== '' ? $authorization : "Bearer {$this->accessToken}";
+        $token ??= $this->installationToken(...);
 
         $items = [];
         $pageToken = '';
@@ -2810,11 +2914,11 @@ class Origin extends Git
                 $query['pageToken'] = $pageToken;
             }
 
-            $response = $this->call(self::METHOD_GET, $path, ['Authorization' => $authorization], $query);
+            $response = $this->call(self::METHOD_GET, $path, ['Authorization' => 'Bearer ' . $token()], $query);
 
             $statusCode = $response['headers']['status-code'] ?? 0;
             if ($statusCode >= 400) {
-                throw $this->requestFailed('Failed to list {$field}', $response);
+                throw $this->requestFailed("Failed to list {$field}", $response);
             }
 
             $responseBody = \is_array($response['body'] ?? null) ? $response['body'] : [];
