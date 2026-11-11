@@ -716,6 +716,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Import data from other backends': '他のバックエンドからデータをインポート',
   'Settings · SMTP': '設定 · SMTP',
   'Settings · Firewall': '設定 · ファイアウォール',
+  'Firewall has moved': 'ファイアウォールの場所が変わりました',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'ファイアウォールのルールは、保護する対象のそばに移りました。各関数とサイトの「ファイアウォール」タブと、API 用のプロジェクト設定のタブです。',
+  'Got it': '了解',
+  'Open API firewall': 'API のファイアウォールを開く',
   // Command center: project settings card entries
   'Settings · Project name': '設定 · プロジェクト名',
   'Rename your project': 'プロジェクト名を変更',

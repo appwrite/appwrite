@@ -1104,6 +1104,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   Advisor: 'יועץ',
   Firewall: 'חומת אש',
   'Settings · Firewall': 'הגדרות · חומת אש',
+  'Firewall has moved': 'חומת האש עברה למקום אחר',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'כללי חומת האש נמצאים עכשיו ליד מה שהם מגינים עליו: לשונית חומת אש בכל פונקציה ובכל אתר, ואחת בהגדרות הפרויקט עבור ה-API.',
+  'Got it': 'הבנתי',
+  'Open API firewall': 'פתיחת חומת האש של ה-API',
   'IP allow/block lists and request rules':
     'רשימות היתר/חסימה של IP וכללי בקשות',
 
