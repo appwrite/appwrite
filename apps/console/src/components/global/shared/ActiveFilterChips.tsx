@@ -160,7 +160,10 @@ function FilterChip({
 
   return (
     <span className="inline-flex h-7 max-w-[28rem] items-stretch overflow-hidden rounded-md border border-border bg-card text-[12px]">
-      <span className="flex min-w-0 items-center px-2 text-muted-foreground">
+      <span
+        className="flex max-w-[10rem] shrink-0 items-center px-2 text-muted-foreground"
+        title={field}
+      >
         <span className="truncate">{field}</span>
       </span>
 
@@ -204,7 +207,8 @@ function FilterChip({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className={`${SEGMENT_BUTTON} min-w-0 font-medium text-foreground`}
+              className={`${SEGMENT_BUTTON} min-w-0 flex-1 font-medium text-foreground`}
+              title={value}
               aria-label={t('Change value')}
             >
               <span className="truncate">{value}</span>
@@ -237,7 +241,8 @@ function FilterChip({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className={`${SEGMENT_BUTTON} min-w-0 font-medium text-foreground`}
+              className={`${SEGMENT_BUTTON} min-w-0 flex-1 font-medium text-foreground`}
+              title={value}
               aria-label={t('Change value')}
             >
               <span className="truncate">{value}</span>
@@ -290,7 +295,10 @@ function FilterChip({
           </PopoverContent>
         </Popover>
       ) : value ? (
-        <span className="flex min-w-0 items-center border-s border-border px-2 font-medium text-foreground">
+        <span
+          className="flex min-w-0 flex-1 items-center border-s border-border px-2 font-medium text-foreground"
+          title={value}
+        >
           <span className="truncate">{value}</span>
         </span>
       ) : null}
