@@ -14,8 +14,6 @@ Appwrite Cloud projects can now be handed to another organization with a single-
 
 The project keeps its region, ID, endpoint, data, and keys, so apps built on it keep working. The new organization's members, plan, and billing apply from the moment of the claim.
 
-Owners of both organizations can still move a project directly from the same card.
-
 {% arrow_link href="/blog/post/announcing-project-transfer-links" %}
 Read the announcement
 {% /arrow_link %}
