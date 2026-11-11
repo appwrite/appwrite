@@ -52,7 +52,9 @@ ENV PORT=3000
 ENV APPWRITE_SPECS_ROOT=/app/dist/specs
 
 # librsvg (Sharp SVG export) resolves fonts via fontconfig on Linux, not SVG @font-face.
+# oven/bun lags Debian security updates, so upgrade the base packages too.
 RUN apt-get update \
+  && apt-get upgrade -y \
   && apt-get install -y --no-install-recommends fontconfig fonts-liberation \
   && rm -rf /var/lib/apt/lists/*
 
