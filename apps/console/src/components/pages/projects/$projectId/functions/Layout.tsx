@@ -21,6 +21,7 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   canSeeProjectNavItem,
+  canSeeUsageNav,
   canShowFunctionSecuritySettings,
 } from '@/lib/console-access-checks'
 import { isCloudProfile } from '@/lib/console-profiles'
@@ -114,6 +115,7 @@ function FunctionLayoutContent() {
             'deployments',
             'executions',
             'domains',
+            'usage',
             'firewall',
             'variables',
             'security',
@@ -152,6 +154,7 @@ function FunctionLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSecuritySettings = canShowFunctionSecuritySettings(access, features)
+  const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
   const showFirewallTab =
     isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
 
@@ -261,6 +264,19 @@ function FunctionLayoutContent() {
           functionId: functionId as string,
         },
       },
+      ...(showUsageTab
+        ? [
+            {
+              id: 'usage' as const,
+              label: t('Usage'),
+              to: '/projects/$projectId/functions/$functionId/usage',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
       ...(showFirewallTab
         ? [
             {
@@ -307,7 +323,14 @@ function FunctionLayoutContent() {
         : []),
     ]
     return base
-  }, [projectId, functionId, showFirewallTab, showSecuritySettings, t])
+  }, [
+    projectId,
+    functionId,
+    showUsageTab,
+    showFirewallTab,
+    showSecuritySettings,
+    t,
+  ])
 
   // Redirect from variables/security/settings when user lacks permission
   useEffect(() => {
@@ -574,7 +597,11 @@ function FunctionLayoutContent() {
           tabs={tabs}
           activeTab={activeTab}
           fullWidthBorder
-          fullWidth={activeTab === 'executions' || activeTab === 'firewall'}
+          fullWidth={
+            activeTab === 'executions' ||
+            activeTab === 'usage' ||
+            activeTab === 'firewall'
+          }
           showToolbarBottomBorder={isExecutionsTabLayout}
           showFilters={activeTab === 'executions' || activeTab === 'domains'}
           filterTrigger={

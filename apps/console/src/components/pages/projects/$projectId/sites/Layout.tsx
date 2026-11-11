@@ -24,6 +24,7 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   canSeeProjectNavItem,
+  canSeeUsageNav,
   canShowSiteSettingsTab,
 } from '@/lib/console-access-checks'
 import { isCloudProfile } from '@/lib/console-profiles'
@@ -112,6 +113,7 @@ function SiteLayoutContent() {
           'deployments',
           'logs',
           'domains',
+          'usage',
           'firewall',
           'variables',
           'settings',
@@ -144,6 +146,7 @@ function SiteLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSettingsTab = canShowSiteSettingsTab(access, features)
+  const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
   const showFirewallTab =
     isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
 
@@ -336,6 +339,16 @@ function SiteLayoutContent() {
         to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
+      ...(showUsageTab
+        ? [
+            {
+              id: 'usage' as const,
+              label: t('Usage'),
+              to: '/projects/$projectId/sites/$siteId/usage',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
       ...(showFirewallTab
         ? [
             {
@@ -363,7 +376,7 @@ function SiteLayoutContent() {
           ]
         : []),
     ],
-    [projectId, siteId, showFirewallTab, showSettingsTab, t],
+    [projectId, siteId, showUsageTab, showFirewallTab, showSettingsTab, t],
   )
 
   // Redirect from settings or variables when user lacks permission
@@ -486,7 +499,11 @@ function SiteLayoutContent() {
             tabs={tabs}
             activeTab={activeTab}
             fullWidthBorder
-            fullWidth={activeTab === 'logs' || activeTab === 'firewall'}
+            fullWidth={
+              activeTab === 'logs' ||
+              activeTab === 'usage' ||
+              activeTab === 'firewall'
+            }
             showToolbarBottomBorder={isLogsTabLayout}
             showFilters={activeTab === 'logs' || activeTab === 'domains'}
             filterTrigger={

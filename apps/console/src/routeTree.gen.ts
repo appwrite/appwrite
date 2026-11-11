@@ -324,6 +324,7 @@ import { Route as PublicProjectsProjectIdFunctionsFunctionIdExecutionsRouteImpor
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdFirewallRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.firewall'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSecurityRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.security'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdUsageRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.usage'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdVariablesRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.variables'
 import { Route as PublicProjectsProjectIdFunctionsCreateIndexRouteImport } from './routes/_public/projects.$projectId.functions.create.index'
 import { Route as PublicProjectsProjectIdFunctionsCreateDeployRouteImport } from './routes/_public/projects.$projectId.functions.create.deploy'
@@ -346,6 +347,7 @@ import { Route as PublicProjectsProjectIdSitesSiteIdDomainsRouteImport } from '.
 import { Route as PublicProjectsProjectIdSitesSiteIdFirewallRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.firewall'
 import { Route as PublicProjectsProjectIdSitesSiteIdLogsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.logs'
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings'
+import { Route as PublicProjectsProjectIdSitesSiteIdUsageRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.usage'
 import { Route as PublicProjectsProjectIdSitesSiteIdVariablesRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.variables'
 import { Route as PublicProjectsProjectIdSitesCreateIndexRouteImport } from './routes/_public/projects.$projectId.sites.create.index'
 import { Route as PublicProjectsProjectIdSitesCreateDeployRouteImport } from './routes/_public/projects.$projectId.sites.create.deploy'
@@ -412,6 +414,7 @@ import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsDangerZoneRo
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.executions'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.git'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings.runtime'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.usage.$categoryId'
 import { Route as PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport } from './routes/_public/projects.$projectId.functions.create.repository.$repository'
 import { Route as PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRouteImport } from './routes/_public/projects.$projectId.functions.create.template.$templateId'
 import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId.index'
@@ -429,6 +432,7 @@ import { Route as PublicProjectsProjectIdSitesSiteIdSettingsBuildRouteImport } f
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.danger-zone'
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsGitRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.git'
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings.runtime'
+import { Route as PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.usage.$categoryId'
 import { Route as PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport } from './routes/_public/projects.$projectId.sites.create.templates.$template'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdCollectionsCollectionIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.collections.$collectionId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdOverviewIndexRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId.overview.index'
@@ -2258,6 +2262,12 @@ const PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute =
     path: '/settings',
     getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
   } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdUsageRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdUsageRouteImport.update({
+    id: '/usage',
+    path: '/usage',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+  } as any)
 const PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute =
   PublicProjectsProjectIdFunctionsFunctionIdVariablesRouteImport.update({
     id: '/variables',
@@ -2388,6 +2398,12 @@ const PublicProjectsProjectIdSitesSiteIdSettingsRoute =
   PublicProjectsProjectIdSitesSiteIdSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdUsageRoute =
+  PublicProjectsProjectIdSitesSiteIdUsageRouteImport.update({
+    id: '/usage',
+    path: '/usage',
     getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
   } as any)
 const PublicProjectsProjectIdSitesSiteIdVariablesRoute =
@@ -2822,6 +2838,12 @@ const PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute =
     getParentRoute: () =>
       PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute,
   } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRouteImport.update({
+    id: '/$categoryId',
+    path: '/$categoryId',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdUsageRoute,
+  } as any)
 const PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute =
   PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRouteImport.update({
     id: '/repository/$repository',
@@ -2930,6 +2952,12 @@ const PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute =
     id: '/runtime',
     path: '/runtime',
     getParentRoute: () => PublicProjectsProjectIdSitesSiteIdSettingsRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute =
+  PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRouteImport.update({
+    id: '/$categoryId',
+    path: '/$categoryId',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdUsageRoute,
   } as any)
 const PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute =
   PublicProjectsProjectIdSitesCreateTemplatesTemplateRouteImport.update({
@@ -3809,6 +3837,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/$functionId/firewall': typeof PublicProjectsProjectIdFunctionsFunctionIdFirewallRoute
   '/projects/$projectId/functions/$functionId/security': typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute
   '/projects/$projectId/functions/$functionId/settings': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteWithChildren
+  '/projects/$projectId/functions/$functionId/usage': typeof PublicProjectsProjectIdFunctionsFunctionIdUsageRouteWithChildren
   '/projects/$projectId/functions/$functionId/variables': typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute
   '/projects/$projectId/functions/create/deploy': typeof PublicProjectsProjectIdFunctionsCreateDeployRoute
   '/projects/$projectId/functions/create/deploying': typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
@@ -3824,6 +3853,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/firewall': typeof PublicProjectsProjectIdSitesSiteIdFirewallRoute
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   '/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsRouteWithChildren
+  '/projects/$projectId/sites/$siteId/usage': typeof PublicProjectsProjectIdSitesSiteIdUsageRouteWithChildren
   '/projects/$projectId/sites/$siteId/variables': typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   '/projects/$projectId/sites/create/deploy': typeof PublicProjectsProjectIdSitesCreateDeployRoute
   '/projects/$projectId/sites/create/deploying': typeof PublicProjectsProjectIdSitesCreateDeployingRoute
@@ -3898,6 +3928,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/$functionId/settings/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute
   '/projects/$projectId/functions/$functionId/settings/git': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute
   '/projects/$projectId/functions/$functionId/settings/runtime': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute
+  '/projects/$projectId/functions/$functionId/usage/$categoryId': typeof PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRoute
   '/projects/$projectId/functions/create/repository/$repository': typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute
   '/projects/$projectId/functions/create/template/$templateId': typeof PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRoute
   '/projects/$projectId/messaging/providers/$providerId/activity': typeof PublicProjectsProjectIdMessagingProvidersProviderIdActivityRoute
@@ -3910,6 +3941,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/settings/danger-zone': typeof PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRoute
   '/projects/$projectId/sites/$siteId/settings/git': typeof PublicProjectsProjectIdSitesSiteIdSettingsGitRoute
   '/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
+  '/projects/$projectId/sites/$siteId/usage/$categoryId': typeof PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute
   '/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
   '/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
@@ -4247,6 +4279,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/functions/$functionId/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdExecutionsRoute
   '/projects/$projectId/functions/$functionId/firewall': typeof PublicProjectsProjectIdFunctionsFunctionIdFirewallRoute
   '/projects/$projectId/functions/$functionId/security': typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute
+  '/projects/$projectId/functions/$functionId/usage': typeof PublicProjectsProjectIdFunctionsFunctionIdUsageRouteWithChildren
   '/projects/$projectId/functions/$functionId/variables': typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute
   '/projects/$projectId/functions/create/deploy': typeof PublicProjectsProjectIdFunctionsCreateDeployRoute
   '/projects/$projectId/functions/create/deploying': typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
@@ -4257,6 +4290,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings/migrations/import': typeof PublicProjectsProjectIdSettingsMigrationsImportRoute
   '/projects/$projectId/sites/$siteId/firewall': typeof PublicProjectsProjectIdSitesSiteIdFirewallRoute
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
+  '/projects/$projectId/sites/$siteId/usage': typeof PublicProjectsProjectIdSitesSiteIdUsageRouteWithChildren
   '/projects/$projectId/sites/$siteId/variables': typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   '/projects/$projectId/sites/create/deploy': typeof PublicProjectsProjectIdSitesCreateDeployRoute
   '/projects/$projectId/sites/create/deploying': typeof PublicProjectsProjectIdSitesCreateDeployingRoute
@@ -4328,6 +4362,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/functions/$functionId/settings/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute
   '/projects/$projectId/functions/$functionId/settings/git': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute
   '/projects/$projectId/functions/$functionId/settings/runtime': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute
+  '/projects/$projectId/functions/$functionId/usage/$categoryId': typeof PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRoute
   '/projects/$projectId/functions/create/repository/$repository': typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute
   '/projects/$projectId/functions/create/template/$templateId': typeof PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRoute
   '/projects/$projectId/messaging/providers/$providerId/activity': typeof PublicProjectsProjectIdMessagingProvidersProviderIdActivityRoute
@@ -4339,6 +4374,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/settings/danger-zone': typeof PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRoute
   '/projects/$projectId/sites/$siteId/settings/git': typeof PublicProjectsProjectIdSitesSiteIdSettingsGitRoute
   '/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
+  '/projects/$projectId/sites/$siteId/usage/$categoryId': typeof PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute
   '/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
   '/projects/$projectId/databases/$dbKind/$databaseId': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/projects/$projectId/databases/mysql/$databaseId': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
@@ -4723,6 +4759,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/$functionId/firewall': typeof PublicProjectsProjectIdFunctionsFunctionIdFirewallRoute
   '/_public/projects/$projectId/functions/$functionId/security': typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute
   '/_public/projects/$projectId/functions/$functionId/settings': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteWithChildren
+  '/_public/projects/$projectId/functions/$functionId/usage': typeof PublicProjectsProjectIdFunctionsFunctionIdUsageRouteWithChildren
   '/_public/projects/$projectId/functions/$functionId/variables': typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute
   '/_public/projects/$projectId/functions/create/deploy': typeof PublicProjectsProjectIdFunctionsCreateDeployRoute
   '/_public/projects/$projectId/functions/create/deploying': typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
@@ -4738,6 +4775,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/firewall': typeof PublicProjectsProjectIdSitesSiteIdFirewallRoute
   '/_public/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   '/_public/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsRouteWithChildren
+  '/_public/projects/$projectId/sites/$siteId/usage': typeof PublicProjectsProjectIdSitesSiteIdUsageRouteWithChildren
   '/_public/projects/$projectId/sites/$siteId/variables': typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   '/_public/projects/$projectId/sites/create/deploy': typeof PublicProjectsProjectIdSitesCreateDeployRoute
   '/_public/projects/$projectId/sites/create/deploying': typeof PublicProjectsProjectIdSitesCreateDeployingRoute
@@ -4812,6 +4850,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/$functionId/settings/executions': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsExecutionsRoute
   '/_public/projects/$projectId/functions/$functionId/settings/git': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsGitRoute
   '/_public/projects/$projectId/functions/$functionId/settings/runtime': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRoute
+  '/_public/projects/$projectId/functions/$functionId/usage/$categoryId': typeof PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRoute
   '/_public/projects/$projectId/functions/create/repository/$repository': typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute
   '/_public/projects/$projectId/functions/create/template/$templateId': typeof PublicProjectsProjectIdFunctionsCreateTemplateTemplateIdRoute
   '/_public/projects/$projectId/messaging/providers/$providerId/activity': typeof PublicProjectsProjectIdMessagingProvidersProviderIdActivityRoute
@@ -4824,6 +4863,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/settings/danger-zone': typeof PublicProjectsProjectIdSitesSiteIdSettingsDangerZoneRoute
   '/_public/projects/$projectId/sites/$siteId/settings/git': typeof PublicProjectsProjectIdSitesSiteIdSettingsGitRoute
   '/_public/projects/$projectId/sites/$siteId/settings/runtime': typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRoute
+  '/_public/projects/$projectId/sites/$siteId/usage/$categoryId': typeof PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute
   '/_public/projects/$projectId/sites/create/templates/$template': typeof PublicProjectsProjectIdSitesCreateTemplatesTemplateRoute
   '/_public/projects/$projectId/databases/$dbKind/$databaseId/': typeof PublicProjectsProjectIdDatabasesDbKindDatabaseIdIndexRoute
   '/_public/projects/$projectId/databases/mysql/$databaseId/': typeof PublicProjectsProjectIdDatabasesMysqlDatabaseIdIndexRoute
@@ -5207,6 +5247,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/$functionId/firewall'
     | '/projects/$projectId/functions/$functionId/security'
     | '/projects/$projectId/functions/$functionId/settings'
+    | '/projects/$projectId/functions/$functionId/usage'
     | '/projects/$projectId/functions/$functionId/variables'
     | '/projects/$projectId/functions/create/deploy'
     | '/projects/$projectId/functions/create/deploying'
@@ -5222,6 +5263,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/firewall'
     | '/projects/$projectId/sites/$siteId/logs'
     | '/projects/$projectId/sites/$siteId/settings'
+    | '/projects/$projectId/sites/$siteId/usage'
     | '/projects/$projectId/sites/$siteId/variables'
     | '/projects/$projectId/sites/create/deploy'
     | '/projects/$projectId/sites/create/deploying'
@@ -5296,6 +5338,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/$functionId/settings/executions'
     | '/projects/$projectId/functions/$functionId/settings/git'
     | '/projects/$projectId/functions/$functionId/settings/runtime'
+    | '/projects/$projectId/functions/$functionId/usage/$categoryId'
     | '/projects/$projectId/functions/create/repository/$repository'
     | '/projects/$projectId/functions/create/template/$templateId'
     | '/projects/$projectId/messaging/providers/$providerId/activity'
@@ -5308,6 +5351,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/settings/danger-zone'
     | '/projects/$projectId/sites/$siteId/settings/git'
     | '/projects/$projectId/sites/$siteId/settings/runtime'
+    | '/projects/$projectId/sites/$siteId/usage/$categoryId'
     | '/projects/$projectId/sites/create/templates/$template'
     | '/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/projects/$projectId/databases/mysql/$databaseId/'
@@ -5645,6 +5689,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/$functionId/executions'
     | '/projects/$projectId/functions/$functionId/firewall'
     | '/projects/$projectId/functions/$functionId/security'
+    | '/projects/$projectId/functions/$functionId/usage'
     | '/projects/$projectId/functions/$functionId/variables'
     | '/projects/$projectId/functions/create/deploy'
     | '/projects/$projectId/functions/create/deploying'
@@ -5655,6 +5700,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/migrations/import'
     | '/projects/$projectId/sites/$siteId/firewall'
     | '/projects/$projectId/sites/$siteId/logs'
+    | '/projects/$projectId/sites/$siteId/usage'
     | '/projects/$projectId/sites/$siteId/variables'
     | '/projects/$projectId/sites/create/deploy'
     | '/projects/$projectId/sites/create/deploying'
@@ -5726,6 +5772,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/$functionId/settings/executions'
     | '/projects/$projectId/functions/$functionId/settings/git'
     | '/projects/$projectId/functions/$functionId/settings/runtime'
+    | '/projects/$projectId/functions/$functionId/usage/$categoryId'
     | '/projects/$projectId/functions/create/repository/$repository'
     | '/projects/$projectId/functions/create/template/$templateId'
     | '/projects/$projectId/messaging/providers/$providerId/activity'
@@ -5737,6 +5784,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/settings/danger-zone'
     | '/projects/$projectId/sites/$siteId/settings/git'
     | '/projects/$projectId/sites/$siteId/settings/runtime'
+    | '/projects/$projectId/sites/$siteId/usage/$categoryId'
     | '/projects/$projectId/sites/create/templates/$template'
     | '/projects/$projectId/databases/$dbKind/$databaseId'
     | '/projects/$projectId/databases/mysql/$databaseId'
@@ -6120,6 +6168,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/$functionId/firewall'
     | '/_public/projects/$projectId/functions/$functionId/security'
     | '/_public/projects/$projectId/functions/$functionId/settings'
+    | '/_public/projects/$projectId/functions/$functionId/usage'
     | '/_public/projects/$projectId/functions/$functionId/variables'
     | '/_public/projects/$projectId/functions/create/deploy'
     | '/_public/projects/$projectId/functions/create/deploying'
@@ -6135,6 +6184,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/firewall'
     | '/_public/projects/$projectId/sites/$siteId/logs'
     | '/_public/projects/$projectId/sites/$siteId/settings'
+    | '/_public/projects/$projectId/sites/$siteId/usage'
     | '/_public/projects/$projectId/sites/$siteId/variables'
     | '/_public/projects/$projectId/sites/create/deploy'
     | '/_public/projects/$projectId/sites/create/deploying'
@@ -6209,6 +6259,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/$functionId/settings/executions'
     | '/_public/projects/$projectId/functions/$functionId/settings/git'
     | '/_public/projects/$projectId/functions/$functionId/settings/runtime'
+    | '/_public/projects/$projectId/functions/$functionId/usage/$categoryId'
     | '/_public/projects/$projectId/functions/create/repository/$repository'
     | '/_public/projects/$projectId/functions/create/template/$templateId'
     | '/_public/projects/$projectId/messaging/providers/$providerId/activity'
@@ -6221,6 +6272,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/settings/danger-zone'
     | '/_public/projects/$projectId/sites/$siteId/settings/git'
     | '/_public/projects/$projectId/sites/$siteId/settings/runtime'
+    | '/_public/projects/$projectId/sites/$siteId/usage/$categoryId'
     | '/_public/projects/$projectId/sites/create/templates/$template'
     | '/_public/projects/$projectId/databases/$dbKind/$databaseId/'
     | '/_public/projects/$projectId/databases/mysql/$databaseId/'
@@ -8556,6 +8608,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteImport
       parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
     }
+    '/_public/projects/$projectId/functions/$functionId/usage': {
+      id: '/_public/projects/$projectId/functions/$functionId/usage'
+      path: '/usage'
+      fullPath: '/projects/$projectId/functions/$functionId/usage'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdUsageRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    }
     '/_public/projects/$projectId/functions/$functionId/variables': {
       id: '/_public/projects/$projectId/functions/$functionId/variables'
       path: '/variables'
@@ -8708,6 +8767,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/projects/$projectId/sites/$siteId/settings'
       preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/usage': {
+      id: '/_public/projects/$projectId/sites/$siteId/usage'
+      path: '/usage'
+      fullPath: '/projects/$projectId/sites/$siteId/usage'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdUsageRouteImport
       parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
     }
     '/_public/projects/$projectId/sites/$siteId/variables': {
@@ -9172,6 +9238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRuntimeRouteImport
       parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
     }
+    '/_public/projects/$projectId/functions/$functionId/usage/$categoryId': {
+      id: '/_public/projects/$projectId/functions/$functionId/usage/$categoryId'
+      path: '/$categoryId'
+      fullPath: '/projects/$projectId/functions/$functionId/usage/$categoryId'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdUsageRoute
+    }
     '/_public/projects/$projectId/functions/create/repository/$repository': {
       id: '/_public/projects/$projectId/functions/create/repository/$repository'
       path: '/repository/$repository'
@@ -9290,6 +9363,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/sites/$siteId/settings/runtime'
       preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRuntimeRouteImport
       parentRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/usage/$categoryId': {
+      id: '/_public/projects/$projectId/sites/$siteId/usage/$categoryId'
+      path: '/$categoryId'
+      fullPath: '/projects/$projectId/sites/$siteId/usage/$categoryId'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdUsageRoute
     }
     '/_public/projects/$projectId/sites/create/templates/$template': {
       id: '/_public/projects/$projectId/sites/create/templates/$template'
@@ -10946,6 +11026,21 @@ const PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteWithChildren =
     PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteChildren,
   )
 
+interface PublicProjectsProjectIdFunctionsFunctionIdUsageRouteChildren {
+  PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRoute
+}
+
+const PublicProjectsProjectIdFunctionsFunctionIdUsageRouteChildren: PublicProjectsProjectIdFunctionsFunctionIdUsageRouteChildren =
+  {
+    PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRoute:
+      PublicProjectsProjectIdFunctionsFunctionIdUsageCategoryIdRoute,
+  }
+
+const PublicProjectsProjectIdFunctionsFunctionIdUsageRouteWithChildren =
+  PublicProjectsProjectIdFunctionsFunctionIdUsageRoute._addFileChildren(
+    PublicProjectsProjectIdFunctionsFunctionIdUsageRouteChildren,
+  )
+
 interface PublicProjectsProjectIdFunctionsFunctionIdRouteChildren {
   PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsRouteWithChildren
   PublicProjectsProjectIdFunctionsFunctionIdDomainsRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDomainsRouteWithChildren
@@ -10953,6 +11048,7 @@ interface PublicProjectsProjectIdFunctionsFunctionIdRouteChildren {
   PublicProjectsProjectIdFunctionsFunctionIdFirewallRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdFirewallRoute
   PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute
   PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteWithChildren
+  PublicProjectsProjectIdFunctionsFunctionIdUsageRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdUsageRouteWithChildren
   PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute
   PublicProjectsProjectIdFunctionsFunctionIdIndexRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
 }
@@ -10971,6 +11067,8 @@ const PublicProjectsProjectIdFunctionsFunctionIdRouteChildren: PublicProjectsPro
       PublicProjectsProjectIdFunctionsFunctionIdSecurityRoute,
     PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute:
       PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteWithChildren,
+    PublicProjectsProjectIdFunctionsFunctionIdUsageRoute:
+      PublicProjectsProjectIdFunctionsFunctionIdUsageRouteWithChildren,
     PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute:
       PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute,
     PublicProjectsProjectIdFunctionsFunctionIdIndexRoute:
@@ -11474,12 +11572,28 @@ const PublicProjectsProjectIdSitesSiteIdSettingsRouteWithChildren =
     PublicProjectsProjectIdSitesSiteIdSettingsRouteChildren,
   )
 
+interface PublicProjectsProjectIdSitesSiteIdUsageRouteChildren {
+  PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute: typeof PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute
+}
+
+const PublicProjectsProjectIdSitesSiteIdUsageRouteChildren: PublicProjectsProjectIdSitesSiteIdUsageRouteChildren =
+  {
+    PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute:
+      PublicProjectsProjectIdSitesSiteIdUsageCategoryIdRoute,
+  }
+
+const PublicProjectsProjectIdSitesSiteIdUsageRouteWithChildren =
+  PublicProjectsProjectIdSitesSiteIdUsageRoute._addFileChildren(
+    PublicProjectsProjectIdSitesSiteIdUsageRouteChildren,
+  )
+
 interface PublicProjectsProjectIdSitesSiteIdRouteChildren {
   PublicProjectsProjectIdSitesSiteIdDeploymentsRoute: typeof PublicProjectsProjectIdSitesSiteIdDeploymentsRouteWithChildren
   PublicProjectsProjectIdSitesSiteIdDomainsRoute: typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteWithChildren
   PublicProjectsProjectIdSitesSiteIdFirewallRoute: typeof PublicProjectsProjectIdSitesSiteIdFirewallRoute
   PublicProjectsProjectIdSitesSiteIdLogsRoute: typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   PublicProjectsProjectIdSitesSiteIdSettingsRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRouteWithChildren
+  PublicProjectsProjectIdSitesSiteIdUsageRoute: typeof PublicProjectsProjectIdSitesSiteIdUsageRouteWithChildren
   PublicProjectsProjectIdSitesSiteIdVariablesRoute: typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   PublicProjectsProjectIdSitesSiteIdIndexRoute: typeof PublicProjectsProjectIdSitesSiteIdIndexRoute
 }
@@ -11496,6 +11610,8 @@ const PublicProjectsProjectIdSitesSiteIdRouteChildren: PublicProjectsProjectIdSi
       PublicProjectsProjectIdSitesSiteIdLogsRoute,
     PublicProjectsProjectIdSitesSiteIdSettingsRoute:
       PublicProjectsProjectIdSitesSiteIdSettingsRouteWithChildren,
+    PublicProjectsProjectIdSitesSiteIdUsageRoute:
+      PublicProjectsProjectIdSitesSiteIdUsageRouteWithChildren,
     PublicProjectsProjectIdSitesSiteIdVariablesRoute:
       PublicProjectsProjectIdSitesSiteIdVariablesRoute,
     PublicProjectsProjectIdSitesSiteIdIndexRoute:
