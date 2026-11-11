@@ -1,0 +1,120 @@
+---
+layout: article
+title: Project transfers
+description: Move an Appwrite Cloud project to another organization, directly or with a single-use transfer link that an owner of the other organization claims.
+---
+
+A project transfer changes which organization owns a project. The project keeps its ID, region, data, and endpoints. Only the organization that owns it changes, and with it the plan, the members, and the bill that apply to the project.
+
+There are two ways to transfer a project from the **Transfer project** card in the project's **Settings**:
+
+- **Move to another organization.** Moves the project right away into another organization you are a member of.
+- **Hand off with a transfer link.** Creates a single-use link for someone in an organization you don't belong to. The project moves when an owner of that organization claims the link.
+
+{% only_dark %}
+![Transfer project card in project settings](/images/docs/advanced/billing/dark/transfer-project.avif)
+{% /only_dark %}
+
+{% only_light %}
+![Transfer project card in project settings](/images/docs/advanced/billing/transfer-project.avif)
+{% /only_light %}
+
+# Who can transfer a project {% #who-can-transfer %}
+
+Transfers need the [owner role](/docs/advanced/security/roles#owner) on both sides:
+
+- Creating a transfer link, deleting one, or moving a project directly requires the owner role on the organization that owns the project.
+- Claiming a transfer link requires the owner role on the organization that receives the project.
+
+Members with other roles see a notice on the **Transfer project** card instead of its actions. Organization API keys can't create or claim transfers, because a key has no owner behind it.
+
+# Move a project to another organization {% #move %}
+
+Use a direct move when you are an owner of both organizations.
+
+1. Open the project and go to **Settings**.
+2. In **Transfer project**, select the destination organization under **Move to another organization**.
+3. Click **Move project** and confirm in the dialog.
+
+The project moves right away and opens in its new organization. Organizations that can't receive the project are listed with the reason, such as **Billing issue** or **Project limit reached**.
+
+# Hand off a project with a transfer link {% #transfer-links %}
+
+Use a transfer link when the receiving organization belongs to someone else, for example a client you built the project for. You don't need to be a member of their organization, and they don't need to be a member of yours.
+
+## Create a transfer link {% #create-link %}
+
+1. Open the project and go to **Settings**.
+2. In **Transfer project**, click **Create transfer link**.
+3. Under **Expires in**, choose **24 hours**, **7 days**, or **30 days**.
+4. Optionally, enter the **Recipient organization ID**. Only that organization can then claim the project.
+5. Click **Create link**, then copy the link and share it with the recipient.
+
+{% only_dark %}
+![Create transfer link dialog](/images/docs/advanced/billing/dark/create-transfer-link.avif)
+{% /only_dark %}
+
+{% only_light %}
+![Create transfer link dialog](/images/docs/advanced/billing/create-transfer-link.avif)
+{% /only_light %}
+
+{% info title="Lock the link to one organization" %}
+Anyone who has the link can claim the project into an organization they own, until the link is used or expires. Set the recipient organization ID whenever you know it, so the link is useless to anyone else. The recipient finds it in the **Organization ID** card of their organization's **Settings**.
+{% /info %}
+
+Unclaimed links appear under **Pending transfer links** on the same card, with their recipient and expiry. From a link's menu, copy it again or delete it. A deleted link stops working at once.
+
+## Claim a project {% #claim %}
+
+The recipient opens the link in the Appwrite Console. If they aren't signed in, the Console asks them to sign in or create an account first, then returns them to the link.
+
+{% only_dark %}
+![Claim project page](/images/docs/advanced/billing/dark/claim-project.avif)
+{% /only_dark %}
+
+{% only_light %}
+![Claim project page](/images/docs/advanced/billing/claim-project.avif)
+{% /only_light %}
+
+1. Check the project name, the organization it comes from, and when the link expires.
+2. Under **Target organization**, select an organization you own. If the link is locked to one organization, the Console selects it for you.
+3. Click **Claim project**.
+
+The project moves into the selected organization and opens there. If the recipient doesn't own an organization yet, they can create one from the same page with **Create a free organization**.
+
+## How transfer links behave {% #link-rules %}
+
+- **Single use.** A claimed link can't be used again.
+- **Expiry.** A link expires 24 hours after it's created unless you choose a longer time. The maximum is 30 days.
+- **One claim wins.** When a project is claimed or moved, every other link for that project stops working.
+- **Tied to the project's owner.** If the project is deleted or moved some other way, its links stop working.
+- **Checked when claimed.** Creating a link doesn't check either organization's plan or billing. All the requirements below are checked when the link is claimed. A link that's refused stays valid, so the recipient can claim it again after fixing the cause.
+
+# Requirements {% #requirements %}
+
+Appwrite checks both organizations before it moves a project, whether it's a direct move or a claimed link. The transfer is refused, and the project stays where it is, when any of these is true:
+
+- **Unpaid invoice.** Either organization has a failed payment or a payment that's waiting for authentication. Resolve it from the organization's **Billing** settings.
+- **Read-only organization.** Either organization is read-only.
+- **Budget cap reached.** Either organization has reached its [budget cap](/docs/advanced/billing/payments#budget-cap).
+- **Over plan limits.** The project comes from a [Free](/docs/advanced/billing/free) organization and has gone over the plan's limits this billing cycle. Wait for the next cycle, or upgrade the organization that owns it.
+- **Plan doesn't fit the project.** The receiving organization's plan doesn't allow what the project uses, such as its function specifications or number of environments. Upgrade the receiving organization, or reduce what the project uses.
+- **Project limit reached.** The receiving organization already has as many projects as its plan allows.
+- **Same organization.** The project already belongs to the receiving organization.
+
+# What moves with a project {% #what-moves %}
+
+The project moves as a whole. It stays in the same region, keeps its ID and API endpoint, and all of its data stays in place:
+
+- Databases, storage, Auth users, functions, sites, messaging, and every other resource in the project.
+- API keys, platforms, and custom domains. Apps and integrations keep working without changes.
+- Git connections of the project's functions and sites.
+- Site deployment screenshots.
+- The project's environments. An environment can't be transferred on its own, and the receiving organization's plan has to allow all of them.
+
+These don't move:
+
+- **Members.** Members of the previous organization lose access unless they also belong to the new one. Invite them to the new organization if they still need access.
+- **Plan and billing.** The new organization's plan, limits, and billing apply from the moment of the transfer.
+- **Other transfer links** for the project. They stop working.
+- **Organization domains.** Domains registered or added under the organization's **Domains** belong to the organization, not the project. To move one, [change its organization](/docs/products/domains/change-organization).
