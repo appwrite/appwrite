@@ -3209,6 +3209,252 @@ trait DatabasesBase
         $this->assertSame(RelationshipDeleteAction::SetNull->value, $book['body']['onDelete']);
     }
 
+    public function testCreateRelationshipRejectsTwoWayKeyOfProcessingRelationship(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $owners = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Owners',
+        ]);
+
+        $this->assertSame(201, $owners['headers']['status-code'], \json_encode($owners['body']) ?: '');
+        $ownersId = $owners['body']['$id'];
+
+        $related = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Related',
+        ]);
+
+        $this->assertSame(201, $related['headers']['status-code'], \json_encode($related['body']) ?: '');
+        $relatedId = $related['body']['$id'];
+
+        $scratch = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Scratch',
+        ]);
+
+        $this->assertSame(201, $scratch['headers']['status-code'], \json_encode($scratch['body']) ?: '');
+        $scratchId = $scratch['body']['$id'];
+
+        for ($i = 0; $i < 10; $i++) {
+            $backlog = $this->createAttribute($databaseId, $scratchId, 'string', [
+                'key' => 'b' . $i,
+                'size' => 64,
+                'required' => false,
+            ]);
+
+            $this->assertSame(202, $backlog['headers']['status-code'], \json_encode($backlog['body']) ?: '');
+        }
+
+        $relationshipUrl = $this->getSchemaUrl($databaseId, $ownersId, 'relationship');
+
+        $first = $this->client->call(Client::METHOD_POST, $relationshipUrl, $headers, [
+            $this->getRelatedIdParam() => $relatedId,
+            'type' => RelationshipType::OneToOne->value,
+            'twoWay' => false,
+            'key' => 'first',
+        ]);
+
+        $this->assertSame(202, $first['headers']['status-code'], \json_encode($first['body']) ?: '');
+
+        $second = $this->client->call(Client::METHOD_POST, $relationshipUrl, $headers, [
+            $this->getRelatedIdParam() => $relatedId,
+            'type' => RelationshipType::OneToOne->value,
+            'twoWay' => false,
+            'key' => 'second',
+        ]);
+
+        $this->assertSame(409, $second['headers']['status-code'], \json_encode($second['body']) ?: '');
+        $this->assertSame($this->isTablesAPI() ? Exception::COLUMN_ALREADY_EXISTS : Exception::ATTRIBUTE_ALREADY_EXISTS, $second['body']['type']);
+
+        $third = $this->client->call(Client::METHOD_POST, $relationshipUrl, $headers, [
+            $this->getRelatedIdParam() => $relatedId,
+            'type' => RelationshipType::OneToOne->value,
+            'twoWay' => false,
+            'key' => 'third',
+            'twoWayKey' => 'third_inverse',
+        ]);
+
+        $this->assertSame(202, $third['headers']['status-code'], \json_encode($third['body']) ?: '');
+
+        $this->waitForAttribute($databaseId, $ownersId, 'first');
+        $this->waitForAttribute($databaseId, $ownersId, 'third');
+
+        $rejected = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $ownersId, '', 'second'), $headers);
+
+        $this->assertSame(404, $rejected['headers']['status-code'], \json_encode($rejected['body']) ?: '');
+    }
+
+    public function testCreateRelationshipRejectsTwoWayKeyTakenOnRelatedCollection(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $owners = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Owners',
+        ]);
+
+        $this->assertSame(201, $owners['headers']['status-code'], \json_encode($owners['body']) ?: '');
+        $ownersId = $owners['body']['$id'];
+
+        $related = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Related',
+        ]);
+
+        $this->assertSame(201, $related['headers']['status-code'], \json_encode($related['body']) ?: '');
+        $relatedId = $related['body']['$id'];
+
+        $taken = $this->createAttribute($databaseId, $relatedId, 'string', [
+            'key' => 'taken',
+            'size' => 64,
+            'required' => false,
+        ]);
+
+        $this->assertSame(202, $taken['headers']['status-code'], \json_encode($taken['body']) ?: '');
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $ownersId, 'relationship'), $headers, [
+            $this->getRelatedIdParam() => $relatedId,
+            'type' => RelationshipType::OneToOne->value,
+            'twoWay' => true,
+            'key' => 'owner',
+            'twoWayKey' => 'taken',
+        ]);
+
+        $this->assertSame(409, $relationship['headers']['status-code'], \json_encode($relationship['body']) ?: '');
+        $this->assertSame($this->isTablesAPI() ? Exception::COLUMN_ALREADY_EXISTS : Exception::ATTRIBUTE_ALREADY_EXISTS, $relationship['body']['type']);
+
+        $orphan = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $ownersId, '', 'owner'), $headers);
+
+        $this->assertSame(404, $orphan['headers']['status-code'], \json_encode($orphan['body']) ?: '');
+
+        $oneWay = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $ownersId, 'relationship'), $headers, [
+            $this->getRelatedIdParam() => $relatedId,
+            'type' => RelationshipType::OneToOne->value,
+            'twoWay' => false,
+            'key' => 'holder',
+            'twoWayKey' => 'taken',
+        ]);
+
+        $this->assertSame(409, $oneWay['headers']['status-code'], \json_encode($oneWay['body']) ?: '');
+        $this->assertSame($this->isTablesAPI() ? Exception::COLUMN_ALREADY_EXISTS : Exception::ATTRIBUTE_ALREADY_EXISTS, $oneWay['body']['type']);
+
+        $holder = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $ownersId, '', 'holder'), $headers);
+
+        $this->assertSame(404, $holder['headers']['status-code'], \json_encode($holder['body']) ?: '');
+    }
+
+    public function testCreateSelfRelationshipRejectsMatchingKeyAndTwoWayKey(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $nodes = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Nodes',
+        ]);
+
+        $this->assertSame(201, $nodes['headers']['status-code'], \json_encode($nodes['body']) ?: '');
+        $nodesId = $nodes['body']['$id'];
+
+        $relationshipUrl = $this->getSchemaUrl($databaseId, $nodesId, 'relationship');
+
+        $defaulted = $this->client->call(Client::METHOD_POST, $relationshipUrl, $headers, [
+            $this->getRelatedIdParam() => $nodesId,
+            'type' => RelationshipType::OneToOne->value,
+            'twoWay' => false,
+        ]);
+
+        $this->assertSame(409, $defaulted['headers']['status-code'], \json_encode($defaulted['body']) ?: '');
+        $this->assertSame($this->isTablesAPI() ? Exception::COLUMN_ALREADY_EXISTS : Exception::ATTRIBUTE_ALREADY_EXISTS, $defaulted['body']['type']);
+
+        $distinct = $this->client->call(Client::METHOD_POST, $relationshipUrl, $headers, [
+            $this->getRelatedIdParam() => $nodesId,
+            'type' => RelationshipType::OneToOne->value,
+            'twoWay' => false,
+            'key' => 'parent',
+            'twoWayKey' => 'children',
+        ]);
+
+        $this->assertSame(202, $distinct['headers']['status-code'], \json_encode($distinct['body']) ?: '');
+    }
+
+    public function testCreateManyToManyRelationshipRejectsMatchingKeyAndTwoWayKey(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $posts = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Posts',
+        ]);
+
+        $this->assertSame(201, $posts['headers']['status-code'], \json_encode($posts['body']) ?: '');
+        $postsId = $posts['body']['$id'];
+
+        $labels = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Labels',
+        ]);
+
+        $this->assertSame(201, $labels['headers']['status-code'], \json_encode($labels['body']) ?: '');
+        $labelsId = $labels['body']['$id'];
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $postsId, 'relationship'), $headers, [
+            $this->getRelatedIdParam() => $labelsId,
+            'type' => RelationshipType::ManyToMany->value,
+            'twoWay' => true,
+            'key' => 'tags',
+            'twoWayKey' => 'Tags',
+        ]);
+
+        $this->assertSame(409, $relationship['headers']['status-code'], \json_encode($relationship['body']) ?: '');
+        $this->assertSame($this->isTablesAPI() ? Exception::COLUMN_ALREADY_EXISTS : Exception::ATTRIBUTE_ALREADY_EXISTS, $relationship['body']['type']);
+
+        $orphan = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $postsId, '', 'tags'), $headers);
+
+        $this->assertSame(404, $orphan['headers']['status-code'], \json_encode($orphan['body']) ?: '');
+    }
+
     public function testAttributeResponseModels(): void
     {
         if (!$this->getSupportForAttributes()) {
