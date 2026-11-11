@@ -161,7 +161,7 @@ export function View() {
 
   if (domainsLoading && rules.length === 0 && !domainsFetching) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
@@ -194,7 +194,7 @@ export function View() {
   )
   const domainsContent =
     rules.length === 0 ? (
-      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
         <EmptyState
           icon={Globe}
           title={hasFilters ? undefined : t('No domains yet')}

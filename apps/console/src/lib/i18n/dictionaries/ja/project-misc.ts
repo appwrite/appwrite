@@ -153,6 +153,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '攻撃モードがオンです。すべての訪問者がチャレンジされます。',
   'Apply as firewall rule': 'ファイアウォールルールとして適用',
   'No firewall rules': 'ファイアウォールルールがありません',
+  'Configure rules': 'ルールを設定',
+  'Rules that apply to this site appear here.':
+    'このサイトに適用されるルールがここに表示されます。',
+  'Rules that apply to this function appear here.':
+    'この Function に適用されるルールがここに表示されます。',
   'No API firewall rules': 'API のファイアウォールルールがありません',
   'No function firewall rules':
     'Functions のファイアウォールルールがありません',
@@ -1415,6 +1420,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Use a date range longer than this interval.':
     'この間隔より長い日付範囲を使用してください。',
   'days or less for this interval.': '日以下 (この間隔の場合)。',
+  'This interval is larger than the selected date range.':
+    'この間隔は選択した期間より大きいです。',
   Compute: 'コンピュート',
   'Compute over time': '経時的なコンピュート',
   'Copy API endpoint': 'API エンドポイントをコピー',
@@ -3106,6 +3113,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Clear: 'クリア',
   Apply: '適用',
   Compare: '比較',
+  vs: 'vs',
   Realtime: 'Realtime',
   Connected: '接続済み',
   Connecting: '接続中',
