@@ -165,7 +165,7 @@ class MintingEntire extends Entire
         return [
             'headers' => ['status-code' => self::STATUSES[$code] ?? 503],
             'body' => $code === ''
-                ? ['token' => 'token', 'username' => 'x-access-token', 'expires_at' => '2026-10-27T10:00:00Z', 'permissions' => $permissions]
+                ? ['token' => 'token', 'username' => 'x-access-token', 'expires_at' => EntireTest::tokenExpiry(), 'permissions' => $permissions]
                 : ['code' => $code],
         ];
     }
@@ -211,6 +211,92 @@ class HoldingEntire extends MintingEntire
 }
 
 /**
+ * Entire acting for a known installation whose mints hand out tokens living
+ * the given seconds in turn, and whose core and data-plane calls are recorded
+ * with the credential each carried, so a long-lived instance's tokens can be
+ * aged and their renewal followed.
+ */
+class RefreshingEntire extends Entire
+{
+    /**
+     * @var list<array{path: string, authorization: string}>
+     */
+    public array $calls = [];
+
+    /**
+     * @param list<int> $lifetimes Seconds each minted token in turn lives
+     */
+    public function __construct(private array $lifetimes)
+    {
+        parent::__construct(new Cache(new None()));
+    }
+
+    /**
+     * Moves the plugin JWT's issue and expiry back by $seconds, as though it
+     * was signed that long ago.
+     */
+    public function ageJwt(int $seconds): void
+    {
+        $claims = $this->decodeJwt($this->jwtToken)['claims'];
+        $claims['iat'] = $this->number($claims, 'iat') - $seconds;
+        $claims['exp'] = $this->number($claims, 'exp') - $seconds;
+
+        [$header] = explode('.', $this->jwtToken);
+        $this->jwtToken = $header . '.' . $this->base64UrlEncode(json_encode($claims) ?: '') . '.' . $this->base64UrlEncode('signature');
+    }
+
+    /**
+     * The claims of a JWT a call carried as its bearer credential.
+     *
+     * @return array<mixed>
+     */
+    public function bearerClaims(string $authorization): array
+    {
+        return $this->decodeJwt($this->bearerToken($authorization))['claims'];
+    }
+
+    #[\Override]
+    protected function repositoryId(string $owner, string $repositoryName): string
+    {
+        return 'repo_' . $repositoryName;
+    }
+
+    #[\Override]
+    protected function gitRepositoryId(string $repositoryId): string
+    {
+        return 'regional_' . $repositoryId;
+    }
+
+    #[\Override]
+    protected function dataEndpoint(string $repositoryId): string
+    {
+        return 'https://aws-us-east-2.api.entire.io';
+    }
+
+    #[\Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+    {
+        $this->calls[] = ['path' => $path, 'authorization' => $headers['Authorization'] ?? ''];
+
+        if (str_ends_with($path, '/access-tokens')) {
+            $lifetime = array_shift($this->lifetimes) ?? EntireTest::TOKEN_LIFETIME;
+
+            return ['headers' => ['status-code' => 201], 'body' => [
+                'token' => 'token-' . \count($this->calls),
+                'expires_at' => EntireTest::tokenExpiry($lifetime),
+                'permissions' => $params['permissions'] ?? [],
+            ]];
+        }
+
+        if (str_ends_with($path, '/repositories')) {
+            return ['headers' => ['status-code' => 200], 'body' => ['repositories' => [], 'next_cursor' => '']];
+        }
+
+        return ['headers' => ['status-code' => 200], 'body' => ['mergeBaseSHA' => 'abc1234567abc1234567abc1234567abc1234567']];
+    }
+}
+
+/**
  * Exercises everything Entire can prove without credentials: delivery token
  * verification and delivery parsing, which never touch the network. The
  * live half of the shared adapter suite cannot run at all - see
@@ -229,6 +315,11 @@ final class EntireTest extends TestCase
     protected const string ISSUER = 'https://appwrite.test';
     protected const string CORE = 'https://eu.auth.entire.io';
     protected const string CELL = 'https://aws-us-east-2.api.entire.io';
+
+    /**
+     * How long Entire's installation tokens live.
+     */
+    public const int TOKEN_LIFETIME = 60 * 45;
 
     protected Entire $adapter;
 
@@ -898,7 +989,7 @@ final class EntireTest extends TestCase
                 'home_core_url' => 'https://eu.auth.entire.io',
                 'jurisdiction' => 'eu',
             ]],
-            [201, ['token' => 'home', 'expires_at' => '2026-10-27T14:00:00Z', 'permissions' => ['repositories' => 'create', 'installations' => 'read']]],
+            [201, ['token' => 'home', 'expires_at' => self::tokenExpiry(), 'permissions' => ['repositories' => 'create', 'installations' => 'read']]],
             [201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'active']],
             [200, ['repositories' => [[
                 'id' => 'repo_01M5NEW',
@@ -952,7 +1043,7 @@ final class EntireTest extends TestCase
     {
         // A cached token without repository creation, and an installation that still has not accepted it
         $checks = ['contents' => 'read', 'checks' => 'write'];
-        $adapter = new CoreCallsEntire([[201, ['token' => 'fresh', 'expires_at' => '2026-10-27T10:00:00Z', 'permissions' => $checks]]], $checks);
+        $adapter = new CoreCallsEntire([[201, ['token' => 'fresh', 'expires_at' => self::tokenExpiry(), 'permissions' => $checks]]], $checks);
 
         try {
             $adapter->createRepository(self::OWNER, 'pricing-site', true);
@@ -971,7 +1062,7 @@ final class EntireTest extends TestCase
     {
         // The installation accepted repository creation after its token was cached
         $adapter = new CoreCallsEntire([
-            [201, ['token' => 'fresh', 'expires_at' => '2026-10-27T10:00:00Z', 'permissions' => Entire::PERMISSIONS]],
+            [201, ['token' => 'fresh', 'expires_at' => self::tokenExpiry(), 'permissions' => Entire::PERMISSIONS]],
             [201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'provisioning']],
             [200, ['repositories' => [[
                 'id' => 'repo_01M5NEW',
@@ -1191,6 +1282,64 @@ final class EntireTest extends TestCase
         }
 
         $this->assertCount(7, $adapter->requested);
+    }
+
+    /**
+     * When a token minted now, living $lifetime seconds, expires, as Entire
+     * writes it.
+     */
+    public static function tokenExpiry(int $lifetime = self::TOKEN_LIFETIME): string
+    {
+        return gmdate('Y-m-d\\TH:i:s\\Z', time() + $lifetime);
+    }
+
+    public function testPluginJwtIsSignedAgainBeforeItExpires(): void
+    {
+        $adapter = new RefreshingEntire([self::TOKEN_LIFETIME]);
+        $adapter->setIssuer(self::ISSUER);
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+
+        // A delivery that has run for four minutes holds a JWT about to expire
+        $age = 4 * 60;
+        $adapter->ageJwt($age);
+        $adapter->searchRepositories(self::OWNER, 1, 10);
+
+        $this->assertCount(2, $adapter->calls);
+        $this->assertStringEndsWith('/repositories', $adapter->calls[1]['path']);
+        $claims = $adapter->bearerClaims($adapter->calls[1]['authorization']);
+        $this->assertGreaterThan(time() + Entire::PLUGIN_JWT_EXPIRY - Entire::PLUGIN_JWT_SKEW - $age, $claims['exp'] ?? 0, 'An aged plugin JWT must be signed again before it is sent');
+        $this->assertSame(self::PLUGIN, $claims['plugin_id'] ?? null);
+    }
+
+    public function testAccessTokenIsMintedAgainBeforeItExpires(): void
+    {
+        // The token minted when the delivery began has four minutes left
+        $adapter = new RefreshingEntire([4 * 60, self::TOKEN_LIFETIME]);
+        $adapter->setIssuer(self::ISSUER);
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+
+        $adapter->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH);
+
+        $this->assertCount(3, $adapter->calls);
+        $this->assertStringEndsWith('/access-tokens', $adapter->calls[1]['path'], 'An expiring installation token must be minted again before it is used');
+        $this->assertSame('Bearer token-2', $adapter->calls[2]['authorization']);
+    }
+
+    public function testFreshTokensAreReused(): void
+    {
+        $adapter = new RefreshingEntire([self::TOKEN_LIFETIME]);
+        $adapter->setIssuer(self::ISSUER);
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+
+        $adapter->searchRepositories(self::OWNER, 1, 10);
+        $adapter->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH);
+        $adapter->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH);
+
+        // One mint, its JWT listing the repositories, its token on every data call
+        $this->assertSame(['/plugins/appwrite/installations/' . self::INSTALLATION_ID . '/access-tokens', '/plugins/appwrite/installations/' . self::INSTALLATION_ID . '/repositories', '/git/repos/regional_repo_test-repo/merge-base', '/git/repos/regional_repo_test-repo/merge-base'], array_column($adapter->calls, 'path'));
+        $this->assertSame($adapter->calls[0]['authorization'], $adapter->calls[1]['authorization']);
+        $this->assertSame('Bearer token-1', $adapter->calls[2]['authorization']);
+        $this->assertSame('Bearer token-1', $adapter->calls[3]['authorization']);
     }
 
     public function testCreateFileRejectsEscapingPath(): void
