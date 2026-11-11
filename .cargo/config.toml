@@ -1,0 +1,4 @@
+# The utopia PHP extension (crates/extension) leaves PHP's symbols for the
+# `php` binary that loads it to resolve; macOS's linker needs telling.
+[target.'cfg(target_os = "macos")']
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]

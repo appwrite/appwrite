@@ -1,0 +1,48 @@
+# Appwrite Rust workspace.
+#
+# Lives next to the PHP code in the appwrite/appwrite monorepo. Rust crates are
+# kept out of `packages/` (that directory is reserved for Composer packages and
+# is wired into the PHP CI, autoloader and Docker image).
+#
+#   crates/utopia/<name>    Generic Utopia libraries (Rust equivalents of packages/<name>).
+#   crates/support/<name>   Support crates shared by Utopia crates: php-std (PHP engine semantics).
+#   crates/extension        The `utopia` PHP extension: Utopia crates as the PHP classes of
+#                           packages/<name>, so PHP runs the Rust implementation.
+[workspace]
+resolver = "3"
+members = ["crates/utopia/*", "crates/support/*", "crates/extension"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "BSD-3-Clause"
+repository = "https://github.com/appwrite/appwrite"
+publish = false
+
+[workspace.dependencies]
+php-std = { path = "crates/support/php-std" }
+utopia-image = { path = "crates/utopia/image" }
+
+ext-php-rs = "0.16"
+fast_image_resize = { version = "6", default-features = false, features = ["std"] }
+gif = "0.14"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp", "avif", "rayon"] }
+image-webp = "0.2"
+kamadak-exif = "0.6"
+# libheif (a system library): AVIF and HEIC decoding, HEIC encoding. utopia-image's `libheif` feature.
+libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
+png = "0.18"
+thiserror = "2"
+# libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.
+webp = { version = "0.3", default-features = false }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
+
+# Per-pixel loops (rotation, masks, borders) on multi-megapixel images take
+# seconds unoptimised; tests use the dev profile.
+[profile.dev.package.utopia-image]
+opt-level = 2
