@@ -9,6 +9,8 @@ Backups protect your DocumentsDB data by capturing a full copy of a database tha
 {% info title="Backups are available for all Pro and Enterprise customers." %}
 {% /info %}
 
+Backups belong to the project. [Project environments](/docs/advanced/environments) don't have backups of their own, so back up the project instead.
+
 You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand.
 
 {% only_dark %}

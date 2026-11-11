@@ -1,0 +1,42 @@
+---
+layout: article
+title: Limits and billing
+description: How many environments each Appwrite Cloud plan includes per project, the request and user limits of an environment, and how environment usage is billed.
+---
+
+Project environments are part of your Appwrite Cloud plan. They don't count as projects, and their usage is billed under the project they belong to.
+
+# Environments per plan {% #per-plan %}
+
+| Plan | Environments per project |
+|---|---|
+| Free | 5 |
+| Pro | 5 |
+| Enterprise | 25 by default, or custom |
+
+Production, the project itself, isn't counted. A Pro project can have production and five environments.
+
+A project can create as many environments in an hour as its plan includes per project. Creating more within the hour returns a `429 Too Many Requests` error, and creating more than the plan allows returns a `403` error.
+
+# Limits inside an environment {% #limits %}
+
+Environments are sized for development and testing, so each one has limits of its own:
+
+| Limit | Value |
+|---|---|
+| Users | 100 per environment |
+| API requests | 500 per hour per environment |
+| Database backups | Not available |
+| Environments inside an environment | Not available |
+
+Requests made from the Appwrite Console by members of your organization don't count toward the request limit, and neither does the copy from production when the environment is created. Requests from your apps, server SDKs, the CLI, and the MCP server do. A request over the limit returns `429 Too Many Requests` until the hour resets.
+
+Other limits come from the organization's plan, the same as for the project.
+
+# Billing {% #billing %}
+
+- **Environments aren't projects.** They don't use a project slot on your plan, and they don't add the cost of an additional project.
+- **Usage is added to the project's.** Requests, bandwidth, executions, database reads and writes, storage, and users in an environment count toward the project's usage, and the plan's included resources cover the project and its environments together.
+- **Add-ons are shared.** An environment uses the add-ons of its project, such as [Premium Geo DB](/docs/advanced/billing/premium-geo-db). Add-ons are bought on the project, not on an environment.
+
+Usage an environment recorded before it was deleted stays on the bill for the current billing period. [Learn more about billing](/docs/advanced/billing).

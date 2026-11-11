@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-project-environments",
+    "href": "/blog/post/announcing-project-environments",
+    "title": "Announcing project environments: dev, staging, and QA for every Appwrite project",
+    "description": "Appwrite Cloud projects now have environments. Give a project dev, staging, and QA backends with their own data and users, copied from production, under the same project ID and bill.",
+    "date": "2026-11-12",
+    "lastUpdated": "2026-11-12",
+    "timeToRead": 7,
+    "author": "matej-baco",
+    "category": "announcements, products",
+    "featured": false,
+    "cover": "/images/blog/announcing-project-environments/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-otp-token-email-header",
     "href": "/blog/post/announcing-otp-token-email-header",
     "title": "Announcing origin-bound OTP-Token headers in Appwrite Auth",

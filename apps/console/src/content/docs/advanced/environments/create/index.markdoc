@@ -1,0 +1,95 @@
+---
+layout: article
+title: Create an environment
+description: Create an Appwrite project environment from the Console, as an empty environment or as a copy of the project, and switch between production and its environments.
+difficulty: beginner
+readtime: 4
+---
+
+An environment is created from its project. It lands in the project's organization and region, and it's ready to use as soon as it's created.
+
+# Open the environment switcher {% #open-switcher %}
+
+{% only_dark %}
+![Environment switcher open in the project sidebar](/images/docs/environments/dark/switcher.avif)
+{% /only_dark %}
+{% only_light %}
+![Environment switcher open in the project sidebar](/images/docs/environments/switcher.avif)
+{% /only_light %}
+
+1. Open your project in the [Appwrite Console](https://cloud.appwrite.io/console).
+2. Click the environment switcher in the project sidebar, above **Overview**. It shows **Production** with a green dot.
+3. Click **Create environment**.
+
+# Name the environment {% #name %}
+
+{% only_dark %}
+![Create environment page with a name, an environment ID, and the Start from options](/images/docs/environments/dark/create.avif)
+{% /only_dark %}
+{% only_light %}
+![Create environment page with a name, an environment ID, and the Start from options](/images/docs/environments/create.avif)
+{% /only_light %}
+
+1. Enter a **Name**, such as `Staging`. The Console suggests one that isn't taken yet.
+2. Check the **Environment ID**. It follows the name, so `Staging` gives `staging`. Apps pass this ID next to the project ID, so pick one that's easy to type. It can contain lowercase letters, numbers, and hyphens, starts with a letter or a number, and can't be changed later. Leave it blank to generate a random ID.
+
+# Choose where to start {% #start-from %}
+
+Under **Start from**, choose one of:
+
+- **Empty environment.** Nothing is copied. The environment starts like a new project.
+- **Clone of the project.** The project's structure and settings are copied, and data only where you tick it. Choose what to copy under **What to copy**. [Learn what a copy includes](/docs/advanced/environments/copy).
+
+{% only_dark %}
+![What to copy list with structure selected for every group and data unticked](/images/docs/environments/dark/copy.avif)
+{% /only_dark %}
+{% only_light %}
+![What to copy list with structure selected for every group and data unticked](/images/docs/environments/copy.avif)
+{% /only_light %}
+
+Click **Create environment**. The Console opens the new environment.
+
+If you cloned the project, a card in the bottom-right corner shows the copy's progress. The environment is usable while the copy runs, and its pages refresh when the copy finishes.
+
+# Work inside an environment {% #inside %}
+
+{% only_dark %}
+![Purple environment banner above a project page, with a Switch to production button](/images/docs/environments/dark/banner.avif)
+{% /only_dark %}
+{% only_light %}
+![Purple environment banner above a project page, with a Switch to production button](/images/docs/environments/banner.avif)
+{% /only_light %}
+
+Inside an environment, a purple banner at the top of every project page names the environment, and the environment switcher shows its name with a purple dot. Every page of the project, from Databases to Sites, now shows and changes the environment's resources instead of production's.
+
+The project's **Get started** page shows the endpoint, project ID, and environment ID to [connect an app to the environment](/docs/advanced/environments/connect).
+
+# Switch environments {% #switch %}
+
+Open the environment switcher and pick **Production** or another environment. The **Switch to production** button on the banner goes straight back to production.
+
+The Console keeps you on the same project URL and remembers the environment you picked for each project in the current browser tab. A different tab can work in a different environment of the same project.
+
+# Create environments with the API {% #api %}
+
+Environments can also be created with an API key that has the `project.write` scope. Send a `POST` request to `/v1/project/environments` with the project's ID in the `X-Appwrite-Project` header:
+
+```bash
+curl -X POST https://<REGION>.cloud.appwrite.io/v1/project/environments \
+    -H "X-Appwrite-Project: <PROJECT_ID>" \
+    -H "X-Appwrite-Key: <API_KEY>" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "environmentId": "staging",
+        "name": "Staging",
+        "resources": ["database", "table", "column", "index", "bucket", "function", "environment-variable"]
+    }'
+```
+
+Leave out `resources` to create an empty environment. The same route lists environments with `GET`, and `/v1/project/environments/<ENVIRONMENT_ID>` gets, renames (`PATCH` with a new `name`), or deletes one.
+
+# Next steps {% #next-steps %}
+
+{% arrow_link href="/docs/advanced/environments/connect" %}
+Connect your app to the environment
+{% /arrow_link %}

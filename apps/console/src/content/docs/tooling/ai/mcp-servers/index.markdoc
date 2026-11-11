@@ -75,7 +75,7 @@ Every change the MCP server makes carries a reason. The model passes a one-line 
 
 ## Project environments {% #environments %}
 
-The model can act in a [project environment](/docs/sdks#environments), such as `staging`, by passing `environment_id` together with `project_id`, the ID of the project the environment belongs to. When you ask `appwrite_get_context` about a project, it lists the project's environments, so you can ask for one by name:
+The model can act in a [project environment](/docs/advanced/environments), such as `staging`, by passing `environment_id` together with `project_id`, the ID of the project the environment belongs to. When you ask `appwrite_get_context` about a project, it lists the project's environments, so you can ask for one by name:
 
 ```
 List the users in the staging environment of my storefront project
