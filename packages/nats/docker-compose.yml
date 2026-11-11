@@ -38,3 +38,16 @@ services:
       interval: 2s
       timeout: 2s
       retries: 30
+
+  nats-system:
+    image: nats:2.11-alpine
+    command: ["-c", "/nats.conf"]
+    volumes:
+      - ./tests/fixtures/nats-system.conf:/nats.conf:ro
+    ports:
+      - "14225:4222"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8222/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
