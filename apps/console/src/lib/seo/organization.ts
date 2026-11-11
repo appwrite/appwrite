@@ -22,6 +22,20 @@ export function getOrganizationSchema() {
       '@type': 'ImageObject',
       url: `${MARKETING_SITE_ORIGIN}/apple-touch-icon.png`,
     },
+    description:
+      'Appwrite is an open-source backend platform for web, mobile, and AI apps: auth, databases, storage, functions, messaging, realtime, and hosting.',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: 'support@appwrite.io',
+    },
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'HaSheizaf St 4',
+      addressLocality: "Ra'anana",
+      postalCode: '4366411',
+      addressCountry: 'IL',
+    },
     sameAs: ORGANIZATION_PROFILES,
   }
 }

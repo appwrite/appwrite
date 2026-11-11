@@ -19,7 +19,7 @@ import {
   APPWRITE_AGENT_SKILLS_DISCOVERY_PATH,
   APPWRITE_AGENT_SKILLS_INSTALL,
   APPWRITE_AGENT_SKILLS_REPO,
-  APPWRITE_AI_CATALOG_PATH,
+  APPWRITE_ARD_PATH,
   APPWRITE_MCP_DOCS_PATH,
   APPWRITE_MCP_SERVER_CARD_PATH,
 } from './agent-discovery'
@@ -183,7 +183,7 @@ export function buildProductsLlmsSection(origin: string): LlmsSection {
     links: [
       {
         title: 'Pricing',
-        url: `${origin}/pricing`,
+        url: `${origin}/pricing.md`,
         description: 'Appwrite Cloud plans and pricing.',
       },
       {
@@ -314,10 +314,10 @@ export function buildAppwriteLlmsTxt(
             'SEP-1649 MCP Server Card for pre-connection discovery (/.well-known/mcp/server-card.json).',
         },
         {
-          title: 'AI Catalog',
-          url: `${origin}${APPWRITE_AI_CATALOG_PATH}`,
+          title: 'Agentic Resource Discovery',
+          url: `${origin}${APPWRITE_ARD_PATH}`,
           description:
-            'Domain AI Catalog listing Appwrite MCP Server Cards (/.well-known/ai-catalog.json).',
+            'ARD manifest listing Appwrite MCP Server Cards (/.well-known/ard.json).',
         },
         {
           title: 'MCP documentation',

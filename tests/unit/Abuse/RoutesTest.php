@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Abuse;
 
 use Appwrite\Abuse\Limit;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Http\Http;
 
@@ -36,41 +35,56 @@ final class RoutesTest extends TestCase
     }
 
     /**
-     * @return \Iterator<string, array{string, string}>
+     * A route that takes a `secret` or an `otp` from the request and verifies it against a proof is checking a
+     * value only the owner of an inbox, a handset or an invite should hold, and the code proof's secret is six
+     * digits by default. Nothing records a failed attempt on the token, so the route's abuse limits are the only
+     * cap on guesses. Every limit kept per a part the caller chooses -- the account or the challenge it names --
+     * must therefore count for every caller: being trusted with throughput, as a key or admin mode is, is not
+     * being trusted with the inbox the code was sent to. A limit kept only per caller, per ip, stays exempt, or
+     * one server relaying the logins of many users would lock all of them out at once.
      */
-    public static function confirmations(): \Iterator
-    {
-        yield 'email' => ['PUT', '/v1/account/verifications/email'];
-        yield 'email otp' => ['PUT', '/v1/account/verifications/email/otp'];
-        yield 'phone' => ['PUT', '/v1/account/verifications/phone'];
-    }
-
-    /**
-     * A verification confirmation takes the user and the secret from the request, and its limit is the only cap
-     * on guesses at a six digit code. A caller trusted with throughput, a key or admin mode, must still be
-     * counted here, or it can walk the whole code space and verify an address it does not own.
-     */
-    #[DataProvider('confirmations')]
-    public function testVerificationConfirmationsAreLimitedForEveryCaller(string $method, string $path): void
+    public function testRoutesThatVerifyASecretAreLimitedForEveryCaller(): void
     {
         require_once __DIR__ . '/../../../app/controllers/general.php';
 
-        foreach (Http::getRoutes()[$method] ?? [] as $route) {
-            if ($route->getPath() !== $path) {
-                continue;
+        $verifying = [];
+        foreach (Http::getRoutes() as $method => $methodRoutes) {
+            foreach ($methodRoutes as $route) {
+                $params = $route->getParams();
+                $injections = $route->getInjections();
+                $proven = \array_key_exists('secret', $params) && (\array_key_exists('proofForCode', $injections) || \array_key_exists('proofForToken', $injections));
+
+                // A console route that stores an `otp`, a mock phone's, sets the code rather than guessing it.
+                $guessed = \array_key_exists('otp', $params) && \in_array($route->getLabel('scope', ''), ['account', 'public'], true);
+
+                if (! $proven && ! $guessed) {
+                    continue;
+                }
+
+                $path = $method . ' ' . $route->getPath();
+                $verifying[] = $path;
+
+                /** @var list<Limit> $limits */
+                $limits = $route->getLabel('abuse', []);
+                $this->assertNotEmpty($limits, "{$path} verifies a secret but declares no abuse limit.");
+
+                foreach ($limits as $limit) {
+                    $chosen = \array_values(\array_filter($limit->by, fn (string $part): bool => $part === 'userId' || \str_starts_with($part, 'param.')));
+                    if ($chosen === []) {
+                        continue;
+                    }
+
+                    $this->assertTrue($limit->everyone, "{$path} verifies a secret and is limited per '" . \implode("', '", $chosen) . "', but trusted callers are exempt from that limit.");
+                }
             }
-
-            /** @var list<Limit> $limits */
-            $limits = $route->getLabel('abuse', []);
-            $this->assertNotEmpty($limits, "{$path} declares no abuse limit.");
-
-            foreach ($limits as $limit) {
-                $this->assertTrue($limit->everyone, "{$path} has a limit that trusted callers are exempt from.");
-            }
-
-            return;
         }
 
-        $this->fail("{$method} {$path} is not registered.");
+        // The set is derived, so a route registered later is locked the moment it is added. These only catch the
+        // detector going blind, by a renamed proof injection or secret param.
+        $this->assertContains('PUT /v1/account/recovery/otp', $verifying);
+        $this->assertContains('POST /v1/account/sessions/token', $verifying);
+        $this->assertContains('PUT /v1/account/verifications/email/otp', $verifying);
+        $this->assertContains('PUT /v1/account/mfa/challenges', $verifying);
+        $this->assertContains('PUT /v1/account/mfa/authenticators/:type', $verifying);
     }
 }

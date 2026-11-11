@@ -36,7 +36,11 @@ import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
-import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
+import { CheckDomain } from '@/components/pages/projects/$projectId/settings/domains/CheckDomain'
+import {
+  getRuleStatusBadgeConfig,
+  isWaitingForDns,
+} from '@/lib/utils/status-badge'
 import {
   canRetryRule,
   canViewRuleLogs,
@@ -284,7 +288,13 @@ export function View() {
                                   {t('View logs')}
                                 </Button>
                               )}
-                            {canRetryRule(rule) && (
+                            <CheckDomain
+                              projectId={projectId ?? ''}
+                              region={project?.region}
+                              rule={rule}
+                              organizationDomainId={getOrganizationDomainId(rule)}
+                            />
+                            {canRetryRule(rule) && !isWaitingForDns(rule) && (
                               <Button
                                 variant="link"
                                 size="sm"
