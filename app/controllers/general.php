@@ -1107,14 +1107,25 @@ Http::init()
             $locale->setDefault($localeParam);
         }
 
-        $localHosts = ['localhost','localhost:'.$request->getPort()];
+        $localHosts = ['localhost', 'localhost:' . $request->getPort()];
+
+        $jobsEndpoint = System::getEnv('_APP_JOBS_ENDPOINT', 'http://appwrite');
+        $jobsHost = \parse_url($jobsEndpoint, PHP_URL_HOST);
+        $jobsPort = \parse_url($jobsEndpoint, PHP_URL_PORT);
+        if (!empty($jobsHost)) {
+            $localHosts[] = $jobsHost;
+            $localHosts[] = $jobsHost . ':' . $request->getPort();
+            if (!empty($jobsPort)) {
+                $localHosts[] = $jobsHost . ':' . $jobsPort;
+            }
+        }
 
         $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
         if (!empty($migrationHost)) {
             // Treat the migration host like localhost because internal migration and
             // CI traffic may use it before a public domain is configured.
             $localHosts[] = $migrationHost;
-            $localHosts[] = $migrationHost.':'.$request->getPort();
+            $localHosts[] = $migrationHost . ':' . $request->getPort();
         }
 
         $warnings = [];
@@ -1177,7 +1188,11 @@ Http::init()
         }
 
         if (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https' && !in_array(($swooleRequest->header['host'] ?? ''), $localHosts)) { // localhost allowed for proxy
+            if (
+                $request->getProtocol() !== 'https'
+                && !\in_array(($swooleRequest->header['host'] ?? ''), $localHosts, true)
+                && !\str_starts_with($request->getURI(), '/v1/jobs/event')
+            ) {
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
                 }
