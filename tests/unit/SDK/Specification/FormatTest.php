@@ -47,6 +47,7 @@ use Appwrite\Utopia\Response\Model\PlatformList;
 use Appwrite\Utopia\Response\Model\PlatformWeb;
 use Appwrite\Utopia\Response\Model\PlatformWindows;
 use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\Presence;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateFramework;
@@ -1470,6 +1471,7 @@ final class FormatTest extends TestCase
 
         $models = [
             new Provider(),
+            new Presence(),
             new FrameworkAdapter(),
             new TemplateFramework(),
             new TemplateSite(),
@@ -1480,6 +1482,7 @@ final class FormatTest extends TestCase
         $routes = [$route];
 
         foreach ([
+            Response::MODEL_PRESENCE,
             Response::MODEL_FRAMEWORK_ADAPTER,
             Response::MODEL_TEMPLATE_FRAMEWORK,
             Response::MODEL_TEMPLATE_SITE,
@@ -1508,6 +1511,11 @@ final class FormatTest extends TestCase
 
         $this->assertTrue($openApiOptions['additionalProperties']);
         $this->assertArrayNotHasKey('nullable', $openApiOptions);
+
+        $openApiMetadata = $openApi['components']['schemas'][Response::MODEL_PRESENCE]['properties']['metadata'];
+
+        $this->assertTrue($openApiMetadata['additionalProperties']);
+        $this->assertTrue($openApiMetadata['nullable']);
 
         foreach ([
             Response::MODEL_FRAMEWORK_ADAPTER => 'fallbackFile',

@@ -805,6 +805,7 @@ You will need to save the challenge ID to complete the challenge in a later step
 {% tabsitem #email title="Email" %}
 Appwrite will use a verified email on the user's account to send the challenge code via email.
 Note that this is only valid as a second factor if the user did not initialize their login with email OTP.
+When the challenge is created from a web app, the email carries an `OTP-Token` header that binds the code to your app's origin. See [Code autofill](/docs/products/auth/email-otp#code-autofill).
 
 {% multicode %}
 ```client-web

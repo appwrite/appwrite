@@ -3905,6 +3905,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'View monitors': 'モニターを表示',
   'Waiting for recovery': '回復待ち',
   Watches: '監視対象',
+  Acknowledge: '確認済みにする',
+  'Acknowledged by {name}': '{name} が確認済み',
+  'Acknowledged by a member': 'メンバーが確認済み',
+  'Acknowledged with an API key': 'API キーで確認済み',
+  'Failed to acknowledge the alert': 'アラートを確認済みにできませんでした',
+  'Failed to undo the acknowledgement': '確認済みを取り消せませんでした',
+  'Let your team know someone is on it. It keeps firing until usage recovers.':
+    '誰かが対応中であることをチームに知らせます。使用量が回復するまでアラートは発生し続けます。',
+  'Nobody has acknowledged this alert':
+    'このアラートはまだ誰も確認していません',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':

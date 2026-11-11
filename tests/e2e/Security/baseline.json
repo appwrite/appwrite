@@ -335,6 +335,7 @@
         "PATCH /v1/account/prefs",
         "PATCH /v1/account/sessions/:sessionId",
         "PATCH /v1/account/status",
+        "PATCH /v1/alerts/:alertId",
         "PATCH /v1/databases/:databaseId/collections/:collectionId/attributes/bigint/:key",
         "PATCH /v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key",
         "PATCH /v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key",

@@ -3832,6 +3832,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'View monitors': 'הצגת המוניטורים',
   'Waiting for recovery': 'ממתין לחזרה לשגרה',
   Watches: 'עוקב אחר',
+  Acknowledge: 'אישור טיפול',
+  'Acknowledged by {name}': 'בטיפול של {name}',
+  'Acknowledged by a member': 'בטיפול של חבר צוות',
+  'Acknowledged with an API key': 'אושר באמצעות מפתח API',
+  'Failed to acknowledge the alert': 'אישור הטיפול בהתראה נכשל',
+  'Failed to undo the acknowledgement': 'ביטול אישור הטיפול נכשל',
+  'Let your team know someone is on it. It keeps firing until usage recovers.':
+    'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהשימוש יחזור לשגרה.',
+  'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
   "You don't have permission to manage monitors.":
     'אין לכם הרשאה לנהל מוניטורים.',
   'between two alerts from this monitor.': 'בין שתי התראות מהמוניטור הזה.',

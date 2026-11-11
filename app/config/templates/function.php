@@ -133,6 +133,7 @@ return [
                 'placeholder' =>
                     'oe4wNTbwHVLcDNa6oceZfhBEABsCNYh43ii6Xdq4bKBH7mq7qJkUmc4cs3ABbYyuVKWZTxVQjiNjYgydn2dkhABNes4NAuDpj7qxUAmZYqGJT78',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -178,6 +179,7 @@ return [
                 'value' => '',
                 'placeholder' => 'efNNehiACfcZiwsTAjcK6xiwPyu6Dpdq',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -239,6 +241,7 @@ return [
                 'value' => '',
                 'placeholder' => 'mCUc4PbVUQN-_NkTLJLisb6ccnwzQKKhrkF77YMctzx',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -278,6 +281,7 @@ return [
                 'placeholder' =>
                     'mongodb+srv://appwrite:Yx42hafg7Q4fgkxe@cluster0.7mslfog.mongodb.net/?retryWrites=true&w=majority&appName=Appwrite',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -340,6 +344,7 @@ return [
                 'value' => '',
                 'placeholder' => 'iQCfaUaaWB3B',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -385,6 +390,7 @@ return [
                 'value' => '',
                 'placeholder' => 'postgresql://admin:d1efb...aec35@db-8f2c61a4d7e0.fra.appwrite.center:5432/db-8f2c61a4d7e0',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -443,6 +449,7 @@ return [
                 'value' => '',
                 'placeholder' => 'sk-wzG...vcy',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -504,6 +511,7 @@ return [
                 'value' => '',
                 'placeholder' => 'your-long-random-secret',
                 'required' => false,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -571,6 +579,7 @@ return [
                 'value' => '',
                 'placeholder' => 'db9...980',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -579,6 +588,7 @@ return [
                 'value' => '',
                 'placeholder' => '427...169',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -587,6 +597,7 @@ return [
                 'value' => '',
                 'placeholder' => 'NDI...LUfg',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -624,6 +635,7 @@ return [
                 'value' => '',
                 'placeholder' => 'AIzaS...fk-fuM',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -676,6 +688,7 @@ return [
                 'value' => '',
                 'placeholder' => 'pts_7p4...5wl4',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -736,6 +749,7 @@ return [
                 'value' => '',
                 'placeholder' => 'ghp_1...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -744,6 +758,7 @@ return [
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -868,6 +883,7 @@ return [
                 'description' => 'The admin API Key for your Algolia service. <a class="u-bold" target="_blank" href="https://www.algolia.com/doc/guides/security/api-keys/">Learn more</a>.',
                 'placeholder' => 'fd0aa...136a8',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -875,6 +891,7 @@ return [
                 'description' => 'The ID of the index in Algolia where the documents are to be synced. <a class="u-bold" target="_blank" href="https://www.algolia.com/doc/api-client/methods/indexing/">Learn more</a>.',
                 'placeholder' => 'my_index',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -882,6 +899,7 @@ return [
                 'description' => 'The search API Key for your Algolia service. This key is used for searching the synced index. <a class="u-bold" target="_blank" href="https://www.algolia.com/doc/guides/security/api-keys/">Learn more</a>.',
                 'placeholder' => 'bf2f5...df733',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
         ],
@@ -967,6 +985,7 @@ return [
                 'description' => 'The admin API key for Meilisearch. <a class="u-bold" target="_blank" href="https://docs.meilisearch.com/reference/api/keys/">Learn more</a>.',
                 'placeholder' => 'masterKey1234',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -974,6 +993,7 @@ return [
                 'description' => 'API Key for Meilisearch search operations. <a class="u-bold" target="_blank" href="https://www.algolia.com/doc/guides/security/api-keys/">Learn more</a>.',
                 'placeholder' => 'searchKey1234',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1053,6 +1073,7 @@ return [
                 'value' => '',
                 'placeholder' => '62...97',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1060,6 +1081,7 @@ return [
                 'description' => 'Secret to use the Vonage API. <a class="u-bold" target="_blank" href="https://api.support.vonage.com/hc/en-us/articles/204014493-How-do-I-find-my-Voice-API-key-and-API-secret-">Learn more</a>.',
                 'placeholder' => 'Zjc...5PH',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1067,6 +1089,7 @@ return [
                 'description' => 'Secret to verify the JWT token sent by Vonage. <a class="u-bold" target="_blank" href="https://developer.vonage.com/en/getting-started/concepts/signing-messages">Learn more</a>.',
                 'placeholder' => 'NXOi3...IBHDa',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1125,6 +1148,7 @@ return [
                 'description' => 'A unique private key used to authenticate with FCM. <a class="u-bold" target="_blank" href="https://github.com/appwrite/templates/tree/main/node/push-notification-with-fcm#:~:text=Documentation-,FCM%3A%20SDK%20Setup,-FCM_DATABASE_URL">Learn more</a>.',
                 'placeholder' => '0b683...75675',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1204,6 +1228,7 @@ return [
                 'description' => 'The password for your SMTP server.',
                 'placeholder' => '5up3r5tr0ngP4ssw0rd',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1255,6 +1280,7 @@ return [
                 'description' => 'Secret for sending requests to the Stripe API. <a class="u-bold" target="_blank" href="https://stripe.com/docs/keys">Learn more</a>.',
                 'placeholder' => 'sk_test_51J...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1262,6 +1288,7 @@ return [
                 'description' => 'Secret used to validate the Stripe Webhook signature. <a class="u-bold" target="_blank" href="https://stripe.com/docs/webhooks">Learn more</a>.',
                 'placeholder' => 'whsec_...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1298,6 +1325,7 @@ return [
                 'description' => 'Secret for sending requests to the Stripe API. <a class="u-bold" target="_blank" href="https://stripe.com/docs/keys">Learn more</a>.',
                 'placeholder' => 'sk_test_51J...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1305,6 +1333,7 @@ return [
                 'description' => 'Secret used to validate the Stripe Webhook signature. <a class="u-bold" target="_blank" href="https://stripe.com/docs/webhooks">Learn more</a>.',
                 'placeholder' => 'whsec_...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1357,6 +1386,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1393,6 +1423,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1453,6 +1484,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1513,6 +1545,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1573,6 +1606,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1636,6 +1670,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1673,6 +1708,7 @@ return [
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1710,6 +1746,7 @@ return [
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1753,6 +1790,7 @@ return [
                 'description' => 'A unique key used to authenticate with the Perplexity API. <a class="u-bold" target="_blank" href="https://docs.perplexity.ai/docs/getting-started">Learn more</a>.',
                 'placeholder' => 'pplex-68...999',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1797,6 +1835,7 @@ return [
                 'value' => '',
                 'placeholder' => 'sk-wzG...vcy',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1804,6 +1843,7 @@ return [
                 'description' => 'A unique key used to authenticate with the Pinecone API. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/authentication">Learn more</a>.',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1862,6 +1902,7 @@ return [
                 'value' => '',
                 'placeholder' => 'sk-wzG...vcy',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1869,6 +1910,7 @@ return [
                 'description' => 'A unique key used to authenticate with the Pinecone API. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/authentication">Learn more</a>.',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1926,6 +1968,7 @@ return [
                 'description' => 'A unique key used to authenticate with the ElevenLabs API. <a class="u-bold" target="_blank" href="https://elevenlabs.io/docs/api-reference/getting-started">Learn more</a>.',
                 'placeholder' => 'd03xxxxxxxx26',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1983,6 +2026,7 @@ return [
                 'description' => 'A unique key used to authenticate with the LMNT API. <a class="u-bold" target="_blank" href="https://app.lmnt.com/account">Learn more</a>.',
                 'placeholder' => 'd03xxxxxxxx26',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2026,6 +2070,7 @@ return [
                 'description' => 'A unique key used to authenticate with the AnyScale API. <a class="u-bold" target="_blank" href="https://app.endpoints.anyscale.com/credentials">Learn more</a>.',
                 'placeholder' => 'd03xxxxxxxx26',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2077,6 +2122,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -2114,6 +2160,7 @@ return [
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -2151,6 +2198,7 @@ return [
                 'description' => 'API key for sending requests to the Lemon Squeezy API. <a class="u-bold" target="_blank" href="https://docs.lemonsqueezy.com/api#authentication">Learn more</a>.',
                 'placeholder' => 'eyJ0eXAiOiJ...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2158,6 +2206,7 @@ return [
                 'description' => 'Secret used to validate the Lemon Squuezy Webhook signature. <a class="u-bold" target="_blank" href="https://docs.lemonsqueezy.com/guides/developer-guide/webhooks#from-the-dashboard">Learn more</a>.',
                 'placeholder' => 'abcd...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2225,6 +2274,7 @@ return [
                 'description' => 'API key for sending requests to the Lemon Squeezy API. <a class="u-bold" target="_blank" href="https://docs.lemonsqueezy.com/api#authentication">Learn more</a>.',
                 'placeholder' => 'eyJ0eXAiOiJ...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2232,6 +2282,7 @@ return [
                 'description' => 'Secret used to validate the Lemon Squuezy Webhook signature. <a class="u-bold" target="_blank" href="https://docs.lemonsqueezy.com/guides/developer-guide/webhooks#from-the-dashboard">Learn more</a>.',
                 'placeholder' => 'abcd...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2284,6 +2335,7 @@ return [
                 'value' => '',
                 'placeholder' => 'abcd...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2292,6 +2344,7 @@ return [
                 'value' => '',
                 'placeholder' => 'whsec_MfKQ...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2346,6 +2399,7 @@ return [
                 'value' => '',
                 'placeholder' => 'abcd...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2354,6 +2408,7 @@ return [
                 'value' => '',
                 'placeholder' => 'whsec_MfKQ...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2441,6 +2496,7 @@ return [
                 'value' => '',
                 'placeholder' => '7x8aA...Ab7c',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],

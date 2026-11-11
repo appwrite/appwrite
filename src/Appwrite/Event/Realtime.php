@@ -14,6 +14,22 @@ class Realtime extends Event
     // Account and user events reach realtime so a console user's connections end with their access.
     public const CONSOLE_ALLOWLIST = ['presences', 'teams', 'account', 'users'];
 
+    /**
+     * Membership payload fields the project's membership privacy policy governs, mapped to the
+     * `auths` setting that makes them visible and to that setting's default for older projects.
+     *
+     * Mirrors the read endpoints (Teams/Http/Memberships/Get.php, XList.php).
+     */
+    private const MEMBERSHIP_PRIVACY = [
+        // Default should be "false", but existing projects already rely on this being "true"
+        'userName' => ['membershipsUserName', true],
+        'userEmail' => ['membershipsUserEmail', true],
+        'userPhone' => ['membershipsUserPhone', true],
+        'userId' => ['membershipsUserId', true],
+        'mfa' => ['membershipsMfa', true],
+        'userAccessedAt' => ['membershipsUserAccessedAt', false],
+    ];
+
     protected array $subscribers = [];
 
     private Adapter $realtime;
@@ -32,15 +48,49 @@ class Realtime extends Event
      */
     public function getRealtimePayload(): array
     {
+        $hidden = $this->sensitive + $this->hiddenMembershipFields();
+
         $payload = [];
 
         foreach ($this->payload as $key => $value) {
-            if (!isset($this->sensitive[$key])) {
+            if (!isset($hidden[$key])) {
                 $payload[$key] = $value;
             }
         }
 
         return $payload;
+    }
+
+    /**
+     * Membership fields the project's privacy policy hides from the team.
+     *
+     * A membership event is addressed to `team:{teamId}`, which every confirmed member holds, and
+     * the payload is the HTTP response rendered for the *writer*: an API key or an admin-mode
+     * caller renders the member's real name and email. The policy is therefore applied again here,
+     * with no privileged or self exemption, so the one payload every member receives carries only
+     * what the least privileged of them may read.
+     *
+     * @return array<string, true>
+     */
+    private function hiddenMembershipFields(): array
+    {
+        $parts = \explode('.', $this->event);
+
+        if ($parts[0] !== 'teams' || ($parts[2] ?? '') !== 'memberships') {
+            return [];
+        }
+
+        $auths = $this->project?->getAttribute('auths', []) ?? [];
+
+        $hidden = [];
+
+        foreach (self::MEMBERSHIP_PRIVACY as $field => [$setting, $default]) {
+            if (!($auths[$setting] ?? $default)) {
+                $hidden[$field] = true;
+            }
+        }
+
+        return $hidden;
     }
 
     /**
