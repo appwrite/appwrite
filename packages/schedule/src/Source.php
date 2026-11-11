@@ -39,6 +39,7 @@ interface Source
      * Called only when a row is new or its version changed, so this is
      * where expensive work belongs. Throwing skips that one row — the
      * failure is reported and the row's previous entry, if any, stays.
+     * Returning null removes the row's entry without reporting an error.
      */
-    public function make(Row $row): Entry;
+    public function make(Row $row): ?Entry;
 }
