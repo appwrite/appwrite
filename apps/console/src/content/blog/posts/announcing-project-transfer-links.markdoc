@@ -61,7 +61,7 @@ What changes is everything that comes from the organization. The new organizatio
 
 Moving a project hands over its data and its users, so transfer links are owner-only on both sides. Only an owner of the sending organization can create a link or read it back, and only an owner of the receiving organization can claim it. Organization API keys can't do either.
 
-Appwrite also checks both organizations at the moment of the claim. A transfer waits while either organization has an unpaid invoice or has reached its budget cap, or while the receiving plan doesn't fit the project. When a claim is refused, the link stays valid and the project stays where it was, so the recipient can sort out billing or upgrade and claim it again. The [requirements](/docs/advanced/billing/project-transfers#requirements) list every check.
+Appwrite also checks both organizations at the moment of the claim. A claim is refused while either organization has an unpaid invoice or has reached its budget cap, or while the receiving plan doesn't fit the project. When that happens, the link stays valid and the project stays where it was, so the recipient can sort out billing or upgrade and claim it again. The [requirements](/docs/advanced/billing/project-transfers#requirements) list every check.
 
 # Get started
 
