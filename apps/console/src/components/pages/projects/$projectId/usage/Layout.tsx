@@ -12,6 +12,7 @@ import {
   refetchProjectRealtimeUsageQueries,
   refetchProjectRequestsUsageQueries,
   refetchProjectStorageUsageQueries,
+  useCountryLookups,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -93,10 +94,12 @@ import {
 } from './usage-nav'
 import { UsageFiltersProvider } from './usage-filters-context'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { ActiveFilterChips } from '@/components/global/shared/ActiveFilterChips'
 import {
   buildFilterQueryString,
   mapToQueryParam,
   queryParamToMap,
+  withFilter,
   type CompactFilterKey,
 } from '@/lib/table-filters'
 import {
@@ -553,6 +556,7 @@ function UsageLayoutContent({
     () => getUsageFilterColumnsForCategory(categoryId, filterAvailability),
     [categoryId, filterAvailability],
   )
+  const { lookups: countryLookups } = useCountryLookups()
   const usageEventFilterQueries = useMemo(
     () =>
       getUsageFilterQueriesForSurface(
@@ -629,9 +633,7 @@ function UsageLayoutContent({
         )
       )
         return
-      const newMap = new Map(usageFilterMap)
-      if (replaceKey) newMap.delete(replaceKey)
-      newMap.set(key, queryStr)
+      const newMap = withFilter(usageFilterMap, key, queryStr, replaceKey)
       navigateUsageFilters(
         mapToQueryParam(
           sanitizeUsageFilterMap(newMap, categoryId, filterAvailability),
@@ -956,6 +958,16 @@ function UsageLayoutContent({
             </div>
           </div>
         </div>
+        {!monitoringPage && showUsageFilters ? (
+          <ActiveFilterChips
+            filterMap={usageFilterMap}
+            columns={usageFilterColumns}
+            countryLookups={countryLookups}
+            onApplyFilter={applyUsageFilter}
+            onRemoveFilter={removeUsageFilter}
+            onClearAllFilters={clearAllUsageFilters}
+          />
+        ) : null}
         {!monitoringPage &&
         showUsageHistoryLimitAlert &&
         hasFiniteUsageLogRetention(organizationPlan) ? (

@@ -261,6 +261,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Filter name': 'שם הסינון',
   Filters: 'סינונים',
   'Filtered by': 'מסונן לפי',
+  'Change operator': 'שינוי אופרטור',
+  'Change value': 'שינוי ערך',
   'Find a branch...': 'חיפוש ענף...',
   'Fix payment': 'הסדרת התשלום',
   'Authorize payment': 'אישור תשלום',

@@ -1163,6 +1163,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   File: 'ファイル',
   Filters: 'フィルター',
   'Filtered by': '絞り込み',
+  'Change operator': '演算子を変更',
+  'Change value': '値を変更',
   Function: '関数',
   Functions: '関数',
   Impersonate: 'なりすまし',

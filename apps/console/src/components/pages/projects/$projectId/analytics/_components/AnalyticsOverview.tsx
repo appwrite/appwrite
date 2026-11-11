@@ -48,7 +48,7 @@ import {
 import { compareModeLabel, formatAnalyticsRangeLabel } from './CompareControl'
 import { MetricInfo, type AnalyticsMetricInfoKey } from './MetricInfo'
 import { useAnalyticsFilters } from './analytics-filters-context'
-import { ActiveFilterChips } from './ActiveFilterChips'
+import { AnalyticsFilterChips } from './AnalyticsFilterChips'
 import { ChangeBadge } from './ChangeBadge'
 import { ANALYTICS_FILTER_UNSUPPORTED_MESSAGE } from '@/lib/analytics/analytics-filters'
 import { useT } from '@/lib/i18n/translate'
@@ -682,7 +682,7 @@ export function AnalyticsOverview({
   return (
     <div className="w-full">
       {/* Active filters, removable in place. Hidden when none. */}
-      <ActiveFilterChips />
+      <AnalyticsFilterChips />
 
       {/* Series totals. Filters, interval, date range, comparison and
           refresh live in the standard ServiceHeader toolbar above. */}

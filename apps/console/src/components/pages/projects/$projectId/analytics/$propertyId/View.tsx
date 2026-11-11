@@ -84,6 +84,7 @@ import {
 import {
   mapToQueryParam,
   queryParamToMap,
+  withFilter,
   type FilterMap,
 } from '@/lib/table-filters'
 
@@ -260,10 +261,7 @@ export function View({
         commitFilterMap(next)
       },
       onApplyFilter: (key, queryStr, replaceKey) => {
-        const next = new Map(filterMap)
-        if (replaceKey) next.delete(replaceKey)
-        next.set(key, queryStr)
-        commitFilterMap(next)
+        commitFilterMap(withFilter(filterMap, key, queryStr, replaceKey))
       },
       onRemoveFilter: (key) => {
         const next = new Map(filterMap)
