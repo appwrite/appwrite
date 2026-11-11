@@ -195,18 +195,4 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Repositories added to the installation later are not included.':
     '後からインストールに追加されたリポジトリは含まれません。',
   'Review pull requests in {name}': '{name} のプルリクエストをレビュー',
-  Learnings: '学習',
-  learnings: '件の学習',
-  Learning: '学習内容',
-  'Asked by': '依頼者',
-  'Learning actions': '学習の操作',
-  'Open conversation on GitHub': 'GitHub で会話を開く',
-  'Learning has been deleted': '学習を削除しました',
-  'Failed to delete learning': '学習を削除できませんでした',
-  'No learnings yet': '学習はまだありません',
-  'When someone asks the reviewer to remember a preference in a pull request conversation, it shows up here. Later reviews of the repository follow it.':
-    'プルリクエストの会話でレビュアーに好みを覚えるよう依頼すると、ここに表示されます。以降のリポジトリのレビューはそれに従います。',
-  'Delete learning': '学習を削除',
-  'Later reviews and answers will no longer follow this learning. This action cannot be undone.':
-    '以降のレビューと回答はこの学習に従わなくなります。この操作は元に戻せません。',
 }

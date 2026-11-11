@@ -255,7 +255,6 @@ import { Route as PublicProjectsProjectIdRealtimeDebuggerRouteImport } from './r
 import { Route as PublicProjectsProjectIdRealtimeMessagesRouteImport } from './routes/_public/projects.$projectId.realtime.messages'
 import { Route as PublicProjectsProjectIdReviewsIndexRouteImport } from './routes/_public/projects.$projectId.reviews.index'
 import { Route as PublicProjectsProjectIdReviewsReviewIdRouteImport } from './routes/_public/projects.$projectId.reviews.$reviewId'
-import { Route as PublicProjectsProjectIdReviewsLearningsRouteImport } from './routes/_public/projects.$projectId.reviews.learnings'
 import { Route as PublicProjectsProjectIdReviewsRepositoriesRouteImport } from './routes/_public/projects.$projectId.reviews.repositories'
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
@@ -1838,12 +1837,6 @@ const PublicProjectsProjectIdReviewsReviewIdRoute =
   PublicProjectsProjectIdReviewsReviewIdRouteImport.update({
     id: '/$reviewId',
     path: '/$reviewId',
-    getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
-  } as any)
-const PublicProjectsProjectIdReviewsLearningsRoute =
-  PublicProjectsProjectIdReviewsLearningsRouteImport.update({
-    id: '/learnings',
-    path: '/learnings',
     getParentRoute: () => PublicProjectsProjectIdReviewsRoute,
   } as any)
 const PublicProjectsProjectIdReviewsRepositoriesRoute =
@@ -3688,7 +3681,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
-  '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
@@ -4131,7 +4123,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
-  '/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -4589,7 +4580,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/realtime/debugger': typeof PublicProjectsProjectIdRealtimeDebuggerRoute
   '/_public/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/_public/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
-  '/_public/projects/$projectId/reviews/learnings': typeof PublicProjectsProjectIdReviewsLearningsRoute
   '/_public/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
@@ -5066,7 +5056,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/reviews/$reviewId'
-    | '/projects/$projectId/reviews/learnings'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/domains'
     | '/projects/$projectId/settings/migrations'
@@ -5509,7 +5498,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/debugger'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/reviews/$reviewId'
-    | '/projects/$projectId/reviews/learnings'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/variables'
@@ -5966,7 +5954,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/realtime/debugger'
     | '/_public/projects/$projectId/realtime/messages'
     | '/_public/projects/$projectId/reviews/$reviewId'
-    | '/_public/projects/$projectId/reviews/learnings'
     | '/_public/projects/$projectId/reviews/repositories'
     | '/_public/projects/$projectId/settings/domains'
     | '/_public/projects/$projectId/settings/migrations'
@@ -7980,13 +7967,6 @@ declare module '@tanstack/react-router' {
       path: '/$reviewId'
       fullPath: '/projects/$projectId/reviews/$reviewId'
       preLoaderRoute: typeof PublicProjectsProjectIdReviewsReviewIdRouteImport
-      parentRoute: typeof PublicProjectsProjectIdReviewsRoute
-    }
-    '/_public/projects/$projectId/reviews/learnings': {
-      id: '/_public/projects/$projectId/reviews/learnings'
-      path: '/learnings'
-      fullPath: '/projects/$projectId/reviews/learnings'
-      preLoaderRoute: typeof PublicProjectsProjectIdReviewsLearningsRouteImport
       parentRoute: typeof PublicProjectsProjectIdReviewsRoute
     }
     '/_public/projects/$projectId/reviews/repositories': {
@@ -10997,7 +10977,6 @@ const PublicProjectsProjectIdRealtimeRouteWithChildren =
 
 interface PublicProjectsProjectIdReviewsRouteChildren {
   PublicProjectsProjectIdReviewsReviewIdRoute: typeof PublicProjectsProjectIdReviewsReviewIdRoute
-  PublicProjectsProjectIdReviewsLearningsRoute: typeof PublicProjectsProjectIdReviewsLearningsRoute
   PublicProjectsProjectIdReviewsRepositoriesRoute: typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   PublicProjectsProjectIdReviewsIndexRoute: typeof PublicProjectsProjectIdReviewsIndexRoute
 }
@@ -11006,8 +10985,6 @@ const PublicProjectsProjectIdReviewsRouteChildren: PublicProjectsProjectIdReview
   {
     PublicProjectsProjectIdReviewsReviewIdRoute:
       PublicProjectsProjectIdReviewsReviewIdRoute,
-    PublicProjectsProjectIdReviewsLearningsRoute:
-      PublicProjectsProjectIdReviewsLearningsRoute,
     PublicProjectsProjectIdReviewsRepositoriesRoute:
       PublicProjectsProjectIdReviewsRepositoriesRoute,
     PublicProjectsProjectIdReviewsIndexRoute:
