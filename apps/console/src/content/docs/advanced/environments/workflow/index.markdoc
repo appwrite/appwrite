@@ -8,11 +8,11 @@ readtime: 8
 
 Environments let one Appwrite project carry a release from development to production. This guide sets up a common flow:
 
-- **`dev`** is where schema changes, functions, and sites are built and tried.
-- **`staging`** gets every change merged to your main branch, so it can be checked against a production-shaped backend.
-- **Production**, the project itself, gets a change when you publish a release.
+- A dev environment, where schema changes, functions, and sites are built and tried.
+- A staging environment, which gets every change merged to your main branch, so it can be checked against a production-shaped backend.
+- Production, the project itself, which gets a change when you publish a release.
 
-The same `appwrite.config.json` describes the backend for all three. Only the environment ID and the API key change between them.
+The same CLI config file describes the backend for all three. Only the environment ID and the API key change between them.
 
 # Create the environments {% #create %}
 

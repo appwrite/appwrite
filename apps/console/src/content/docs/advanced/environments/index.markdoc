@@ -4,7 +4,7 @@ title: Project environments
 description: Give an Appwrite Cloud project development, staging, and QA environments with their own databases, storage, users, functions, and sites, under the same project ID and bill.
 ---
 
-A **project environment** is a separate copy of your project's backend for work that shouldn't touch production, such as `staging`, `dev`, or `qa`. Each environment has its own databases, storage, users, functions, sites, and settings. It shares the project's endpoint, project ID, organization, region, and bill.
+A **project environment** is a separate copy of your project's backend for work that shouldn't touch production, such as staging, development, or QA. Each environment has its own databases, storage, users, functions, sites, and settings. It shares the project's endpoint, project ID, organization, region, and bill.
 
 The project itself is **Production**. Environments sit under it, and the Console switches between them from the project sidebar. Apps reach an environment with the same endpoint and project ID as production, plus the environment's ID.
 

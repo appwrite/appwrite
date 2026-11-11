@@ -193,7 +193,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/environments",
     "title": "Project environments",
     "description": "Give an Appwrite Cloud project development, staging, and QA environments with their own databases, storage, users, functions, and sites, under the same project ID and bill.",
-    "excerpt": "A **project environment** is a separate copy of your project's backend for work that shouldn't touch production, such as , , or . Each environment has its own databases, storage, users, functions, sites, and settings. It shares the project's endpoint, project ID, organization, region, and bill. The project itself is **Production**. Environments sit under it, and the Console switches between them from the project sidebar. Apps reach an environment with the same endpoint and project ID as production, plus the…",
+    "excerpt": "A **project environment** is a separate copy of your project's backend for work that shouldn't touch production, such as staging, development, or QA. Each environment has its own databases, storage, users, functions, sites, and settings. It shares the project's endpoint, project ID, organization, region, and bill. The project itself is **Production**. Environments sit under it, and the Console switches between them from the project sidebar. Apps reach an environment with the same endpoint and project ID as production, plus the…",
     "breadcrumbs": [
       "Environments",
       "Getting started",
@@ -259,7 +259,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/environments/workflow",
     "title": "Development workflow",
     "description": "Move Appwrite changes from a development environment to staging and production with one CLI config, one API key per environment, and a CI pipeline.",
-    "excerpt": "Environments let one Appwrite project carry a release from development to production. This guide sets up a common flow: - **** is where schema changes, functions, and sites are built and tried. - **** gets every change merged to your main branch, so it can be checked against a production-shaped backend. - **Production**, the project itself, gets a change when you publish a release. The same describes the backend for all three. Only the environment ID and the API key…",
+    "excerpt": "Environments let one Appwrite project carry a release from development to production. This guide sets up a common flow: - A dev environment, where schema changes, functions, and sites are built and tried. - A staging environment, which gets every change merged to your main branch, so it can be checked against a production-shaped backend. - Production, the project itself, which gets a change when you publish a release. The same CLI config file describes the backend for all three.…",
     "breadcrumbs": [
       "Environments",
       "Guides",
