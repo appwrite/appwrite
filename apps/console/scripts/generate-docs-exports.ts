@@ -304,6 +304,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: serializeDiscoveryJson(buildMcpServerCard(SITE_ORIGIN)),
     },
     {
+      relativePath: '.well-known/ard.json',
+      contents: serializeDiscoveryJson(buildAiCatalogDocument(SITE_ORIGIN)),
+    },
+    {
       relativePath: '.well-known/ai-catalog.json',
       contents: serializeDiscoveryJson(buildAiCatalogDocument(SITE_ORIGIN)),
     },

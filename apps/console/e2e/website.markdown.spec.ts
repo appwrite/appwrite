@@ -126,18 +126,23 @@ test.describe('markdown exports (read-only)', () => {
     expect(mcpBody.name).toBe('io.appwrite/mcp')
     expect(mcpBody.remotes?.[0]?.url).toContain('mcp.appwrite.io')
 
-    const catalog = await request.get('/.well-known/ai-catalog.json')
-    expect(catalog.status()).toBe(200)
-    expect(catalog.headers()['content-type']).toMatch(
-      /application\/(ai-catalog\+json|json)/,
-    )
-    const catalogBody = await catalog.json()
-    expect(catalogBody.entries?.[0]?.type).toBe(
-      'application/mcp-server-card+json',
-    )
-    expect(catalogBody.entries?.[0]?.url).toContain(
-      '/.well-known/mcp/server-card.json',
-    )
+    for (const path of [
+      '/.well-known/ard.json',
+      '/.well-known/ai-catalog.json',
+    ]) {
+      const catalog = await request.get(path)
+      expect(catalog.status()).toBe(200)
+      expect(catalog.headers()['content-type']).toMatch(JSON_CONTENT_TYPE)
+      expect(catalog.headers()['access-control-allow-origin']).toBe('*')
+      const catalogBody = await catalog.json()
+      expect(catalogBody.host?.displayName).toBe('Appwrite')
+      const entry = catalogBody.entries?.[0]
+      expect(entry?.identifier).toBe('urn:air:appwrite.io:mcp:appwrite')
+      expect(entry?.displayName).toBeTruthy()
+      expect(entry?.type).toBe('application/mcp-server-card+json')
+      expect(entry?.url).toContain('/.well-known/mcp/server-card.json')
+      expect(entry?.data).toBeUndefined()
+    }
 
     const skills = await request.get('/.well-known/agent-skills/index.json')
     expect(skills.status()).toBe(200)

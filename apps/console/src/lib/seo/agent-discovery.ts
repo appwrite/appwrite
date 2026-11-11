@@ -12,9 +12,11 @@ import { MCP_SERVER_NAME, MCP_SERVER_URL } from '../config/mcp.ts'
 export const APPWRITE_MCP_SERVER_CARD_PATH = '/.well-known/mcp/server-card.json'
 
 /**
- * Domain-level AI Catalog (current discovery flow). Points clients at the
+ * Agentic Resource Discovery (ARD v0.91) manifest. Points clients at the
  * Server Card URL rather than inlining the card.
  */
+export const APPWRITE_ARD_PATH = '/.well-known/ard.json'
+/** Pre-ARD path, still probed by scanners. */
 export const APPWRITE_AI_CATALOG_PATH = '/.well-known/ai-catalog.json'
 
 /** @deprecated Prefer {@link APPWRITE_MCP_SERVER_CARD_PATH}. */
@@ -46,8 +48,7 @@ export const MCP_SERVER_CARD_CONTENT_TYPE =
   'application/mcp-server-card+json; charset=utf-8'
 export const API_CATALOG_CONTENT_TYPE =
   'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"'
-export const AI_CATALOG_CONTENT_TYPE =
-  'application/ai-catalog+json; charset=utf-8'
+export const ARD_CONTENT_TYPE = 'application/json; charset=utf-8'
 
 /** CORS headers required by MCP Server Card / AI Catalog discovery. */
 export const DISCOVERY_CORS_HEADERS = {
@@ -210,11 +211,24 @@ export function buildMcpDiscoveryDocument(
 export function buildAiCatalogDocument(origin: string = 'https://appwrite.io') {
   return {
     specVersion: '1.0',
+    host: {
+      displayName: 'Appwrite',
+      identifier: 'did:web:appwrite.io',
+    },
     entries: [
       {
         identifier: 'urn:air:appwrite.io:mcp:appwrite',
+        displayName: 'Appwrite MCP Server',
         type: 'application/mcp-server-card+json',
         url: `${origin}${APPWRITE_MCP_SERVER_CARD_PATH}`,
+        description:
+          'Manage Appwrite projects, auth, databases, storage, functions, sites, and messaging from an AI agent.',
+        representativeQueries: [
+          'create a database table for my app',
+          'add email and OAuth sign-in to my app',
+          'deploy a serverless function',
+          'upload files to a storage bucket',
+        ],
       },
     ],
   }
