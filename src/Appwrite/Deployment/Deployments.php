@@ -35,6 +35,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
@@ -78,13 +79,17 @@ readonly class Deployments
      */
     public const array IN_FLIGHT_STATUSES = ['waiting', 'processing', 'building'];
 
+    private ?\Closure $locks;
+
     public function __construct(
         private Jobs $jobs,
         protected Database $dbForProject,
         protected Document $project,
         private array $platform,
         private BuildPublisher $publisherForBuilds,
+        ?callable $locks = null,
     ) {
+        $this->locks = $locks !== null ? $locks(...) : null;
     }
 
     /**
@@ -517,29 +522,53 @@ readonly class Deployments
             $others = $this->dbForProject->find('deployments', $queries);
 
             foreach ($others as $other) {
-                $canceled = static::canceledAttributes($other);
-                $updated = $this->dbForProject->updateDocuments(
-                    'deployments',
-                    new Document($canceled),
-                    [
-                        Query::equal('$id', [$other->getId()]),
-                        Query::equal('status', self::IN_FLIGHT_STATUSES),
-                    ],
-                );
+                $cancelOne = function () use ($other): ?Document {
+                    // Read inside the lock so concurrent Jobs log appends are not lost.
+                    $current = $this->dbForProject->getDocument('deployments', $other->getId());
+                    if ($current->isEmpty() || !\in_array($current->getAttribute('status'), self::IN_FLIGHT_STATUSES, true)) {
+                        return null;
+                    }
 
-                if ($updated === 0) {
+                    $canceled = static::canceledAttributes($current);
+                    $updated = $this->dbForProject->updateDocuments(
+                        'deployments',
+                        new Document($canceled),
+                        [
+                            Query::equal('$id', [$current->getId()]),
+                            Query::equal('status', self::IN_FLIGHT_STATUSES),
+                        ],
+                    );
+
+                    if ($updated === 0) {
+                        return null;
+                    }
+
+                    $current->setAttributes($canceled);
+
+                    return $current;
+                };
+
+                if ($this->locks !== null) {
+                    try {
+                        $canceledDoc = ($this->locks)(static::lock((string) $this->project->getSequence(), $other->getId()), 30, $cancelOne, 10.0);
+                    } catch (Contention) {
+                        $canceledDoc = $cancelOne();
+                    }
+                } else {
+                    $canceledDoc = $cancelOne();
+                }
+
+                if (!$canceledDoc instanceof Document) {
                     continue;
                 }
 
-                $other->setAttributes($canceled);
-
                 try {
-                    $this->cancel($other->getId());
+                    $this->cancel($canceledDoc->getId());
                 } catch (\Throwable) {
                     // Best-effort cleanup — the deployment is already marked 'canceled'.
                 }
 
-                $superseded[] = $other;
+                $superseded[] = $canceledDoc;
             }
 
             $cursor = \end($others) ?: null;

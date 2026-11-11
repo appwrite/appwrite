@@ -14,6 +14,7 @@ use Psr\Http\Message\ResponseInterface;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Query\Method;
 
 final class CancelSupersededTest extends TestCase
@@ -178,7 +179,7 @@ final class CancelSupersededTest extends TestCase
     public function testCancelSupersededSkipsNonVcsEmptyBranchAlreadyCanceledAndLostRaces(): void
     {
         $site = new Document(['$id' => 'site1', '$sequence' => '5', '$collection' => 'sites']);
-        $project = new Document(['$id' => 'proj1', 'region' => 'default']);
+        $project = new Document(['$id' => 'proj1', '$sequence' => '9', 'region' => 'default']);
 
         $findCalls = 0;
         $database = $this->createStub(Database::class);
@@ -188,6 +189,7 @@ final class CancelSupersededTest extends TestCase
                 new Document(['$id' => 'raced', '$sequence' => 1, 'status' => 'building']),
             ];
         });
+        $database->method('getDocument')->willReturn(new Document(['$id' => 'raced', '$sequence' => 1, 'status' => 'building']));
         $database->method('updateDocuments')->willReturn(0);
 
         $deletedJobPaths = [];
@@ -201,6 +203,92 @@ final class CancelSupersededTest extends TestCase
         $racedResult = $deployments->cancelSuperseded($site, new Document(['$id' => 'v3', '$sequence' => 2, 'type' => 'vcs', 'providerBranch' => 'main', 'status' => 'waiting']));
         $this->assertSame([], $racedResult, 'A deployment that finished before the guarded update must not be reported as canceled');
         $this->assertSame([], $deletedJobPaths);
+    }
+
+    public function testCancelSupersededAcquiresLockAndPreservesConcurrentLogAppends(): void
+    {
+        $site = new Document(['$id' => 'site1', '$sequence' => '5', '$collection' => 'sites']);
+        $project = new Document(['$id' => 'proj1', '$sequence' => '9', 'region' => 'default']);
+
+        $store = [
+            'd1' => new Document([
+                '$id' => 'd1',
+                '$sequence' => 1,
+                'resourceId' => 'site1',
+                'resourceType' => 'sites',
+                'type' => 'vcs',
+                'providerBranch' => 'main',
+                'status' => 'building',
+                'buildLogs' => "Step 1\n",
+            ]),
+            'd2' => new Document([
+                '$id' => 'd2',
+                '$sequence' => 2,
+                'resourceId' => 'site1',
+                'resourceType' => 'sites',
+                'type' => 'vcs',
+                'providerBranch' => 'main',
+                'status' => 'waiting',
+            ]),
+        ];
+
+        $database = $this->createInMemoryDatabase($store);
+        $acquiredKeys = [];
+        $locks = static function (string $key, int $ttl, callable $callback, float $timeout = 0.0) use (&$acquiredKeys, &$store): mixed {
+            $acquiredKeys[] = [$key, $ttl, $timeout];
+            // Simulate a Jobs log append finishing before the lock was granted.
+            $store['d1']->setAttribute('buildLogs', "Step 1\nStep 2 (concurrent append)\n");
+            return $callback();
+        };
+
+        $deletedJobPaths = [];
+        $deployments = $this->createDeploymentsService($database, $project, $deletedJobPaths, $locks);
+        $superseded = $deployments->cancelSuperseded($site, $store['d2']);
+
+        $this->assertCount(1, $superseded);
+        $this->assertSame([[Deployments::lock('9', 'd1'), 30, 10.0]], $acquiredKeys);
+        $this->assertStringContainsString('Step 2 (concurrent append)', (string) $store['d1']->getAttribute('buildLogs'));
+        $this->assertStringContainsString('Build has been canceled.', (string) $store['d1']->getAttribute('buildLogs'));
+    }
+
+    public function testCancelSupersededFallsBackWhenLockContends(): void
+    {
+        $site = new Document(['$id' => 'site1', '$sequence' => '5', '$collection' => 'sites']);
+        $project = new Document(['$id' => 'proj1', '$sequence' => '9', 'region' => 'default']);
+
+        $store = [
+            'd1' => new Document([
+                '$id' => 'd1',
+                '$sequence' => 1,
+                'resourceId' => 'site1',
+                'resourceType' => 'sites',
+                'type' => 'vcs',
+                'providerBranch' => 'main',
+                'status' => 'building',
+            ]),
+            'd2' => new Document([
+                '$id' => 'd2',
+                '$sequence' => 2,
+                'resourceId' => 'site1',
+                'resourceType' => 'sites',
+                'type' => 'vcs',
+                'providerBranch' => 'main',
+                'status' => 'waiting',
+            ]),
+        ];
+
+        $database = $this->createInMemoryDatabase($store);
+        $locks = static function (): mixed {
+            throw new Contention('Lock timed out');
+        };
+
+        $deletedJobPaths = [];
+        $deployments = $this->createDeploymentsService($database, $project, $deletedJobPaths, $locks);
+        $superseded = $deployments->cancelSuperseded($site, $store['d2']);
+
+        $this->assertCount(1, $superseded);
+        $this->assertSame('canceled', $store['d1']->getAttribute('status'));
+        $this->assertSame(['/v1/jobs/' . Deployments::id('proj1', 'd1')], $deletedJobPaths);
     }
 
     public function testCancelSupersededContinuesIfBackendJobCancellationThrows(): void
@@ -270,7 +358,7 @@ final class CancelSupersededTest extends TestCase
     /**
      * @param array<int, string> $deletedJobPaths
      */
-    private function createDeploymentsService(Database $database, Document $project, array &$deletedJobPaths): Deployments
+    private function createDeploymentsService(Database $database, Document $project, array &$deletedJobPaths, ?callable $locks = null): Deployments
     {
         $client = $this->createStub(ClientInterface::class);
         $client->method('sendRequest')->willReturnCallback(function (RequestInterface $request) use (&$deletedJobPaths): ResponseInterface {
@@ -288,6 +376,7 @@ final class CancelSupersededTest extends TestCase
             $project,
             ['apiHostname' => 'localhost'],
             $this->createStub(BuildPublisher::class),
+            $locks,
         );
     }
 
@@ -329,6 +418,10 @@ final class CancelSupersededTest extends TestCase
             }
 
             return $result;
+        });
+
+        $database->method('getDocument')->willReturnCallback(static function (string $collection, string $id) use (&$store): Document {
+            return isset($store[$id]) ? clone $store[$id] : new Document();
         });
 
         $database->method('updateDocuments')->willReturnCallback(static function (string $collection, Document $update, array $queries) use (&$store, $matches): int {
