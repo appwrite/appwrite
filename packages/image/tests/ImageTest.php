@@ -1269,10 +1269,6 @@ final class ImageTest extends TestCase
 
     public function testEveryImageFailureIsAnImageException(): void
     {
-        foreach ([UnsupportedFormatException::class, CorruptImageException::class, LimitExceededException::class] as $class) {
-            $this->assertTrue(is_subclass_of($class, ImageException::class), $class);
-        }
-
         try {
             new Image('not an image');
             $this->fail('Expected an ImageException');

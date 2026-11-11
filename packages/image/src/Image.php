@@ -250,7 +250,7 @@ class Image
     {
         try {
             new ImagickPixel($color);
-        } catch (\ImagickException | \ImagickPixelException) {
+        } catch (\ImagickPixelException) {
             throw new \InvalidArgumentException('Invalid color: ' . $color);
         }
     }
@@ -451,7 +451,10 @@ class Image
      */
     public function setBackground($color): static
     {
-        self::validateColor((string) $color);
+        if (! \is_string($color)) {
+            throw new \InvalidArgumentException('Invalid color: ' . \get_debug_type($color));
+        }
+        self::validateColor($color);
 
         try {
             $this->image->setImageBackgroundColor($color);

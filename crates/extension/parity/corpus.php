@@ -136,12 +136,27 @@ foreach (glob("$out/valid/*") as $path) {
         // Mostly in the first 4 kB, where the headers a decoder trusts are.
         $at = fn () => mt_rand(0, 3) ? mt_rand(4, min($length, 4096) - 1) : mt_rand(4, $length - 1);
         switch ($n % 6) {
-            case 0: $bytes = substr($bytes, 0, mt_rand(8, $length - 1)); break;
-            case 1: foreach (range(1, mt_rand(1, 8)) as $_) { $bytes[$at()] = chr(mt_rand(0, 255)); } break;
-            case 2: $start = $at(); $bytes = substr_replace($bytes, str_repeat(mt_rand(0, 1) ? "\xff" : "\0", mt_rand(1, 16)), $start, 0); break;
-            case 3: $start = $at(); $size = mt_rand(2, 64); $bytes = substr_replace($bytes, str_repeat(chr(mt_rand(0, 255)), $size), $start, $size); break;
-            case 4: $start = $at(); $bytes = substr($bytes, 0, $start) . substr($bytes, $start + mt_rand(1, 512)); break;
-            case 5: $start = $at(); foreach (range(0, 3) as $offset) { if ($start + $offset < $length) { $bytes[$start + $offset] = "\xff"; } } break;
+            case 0: $bytes = substr($bytes, 0, mt_rand(8, $length - 1));
+                break;
+            case 1: foreach (range(1, mt_rand(1, 8)) as $_) {
+                $bytes[$at()] = chr(mt_rand(0, 255));
+            } break;
+            case 2: $start = $at();
+                $bytes = substr_replace($bytes, str_repeat(mt_rand(0, 1) ? "\xff" : "\0", mt_rand(1, 16)), $start, 0);
+                break;
+            case 3: $start = $at();
+                $size = mt_rand(2, 64);
+                $bytes = substr_replace($bytes, str_repeat(chr(mt_rand(0, 255)), $size), $start, $size);
+                break;
+            case 4: $start = $at();
+                $bytes = substr($bytes, 0, $start) . substr($bytes, $start + mt_rand(1, 512));
+                break;
+            case 5: $start = $at();
+                foreach (range(0, 3) as $offset) {
+                    if ($start + $offset < $length) {
+                        $bytes[$start + $offset] = "\xff";
+                    }
+                } break;
         }
         file_put_contents(sprintf('%s/broken/%s-%02d.%s', $out, $stem, $n, $extension), $bytes);
         $count++;
