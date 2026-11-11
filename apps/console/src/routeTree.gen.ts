@@ -25,6 +25,7 @@ import { Route as IndexDotmdRouteImport } from './routes/index[.]md'
 import { Route as IntegrationsDotmdRouteImport } from './routes/integrations[.]md'
 import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as PricingDotmdRouteImport } from './routes/pricing[.]md'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -562,6 +563,11 @@ const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
   id: '/llms.txt',
   path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingDotmdRoute = PricingDotmdRouteImport.update({
+  id: '/pricing.md',
+  path: '/pricing.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
@@ -3475,6 +3481,7 @@ export interface FileRoutesByFullPath {
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/pricing.md': typeof PricingDotmdRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -3949,6 +3956,7 @@ export interface FileRoutesByTo {
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/pricing.md': typeof PricingDotmdRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -4377,6 +4385,7 @@ export interface FileRoutesById {
   '/integrations.md': typeof IntegrationsDotmdRoute
   '/llms-full.txt': typeof LlmsFullDottxtRoute
   '/llms.txt': typeof LlmsDottxtRoute
+  '/pricing.md': typeof PricingDotmdRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -4856,6 +4865,7 @@ export interface FileRouteTypes {
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/pricing.md'
     | '/robots.txt'
     | '/setup.md'
     | '/sitemap.xml'
@@ -5330,6 +5340,7 @@ export interface FileRouteTypes {
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/pricing.md'
     | '/robots.txt'
     | '/setup.md'
     | '/sitemap.xml'
@@ -5757,6 +5768,7 @@ export interface FileRouteTypes {
     | '/integrations.md'
     | '/llms-full.txt'
     | '/llms.txt'
+    | '/pricing.md'
     | '/robots.txt'
     | '/setup.md'
     | '/sitemap.xml'
@@ -6238,6 +6250,7 @@ export interface RootRouteChildren {
   IntegrationsDotmdRoute: typeof IntegrationsDotmdRoute
   LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
+  PricingDotmdRoute: typeof PricingDotmdRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -6383,6 +6396,13 @@ declare module '@tanstack/react-router' {
       path: '/llms.txt'
       fullPath: '/llms.txt'
       preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing.md': {
+      id: '/pricing.md'
+      path: '/pricing.md'
+      fullPath: '/pricing.md'
+      preLoaderRoute: typeof PricingDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/robots.txt': {
@@ -11646,6 +11666,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsDotmdRoute: IntegrationsDotmdRoute,
   LlmsFullDottxtRoute: LlmsFullDottxtRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
+  PricingDotmdRoute: PricingDotmdRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

@@ -40,6 +40,11 @@ const MARKDOWN_PAGES: Array<{
     path: '/integrations/ai-openai.md',
     contains: [/^---\n/, /layout: integration/],
   },
+  {
+    name: 'pricing',
+    path: '/pricing.md',
+    contains: [/^# Appwrite Cloud pricing/, /### Pro: From \$25\/month/],
+  },
 ]
 
 test.describe('markdown exports (read-only)', () => {
