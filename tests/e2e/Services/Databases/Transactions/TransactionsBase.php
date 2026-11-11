@@ -700,6 +700,15 @@ trait TransactionsBase
             $collections[$name] = $collection['body']['$id'];
         }
 
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collections['parents'], 'string', null), $headers, [
+                'key' => 'name',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->waitForAllAttributes($databaseId, $collections['parents']);
+        }
+
         $relationship = $this->client->call(
             Client::METHOD_POST,
             $this->getSchemaUrl($databaseId, $collections['children']) . '/relationship',
@@ -722,7 +731,7 @@ trait TransactionsBase
             $headers,
             [
                 $this->getRecordIdParam() => $parentId,
-                'data' => [],
+                'data' => ['name' => 'parent'],
             ]
         );
         $this->assertEquals(201, $parent['headers']['status-code']);
