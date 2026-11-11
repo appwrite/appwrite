@@ -106,26 +106,6 @@ export function GitSilentModeCard({
     },
   ] as const
 
-  // Only explain the result when it differs from the default, where the switches already say it
-  const summary =
-    settings.autoDeploy && settings.comments && settings.commitStatus
-      ? ''
-      : !settings.autoDeploy
-        ? settings.commitStatus
-          ? t(
-              'Pushes do nothing. Manual deployments from Git report their status on the commit.',
-            )
-          : t('Pushes do nothing. Deploy manually from Create deployment.')
-        : [
-            t('Every matching push builds'),
-            settings.commitStatus
-              ? t('its commit shows the build status')
-              : t('commits show no status'),
-            settings.comments
-              ? t('pull requests get a build comment')
-              : t('pull requests stay quiet'),
-          ].join(', ') + '.'
-
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
@@ -137,7 +117,7 @@ export function GitSilentModeCard({
         </p>
       </div>
       <div className="border-t border-border" />
-      <div className="px-6 py-4 space-y-3">
+      <div className="px-6 py-4">
         <div className="rounded-lg border border-border bg-background divide-y divide-border">
           {rows.map((row) => {
             const Icon = row.icon
@@ -171,9 +151,6 @@ export function GitSilentModeCard({
             )
           })}
         </div>
-        {summary && (
-          <p className="text-[12px] text-muted-foreground">{summary}</p>
-        )}
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">
         <Button
