@@ -1,7 +1,8 @@
 import { createMiddleware } from '@tanstack/react-start'
 import {
-  AI_CATALOG_CONTENT_TYPE,
   APPWRITE_AI_CATALOG_PATH,
+  APPWRITE_ARD_PATH,
+  ARD_CONTENT_TYPE,
   APPWRITE_AGENT_SKILLS_DISCOVERY_PATH,
   APPWRITE_API_CATALOG_PATH,
   API_CATALOG_CONTENT_TYPE,
@@ -25,8 +26,12 @@ const DISCOVERY_HANDLERS: Record<
     contentType: MCP_SERVER_CARD_CONTENT_TYPE,
     body: () => serializeDiscoveryJson(buildMcpServerCard()),
   },
+  [APPWRITE_ARD_PATH]: {
+    contentType: ARD_CONTENT_TYPE,
+    body: () => serializeDiscoveryJson(buildAiCatalogDocument()),
+  },
   [APPWRITE_AI_CATALOG_PATH]: {
-    contentType: AI_CATALOG_CONTENT_TYPE,
+    contentType: ARD_CONTENT_TYPE,
     body: () => serializeDiscoveryJson(buildAiCatalogDocument()),
   },
   [APPWRITE_API_CATALOG_PATH]: {
