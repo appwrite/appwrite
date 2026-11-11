@@ -19,6 +19,17 @@ export function getPlatformIdentifier(
   return ''
 }
 
+/** Web platform hostname that accepts requests from every website. */
+export const WILDCARD_HOSTNAME = '*'
+
+export function isWildcardHostname(hostname: string): boolean {
+  return hostname.trim() === WILDCARD_HOSTNAME
+}
+
+export function isWildcardPlatform(platform: ProjectPlatform): boolean {
+  return 'hostname' in platform && isWildcardHostname(platform.hostname)
+}
+
 export function getPlatformSearchText(platform: ProjectPlatform): string {
   return [platform.name, getPlatformIdentifier(platform), platform.type]
     .filter(Boolean)
