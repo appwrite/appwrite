@@ -48,6 +48,7 @@ const DNS_RECORD_DESCRIPTIONS: Record<string, string> = {
 }
 
 const DEFAULT_TTL = 3600
+const DEFAULT_MX_PRIORITY = 10
 
 interface CreateRecordDialogProps {
   open: boolean
@@ -115,7 +116,12 @@ export function CreateRecordDialog({
       name: name.trim(),
       value: value.trim(),
       ttl: parsedTtl ?? DEFAULT_TTL,
-      priority: type === 'MX' || type === 'SRV' ? parsedPriority : undefined,
+      priority:
+        type === 'MX'
+          ? (parsedPriority ?? DEFAULT_MX_PRIORITY)
+          : type === 'SRV'
+            ? parsedPriority
+            : undefined,
       weight: type === 'SRV' ? parsedWeight : undefined,
       port: type === 'SRV' ? parsedPort : undefined,
       comment: comment.trim() || undefined,
@@ -248,7 +254,9 @@ export function CreateRecordDialog({
                       type="number"
                       value={priority}
                       onChange={(e) => setPriority(e.target.value)}
-                      placeholder={type === 'MX' ? '10' : '0'}
+                      placeholder={
+                        type === 'MX' ? DEFAULT_MX_PRIORITY.toString() : '0'
+                      }
                       min="0"
                       max={RECORD_NUMBER_MAX}
                       disabled={isLoading}

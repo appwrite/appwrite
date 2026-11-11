@@ -552,7 +552,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No organizations found': '組織が見つかりません',
   'Light theme': 'ライトテーマ',
   'Dark theme': 'ダークテーマ',
-  'System theme': 'システムテーマ',
   // Refresh toasts (default label)
   'data refreshed successfully': 'データを更新しました',
   'Failed to refresh data': 'データの更新に失敗しました',
@@ -564,7 +563,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Focus search': '検索にフォーカス',
   'Set theme to light': 'ライトテーマに設定',
   'Set theme to dark': 'ダークテーマに設定',
-  'Set theme to system': 'システムテーマに設定',
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'ターミナルの表示を切り替え',
   'Enter full screen': '全画面表示',
@@ -1313,6 +1311,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 が本日 Product Hunt でローンチ',
   'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
   'Share your take': 'フィードバックを送る',
+  'Just launched': '新登場',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'Appwrite の MCP1：すべての MCP サーバーを 1 つの URL で',
+  'MCP1 by Appwrite is live': 'Appwrite の MCP1 が登場',
+  'Try MCP1': 'MCP1 を試す',
   'Created by': '作成者',
   'Authorized resources': '認可済みリソース',
   'No scopes granted': '付与されたスコープはありません',

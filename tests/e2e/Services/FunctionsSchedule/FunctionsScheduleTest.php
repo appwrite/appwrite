@@ -367,6 +367,25 @@ final class FunctionsScheduleTest extends Scope
         $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
         $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
 
+        // The stored schedule is client-readable, so it must not carry the server-minted ephemeral API key or
+        // user JWT. The worker re-mints both when the schedule fires; only the client IP is kept.
+        $schedules = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getProject()['$id'] . '/schedules', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]);
+        $this->assertEquals(200, $schedules['headers']['status-code']);
+        $scheduled = \array_values(\array_filter(
+            $schedules['body']['schedules'],
+            fn (array $schedule): bool => ($schedule['resourceId'] ?? '') === $executionId,
+        ));
+        $this->assertCount(1, $scheduled);
+        $storedHeaders = $scheduled[0]['data']['headers'] ?? [];
+        $this->assertArrayNotHasKey('x-appwrite-key', $storedHeaders);
+        $this->assertArrayNotHasKey('x-appwrite-user-jwt', $storedHeaders);
+        $this->assertArrayHasKey('x-appwrite-client-ip', $storedHeaders);
+        $this->assertEquals('custom-value', $storedHeaders['x-custom-header'] ?? null);
+
         $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);
 

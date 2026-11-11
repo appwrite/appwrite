@@ -98,6 +98,7 @@ $admins = [
     'monitors.read',
     'monitors.write',
     'alerts.read',
+    'alerts.write',
     'project.read',
     'project.write',
     'usage.read',

@@ -71,6 +71,7 @@ class XList extends Action
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', $currentId === $session->getId());
+            $session->setAttribute('userName', $targetUser->getAttribute('name', ''));
             $session->setAttribute('secret', $session->getAttribute('secret', ''));
 
             $sessions[$key] = $session;

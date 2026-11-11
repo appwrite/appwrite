@@ -3,6 +3,8 @@
 namespace Utopia\Http;
 
 use Utopia\Compression\Algorithms\Brotli;
+use Utopia\Compression\Algorithms\Deflate;
+use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 
@@ -292,7 +294,22 @@ abstract class Response
 
     protected int $compressionMinSize = Http::COMPRESSION_MIN_SIZE_DEFAULT;
 
-    protected mixed $compressionSupported = [];
+    /**
+     * @var array<mixed>
+     */
+    protected array $compressionSupported = [];
+
+    /**
+     * Incremental gzip or deflate context a streamed body was negotiated to
+     */
+    private ?\DeflateContext $deflateEncoder = null;
+
+    /**
+     * Incremental brotli context a streamed body was negotiated to
+     *
+     * @var resource|null
+     */
+    private mixed $brotliEncoder = null;
 
     /**
      * Response constructor.
@@ -342,8 +359,10 @@ abstract class Response
 
     /**
      * Set supported compression algorithms
+     *
+     * @param  array<mixed>  $compressionSupported
      */
-    public function setCompressionSupported(mixed $compressionSupported): static
+    public function setCompressionSupported(array $compressionSupported): static
     {
         $this->compressionSupported = $compressionSupported;
 
@@ -699,6 +718,116 @@ abstract class Response
             $this->sent = true;
             $this->end();
         }
+    }
+
+    /**
+     * Stream
+     *
+     * Like chunk(), but compresses the body where send() would. Each chunk is flushed, so the client can decode it on arrival.
+     *
+     * @return bool False if the chunk cannot be sent, such as request ended by client
+     */
+    public function stream(string $body, bool $end = false): bool
+    {
+        if ($this->sent) {
+            return false;
+        }
+
+        // Headers wait for the first bytes, so a stream that never carries any stays unencoded
+        if ($body === '' && !$end) {
+            return true;
+        }
+
+        if (!$this->headersSent) {
+            if ($body !== '') {
+                $this->negotiate();
+            }
+
+            $this->addHeader('X-Debug-Speed', (string) (microtime(true) - $this->startTime));
+            $this
+                ->appendCookies()
+                ->appendHeaders();
+
+            $this->size += $this->headersSize();
+            $this->headersSent = true;
+        }
+
+        if ($this->disablePayload) {
+            if ($end) {
+                $this->sent = true;
+                $this->end();
+            }
+
+            return true;
+        }
+
+        $body = match (true) {
+            $this->brotliEncoder !== null => \brotli_compress_add($this->brotliEncoder, $body, $end ? BROTLI_FINISH : BROTLI_FLUSH),
+            $this->deflateEncoder !== null => \deflate_add($this->deflateEncoder, $body, $end ? ZLIB_FINISH : ZLIB_SYNC_FLUSH),
+            default => $body,
+        };
+
+        if ($body === false) {
+            return false;
+        }
+
+        if ($end) {
+            $this->sent = true;
+            $this->disablePayload();
+            $this->size += \strlen($body);
+            $this->end($body === '' ? null : $body);
+
+            return true;
+        }
+
+        if (!$this->write($body)) {
+            return false;
+        }
+
+        $this->size += \strlen($body);
+
+        return true;
+    }
+
+    /**
+     * Picks the encoding send() would, among those that compress incrementally, without its minimum size: a stream's length is unknown.
+     */
+    private function negotiate(): void
+    {
+        if ($this->hasHeader('Content-Encoding') || $this->acceptEncoding === '' || !$this->isCompressible($this->contentType)) {
+            return;
+        }
+
+        // Only the encoders with an incremental API (zstd's is too new to rely on); the library fills in the rest of what is supported
+        $accepted = \array_filter(\explode(',', $this->acceptEncoding), fn (string $encoding): bool => match (\strtolower(\trim(\explode(';', $encoding)[0]))) {
+            Compression::ZSTD => false,
+            'br', Compression::BROTLI => \function_exists('brotli_compress_init'),
+            default => true,
+        });
+
+        $algorithm = Compression::fromAcceptEncoding(\implode(',', $accepted), $this->compressionSupported);
+
+        $encoder = match (true) {
+            $algorithm instanceof Brotli => \brotli_compress_init(Http::COMPRESSION_BROTLI_LEVEL_DEFAULT),
+            $algorithm instanceof GZIP => \deflate_init(ZLIB_ENCODING_GZIP),
+            $algorithm instanceof Deflate => \deflate_init(ZLIB_ENCODING_RAW),
+            default => false,
+        };
+
+        if (!$algorithm instanceof Compression || $encoder === false) {
+            return;
+        }
+
+        if ($encoder instanceof \DeflateContext) {
+            $this->deflateEncoder = $encoder;
+        } else {
+            $this->brotliEncoder = $encoder;
+        }
+
+        $this->removeHeader('Content-Length');
+        $this->addHeader('Content-Encoding', $algorithm->getContentEncoding());
+        $this->addHeader('X-Utopia-Compression', 'true');
+        $this->addHeader('Vary', 'Accept-Encoding');
     }
 
     private function headersSize(): int

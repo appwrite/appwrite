@@ -335,6 +335,7 @@
         "PATCH /v1/account/prefs",
         "PATCH /v1/account/sessions/:sessionId",
         "PATCH /v1/account/status",
+        "PATCH /v1/alerts/:alertId",
         "PATCH /v1/databases/:databaseId/collections/:collectionId/attributes/bigint/:key",
         "PATCH /v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key",
         "PATCH /v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key",
@@ -431,6 +432,8 @@
         "PATCH /v1/project/oauth2/tradeshiftBox",
         "PATCH /v1/project/oauth2/twitch",
         "PATCH /v1/project/oauth2/webflow",
+        "PATCH /v1/project/oauth2/vipps",
+        "PATCH /v1/project/oauth2/vippsSandbox",
         "PATCH /v1/project/oauth2/wordpress",
         "PATCH /v1/project/oauth2/x",
         "PATCH /v1/project/oauth2/yahoo",
@@ -465,6 +468,9 @@
         "PATCH /v1/projects/:projectId/oauth2",
         "PATCH /v1/projects/:projectId/stages/:stageId",
         "PATCH /v1/projects/:projectId/team",
+        "PATCH /v1/proxy/rules/:ruleId/function",
+        "PATCH /v1/proxy/rules/:ruleId/redirect",
+        "PATCH /v1/proxy/rules/:ruleId/site",
         "PATCH /v1/proxy/rules/:ruleId/status",
         "PATCH /v1/reviews/:reviewId/status",
         "PATCH /v1/reviews/:reviewId/tier",
@@ -750,7 +756,12 @@
         "PUT /v1/vectorsdb/:databaseId/collections/:collectionId",
         "PUT /v1/vectorsdb/:databaseId/collections/:collectionId/documents",
         "PUT /v1/vectorsdb/:databaseId/collections/:collectionId/documents/:documentId",
-        "PUT /v1/webhooks/:webhookId"
+        "PUT /v1/webhooks/:webhookId",
+        "DELETE /v1/account/devices/:deviceId",
+        "GET /v1/account/devices/:deviceId",
+        "PATCH /v1/account/devices/:deviceId/session",
+        "PATCH /v1/project/policies/account-devices",
+        "POST /v1/account/devices"
     ],
     "findings": [
         {

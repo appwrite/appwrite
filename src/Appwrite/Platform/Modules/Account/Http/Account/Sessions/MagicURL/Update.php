@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\MagicURL;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Geo\Geo;
 use Appwrite\Messaging\Adapter\Mqtt;
@@ -70,8 +71,8 @@ class Update extends Base
                 ),
             ))
             ->label('abuse', [
-                Limit::failures(['url', 'ip', 'param.userId'], 10),
-                Limit::failures(['projectId', 'url', 'param.userId'], 10),
+                Limit::failures(['url', 'ip', 'param.userId'], 10, everyone: true),
+                Limit::failures(['projectId', 'url', 'param.userId'], 10, everyone: true),
                 Limit::failures(['projectId', 'url', 'ip'], 100),
             ])
             ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
@@ -93,6 +94,8 @@ class Update extends Base
             ->inject('authorization')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('authDevice')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
@@ -116,9 +119,11 @@ class Update extends Base
         Authorization $authorization,
         Mqtt $mqtt,
         Realtime $queueForRealtime,
+        ?Document $authDevice,
+        DeletePublisher $publisherForDeletes,
     ): void {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $this->createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt, $queueForRealtime);
+        $this->createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt, $queueForRealtime, $authDevice, $publisherForDeletes);
     }
 }

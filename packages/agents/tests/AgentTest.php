@@ -229,6 +229,23 @@ class AgentTest extends TestCase
         }
     }
 
+    public function testOutputExceptionCarriesUsageOfEveryStep(): void
+    {
+        $model = new Model([
+            $this->calls([new ToolCall('call_1', 'weather', ['city' => 'Oslo'])]),
+            $this->text('not json', input: 30, output: 7),
+        ]);
+        $agent = (new Agent($model))->addTool($this->weather())->setSchema(Schema::object([]));
+
+        try {
+            $agent->generate('Weather?');
+            $this->fail('Expected an output exception');
+        } catch (Output $error) {
+            $this->assertSame(31, $error->usage->input);
+            $this->assertSame(8, $error->usage->output);
+        }
+    }
+
     public function testNonJsonStructuredOutputThrows(): void
     {
         $model = new Model([$this->text('not json')]);

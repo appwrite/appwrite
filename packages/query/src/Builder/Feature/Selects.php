@@ -60,6 +60,11 @@ interface Selects
 
     public function build(): Statement;
 
+    /**
+     * The built query with its bindings inlined, for logs and debugging only.
+     * Never execute it: values are escaped without knowing the connection's
+     * charset or SQL mode, which only bound parameters are safe against.
+     */
     public function toRawSql(): string;
 
     /**
