@@ -182,4 +182,18 @@ final class ParserTest extends TestCase
         $this->expectException(ProtocolException::class);
         $parser->next();
     }
+
+    public function testCompleteLineIsReportedOnlyOnceItHasArrived(): void
+    {
+        $parser = $this->createParser("PING\r\nPONG\r\nMSG foo 1");
+
+        $this->assertFalse($parser->hasCompleteLine(), 'Nothing has been read yet');
+
+        $parser->next();
+        $this->assertTrue($parser->hasCompleteLine());
+
+        $parser->next();
+        $this->assertFalse($parser->hasCompleteLine(), 'A partial line is buffered data, not a line');
+        $this->assertTrue($parser->hasBufferedData());
+    }
 }

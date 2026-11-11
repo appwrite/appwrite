@@ -342,6 +342,7 @@ final class JetStream
         $sub = $this->conn->subscribe($inbox . '.*');
 
         try {
+            $this->conn->settle();
             foreach ($chunk as $index => $message) {
                 /** @var array{subject: string, data?: string, headers?: Headers, msgId?: string, expectedLastMsgId?: string, expectedLastSeq?: int, expectedLastSubjectSeq?: int, expectedStream?: string, ttl?: int|string} $message */
                 $this->conn->publish(

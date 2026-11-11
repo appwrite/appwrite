@@ -8,7 +8,7 @@ use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Exception\TlsException;
 
-final class TlsTransport implements Transport
+final class TlsTransport implements Pollable, Transport
 {
     /** @var resource|null */
     private $stream;
@@ -147,6 +147,25 @@ final class TlsTransport implements Transport
     public function isConnected(): bool
     {
         return \is_resource($this->stream) && !feof($this->stream);
+    }
+
+    public function poll(): bool
+    {
+        if (!\is_resource($this->stream)) {
+            return true;
+        }
+        if (stream_get_meta_data($this->stream)['unread_bytes'] > 0) {
+            return true;
+        }
+
+        // A peek rather than stream_select(): select() fails outright on a
+        // descriptor numbered at or above FD_SETSIZE.
+        stream_set_blocking($this->stream, false);
+        try {
+            return @stream_socket_recvfrom($this->stream, 1, STREAM_PEEK) !== false;
+        } finally {
+            stream_set_blocking($this->stream, true);
+        }
     }
 
     public function close(): void

@@ -13,6 +13,7 @@ use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\PermissionException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Tests\Support\FakeTransport;
+use Utopia\NATS\Tests\Support\ShortWriteStream;
 use Utopia\NATS\Transport\TcpTransport;
 use Utopia\NATS\Transport\TlsTransport;
 use Utopia\NATS\Transport\WebSocketTransport;
@@ -51,7 +52,6 @@ final class ConnectionDeathDetectionTest extends TestCase
         ], $extra)));
     }
 
-    // --- -ERR classification (pure) ---
     /**
      * @return \Iterator<int<0, max>, array{string, bool}>
      */
@@ -107,8 +107,6 @@ final class ConnectionDeathDetectionTest extends TestCase
     {
         $this->assertSame($expected, Connection::reconnectsAfter($message));
     }
-
-    // --- Finding: reconnect on a connection-closing -ERR ---
 
     public function testConnectionClosingErrorTriggersReconnect(): void
     {
@@ -219,8 +217,6 @@ final class ConnectionDeathDetectionTest extends TestCase
 
         $conn->close();
     }
-
-    // --- Finding: keepalive independent of the caller ---
 
     public function testTickSendsKeepalivePingWhenDue(): void
     {
@@ -333,7 +329,6 @@ final class ConnectionDeathDetectionTest extends TestCase
         $conn->close();
     }
 
-
     public function testTickCollectsItsOwnPongsSoAHealthyConnectionSurvives(): void
     {
         $fake = new FakeTransport();
@@ -423,7 +418,6 @@ final class ConnectionDeathDetectionTest extends TestCase
         );
     }
 
-    // --- Finding: transports must not raise TypeError on a closed stream ---
     /**
      * @return \Iterator<int<0, max>, array{class-string}>
      */
@@ -551,65 +545,5 @@ final class ConnectionDeathDetectionTest extends TestCase
         fclose($stream);
 
         return $transport;
-    }
-}
-
-/**
- * A stream that accepts one byte per write, so a transport's short-write loop is
- * guaranteed more than one pass, and that runs a callback after the first of
- * them -- the seam a concurrent close() would land in.
- */
-final class ShortWriteStream
-{
-    /** Fired once, after the first write, to stand in for the racing close(). */
-    public static ?\Closure $afterFirstWrite = null;
-
-    /** @var resource|null Set by PHP for stream context; unused here. */
-    public $context;
-
-    private int $writes = 0;
-
-    public function stream_open(): bool
-    {
-        return true;
-    }
-
-    public function stream_write(string $data): int
-    {
-        $this->writes++;
-
-        // PHP drives stream_write() in a loop inside one fwrite() call until
-        // everything is accepted, so accepting a byte and then refusing is what
-        // makes fwrite() itself return short -- which is the only thing the
-        // transport's own loop responds to.
-        if ($this->writes > 1) {
-            return 0;
-        }
-
-        if (self::$afterFirstWrite instanceof \Closure) {
-            $callback = self::$afterFirstWrite;
-            self::$afterFirstWrite = null;
-            $callback();
-        }
-
-        return min(1, \strlen($data));
-    }
-
-    public function stream_eof(): bool
-    {
-        return false;
-    }
-
-    /** @return array<int|string, int> */
-    public function stream_stat(): array
-    {
-        return [];
-    }
-
-    // PHP passes three arguments; none of them matter to a stream that only has
-    // to accept a timeout being set on it.
-    public function stream_set_option(): bool
-    {
-        return true;
     }
 }

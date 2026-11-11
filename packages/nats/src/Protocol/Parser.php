@@ -24,6 +24,12 @@ final class Parser
         return $this->buffer !== '';
     }
 
+    /** Whether a whole protocol line is buffered, so the next operation can start without a transport read. */
+    public function hasCompleteLine(): bool
+    {
+        return str_contains($this->buffer, "\n");
+    }
+
     /**
      * Read and parse the next server operation.
      *

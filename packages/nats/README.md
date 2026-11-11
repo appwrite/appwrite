@@ -72,6 +72,13 @@ TLS handshake or a server at its connection limit fails on the first pass. No pa
 and a pause that would end past that point is not taken, so a `connectRetryWait` longer than
 `connectTimeout` leaves a single pass. Set `connectAttempts: 1` for a single pass.
 
+A connection held unread between calls, such as a pooled one, can be closed by the server
+meanwhile: a server entering lame-duck mode sends it an `INFO` and then closes it. `request()`,
+`requestBatch()`, `requestMany()`, `flush()`, `Consumer::fetch()` and `JetStream::publishMany()`
+first act on whatever the server has already sent, so they reconnect before writing rather
+than writing into the closed socket. Call `settle()` to do the same before your own
+write-then-read. Custom transports opt in by implementing `Transport\Pollable`.
+
 ### Publishing
 
 ```php

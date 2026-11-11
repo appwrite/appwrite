@@ -19,7 +19,7 @@ use Utopia\NATS\Exception\TlsException;
  * Requires ext-swoole; the base package does not depend on it. Wire it in via
  * ConnectionOptions::$transportFactory.
  */
-final class SwooleTransport implements Transport
+final class SwooleTransport implements Pollable, Transport
 {
     private ?Client $client = null;
 
@@ -109,6 +109,24 @@ final class SwooleTransport implements Transport
     public function isConnected(): bool
     {
         return $this->client instanceof \Swoole\Coroutine\Client && $this->client->isConnected();
+    }
+
+    public function poll(): bool
+    {
+        if ($this->buffer !== '') {
+            return true;
+        }
+        if (!$this->client instanceof Client) {
+            return true;
+        }
+
+        // peek() never yields: it is a MSG_PEEK recv on the non-blocking socket.
+        // '' is the peer's close, which a read reports at once.
+        if ($this->client->peek(1) !== false) {
+            return true;
+        }
+
+        return \defined('SOCKET_EAGAIN') && $this->client->errCode !== SOCKET_EAGAIN;
     }
 
     public function close(): void

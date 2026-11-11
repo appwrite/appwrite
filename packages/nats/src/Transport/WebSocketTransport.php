@@ -14,7 +14,7 @@ use Utopia\NATS\Exception\TimeoutException;
  * are masked as the spec requires; server-to-client frames are not. read()/readLine()
  * serve the client the un-framed NATS byte stream from an internal buffer.
  */
-final class WebSocketTransport implements Transport
+final class WebSocketTransport implements Pollable, Transport
 {
     /** @var resource|null */
     private $stream;
@@ -109,6 +109,23 @@ final class WebSocketTransport implements Transport
     public function isConnected(): bool
     {
         return \is_resource($this->stream) && !feof($this->stream);
+    }
+
+    public function poll(): bool
+    {
+        if ($this->buffer !== '' || !\is_resource($this->stream)) {
+            return true;
+        }
+        if (stream_get_meta_data($this->stream)['unread_bytes'] > 0) {
+            return true;
+        }
+
+        stream_set_blocking($this->stream, false);
+        try {
+            return @stream_socket_recvfrom($this->stream, 1, STREAM_PEEK) !== false;
+        } finally {
+            stream_set_blocking($this->stream, true);
+        }
     }
 
     public function close(): void
