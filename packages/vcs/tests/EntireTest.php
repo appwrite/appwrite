@@ -2,6 +2,9 @@
 
 namespace Utopia\VCS\Tests;
 
+use Exception;
+use Iterator;
+use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
@@ -19,7 +22,7 @@ class FixtureKeysEntire extends Entire
      */
     public array $fixtureKeys = [];
 
-    #[\Override]
+    #[Override]
     protected function jwks(string $issuer, bool $refresh = false): array
     {
         return $this->fixtureKeys;
@@ -61,19 +64,19 @@ class DataCallsEntire extends Entire
         parent::__construct(new Cache(new None()));
     }
 
-    #[\Override]
+    #[Override]
     protected function repositoryId(string $owner, string $repositoryName): string
     {
         return 'repo_' . $repositoryName;
     }
 
-    #[\Override]
+    #[Override]
     protected function gitRepositoryId(string $repositoryId): string
     {
         return 'regional_' . $repositoryId;
     }
 
-    #[\Override]
+    #[Override]
     protected function dataCall(string $repositoryId, string $method, string $path, array $params = [], bool $decode = true, string $version = 'v1'): array
     {
         $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params, 'version' => $version];
@@ -116,7 +119,7 @@ class CoreCallsEntire extends Entire
         $this->provisioningInterval = 0;
     }
 
-    #[\Override]
+    #[Override]
     protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
     {
         $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params];
@@ -155,7 +158,7 @@ class MintingEntire extends Entire
         parent::__construct(new Cache(new None()));
     }
 
-    #[\Override]
+    #[Override]
     protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
     {
         $permissions = \is_array($params['permissions'] ?? null) ? $params['permissions'] : [];
@@ -193,7 +196,7 @@ class HoldingEntire extends MintingEntire
         parent::__construct([]);
     }
 
-    #[\Override]
+    #[Override]
     protected function code(array $permissions): string
     {
         if ($permissions == $this->held) {
@@ -243,6 +246,7 @@ class RefreshingEntire extends Entire
 
         [$header] = explode('.', $this->jwtToken);
         $this->jwtToken = $header . '.' . $this->base64UrlEncode(json_encode($claims) ?: '') . '.' . $this->base64UrlEncode('signature');
+        $this->jwtExpiresAt -= $seconds;
     }
 
     /**
@@ -255,25 +259,25 @@ class RefreshingEntire extends Entire
         return $this->decodeJwt($this->bearerToken($authorization))['claims'];
     }
 
-    #[\Override]
+    #[Override]
     protected function repositoryId(string $owner, string $repositoryName): string
     {
         return 'repo_' . $repositoryName;
     }
 
-    #[\Override]
+    #[Override]
     protected function gitRepositoryId(string $repositoryId): string
     {
         return 'regional_' . $repositoryId;
     }
 
-    #[\Override]
+    #[Override]
     protected function dataEndpoint(string $repositoryId): string
     {
         return 'https://aws-us-east-2.api.entire.io';
     }
 
-    #[\Override]
+    #[Override]
     protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
     {
         $this->calls[] = ['path' => $path, 'authorization' => $headers['Authorization'] ?? ''];
@@ -441,7 +445,7 @@ final class EntireTest extends TestCase
         $this->assertSame(self::PLUGIN, $claims['aud']);
         $this->assertSame('k1', $claims['kid']);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->adapter->getWebhookClaims('Bearer not-a-token');
     }
 
@@ -559,7 +563,7 @@ final class EntireTest extends TestCase
             try {
                 $adapter->verifyReceipt($receipt, $plugin);
                 $this->fail("Expected the '{$name}' receipt to be rejected");
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->assertNotEmpty($e->getMessage(), $name);
             }
         }
@@ -637,7 +641,7 @@ final class EntireTest extends TestCase
         $this->assertSame('ref.updated', $this->adapter->getEventType((string) json_encode($this->refPayload('ref.updated', 'refs/heads/main'))));
         $this->assertSame('', $this->adapter->getEventType('{}'));
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->adapter->getEventType('not json');
     }
 
@@ -746,7 +750,7 @@ final class EntireTest extends TestCase
             'version' => 'v1',
         ]], $adapter->calls);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         new DataCallsEntire([[404, ['code' => 'not_found']]])->getMergeBase(self::OWNER, self::REPOSITORY_NAME, 'main', self::COMMIT_HASH);
     }
 
@@ -806,7 +810,7 @@ final class EntireTest extends TestCase
 
     public function testGetEventsRejectsInvalidPayload(): void
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->adapter->getEvents('ref.updated', 'not json');
     }
 
@@ -1018,7 +1022,7 @@ final class EntireTest extends TestCase
         try {
             $adapter->createRepository(self::OWNER, 'pricing-site', true);
             $this->fail('A redirect to an unknown core must not be followed');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertSame(421, $e->getCode());
             $this->assertStringContainsString('retry against the home core', $e->getMessage());
         }
@@ -1033,7 +1037,7 @@ final class EntireTest extends TestCase
         try {
             $adapter->createRepository(self::OWNER, 'pricing-site', true);
             $this->fail('A taken name must fail');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertSame(409, $e->getCode());
             $this->assertSame('A repository named pricing-site already exists in ' . self::OWNER . '.', $e->getMessage());
         }
@@ -1048,7 +1052,7 @@ final class EntireTest extends TestCase
         try {
             $adapter->createRepository(self::OWNER, 'pricing-site', true);
             $this->fail('Creation without the permission must fail');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertSame(403, $e->getCode());
             $this->assertStringContainsString('Connect an existing repository', $e->getMessage());
         }
@@ -1188,9 +1192,9 @@ final class EntireTest extends TestCase
     }
 
     /**
-     * @return \Iterator<string, array{list<string>, list<array<string, string>>}>
+     * @return Iterator<string, array{list<string>, list<array<string, string>>}>
      */
-    public static function mints(): \Iterator
+    public static function mints(): Iterator
     {
         $withoutDiscussions = ['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'repositories' => 'create'];
         $beforeCreation = ['contents' => 'read', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write'];
@@ -1225,9 +1229,9 @@ final class EntireTest extends TestCase
     }
 
     /**
-     * @return \Iterator<string, array{array<string, string>, int}>
+     * @return Iterator<string, array{array<string, string>, int}>
      */
-    public static function installations(): \Iterator
+    public static function installations(): Iterator
     {
         yield 'installed today' => [['contents' => 'write', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write', 'repositories' => 'create'], 1];
         yield 'installed before repository creation' => [['contents' => 'read', 'checks' => 'write', 'deployments' => 'write', 'discussions' => 'write'], 3];
@@ -1260,7 +1264,7 @@ final class EntireTest extends TestCase
         try {
             $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
             $this->fail('A refused mint must fail');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertSame(403, $e->getCode());
             $this->assertStringContainsString('installation_suspended', $e->getMessage());
         }
@@ -1276,7 +1280,7 @@ final class EntireTest extends TestCase
         try {
             $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
             $this->fail('A mint refused every set must fail');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->assertSame(400, $e->getCode());
             $this->assertStringContainsString('repository_required', $e->getMessage());
         }
@@ -1325,6 +1329,32 @@ final class EntireTest extends TestCase
         $this->assertSame('Bearer token-2', $adapter->calls[2]['authorization']);
     }
 
+    public function testPluginJwtIsSignedAgainForAnotherPlugin(): void
+    {
+        $adapter = new RefreshingEntire([self::TOKEN_LIFETIME, self::TOKEN_LIFETIME]);
+        $adapter->setIssuer(self::ISSUER);
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), self::PLUGIN);
+        $adapter->initializeVariables(self::INSTALLATION_ID, base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES)), 'other-plugin');
+
+        $this->assertCount(2, $adapter->calls);
+        $this->assertSame('other-plugin', $adapter->bearerClaims($adapter->calls[1]['authorization'])['plugin_id'] ?? null, 'A JWT signed for the previous plugin must not be reused');
+    }
+
+    public function testUnreadablePrivateKeyFailsBeforeAnyCall(): void
+    {
+        $adapter = new RefreshingEntire([]);
+        $adapter->setIssuer(self::ISSUER);
+
+        try {
+            $adapter->initializeVariables(self::INSTALLATION_ID, 'not-a-key!', self::PLUGIN);
+            $this->fail('An unreadable private key must be refused');
+        } catch (Exception $e) {
+            $this->assertSame('Failed to decode the Entire private key.', $e->getMessage());
+        }
+
+        $this->assertSame([], $adapter->calls);
+    }
+
     public function testFreshTokensAreReused(): void
     {
         $adapter = new RefreshingEntire([self::TOKEN_LIFETIME]);
@@ -1344,21 +1374,21 @@ final class EntireTest extends TestCase
 
     public function testCreateFileRejectsEscapingPath(): void
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('escapes the repository');
         $this->adapter->createFile('owner', 'repo', '../escape.txt', 'content');
     }
 
     public function testCreateFileRejectsGitMetadataPath(): void
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('names repository metadata');
         $this->adapter->createFile('owner', 'repo', 'docs/../.Git/config', 'content');
     }
 
     public function testCreateFileRejectsEmptyPath(): void
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('names no file');
         $this->adapter->createFile('owner', 'repo', './.', 'content');
     }

@@ -201,6 +201,8 @@ class Entire extends Git
 
     protected string $jwtToken = '';
 
+    protected int $jwtExpiresAt = 0;
+
     /**
      * The plugin's private key, kept to sign a plugin JWT for another core:
      * a project's home core, which alone creates its repositories.
@@ -325,11 +327,7 @@ class Entire extends Git
         $this->installationId = $installationId;
         $this->plugin = $appId;
         $this->privateKey = $privateKey;
-
-        // A plugin JWT lives five minutes and costs one signature, so every
-        // instance signs its own; only the minted access token is worth
-        // keeping across requests.
-        $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
+        $this->jwtExpiresAt = 0;
 
         $response = $this->cache->load('entire-' . $installationId, self::TOKEN_CACHE_TTL);
         $parsed = \is_string($response) ? json_decode($response, true) : null;
@@ -360,7 +358,6 @@ class Entire extends Git
             throw new Exception('Entire requires the plugin slug to sign the plugin JWT.');
         }
 
-        $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
         $this->mintAccessToken();
     }
 
@@ -401,9 +398,6 @@ class Entire extends Git
         ]) ?: '{}');
     }
 
-    /**
-     * The installation token, minted again when it is about to expire.
-     */
     protected function installationToken(): string
     {
         if ($this->accessToken !== '' && $this->isTokenExpiring($this->accessTokenExpiresAt)) {
@@ -422,14 +416,12 @@ class Entire extends Git
         return $expiresAt > 0 && $expiresAt - self::TOKEN_REFRESH_MARGIN <= time();
     }
 
-    /**
-     * The plugin JWT, signed again when it is about to expire.
-     */
     protected function pluginJwt(): string
     {
-        $expiresAt = $this->jwtToken === '' ? 0 : $this->number($this->decodeJwt($this->jwtToken)['claims'], 'exp');
-        if ($expiresAt - self::PLUGIN_JWT_REFRESH_MARGIN <= time()) {
+        if ($this->jwtExpiresAt - self::PLUGIN_JWT_REFRESH_MARGIN <= time()) {
+            $expiresAt = time() - self::PLUGIN_JWT_SKEW + self::PLUGIN_JWT_EXPIRY;
             $this->jwtToken = $this->generatePluginJwt($this->privateKey, $this->plugin);
+            $this->jwtExpiresAt = $expiresAt;
         }
 
         return $this->jwtToken;
