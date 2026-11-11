@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useAnalytics } from '@/hooks/use-analytics'
 import type { AnalyticsProps } from '@/lib/analytics'
+import { formatListTotal } from '@/lib/list-total'
 import { cn } from '@/lib/utils'
 import { RESOURCE_CARD_BASE_CLASSNAME } from '../../shared/ResourceCard'
 
@@ -80,6 +81,7 @@ export function OverviewListCard({
 }: {
   icon: ComponentType<{ className?: string }>
   title: string
+  /** Resource count, as reported by its list `total`; rendered as `5,000+` once clamped. */
   count?: number
   /** Header quick action; rendered as an icon button with a tooltip. */
   action?: CardAction
@@ -106,7 +108,7 @@ export function OverviewListCard({
         </h3>
         {count != null && count > 0 ? (
           <span className="shrink-0 rounded-full bg-muted px-1.5 py-px font-mono text-[11px] tabular-nums text-muted-foreground">
-            {count.toLocaleString()}
+            {formatListTotal(count)}
           </span>
         ) : null}
         {action ? <CardHeaderAction action={action} /> : null}

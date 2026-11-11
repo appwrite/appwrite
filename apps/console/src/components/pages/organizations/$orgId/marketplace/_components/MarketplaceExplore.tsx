@@ -1,9 +1,9 @@
 import {
   MARKETPLACE_CATEGORY_ICONS,
   MARKETPLACE_CATEGORY_LABELS,
-  formatMarketplaceCount,
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
+import { formatListTotal } from '@/lib/list-total'
 import {
   MARKETPLACE_CATEGORY_ORDER,
   type MarketplaceNavId,
@@ -58,7 +58,7 @@ export function MarketplaceExplore({
                 <p className="text-[12px] text-muted-foreground mt-0.5">
                   {count === undefined
                     ? ' '
-                    : `${formatMarketplaceCount(count)} ${count !== 1 ? t('apps') : t('app')}`}
+                    : `${formatListTotal(count)} ${count !== 1 ? t('apps') : t('app')}`}
                 </p>
               </div>
             </button>
