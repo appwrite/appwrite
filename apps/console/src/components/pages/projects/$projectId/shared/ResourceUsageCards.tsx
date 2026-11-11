@@ -19,16 +19,10 @@ import { formatBandwidthTotal } from '@/lib/usage/bandwidth-events'
 import { formatExecutionsValue } from '@/lib/usage/executions-events'
 import { formatGbHoursTotal } from '@/lib/usage/gb-hours-events'
 import { formatRequestsValue } from '@/lib/usage/requests-events'
-import { getUsageCategoryLinkProps } from '@/lib/usage/usage-breakdown-links'
 import { sumUsageChartPoints } from '@/lib/usage/usage-events-common'
-import { getUsageResourceFilterEntries } from '@/lib/usage/usage-resource-filters'
 import { cn } from '@/lib/utils'
 import { ChangeBadge } from '../analytics/_components/ChangeBadge'
-import {
-  FUNCTIONS_USAGE_CATEGORY,
-  REQUESTS_USAGE_CATEGORY,
-  SITES_USAGE_CATEGORY,
-} from '../usage/usage-live-categories'
+import type { ResourceUsageCategory } from './ResourceUsage'
 
 const CHART_FRAME_CLASS =
   'flex h-[120px] min-w-0 flex-col rounded-lg border border-border/60 bg-background/40 px-3 pb-2.5 pt-3'
@@ -163,7 +157,11 @@ function UsageMetricColumn({
       </div>
       <div className={cn(CHART_FRAME_CLASS, 'mt-4')}>
         <div className={cn('relative min-h-0 flex-1', FORCE_LTR_CLASS)}>
-          <div aria-hidden className="absolute inset-0" style={DOT_GRID_STYLE} />
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={DOT_GRID_STYLE}
+          />
           {loading ? (
             <div className="absolute inset-x-0 bottom-0 top-6 animate-pulse rounded-md bg-muted/40" />
           ) : hasActivity ? (
@@ -205,7 +203,6 @@ function DualUsageCard({
     href: {
       to: string
       params: Record<string, string>
-      search?: { query?: string }
     }
     label: string
   }
@@ -237,11 +234,7 @@ function DualUsageCard({
       </div>
       <div className="flex h-[68px] items-center justify-end border-t border-border bg-muted/30 px-6">
         <Button size="sm" variant="outline" className="h-9 text-[13px]" asChild>
-          <Link
-            to={action.href.to}
-            params={action.href.params}
-            search={action.href.search}
-          >
+          <Link to={action.href.to} params={action.href.params}>
             {action.label}
           </Link>
         </Button>
@@ -262,15 +255,19 @@ export function ResourceUsageCards({
   const t = useT()
   const { features } = useConsoleProfile()
   const dateRange = useMemo(() => getStableUsageChartDateRange(), [])
-  const usageFilters = getUsageResourceFilterEntries(
-    resourceId,
-    {},
-    resourceType,
-  )
-  const computeCategoryId =
+  // "View usage" opens this resource's own Usage tab on the card's category.
+  const usageTab = (
+    categoryId: ResourceUsageCategory,
+  ): { to: string; params: Record<string, string> } =>
     resourceType === 'function'
-      ? FUNCTIONS_USAGE_CATEGORY.id
-      : SITES_USAGE_CATEGORY.id
+      ? {
+          to: '/projects/$projectId/functions/$functionId/usage/$categoryId',
+          params: { projectId, functionId: resourceId, categoryId },
+        }
+      : {
+          to: '/projects/$projectId/sites/$siteId/usage/$categoryId',
+          params: { projectId, siteId: resourceId, categoryId },
+        }
 
   const requestsQuery = useRequestsForResourceChart(
     projectId,
@@ -318,9 +315,7 @@ export function ResourceUsageCards({
   const gbHoursQuery =
     resourceType === 'function' ? functionGbHoursQuery : siteGbHoursQuery
 
-  const toTrend = (
-    points: { date: string; total: number }[],
-  ): TrendPoint[] =>
+  const toTrend = (points: { date: string; total: number }[]): TrendPoint[] =>
     points.map((point) => ({ label: point.date, value: point.total }))
 
   const isInitial = (query: {
@@ -344,11 +339,7 @@ export function ResourceUsageCards({
         title={t('Traffic')}
         subtitle={t('Last 24 hours')}
         action={{
-          href: getUsageCategoryLinkProps(
-            projectId,
-            REQUESTS_USAGE_CATEGORY.id,
-            usageFilters,
-          ),
+          href: usageTab('requests'),
           label: t('View usage'),
         }}
         left={{
@@ -380,11 +371,7 @@ export function ResourceUsageCards({
         title={t('Compute')}
         subtitle={t('Last 24 hours')}
         action={{
-          href: getUsageCategoryLinkProps(
-            projectId,
-            computeCategoryId,
-            usageFilters,
-          ),
+          href: usageTab('compute'),
           label: t('View usage'),
         }}
         left={{
