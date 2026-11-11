@@ -1410,6 +1410,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'for development (no port or protocol). Add a separate platform for each origin (e.g. localhost and production).':
     'לפיתוח (ללא פורט או פרוטוקול). הוסיפו פלטפורמה נפרדת לכל מקור (למשל localhost וסביבת ייצור).',
   'Troubleshoot CORS errors': 'פתרון שגיאות CORS',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'כל אתר יכול לשלוח בקשות לפרויקט הזה. לפני העלייה לאוויר, החליפו את * בדומיין של האפליקציה שלכם, למשל app.example.com.',
   'Bundle ID': 'מזהה Bundle',
   'Application ID': 'מזהה אפליקציה',
   'Package identifier': 'מזהה חבילה',

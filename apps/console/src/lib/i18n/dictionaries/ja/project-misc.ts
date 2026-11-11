@@ -948,6 +948,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'The domain your app makes requests from. Use':
     'アプリがリクエストを送信するドメイン。使用:',
   'Troubleshoot CORS errors': 'CORS エラーのトラブルシューティング',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'どのウェブサイトからでもこのプロジェクトにリクエストを送信できます。本番公開の前に、* をアプリのドメイン（例: app.example.com）に置き換えてください。',
   'Bundle ID': 'バンドル ID',
   'Application ID': 'アプリケーション ID',
   'Package identifier': 'パッケージ識別子',

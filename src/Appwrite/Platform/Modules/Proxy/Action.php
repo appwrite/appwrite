@@ -7,6 +7,7 @@ use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
+use Swoole\Coroutine;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
@@ -265,23 +266,37 @@ class Action extends PlatformAction
         $wg = new WaitGroup();
         $results = [];
         $errors = [];
+        // Outside a coroutine (CLI, tests) go() would leave a reactor running, so check in turn
+        $parallel = Coroutine::getCid() > 0;
 
         foreach ($queries as $key => $query) {
-            $wg->add();
-
-            \go(function () use ($query, $key, $domain, $wg, &$results, &$errors) {
+            $check = function () use ($query, $key, $domain, &$results, &$errors): void {
                 try {
                     $results[$key] = $query->isValid($domain->get());
                 } catch (\Throwable $error) {
                     // Uncaught in a coroutine it would end the process, so the caller handles it instead
                     $errors[$key] = $error;
+                }
+            };
+
+            if (!$parallel) {
+                $check();
+                continue;
+            }
+
+            $wg->add();
+            \go(function () use ($check, $wg) {
+                try {
+                    $check();
                 } finally {
                     $wg->done();
                 }
             });
         }
 
-        $wg->wait();
+        if ($parallel) {
+            $wg->wait();
+        }
 
         if (isset($errors['caa'])) {
             throw $errors['caa'];
