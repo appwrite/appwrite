@@ -4707,7 +4707,7 @@ trait DatabasesBase
 
         // A unique index over rows that already hold the same value can only fail, and only in the worker.
         $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
-            'key' => 'email',
+            'key' => 'uniqueEmail',
             'type' => IndexType::Unique->value,
             $this->getIndexAttributesParam() => ['email'],
         ]);
@@ -4715,18 +4715,18 @@ trait DatabasesBase
         $this->assertEquals(202, $index['headers']['status-code']);
 
         $this->assertEventually(function () use ($databaseId, $containerId, $headers) {
-            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'email'), $headers);
+            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'uniqueEmail'), $headers);
 
             $this->assertEquals(200, $index['headers']['status-code']);
             $this->assertEquals('failed', $index['body']['status']);
         }, 60000, 500);
 
-        $deleted = $this->client->call(Client::METHOD_DELETE, $this->getIndexUrl($databaseId, $containerId, 'email'), $headers);
+        $deleted = $this->client->call(Client::METHOD_DELETE, $this->getIndexUrl($databaseId, $containerId, 'uniqueEmail'), $headers);
 
         $this->assertEquals(204, $deleted['headers']['status-code']);
 
         $this->assertEventually(function () use ($databaseId, $containerId, $headers) {
-            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'email'), $headers);
+            $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'uniqueEmail'), $headers);
 
             $this->assertEquals(404, $index['headers']['status-code'], \json_encode($index['body']));
         }, 60000, 500);
