@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Utopia\Client\Tests\Decorator;
 
-use LogicException;
+use Closure;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Decorator\Retry\Backoff;
-use Utopia\Client\Destinations;
+use Utopia\Client\Decorator\Retry\Strategy;
 use Utopia\Client\Exception\InvalidUriException;
 use Utopia\Client\Exception\NetworkException;
-use Utopia\Client\Redirect;
 use Utopia\Client\Tls;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
@@ -22,6 +22,8 @@ use Utopia\Psr7\Response;
 
 final class RetryTest extends TestCase
 {
+    private const string ENVOY_RESET = 'upstream connect error or disconnect/reset before headers. reset reason: connection termination';
+
     public function testUnsupportedResponseStreamingDoesNotSpendRetryBudget(): void
     {
         $inner = new QueueAdapter([]);
@@ -179,6 +181,124 @@ final class RetryTest extends TestCase
         }
     }
 
+    public function testItRetriesAStreamedErrorResponseWhoseBodyWasHeld(): void
+    {
+        $inner = new ResponseStreamingQueueAdapter([
+            $this->respond(503, self::ENVOY_RESET),
+            $this->respond(200, 'hello'),
+        ]);
+        $delays = [];
+        $received = '';
+
+        $response = $this->retry($inner, $delays)->stream($this->request(Method::GET), function (string $chunk) use (&$received): void {
+            $received .= $chunk;
+        });
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('hello', $received);
+        $this->assertSame(2, $inner->calls);
+        $this->assertSame([0.1], $delays);
+    }
+
+    public function testItRetriesAStreamedErrorResponseAndNotifiesTheCallerOncePerAttempt(): void
+    {
+        $inner = new ResponseStreamingQueueAdapter([
+            $this->respond(503, self::ENVOY_RESET),
+            $this->respond(200, 'hello'),
+        ]);
+        $delays = [];
+        $received = '';
+        $statuses = [];
+
+        $response = $this->retry($inner, $delays)->stream(
+            $this->request(Method::GET),
+            function (string $chunk) use (&$received): void {
+                $received .= $chunk;
+            },
+            function (ResponseInterface $response) use (&$statuses): void {
+                $statuses[] = $response->getStatusCode();
+            },
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('hello', $received);
+        $this->assertSame([503, 200], $statuses);
+        $this->assertSame(2, $inner->calls);
+        $this->assertSame([0.1], $delays);
+    }
+
+    public function testItDeliversANonRetryableErrorBodyOnce(): void
+    {
+        $body = '<Error><Code>NoSuchKey</Code></Error>';
+        $inner = new ResponseStreamingQueueAdapter([$this->respond(404, $body)]);
+        $delays = [];
+        $received = '';
+
+        $response = $this->retry($inner, $delays)->stream($this->request(Method::GET), function (string $chunk) use (&$received): void {
+            $received .= $chunk;
+        });
+
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame($body, $received);
+        $this->assertSame(1, $inner->calls);
+        $this->assertSame([], $delays);
+    }
+
+    public function testItDeliversOnlyTheFinalErrorBodyWhenRetriesRunOut(): void
+    {
+        $inner = new ResponseStreamingQueueAdapter([
+            $this->respond(503, 'a1'),
+            $this->respond(503, 'a2'),
+            $this->respond(503, 'a3'),
+        ]);
+        $delays = [];
+        $received = '';
+
+        $response = $this->retry($inner, $delays)->stream($this->request(Method::GET), function (string $chunk) use (&$received): void {
+            $received .= $chunk;
+        });
+
+        $this->assertSame(503, $response->getStatusCode());
+        $this->assertSame('a3', $received);
+        $this->assertSame(3, $inner->calls);
+        $this->assertSame([0.1, 0.2], $delays);
+    }
+
+    public function testTheStrategySeesTheHeldErrorBody(): void
+    {
+        $body = '<Error><Code>InternalError</Code></Error>';
+        $inner = new ResponseStreamingQueueAdapter([$this->respond(500, $body)]);
+        $strategy = new class () implements Strategy {
+            /**
+             * @var array<int, array{status: int, body: string}>
+             */
+            public array $responses = [];
+
+            public function delay(RequestInterface $request, int $attempt, ?ResponseInterface $response, ?ClientExceptionInterface $error): ?float
+            {
+                if ($response instanceof ResponseInterface) {
+                    $this->responses[] = [
+                        'status' => $response->getStatusCode(),
+                        'body' => (string) $response->getBody(),
+                    ];
+                }
+
+                return null;
+            }
+        };
+        $received = '';
+
+        $response = new Retry($inner, $strategy, static function (float $seconds): void {
+        })->stream($this->request(Method::GET), function (string $chunk) use (&$received): void {
+            $received .= $chunk;
+        });
+
+        $this->assertSame([['status' => 500, 'body' => $body]], $strategy->responses);
+        $this->assertSame(500, $response->getStatusCode());
+        $this->assertSame($body, $received);
+        $this->assertSame(1, $inner->calls);
+    }
+
     public function testItForwardsConfigurationToTheInnerAdapter(): void
     {
         $inner = new QueueAdapter([]);
@@ -210,87 +330,24 @@ final class RetryTest extends TestCase
         );
     }
 
+    /**
+     * @return Closure(callable(string): void, (callable(ResponseInterface): void)|null): ResponseInterface
+     */
+    private function respond(int $status, string $body): Closure
+    {
+        return static function (callable $sink, ?callable $onResponse) use ($status, $body): ResponseInterface {
+            if ($onResponse !== null) {
+                $onResponse(new Response($status));
+            }
+
+            $sink($body);
+
+            return new Response($status);
+        };
+    }
+
     private function request(string $method): RequestInterface
     {
         return new Request\Factory()->createRequest($method, 'https://example.com/resource');
-    }
-}
-
-final class QueueAdapter implements Adapter
-{
-    public int $calls = 0;
-
-    /**
-     * @param array<int, callable(callable(string): void): ResponseInterface> $outcomes
-     */
-    public function __construct(private array $outcomes)
-    {
-    }
-
-    public function withDestinations(Destinations $destinations): static
-    {
-        return $this;
-    }
-
-    public function withTimeout(float $seconds): static
-    {
-        return $this;
-    }
-
-    public function withConnectTimeout(float $seconds): static
-    {
-        return $this;
-    }
-
-    public function withSslVerification(bool $enabled = true): static
-    {
-        return $this;
-    }
-
-    public function withCustomCA(string $path): static
-    {
-        return $this;
-    }
-
-    public function withCertificate(string $certPath, string $keyPath, ?string $passphrase = null): static
-    {
-        return $this;
-    }
-
-    public function withMinTlsVersion(Tls $version): static
-    {
-        return $this;
-    }
-
-    public function withConnectionReuse(bool $enabled = true): static
-    {
-        return $this;
-    }
-
-    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
-    {
-        return $this;
-    }
-
-    public function sendRequest(RequestInterface $request): ResponseInterface
-    {
-        return $this->next(static function (string $chunk): void {
-        });
-    }
-
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
-    {
-        return $this->next($sink);
-    }
-
-    /**
-     * @param callable(string): void $sink
-     */
-    private function next(callable $sink): ResponseInterface
-    {
-        $outcome = $this->outcomes[$this->calls] ?? throw new LogicException('No more queued outcomes.');
-        $this->calls++;
-
-        return $outcome($sink);
     }
 }
