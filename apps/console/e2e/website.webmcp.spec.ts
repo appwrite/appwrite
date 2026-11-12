@@ -1,4 +1,6 @@
 import type { ToolError } from '../src/lib/webmcp/register'
+import type { Page } from '@playwright/test'
+import { RUNTIME_CONFIG_WINDOW_KEY } from '../src/lib/runtime-config-shared'
 import { expect, test } from './fixtures'
 import { WEBMCP_CHANNEL, openAsAgent, type WebMcpAgent } from './helpers/webmcp'
 
@@ -24,10 +26,39 @@ const NAVIGATION_TOOLS = ['navigate_to_page', 'open_sign_up']
 
 type MarkdownPage = { url: string; markdown: string; truncated: boolean }
 
+/** Turns analytics on with a Plausible stub that records calls instead of sending them. */
+async function captureAnalytics(page: Page): Promise<void> {
+  await page.route('https://plausible.test/**', (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: '' }),
+  )
+  await page.addInitScript((key) => {
+    const events: Array<[string, Record<string, unknown> | undefined]> = []
+    let config: Record<string, unknown> | undefined
+    Object.defineProperty(window, key, {
+      configurable: true,
+      get: () => config,
+      set: (value: Record<string, unknown>) => {
+        config = {
+          ...value,
+          plausibleScriptSrc: 'https://plausible.test/js/script.js',
+        }
+      },
+    })
+    Object.assign(window, {
+      __analytics: events,
+      plausible: (
+        name: string,
+        options?: { props?: Record<string, unknown> },
+      ) => events.push([name, options?.props]),
+    })
+  }, RUNTIME_CONFIG_WINDOW_KEY)
+}
+
 test.describe('WebMCP tools', () => {
   let agent: WebMcpAgent
 
   test.beforeEach(async ({ page }) => {
+    await captureAnalytics(page)
     agent = await openAsAgent(
       page,
       '/home',
@@ -141,6 +172,35 @@ test.describe('WebMCP tools', () => {
     for (const thread of result.threads) {
       expect(thread.url).toMatch(/\/threads\//)
     }
+  })
+
+  test('records each call as an analytics event, without its input', async ({
+    page,
+  }) => {
+    await agent.call('search_docs', { query: 'create a row' })
+    await agent.call('get_doc_page', { path: '/blog/post/appwrite-realtime' })
+
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          (
+            window as unknown as {
+              __analytics: Array<[string, Record<string, unknown>]>
+            }
+          ).__analytics
+            .filter(([name]) => name === 'WebMCP Tool Called')
+            .map(([, props]) => ({
+              tool: props.tool,
+              status: props.status,
+              code: props.code,
+              query: props.query,
+            })),
+        ),
+      )
+      .toEqual([
+        { tool: 'search_docs', status: 'success' },
+        { tool: 'get_doc_page', status: 'error', code: 'invalid_path' },
+      ])
   })
 
   test('navigate_to_page and open_sign_up move the tab on this site only', async ({
