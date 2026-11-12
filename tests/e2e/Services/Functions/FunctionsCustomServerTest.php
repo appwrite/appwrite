@@ -689,6 +689,42 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $variable['headers']['status-code']);
     }
 
+    public function testUpdateFunctionKeepsOmittedSettings(): void
+    {
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Keep settings',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => ['any'],
+            'events' => ['users.*.create'],
+            'scopes' => ['users.read'],
+            'timeout' => 300,
+            'enabled' => false,
+            'logging' => false,
+            'commands' => 'npm install',
+            'deploymentRetention' => 7,
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $function = $this->updateFunction($function['body']['$id'], [
+            'name' => 'Keep settings',
+            'interval' => 30,
+        ]);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals(30, $function['body']['interval']);
+        $this->assertEquals(['any'], $function['body']['execute']);
+        $this->assertEquals(['users.*.create'], $function['body']['events']);
+        $this->assertEquals(['users.read'], $function['body']['scopes']);
+        $this->assertEquals(300, $function['body']['timeout']);
+        $this->assertFalse($function['body']['enabled']);
+        $this->assertFalse($function['body']['logging']);
+        $this->assertEquals('npm install', $function['body']['commands']);
+        $this->assertEquals(7, $function['body']['deploymentRetention']);
+    }
+
     public function testUpdateVariableDescription(): void
     {
         $settings = [
