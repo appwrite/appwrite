@@ -29,7 +29,9 @@ export type ApiReferenceServiceData = {
   label: string
   description: string
   methods: ApiReferenceMethod[]
+  serverOnly?: boolean
 }
+
 
 export type ApiReferencePropertyTypeKind = 'array' | 'object' | 'scalar'
 

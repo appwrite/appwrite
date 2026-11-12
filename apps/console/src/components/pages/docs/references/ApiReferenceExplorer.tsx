@@ -132,8 +132,9 @@ export function ApiReferenceExplorer({
   if (data.methods.length === 0) {
     return (
       <div className="flex h-full min-h-0 items-center justify-center px-6 text-center text-[13px] text-muted-foreground">
-        No endpoints found for this version and platform. Try switching to a
-        different version or platform.
+        {data.serverOnly
+          ? 'Only Server SDKs'
+          : 'No endpoints found for this version and platform. Try switching to a different version or platform.'}
       </div>
     )
   }
