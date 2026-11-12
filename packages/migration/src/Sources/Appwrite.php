@@ -6,12 +6,12 @@ use Appwrite\AppwriteException;
 use Appwrite\Enums\ProjectAuthMethodId;
 use Appwrite\Enums\ProjectPolicyId;
 use Appwrite\Enums\ProjectProtocolId;
+use Appwrite\Models\EnvironmentList;
 use Appwrite\Models\PolicyAccountDevices;
 use Appwrite\Models\PolicyDenyRealtimeGuests;
 use Appwrite\Models\PolicyPasskey;
 use Appwrite\Models\PolicyPasswordPwned;
 use Appwrite\Models\PolicyPasswordRotation;
-use Appwrite\Models\ProjectList;
 use Appwrite\Query;
 use Appwrite\Services\Functions;
 use Appwrite\Services\Messaging;
@@ -2025,13 +2025,13 @@ class Appwrite extends Source
             }
 
             $response = $this->listEnvironmentsIfSupported($queries);
-            if ($response === null || $response->projects === []) {
+            if ($response === null || $response->environments === []) {
                 break;
             }
 
             $environments = [];
 
-            foreach ($response->projects as $environment) {
+            foreach ($response->environments as $environment) {
                 $environments[] = new Environment(
                     $environment->id,
                     $environment->name,
@@ -2044,7 +2044,7 @@ class Appwrite extends Source
 
             $this->callback($environments);
 
-            if (\count($response->projects) < $batchSize) {
+            if (\count($response->environments) < $batchSize) {
                 break;
             }
         }
@@ -2056,7 +2056,7 @@ class Appwrite extends Source
      * @param array<string> $queries
      * @throws AppwriteException
      */
-    private function listEnvironmentsIfSupported(array $queries): ?ProjectList
+    private function listEnvironmentsIfSupported(array $queries): ?EnvironmentList
     {
         try {
             return $this->project->listEnvironments($queries);
