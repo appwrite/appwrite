@@ -6,6 +6,7 @@ use Appwrite\Abuse\Limit;
 use Appwrite\Auth\AuthDevice;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -23,6 +24,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class Update extends Action
 {
@@ -128,6 +130,11 @@ class Update extends Action
         if (!empty($refreshToken) && $className !== null && \class_exists($className)) {
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+
+            if (!empty($appSecret) && isset($appSecret['version'])) {
+                $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+                $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
+            }
 
             $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, '', [], []);
             $oauth2->refreshTokens($refreshToken);
