@@ -2,8 +2,8 @@
 
 ## 28.12.1
 
-* Fixed: `terminal` lists the organizations of a Cloud login, which failed with `general_access_forbidden`
-* Fixed: output masks every response field the API marks as a password, not only the field names the CLI knew
+* Fixed: `terminal` lists organizations on Cloud
+* Fixed: output masks every response field the API marks as a password
 
 ## 28.12.0
 
