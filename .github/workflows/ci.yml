@@ -481,7 +481,7 @@ jobs:
           docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
             --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
             php --ri utopia &&
-            php crates/extension/tests/image.php &&
+            php crates/extension/tests/canvas.php &&
             vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests'
 
   build:

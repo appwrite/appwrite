@@ -4,7 +4,10 @@ namespace Appwrite\AvatarPhotos\Providers;
 
 use Appwrite\AvatarPhotos\Photo;
 use Utopia\Database\Document;
-use Utopia\Image\Image;
+use Utopia\Image\Blank;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
+use Utopia\Image\Path;
 
 /**
  * Static fallback provider, a minimal built-in avatar placeholder
@@ -43,8 +46,8 @@ class Fallback extends Photo
     {
         $box = \min($width, $height) * 0.55;
 
-        return Image::create($width, $height, self::SURFACE)
-            ->path(self::MARK, self::FIGURE, ($width - $box) / 2, ($height - $box) / 2, $box / 24)
-            ->output('png') ?? '';
+        return (new Canvas(new Blank($width, $height, self::SURFACE)))
+            ->draw(new Path(self::MARK, self::FIGURE, ($width - $box) / 2, ($height - $box) / 2, $box / 24))
+            ->encode(Format::Png);
     }
 }

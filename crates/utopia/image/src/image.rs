@@ -180,6 +180,14 @@ impl Image {
         self.height
     }
 
+    /// Takes the current frame's size as the size later operations work from,
+    /// so a step of a [`Canvas`](crate::Canvas) sees what the steps before it
+    /// left (a border or a rotation changes it).
+    pub(crate) fn settle(&mut self) {
+        let frame = &self.frames[self.current];
+        (self.width, self.height) = (i64::from(frame.width()), i64::from(frame.height()));
+    }
+
     /// The number of frames.
     pub fn frames(&self) -> usize {
         self.frames.len()

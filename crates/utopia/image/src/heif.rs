@@ -10,6 +10,14 @@ use crate::error::{Error, Result};
 use crate::frame::{Format, Frame};
 use crate::options::{canvas_bytes, check_dimensions, check_pixels};
 
+/// The size of the primary image of `data`, from its header.
+pub(crate) fn dimensions(data: &[u8], format: Format) -> Result<(u32, u32)> {
+    let corrupt = |e: libheif_rs::HeifError| Error::Corrupt(format!("{}: {e}", format.magick()));
+    let context = HeifContext::read_from_bytes(data).map_err(corrupt)?;
+    let handle = context.primary_image_handle().map_err(corrupt)?;
+    Ok((handle.width(), handle.height()))
+}
+
 /// Decodes the primary image of `data`, with the file's own rotation,
 /// mirroring and cropping applied, as ImageMagick reads it.
 pub(crate) fn decode(data: &[u8], format: Format) -> Result<Vec<Frame>> {

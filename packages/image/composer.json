@@ -24,7 +24,7 @@
         "test": "phpunit --testsuite unit"
     },
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.2",
         "ext-utopia": "*"
     },
     "require-dev": {

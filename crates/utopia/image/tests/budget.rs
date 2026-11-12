@@ -1,8 +1,7 @@
-//! The pixel budget: an image whose decoded pixels would pass the `memory`
-//! and `map` limits fails before its buffers are allocated. Its own test
-//! binary with a single test, because resource limits are process-wide.
+//! The pixel budget: an image whose decoded pixels would pass its canvas's
+//! `memory` limit fails before its buffers are allocated.
 
-use utopia_image::{Image, Resource, set_resource_limit};
+use utopia_image::{Canvas, Error, Image, Limits, OutputFormat};
 
 const PNG: &[u8] = include_bytes!("../../../../packages/image/tests/resources/resize/100x100.png");
 const GIF: &[u8] = include_bytes!("../../../../packages/image/tests/resources/disk-a/kitten-3.gif");
@@ -18,38 +17,53 @@ fn oversized_frame_gif() -> Vec<u8> {
     gif
 }
 
-fn exhausted(result: utopia_image::Result<Image>) -> bool {
-    matches!(result, Err(utopia_image::Error::LimitExceeded))
+/// Reads `data` under a budget of `memory` bytes and decodes it.
+fn decoded(data: &[u8], memory: u64) -> utopia_image::Result<Vec<u8>> {
+    let canvas = Canvas::decode(data, Limits { memory, ..Limits::default() })?;
+    canvas.encode(OutputFormat::Png, None)
+}
+
+fn exhausted(result: utopia_image::Result<Vec<u8>>) -> bool {
+    matches!(result, Err(Error::LimitExceeded))
 }
 
 #[test]
 fn images_past_the_budget_fail_before_decoding() {
+    let budget = Limits::default().memory;
     // Within the default budget: decodes.
-    assert!(Image::new(PNG).is_ok());
+    assert!(decoded(PNG, budget).is_ok());
     let gif = Image::new(GIF).expect("the animation fits the default budget");
     let (w, h, frames) = (gif.width() as u64, gif.height() as u64, gif.frames() as u64);
     assert!(frames > 1, "the fixture is an animation");
 
-    // A budget smaller than one 100x100 canvas (40,000 bytes): refused.
-    set_resource_limit(Resource::Memory, 20_000);
-    set_resource_limit(Resource::Map, 0);
-    assert!(exhausted(Image::new(PNG)));
+    // A budget smaller than one 100x100 canvas (40,000 bytes): refused from the header.
+    assert!(matches!(Canvas::decode(PNG, Limits { memory: 20_000, ..Limits::default() }), Err(Error::LimitExceeded)));
 
-    // Room for one frame of the animation but not all of them: refused while
-    // reading frames, since each keeps a whole canvas.
-    let frame = (w * h * 4) as i64;
-    set_resource_limit(Resource::Memory, frame * (frames as i64 - 1));
-    assert!(exhausted(Image::new(GIF)));
+    // Room for one frame of the animation but not all of them: the header is
+    // accepted, and decoding is refused while reading frames, since each keeps
+    // a whole canvas.
+    let frame = w * h * 4;
+    assert!(Canvas::decode(GIF, Limits { memory: frame * (frames - 1), ..Limits::default() }).is_ok());
+    assert!(exhausted(decoded(GIF, frame * (frames - 1))));
 
     // Room for every frame plus what decoding holds alongside them (the
     // working canvas, the copy being pushed, a saved canvas and one frame's
     // pixels): decodes again.
-    set_resource_limit(Resource::Memory, frame * (frames as i64 + 4));
-    assert!(Image::new(GIF).is_ok());
+    assert!(decoded(GIF, frame * (frames + 4)).is_ok());
 
     // A frame declaring more than its 1x1 screen: refused from its
     // descriptor, before its pixels are decoded, even with the default budget.
-    set_resource_limit(Resource::Memory, 268_435_456);
-    set_resource_limit(Resource::Map, 536_870_912);
-    assert!(exhausted(Image::new(&oversized_frame_gif())));
+    assert!(exhausted(decoded(&oversized_frame_gif(), budget)));
+}
+
+#[test]
+fn a_canvas_keeps_its_own_limits() {
+    let narrow = Limits { width: 50, ..Limits::default() };
+    assert!(matches!(Canvas::decode(PNG, narrow), Err(Error::LimitExceeded)));
+    // Another canvas on the same thread is unaffected.
+    assert!(Canvas::decode(PNG, Limits::default()).is_ok());
+    assert!(matches!(
+        Canvas::blank(10, 60, "#fff", Limits { height: 50, ..Limits::default() }),
+        Err(Error::LimitExceeded)
+    ));
 }
