@@ -334,6 +334,34 @@ final class TeamsCustomClientTest extends Scope
         $this->assertSame(200, $confirmation['headers']['status-code']);
         $this->assertTrue($confirmation['body']['confirm']);
 
+        // A verified address does not stand in for the second factor either
+        $verified = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $serverHeaders, [
+            'emailVerification' => true,
+        ]);
+        $this->assertSame(200, $verified['headers']['status-code']);
+
+        $team = $this->createTeamHelper('MFA Invites Verified');
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $params = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email, function (array $message) use ($team) {
+            $this->assertSame($team['teamUid'], $this->extractQueryParamsFromEmailLink($message['html'])['teamId']);
+        })['html']);
+
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertSame(401, $confirmation['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $confirmation['body']['type']);
+
         // With an email and a phone on file an invite proves neither, so it is refused too
         $phone = $this->client->call(Client::METHOD_PATCH, '/account/phone', $ownerHeaders, [
             'phone' => '+1202' . \random_int(1000000, 9999999),
