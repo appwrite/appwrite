@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { GitCommitHorizontal, MessageSquare, CircleCheck } from 'lucide-react'
+import {
+  GitCommitHorizontal,
+  MessageSquare,
+  CircleCheck,
+  Info,
+} from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -24,21 +34,21 @@ export function GitSilentModeCard({
   const t = useT()
   const queryClient = useQueryClient()
   const git = site as Models.Site & {
-    providerAutoDeploy?: boolean
-    providerComments?: boolean
-    providerCommitStatus?: boolean
+    providerDeployments?: boolean
+    providerSummaries?: boolean
+    providerStatuses?: boolean
   }
   const silent = site.providerSilentMode ?? false
   const saved = {
-    autoDeploy: git.providerAutoDeploy ?? true,
-    comments: !silent && (git.providerComments ?? true),
-    commitStatus: !silent && (git.providerCommitStatus ?? true),
+    deployments: git.providerDeployments ?? true,
+    summaries: !silent && (git.providerSummaries ?? true),
+    statuses: !silent && (git.providerStatuses ?? true),
   }
   const [settings, setSettings] = useState(saved)
 
   useEffect(() => {
     setSettings(saved)
-  }, [saved.autoDeploy, saved.comments, saved.commitStatus, site.$id])
+  }, [saved.deployments, saved.summaries, saved.statuses, site.$id])
 
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {
@@ -62,21 +72,21 @@ export function GitSilentModeCard({
   })
 
   const hasChanges =
-    settings.autoDeploy !== saved.autoDeploy ||
-    settings.comments !== saved.comments ||
-    settings.commitStatus !== saved.commitStatus
+    settings.deployments !== saved.deployments ||
+    settings.summaries !== saved.summaries ||
+    settings.statuses !== saved.statuses
 
   const handleSave = () => {
     updateSiteMutation.mutate({
-      providerAutoDeploy: settings.autoDeploy,
-      providerComments: settings.comments,
-      providerCommitStatus: settings.commitStatus,
+      providerDeployments: settings.deployments,
+      providerSummaries: settings.summaries,
+      providerStatuses: settings.statuses,
     } as Partial<Models.Site>)
   }
 
   const rows = [
     {
-      key: 'autoDeploy',
+      key: 'deployments',
       icon: GitCommitHorizontal,
       label: t('Deploy on push'),
       description: t(
@@ -85,18 +95,18 @@ export function GitSilentModeCard({
       disabledReason: '',
     },
     {
-      key: 'comments',
+      key: 'summaries',
       icon: MessageSquare,
-      label: t('Comment on pull requests'),
+      label: t('Post build summaries'),
       description: t(
-        'One comment per pull request with the build status and preview link, kept up to date.',
+        'One summary per pull request with the build status and preview link, kept up to date.',
       ),
-      disabledReason: settings.autoDeploy
+      disabledReason: settings.deployments
         ? ''
         : t('Needs deploy on push. Manual deployments have no pull request.'),
     },
     {
-      key: 'commitStatus',
+      key: 'statuses',
       icon: CircleCheck,
       label: t('Report commit status'),
       description: t(
@@ -132,11 +142,26 @@ export function GitSilentModeCard({
                   <Icon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-foreground">
-                    {row.label}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[13px] font-medium text-foreground">
+                      {row.label}
+                    </p>
+                    {disabled && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info
+                            className="h-3.5 w-3.5 text-muted-foreground"
+                            aria-label={row.disabledReason}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-[13px]">
+                          {row.disabledReason}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
                   <p className="text-[12px] text-muted-foreground">
-                    {disabled ? row.disabledReason : row.description}
+                    {row.description}
                   </p>
                 </div>
                 <Switch
