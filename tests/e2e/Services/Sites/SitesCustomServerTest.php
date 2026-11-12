@@ -1541,6 +1541,76 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testUpdateSitePreservesOmittedSettings(): void
+    {
+        $site = $this->createSite([
+            'siteId' => Id::unique(),
+            'name' => 'Site Settings Test',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'enabled' => false,
+            'logging' => false,
+            'timeout' => 20,
+            'installCommand' => 'npm install',
+            'buildCommand' => 'npm run build',
+            'startCommand' => 'npm start',
+            'outputDirectory' => './dist',
+            'adapter' => 'static',
+            'fallbackFile' => '404.html',
+            'deploymentRetention' => 14,
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertFalse($site['body']['enabled']);
+        $this->assertFalse($site['body']['logging']);
+        $this->assertEquals(20, $site['body']['timeout']);
+        $this->assertEquals('npm install', $site['body']['installCommand']);
+        $this->assertEquals('npm run build', $site['body']['buildCommand']);
+        $this->assertEquals('npm start', $site['body']['startCommand']);
+        $this->assertEquals('./dist', $site['body']['outputDirectory']);
+        $this->assertEquals('static', $site['body']['adapter']);
+        $this->assertEquals('404.html', $site['body']['fallbackFile']);
+        $this->assertEquals(14, $site['body']['deploymentRetention']);
+
+        // Perform a partial PUT update omitting those fields
+        $updated = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Site Settings Updated',
+            'framework' => 'other',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('Site Settings Updated', $updated['body']['name']);
+        $this->assertFalse($updated['body']['enabled']);
+        $this->assertFalse($updated['body']['logging']);
+        $this->assertEquals(20, $updated['body']['timeout']);
+        $this->assertEquals('npm install', $updated['body']['installCommand']);
+        $this->assertEquals('npm run build', $updated['body']['buildCommand']);
+        $this->assertEquals('npm start', $updated['body']['startCommand']);
+        $this->assertEquals('./dist', $updated['body']['outputDirectory']);
+        $this->assertEquals('static', $updated['body']['adapter']);
+        $this->assertEquals('404.html', $updated['body']['fallbackFile']);
+        $this->assertEquals(14, $updated['body']['deploymentRetention']);
+
+        // Assert values are preserved in the database
+        $fetched = $this->getSite($siteId);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals('Site Settings Updated', $fetched['body']['name']);
+        $this->assertFalse($fetched['body']['enabled']);
+        $this->assertFalse($fetched['body']['logging']);
+        $this->assertEquals(20, $fetched['body']['timeout']);
+        $this->assertEquals('npm install', $fetched['body']['installCommand']);
+        $this->assertEquals('npm run build', $fetched['body']['buildCommand']);
+        $this->assertEquals('npm start', $fetched['body']['startCommand']);
+        $this->assertEquals('./dist', $fetched['body']['outputDirectory']);
+        $this->assertEquals('static', $fetched['body']['adapter']);
+        $this->assertEquals('404.html', $fetched['body']['fallbackFile']);
+        $this->assertEquals(14, $fetched['body']['deploymentRetention']);
+
+        $this->cleanupSite($siteId);
+    }
+
     // public function testCreateDeploymentFromCLI() {
     //     // TODO: Implement testCreateDeploymentFromCLI() later
     // }
