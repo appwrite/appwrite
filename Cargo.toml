@@ -22,9 +22,12 @@ publish = false
 
 [workspace.dependencies]
 php-std = { path = "crates/support/php-std" }
+utopia-dsn = { path = "crates/utopia/dsn" }
 utopia-image = { path = "crates/utopia/image", default-features = false }
 
-ext-php-rs = "0.16"
+# #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
+# credentials out of exception traces. Back to a release once it ships in one.
+ext-php-rs = { git = "https://github.com/ChiragAgg5k/ext-php-rs", rev = "8daf41502b1da32bc3c64135dad2cb4b1b86dd6e" }
 argon2 = { version = "0.5", features = ["std"] }
 blowfish = { version = "0.9", features = ["bcrypt"] }
 bytes = "1"

@@ -484,6 +484,18 @@ jobs:
             php crates/extension/tests/image.php &&
             vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests'
 
+      - name: Test DSN on the extension
+        run: |
+          # Utopia\DSN\DSN is registered only when _APP_EXTENSION_LIBRARIES names dsn: the package's
+          # tests must pass on it, and the parity corpus must print the same on both implementations.
+          docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
+            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
+            set -e
+            _APP_EXTENSION_LIBRARIES=dsn vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/dsn/tests
+            php crates/extension/tests/dsn.php > /tmp/php.jsonl
+            _APP_EXTENSION_LIBRARIES=dsn php crates/extension/tests/dsn.php > /tmp/rust.jsonl
+            diff /tmp/php.jsonl /tmp/rust.jsonl'
+
   build:
     name: Build
     needs: changes
