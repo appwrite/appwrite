@@ -1,0 +1,77 @@
+---
+layout: integration
+title: OAuth with Facebook
+description: Authenticate users with an existing Facebook account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-facebook/cover.avif
+category: auth
+product:
+    vendor: Facebook
+    description: "Facebook is Meta's social network, where people connect with friends, communities, and businesses."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[Facebook](https://www.facebook.com/) is Meta's social network, where people connect with friends, communities, and businesses. Facebook Login lets apps sign people in with the Facebook account they already use every day.
+
+# How does the integration work?
+
+You can use the Facebook OAuth adapter in Appwrite Auth to let users sign in with their Facebook account. This is a common choice for consumer apps, because it saves users from creating another account and password.
+
+Appwrite requests the `email` permission and stores the user's name, email, and profile picture from the Graph API. Facebook doesn't report whether the email is verified, so Appwrite stores it as unverified. If another user in your project already has that email, Appwrite redirects to your failure URL instead of signing the user in. To connect Facebook to that account, have the user sign in first and then start the OAuth flow from the browser, which links Facebook as a new [identity](/docs/products/auth/identities).
+
+# How to implement
+
+To implement the Facebook OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an app on Meta for Developers
+
+Go to [Meta for Developers](https://developers.facebook.com/apps/) and create an app that uses Facebook Login to authenticate users. In the app's Facebook Login permissions, make sure `email` is included alongside the default `public_profile`.
+
+Open **App settings** > **Basic** and save the **App ID** and **App secret** for later use. You'll add the redirect URI to the Facebook Login settings after you configure Appwrite in the next step.
+
+## Step 2: Add Facebook OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Facebook** under the **OAuth2 Providers** section.
+
+Paste the app's credentials into the **App ID** and **App Secret** fields, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/facebook/<PROJECT_ID>`, but always copy the exact value from the Console. In your Meta app, open the Facebook Login settings and add the URI to **Valid OAuth Redirect URIs** under **Client OAuth Settings**, then save.
+
+While your Meta app is in development mode, only people with a role on the app can sign in. Switch the app to live mode before you launch.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Facebook` value. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Facebook,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about Facebook and Appwrite Auth
+
+If you would like to learn more about Facebook and Appwrite Auth, we have some resources that you should visit:
+
+- [Facebook Login documentation](https://developers.facebook.com/documentation/facebook-login)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

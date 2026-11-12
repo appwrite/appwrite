@@ -4,13 +4,11 @@ import { useSequentialShortcuts } from '@/hooks/use-keyboard-shortcuts'
 
 export const THEME_LIGHT_SHORTCUT = 't l'
 export const THEME_DARK_SHORTCUT = 't d'
-export const THEME_SYSTEM_SHORTCUT = 't a'
 
 export const THEME_LIGHT_SHORTCUT_RAW = 'T L'
 export const THEME_DARK_SHORTCUT_RAW = 'T D'
-export const THEME_SYSTEM_SHORTCUT_RAW = 'T A'
 
-export type ThemeShortcutValue = 'light' | 'dark' | 'system'
+export type ThemeShortcutValue = 'light' | 'dark'
 
 export function buildThemeSequentialShortcuts(
   setTheme: (theme: ThemeShortcutValue) => void,
@@ -18,7 +16,6 @@ export function buildThemeSequentialShortcuts(
   return {
     [THEME_LIGHT_SHORTCUT]: () => setTheme('light'),
     [THEME_DARK_SHORTCUT]: () => setTheme('dark'),
-    [THEME_SYSTEM_SHORTCUT]: () => setTheme('system'),
   }
 }
 

@@ -1,0 +1,23 @@
+---
+layout: changelog
+title: "See why every change was made with reasons in Activity"
+date: 2026-11-12
+cover: /images/blog/announcing-activity-reasons/cover.avif
+tags: console, mcp, cli, security
+---
+
+Your project's Activity tab now shows why each change was made. A new Reason column sits next to every event, and the event's details show the full text, so reviewing what an AI agent or a script changed takes a glance.
+
+- **The Appwrite MCP server** asks the AI agent for a one-line reason with every change it makes, and refuses a change without one.
+- **The Appwrite CLI** takes a reason for any command, either as a flag or as an environment variable that covers a whole CI job.
+- **Your own code** can send a reason with any API request, including from the server SDKs.
+
+A reason is one line of up to 256 characters, in any language. Reasons are available on Appwrite Cloud today.
+
+{% arrow_link href="/blog/post/announcing-activity-reasons" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/security/audit-logs#reason" %}
+Learn how to record a reason
+{% /arrow_link %}

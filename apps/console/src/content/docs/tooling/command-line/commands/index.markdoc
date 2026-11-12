@@ -73,6 +73,9 @@ Below is a list of the available commands in the Appwrite CLI. You can get more 
 * `init [options]`
 * The init command provides a convenient wrapper for creating and initializing projects, functions, tables, buckets, teams, and messaging-topics in Appwrite.
 ---
+* `init apns [options]`
+* Sets up push notifications for an iOS app: creates the APNs production and sandbox providers, configures the Xcode target, and checks the App ID with Apple. Learn more about [one-click APNs setup](/docs/products/messaging/apns#one-click-setup).
+---
 * `pull`
 * The pull command helps you pull your Appwrite project, functions, tables, buckets, teams, and messaging-topics.
 ---

@@ -1,0 +1,78 @@
+---
+layout: integration
+title: MCP with Zed
+description: Connect Zed's agent to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-zed/cover.avif
+category: mcp
+product:
+    vendor: Zed
+    description: "Zed is a code editor built for speed and for collaboration with humans and AI, with agents that can use MCP servers."
+platform:
+    - 'Cloud'
+---
+
+[Zed](https://zed.dev) is a code editor built for speed and for collaboration with humans and AI. Its Agent Panel runs AI agents that edit your code, and it connects to MCP servers, which Zed calls context servers, to give those agents extra tools.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects Zed's agent to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that uses the HTTP transport and signs you in with OAuth, so there is nothing to install and no API key to create.
+
+Once connected, the agent can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation while it codes. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab. Appwrite agent skills add SDK-specific knowledge on top.
+
+{% info title="Self-hosted Appwrite" %}
+The hosted MCP server authenticates against Appwrite Cloud. If you self-host Appwrite, use the [local MCP server](/docs/advanced/self-hosting/mcp) instead. It runs on your machine over stdio and connects to your instance with an API key.
+{% /info %}
+
+# How to implement
+
+To connect Zed to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: Zed opens your browser so you can sign in to Appwrite when it first connects.
+
+## Step 2: Add the Appwrite MCP server to Zed
+
+Open the **Command Palette** (`CMD + Shift + P` on macOS, `CTRL + Shift + P` on Linux) and run the `agent: add context server` action. In the **Remote** tab, set the configuration to:
+
+```json
+{
+  "appwrite": {
+    "url": "https://mcp.appwrite.io/"
+  }
+}
+```
+
+Click **Add Server**, then sign in to your Appwrite account in the browser window that opens and authorize access. You can review the server under **Model Context Protocol (MCP) Servers** in Zed's Agent settings.
+
+## Step 3: Install Appwrite skills
+
+In your project directory, run:
+
+```bash
+npx skills add appwrite/skills
+```
+
+When prompted, select the skills for the SDKs you use, select **Zed** as one of the AI tools, choose a project-level or global install, and select **symlink** as the installation method. Zed loads global skills from `~/.agents/skills/` and project skills from `<worktree>/.agents/skills/`.
+
+## Step 4: Test the integration
+
+Open the Agent Panel and try prompts like:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I set up real-time subscriptions in Appwrite?`
+
+# Read more about Zed and the Appwrite MCP server
+
+If you would like to learn more about Zed and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Use Appwrite with Zed](/docs/tooling/ai/agents/zed)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [Appwrite agent skills](/docs/tooling/ai/skills)
+- [Zed](https://zed.dev)

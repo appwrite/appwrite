@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import {
   refetchProjectBandwidthUsageQueries,
   refetchProjectDatabaseUsageQueries,
@@ -12,6 +12,7 @@ import {
   refetchProjectRealtimeUsageQueries,
   refetchProjectRequestsUsageQueries,
   refetchProjectStorageUsageQueries,
+  useCountryLookups,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -67,6 +68,7 @@ import { categorySupportsChartInterval } from './category-filter-state'
 import { useUsageChartFilters } from '@/hooks/use-usage-chart-filters'
 import { useUsageHistoryLimitAlertState } from '@/hooks/use-usage-history-limit-alert'
 import {
+  alertsInfiniteQueryOptions,
   useMonitors,
   useProject,
   useOrganizationPlan,
@@ -92,10 +94,12 @@ import {
 } from './usage-nav'
 import { UsageFiltersProvider } from './usage-filters-context'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { ActiveFilterChips } from '@/components/global/shared/ActiveFilterChips'
 import {
   buildFilterQueryString,
   mapToQueryParam,
   queryParamToMap,
+  withFilter,
   type CompactFilterKey,
 } from '@/lib/table-filters'
 import {
@@ -503,9 +507,24 @@ function UsageLayoutContent({
   )
   const { features, isCloud, isSelfHosted } = useConsoleProfile()
   const { monitors } = useMonitors(features.alerts ? projectId : null)
+  // An acknowledged alert has someone on it, so it leaves the count while it keeps firing.
+  const { data: firing } = useInfiniteQuery(
+    alertsInfiniteQueryOptions(features.alerts ? projectId : null, {
+      status: 'firing',
+    }),
+  )
+  const acknowledged = new Set(
+    firing?.pages
+      .flatMap((page) => page.alerts)
+      .filter((alert) => alert.acknowledgedAt)
+      .map((alert) => alert.$id),
+  )
   const firingAlerts = features.alerts
     ? monitors.filter(
-        (monitor) => monitor.enabled && monitor.status === 'firing',
+        (monitor) =>
+          monitor.enabled &&
+          monitor.status === 'firing' &&
+          !acknowledged.has(monitor.alertId),
       ).length
     : null
   const alertMetric = features.alerts
@@ -537,6 +556,7 @@ function UsageLayoutContent({
     () => getUsageFilterColumnsForCategory(categoryId, filterAvailability),
     [categoryId, filterAvailability],
   )
+  const { lookups: countryLookups } = useCountryLookups()
   const usageEventFilterQueries = useMemo(
     () =>
       getUsageFilterQueriesForSurface(
@@ -613,9 +633,7 @@ function UsageLayoutContent({
         )
       )
         return
-      const newMap = new Map(usageFilterMap)
-      if (replaceKey) newMap.delete(replaceKey)
-      newMap.set(key, queryStr)
+      const newMap = withFilter(usageFilterMap, key, queryStr, replaceKey)
       navigateUsageFilters(
         mapToQueryParam(
           sanitizeUsageFilterMap(newMap, categoryId, filterAvailability),
@@ -940,6 +958,16 @@ function UsageLayoutContent({
             </div>
           </div>
         </div>
+        {!monitoringPage && showUsageFilters ? (
+          <ActiveFilterChips
+            filterMap={usageFilterMap}
+            columns={usageFilterColumns}
+            countryLookups={countryLookups}
+            onApplyFilter={applyUsageFilter}
+            onRemoveFilter={removeUsageFilter}
+            onClearAllFilters={clearAllUsageFilters}
+          />
+        ) : null}
         {!monitoringPage &&
         showUsageHistoryLimitAlert &&
         hasFiniteUsageLogRetention(organizationPlan) ? (

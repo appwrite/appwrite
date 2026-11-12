@@ -1,12 +1,16 @@
 /**
- * Ensures the current user has a personal organization and at least one project,
- * then sets account prefs so the root redirect sends them to their org.
+ * Ensures the current user has a personal organization, then sets account
+ * prefs so the root redirect sends them to their org.
  *
- * - If the user has no organizations: creates "Personal Projects" (free tier)
- *   and "My first project", sets prefs, returns orgId.
+ * - If the user has no organizations: creates "Personal Projects" (free tier),
+ *   sets prefs, returns orgId.
  * - If the user has organizations but no preferred org in prefs: sets prefs to
- *   the first org and ensures that org has at least one project (creates
- *   "My first project" if none).
+ *   the first org.
+ *
+ * The first project is not created here. An organization without projects
+ * opens the create project dialog, which suggests the region closest to the
+ * visitor; creating it here would land every new project in the API's default
+ * region.
  *
  * Self-hosted instances reject additional organization creation. Remember that
  * denial during navigation, but recheck memberships so invitations can grant access.
@@ -15,16 +19,12 @@
  * are redirected to their org main page.
  */
 
-import { AppwriteException, ID, Query, type Models } from '@appwrite.io/console'
+import { AppwriteException, type Models } from '@appwrite.io/console'
 import type { QueryClient } from '@tanstack/react-query'
 import { setConsoleAccountCache } from '@/lib/console-account-cache'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
-import {
-  createConsoleProject,
-  listConsoleProjects,
-} from '@/lib/appwrite/console-projects'
 import {
   createOrganization,
   fetchOrganizationById,
@@ -40,7 +40,6 @@ import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 
 export const PERSONAL_ORG_NAME = 'Personal Projects'
-const FIRST_PROJECT_NAME = 'My first project'
 
 function isOrganizationCreationProhibited(
   error: unknown,
@@ -118,7 +117,7 @@ export async function resolvePostAuthOrganizationId(
     }
   }
 
-  return await ensurePersonalOrgAndFirstProject(queryClient)
+  return await ensurePersonalOrg(queryClient)
 }
 
 /**
@@ -137,19 +136,17 @@ let inflight: Promise<string> | null = null
 /**
  * Single-flight: sign-up, the post-auth prefetch and the root loader can all
  * call this within the same tick. Running them concurrently used to create a
- * second "Personal Projects" / "My first project".
+ * second "Personal Projects".
  */
-export function ensurePersonalOrgAndFirstProject(
-  queryClient?: QueryClient,
-): Promise<string> {
+export function ensurePersonalOrg(queryClient?: QueryClient): Promise<string> {
   if (inflight) return inflight
-  inflight = provisionPersonalOrgAndFirstProject(queryClient).finally(() => {
+  inflight = provisionPersonalOrg(queryClient).finally(() => {
     inflight = null
   })
   return inflight
 }
 
-async function provisionPersonalOrgAndFirstProject(
+async function provisionPersonalOrg(
   queryClient?: QueryClient,
 ): Promise<string> {
   const account = await fetchConsoleAccount()
@@ -203,12 +200,6 @@ async function provisionPersonalOrgAndFirstProject(
         [USER_PREFS_KEY_ORGANIZATION]: orgId,
       }),
     )
-
-    await createConsoleProject({
-      projectId: ID.unique(),
-      name: FIRST_PROJECT_NAME,
-      teamId: orgId,
-    })
     return orgId
   }
 
@@ -222,22 +213,6 @@ async function provisionPersonalOrgAndFirstProject(
         [USER_PREFS_KEY_ORGANIZATION]: orgId,
       }),
     )
-  }
-
-  // A failed listing must abort provisioning rather than read as "no
-  // projects" and create a duplicate, so this does not go through the
-  // error-swallowing fetchOrganizationProjects().
-  const { total } = await listConsoleProjects({
-    organizationId: orgId,
-    queries: [Query.limit(1)],
-    total: true,
-  })
-  if (total === 0) {
-    await createConsoleProject({
-      projectId: ID.unique(),
-      name: FIRST_PROJECT_NAME,
-      teamId: orgId,
-    })
   }
 
   return orgId

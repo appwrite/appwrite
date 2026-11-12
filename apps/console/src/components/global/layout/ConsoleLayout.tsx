@@ -6,6 +6,7 @@ import { CloudStatusBanner } from './CloudStatusBanner'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { ZeroBanner } from '@/components/global/shared/ZeroBanner'
 import { ProductHuntPromoBanner } from '@/components/global/shared/ProductHuntPromoBanner'
+import { Mcp1LaunchBanner } from '@/components/global/shared/Mcp1LaunchBanner'
 import { StartPromoBanner } from '@/components/global/shared/StartPromoBanner'
 import { NetworkOfflineCurtain } from '@/components/global/shared/NetworkOfflineCurtain'
 import { SkipToContent } from './SkipToContent'
@@ -191,6 +192,7 @@ export function ConsoleLayout({
           <ConsoleImpersonationBanner />
           <ZeroBanner />
           {!hideHeader ? <ProductHuntPromoBanner /> : null}
+          {!hideHeader ? <Mcp1LaunchBanner /> : null}
           {!hideHeader ? <StartPromoBanner /> : null}
           {headerBanner}
           {showAppHeader ? (

@@ -1,5 +1,5 @@
 import { useTheme } from 'next-themes'
-import { Sun, Moon, Contrast } from 'lucide-react'
+import { Sun, Moon } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -17,9 +17,9 @@ function ThemeToggleGroup({ className }: { className?: string }) {
   return (
     <ToggleGroup
       type="single"
-      value={theme}
+      value={theme ?? 'dark'}
       onValueChange={(value) => {
-        if (value) setTheme(value)
+        if (value === 'light' || value === 'dark') setTheme(value)
       }}
       className={cn('rounded-lg bg-muted/50 p-0.5', className)}
     >
@@ -38,14 +38,6 @@ function ThemeToggleGroup({ className }: { className?: string }) {
         {...analyticsAttrs('theme-toggle')}
       >
         <Moon className="h-4 w-4" />
-      </ToggleGroupItem>
-      <ToggleGroupItem
-        value="system"
-        aria-label={t('System theme')}
-        className="h-7 w-7 rounded-md data-[state=on]:bg-accent data-[state=on]:text-foreground"
-        {...analyticsAttrs('theme-toggle')}
-      >
-        <Contrast className="h-4 w-4" />
       </ToggleGroupItem>
     </ToggleGroup>
   )

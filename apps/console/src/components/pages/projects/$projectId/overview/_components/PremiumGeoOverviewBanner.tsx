@@ -173,7 +173,7 @@ export function PremiumGeoOverviewBanner({
         className="border-b border-border"
         aria-labelledby="premium-geo-overview-promo-title"
       >
-        <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+        <div className="w-full px-4 py-4 sm:px-6">
           <div className="flex items-center gap-4 sm:gap-5">
             <div className="shrink-0 self-start pt-1">
               {paymentMethodMissing ? (

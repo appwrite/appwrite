@@ -1,0 +1,88 @@
+---
+layout: integration
+title: OAuth with FusionAuth
+description: Sign users in through your FusionAuth instance
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-fusionauth/cover.avif
+category: auth
+product:
+    vendor: FusionAuth
+    description: 'FusionAuth is a customer identity and access management platform that you can self-host or run in FusionAuth Cloud.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[FusionAuth](https://fusionauth.io/) is a customer identity and access management platform for login, registration, multi-factor authentication, and single sign-on. You can run it on your own infrastructure or use FusionAuth Cloud.
+
+# How does the integration work?
+
+You can use the FusionAuth OAuth adapter in Appwrite Auth to sign users in through your FusionAuth instance. Appwrite redirects users to FusionAuth's hosted login pages, exchanges the authorization code for tokens, and creates an Appwrite user from the OpenID Connect user info. Your users keep a single identity in FusionAuth, and your app gets Appwrite sessions, permissions, and APIs on top of it.
+
+Appwrite requests the `openid`, `profile`, and `email` scopes, plus `offline_access` for a refresh token. It marks the user's email as verified only when FusionAuth returns `email_verified` as `true`.
+
+# Prerequisites
+
+- A FusionAuth instance served over HTTPS. Appwrite calls its token and user info endpoints from the server, so the instance must be reachable from your Appwrite project.
+- Access to the FusionAuth admin UI.
+
+# How to implement
+
+To implement the FusionAuth OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an application in FusionAuth
+
+In the FusionAuth admin UI, click **Applications** in the left navigation, then **Add**. Enter a **Name**, select the **Tenant** your users belong to, and open the **OAuth** tab.
+
+Under **Enabled grants**, keep **Authorization Code** enabled, and keep **Refresh Token** enabled if you want Appwrite to receive refresh tokens. New applications enable both by default. Click **Save**.
+
+Reopen the application and save the **Client Id** and **Client secret** from the **OAuth** tab for later use. You'll add the redirect URL after you configure Appwrite in the next step.
+
+## Step 2: Add FusionAuth OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **FusionAuth** under the **OAuth2 Providers** section.
+
+Fill in the provider form:
+
+- **Client ID**: the application's Client Id.
+- **Client Secret**: the application's Client secret.
+- **Domain**: the host name of your FusionAuth instance without `https://`, for example `example.fusionauth.io`. Appwrite builds the endpoints from it, such as `https://example.fusionauth.io/oauth2/authorize`.
+
+Turn the provider on and click **Update**. Appwrite won't enable the provider until the **Domain** field is set.
+
+Copy the **Redirect URI** shown in the form. On Appwrite Cloud it looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/fusionauth/<PROJECT_ID>`, but always copy the exact value from the Console. In FusionAuth, edit the application and add it to **Authorized redirect URLs** on the **OAuth** tab. FusionAuth rejects redirect URLs that aren't listed.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Fusionauth` value. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Fusionauth,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about FusionAuth and Appwrite Auth
+
+If you would like to learn more about FusionAuth and Appwrite Auth, we have some resources that you should visit:
+
+- [FusionAuth applications](https://fusionauth.io/docs/concepts/types/applications)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

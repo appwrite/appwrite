@@ -207,6 +207,7 @@ $renewDate = $certificates->issueCertificate(
 );
 
 $status = $certificates->getCertificateStatus('cdn.example.com', null);
+$expiry = $certificates->getCertificateExpiry('cdn.example.com', null);
 $renewRequired = $certificates->isRenewRequired('cdn.example.com', null);
 ```
 
@@ -215,6 +216,8 @@ $renewRequired = $certificates->isRenewRequired('cdn.example.com', null);
 `getCertificateStatus()` returns a `Certificates\Status` constant. Fastly keeps a subscription `pending` while it waits for the domain owner to prove ownership, so the provider also reads the subscription's TLS authorizations: when one is `blocked`, or the subscription has `failed`, it throws `Exception\Certificate` instead of returning a status. The exception carries `getStatus()` (`Status::BLOCKED` or `Status::FAILED`), `getChallenges()` (the DNS records to create, as `Certificates\Challenge` values with a `type`, `recordType`, `recordName` and `values`) and `getWarnings()` (Fastly's own instructions, such as a record that conflicts with a challenge). `FastlyTls::CHALLENGE_MANAGED_DNS` is the `_acme-challenge` CNAME challenge, the one that proves ownership without pointing the domain itself at Fastly.
 
 Fastly renews certificates on its own, but marks a subscription `failed` only a week after its certificate expired. When the newest certificate expires within a week and Fastly has not replaced it, `getCertificateStatus()` returns `Status::EXPIRING`. Alert on it rather than issue again: Fastly accepts a retry only once the subscription has failed. `isRenewRequired()` is true only when issuing does something: no subscription or a failed one, or, for `Fastly`, a domain missing from domain management, attached to another service, or detached.
+
+`getCertificateExpiry()` returns when the certificate serving the domain expires, as `Y-m-d H:i:s.v` in UTC, or `null` when the provider cannot tell. Fastly reads it from the newest certificate with one subscription lookup and no activation requests, so a stuck renewal keeps reporting the old certificate's date, which is in the past once it has expired, and a subscription still waiting on its first certificate reports `null`.
 
 ```php
 use Utopia\Cdn\Exception\Certificate as CertificateException;
@@ -263,7 +266,7 @@ $cloudflareCertificates = new Cloudflare(
 );
 ```
 
-Cloudflare custom-hostname issuance is treated as instant. Certificate status retrieval is not supported by this provider.
+Cloudflare custom-hostname issuance is treated as instant. Certificate status retrieval is not supported by this provider, and `getCertificateExpiry()` returns `null` rather than spend another custom hostname lookup on a certificate Cloudflare renews by itself.
 
 ### CloudFront certificates
 
@@ -282,6 +285,7 @@ $cloudFrontCertificates = new CloudFront(
 
 - `issueCertificate()` creates the tenant with a certificate request, or sends a fresh request when the tenant's certificate failed, timed out, expired or was revoked, and enables a disabled tenant. It returns `null` until the certificate is issued, then a date `CloudFront::RECHECK_INTERVAL` ahead: AWS renews by itself, so the date is only when to look again.
 - `getCertificateStatus()` returns `Status::PENDING` while the certificate waits on validation and `Status::ISSUED` once issued, and throws `Exception\Certificate` with `Status::FAILED` when AWS has stopped trying.
+- `getCertificateExpiry()` returns `null`: the managed certificate details carry no expiry, and reading it from ACM needs a permission this provider does not ask for.
 - `deleteCertificate()` disables the tenant, which CloudFront requires, and deletes it. When the disable has not propagated yet the delete throws, leaving the tenant disabled for a later attempt.
 
 By default the certificate is requested with a `self-hosted` validation token, which lets it be issued while the domain still points at another CDN. Whatever serves the domain then has to answer the certificate authority's request with a redirect to the token:
@@ -296,7 +300,7 @@ Pass `validationTokenHost: CloudFront::VALIDATION_TOKEN_HOST_CLOUDFRONT` when do
 
 ### Certificate routing
 
-`Certificates\Provider\Proxy` sends `site`, `network`, and `redirect` domains to the network provider, the application domain to its provider, and all other domains to every custom-domain provider.
+`Certificates\Provider\Proxy` sends `site`, `network`, and `redirect` domains to the network provider, the application domain to its provider, and all other domains to every custom-domain provider. With several custom-domain providers, `getCertificateExpiry()` returns the earliest expiry any of them reports, so a certificate about to lapse on one is not hidden by a newer one on another.
 
 ```php
 use Utopia\Cdn\Certificates\Provider\Proxy;

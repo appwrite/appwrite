@@ -14,11 +14,11 @@ If you're trying to migrate to a newer minor version, you should upgrade to each
 1. `1.6.2`
 1. `1.7.4`
 
-`1.9` is the exception: [`1.9.6`](https://github.com/appwrite/appwrite/releases/tag/1.9.6) added a new migration in a patch release, and each migration only runs its own changes. From `1.8.x` or earlier, upgrade to `1.9.5` and run the migration before moving to `1.9.10`, or the `1.9` migration is skipped. For example, from `1.8.1` to `2.7.0` you should upgrade to:
+`1.9` is the exception: [`1.9.6`](https://github.com/appwrite/appwrite/releases/tag/1.9.6) added a new migration in a patch release, and each migration only runs its own changes. From `1.8.x` or earlier, upgrade to `1.9.5` and run the migration before moving to `1.9.10`, or the `1.9` migration is skipped. For example, from `1.8.1` to `2.7.1` you should upgrade to:
 
 1. `1.9.5`
 1. `1.9.10`
-1. `2.7.0`
+1. `2.7.1`
 
 Recent versions share a migration and can skip minor versions. The [latest upgrade section](#upgrading-to-latest) names the oldest version that upgrades to the current release in one step. From an older version, upgrade to that version first.
 
@@ -28,9 +28,15 @@ Before upgrading, be sure to:
 1. review the [changelog](https://github.com/appwrite/appwrite/releases) for any breaking changes
 1. test the migration process on a non-production instance to make sure your application is working well
 
-# Upgrading to 2.7.0 {% #upgrading-to-latest %}
+# Upgrading to 2.7.1 {% #upgrading-to-latest %}
 
-Appwrite 2.7.0 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.7.0` tag, then run the migration.
+Back up your data first.
+
+2.7.1 is a security release. It updates the Open Runtimes executor from `1.1.2` to `1.3.1`. The old executor followed symlinks that a function or site planted in its logs, build output or build cache, so a deployment could read files from the executor container, including `_APP_EXECUTOR_SECRET`. With that secret, code in a function can call the executor directly, and the executor controls Docker on the host. If anyone you don't fully trust can deploy functions or sites on your instance, upgrade and then rotate `_APP_EXECUTOR_SECRET`.
+
+From `2.7.0`, the upgrade only replaces the images. 2.7.1 has no schema changes and keeps the same 1.2.138 Console, so the migration has nothing to change.
+
+Appwrite 2.7.1 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.7.1` tag, then run the migration.
 
 ```sh
 docker run -it --rm \
@@ -38,7 +44,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="upgrade" \
-    appwrite/appwrite:2.7.0
+    appwrite/appwrite:2.7.1
 ```
 
 Then run the migration from the `appwrite` directory.
@@ -48,14 +54,18 @@ cd appwrite/
 docker compose exec appwrite migrate
 ```
 
-The V25 migration is idempotent and adds:
+If you maintain your own `docker-compose.yml`, set the `openruntimes-executor` image to `openruntimes/executor:1.3.1` and run `docker compose up -d`.
+
+To rotate the executor secret, set a new `_APP_EXECUTOR_SECRET` in `.env` and run `docker compose up -d`. This recreates the API, the workers and the executor together, so nothing needs the old value.
+
+From `2.6.x` or earlier, the V25 migration is idempotent and adds:
 
 - `prefs` on projects; `alertsUnsubscribed` on users; the GeoIP attributes on sessions; and `folder` with its index on buckets created before 2.0.0.
 - `type` on transactions, backfilled to `legacy` for existing ones.
 - `topicInternalId` indexes on the push ledger. Ledger entries are now bound to their topic, so entries written before the upgrade have no `topicInternalId` and are never replayed. Push messages a device had not yet received over MQTT when you upgrade are not delivered when it reconnects; the age-based prune removes those entries. New messages replay as before.
 - The `transfers`, `monitors`, `monitorAlerts` and `reviews` collections, used by API features that have no self-hosted Console screen yet.
 
-Check these before upgrading:
+If you're upgrading from `2.6.x` or earlier, also check these, which come from 2.7.0:
 
 - **Server key**: nothing to change. Keep `_APP_OPENSSL_KEY_V1`. To rotate it later, recreate the containers after each configuration change with `docker compose up -d` (`docker compose restart` keeps the old environment): set `_APP_OPENSSL_KEY_V2` in `.env` and run `docker compose up -d`; set `_APP_OPENSSL_KEY_CURRENT=2` and run `docker compose up -d`; run `docker compose exec appwrite encryption` (a dry run that counts what's left), then `docker compose exec appwrite encryption --commit=true` (resume with `--after=<projectId>` if it stops); then set `_APP_OPENSSL_KEY_OLDEST=2` and run `docker compose up -d` to stop accepting V1 tokens. JWTs and resource tokens signed with V1 stop working at that point. Files already encrypted in storage are not re-encrypted, so keep `_APP_OPENSSL_KEY_V1` configured.
 - **Realtime and MQTT clients**: a connection over 100 subscriptions, channels or queries now gets an error, and a user's 33rd connection on one worker is closed. Raise the realtime limits with the variables above if your app needs more.
@@ -67,7 +77,7 @@ Check these before upgrading:
 - **Maintenance**: `_APP_MAINTENANCE_INTERVAL` should be a multiple of 300 seconds. The default, 86400, is.
 - **New optional variables**: `_APP_OPENSSL_KEY_V2`, `_APP_OPENSSL_KEY_CURRENT`, `_APP_OPENSSL_KEY_OLDEST`, `_APP_LIMIT_REALTIME_SUBSCRIPTIONS`, `_APP_LIMIT_REALTIME_CHANNELS`, `_APP_LIMIT_REALTIME_QUERIES`, `_APP_DB_MAX_CONNECTIONS` and `_APP_DOMAIN_FUNCTIONS_FALLBACK`.
 
-If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0), [`2.3.0`](https://github.com/appwrite/appwrite/releases/tag/2.3.0), [`2.4.0`](https://github.com/appwrite/appwrite/releases/tag/2.4.0), [`2.5.0`](https://github.com/appwrite/appwrite/releases/tag/2.5.0), [`2.6.0`](https://github.com/appwrite/appwrite/releases/tag/2.6.0), [`2.6.1`](https://github.com/appwrite/appwrite/releases/tag/2.6.1), [`2.6.2`](https://github.com/appwrite/appwrite/releases/tag/2.6.2).
+If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0), [`2.3.0`](https://github.com/appwrite/appwrite/releases/tag/2.3.0), [`2.4.0`](https://github.com/appwrite/appwrite/releases/tag/2.4.0), [`2.5.0`](https://github.com/appwrite/appwrite/releases/tag/2.5.0), [`2.6.0`](https://github.com/appwrite/appwrite/releases/tag/2.6.0), [`2.6.1`](https://github.com/appwrite/appwrite/releases/tag/2.6.1), [`2.6.2`](https://github.com/appwrite/appwrite/releases/tag/2.6.2), [`2.7.0`](https://github.com/appwrite/appwrite/releases/tag/2.7.0).
 
 # Upgrading within the 1.9 line {% #upgrading-1-9 %}
 
@@ -107,7 +117,7 @@ Your Appwrite installation's parent directory name is expected to be `appwrite`.
 {% /info %}
 
 {% info title="Choose an image tag" %}
-Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.7.0`). Avoid using `latest` in production.
+Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.7.1`). Avoid using `latest` in production.
 {% /info %}
 
 ## Unix

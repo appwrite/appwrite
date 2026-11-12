@@ -86,6 +86,7 @@ final class OAuth2Provider extends Resource
         'tradeshiftBox' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'twitch' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'vipps' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'vippsSandbox' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'webflow' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'wordpress' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'x' => ['clientId' => ['target' => self::TARGET_APP_ID]],

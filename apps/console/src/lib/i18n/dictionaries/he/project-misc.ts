@@ -330,6 +330,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You don't have permission to update firewall settings.":
     'אין לכם הרשאה לעדכן הגדרות חומת אש.',
   'No firewall rules': 'אין כללי חומת אש',
+  'Configure rules': 'הגדרת כללים',
+  'Rules that apply to this site appear here.':
+    'הכללים שחלים על האתר הזה יופיעו כאן.',
+  'Rules that apply to this function appear here.':
+    'הכללים שחלים על הפונקציה הזו יופיעו כאן.',
   'No API firewall rules': 'אין כללי חומת אש ל-API',
   'No function firewall rules': 'אין כללי חומת אש לפונקציות',
   'No site firewall rules': 'אין כללי חומת אש לאתרים',
@@ -993,6 +998,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Clear: 'ניקוי',
   Apply: 'החלה',
   Compare: 'השוואה',
+  vs: 'לעומת',
   'No comparison': 'ללא השוואה',
   'Show only current period': 'הצגת התקופה הנוכחית בלבד',
   'Previous period': 'תקופה קודמת',
@@ -1054,10 +1060,38 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קבעו אם הנכס הזה מקבל אירועים.',
   'Tracking enabled': 'המעקב הופעל',
   'Tracking disabled': 'המעקב הושבת',
+  'Browser versions': 'גרסאות דפדפן',
+  'OS versions': 'גרסאות מערכת הפעלה',
+  'Versions': 'גרסאות',
+  'Browser version': 'גרסת דפדפן',
+  'OS version': 'גרסת מערכת הפעלה',
+  'Identified users, ranked by visitors':
+    'משתמשים מזוהים, לפי מספר המבקרים',
+  'No identified users in this range':
+    'אין משתמשים מזוהים בטווח הזה',
+  'Event properties': 'מאפייני אירועים',
+  'Models and tools': 'מודלים וכלים',
+  'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
+  'No calls in this range': 'אין קריאות בטווח הזה',
+  'Values of the props sent with your events':
+    'ערכי ה-props שנשלחו עם האירועים',
+  'No event props in this range': 'אין props של אירועים בטווח הזה',
+  'Not available with this filter': 'לא זמין עם המסנן הזה',
+  'User identification': 'זיהוי משתמשים',
+  'Identify signed-in users': 'זיהוי משתמשים מחוברים',
+  'User identification enabled': 'זיהוי המשתמשים הופעל',
+  'User identification disabled': 'זיהוי המשתמשים הושבת',
+  'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.':
+    'משתמשים מזוהים ייחודיים. נספרים רק אירועים שכוללים מזהה משתמש; מבקרים אנונימיים אינם נכללים.',
+  "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.":
+    'תיעוד מזהה המשתמש המחובר באירועים שנשלחים מסשן לקוח, כדי לספור ולפלח תנועה לפי משתמש. מבקרים אנונימיים אינם מושפעים. המזהים הם מזהי המשתמשים של הפרויקט, לעולם לא כתובות אימייל או שמות. יש להפעיל זאת רק אם מדיניות הפרטיות מכסה קישור של נתוני אנליטיקס לחשבונות משתמשים.',
   'Tracking is enabled': 'המעקב פעיל',
-  'Primary domain being tracked. Optional for native apps.':
-    'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',
+  'Primary domain being tracked. May be empty for mobile and agent properties.':
+    'הדומיין הראשי שנמצא במעקב. יכול להישאר ריק בנכסים של מובייל וסוכנים.',
   'Domain updated': 'הדומיין עודכן',
+  'Type updated': 'הסוג עודכן',
+  'Only changes which panels the dashboard shows.':
+    'משנה רק אילו חלוניות מוצגות בלוח הבקרה.',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     'מקורות שמורשים לשלוח אירועי מעקב. השתמשו ב-* כדי לאפשר את כל המקורות.',
   'https://example.com': 'https://example.com',
@@ -1134,8 +1168,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Exit pages': 'דפי יציאה',
   'Where visitors came from': 'מהיכן הגיעו המבקרים',
   'Most visited paths': 'הנתיבים הנצפים ביותר',
+  Screens: 'מסכים',
+  'Most viewed screens': 'המסכים הנצפים ביותר',
   'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
+  'What visitors are using': 'במה המבקרים משתמשים',
   'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
   'AI agents and crawlers': 'סוכני AI וסורקים',
   Agents: 'סוכנים',
@@ -1162,6 +1199,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'iOS, Android, web ודסקטופ מבסיס קוד אחד.',
   'Any language, straight against the HTTP API.':
     'כל שפה, ישירות מול ה-API של HTTP.',
+  'Websites and browser apps.': 'אתרים ואפליקציות דפדפן.',
+  'iOS and Android apps.': 'אפליקציות iOS ו-Android.',
+  'AI agents and backend services, over the API.':
+    'סוכני AI ושירותי צד שרת, דרך ה-API.',
+  'Decides which panels the dashboard shows. You can change it later in settings.':
+    'קובע אילו חלוניות יוצגו בלוח הבקרה. אפשר לשנות זאת בהמשך בהגדרות.',
+  'The site you are tracking. Page paths in reports link to it.':
+    'האתר שבמעקב. נתיבי הדפים בדוחות מקשרים אליו.',
   'Install the SDK': 'התקנת ה-SDK',
   'Initialize tracking': 'אתחול המעקב',
   'Turn on automatic tracking': 'הפעלת מעקב אוטומטי',
@@ -1371,6 +1416,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'for development (no port or protocol). Add a separate platform for each origin (e.g. localhost and production).':
     'לפיתוח (ללא פורט או פרוטוקול). הוסיפו פלטפורמה נפרדת לכל מקור (למשל localhost וסביבת ייצור).',
   'Troubleshoot CORS errors': 'פתרון שגיאות CORS',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'כל אתר יכול לשלוח בקשות לפרויקט הזה. לפני העלייה לאוויר, החליפו את * בדומיין של האפליקציה שלכם, למשל app.example.com.',
   'Bundle ID': 'מזהה Bundle',
   'Application ID': 'מזהה אפליקציה',
   'Package identifier': 'מזהה חבילה',
@@ -1895,6 +1942,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Use a date range longer than this interval.':
     'השתמשו בטווח תאריכים ארוך מהמרווח הזה.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
+  'This interval is larger than the selected date range.':
+    'המרווח הזה גדול מטווח התאריכים שנבחר.',
   Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
   'Copy API endpoint': 'העתקת נקודת קצה של API',
@@ -2371,8 +2420,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'All project protocols will be enabled.': 'כל הפרוטוקולים של הפרויקט יופעלו.',
   'All protocols for': 'כל הפרוטוקולים עבור',
   'All services for': 'כל השירותים עבור',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'האם אתם בטוחים שברצונכם למחוק את הדומיין הזה? לא ניתן לבטל פעולה זו.',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'האם אתם בטוחים שברצונכם להשבית את כל הפרוטוקולים? הדבר יחסום גישת לקוח דרך פרוטוקולים אלה עד שיופעלו מחדש.',
   'Are you sure you want to disconnect this git installation?':
@@ -3585,8 +3632,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קישורים שעדיין לא מומשו. לא ניתן לממש קישורים שפג תוקפם. מחקו קישור כדי שיפסיק לפעול מוקדם יותר.',
   'The project already belongs to this organization.':
     'הפרויקט כבר שייך לארגון זה.',
-  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
-    'רק חברי ארגון שהתפקיד שלהם מאפשר לנהל פרויקטים יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
+  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'רק בעלים של הארגון יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
   'No permission': 'אין הרשאה',
   "You don't have permission to transfer projects in this organization.":
     'אין לכם הרשאה להעביר פרויקטים בארגון זה.',
@@ -3795,6 +3842,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'View monitors': 'הצגת המוניטורים',
   'Waiting for recovery': 'ממתין לחזרה לשגרה',
   Watches: 'עוקב אחר',
+  Acknowledge: 'אישור טיפול',
+  'Acknowledged by {name}': 'בטיפול של {name}',
+  'Acknowledged by a member': 'בטיפול של חבר צוות',
+  'Acknowledged with an API key': 'אושר באמצעות מפתח API',
+  'Failed to acknowledge the alert': 'אישור הטיפול בהתראה נכשל',
+  'Failed to undo the acknowledgement': 'ביטול אישור הטיפול נכשל',
+  'Let your team know someone is on it. It keeps firing until usage recovers.':
+    'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהשימוש יחזור לשגרה.',
+  'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
   "You don't have permission to manage monitors.":
     'אין לכם הרשאה לנהל מוניטורים.',
   'between two alerts from this monitor.': 'בין שתי התראות מהמוניטור הזה.',
@@ -3839,4 +3895,78 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You'll still see these alerts in console notifications.":
     'ההתראות האלה עדיין יופיעו בהתראות ב-Console.',
   'Saving...': 'שומר...',
+  // Firewall rule schedules
+  'Times are in your local time zone:': 'השעות לפי אזור הזמן המקומי שלכם:',
+  'Times follow the time zone this schedule was created in:':
+    'השעות לפי אזור הזמן שבו נוצר התזמון:',
+  'Your local time zone:': 'אזור הזמן המקומי שלכם:',
+  'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
+    'לכלל הזה יש תזמון שגרסה זו של הקונסולה לא יכולה להציג. הוא נשמר אלא אם תסירו אותו או תגדירו תזמון חדש.',
+  'Remove schedule': 'הסרת התזמון',
+  'The schedule will be removed when you save.': 'התזמון יוסר כשתשמרו.',
+  'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
+    'החלת הכלל רק בימים או בשעות מסוימים. כשהאפשרות כבויה, הכלל פעיל תמיד.',
+  Repeat: 'חזרה',
+  'Selected days every week': 'ימים נבחרים בכל שבוע',
+  'Selected days every other week': 'ימים נבחרים כל שבועיים',
+  'Weekends (Sat and Sun)': 'סופי שבוע (שבת וראשון)',
+  'Every few days': 'כל כמה ימים',
+  'Days of the week': 'ימים בשבוע',
+  'Select at least one day.': 'בחרו לפחות יום אחד.',
+  'Repeat every (days)': 'חזרה כל (ימים)',
+  'Starting on': 'תאריך התחלה',
+  'The week of this date is the first active week.':
+    'השבוע של התאריך הזה הוא השבוע הפעיל הראשון.',
+  'The first active day. The rule is never active before it.':
+    'היום הפעיל הראשון. לפניו הכלל אינו פעיל.',
+  'All day': 'כל היום',
+  'Start and end times must differ. Turn on All day for the whole day.':
+    'שעת ההתחלה ושעת הסיום חייבות להיות שונות. לכל היום, הפעילו את "כל היום".',
+  'This window crosses midnight: it starts on each selected day and ends the next morning.':
+    'חלון הזמן חוצה את חצות: הוא מתחיל בכל יום נבחר ומסתיים למחרת בבוקר.',
+
+  // Project dashboard: resources, apps and API keys
+  'Your resources': 'המשאבים שלכם',
+  'View all databases': 'צפייה בכל מסדי הנתונים',
+  'View all sites': 'צפייה בכל האתרים',
+  'Files up to': 'קבצים עד',
+  'View all functions': 'צפייה בכל הפונקציות',
+  'View all buckets': 'צפייה בכל הבאקטים',
+  'View all users': 'צפייה בכל המשתמשים',
+  'View all topics': 'צפייה בכל הנושאים',
+  'View all API keys': 'צפייה בכל מפתחות ה-API',
+  'Failed to load sites': 'טעינת האתרים נכשלה',
+  'Failed to load functions': 'טעינת הפונקציות נכשלה',
+  'Failed to load buckets': 'טעינת הבאקטים נכשלה',
+  'Failed to load users': 'טעינת המשתמשים נכשלה',
+  'Failed to load topics': 'טעינת הנושאים נכשלה',
+  'Store, query, and sync your app data with a managed database.':
+    'אחסון, שאילתות וסנכרון של נתוני האפליקציה שלכם במסד נתונים מנוהל.',
+  'Run backend code on HTTP requests, events, or a schedule.':
+    'הריצו קוד צד שרת בתגובה לבקשות HTTP, לאירועים או לפי תזמון.',
+  'Keep data apart by environment, customer, or workload.':
+    'הפרידו נתונים לפי סביבה, לקוח או עומס עבודה.',
+  'Deploy another app, a landing page, or your docs.':
+    'פרסו אפליקציה נוספת, דף נחיתה או את התיעוד שלכם.',
+  'Add a webhook, a scheduled job, or an event handler.':
+    'הוסיפו Webhook, משימה מתוזמנת או טיפול באירועים.',
+  'Group files with their own permissions and limits.':
+    'קבצו קבצים עם הרשאות ומגבלות משלהם.',
+  'Add a user by hand, or let people sign up from your app.':
+    'הוסיפו משתמש ידנית, או אפשרו הרשמה מהאפליקציה שלכם.',
+  'Group subscribers to message them all at once.':
+    'קבצו מנויים כדי לשלוח הודעה לכולם בבת אחת.',
+  'Add each web, mobile, or desktop app that calls this project.':
+    'הוסיפו כל אפליקציית Web, מובייל או דסקטופ שפונה לפרויקט הזה.',
+  'Give your servers and scripts scoped access to this project.':
+    'העניקו לשרתים ולסקריפטים שלכם גישה לפרויקט הזה עם הרשאות מוגדרות.',
+  'Use a key per server or environment, with only the scopes it needs.':
+    'השתמשו במפתח נפרד לכל שרת או סביבה, עם ההרשאות הנחוצות בלבד.',
+  'Upload and serve files with permissions, encryption, and image previews.':
+    'העלו והגישו קבצים עם הרשאות, הצפנה ותצוגות מקדימות לתמונות.',
+  'Sign users in with email, OAuth providers, phone, or passkeys.':
+    'אפשרו למשתמשים להתחבר עם אימייל, ספקי OAuth, טלפון או מפתחות גישה.',
+  'Send email, SMS, and push notifications to your users.':
+    'שלחו למשתמשים שלכם אימיילים, הודעות SMS והתראות פוש.',
+  'Auto-deploy on every push': 'פריסה אוטומטית בכל push',
 }

@@ -49,7 +49,7 @@ function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
     dueDate,
     paidDate,
     status,
-    amount: apiInvoice.grossAmount || apiInvoice.amount,
+    amount: apiInvoice.grossAmount ?? apiInvoice.amount,
     currency: apiInvoice.currency || 'USD',
     downloadUrl: undefined,
     lastError: apiInvoice.lastError || undefined,

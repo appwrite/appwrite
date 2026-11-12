@@ -878,6 +878,17 @@
             "data",
             "permissions",
             "transactionId"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
         ]
     },
     "console": {
@@ -1146,6 +1157,10 @@
         "alerts.list": [
             "queries",
             "total"
+        ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
@@ -3414,6 +3429,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -5124,6 +5144,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     },
     "server": {
@@ -5376,6 +5410,10 @@
         "alerts.list": [
             "queries",
             "total"
+        ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
@@ -7578,6 +7616,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -9166,6 +9209,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     }
 }
