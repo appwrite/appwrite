@@ -210,6 +210,37 @@ final class SitesConsoleClientTest extends Scope
             $this->assertSame([Permission::read(Role::team($teamId))], $file['body']['$permissions']);
         }
 
+        /**
+         * Test for SUCCESS - claiming a transfer link moves the screenshots too
+         */
+        $claimer = $this->createTeamFixture($console, [
+            'teamId' => Id::unique(),
+            'name' => 'Screenshots Claiming Team',
+        ]);
+        $this->assertSame(200, $claimer['headers']['status-code']);
+        $claimerId = $claimer['body']['$id'];
+
+        $transfer = $this->client->call(Client::METHOD_POST, '/organization/transfers', array_merge($console, [
+            'x-appwrite-organization' => $teamId,
+        ]), [
+            'projectId' => $this->getProject()['$id'],
+        ]);
+        $this->assertSame(201, $transfer['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/organization/transfers/' . $transfer['body']['$id'] . '/status', array_merge($console, [
+            'x-appwrite-organization' => $claimerId,
+        ]), [
+            'secret' => $transfer['body']['secret'],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($claimerId, $response['body']['teamId']);
+
+        foreach ($files as $fileId) {
+            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
+            $this->assertSame(200, $file['headers']['status-code']);
+            $this->assertSame([Permission::read(Role::team($claimerId))], $file['body']['$permissions']);
+        }
+
         $this->cleanupSite($siteId);
     }
 
