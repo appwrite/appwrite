@@ -24,6 +24,7 @@ use Appwrite\Platform\Appwrite;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Transformation\Adapter\Analytics;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
 use Appwrite\Usage\Context;
@@ -717,11 +718,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $executionResponse['body'] = $streamBody;
             }
 
-            // Ended only here, once the executor has confirmed the rest of the envelope arrived.
-            if ($streamed === true) {
-                $response->stream('', true);
-            }
-
             $headerOverrides = [];
 
             // Branded 404 override
@@ -733,24 +729,47 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $isResponseBranded = true;
             }
 
-            // Branded banner for previews
+            // Branded banner for previews, analytics tracker for production sites
             if (!$isResponseBranded) {
-                if (\is_null($apiKey) || $apiKey->isBannerDisabled() === false) {
-                    $transformation = new Transformation();
+                $transformation = new Transformation();
+
+                if ($isPreview && (\is_null($apiKey) || $apiKey->isBannerDisabled() === false)) {
                     $transformation->addAdapter(new Preview());
-                    $transformation->setInput($executionResponse['body']);
+                }
 
-                    $simpleHeaders = [];
-                    foreach ($executionResponse['headers'] as $key => $value) {
-                        $simpleHeaders[$key] = \is_array($value) ? \implode(', ', $value) : $value;
-                    }
+                // Cloud-only site attributes; absent on self-hosted, so this never applies there.
+                // Banner-disabled keys are the screenshot worker's; its captures are not visits.
+                $propertyId = $resource->getAttribute('analyticsPropertyId', '');
+                if ($type === 'site' && !$isPreview && $apiKey?->isBannerDisabled() !== true && $resource->getAttribute('analyticsEnabled', false) === true && !empty($propertyId)) {
+                    $web = \array_values(\array_filter(
+                        Config::getParam('sdks')[APP_SDK_PLATFORM_CLIENT]['sdks'],
+                        fn (array $sdk) => $sdk['key'] === 'web'
+                    ))[0];
+                    $transformation->addAdapter(new Analytics($endpoint, $project->getId(), $propertyId, $web['version']));
+                }
 
-                    $transformation->setTraits($simpleHeaders);
-                    if ($isPreview && $transformation->transform()) {
+                // A streamed body has already gone out, so the input is empty and only the additions are sent.
+                $transformation->setInput($executionResponse['body']);
+
+                $simpleHeaders = [];
+                foreach ($executionResponse['headers'] as $key => $value) {
+                    $simpleHeaders[$key] = \is_array($value) ? \implode(', ', $value) : $value;
+                }
+
+                $transformation->setTraits($simpleHeaders);
+                if ($transformation->transform()) {
+                    if ($streamed === true) {
+                        $response->stream($transformation->getOutput());
+                    } else {
                         $executionResponse['body'] = $transformation->getOutput();
                         $headerOverrides['content-length'] = \strlen($executionResponse['body']);
                     }
                 }
+            }
+
+            // Ended only here, once the executor has confirmed the rest of the envelope arrived and the transformers ran.
+            if ($streamed === true) {
+                $response->stream('', true);
             }
 
             // Branded error pages (when developer left body empty)

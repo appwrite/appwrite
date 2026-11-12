@@ -11,7 +11,7 @@ class Mock extends Adapter
      */
     public function isValid(array $traits): bool
     {
-        if ($traits['mock'] === true) {
+        if (($traits['mock'] ?? false) === true) {
             return true;
         }
 
