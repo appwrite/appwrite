@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
+use Appwrite\Bus\Events\RuleVerified;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -549,6 +550,9 @@ class Certificates extends Action
         Realtime $queueForRealtime,
         Bus $bus
     ): void {
+        // Read before the update, to tell a domain going live from a renewal
+        $previousStatus = $dbForPlatform->getDocument('rules', $rule->getId())->getAttribute('status', '');
+
         $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
             'status' => $rule->getAttribute('status'),
             'certificateId' => $rule->getAttribute('certificateId'),
@@ -603,6 +607,11 @@ class Certificates extends Action
             ->setSubscribers(['console', $projectId])
             ->from($queueForEvents)
             ->trigger();
+
+        // Last, so a failure to email the owners cannot hold back the events above
+        if ($previousStatus !== RULE_STATUS_VERIFIED && $rule->getAttribute('status') === RULE_STATUS_VERIFIED) {
+            $bus->dispatch(new RuleVerified($rule->getArrayCopy(), $project->getArrayCopy()));
+        }
     }
 
     /**

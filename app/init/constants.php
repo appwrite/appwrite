@@ -382,6 +382,7 @@ const ALERT_UNSUBSCRIBE_TTL = 60 * 60 * 24 * 90; // An alert email's unsubscribe
 const MAIL_TEMPLATE_ALERT = 'alert';
 const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
 const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
+const MAIL_TEMPLATE_DOMAIN_VERIFIED = 'domain-verified';
 const MAIL_TEMPLATE_INVITATION = 'invitation';
 const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
 const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
