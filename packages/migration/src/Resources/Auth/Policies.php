@@ -48,6 +48,7 @@ class Policies extends Resource
         private readonly ?array $passwordRotation = null,
         private readonly ?string $passkeyRpId = null,
         private readonly ?bool $denyRealtimeGuests = null,
+        private readonly ?bool $accountDevices = null,
     ) {
         $this->id = $id;
         $this->createdAt = $createdAt;
@@ -87,6 +88,7 @@ class Policies extends Resource
             passwordRotation: $array['passwordRotation'] ?? null,
             passkeyRpId: $array['passkeyRpId'] ?? null,
             denyRealtimeGuests: $array['denyRealtimeGuests'] ?? null,
+            accountDevices: $array['accountDevices'] ?? null,
         );
     }
 
@@ -121,6 +123,7 @@ class Policies extends Resource
             'passwordRotation' => $this->passwordRotation,
             'passkeyRpId' => $this->passkeyRpId,
             'denyRealtimeGuests' => $this->denyRealtimeGuests,
+            'accountDevices' => $this->accountDevices,
             'createdAt' => $this->createdAt,
             'updatedAt' => $this->updatedAt,
         ];
@@ -266,5 +269,10 @@ class Policies extends Resource
     public function getDenyRealtimeGuests(): ?bool
     {
         return $this->denyRealtimeGuests;
+    }
+
+    public function getAccountDevices(): ?bool
+    {
+        return $this->accountDevices;
     }
 }
