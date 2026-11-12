@@ -126,34 +126,13 @@ class Update extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
         }
 
-        $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
-            if (
-                $challenge->isSet('type') &&
-                $challenge->getAttribute('type') === Type::RECOVERY_CODE
-            ) {
-                $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
-                if (\in_array($otp, $mfaRecoveryCodes)) {
-                    $mfaRecoveryCodes = \array_diff($mfaRecoveryCodes, [$otp]);
-                    $mfaRecoveryCodes = \array_values($mfaRecoveryCodes);
-                    $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-                    $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
-
-                    return true;
-                }
-
-                return false;
-            }
-
-            return false;
-        };
-
         $step = $type === Type::TOTP ? Challenge\TOTP::step($user, $otp) : null;
 
         $success = (match ($type) {
             Type::TOTP => $step !== null,
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
-            Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
+            Type::RECOVERY_CODE => \in_array($otp, $user->getAttribute('mfaRecoveryCodes', []), true),
             Type::CUSTOM => Challenge\Custom::challenge($challenge, $user, $otp),
             default => false
         });
@@ -163,8 +142,21 @@ class Update extends Action
         }
 
         // Claim the challenge under the user row lock an address change takes, which deletes challenges sent to the old address
-        $dbForProject->withTransaction(function () use ($dbForProject, $user, $challengeId, $step) {
-            $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $challengeId, $step, $type, $otp) {
+            $locked = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+
+            // A recovery code is single-use: remove it from the locked row so concurrent confirmations cannot redeem or restore it
+            if ($type === Type::RECOVERY_CODE) {
+                $mfaRecoveryCodes = $locked->getAttribute('mfaRecoveryCodes', []);
+
+                if (!\in_array($otp, $mfaRecoveryCodes, true)) {
+                    throw new Exception(Exception::USER_INVALID_TOKEN);
+                }
+
+                $mfaRecoveryCodes = \array_values(\array_diff($mfaRecoveryCodes, [$otp]));
+                $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+                $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
+            }
 
             // A TOTP code is single-use: spend its step so no other challenge or session can redeem it again
             if ($step !== null && !Challenge\TOTP::spend($dbForProject, $user, $step)) {
