@@ -1,5 +1,7 @@
 parameters:
     level: max
+    scanFiles:
+        - stubs/Image.php
     paths:
         - src
         - tests
