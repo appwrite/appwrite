@@ -301,6 +301,10 @@ abstract class Base extends Action
             }
         }
         $this->validateFileConstraints($bucket, (string) ($upload['name'] ?? $upload['key'] ?? ''), $size);
+        // Completion requires part 1 and a retry must resend the same bytes, so part 1 decides the type.
+        if ($partNumber === 1) {
+            $this->validateContent($bucket, (string) ($upload['name'] ?? $upload['key'] ?? ''), $body);
+        }
 
         $metadata = $upload['metadata'] ?? [];
         $deviceMetadata = $metadata['device'] ?? [];
@@ -451,6 +455,24 @@ abstract class Base extends Action
             if ($extension === '' || !\in_array($extension, $allowed, true)) {
                 throw new AppwriteException(AppwriteException::STORAGE_FILE_TYPE_UNSUPPORTED, 'File extension not allowed');
             }
+        }
+    }
+
+    /**
+     * Same rule as the REST upload: a signed extension must sniff as one of the bucket's allowed formats.
+     */
+    protected function validateContent(Document $bucket, string $name, string $body): void
+    {
+        $allowed = $bucket->getAttribute('allowedFileExtensions', []);
+        $formats = Config::getParam('storage-formats');
+        if (empty($allowed) || !isset($formats['signatures'][\strtolower(\pathinfo($name, PATHINFO_EXTENSION))])) {
+            return;
+        }
+
+        $mimeType = (new \finfo(FILEINFO_MIME_TYPE))->buffer($body);
+        $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower(\ltrim($extension, '.'))] ?? [], $allowed));
+        if (!\in_array($mimeType, $formats['ambiguous'], true) && !\in_array($mimeType, $types, true)) {
+            throw new AppwriteException(AppwriteException::STORAGE_FILE_TYPE_UNSUPPORTED, 'File content type not allowed');
         }
     }
 
@@ -649,6 +671,7 @@ abstract class Base extends Action
         $folder = $object['folder'];
         $name = $object['name'];
         $this->validateFileConstraints($bucket, $name, \strlen($body));
+        $this->validateContent($bucket, $name, $body);
         $previousPath = $existing?->getAttribute('path', '') ?? '';
         $path = $existing === null
             ? $this->path($deviceForFiles, $bucket, $fileId, $name)
