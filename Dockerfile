@@ -1,4 +1,4 @@
-FROM composer:2 AS composer
+FROM composer:2@sha256:ca11f643d7791ebdd90a34fc20caf11380d434007ae539a9ea75cd9212e13dca AS composer
 
 # Distrust the compromised eMudhra chains before downloading dependencies.
 RUN apk add --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
