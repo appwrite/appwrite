@@ -15,11 +15,11 @@ use Tests\E2E\Scopes\VideoCustom;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Database\Permission;
-use Utopia\Storage\Device;
-use Utopia\Storage\Device\Local;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
@@ -3459,6 +3459,8 @@ final class VideosCustomServerTest extends Scope
         // claim the row between the park and the delete.
         $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $pendingId)['status']);
         $this->timeTravelRendition($projectId, $pendingId, status: 'pending');
+        // A running timeline is its own gate; keep this test on renditions.
+        $this->waitForTimelineTerminalState($videoId);
 
         $allowedPending = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
         $this->assertEquals(204, $allowedPending['headers']['status-code']);
@@ -3478,6 +3480,7 @@ final class VideosCustomServerTest extends Scope
             // worker cannot settle the row after the 409 assertion.
             $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $renditionId)['status'], $status);
             $this->timeTravelRendition($projectId, $renditionId, status: $status);
+            $this->waitForTimelineTerminalState($videoId);
 
             $blocked = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
             $this->assertEquals(409, $blocked['headers']['status-code'], $status);
@@ -3506,9 +3509,56 @@ final class VideosCustomServerTest extends Scope
         $abortedId = $rendition['body']['$id'];
         $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $abortedId)['status']);
         $this->timeTravelRendition($projectId, $abortedId, status: 'aborted');
+        $this->waitForTimelineTerminalState($videoId);
 
         $allowed = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
         $this->assertEquals(204, $allowed['headers']['status-code']);
+    }
+
+    /**
+     * A running timeline within the retention window blocks video delete:
+     * the cascade would remove the scratch folder ffmpeg is tiling into.
+     * Pending, finished and aged timelines do not block.
+     */
+    public function testDeleteVideoBlockedWhileTimelineInProgress(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Test for SUCCESS: a finished timeline does not block.
+        $videoId = $this->createVideo();
+        $this->assertEquals('ready', $this->waitForTimelineTerminalState($videoId)['timelineStatus']);
+
+        $allowed = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(204, $allowed['headers']['status-code']);
+
+        // Test for SUCCESS: a pending timeline exits on its claim, so it does not block.
+        $videoId = $this->createVideo();
+        $this->waitForTimelineTerminalState($videoId);
+        $this->timeTravelVideo($projectId, $videoId, status: 'pending');
+
+        $allowed = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(204, $allowed['headers']['status-code']);
+
+        // Test for FAILURE: a running timeline blocks until it ages past retention.
+        $videoId = $this->createVideo();
+        // Seed after the real job settles, so no worker moves the status after the 409.
+        $this->waitForTimelineTerminalState($videoId);
+        $this->timeTravelVideo($projectId, $videoId, status: 'started');
+
+        $blocked = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(409, $blocked['headers']['status-code']);
+        $this->assertEquals('video_timeline_in_progress', $blocked['body']['type']);
+
+        $stillThere = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(200, $stillThere['headers']['status-code']);
+
+        $this->timeTravelVideo($projectId, $videoId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+
+        $allowed = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(204, $allowed['headers']['status-code']);
+
+        $gone = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(404, $gone['headers']['status-code']);
     }
 
     /**
@@ -4183,6 +4233,34 @@ final class VideosCustomServerTest extends Scope
             ->argument('--resourceType=videos_rendition')
             ->argument('--resourceId=' . $renditionId);
 
+        if ($status !== null) {
+            $command->argument('--status=' . $status);
+        }
+        if ($updatedAt !== null) {
+            $command->argument('--updatedAt=' . $updatedAt);
+        }
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute($command, '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+    }
+
+    private function timeTravelVideo(
+        string $projectId,
+        string $videoId,
+        ?string $status = null,
+        ?string $updatedAt = null
+    ): void {
+        $command = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $projectId)
+            ->argument('--resourceType=video')
+            ->argument('--resourceId=' . $videoId);
+
+        // Seeds timelineStatus: a video has no status of its own.
         if ($status !== null) {
             $command->argument('--status=' . $status);
         }

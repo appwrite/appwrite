@@ -1309,6 +1309,8 @@ final class VideosCustomClientTest extends Scope
         $cannotDelete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $readOnlyId, $this->sessionHeaders());
         $this->assertContains($cannotDelete['headers']['status-code'], [401, 404]);
 
+        // A running timeline blocks delete; let the create-time job settle.
+        $this->waitForTimelineTerminalState($videoId);
         $deleted = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->sessionHeaders());
         $this->assertEquals(204, $deleted['headers']['status-code']);
     }

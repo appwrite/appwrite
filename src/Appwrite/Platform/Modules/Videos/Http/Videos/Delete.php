@@ -99,6 +99,16 @@ class Delete extends Base
             throw new Exception(Exception::VIDEO_RENDITION_IN_PROGRESS);
         }
 
+        // A running timeline tiles into a scratch folder the delete cascade
+        // removes. A pending one exits on its claim. Nothing sweeps a stuck
+        // timeline, so one past the same retention no longer blocks.
+        if (
+            $video->getAttribute('timelineStatus') === self::STATUS_STARTED
+            && $video->getUpdatedAt() > $cutoff
+        ) {
+            throw new Exception(Exception::VIDEO_TIMELINE_IN_PROGRESS);
+        }
+
         $roles = $authorization->getRoles();
         if ($user->isPrivileged($roles) || $user->isKey($roles)) {
             $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos', $video->getId()));

@@ -1787,6 +1787,11 @@ return [
         'description' => 'Video timeline could not be found. The video may still be processing.',
         'code' => 404,
     ],
+    Exception::VIDEO_TIMELINE_IN_PROGRESS => [
+        'name' => Exception::VIDEO_TIMELINE_IN_PROGRESS,
+        'description' => 'Cannot delete a video while its timeline is being generated. Wait for the job to finish, or wait until a stuck timeline is older than the retention window.',
+        'code' => 409,
+    ],
     Exception::VIDEO_SECOND_OUT_OF_RANGE => [
         'name' => Exception::VIDEO_SECOND_OUT_OF_RANGE,
         'description' => 'The requested second is outside the video duration range.',

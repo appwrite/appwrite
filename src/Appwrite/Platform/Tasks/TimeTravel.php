@@ -29,7 +29,7 @@ class TimeTravel extends Action
             ->param('resourceId', '', new UID(), 'ID of resource.')
             ->param('createdAt', '', new Nullable(new DatetimeValidator()), 'New value for $createdAt.', true)
             ->param('updatedAt', '', new Nullable(new DatetimeValidator()), 'New value for $updatedAt.', true)
-            ->param('status', '', new Nullable(new Text(64)), 'Optional status override (renditions, captions).', true)
+            ->param('status', '', new Nullable(new Text(64)), 'Optional status override (renditions, captions; timelineStatus for a video).', true)
             ->param('progress', '', new Nullable(new Text(8)), 'Optional progress (renditions).', true)
             ->inject('getProjectDB')
             ->inject('dbForPlatform')
@@ -86,7 +86,8 @@ class TimeTravel extends Action
             $data['$updatedAt'] = $updatedAt;
         }
         if ($status !== null && $status !== '') {
-            $data['status'] = $status;
+            // A video has no status of its own; its timeline job's is the one seeded.
+            $data[$resourceType === 'video' ? 'timelineStatus' : 'status'] = $status;
         }
         if ($progress !== null && $progress !== '') {
             $data['progress'] = $progress;

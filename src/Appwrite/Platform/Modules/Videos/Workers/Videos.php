@@ -912,8 +912,8 @@ class Videos extends Action
             $uploader = new Uploader($deviceForVideos, $path);
             $uploader->start();
 
-            $lastProgress = -1;
-            $lastStatusCheck = 0.0;
+            // The claim wrote '0'.
+            $lastProgress = 0;
             $phaseStart = \microtime(true);
             $advancedAt = $phaseStart;
             $advancedTime = -1.0;
@@ -934,7 +934,7 @@ class Videos extends Action
                         $wrote = true;
                         $uploader->take($written);
                     })
-                    ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$lastStatusCheck, &$last, &$advancedAt, &$advancedTime) {
+                    ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$last, &$advancedAt, &$advancedTime) {
                         if (!$progress instanceof Progress) {
                             return;
                         }
@@ -954,13 +954,17 @@ class Videos extends Action
                         }
 
                         $percentage = (int) \round($progress->percent);
-                        $onWriteBoundary = $percentage % 3 === 0 && $percentage !== $lastProgress;
-                        // Poll status ~every 500ms (and on write boundaries) so abort/
-                        // error parks are noticed without a DB read on every ffmpeg tick.
-                        if (!$onWriteBoundary && ($now - $lastStatusCheck) < 0.5) {
+                        // Status is read only on a 3% step, right before the progress
+                        // write. Deletes are gated while a rendition runs, so only the
+                        // maintenance sweep (or an e2e park) moves the row out of
+                        // `started`, and noticing that a step later is soon enough.
+                        // A step is 3 points since the last write, not a multiple of 3:
+                        // ffmpeg reports about twice a second, so a fast encode jumps
+                        // several points per report and can skip every multiple.
+                        if ($percentage - $lastProgress < 3) {
                             return;
                         }
-                        $lastStatusCheck = $now;
+                        $lastProgress = $percentage;
 
                         $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
                         if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_STARTED) {
@@ -968,11 +972,6 @@ class Videos extends Action
                             $halted = true;
                             throw new \Exception('Encode halted: rendition left started');
                         }
-
-                        if (!$onWriteBoundary) {
-                            return;
-                        }
-                        $lastProgress = $percentage;
 
                         $rendition = $dbForProject->updateDocument(
                             'videosRenditions',

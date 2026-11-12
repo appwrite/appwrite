@@ -404,6 +404,7 @@ class Exception extends \Exception
     public const string VIDEO_LANGUAGE_CODE_NOT_VALID = 'video_language_code_not_valid';
     public const string VIDEO_THUMBNAIL_NOT_FOUND = 'video_thumbnail_not_found';
     public const string VIDEO_TIMELINES_NOT_FOUND = 'video_timelines_not_found';
+    public const string VIDEO_TIMELINE_IN_PROGRESS = 'video_timeline_in_progress';
     public const string VIDEO_SECOND_OUT_OF_RANGE = 'video_second_out_of_range';
 
     /** GraphqQL */
