@@ -280,6 +280,17 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'transactionLogs':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'documentUpdatedAt');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"documentUpdatedAt\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         foreach (['status', 'description'] as $attribute) {
