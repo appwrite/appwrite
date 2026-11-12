@@ -60,6 +60,7 @@ final class OAuth2Provider extends Resource
         'kick' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'linkedin' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'microsoft' => ['clientId' => ['target' => self::TARGET_APP_ID], 'tenant' => ['target' => self::TARGET_SECRET]],
+        'naver' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'notion' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'oidc' => [
             'clientId' => ['target' => self::TARGET_APP_ID],

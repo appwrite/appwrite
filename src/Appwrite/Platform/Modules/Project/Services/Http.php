@@ -46,6 +46,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as Upd
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
@@ -271,6 +272,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
+        $this->addAction('updateProjectOAuth2Naver', UpdateOAuth2Naver::class);
         $this->addAction('updateProjectOAuth2Cloudflare', UpdateOAuth2Cloudflare::class);
         $this->addAction('updateProjectOAuth2Vipps MobilePay', UpdateOAuth2Vipps::class);
         $this->addAction('updateProjectOAuth2Vipps MobilePay Sandbox', UpdateOAuth2VippsSandbox::class);
