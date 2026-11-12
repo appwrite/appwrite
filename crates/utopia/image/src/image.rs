@@ -11,7 +11,7 @@ use crate::draw;
 use crate::encode;
 use crate::error::{Error, Result};
 use crate::frame::{Format, Frame};
-use crate::options::{FocalPoint, Gravity, OutputFormat};
+use crate::options::{FocalPoint, Gravity, OutputFormat, canvas_bytes, check_pixels};
 use crate::transform::{self, RoundRect};
 
 /// A decoded image (every frame of an animation), transformed in place and
@@ -250,6 +250,10 @@ impl Image {
         let (x, y) = crop_coordinates(width, height, resize_width, resize_height, gravity, focal);
         let dims = |v: i64| u32::try_from(v.max(0)).unwrap_or(u32::MAX);
         let (w, h, rw, rh) = (dims(width), dims(height), dims(resize_width), dims(resize_height));
+        // Every frame is held at once, so the animation as a whole must fit the budget at
+        // the largest size a frame takes on the way.
+        let largest = canvas_bytes(u64::from(rw.max(w)), u64::from(rh.max(h)));
+        check_pixels(largest.saturating_mul(self.frames.len() as u64))?;
         if self.frames.len() > 1 {
             for frame in &mut self.frames {
                 if center {

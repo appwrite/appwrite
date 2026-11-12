@@ -67,3 +67,15 @@ fn a_canvas_keeps_its_own_limits() {
         Err(Error::LimitExceeded)
     ));
 }
+
+#[test]
+fn a_resized_animation_is_held_to_the_budget_as_a_whole() {
+    let gif = Image::new(GIF).unwrap();
+    let (w, h, frames) = (gif.width() as u64, gif.height() as u64, gif.frames() as u64);
+    // Room to decode it, and for one frame at twice the size, but not for every frame at that size.
+    let memory = w * h * 4 * (frames + 4);
+    let canvas = Canvas::decode(GIF, Limits { memory, ..Limits::default() }).unwrap();
+    let doubled = utopia_image::Transform { width: (w * 2) as u32, height: (h * 2) as u32, ..Default::default() };
+    assert!(exhausted(canvas.apply(doubled).unwrap().encode(OutputFormat::Gif, None)));
+    assert!(canvas.encode(OutputFormat::Gif, None).is_ok());
+}

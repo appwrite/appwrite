@@ -243,12 +243,17 @@ thread_local! {
 }
 
 impl Limits {
-    /// Runs `work` under these limits, restoring the previous ones after.
+    /// Runs `work` under these limits, restoring the previous ones after, also when `work`
+    /// panics: the extension turns a panic into a PHP error and the worker carries on.
     pub(crate) fn scope<T>(self, work: impl FnOnce() -> T) -> T {
-        let previous = ACTIVE.replace(self);
-        let result = work();
-        ACTIVE.set(previous);
-        result
+        struct Restore(Limits);
+        impl Drop for Restore {
+            fn drop(&mut self) {
+                ACTIVE.set(self.0);
+            }
+        }
+        let _restore = Restore(ACTIVE.replace(self));
+        work()
     }
 
     fn active() -> Limits {
@@ -283,4 +288,18 @@ pub(crate) fn check_dimensions(width: u64, height: u64) -> Result<()> {
         return Err(Error::LimitExceeded);
     }
     check_pixels(canvas_bytes(width, height))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_panic_inside_a_scope_restores_the_limits() {
+        let narrow = Limits { width: 1, height: 1, memory: 4 };
+        let panicked = std::panic::catch_unwind(|| narrow.scope(|| panic!("a codec panicked")));
+        assert!(panicked.is_err());
+        assert_eq!(Limits::active(), Limits::default());
+        assert!(check_dimensions(100, 100).is_ok());
+    }
 }
