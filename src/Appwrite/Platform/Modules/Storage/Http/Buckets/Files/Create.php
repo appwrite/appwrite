@@ -474,7 +474,7 @@ class Create extends Action
                 $allowed = $bucket->getAttribute('allowedFileExtensions', []);
                 $signed = isset($formats['signatures'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))]);
                 $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower($extension)] ?? [], $allowed));
-                if (!empty($allowed) && $signed && !\in_array($mimeType, $formats['ambiguous'], true) && !\in_array($mimeType, $types, true)) {
+                if (!empty($allowed) && $signed && !\in_array($mimeType, $types, true)) {
                     $removed = $deviceForFiles->delete($path);
 
                     if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
