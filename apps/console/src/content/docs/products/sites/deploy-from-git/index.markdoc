@@ -62,6 +62,14 @@ Use these formats to write glob patterns.
 
 {% partial file="git-glob-patterns.md" /%}
 
+## Skip a deployment {% #skip-deployment %}
+
+To push a commit without creating a deployment, add `[skip appwrite]` or `[skip ci]` to the commit message. `[skip appwrite]` skips only the Appwrite deployment. `[skip ci]` is also recognized by GitHub Actions and most other CI tools, so it skips those workflows too.
+
+```txt
+docs: update readme [skip appwrite]
+```
+
 ## Install command
 
 The install command of your site allow you to install your site’s dependencies. You can specify custom install scripts such as ones that let you configure your `npm` command with options or use an alternative package manager such as `pnpm` or `yarn`.
