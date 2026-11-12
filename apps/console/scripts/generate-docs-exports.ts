@@ -251,8 +251,9 @@ async function fetchOk(url: string, accept?: string): Promise<Response> {
 /** Skills index pinned to the current appwrite/skills commit, with sha256 digests of each SKILL.md. */
 async function buildAgentSkillsIndex(): Promise<string> {
   const document = buildAgentSkillsDiscoveryDocument()
+  let commit: string
   try {
-    const commit = (
+    commit = (
       await (
         await fetchOk(
           'https://api.github.com/repos/appwrite/skills/commits/main',
@@ -260,19 +261,25 @@ async function buildAgentSkillsIndex(): Promise<string> {
         )
       ).text()
     ).trim()
-    const skills = await Promise.all(
-      document.skills.map(async (skill) => {
-        const url = skill.url.replace('/skills/main/', `/skills/${commit}/`)
-        const bytes = await (await fetchOk(url)).arrayBuffer()
-        const digest = createHash('sha256').update(new Uint8Array(bytes)).digest('hex')
-        return { ...skill, url, digest: `sha256:${digest}` }
-      }),
-    )
-    return serializeDiscoveryJson({ ...document, skills })
   } catch (error) {
     console.warn(`Agent skills index published without digests: ${String(error)}`)
     return serializeDiscoveryJson(document)
   }
+
+  const skills = await Promise.all(
+    document.skills.map(async (skill) => {
+      const url = skill.url.replace('/skills/main/', `/skills/${commit}/`)
+      try {
+        const bytes = await (await fetchOk(url)).arrayBuffer()
+        const digest = createHash('sha256').update(new Uint8Array(bytes)).digest('hex')
+        return { ...skill, url, digest: `sha256:${digest}` }
+      } catch (error) {
+        console.warn(`Skill ${skill.name} published without a digest: ${String(error)}`)
+        return skill
+      }
+    }),
+  )
+  return serializeDiscoveryJson({ ...document, skills })
 }
 
 async function buildExportFiles(): Promise<ExportFile[]> {
