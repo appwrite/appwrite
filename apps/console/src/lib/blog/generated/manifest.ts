@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-project-transfer-links",
+    "href": "/blog/post/announcing-project-transfer-links",
+    "title": "Announcing project transfer links: hand off an Appwrite project to any organization",
+    "description": "Hand an Appwrite Cloud project to another organization with a single-use transfer link, even one you're not a member of. The project keeps its data, keys, and endpoints.",
+    "date": "2026-11-12",
+    "lastUpdated": "2026-11-12",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-project-transfer-links/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-otp-token-email-header",
     "href": "/blog/post/announcing-otp-token-email-header",
     "title": "Announcing origin-bound OTP-Token headers in Appwrite Auth",

@@ -80,6 +80,24 @@ export function firewallListSearch(selection: FirewallResourceSelection): {
 }
 
 /**
+ * Console path of the Firewall tab that lists a selection's rules: the
+ * function or site Firewall tab, or the project settings tab for the API.
+ */
+export function firewallTabPath(
+  projectId: string,
+  selection: FirewallResourceSelection,
+): string {
+  const { resourceType, resourceId } = firewallListSearch(selection)
+  if (resourceType === 'functions') {
+    return `/projects/${projectId}/functions/${resourceId}/firewall`
+  }
+  if (resourceType === 'sites') {
+    return `/projects/${projectId}/sites/${resourceId}/firewall`
+  }
+  return `/projects/${projectId}/settings/firewall`
+}
+
+/**
  * Condition attributes shown in the rule builder, grouped for the picker.
  * Kept in sync with the backend Firewall `ALLOWED` attribute list so a rule the
  * console can build is always one the server will accept.

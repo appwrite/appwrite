@@ -906,7 +906,7 @@ export function SiteDeploymentsView() {
                                     href={repoUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="truncate link-neutral"
+                                    className="truncate no-underline hover:text-foreground"
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     {label}
@@ -1447,7 +1447,7 @@ export function SiteDeploymentsView() {
                                             href={repoUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="link-neutral truncate"
+                                            className="truncate no-underline hover:text-foreground"
                                             onClick={(e) => e.stopPropagation()}
                                           >
                                             {label}

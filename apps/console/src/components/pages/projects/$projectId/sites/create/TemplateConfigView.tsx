@@ -45,6 +45,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
+import { isTemplateVariableSecret } from '@/lib/template-variables'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import {
@@ -204,7 +205,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         const templateVars = template.variables.map((v) => ({
           key: v.name,
           value: resolveTemplatePlaceholder(v.value || '', context),
-          secret: v.secret || false,
+          secret: isTemplateVariableSecret(v),
         }))
         setVariables(templateVars)
       }
@@ -853,7 +854,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                       <span className="text-destructive ms-1">*</span>
                     )}
                   </Label>
-                  {templateVar?.secret && (
+                  {variable.secret && (
                     <span className="text-[10px] text-muted-foreground">
                       {t('Secret')}
                     </span>
@@ -880,7 +881,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
                   placeholder={
                     templateVar?.placeholder || `Enter ${variable.key}`
                   }
-                  type={templateVar?.secret ? 'password' : 'text'}
+                  type={variable.secret ? 'password' : 'text'}
                   className="h-9 text-[13px] font-mono"
                 />
               </div>

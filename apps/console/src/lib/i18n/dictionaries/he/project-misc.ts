@@ -330,6 +330,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You don't have permission to update firewall settings.":
     'אין לכם הרשאה לעדכן הגדרות חומת אש.',
   'No firewall rules': 'אין כללי חומת אש',
+  'Configure rules': 'הגדרת כללים',
+  'Rules that apply to this site appear here.':
+    'הכללים שחלים על האתר הזה יופיעו כאן.',
+  'Rules that apply to this function appear here.':
+    'הכללים שחלים על הפונקציה הזו יופיעו כאן.',
   'No API firewall rules': 'אין כללי חומת אש ל-API',
   'No function firewall rules': 'אין כללי חומת אש לפונקציות',
   'No site firewall rules': 'אין כללי חומת אש לאתרים',
@@ -993,6 +998,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Clear: 'ניקוי',
   Apply: 'החלה',
   Compare: 'השוואה',
+  vs: 'לעומת',
   'No comparison': 'ללא השוואה',
   'Show only current period': 'הצגת התקופה הנוכחית בלבד',
   'Previous period': 'תקופה קודמת',
@@ -1410,6 +1416,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'for development (no port or protocol). Add a separate platform for each origin (e.g. localhost and production).':
     'לפיתוח (ללא פורט או פרוטוקול). הוסיפו פלטפורמה נפרדת לכל מקור (למשל localhost וסביבת ייצור).',
   'Troubleshoot CORS errors': 'פתרון שגיאות CORS',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'כל אתר יכול לשלוח בקשות לפרויקט הזה. לפני העלייה לאוויר, החליפו את * בדומיין של האפליקציה שלכם, למשל app.example.com.',
   'Bundle ID': 'מזהה Bundle',
   'Application ID': 'מזהה אפליקציה',
   'Package identifier': 'מזהה חבילה',
@@ -1934,6 +1942,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Use a date range longer than this interval.':
     'השתמשו בטווח תאריכים ארוך מהמרווח הזה.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
+  'This interval is larger than the selected date range.':
+    'המרווח הזה גדול מטווח התאריכים שנבחר.',
   Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
   'Copy API endpoint': 'העתקת נקודת קצה של API',

@@ -157,6 +157,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/billing/project-transfers",
+    "title": "Project transfers",
+    "description": "Move an Appwrite Cloud project to another organization, directly or with a single-use transfer link that an owner of the other organization claims.",
+    "excerpt": "A project transfer changes which organization owns a project. The project keeps its ID, region, data, and endpoints. Only the organization that owns it changes, and with it the plan, the members, and the bill that apply to the project. There are two ways to transfer a project from the **Transfer project** card in the project's **Settings**: - **Move to another organization.** Moves the project right away into another organization you are a member of. - **Hand off with a…",
+    "breadcrumbs": [
+      "Billing",
+      "Getting started",
+      "Project transfers"
+    ]
+  },
+  {
     "slug": "advanced/billing/refund-policy",
     "title": "Refund policy",
     "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
