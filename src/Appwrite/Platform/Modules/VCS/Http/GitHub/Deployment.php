@@ -115,7 +115,7 @@ trait Deployment
                 }
                 $resourceInternalId = $resource->getSequence();
 
-                if ($resource->getAttribute('providerAutoDeploy', true) === false) {
+                if ($resource->getAttribute('providerDeployments', true) === false) {
                     Span::add("{$logBase}.build.skipped.reason", 'auto deploy off');
                     Span::add("{$logBase}.build.skipped", 'true');
                     continue;
@@ -257,7 +257,7 @@ trait Deployment
                 }
 
                 $latestCommentId = '';
-                $comments = $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerComments', true) !== false;
+                $comments = $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerSummaries', true) !== false;
 
                 if ($comments && !empty($providerPullRequestId)) {
                     $latestComment = $authorization->skip(fn () => $dbForPlatform->findOne('vcsComments', [
@@ -648,7 +648,7 @@ trait Deployment
                     }
                 }
 
-                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerCommitStatus', true) !== false) {
+                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerStatuses', true) !== false) {
                     // The deployment exists by now, so a refused report is logged like
                     // every later one: failing the push here would make a provider that
                     // retries deliveries deploy the commit again.
