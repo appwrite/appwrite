@@ -313,6 +313,21 @@ final class RequestTest extends TestCase
         $this->assertSame($none->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['width' => '100'])->cacheIdentifier());
     }
 
+    public function testCacheIdentifierNegotiatesWithoutCacheParams(): void
+    {
+        // Routes without a `cache.params` allowlist (like avatars screenshots) key every param
+        $route = new Route(Request::METHOD_GET, '/screenshots');
+        $route->label('cache.negotiate', ['output' => ['avif' => 'image/avif', 'webp' => 'image/webp']]);
+        $url = 'https://example.com';
+
+        $avif = $this->negotiatedRequest('image/avif', ['url' => $url, 'output' => 'auto'], $route);
+        $none = $this->negotiatedRequest('*/*', ['url' => $url, 'output' => 'auto'], $route);
+
+        $this->assertSame($avif->cacheIdentifier(), $this->negotiatedRequest('*/*', ['url' => $url, 'output' => 'avif'], $route)->cacheIdentifier());
+        $this->assertSame($none->cacheIdentifier(), $this->negotiatedRequest('image/avif', ['url' => $url], $route)->cacheIdentifier());
+        $this->assertNotSame($avif->cacheIdentifier(), $none->cacheIdentifier());
+    }
+
     public function testCacheIdentifierIgnoresAcceptForExplicitValues(): void
     {
         $first = $this->negotiatedRequest('image/avif', ['output' => 'png']);
@@ -565,13 +580,13 @@ final class RequestTest extends TestCase
     /**
      * @param array<string, string> $query
      */
-    private function negotiatedRequest(string $accept, array $query): Request
+    private function negotiatedRequest(string $accept, array $query, ?Route $route = null): Request
     {
         $swoole = new SwooleRequest();
         $swoole->header = ['accept' => $accept];
         $request = new Request($swoole);
         $request->setQueryString($query);
-        $request->setRoute($this->negotiatedRoute());
+        $request->setRoute($route ?? $this->negotiatedRoute());
 
         return $request;
     }

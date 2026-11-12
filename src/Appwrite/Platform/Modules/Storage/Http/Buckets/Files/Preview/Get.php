@@ -45,16 +45,6 @@ class Get extends Action
 
     private const GRAVITY_AUTO = 'auto';
 
-    private const OUTPUT_AUTO = 'auto';
-
-    /**
-     * Formats `output=auto` picks from, in preference order, when the client's Accept header lists them.
-     */
-    private const OUTPUT_AUTO_FORMATS = [
-        'avif' => 'image/avif',
-        'webp' => 'image/webp',
-    ];
-
     public static function getName()
     {
         return 'getFilePreview';
@@ -75,7 +65,7 @@ class Get extends Action
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')
             ->label('cache.params', ['width', 'height', 'gravity', 'quality', 'borderWidth', 'borderColor', 'borderRadius', 'opacity', 'rotation', 'background', 'output', 'project'])
-            ->label('cache.negotiate', ['output' => self::OUTPUT_AUTO_FORMATS])
+            ->label('cache.negotiate', ['output' => Config::getParam('storage-outputs-auto')])
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
@@ -104,7 +94,7 @@ class Get extends Action
             ->param('opacity', 1, new Range(0, 1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
             ->param('rotation', 0, new Range(-360, 360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
             ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-            ->param('output', '', new WhiteList([...\array_keys(Config::getParam('storage-outputs')), self::OUTPUT_AUTO], true), 'Output format type (jpeg, jpg, png, gif, webp, heic and avif). Pass auto to serve avif or webp when the client\'s Accept header supports it, falling back to the original format.', true, enum: new Enum(name: 'ImageFormat'))
+            ->param('output', '', new WhiteList([...\array_keys(Config::getParam('storage-outputs')), Request::NEGOTIATE_AUTO], true), 'Output format type (jpeg, jpg, png, gif, webp, heic and avif). Pass auto to serve avif or webp when the client\'s Accept header supports it, falling back to the original format.', true, enum: new Enum(name: 'ImageFormat'))
             // NOTE: this is only for the sdk generator and is not used in the action below and is utilised in `resources.php` for `resourceToken`.
             ->param('token', '', new Text(512), 'File token for accessing this file.', true)
             ->inject('request')
@@ -216,7 +206,7 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $negotiated = $output === self::OUTPUT_AUTO;
+        $negotiated = $output === Request::NEGOTIATE_AUTO;
         if ($negotiated) {
             // resolved the same way as the cache key, so cached and fresh responses match
             $output = $request->getNegotiatedParams()['output'] ?? '';
@@ -384,6 +374,7 @@ class Get extends Action
             file: $file,
             resourceToken: $resourceToken,
             fileSecurity: $fileSecurity,
+            negotiated: $negotiated,
         ));
 
         if ($negotiated) {

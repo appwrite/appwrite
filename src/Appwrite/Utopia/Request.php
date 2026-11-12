@@ -16,6 +16,11 @@ use Utopia\System\System;
 class Request extends UtopiaRequest
 {
     /**
+     * Value of a param listed in the route's `cache.negotiate` label that asks the server to pick it from the Accept header.
+     */
+    public const string NEGOTIATE_AUTO = 'auto';
+
+    /**
      * @var array<Filter>
      */
     private array $filters = [];
@@ -347,7 +352,7 @@ class Request extends UtopiaRequest
         $params = $this->getParams();
         $resolved = [];
         foreach ($negotiate as $param => $types) {
-            if (($params[$param] ?? null) !== 'auto') {
+            if (($params[$param] ?? null) !== self::NEGOTIATE_AUTO) {
                 continue;
             }
             $type = $this->getAcceptedType(\array_values($types));
