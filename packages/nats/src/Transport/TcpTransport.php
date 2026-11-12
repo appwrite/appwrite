@@ -87,15 +87,12 @@ final class TcpTransport implements Pollable, Transport
 
         $data = @fread($stream, $maxBytes);
 
-        if ($data === false) {
-            if ($this->isTimedOut()) {
+        if ($data === false || $data === '') {
+            // A hooked read reports its timeout as '' rather than false.
+            if ($this->isTimedOut() || ($data === '' && !$this->isAtEof())) {
                 throw new TimeoutException('Read timed out');
             }
-            throw new ConnectionException('Failed to read from socket');
-        }
-
-        if ($data === '' && $this->isAtEof()) {
-            throw new ConnectionException('Connection closed by server');
+            throw new ConnectionException($data === '' ? 'Connection closed by server' : 'Failed to read from socket');
         }
 
         return $data;

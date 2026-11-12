@@ -147,8 +147,7 @@ final class SwooleTransport implements Pollable, Transport
         }
 
         if ($data === false) {
-            // ponytail: Swoole sets errCode 110 (ETIMEDOUT) on a recv timeout; anything else is a hard error.
-            if ($client->errCode === 110) {
+            if (\defined('SOCKET_ETIMEDOUT') && $client->errCode === SOCKET_ETIMEDOUT) {
                 throw new TimeoutException('Read timed out');
             }
             throw new ConnectionException("Failed to read from socket: [{$client->errCode}] {$client->errMsg}");

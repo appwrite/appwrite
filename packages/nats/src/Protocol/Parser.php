@@ -6,6 +6,7 @@ namespace Utopia\NATS\Protocol;
 
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\ProtocolException;
+use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Transport\Transport;
 
 final class Parser
@@ -184,9 +185,11 @@ final class Parser
             return $line;
         }
 
-        // Read from transport until we get a line
         while (true) {
             $data = $this->transport->read(65536, $timeout);
+            if ($data === '') {
+                throw new TimeoutException('Read timed out');
+            }
             $this->buffer .= $data;
 
             $pos = strpos($this->buffer, "\n");
