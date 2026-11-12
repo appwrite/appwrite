@@ -416,6 +416,7 @@
         "PATCH /v1/project/oauth2/kick",
         "PATCH /v1/project/oauth2/linkedin",
         "PATCH /v1/project/oauth2/microsoft",
+        "PATCH /v1/project/oauth2/naver",
         "PATCH /v1/project/oauth2/notion",
         "PATCH /v1/project/oauth2/oidc",
         "PATCH /v1/project/oauth2/okta",
