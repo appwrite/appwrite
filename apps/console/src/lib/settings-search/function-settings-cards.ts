@@ -41,7 +41,6 @@ export const FUNCTION_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
       'silent mode',
       'automation',
       'deploy on push',
-      'production branch',
       'summaries',
       'comments',
       'commit status',
