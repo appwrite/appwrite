@@ -8,14 +8,13 @@ use Closure;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Decorator;
+use Utopia\Client\Decorator\Retry\Attempt;
 use Utopia\Client\Decorator\Retry\Backoff;
 use Utopia\Client\Decorator\Retry\Strategy;
 use Utopia\Client\Exception\AdapterPreconditionException;
 use Utopia\Client\Psr18\ResponseStreamingClientInterface;
-use Utopia\Psr7\Stream;
 
 /**
  * An adapter that decorates another adapter and retries it according to a
@@ -26,10 +25,6 @@ use Utopia\Psr7\Stream;
  */
 final class Retry extends Decorator implements ResponseStreamingClientInterface
 {
-    private const int ERROR_STATUS = 400;
-
-    private const int CHUNK_SIZE = 65_536;
-
     private readonly Closure $sleep;
 
     /**
@@ -70,6 +65,7 @@ final class Retry extends Decorator implements ResponseStreamingClientInterface
         }
     }
 
+    #[\Override]
     public function supportsResponseStreaming(): bool
     {
         return $this->responseStreamingAdapter() instanceof ResponseStreamingClientInterface;
@@ -83,44 +79,39 @@ final class Retry extends Decorator implements ResponseStreamingClientInterface
             throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
         }
 
-        for ($attempt = 1; ; $attempt++) {
-            $delivered = 0;
-            $held = null;
-            $countingSink = static function (string $chunk) use ($sink, &$delivered): void {
-                $delivered += \strlen($chunk);
-                $sink($chunk);
-            };
+        for ($number = 1; ; $number++) {
+            $attempt = new Attempt($sink(...));
 
             try {
                 $response = $adapter instanceof ResponseStreamingClientInterface
-                    ? $this->streamHoldingErrors($adapter, $request, $countingSink, $onResponse, $held)
-                    : $this->adapter->stream($request, $countingSink);
+                    ? $adapter->stream($request, $attempt->write(...), $this->observer($attempt, $onResponse))
+                    : $this->adapter->stream($request, $attempt->deliver(...));
 
-                // Once bytes have reached the sink, replaying would duplicate them.
-                if ($delivered > 0) {
+                if ($attempt->hasDelivered()) {
                     return $response;
                 }
 
-                $delay = $this->strategy->delay($request, $attempt, $this->withHeldBody($response, $held), null);
+                $delay = $this->strategy->delay($request, $number, $attempt->withHeldBody($response), null);
 
                 if ($delay === null) {
-                    $this->release($held, $sink);
+                    $attempt->release();
 
                     return $response;
                 }
             } catch (ClientExceptionInterface $error) {
-                if ($delivered > 0) {
+                if ($attempt->hasDelivered()) {
                     throw $error;
                 }
 
-                $delay = $this->strategy->delay($request, $attempt, null, $error);
+                $delay = $this->strategy->delay($request, $number, null, $error);
 
                 if ($delay === null) {
                     throw $error;
                 }
+            } finally {
+                $attempt->close();
             }
 
-            $held?->close();
             ($this->sleep)($delay);
         }
     }
@@ -133,74 +124,18 @@ final class Retry extends Decorator implements ResponseStreamingClientInterface
     }
 
     /**
-     * Error responses (4xx/5xx) write their body to $held instead of the sink, so a
-     * proxy error page does not count as delivered and the strategy can still retry.
-     *
-     * @param callable(string): void                   $sink
      * @param (callable(ResponseInterface): void)|null $onResponse
      *
-     * @param-out StreamInterface|null $held
-     *
-     * @throws ClientExceptionInterface
+     * @return Closure(ResponseInterface): void
      */
-    private function streamHoldingErrors(
-        ResponseStreamingClientInterface $adapter,
-        RequestInterface $request,
-        callable $sink,
-        ?callable $onResponse,
-        ?StreamInterface &$held,
-    ): ResponseInterface {
-        $observe = static function (ResponseInterface $response) use ($onResponse, &$held): void {
-            if ($response->getStatusCode() >= self::ERROR_STATUS) {
-                $held = new Stream();
-            }
+    private function observer(Attempt $attempt, ?callable $onResponse): Closure
+    {
+        return static function (ResponseInterface $response) use ($attempt, $onResponse): void {
+            $attempt->observe($response);
 
             if ($onResponse !== null) {
                 $onResponse($response);
             }
         };
-
-        $write = static function (string $chunk) use ($sink, &$held): void {
-            if ($held instanceof StreamInterface) {
-                $held->write($chunk);
-
-                return;
-            }
-
-            $sink($chunk);
-        };
-
-        return $adapter->stream($request, $write, $observe);
-    }
-
-    private function withHeldBody(ResponseInterface $response, ?StreamInterface $held): ResponseInterface
-    {
-        if (!$held instanceof StreamInterface) {
-            return $response;
-        }
-
-        $held->rewind();
-
-        return $response->withBody($held);
-    }
-
-    /**
-     * @param callable(string): void $sink
-     */
-    private function release(?StreamInterface $held, callable $sink): void
-    {
-        if (!$held instanceof StreamInterface) {
-            return;
-        }
-
-        $held->rewind();
-        while (!$held->eof()) {
-            $chunk = $held->read(self::CHUNK_SIZE);
-            if ($chunk !== '') {
-                $sink($chunk);
-            }
-        }
-
-        $held->close();
     }
 }
