@@ -66,6 +66,44 @@ final class WebSocketTransportPollTest extends TestCase
         $transport->close();
     }
 
+    public function testReadTimingOutMidFrameKeepsTheFrame(): void
+    {
+        [$transport, $peer] = $this->connect();
+        $frame = self::binaryFrame("MSG a 1 5\r\nhello\r\n");
+        $peer->send(substr($frame, 0, 4));
+
+        try {
+            $transport->read(65536, 0.05);
+            $this->fail('Half a frame has nothing for the reader yet');
+        } catch (TimeoutException) {
+        }
+        $peer->send(substr($frame, 4));
+
+        $this->assertSame("MSG a 1 5\r\nhello\r\n", $transport->read(65536, 1.0));
+
+        $transport->close();
+    }
+
+    public function testHalfAFrameIsNotReadable(): void
+    {
+        [$transport, $peer] = $this->connect();
+        $frame = self::binaryFrame("PING\r\n");
+        $peer->send(substr($frame, 0, 3));
+
+        try {
+            $transport->read(65536, 0.05);
+            $this->fail('Half a frame has nothing for the reader yet');
+        } catch (TimeoutException) {
+        }
+
+        $this->assertFalse($transport->poll(), 'The buffered half frame must not read as ready');
+        $peer->send(substr($frame, 3));
+        $this->assertTrue(Wait::until($transport->poll(...)));
+        $this->assertSame("PING\r\n", $transport->read(64, 1.0));
+
+        $transport->close();
+    }
+
     public function testClosedByThePeerIsReadable(): void
     {
         [$transport, $peer] = $this->connect();

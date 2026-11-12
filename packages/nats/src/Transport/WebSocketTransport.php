@@ -16,6 +16,8 @@ use Utopia\NATS\Exception\TimeoutException;
  */
 final class WebSocketTransport implements Pollable, Transport
 {
+    private const int READ_SIZE = 65536;
+
     /** @var resource|null */
     private $stream;
 
@@ -23,6 +25,9 @@ final class WebSocketTransport implements Pollable, Transport
 
     // Decoded (un-framed) NATS bytes not yet consumed by read()/readLine().
     private string $buffer = '';
+
+    // Raw bytes from the socket that do not make up a whole frame yet.
+    private string $frames = '';
 
     /**
      * @param bool $secure use wss:// (TLS) instead of ws://
@@ -60,6 +65,7 @@ final class WebSocketTransport implements Pollable, Transport
         $this->setTimeout($stream, $timeout);
         $this->stream = $stream;
         $this->probe = new Probe($stream);
+        $this->buffer = $this->frames = '';
 
         $this->handshake($host, $port);
     }
@@ -116,7 +122,7 @@ final class WebSocketTransport implements Pollable, Transport
 
     public function poll(): bool
     {
-        if ($this->buffer !== '' || !\is_resource($this->stream)) {
+        if ($this->buffer !== '' || $this->header() !== null || !\is_resource($this->stream)) {
             return true;
         }
 
@@ -143,12 +149,11 @@ final class WebSocketTransport implements Pollable, Transport
             . "Sec-WebSocket-Version: 13\r\n\r\n";
         $this->rawWrite($request);
 
-        // Read the HTTP response headers up to the blank line, keeping any trailing
-        // bytes (the first WS frame) — they must not be swallowed.
-        $response = '';
-        while (!str_contains($response, "\r\n\r\n")) {
-            $response .= $this->rawRead(1);
+        while (($end = strpos($this->frames, "\r\n\r\n")) === false) {
+            $this->frames .= $this->receive();
         }
+        $response = substr($this->frames, 0, $end + 4);
+        $this->frames = substr($this->frames, $end + 4);
 
         if (!preg_match('#^HTTP/1\.1 101#i', $response)) {
             $status = strtok($response, "\r\n");
@@ -163,39 +168,21 @@ final class WebSocketTransport implements Pollable, Transport
 
     /**
      * Read one WebSocket frame, handling control frames, and append data payloads
-     * (text/binary/continuation) to the buffer.
+     * (text/binary/continuation) to the buffer. A frame is decoded only once all
+     * of it has arrived, so a read that times out mid-frame loses nothing.
      */
     private function readFrame(): void
     {
-        $header = $this->rawRead(2);
-        $b0 = \ord($header[0]);
-        $b1 = \ord($header[1]);
-
-        $opcode = $b0 & 0x0F;
-        $masked = ($b1 & 0x80) !== 0;
-        $len = $b1 & 0x7F;
-
-        if ($len === 126) {
-            $ext = $this->rawRead(2);
-            $len = (\ord($ext[0]) << 8) | \ord($ext[1]);
-        } elseif ($len === 127) {
-            $ext = $this->rawRead(8);
-            $len = 0;
-            for ($i = 0; $i < 8; $i++) {
-                $len = ($len << 8) | \ord($ext[$i]);
-            }
+        while (($header = $this->header()) === null) {
+            $this->frames .= $this->receive();
         }
 
-        $maskKey = $masked ? $this->rawRead(4) : '';
-        $payload = $len > 0 ? $this->rawRead($len) : '';
-
-        if ($masked && $payload !== '') {
-            $unmasked = '';
-            for ($i = 0, $n = \strlen($payload); $i < $n; $i++) {
-                $unmasked .= $payload[$i] ^ $maskKey[$i % 4];
-            }
-            $payload = $unmasked;
+        $payload = substr($this->frames, $header['start'], $header['length']);
+        $this->frames = substr($this->frames, $header['start'] + $header['length']);
+        if ($header['mask'] !== '') {
+            $payload ^= substr(str_repeat($header['mask'], intdiv($header['length'], 4) + 1), 0, $header['length']);
         }
+        $opcode = $header['opcode'];
 
         switch ($opcode) {
             case 0x0: // continuation
@@ -261,26 +248,61 @@ final class WebSocketTransport implements Pollable, Transport
         }
     }
 
-    private function rawRead(int $length): string
+    /**
+     * The next frame's header, once the whole frame is buffered.
+     *
+     * @return array{opcode: int, start: int, length: int, mask: string}|null
+     */
+    private function header(): ?array
     {
-        $this->ensureConnected();
-        $data = '';
-
-        // Re-resolved per pass for the same reason as rawWrite(): fread() yields,
-        // so a partial read spans a window in which close() can invalidate the
-        // handle this loop would otherwise keep using.
-        while (\strlen($data) < $length) {
-            $chunk = @fread($this->ensureConnected(), $length - \strlen($data));
-            if ($chunk === false || $chunk === '') {
-                if ($this->isTimedOut()) {
-                    throw new TimeoutException('Read timed out');
-                }
-                throw new ConnectionException('Connection closed by server');
-            }
-            $data .= $chunk;
+        $available = \strlen($this->frames);
+        if ($available < 2) {
+            return null;
         }
 
-        return $data;
+        $second = \ord($this->frames[1]);
+        $length = $second & 0x7F;
+        $start = 2;
+        if ($length === 126) {
+            $start = 4;
+        } elseif ($length === 127) {
+            $start = 10;
+        }
+        if ($available < $start) {
+            return null;
+        }
+        if ($start > 2) {
+            $length = 0;
+            for ($index = 2; $index < $start; $index++) {
+                $length = ($length << 8) | \ord($this->frames[$index]);
+            }
+        }
+
+        $mask = '';
+        if (($second & 0x80) !== 0) {
+            $mask = substr($this->frames, $start, 4);
+            $start += 4;
+        }
+        if ($available < $start + $length) {
+            return null;
+        }
+
+        return ['opcode' => \ord($this->frames[0]) & 0x0F, 'start' => $start, 'length' => $length, 'mask' => $mask];
+    }
+
+    private function receive(): string
+    {
+        // Re-resolved per call for the same reason as rawWrite(): fread() yields,
+        // and close() can invalidate the handle in between.
+        $chunk = @fread($this->ensureConnected(), self::READ_SIZE);
+        if ($chunk === false || $chunk === '') {
+            if ($this->isTimedOut()) {
+                throw new TimeoutException('Read timed out');
+            }
+            throw new ConnectionException('Connection closed by server');
+        }
+
+        return $chunk;
     }
 
     /** @return resource */

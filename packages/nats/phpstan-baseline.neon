@@ -1513,12 +1513,6 @@ parameters:
 			path: src/Transport/WebSocketTransport.php
 
 		-
-			message: '#^Parameter \#2 \$length of function fread expects int\<1, max\>, int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Transport/WebSocketTransport.php
-
-		-
 			message: '#^Parameter \#1 \$input of method Utopia\\NATS\\Tests\\Auth\\NKeyAuthTest\:\:base32Decode\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
