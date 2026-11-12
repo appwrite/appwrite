@@ -98,6 +98,8 @@ check('width limit', thrown(fn () => new Image(png(16, 8))) === 'Exception: Imag
 Image::setResourceLimit('width', 50000);
 Image::setResourceLimit('height', 4);
 check('height limit', thrown(fn () => new Image(png(16, 8))) === 'Exception: Image exceeds the size or memory limits');
+check('a quarter turn is held to the limits', thrown(fn () => (new Image(png(8, 4)))->setRotation(90)->output('png'))
+    === 'Exception: Image exceeds the size or memory limits');
 Image::setResourceLimit('height', 50000);
 check('limits restored', (new Image(png(16, 8)))->getWidth() === 16);
 
