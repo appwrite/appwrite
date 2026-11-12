@@ -275,6 +275,8 @@ A code that is wrong, has expired, or was already used fails with `user_invalid_
 
 To add a security phrase to the email and the returned token, set `phrase` to `true` in the call that sends the code. [Verify with a code](/docs/products/auth/verify-user#verify-with-code) explains how to show the phrase.
 
+When your web app sends the code from the browser, the email also carries an `OTP-Token` header that binds the code to your app's origin, so supporting mail clients and password managers can autofill it there. See [Code autofill](/docs/products/auth/email-otp#code-autofill) for when Appwrite adds the header.
+
 # Security {% #security %}
 
 Appwrite's security first mindset goes beyond a securely implemented authentication API. You can enable features like password strength requirements, password dictionary, password history, [breached password detection](/docs/products/auth/security#breached-passwords), and disallow personal data in passwords to encourage users to pick better passwords. By enabling these features, you protect user data and teach better password choices, which helps make the internet a safer place.

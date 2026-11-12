@@ -12,6 +12,7 @@ use Appwrite\Realtime\Usage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Table;
+use Utopia\Database\Role;
 use Utopia\Telemetry\Counter;
 use Utopia\WebSocket\Server;
 
@@ -27,6 +28,10 @@ final class HandlerTest extends TestCase
 
     private RecordingGauge $stage;
 
+    private Realtime $realtime;
+
+    private RecordingAdapter $adapter;
+
     private Handler $handler;
 
     protected function setUp(): void
@@ -36,6 +41,8 @@ final class HandlerTest extends TestCase
         $this->dropped = new RecordingCounter();
         $this->failed = new RecordingCounter();
         $this->stage = new RecordingGauge();
+        $this->realtime = new Realtime();
+        $this->adapter = new RecordingAdapter();
         $this->handler = $this->makeHandler($this->received);
     }
 
@@ -46,8 +53,8 @@ final class HandlerTest extends TestCase
         $stats->create();
 
         return new Handler(
-            server: new Server(new RecordingAdapter()),
-            realtime: new Realtime(),
+            server: new Server($this->adapter),
+            realtime: $this->realtime,
             stats: $stats,
             eventTailRegistry: new EventTailRegistry(),
             usage: new Usage(function (): void {
@@ -169,6 +176,46 @@ final class HandlerTest extends TestCase
         }
 
         $this->assertSame([[0.0, ['workerId' => '0', 'stage' => 'idle']]], $observed);
+    }
+
+    public function testDeletingAProjectTeamEndsOnlyItsMemberSockets(): void
+    {
+        // A team id may contain periods, so the dotted id must still be recognised.
+        $this->realtime->subscribe('project1', 101, 'member', [Role::team('my.team')->toString()], ['account']);
+        $this->realtime->subscribe('project1', 102, 'bystander', [Role::user('user2')->toString()], ['account']);
+
+        $this->handleTeamDelete('project1', 'my.team', ['teams.my.team.delete', 'teams.*.delete']);
+
+        // The stale team role is evicted by closing the socket, so a reconnect rebuilds roles
+        // without the gone team; a connection that never held the role is left alone.
+        $closed = \array_column($this->adapter->closed, 0);
+        $this->assertContains(101, $closed);
+        $this->assertNotContains(102, $closed);
+    }
+
+    public function testMembershipDeleteDoesNotEndTeamMemberSockets(): void
+    {
+        $this->realtime->subscribe('project1', 201, 'member', [Role::team('team1')->toString()], ['account']);
+
+        // A membership delete carries the membership id, so its event name is not
+        // teams.team1.delete and must not be mistaken for the team's own deletion.
+        $this->handleTeamDelete('project1', 'membership1', ['teams.team1.memberships.membership1.delete']);
+
+        $this->assertSame([], $this->adapter->closed);
+    }
+
+    /**
+     * @param list<string> $events
+     */
+    private function handleTeamDelete(string $projectId, string $payloadId, array $events): void
+    {
+        $event = \json_decode($this->payload(\date(DATE_ATOM)), true);
+        $event['project'] = $projectId;
+        $event['data']['events'] = $events;
+        $event['data']['channels'] = ['account'];
+        $event['data']['payload'] = ['$id' => $payloadId];
+
+        $this->handler->handle(null, 'realtime', \json_encode($event));
     }
 
     private function payload(string $timestamp): string

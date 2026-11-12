@@ -20,7 +20,22 @@
       ".github/PULL_REQUEST_TEMPLATE",
       "LICENSE"
     ],
+    "extension": [
+      "crates/",
+      "Cargo.toml",
+      "Cargo.lock",
+      ".cargo/",
+      "rustfmt.toml",
+      "packages/image/",
+      "Dockerfile",
+      ".dockerignore"
+    ],
     "checks": [
+      "crates/",
+      "Cargo.toml",
+      "Cargo.lock",
+      ".cargo/",
+      "rustfmt.toml",
       ".github/",
       "docs/",
       "tests/unit/",
@@ -176,6 +191,19 @@
       "functional": true,
       "processes": null,
       "paths": ["src/Appwrite/Platform/Modules/Advisor/"]
+    },
+    {
+      "name": "Reviews",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Reviews/",
+        "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Event/Message/Review.php",
+        "src/Appwrite/Event/Publisher/Review.php",
+        "packages/vcs/"
+      ]
     },
     {
       "name": "Alerts",
@@ -536,6 +564,20 @@
       "wait": "executor",
       "storage_device": "s3",
       "services": ["Functions", "Project", "Storage"]
+    },
+    {
+      "label": "Response Cache",
+      "group": "responseCache",
+      "path": "/usr/src/code/tests/e2e/Services/Storage",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "s3",
+      "wait": "",
+      "storage_cache_percent": "50",
+      "worker_per_core": "1",
+      "services": [
+        "Storage"
+      ]
     },
     {
       "label": "Usage Outage",

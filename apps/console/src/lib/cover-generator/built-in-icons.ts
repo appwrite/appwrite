@@ -181,7 +181,7 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
     'mqtt.svg',
     'skype.svg',
   ],
-  payments: ['stripe.svg', 'paypal.svg', 'lemon-squeezy.svg'],
+  payments: ['stripe.svg', 'paypal.svg', 'lemon-squeezy.svg', 'vipps.svg'],
   social: [
     'twitter.svg',
     'youtube.svg',

@@ -19,7 +19,11 @@ use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
+use Appwrite\Messaging\Provider;
+use Appwrite\Messaging\PushService;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Alerts\Workers\Alerts;
+use Appwrite\Platform\Workers\Notifications;
 use Appwrite\Platform\Workers\StatsResources;
 use Appwrite\Platform\Workers\StatsUsage;
 use Appwrite\Usage\Concurrency;
@@ -36,6 +40,10 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Realtime\RealtimeBase;
 use Tests\Unit\Event\MockPublisher;
+use Tests\Unit\Network\FixedLookup;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client as HttpClient;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
@@ -45,9 +53,12 @@ use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Queue\Message;
 use Utopia\Queue\Queue;
+use Utopia\Registry\Registry;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Usage\Adapter;
 use Utopia\Usage\Metric;
 use Utopia\Usage\Tenant;
@@ -76,6 +87,8 @@ final class EvaluationCustomServerTest extends Scope
     {
         $name = 'Egress ' . \uniqid();
         $webhook = $this->createAlertWebhook();
+        // The owner signed in on a phone too.
+        $device = $this->createDevice($this->getRoot()['email'], 'password', \bin2hex(\random_bytes(32)));
 
         // Traffic for the project, so network.outbound has something to sum.
         for ($i = 0; $i < 5; $i++) {
@@ -163,6 +176,61 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(200, $bell['headers']['status-code']);
         $this->assertNotEmpty(\array_filter(\array_column($bell['body']['notifications'], 'title'), fn (string $title) => \str_starts_with($title, '[Firing] ' . $name . ' · ')));
 
+        // The phone gets a push that opens the alert and can mute the monitor.
+        $push = $this->waitForPush($device['token'], 'alert:' . $firing['alertId'], 'firing');
+        $this->assertSame('Firing: ' . $name, $push['title']);
+        $this->assertStringContainsString('Outbound bandwidth reached', (string) $push['body']);
+        $this->assertSame('high', $push['priority']);
+        // The monitor is critical, so its firing rings with the critical sound.
+        $this->assertTrue($push['critical']);
+        $this->assertSame('siren.caf', $push['sound']);
+        $this->assertSame('alert', $push['data']['type']);
+        $this->assertSame($firing['alertId'], $push['data']['alertId']);
+        $this->assertSame($monitorId, $push['data']['monitorId']);
+        $this->assertSame($this->getProject()['$id'], $push['data']['projectId']);
+        $this->assertSame($this->teamId(), $push['data']['organizationId']);
+        $this->assertStringContainsString('/projects/' . $this->getProject()['$id'] . '/usage/alerts?alert=' . $firing['alertId'], (string) $push['data']['url']);
+        $this->assertNotSame('', $push['data']['unsubscribeToken']);
+
+        // A member acknowledges the alert for everyone who can read it; it keeps firing.
+        $acknowledgements = $this->createAlertWebhook(['monitors.*.alerts.*.acknowledged', 'monitors.*.alerts.*.unacknowledged']);
+        $member = \array_merge($this->consoleHeaders(), ['x-appwrite-project' => $this->getProject()['$id'], 'x-appwrite-mode' => 'admin']);
+        $acknowledged = $this->updateAlert($firing['alertId'], true, $member);
+        $this->assertSame('firing', $acknowledged['status']);
+        $this->assertNotNull($acknowledged['acknowledgedAt']);
+        $this->assertSame($this->getRoot()['$id'], $acknowledged['acknowledgedBy']);
+        $this->assertSame($this->getRoot()['name'], $acknowledged['acknowledgedByName']);
+        $this->assertSame($acknowledged['acknowledgedAt'], $this->getAlert($firing['alertId'])['acknowledgedAt']);
+        $delivery = $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'acknowledged');
+        $this->assertSame($this->getRoot()['$id'], $delivery['data']['acknowledgedBy']);
+        $this->assertSame('firing', $delivery['data']['status']);
+
+        // Acknowledging again keeps the first member on it and fires nothing new.
+        $again = $this->updateAlert($firing['alertId'], true);
+        $this->assertSame($acknowledged['acknowledgedAt'], $again['acknowledgedAt']);
+        $this->assertSame($this->getRoot()['$id'], $again['acknowledgedBy']);
+
+        // Undo clears it for everyone.
+        $undone = $this->updateAlert($firing['alertId'], false, $member);
+        $this->assertNull($undone['acknowledgedAt']);
+        $this->assertSame('', $undone['acknowledgedBy']);
+        $this->assertSame('', $undone['acknowledgedByName']);
+        $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'unacknowledged');
+
+        // An API key acknowledges as nobody in particular.
+        $byKey = $this->updateAlert($firing['alertId'], true);
+        $this->assertNotNull($byKey['acknowledgedAt']);
+        $this->assertSame('', $byKey['acknowledgedBy']);
+        $this->assertSame('', $byKey['acknowledgedByName']);
+        // Two acknowledgements reached the webhook: the member's and the key's, not the repeat in between.
+        $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.acknowledged';
+        $deliveries = fn (): int => \count(\array_filter(
+            \json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($acknowledgements['path'])), true) ?: [],
+            fn (array $request): bool => \in_array($event, \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')), true),
+        ));
+        $this->assertEventually(fn () => $this->assertGreaterThanOrEqual(2, $deliveries()), 60_000, 1_000);
+        $this->assertSame(2, $deliveries());
+
         // Raising the threshold above any traffic the test made resolves the alert.
         $this->setThreshold($monitorId, 1e15);
 
@@ -174,6 +242,12 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('resolved', $alert['status']);
         $this->assertNotNull($alert['resolvedAt']);
         $this->assertSame(1, $alert['notifications']);
+        // Resolving keeps the acknowledgement, so the history shows it was handled, and it can no longer change.
+        $this->assertSame($byKey['acknowledgedAt'], $alert['acknowledgedAt']);
+        $refused = $this->client->call(Client::METHOD_PATCH, '/alerts/' . $firing['alertId'], $this->headers(), ['acknowledged' => false]);
+        $this->assertSame(400, $refused['headers']['status-code']);
+        $this->assertSame('alert_resolved', $refused['body']['type']);
+        $this->assertSame($byKey['acknowledgedAt'], $this->getAlert($firing['alertId'])['acknowledgedAt']);
         $this->assertSame([], $this->listAlerts([
             Query::equal('monitorId', [$monitorId])->toString(),
             Query::equal('status', ['firing'])->toString(),
@@ -187,9 +261,118 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame($delivery['data']['resolvedAt'], $delivery['data']['$updatedAt']);
         $this->assertSame('resolved', $delivery['data']['status']);
 
+        // The resolved push replaces the firing one, by its tag.
+        $push = $this->waitForPush($device['token'], 'alert:' . $firing['alertId'], 'resolved');
+        $this->assertSame('Resolved: ' . $name, $push['title']);
+        $this->assertArrayNotHasKey('critical', $push);
+
         $this->assertEventually(function () use ($name) {
             $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
         }, 60_000, 1_000);
+        $this->assertCount(2, $this->pushes($device['token'], 'alert:' . $firing['alertId']));
+    }
+
+    public function testPushesReachEveryDeviceAsTheirOwnersPrefsSay(): void
+    {
+        $teamId = $this->teamId();
+        $projectId = $this->getProject()['$id'];
+
+        // One owner signed in on several phones, iPhones and Android phones (an FCM token is not hex),
+        // and owners who set their alert push prefs.
+        $owner = $this->createMember($teamId);
+        $first = $owner['device'];
+        $second = $this->createDevice($owner['email'], $owner['password'], 'second-' . \uniqid());
+        $removed = $this->createDevice($owner['email'], $owner['password'], 'removed-' . \uniqid());
+        $expired = $this->createDevice($owner['email'], $owner['password'], 'expired-' . \uniqid());
+        // Prefs are user-written JSON: values of the wrong type read as unset.
+        $quiet = $this->createMember($teamId, ['resolved' => false, 'mutedOrganizationIds' => $teamId, 'mutedProjectIds' => [42]]);
+        $organizationMuted = $this->createMember($teamId, ['mutedOrganizationIds' => [$teamId]]);
+        $projectMuted = $this->createMember($teamId, ['mutedProjectIds' => [$projectId]]);
+        $members = [$owner['$id'], $quiet['$id'], $organizationMuted['$id'], $projectMuted['$id']];
+
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
+            'monitorId' => 'unique()',
+            'name' => 'Critical ' . \uniqid(),
+            'rules' => [Query::greaterThan('network.outbound', 10)->toString()],
+            'cooldown' => 300,
+            'enabled' => false,
+            'critical' => true,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $monitorId = $created['body']['$id'];
+        $name = $created['body']['name'];
+
+        /**
+         * Test for SUCCESS
+         */
+        // Firing, delivered twice as a redelivered evaluation would be.
+        $at = new \DateTimeImmutable('+' . (++$this->checks) . ' days');
+        $this->deliverPushes($monitorId, $members, 20, $at, 2);
+        $tag = 'alert:' . $this->getMonitorBody($monitorId)['alertId'];
+
+        // Every device gets one push through its own service: an iPhone with APNs' critical sound,
+        // an Android phone on the channel that rings through Do Not Disturb.
+        foreach ([$first, $second, $removed, $quiet['device']] as $device) {
+            $pushes = $this->pushes($device['token'], $tag);
+            $this->assertCount(1, $pushes, $device['token']);
+            $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
+            $this->assertSame('high', $pushes[0]['priority']);
+            $this->assertSame($tag, $pushes[0]['tag']);
+            if (\ctype_xdigit($device['token'])) {
+                $this->assertSame(PushService::APNS->value, $pushes[0]['service']);
+                $this->assertTrue($pushes[0]['critical']);
+                $this->assertSame('siren.caf', $pushes[0]['sound']);
+                $this->assertArrayNotHasKey('channelId', $pushes[0]);
+            } else {
+                $this->assertSame(PushService::FCM->value, $pushes[0]['service']);
+                $this->assertSame('critical', $pushes[0]['channelId']);
+                $this->assertArrayNotHasKey('critical', $pushes[0]);
+                $this->assertArrayNotHasKey('sound', $pushes[0]);
+            }
+        }
+        // Owners who muted the organization or the project get none.
+        $this->assertSame([], $this->pushes($organizationMuted['device']['token'], $tag));
+        $this->assertSame([], $this->pushes($projectMuted['device']['token'], $tag));
+
+        // The expired token marks its target expired.
+        $this->inCoroutine(function () use ($expired): void {
+            $this->assertTrue($this->platform()->getDocument('targets', $expired['targetId'])->getAttribute('expired'));
+        });
+
+        // Resolved: one normal push, except to the owner who turned resolved pushes off.
+        $this->deliverPushes($monitorId, $members, 0, $at->modify('+1 minute'), 2);
+        foreach ([$first, $second] as $device) {
+            $resolved = \array_values(\array_filter($this->pushes($device['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'));
+            $this->assertCount(1, $resolved);
+            $this->assertSame('Resolved: ' . $name, $resolved[0]['title']);
+            $this->assertArrayNotHasKey('critical', $resolved[0]);
+            $this->assertArrayNotHasKey('sound', $resolved[0]);
+        }
+        // A resolved push on Android goes on the normal channel.
+        $this->assertSame('alerts', \array_values(\array_filter($this->pushes($second['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'))[0]['channelId']);
+        $this->assertCount(1, $this->pushes($quiet['device']['token'], $tag));
+
+        // Signing out of a phone, or removing its target, stops its pushes.
+        $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', $first['headers'])['headers']['status-code']);
+        $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/account/targets/' . $removed['targetId'] . '/push', $removed['headers'])['headers']['status-code']);
+        $this->assertEventually(function () use ($first, $removed) {
+            // Read in the coroutine, asserted outside it, so a miss is retried rather than fatal.
+            $left = [];
+            $this->inCoroutine(function () use ($first, $removed, &$left): void {
+                foreach ([$first, $removed] as $device) {
+                    if (!$this->platform()->getDocument('targets', $device['targetId'])->isEmpty()) {
+                        $left[] = $device['targetId'];
+                    }
+                }
+            });
+            $this->assertSame([], $left);
+        }, 60_000, 1_000);
+
+        $this->deliverPushes($monitorId, $members, 20, $at->modify('+1 day'));
+        $tag = 'alert:' . $this->getMonitorBody($monitorId)['alertId'];
+        $this->assertCount(1, $this->pushes($second['token'], $tag));
+        $this->assertSame([], $this->pushes($first['token'], $tag));
+        $this->assertSame([], $this->pushes($removed['token'], $tag));
     }
 
     public function testMonitorNotifyingNobodyOnlyFiresEvents(): void
@@ -347,22 +530,22 @@ final class EvaluationCustomServerTest extends Scope
             'all' => false,
         ], $page['body']);
 
-        // Another monitor, not unsubscribed from.
+        // Another monitor, not unsubscribed from. Unsubscribing a monitor stops its pushes too.
         $other = $this->createPausedMonitor('Other ' . \uniqid());
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($monitorId, $root['$id']));
-        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL, NOTIFICATION_TYPE_PUSH], $this->ownerChannels($other, $root['$id']));
 
-        // The same token stops every usage alert email from the page; console notifications stay.
+        // The same token stops every usage alert email from the page; console notifications and pushes stay.
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token, 'all')['headers']['status-code']);
         $this->assertTrue($this->unsubscribe(Client::METHOD_GET, $token)['body']['all']);
-        $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($other, $root['$id']));
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_PUSH], $this->ownerChannels($other, $root['$id']));
 
         // Undo restores each, with the same token.
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $token, 'all')['headers']['status-code']);
-        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL, NOTIFICATION_TYPE_PUSH], $this->ownerChannels($other, $root['$id']));
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($monitorId, $root['$id']));
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $token)['headers']['status-code']);
-        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($monitorId, $root['$id']));
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL, NOTIFICATION_TYPE_PUSH], $this->ownerChannels($monitorId, $root['$id']));
         $this->assertSame(['monitor' => false, 'all' => false], \array_intersect_key($this->unsubscribe(Client::METHOD_GET, $token)['body'], ['monitor' => 0, 'all' => 0]));
 
         /**
@@ -386,7 +569,7 @@ final class EvaluationCustomServerTest extends Scope
         $scope = $this->unsubscribe(Client::METHOD_POST, $token, 'everything');
         $this->assertSame(400, $scope['headers']['status-code']);
         // None of them changed anything.
-        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL, NOTIFICATION_TYPE_PUSH], $this->ownerChannels($other, $root['$id']));
     }
 
     public function testProjectUsersCannotSeeMonitorsOrAlerts(): void
@@ -1767,6 +1950,18 @@ final class EvaluationCustomServerTest extends Scope
         return $response['body'];
     }
 
+    /**
+     * @param array<string, string>|null $headers
+     * @return array<string, mixed>
+     */
+    private function updateAlert(string $alertId, bool $acknowledged, ?array $headers = null): array
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/alerts/' . $alertId, $headers ?? $this->headers(), ['acknowledged' => $acknowledged]);
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        return $response['body'];
+    }
+
     private function setThreshold(string $monitorId, float|int $threshold): void
     {
         $response = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
@@ -1822,14 +2017,17 @@ final class EvaluationCustomServerTest extends Scope
     }
 
     /**
-     * Invites a new console user to the organization with `$roles` and confirms them.
+     * Invites a console user to the organization with `$roles` and confirms them:
+     * a new one, or the one signed up with `$email`, who accepts with the `$session` headers
+     * they are signed in with (accepting signed out takes their password away).
      *
      * @param list<string> $roles
+     * @param array<string, string> $session
      * @return string the member's email
      */
-    private function addMember(string $teamId, array $roles): string
+    private function addMember(string $teamId, array $roles, ?string $email = null, array $session = []): string
     {
-        $email = 'member-' . \uniqid() . '@localhost.test';
+        $email ??= 'member-' . \uniqid() . '@localhost.test';
         $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $this->consoleHeaders(), [
             'email' => $email,
             'roles' => $roles,
@@ -1839,7 +2037,7 @@ final class EvaluationCustomServerTest extends Scope
         $invite = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email, function (array $email) {
             $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? ''));
         })['html']);
-        $confirmed = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', [
+        $confirmed = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', $session ?: [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
@@ -1850,6 +2048,174 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(200, $confirmed['headers']['status-code']);
 
         return $email;
+    }
+
+    private function teamId(): string
+    {
+        return $this->client->call(Client::METHOD_GET, '/projects/' . $this->getProject()['$id'], $this->consoleHeaders())['body']['teamId'];
+    }
+
+    /**
+     * Signs a new console user up with `$password`.
+     *
+     * @return array{'$id': string, email: string}
+     */
+    private function createConsoleUser(string $password): array
+    {
+        $email = 'devices-' . \uniqid() . '@localhost.test';
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => 'unique()',
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        return ['$id' => $user['body']['$id'], 'email' => $email];
+    }
+
+    /**
+     * Signs the console user in again, as a phone does, and registers the phone's push token.
+     *
+     * @return array{headers: array<string, string>, targetId: string, token: string}
+     */
+    private function createDevice(string $email, string $password, string $token): array
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ];
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code'], \json_encode($session['body']));
+        $headers['cookie'] = 'a_session_console=' . $session['cookies']['a_session_console'];
+
+        $target = $this->client->call(Client::METHOD_POST, '/account/targets/push', $headers, [
+            'targetId' => 'unique()',
+            'identifier' => $token,
+        ]);
+        $this->assertSame(201, $target['headers']['status-code'], \json_encode($target['body']));
+
+        return ['headers' => $headers, 'targetId' => $target['body']['$id'], 'token' => $token];
+    }
+
+    /**
+     * A new console user who joins the organization as an owner from a signed-in phone,
+     * with `$prefs` as the alert push prefs of their account.
+     *
+     * @param array<string, mixed>|null $prefs
+     * @return array{'$id': string, email: string, password: string, device: array{headers: array<string, string>, targetId: string, token: string}}
+     */
+    private function createMember(string $teamId, ?array $prefs = null): array
+    {
+        $password = 'password-' . \uniqid(); // pragma: allowlist secret
+        $user = $this->createConsoleUser($password);
+        $device = $this->createDevice($user['email'], $password, \bin2hex(\random_bytes(32)));
+        // Accepted while signed in: accepting signed out proves the email and revokes the password.
+        $this->addMember($teamId, ['owner'], $user['email'], $device['headers']);
+
+        if ($prefs !== null) {
+            $updated = $this->client->call(Client::METHOD_PATCH, '/account/prefs', $device['headers'], ['prefs' => ['beep' => $prefs]]);
+            $this->assertSame(200, $updated['headers']['status-code'], \json_encode($updated['body']));
+        }
+
+        return [...$user, 'password' => $password, 'device' => $device];
+    }
+
+    /**
+     * The pushes the mock push service received for `$token` with `$tag`, oldest first.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function pushes(string $token, string $tag): array
+    {
+        $pushes = [];
+        // The .env points APNs and FCM at separate mock paths, so each push says which service carried it.
+        foreach ([PushService::APNS->value => '/mock-push', PushService::FCM->value => '/mock-fcm'] as $service => $path) {
+            foreach (\json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [] as $request) {
+                $push = \json_decode($request['data'] ?? '{}', true) ?: [];
+                if (\in_array($token, $push['to'] ?? [], true) && ($push['tag'] ?? $push['data']['tag'] ?? null) === $tag) {
+                    $pushes[] = [...$push, 'service' => $service];
+                }
+            }
+        }
+
+        return $pushes;
+    }
+
+    /**
+     * Waits for a push to `$token` with `$tag`, of an alert with `$status` when one is given.
+     *
+     * @param (callable(array<string, mixed>): bool)|null $match
+     * @return array<string, mixed>
+     */
+    private function waitForPush(string $token, string $tag, ?string $status, ?callable $match = null): array
+    {
+        $found = [];
+        $this->assertEventually(function () use ($token, $tag, $status, $match, &$found) {
+            $pushes = \array_values(\array_filter(
+                $this->pushes($token, $tag),
+                fn (array $push) => ($status === null || ($push['data']['status'] ?? null) === $status) && ($match === null || $match($push)),
+            ));
+            $this->assertNotEmpty($pushes, "No push with tag {$tag} reached {$token}");
+            $found = \end($pushes);
+        }, 60_000, 1_000);
+
+        return $found;
+    }
+
+    /**
+     * Evaluates the paused monitor in-process against `$value`, and runs the notifications
+     * worker `$times` over the push recipients among `$userIds`, as a redelivery would.
+     *
+     * @param list<string> $userIds
+     */
+    private function deliverPushes(string $monitorId, array $userIds, float $value, \DateTimeImmutable $at, int $times = 1): void
+    {
+        $this->inCoroutine(function () use ($monitorId, $userIds, $value, $at, $times): void {
+            $messages = [];
+            $this->evaluateMonitor($this->platform(), $monitorId, $value, messages: $messages, now: $at);
+
+            $publicHostname = new PublicHostname(new PublicInternet(), new FixedLookup());
+            $adapters = [];
+            foreach (PushService::cases() as $service) {
+                $adapter = (new Provider(new NoTelemetry(), $publicHostname))->internalPush($service);
+                $this->assertInstanceOf(PushAdapter::class, $adapter, $service->variable() . ' is not set');
+                $adapters[$service->value] = $adapter;
+            }
+            $project = $this->platform()->getDocument('projects', $this->getProject()['$id']);
+
+            foreach ($messages as $message) {
+                $payload = $message->toArray();
+                $payload['recipients'] = \array_values(\array_filter(
+                    $payload['recipients'],
+                    fn (array $recipient) => $recipient['channel'] === NOTIFICATION_TYPE_PUSH && \in_array($recipient['resourceId'], $userIds, true),
+                ));
+                if ($payload['recipients'] === []) {
+                    continue;
+                }
+
+                for ($i = 0; $i < $times; $i++) {
+                    (new Notifications())->action(
+                        new Message(['pid' => 'pid', 'queue' => 'v1-notifications', 'timestamp' => \time(), 'payload' => $payload]),
+                        $project,
+                        new Registry(),
+                        $this->platform(),
+                        [],
+                        new HttpClient(new CurlAdapter()),
+                        $publicHostname,
+                        new NoTelemetry(),
+                        $adapters,
+                    );
+                }
+            }
+        });
     }
 
     /**
@@ -1924,18 +2290,19 @@ final class EvaluationCustomServerTest extends Scope
     }
 
     /**
-     * A project webhook on both alert events, posting to a path of its own.
+     * A project webhook on `$events`, by default the firing and resolved ones, posting to a path of its own.
      *
+     * @param list<string> $events
      * @return array{path: string, url: string, secret: string}
      */
-    private function createAlertWebhook(): array
+    private function createAlertWebhook(array $events = ['monitors.*.alerts.*.firing', 'monitors.*.alerts.*.resolved']): array
     {
         $path = '/alerts/' . \uniqid();
         $url = 'http://request-catcher-webhook:5000' . $path;
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', $this->headers(), [
             'webhookId' => 'unique()',
             'name' => 'Alerts ' . $path,
-            'events' => ['monitors.*.alerts.*.firing', 'monitors.*.alerts.*.resolved'],
+            'events' => $events,
             'url' => $url,
             'tls' => false,
         ]);
@@ -1978,6 +2345,29 @@ final class EvaluationCustomServerTest extends Scope
      *
      * @return array<string, mixed> the request the catcher recorded, with its raw `body` and decoded `data`
      */
+    /**
+     * The delivery to `$path` of the alert's `$change` event, once it arrives.
+     *
+     * @return array<string, mixed>
+     */
+    private function waitForAcknowledgement(string $path, string $alertId, string $change): array
+    {
+        $delivery = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            self::REQUEST_TYPE_WEBHOOK,
+            ['url' => $path],
+            60,
+            1_000,
+            function (array $request) use ($alertId, $change) {
+                $this->assertSame($alertId, $request['data']['$id'] ?? null);
+                $this->assertContains('monitors.*.alerts.*.' . $change, \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')));
+            },
+        );
+        $this->assertNotSame([], $delivery, "No '{$change}' event of alert {$alertId} reached {$path}");
+
+        return $delivery;
+    }
+
     private function waitForEvent(string $path, string $monitorId, string $status, int $count = 1): array
     {
         $this->assertEventually(function () use ($path, $monitorId, $status, $count) {

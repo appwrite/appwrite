@@ -79,6 +79,7 @@ use Utopia\Migration\Resources\Messaging\Subscriber;
 use Utopia\Migration\Resources\Messaging\Topic;
 use Utopia\Migration\Resources\Settings\Environment;
 use Utopia\Migration\Resources\Settings\Labels;
+use Utopia\Migration\Resources\Settings\Preferences;
 use Utopia\Migration\Resources\Settings\ProjectVariable;
 use Utopia\Migration\Resources\Settings\Protocols;
 use Utopia\Migration\Resources\Settings\Services as ServicesResource;
@@ -427,6 +428,7 @@ class Appwrite extends Destination
             Resource::TYPE_PROJECT_VARIABLE,
             Resource::TYPE_PROJECT_PROTOCOLS,
             Resource::TYPE_PROJECT_LABELS,
+            Resource::TYPE_PROJECT_PREFERENCES,
             Resource::TYPE_PROJECT_SERVICES,
             Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
             Resource::TYPE_PROJECT_ENVIRONMENT,
@@ -3475,6 +3477,10 @@ class Appwrite extends Destination
                 /** @var Labels $resource */
                 $this->createLabels($resource);
                 break;
+            case Resource::TYPE_PROJECT_PREFERENCES:
+                /** @var Preferences $resource */
+                $this->createPreferences($resource);
+                break;
             case Resource::TYPE_PROJECT_SERVICES:
                 /** @var ServicesResource $resource */
                 $this->createServices($resource);
@@ -3625,6 +3631,19 @@ class Appwrite extends Destination
             'projects',
             $this->projectId,
             new UtopiaDocument(['labels' => $labels]),
+        ));
+
+        $this->dbForPlatform->purgeCachedDocument('projects', $this->projectId);
+
+        return true;
+    }
+
+    protected function createPreferences(Preferences $resource): bool
+    {
+        $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument(
+            'projects',
+            $this->projectId,
+            new UtopiaDocument(['prefs' => $resource->getPreferences()]),
         ));
 
         $this->dbForPlatform->purgeCachedDocument('projects', $this->projectId);

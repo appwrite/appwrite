@@ -192,32 +192,23 @@ class XList extends Action
                 );
                 $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
             } elseif ((int)$ttl > 0 && $parsed->joins === []) {
-                $cache = $dbForProject->getCache();
-                $cacheKey = $this->getListCacheKey($dbForProject, $database, $collectionId);
                 $listCache = $this->getListCache($dbForProject, $database, $collectionId);
                 $roles = $dbForProject->getAuthorization()->getRoles();
                 $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
                 $operationsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_OPERATIONS);
 
-                $documentsCacheHit = false;
-                try {
-                    $cachedDocuments = $cache->load($cacheKey, $ttl, $documentsField);
-                } catch (\Throwable) {
-                    $cachedDocuments = null;
-                }
+                // The version is taken before every query below, so this response is read from and saved under
+                // the version it was queried at. A permission write purges the collection and changes the
+                // version, leaving nothing here for it to read and nowhere it can still be served from.
+                $version = $listCache->getVersion();
 
-                if (\is_array($cachedDocuments)) {
+                $cachedDocuments = $listCache->load($documentsField, $ttl, $version);
+                $documentsCacheHit = \is_array($cachedDocuments);
+
+                if ($documentsCacheHit) {
                     $documents = \array_map($hydrate, $cachedDocuments);
-                    $documentsCacheHit = true;
-
-                    try {
-                        $cachedOperations = $cache->load($cacheKey, $ttl, $operationsField);
-                    } catch (\Throwable) {
-                        $cachedOperations = null;
-                    }
-                    $this->recordCachedOperations($operations, $documents, $cachedOperations);
+                    $this->recordCachedOperations($operations, $documents, $listCache->load($operationsField, $ttl, $version));
                 } else {
-                    $version = $listCache->getVersion();
                     $documents = $find();
 
                     if ($documents !== []) {
@@ -231,15 +222,10 @@ class XList extends Action
                 $total = 0;
                 if ($includeTotal) {
                     $totalField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_TOTAL);
-                    try {
-                        $cachedTotal = $cache->load($cacheKey, $ttl, $totalField);
-                    } catch (\Throwable) {
-                        $cachedTotal = null;
-                    }
+                    $cachedTotal = $listCache->load($totalField, $ttl, $version);
                     if ($cachedTotal !== null && $cachedTotal !== false) {
                         $total = (int) $cachedTotal;
                     } else {
-                        $version = $listCache->getVersion();
                         $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
                         $listCache->save([$totalField => (string) $total], $version);
                     }

@@ -261,6 +261,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Filter name': 'שם הסינון',
   Filters: 'סינונים',
   'Filtered by': 'מסונן לפי',
+  'Change operator': 'שינוי אופרטור',
+  'Change value': 'שינוי ערך',
   'Find a branch...': 'חיפוש ענף...',
   'Fix payment': 'הסדרת התשלום',
   'Authorize payment': 'אישור תשלום',
@@ -859,7 +861,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   Theme: 'ערכת נושא',
   'Light theme': 'ערכת נושא בהירה',
   'Dark theme': 'ערכת נושא כהה',
-  'System theme': 'ערכת נושא לפי המערכת',
 
   // Refresh toasts (default label)
   'data refreshed successfully': 'הנתונים רועננו בהצלחה',
@@ -878,7 +879,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Focus search': 'מעבר לשדה החיפוש',
   'Set theme to light': 'החלפה לערכת נושא בהירה',
   'Set theme to dark': 'החלפה לערכת נושא כהה',
-  'Set theme to system': 'החלפה לערכת נושא לפי המערכת',
 
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'פתיחה או סגירה של הטרמינל',
@@ -1103,7 +1103,27 @@ export const heSharedUiDictionary: Record<string, string> = {
     'שרת SMTP מותאם אישית לאימיילים יוצאים',
   Advisor: 'יועץ',
   Firewall: 'חומת אש',
-  'Security · Firewall rules': 'אבטחה · כללי חומת אש',
+  'Settings · Firewall': 'הגדרות · חומת אש',
+  'Firewall has moved': 'חומת האש עברה למקום אחר',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'כללי חומת האש נמצאים עכשיו ליד מה שהם מגינים עליו: לשונית חומת אש בכל פונקציה ובכל אתר, ואחת בהגדרות הפרויקט עבור ה-API.',
+  'Got it': 'הבנתי',
+  'Open API firewall': 'פתיחת חומת האש של ה-API',
+  // Function and site overview cards, filter chips
+  '1 rule': 'כלל אחד',
+  '{count} rules': '{count} כללים',
+  'vs previous 24 hours': 'לעומת 24 השעות הקודמות',
+  'No blocked traffic yet': 'עדיין אין תעבורה חסומה',
+  'Denied requests will show up here.': 'בקשות שנדחו יופיעו כאן.',
+  '24 hours ago': 'לפני 24 שעות',
+  'No requests yet': 'עדיין אין בקשות',
+  'No bandwidth yet': 'עדיין אין תעבורת נתונים',
+  Humans: 'בני אדם',
+  Bots: 'בוטים',
+  only: 'בלבד',
+  On: 'פעיל',
+  SSR: 'SSR',
+  Static: 'סטטי',
   'IP allow/block lists and request rules':
     'רשימות היתר/חסימה של IP וכללי בקשות',
 
@@ -1352,6 +1372,11 @@ export const heSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 מושק היום ב-Product Hunt',
   'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
   'Share your take': 'שתפו את דעתכם',
+  'Just launched': 'הושק עכשיו',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'MCP1 מבית Appwrite: כתובת URL אחת לכל שרתי ה-MCP',
+  'MCP1 by Appwrite is live': 'MCP1 מבית Appwrite הושק',
+  'Try MCP1': 'נסו את MCP1',
   'Created by': 'נוצר על ידי',
   'Authorized resources': 'משאבים מורשים',
   'No scopes granted': 'לא הוענקו הרשאות גישה',
@@ -1391,8 +1416,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
   Previews: 'תצוגות מקדימות',
-  'Early access. Saved in this browser.':
-    'גישה מוקדמת. נשמר בדפדפן הזה.',
+  'Early access. Saved in this browser.': 'גישה מוקדמת. נשמר בדפדפן הזה.',
   'Appwrite Analytics': 'Appwrite Analytics',
   'Visitor, page, and campaign tracking.':
     'מעקב אחרי מבקרים, עמודים וקמפיינים.',
@@ -1400,12 +1424,18 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Switch or clone staging and production.':
     'מעבר או שכפול בין staging לפרודקשן.',
   'Project transfers': 'העברות פרויקטים',
-  'Move a project to another organization.':
-    'העברת פרויקט לארגון אחר.',
+  'Move a project to another organization.': 'העברת פרויקט לארגון אחר.',
   'Repository not available': 'ה-repo לא זמין',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
   // Halloween caution tape
   Caution: 'זהירות',
   'Spooky zone': 'אזור מפחיד',
+  // GitHub star wizard
+  'Enjoying Appwrite?': 'נהנים מ-Appwrite?',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwrite הוא קוד פתוח שנבנה בשקיפות מלאה. כוכב עוזר ליותר מפתחים לגלות אותו.',
+  'No thanks': 'לא תודה',
+  'One-time ask, promise. May your builds be ever green.':
+    'מבקשים רק פעם אחת, מבטיחים. שה-builds שלכם יהיו תמיד ירוקים.',
 }

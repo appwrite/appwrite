@@ -1,6 +1,7 @@
 {
     "project": [
         "alerts.read",
+        "alerts.write",
         "assistant.read",
         "attributes.read",
         "attributes.write",
@@ -67,6 +68,8 @@
         "providers.write",
         "reports.read",
         "reports.write",
+        "reviews.read",
+        "reviews.write",
         "rows.read",
         "rows.write",
         "rules.read",

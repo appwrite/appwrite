@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\GraphQL\Http\GraphQL\Mutation;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\Platform\Action;
@@ -50,8 +51,7 @@ class Create extends Base
                     'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false, 'example' => '{"query":"mutation { accountUpdateName(name: \"Walter\") { name } }"}'],
                 ],
             ))
-            ->label('abuse-limit', 60)
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 60, seconds: 60)])
             ->inject('request')
             ->inject('response')
             ->inject('schema')

@@ -1999,6 +1999,67 @@ final class SitesCustomServerTest extends Scope
     }
 
     #[Retry(count: 3)]
+    public function testSiteStreaming(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Streaming site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true',
+        ]);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        // Note when each piece of the page reaches the visitor.
+        $measure = function (string $path) use ($domain): array {
+            $body = '';
+            $arrivals = [];
+            $request = \curl_init('http://' . $domain . $path);
+            \curl_setopt_array($request, [
+                CURLOPT_HTTPHEADER => ['Accept-Encoding: identity'],
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_WRITEFUNCTION => function ($handle, string $chunk) use (&$body, &$arrivals): int {
+                    $body .= $chunk;
+                    foreach (['first', 'second', 'third'] as $text) {
+                        if (!isset($arrivals[$text]) && \str_contains($body, $text)) {
+                            $arrivals[$text] = \microtime(true);
+                        }
+                    }
+                    return \strlen($chunk);
+                },
+            ]);
+            \curl_exec($request);
+
+            return [\curl_getinfo($request, CURLINFO_RESPONSE_CODE), $arrivals];
+        };
+
+        // The page renders over 4s; buffered, every piece would arrive together at the end.
+        [$status, $arrivals] = $measure('/stream');
+        $this->assertSame(200, $status);
+        $this->assertCount(3, $arrivals);
+        $this->assertGreaterThan(1.5, $arrivals['second'] - $arrivals['first']);
+        $this->assertGreaterThan(1.5, $arrivals['third'] - $arrivals['second']);
+
+        // An error status stays buffered, so the proxy can still replace it with an error page.
+        [$status, $arrivals] = $measure('/stream?code=500');
+        $this->assertSame(500, $status);
+        $this->assertCount(3, $arrivals);
+        $this->assertLessThan(0.5, $arrivals['third'] - $arrivals['first']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    #[Retry(count: 3)]
     public function testAdapterDetectionSSR(): void
     {
         $siteId = $this->setupSite([
@@ -3561,6 +3622,7 @@ final class SitesCustomServerTest extends Scope
 
         $apiKey = $this->createPreviewKey($deploymentDomain, $deploymentId);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -3569,6 +3631,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/non-existing-path', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -3615,6 +3678,7 @@ final class SitesCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
@@ -3624,6 +3688,7 @@ final class SitesCustomServerTest extends Scope
          * Test for FAILURE
          */
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
             'x-appwrite-hostname' => $otherDomain,
         ]);
@@ -3632,6 +3697,7 @@ final class SitesCustomServerTest extends Scope
 
         $proxyClient->setEndpoint('http://' . $otherDomain);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertSame(301, $response['headers']['status-code']);
@@ -3657,9 +3723,9 @@ final class SitesCustomServerTest extends Scope
         return API_KEY_EPHEMERAL . '_' . $jwt->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
             'hostname' => $hostname,
+            'projectId' => $this->getProject()['$id'],
             'deploymentId' => $deploymentId,
             'hostnameOverride' => true,
-            'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
         ]);
     }
@@ -3757,6 +3823,13 @@ final class SitesCustomServerTest extends Scope
         $buildMd5 = \md5($response['body']);
 
         $this->assertNotSame($deploymentMd5, $buildMd5);
+
+        $unscoped = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId . '/download', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['users.read']),
+        ], ['type' => 'source']);
+        $this->assertSame(401, $unscoped['headers']['status-code']);
 
         // Range bounds are inclusive and an end past the last byte is clamped to it.
         $size = \strlen($response['body']);
@@ -4620,6 +4693,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->createPreviewKey($deploymentDomain, $deploymentId),
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -4663,6 +4737,7 @@ final class SitesCustomServerTest extends Scope
         // deployment is still building error page
         $apiKey = $this->createPreviewKey($deploymentDomain, $deploymentId);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -4678,6 +4753,7 @@ final class SitesCustomServerTest extends Scope
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);

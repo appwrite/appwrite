@@ -20,6 +20,7 @@ import {
   useProject,
   useOrganizationScopes,
   useAccountConsents,
+  useConsoleVariables,
 } from '@/lib/react-query/hooks'
 import {
   canSeeProjectNavItem,
@@ -54,11 +55,11 @@ import {
   Globe,
   Plug,
   Activity,
-  Shield,
   ScanSearch,
   Package,
   FileText,
   AlertTriangle,
+  GitPullRequest,
   Joystick,
   type LucideIcon,
 } from 'lucide-react'
@@ -115,6 +116,7 @@ interface SidebarCopy {
     functions: string
     messaging: string
     videos: string
+    reviews: string
     sites: string
     distribution: string
     activity: string
@@ -122,7 +124,6 @@ interface SidebarCopy {
     usage: string
     analytics: string
     errors: string
-    firewall: string
     advisor: string
     settings: string
   }
@@ -278,10 +279,10 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
       label: sidebarCopy.sections.protect,
       items: [
         {
-          id: 'firewall',
-          label: sidebarCopy.items.firewall,
-          icon: Shield,
-          path: `/projects/${projectId}/firewall`,
+          id: 'reviews',
+          label: sidebarCopy.items.reviews,
+          icon: GitPullRequest,
+          path: `/projects/${projectId}/reviews`,
         },
         {
           id: 'advisor',
@@ -329,8 +330,9 @@ export function ConsoleSidebar({
   const { collapsed, setCollapsed } = useSidebarCollapsed(accountWithPrefs)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
-  const { features, isCloud } = useConsoleProfile()
+  const { features } = useConsoleProfile()
   const { project, projectData } = useProject(projectId)
+  const { reviewsEnabled } = useConsoleVariables(project?.region)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
   )
@@ -351,8 +353,6 @@ export function ConsoleSidebar({
             return features.usageStats && canSeeUsageNav(access, features)
           if (item.id === 'activity')
             return features.activity && canSeeActivityNav(access, features)
-          if (item.id === 'firewall')
-            return isCloud && canSeeProjectNavItem(access, features, item.id)
           if (item.id === 'analytics')
             return (
               features.analytics &&
@@ -361,6 +361,12 @@ export function ConsoleSidebar({
           if (item.id === 'videos')
             return (
               features.videos && canSeeProjectNavItem(access, features, item.id)
+            )
+          if (item.id === 'reviews')
+            return (
+              features.reviews &&
+              reviewsEnabled &&
+              canSeeProjectNavItem(access, features, item.id)
             )
           if (item.id === 'agents')
             return (
@@ -376,8 +382,8 @@ export function ConsoleSidebar({
     features,
     access,
     sidebarCopy,
-    isCloud,
     showProjectAgents,
+    reviewsEnabled,
   ])
 
   const showOverview = canSeeProjects(access, features)

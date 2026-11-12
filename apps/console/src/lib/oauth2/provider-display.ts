@@ -18,6 +18,8 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   [OAuthProvider.PaypalSandbox]: 'PayPal Sandbox',
   [OAuthProvider.Tiktok]: 'TikTok',
   [OAuthProvider.TradeshiftBox]: 'Tradeshift Sandbox',
+  [OAuthProvider.Vipps]: 'Vipps MobilePay',
+  [OAuthProvider.VippsSandbox]: 'Vipps MobilePay Sandbox',
   [OAuthProvider.Oidc]: 'OpenID Connect',
   [OAuthProvider.Fusionauth]: 'FusionAuth',
   [OAuthProvider.Huggingface]: 'Hugging Face',
@@ -42,6 +44,7 @@ const ICON_FILENAME_OVERRIDES: Record<string, string> = {
   [OAuthProvider.Huggingface]: 'hugging-face.svg',
   [OAuthProvider.PaypalSandbox]: 'paypal.svg',
   [OAuthProvider.TradeshiftBox]: 'tradeshift.svg',
+  [OAuthProvider.VippsSandbox]: 'vipps.svg',
 }
 
 /** Map provider id to the matching `/public/icons/*.svg` asset. */
@@ -65,6 +68,7 @@ export const OAUTH2_NEW_PROVIDER_LAUNCH_DATES: Partial<Record<string, string>> =
     [OAuthProvider.Kakao]: '2026-09-08',
     [OAuthProvider.Resend]: '2026-09-08',
     [OAuthProvider.Tiktok]: '2026-09-08',
+    [OAuthProvider.Vipps]: '2026-11-04',
     [OAuthProvider.Webflow]: '2026-09-29',
   }
 

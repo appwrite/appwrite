@@ -3,12 +3,15 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Redirect;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Abuse\Limit;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
@@ -18,6 +21,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Account\Base;
 use Appwrite\URL\URL as URLParser;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -67,8 +71,7 @@ class Get extends Base
             ->label('audits.event', 'session.create')
             ->label('audits.resource', 'user/{user.$id}')
             ->label('audits.userId', '{user.$id}')
-            ->label('abuse-limit', 50)
-            ->label('abuse-key', 'ip:{ip}')
+            ->label('abuse', [Limit::attempts(['ip'], 50)])
             ->label('docs', false)
             ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
@@ -96,6 +99,8 @@ class Get extends Base
             ->inject('clientForOAuth2')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('authDevice')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
@@ -107,7 +112,7 @@ class Get extends Base
         string $error_description,
         Request $request,
         Response $response,
-        Document $project,
+        Project $project,
         Validator $redirectValidator,
         User $user,
         Database $dbForProject,
@@ -125,6 +130,8 @@ class Get extends Base
         Client $clientForOAuth2,
         Mqtt $mqtt,
         Realtime $queueForRealtime,
+        ?Document $authDevice,
+        DeletePublisher $publisherForDeletes,
     ): void {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
@@ -196,7 +203,7 @@ class Get extends Base
         // The default relays live on the console host; the same path on any other allowed host is a customer page.
         // Native apps skip the relay: its JavaScript redirect into the app is late or dropped on slow in-app browsers.
         $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
-        $nativeCallback = ['scheme' => 'appwrite-callback-' . $project->getId()];
+        $nativeCallback = ['scheme' => $project->getCallbackScheme()];
 
         $failure = [];
         if (!empty($state['failure'])) {
@@ -803,6 +810,9 @@ class Get extends Base
                 '$id' => Id::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
+                // The account switching device the session joins, when the browser holds one
+                'deviceId' => $authDevice?->getId() ?? '',
+                'deviceInternalId' => $authDevice?->getSequence() ?? '',
                 'provider' => $provider,
                 'providerUid' => $oauth2ID,
                 'providerAccessToken' => $accessToken,
@@ -834,7 +844,9 @@ class Get extends Base
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-            $session->setAttribute('expire', $expire);
+            $session
+                ->setAttribute('expire', $expire)
+                ->setAttribute('userName', $user->getAttribute('name', ''));
 
             $encoded = $store
                 ->setProperty('id', $user->getId())
@@ -863,6 +875,13 @@ class Get extends Base
             $response
                 ->addCookie($store->getKey() . '_legacy', $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, null)
                 ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+
+            // The session joins the account switching device and becomes its active one, before the
+            // redirect goes out so the device reads consistently on the client's next request
+            if ($authDevice !== null) {
+                $authDevice = AuthDevice::attach($dbForProject, $authorization, $proofForToken, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
+                AuthDevice::refreshCookie($request, $response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
+            }
         }
 
         if (isset($sessionUpgrade) && isset($session)) {

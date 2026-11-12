@@ -19,6 +19,7 @@ final class Notification extends Base
      * @param array<string, mixed> $params
      * @param array<string, mixed> $platform
      * @param array<string, string> $headers extra email headers, such as List-Unsubscribe
+     * @param array{title?: string, body?: string, tag?: string, critical?: bool, data?: array<string, string>} $push what a push recipient's devices show
      */
     public function __construct(
         public readonly ?Document $project = null,
@@ -41,6 +42,7 @@ final class Notification extends Base
         public readonly array $params = [],
         public readonly array $platform = [],
         public readonly array $headers = [],
+        public readonly array $push = [],
     ) {
     }
 
@@ -80,6 +82,7 @@ final class Notification extends Base
             'events' => !empty($this->events) ? $this->events : $this->generateEvents(),
             'platform' => $platform,
             'headers' => $this->headers,
+            'push' => $this->push,
         ];
     }
 
@@ -105,6 +108,7 @@ final class Notification extends Base
             events: $data['events'] ?? [],
             platform: $data['platform'] ?? [],
             headers: $data['headers'] ?? [],
+            push: $data['push'] ?? [],
         );
     }
 

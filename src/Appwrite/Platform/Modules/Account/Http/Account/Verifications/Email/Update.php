@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -77,8 +78,7 @@ class Update extends Action
                     public: false,
                 )
             ])
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{param-userId}')
+            ->label('abuse', [Limit::attempts(['projectId', 'url', 'param.userId'], 10, everyone: true)])
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('secret', '', new Text(256), 'Valid verification token.')
             ->inject('response')
@@ -115,17 +115,20 @@ class Update extends Action
 
         $authorization->addRole(Role::user($profile->getId())->toString());
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(['emailVerification' => true]));
-
-        $user->setAttributes($profile->getArrayCopy());
-
         $verification = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
-        /**
-         * We act like we're updating and validating
-         *  the verification token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        // Claim the token under the user row lock an email change takes, which deletes tokens sent to the old address
+        $profile = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $profile, $verifiedToken) {
+            $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
+
+            return $dbForProject->updateDocument('users', $profile->getId(), new Document(['emailVerification' => true]));
+        });
+
+        $user->setAttributes($profile->getArrayCopy());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents

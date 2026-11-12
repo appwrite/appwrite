@@ -878,6 +878,17 @@
             "data",
             "permissions",
             "transactionId"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
         ]
     },
     "console": {
@@ -1146,6 +1157,10 @@
         "alerts.list": [
             "queries",
             "total"
+        ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
@@ -3403,6 +3418,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -3579,8 +3604,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",
@@ -5067,6 +5132,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     },
     "server": {
@@ -5319,6 +5398,10 @@
         "alerts.list": [
             "queries",
             "total"
+        ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
@@ -7510,6 +7593,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -7656,8 +7749,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",
@@ -9052,6 +9185,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     }
 }

@@ -320,7 +320,23 @@ trait StorageBase
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
-        $this->assertContains($largeFile['body']['signature'], $this->getChunkedFileSignatures(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'))); // should validate that the file is not encrypted
+        $this->assertContains($largeFile['body']['signature'], $this->getChunkedFileSignatures(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'))); // describes the original bytes, not the encrypted ones
+        $this->assertTrue($largeFile['body']['encryption']);
+
+        // Encrypted above 20 MB: the full file and a range across the first chunk boundary come back as uploaded.
+        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket2['body']['$id'] . '/files/' . $largeFile['body']['$id'] . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame(\md5_file($source), \md5($download['body']));
+
+        $boundary = $chunkSize - 10;
+        $range = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket2['body']['$id'] . '/files/' . $largeFile['body']['$id'] . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $boundary . '-' . ($boundary + 19),
+        ], $this->getHeaders()));
+        $this->assertSame(206, $range['headers']['status-code']);
+        $this->assertSame(\substr(\file_get_contents($source), $boundary, 20), $range['body']);
 
         /**
          * Failure
@@ -762,7 +778,7 @@ trait StorageBase
         $source = __DIR__ . '/../../../resources/disk-a/large-file.mp4';
         $size = \filesize($source);
 
-        // Both are skipped above the buffer, so every chunk reports none/false.
+        // Compression is skipped above the buffer. Encryption is not, and is reported once the last chunk is in.
         $this->assertGreaterThan(APP_STORAGE_READ_BUFFER, $size);
         $chunkSize = 5 * 1024 * 1024;
         $handle = @\fopen($source, 'rb');
@@ -786,12 +802,12 @@ trait StorageBase
             ]);
             $this->assertNotEmpty($chunked['body']['$id']);
             $this->assertSame('none', $chunked['body']['compression']);
-            $this->assertFalse($chunked['body']['encryption']);
             $id = $chunked['body']['$id'];
             $counter++;
         }
         \fclose($handle);
         $this->assertEquals(201, $chunked['headers']['status-code']);
+        $this->assertTrue($chunked['body']['encryption']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
             'content-type' => 'application/json',

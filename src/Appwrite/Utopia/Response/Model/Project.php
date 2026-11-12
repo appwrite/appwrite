@@ -141,6 +141,7 @@ class Project extends Model
             ->addRule('prefs', [
                 'type' => Response::MODEL_PREFERENCES,
                 'description' => 'Project preferences as a key-value object',
+                'required' => false,
                 'default' => new \stdClass(),
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])

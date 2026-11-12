@@ -2,10 +2,12 @@
 
 namespace Utopia\Image;
 
-use Exception;
 use Imagick;
 use ImagickDraw;
 use ImagickPixel;
+use Utopia\Image\Exception\CorruptImageException;
+use Utopia\Image\Exception\ImageException;
+use Utopia\Image\Exception\LimitExceededException;
 use Utopia\Image\Exception\UnsupportedFormatException;
 
 class Image
@@ -43,16 +45,27 @@ class Image
     private int $rotation = 0;
 
     /**
-     * @throws \ImagickException
      * @throws UnsupportedFormatException
+     * @throws CorruptImageException
+     * @throws LimitExceededException
+     * @throws ImageException
      */
     public function __construct(string $data)
     {
         $this->image = new Imagick();
 
-        $this->image->setFormat(Format::detect($data)->value);
-        $this->image->readImageBlob($data);
-        $this->image->setFormat('');
+        $format = Format::detect($data);
+        try {
+            $this->image->setFormat($format->value);
+            $this->image->readImageBlob($data);
+            $this->image->setFormat('');
+        } catch (\ImagickException $exception) {
+            // CoderError: while reading, a decoder refusing the data (a bad PNG chunk or zlib stream).
+            if ($exception->getCode() === 450) {
+                throw new CorruptImageException($exception);
+            }
+            throw self::failure($exception, 'Failed to process image', $format->value . ' input is not available');
+        }
 
         // Solve formats such as GIF. Otherwise width&height would be from last frame (wrong)
         $this->image->setFirstIterator();
@@ -62,6 +75,16 @@ class Image
 
         // Use metadata to fetch rotation. Will be perform right before exporting
         $orientationType = $this->image->getImageProperties()['exif:Orientation'] ?? null;
+
+        // The rotation is applied to the pixels, so the image must stop saying it still needs one:
+        // left in place, the tag is written to JPEG, WebP and PNG output on the crop paths that
+        // keep metadata, and as a rotation of its own to AVIF and HEIC, and a viewer turns the
+        // image a second time.
+        $this->image->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
+        if (! empty($orientationType)) {
+            // PNG writes the tag from the EXIF data itself.
+            $this->image->setImageProperty('exif:Orientation', '1');
+        }
 
         // Reference: https://docs.imgix.com/apis/rendering/rotation/orient
         // Mirror rotations are ignored, because we don't support mirroring
@@ -101,7 +124,9 @@ class Image
     }
 
     /**
-     * @throws \Throwable
+     * @throws \InvalidArgumentException
+     * @throws LimitExceededException
+     * @throws ImageException
      */
     public function crop(
         int $width,
@@ -111,6 +136,10 @@ class Image
         ?float $y = null,
     ): self {
         $this->validateFocalPoint($x, $y);
+
+        if ($width < 0 || $height < 0) {
+            throw new \InvalidArgumentException('Width and height must not be negative');
+        }
 
         $hasFocalPoint = $x !== null && $y !== null;
 
@@ -158,11 +187,27 @@ class Image
             $y,
         );
 
+        try {
+            $this->resize($width, $height, $resizeWidth, $resizeHeight, $x, $y, $gravity === self::GRAVITY_CENTER && !$hasFocalPoint);
+        } catch (\ImagickException $exception) {
+            throw self::failure($exception, 'Failed to process image');
+        }
+        $this->height = $height;
+        $this->width = $width;
+
+        return $this;
+    }
+
+    /**
+     * @throws \ImagickException
+     */
+    private function resize(int $width, int $height, int $resizeWidth, int $resizeHeight, int $x, int $y, bool $thumbnail): void
+    {
         if ($this->image->getNumberImages() > 1) {
             $this->image = $this->image->coalesceImages();
 
             foreach ($this->image as $frame) {
-                if ($gravity === self::GRAVITY_CENTER && !$hasFocalPoint) {
+                if ($thumbnail) {
                     $frame->cropThumbnailImage($width, $height);
                 } else {
                     $frame->scaleImage($resizeWidth, $resizeHeight, false);
@@ -172,16 +217,42 @@ class Image
 
                 $frame->setImagePage($width, $height, 0, 0);
             }
-        } elseif ($gravity === self::GRAVITY_CENTER && !$hasFocalPoint) {
+        } elseif ($thumbnail) {
             $this->image->cropThumbnailImage($width, $height);
         } else {
             $this->image->scaleImage($resizeWidth, $resizeHeight, false);
             $this->image->cropImage($width, $height, $x, $y);
         }
-        $this->height = $height;
-        $this->width = $width;
+    }
 
-        return $this;
+    /**
+     * The library's exception for one of Imagick's, by ImageMagick's own
+     * error code; $message is for a failure it has no class for.
+     */
+    private static function failure(\Throwable $exception, string $message, string $missing = ''): ImageException
+    {
+        return match (true) {
+            // CorruptImageError, BlobError
+            \in_array($exception->getCode(), [425, 435], true) => new CorruptImageException($exception),
+            // ResourceLimitError, CacheError, and ImageError's dimension limit
+            \in_array($exception->getCode(), [400, 445], true),
+            $exception->getCode() === 465 && \str_contains($exception->getMessage(), 'exceeds limit') => new LimitExceededException($exception),
+            // MissingDelegateError
+            $exception->getCode() === 420 && $missing !== '' => new UnsupportedFormatException($missing, $exception),
+            default => new ImageException($message, 0, $exception),
+        };
+    }
+
+    /**
+     * @throws \InvalidArgumentException
+     */
+    private static function validateColor(string $color): void
+    {
+        try {
+            new ImagickPixel($color);
+        } catch (\ImagickPixelException) {
+            throw new \InvalidArgumentException('Invalid color: ' . $color);
+        }
     }
 
     private function validateFocalPoint(?float $x, ?float $y): void
@@ -235,17 +306,27 @@ class Image
      * @param  int  $borderWidth  The size of the border in pixels
      * @param  string  $borderColor  The color of the border in hex format
      *
-     * @throws \ImagickException
+     * @throws \InvalidArgumentException
+     * @throws ImageException
      */
     public function setBorder(int $borderWidth, string $borderColor): self
     {
+        if ($borderWidth < 0) {
+            throw new \InvalidArgumentException('Border width must not be negative');
+        }
+        self::validateColor($borderColor);
+
         $this->borderWidth = $borderWidth;
         $this->borderColor = $borderColor;
 
         if ($this->cornerRadius !== 0) {
             return $this;
         }
-        $this->image->borderImage($borderColor, $borderWidth, $borderWidth);
+        try {
+            $this->image->borderImage($borderColor, $borderWidth, $borderWidth);
+        } catch (\ImagickException $exception) {
+            throw self::failure($exception, 'Failed to process image');
+        }
 
         return $this;
     }
@@ -256,9 +337,30 @@ class Image
      * @param  int  $cornerRadius:  The radius for the corners
      * @return Image $image: The processed image
      *
-     * @throws \ImagickException
+     * @throws \InvalidArgumentException
+     * @throws ImageException
      */
     public function setBorderRadius(int $cornerRadius): self
+    {
+        if ($cornerRadius < 0) {
+            throw new \InvalidArgumentException('Corner radius must not be negative');
+        }
+
+        try {
+            $this->round($cornerRadius);
+        } catch (\ImagickException | \ImagickDrawException | \ImagickPixelException $exception) {
+            throw self::failure($exception, 'Failed to process image');
+        }
+
+        return $this;
+    }
+
+    /**
+     * @throws \ImagickException
+     * @throws \ImagickDrawException
+     * @throws \ImagickPixelException
+     */
+    private function round(int $cornerRadius): void
     {
         $mask = new Imagick();
         $mask->newImage($this->width, $this->height, new ImagickPixel('transparent'), 'png');
@@ -291,25 +393,27 @@ class Image
 
             $this->image = $strokeCanvas;
         }
-
-        return $this;
     }
 
     /**
      * @param  float  $opacity  The opacity of the image
      *
-     * @throws \ImagickException
+     * @throws ImageException
      */
     public function setOpacity(float $opacity): self
     {
         if ($opacity == 1) {
             return $this;
         }
-        $this->image->setImageAlphaChannel(Imagick::ALPHACHANNEL_OPAQUE);
-        if ($opacity === 0.0) {
-            $this->image->evaluateImage(Imagick::EVALUATE_SET, 0, Imagick::CHANNEL_ALPHA);
-        } else {
-            $this->image->evaluateImage(Imagick::EVALUATE_DIVIDE, 1 / $opacity, Imagick::CHANNEL_ALPHA);
+        try {
+            $this->image->setImageAlphaChannel(Imagick::ALPHACHANNEL_OPAQUE);
+            if ($opacity === 0.0) {
+                $this->image->evaluateImage(Imagick::EVALUATE_SET, 0, Imagick::CHANNEL_ALPHA);
+            } else {
+                $this->image->evaluateImage(Imagick::EVALUATE_DIVIDE, 1 / $opacity, Imagick::CHANNEL_ALPHA);
+            }
+        } catch (\ImagickException $exception) {
+            throw self::failure($exception, 'Failed to process image');
         }
 
         return $this;
@@ -321,7 +425,8 @@ class Image
      * @param  int  $degree:  The amount to rotate in degrees
      * @return Image $image: The rotated image
      *
-     * @throws \ImagickException
+     * @throws LimitExceededException
+     * @throws ImageException
      */
     public function setRotation(int $degree): self
     {
@@ -329,7 +434,11 @@ class Image
             return $this;
         }
 
-        $this->image->rotateImage('transparent', $degree);
+        try {
+            $this->image->rotateImage('transparent', $degree);
+        } catch (\ImagickException $exception) {
+            throw self::failure($exception, 'Failed to process image');
+        }
 
         return $this;
     }
@@ -337,12 +446,22 @@ class Image
     /**
      * @param  mixed  $color
      *
-     * @throws \Throwable
+     * @throws \InvalidArgumentException
+     * @throws ImageException
      */
     public function setBackground($color): static
     {
-        $this->image->setImageBackgroundColor($color);
-        $this->image = $this->image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+        if (! \is_string($color)) {
+            throw new \InvalidArgumentException('Invalid color: ' . \get_debug_type($color));
+        }
+        self::validateColor($color);
+
+        try {
+            $this->image->setImageBackgroundColor($color);
+            $this->image = $this->image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+        } catch (\ImagickException $exception) {
+            throw self::failure($exception, 'Failed to process image');
+        }
 
         return $this;
     }
@@ -352,7 +471,8 @@ class Image
      *
      * Prints manipulated image.
      *
-     * @throws Exception
+     * @throws UnsupportedFormatException
+     * @throws ImageException
      */
     public function output(string $type, int $quality = 75): ?string
     {
@@ -360,14 +480,33 @@ class Image
     }
 
     /**
-     * @throws Exception
+     * @throws UnsupportedFormatException
+     * @throws ImageException
      */
     public function save(?string $path = null, string $type = '', int $quality = 75): ?string
     {
         // Create directory with write permissions
         if ($path !== null && !file_exists(\dirname($path)) && ! @mkdir(\dirname($path), 0755, true)) {
-            throw new Exception('Can\'t create directory ' . \dirname($path));
+            throw new ImageException('Can\'t create directory ' . \dirname($path));
         }
+
+        try {
+            return $this->write($path, $type, $quality);
+        } catch (\ImagickException $exception) {
+            // Without an encoder ImageMagick fails AVIF and HEIC with no more than an empty blob.
+            if (\in_array($type, ['avif', 'heic'], true)) {
+                throw new UnsupportedFormatException(\strtoupper($type) . ' output is not available', $exception);
+            }
+            throw self::failure($exception, 'Failed to write image');
+        }
+    }
+
+    /**
+     * @throws \ImagickException
+     * @throws UnsupportedFormatException
+     */
+    private function write(?string $path, string $type, int $quality): ?string
+    {
 
         // Apply original metadata rotation
         if ($this->rotation !== 0) {
@@ -428,7 +567,7 @@ class Image
                 break;
 
             default:
-                throw new Exception('Invalid output type given');
+                throw new UnsupportedFormatException('Unsupported output format: ' . $type);
         }
 
         if ($path === null || $path === '') {

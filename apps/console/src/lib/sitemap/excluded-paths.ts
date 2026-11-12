@@ -33,6 +33,7 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/cli/install.sh',
   '/cli/install.ps1',
   '/.well-known/mcp/server-card.json',
+  '/.well-known/ard.json',
   '/.well-known/ai-catalog.json',
   '/.well-known/agent-skills/index.json',
   '/.well-known/change-password',

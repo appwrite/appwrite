@@ -2,6 +2,7 @@
 
 namespace Appwrite\Database;
 
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hook\UniqueId;
 use Utopia\Cache\Cache;
@@ -211,7 +212,9 @@ class Factory implements Provisioner
 
     protected function configureDocumentTypes(Database $database): Database
     {
-        return $database->setDocumentType('users', User::class);
+        return $database
+            ->setDocumentType('users', User::class)
+            ->setDocumentType('projects', Project::class);
     }
 
     protected function destinationFor(DSN $dsn): ?Database

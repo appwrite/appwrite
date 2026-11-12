@@ -18,5 +18,6 @@ jobs:
           configuration-path: .github/labeler.yml
           enable-versioned-regex: false
           include-title: 1
+          include-body: 0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

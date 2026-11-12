@@ -419,6 +419,10 @@ return [
         'description' => 'Access to read the alerts monitors raise',
         'category' => 'Other',
     ],
+    'alerts.write' => [
+        'description' => 'Access to acknowledge the alerts monitors raise',
+        'category' => 'Other',
+    ],
     'locale.read' => [
         'description' => 'Access to use Locale service',
         'category' => 'Other',
@@ -485,6 +489,15 @@ return [
     'reports.write' => [
         'description' => 'Access to delete reports under Advisor service.',
         'category' => 'Advisor',
+    ],
+    // Reviews
+    'reviews.read' => [
+        'description' => 'Access to read code review repositories and reviews.',
+        'category' => 'Reviews',
+    ],
+    'reviews.write' => [
+        'description' => 'Access to turn code review on and off for repositories.',
+        'category' => 'Reviews',
     ],
     'presences.read' => [
         'description' => 'Access to read your project\'s presences',

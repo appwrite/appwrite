@@ -1456,6 +1456,14 @@ final class FunctionsCustomServerTest extends Scope
             $source = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
             $this->assertSame(200, $source['headers']['status-code']);
             $this->assertStringStartsWith("\x1f\x8b", $source['body']);
+
+            // Every key holds the public scope, which is not enough to download a deployment.
+            $unscoped = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId . '/download', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getNewKey(['users.read']),
+            ], ['type' => 'source']);
+            $this->assertSame(401, $unscoped['headers']['status-code']);
         } finally {
             $this->cleanupFunction($functionId);
         }

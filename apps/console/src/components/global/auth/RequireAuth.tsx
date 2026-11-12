@@ -5,6 +5,7 @@ import { AppwriteException } from '@appwrite.io/console'
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
+import { useOpenAiAdsLead } from '@/lib/hooks/useOpenAiAdsLead'
 import { isHttpForbiddenError } from '@/lib/utils/error-formatting'
 import {
   consoleAccountQueryOptions,
@@ -320,6 +321,8 @@ export function RequireAuth({
     syncOpenAiAdsUser(accountData)
     maybeMeasureOpenAiAdsRegistrationAfterAuth(accountData)
   }, [accountData])
+
+  useOpenAiAdsLead(error ? undefined : accountData)
 
   useAuthErrorNavigation(error, location)
 

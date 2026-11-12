@@ -2,102 +2,99 @@
 
 namespace Utopia\Agents;
 
-use Utopia\Agents\Roles\Assistant;
+use Utopia\Agents\Events\StepFinish;
+use Utopia\Agents\Events\ToolResult;
 
+/**
+ * A running conversation with an agent: keeps the message history and the
+ * usage of every run.
+ */
 class Conversation
 {
-    /**
-     * @var array<Message>
-     */
-    protected array $messages = [];
-
-    protected Agent $agent;
-
-    protected int $inputTokens = 0;
-
-    protected int $outputTokens = 0;
-
-    protected int $cacheCreationInputTokens = 0;
-
-    protected int $cacheReadInputTokens = 0;
-
-    protected int $totalTokens = 0;
+    protected Usage $usage;
 
     /**
-     * @var callable
+     * @param  list<Message>  $messages  Earlier history to continue from
      */
-    protected $listener;
-
-    public function __construct(Agent $agent)
-    {
-        $this->agent = $agent;
-        $this->listener = function () {
-        };
+    public function __construct(
+        protected Agent $agent,
+        protected array $messages = [],
+    ) {
+        $this->usage = new Usage();
     }
 
     /**
-     * Set a callback to handle chunks
+     * Append messages without running the agent, for example tool results
+     * for calls the agent left pending.
      */
-    public function listen(callable $listener): self
+    public function add(Message ...$messages): static
     {
-        $this->listener = $listener;
+        foreach ($messages as $message) {
+            $this->messages[] = $message;
+        }
 
         return $this;
     }
 
     /**
-     * Add a message to the conversation
+     * Append $input, run the agent on the whole history and append each
+     * step's messages as it finishes. Pass no input to continue after add().
      *
-     * @param  array<int, mixed>  $attachments
+     * @param  string|Message|list<Message>  $input
+     * @param  (callable(Event): void)|null  $listener
+     *
+     * @throws Exception
      */
-    public function message(Role $from, Message $message, array $attachments = []): self
+    public function send(string|Message|array $input = [], ?callable $listener = null): Result
     {
-        $entry = $message->withRole($from->getIdentifier());
-        $normalizedExistingAttachments = [];
-        foreach ($entry->getAttachments() as $existingAttachment) {
-            $normalizedExistingAttachments[] = $existingAttachment->withRole($from->getIdentifier());
-        }
-        $entry->setAttachments($normalizedExistingAttachments);
+        $input = match (true) {
+            \is_string($input) => [Message::user($input)],
+            $input instanceof Message => [$input],
+            default => $input,
+        };
+        $this->add(...$input);
 
-        $this->validateAttachments($entry, $attachments);
-
-        foreach ($attachments as $attachment) {
-            if (! $attachment instanceof Message) {
-                throw new \InvalidArgumentException('Attachments must be Message instances');
+        // Record every step as it finishes, so a run that fails partway keeps
+        // the tool calls it already executed and a retry does not repeat them.
+        // A listener failure on a tool result is held until the step is
+        // recorded, since those tools have already run.
+        $failure = null;
+        $result = $this->agent->stream($this->messages, function (Event $event) use ($listener, &$failure): void {
+            if ($event instanceof StepFinish) {
+                $this->add($event->step->response->message());
+                if ($event->step->results !== []) {
+                    $this->add(Message::tool($event->step->results));
+                }
+                $this->usage = $this->usage->add($event->step->response->usage);
             }
 
-            $entry->addAttachment($attachment->withRole($from->getIdentifier()));
-        }
-        $this->messages[] = $entry;
+            if ($failure !== null) {
+                if ($event instanceof StepFinish) {
+                    throw $failure;
+                }
 
-        return $this;
+                return;
+            }
+
+            if ($listener === null) {
+                return;
+            }
+
+            try {
+                $listener($event);
+            } catch (\Throwable $error) {
+                if (! $event instanceof ToolResult) {
+                    throw $error;
+                }
+                $failure = $error;
+            }
+        });
+
+        return $result;
     }
 
     /**
-     * Send the conversation to the agent and get response
-     *
-     *
-     * @throws \Exception
-     */
-    public function send(): Message
-    {
-        $message = $this->agent->getAdapter()->send($this->messages, $this->listener);
-
-        $this->countInputTokens($this->agent->getAdapter()->getInputTokens());
-        $this->countOutputTokens($this->agent->getAdapter()->getOutputTokens());
-        $this->countCacheCreationInputTokens($this->agent->getAdapter()->getCacheCreationInputTokens());
-        $this->countCacheReadInputTokens($this->agent->getAdapter()->getCacheReadInputTokens());
-
-        $from = new Assistant($this->agent->getAdapter()->getModel(), 'Assistant');
-        $this->message($from, $message);
-
-        return $message;
-    }
-
-    /**
-     * Get all messages in the conversation
-     *
-     * @return array<Message>
+     * @return list<Message>
      */
     public function getMessages(): array
     {
@@ -105,154 +102,15 @@ class Conversation
     }
 
     /**
-     * Get the agent in the conversation
+     * Usage summed over every run of this conversation.
      */
+    public function getUsage(): Usage
+    {
+        return $this->usage;
+    }
+
     public function getAgent(): Agent
     {
         return $this->agent;
-    }
-
-    /**
-     * Get the current listener callback
-     */
-    public function getListener(): callable
-    {
-        return $this->listener;
-    }
-
-    /**
-     * Get input tokens count
-     */
-    public function getInputTokens(): int
-    {
-        return $this->inputTokens;
-    }
-
-    /**
-     * Add to input tokens count
-     */
-    public function countInputTokens(int $tokens): self
-    {
-        $this->inputTokens += $tokens;
-
-        return $this;
-    }
-
-    /**
-     * Get output tokens count
-     */
-    public function getOutputTokens(): int
-    {
-        return $this->outputTokens;
-    }
-
-    /**
-     * Add to output tokens count
-     */
-    public function countOutputTokens(int $tokens): self
-    {
-        $this->outputTokens += $tokens;
-
-        return $this;
-    }
-
-    /**
-     * Get cache creation input tokens count
-     */
-    public function getCacheCreationInputTokens(): int
-    {
-        return $this->cacheCreationInputTokens;
-    }
-
-    /**
-     * Add to cache creation input tokens count
-     */
-    public function countCacheCreationInputTokens(int $tokens): self
-    {
-        $this->cacheCreationInputTokens += $tokens;
-
-        return $this;
-    }
-
-    /**
-     * Get cache read input tokens count
-     */
-    public function getCacheReadInputTokens(): int
-    {
-        return $this->cacheReadInputTokens;
-    }
-
-    /**
-     * Add to cache read input tokens count
-     */
-    public function countCacheReadInputTokens(int $tokens): self
-    {
-        $this->cacheReadInputTokens += $tokens;
-
-        return $this;
-    }
-
-    /**
-     * Get total tokens count
-     */
-    public function getTotalTokens(): int
-    {
-        return $this->inputTokens + $this->outputTokens + $this->cacheCreationInputTokens + $this->cacheReadInputTokens;
-    }
-
-    /**
-     * @param  array<int, mixed>  $attachments
-     */
-    protected function validateAttachments(Message $message, array $attachments): void
-    {
-        $adapter = $this->agent->getAdapter();
-        $allAttachments = array_merge($message->getAttachments(), $attachments);
-
-        $maxAttachmentsPerMessage = $adapter->getMaxAttachmentsPerMessage();
-        if ($maxAttachmentsPerMessage !== null && count($allAttachments) > $maxAttachmentsPerMessage) {
-            throw new \InvalidArgumentException('Too many attachments in this message');
-        }
-
-        $maxAttachmentBytes = $adapter->getMaxAttachmentBytes();
-        $maxTotalAttachmentBytes = $adapter->getMaxTotalAttachmentBytes();
-        $allowedAttachmentMimeTypes = $adapter->getAllowedAttachmentMimeTypes();
-
-        $totalBytes = 0;
-        foreach ($allAttachments as $attachment) {
-            if (! $attachment instanceof Message) {
-                throw new \InvalidArgumentException('Attachments must be Message instances');
-            }
-
-            $bytes = strlen($attachment->getContent());
-            if ($bytes === 0) {
-                throw new \InvalidArgumentException('Attachment payload cannot be empty');
-            }
-
-            if ($maxAttachmentBytes !== null && $bytes > $maxAttachmentBytes) {
-                throw new \InvalidArgumentException('Attachment exceeds per-file size limit');
-            }
-
-            $mimeType = $attachment->getMimeType();
-            if ($mimeType === null) {
-                throw new \InvalidArgumentException('Attachment MIME type cannot be detected');
-            }
-
-            if (
-                $allowedAttachmentMimeTypes !== null &&
-                ! in_array($mimeType, $allowedAttachmentMimeTypes, true)
-            ) {
-                throw new \InvalidArgumentException('Attachment MIME type is not allowed');
-            }
-
-            if (! $adapter->supportsAttachment($attachment)) {
-                throw new \InvalidArgumentException('Attachment type is not supported by this adapter');
-            }
-
-            $totalBytes += $bytes;
-        }
-
-        if ($maxTotalAttachmentBytes !== null && $totalBytes > $maxTotalAttachmentBytes) {
-            throw new \InvalidArgumentException('Attachments exceed total payload size limit');
-        }
     }
 }

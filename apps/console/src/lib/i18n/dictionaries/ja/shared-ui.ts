@@ -552,7 +552,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No organizations found': '組織が見つかりません',
   'Light theme': 'ライトテーマ',
   'Dark theme': 'ダークテーマ',
-  'System theme': 'システムテーマ',
   // Refresh toasts (default label)
   'data refreshed successfully': 'データを更新しました',
   'Failed to refresh data': 'データの更新に失敗しました',
@@ -564,7 +563,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Focus search': '検索にフォーカス',
   'Set theme to light': 'ライトテーマに設定',
   'Set theme to dark': 'ダークテーマに設定',
-  'Set theme to system': 'システムテーマに設定',
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'ターミナルの表示を切り替え',
   'Enter full screen': '全画面表示',
@@ -717,7 +715,28 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Settings · Migrations': '設定 · マイグレーション',
   'Import data from other backends': '他のバックエンドからデータをインポート',
   'Settings · SMTP': '設定 · SMTP',
-  'Security · Firewall rules': 'セキュリティ · ファイアウォールルール',
+  'Settings · Firewall': '設定 · ファイアウォール',
+  'Firewall has moved': 'ファイアウォールの場所が変わりました',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'ファイアウォールのルールは、保護する対象のそばに移りました。各関数とサイトの「ファイアウォール」タブと、API 用のプロジェクト設定のタブです。',
+  'Got it': '了解',
+  'Open API firewall': 'API のファイアウォールを開く',
+  // Function and site overview cards, filter chips
+  '1 rule': '1 件のルール',
+  '{count} rules': '{count} 件のルール',
+  'vs previous 24 hours': '前の 24 時間と比較',
+  'No blocked traffic yet': 'ブロックされたトラフィックはまだありません',
+  'Denied requests will show up here.':
+    '拒否されたリクエストはここに表示されます。',
+  '24 hours ago': '24 時間前',
+  'No requests yet': 'リクエストはまだありません',
+  'No bandwidth yet': '帯域幅の使用はまだありません',
+  Humans: '人間',
+  Bots: 'ボット',
+  only: 'のみ',
+  On: 'オン',
+  SSR: 'SSR',
+  Static: '静的',
   // Command center: project settings card entries
   'Settings · Project name': '設定 · プロジェクト名',
   'Rename your project': 'プロジェクト名を変更',
@@ -1165,6 +1184,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   File: 'ファイル',
   Filters: 'フィルター',
   'Filtered by': '絞り込み',
+  'Change operator': '演算子を変更',
+  'Change value': '値を変更',
   Function: '関数',
   Functions: '関数',
   Impersonate: 'なりすまし',
@@ -1313,6 +1334,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 が本日 Product Hunt でローンチ',
   'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
   'Share your take': 'フィードバックを送る',
+  'Just launched': '新登場',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'Appwrite の MCP1：すべての MCP サーバーを 1 つの URL で',
+  'MCP1 by Appwrite is live': 'Appwrite の MCP1 が登場',
+  'Try MCP1': 'MCP1 を試す',
   'Created by': '作成者',
   'Authorized resources': '認可済みリソース',
   'No scopes granted': '付与されたスコープはありません',
@@ -1370,4 +1396,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   // Halloween caution tape
   Caution: '注意',
   'Spooky zone': '恐怖ゾーン',
+  // GitHub star wizard
+  'Enjoying Appwrite?': 'Appwriteを楽しんでいますか？',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwriteはオープンソースで、オープンに開発されています。スターを付けると、より多くの開発者がAppwriteを見つけやすくなります。',
+  'No thanks': 'いいえ、結構です',
+  'One-time ask, promise. May your builds be ever green.':
+    'お願いするのは今回だけ、約束します。あなたのビルドがいつもグリーンでありますように。',
 }

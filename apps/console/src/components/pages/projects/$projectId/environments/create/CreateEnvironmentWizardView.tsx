@@ -1,8 +1,10 @@
 /**
- * Creates an environment of a project on one page: a name, and whether to
- * start empty or as a copy. The id is generated. A copy's progress card
- * follows the environment, so the wizard does not wait. Cloud only, behind
- * the projectEnvironments feature like the switcher that opens this.
+ * Creates an environment of a project on one page: a name, the ID it will be
+ * addressed by in the X-Appwrite-Environment header, and whether to start
+ * empty or as a copy. The ID follows the name until it is typed, and is
+ * generated when left blank. A copy's progress card follows the environment,
+ * so the wizard does not wait. Cloud only, behind the projectEnvironments
+ * feature like the switcher that opens this.
  */
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
@@ -13,6 +15,11 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  getActiveEnvironmentId,
+  setActiveEnvironment,
+} from '@/lib/active-environment'
+import { isValidProjectId, PROJECT_ID_MAX_LENGTH } from '@/lib/project-id'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
@@ -24,6 +31,7 @@ import {
 import {
   defaultProjectEnvironmentCopySelection,
   projectEnvironmentCopyResources,
+  suggestProjectEnvironmentId,
   suggestProjectEnvironmentName,
   type ProjectEnvironmentCopyGroupId,
   type ProjectEnvironmentCopySelection,
@@ -36,8 +44,8 @@ import { CopyResources } from './_components/CopyResources'
 type EnvironmentStartFrom = 'empty' | 'project'
 
 /**
- * Create fails with its own copy for the per-hour creation limit and for the
- * plan caps, which the server words well enough to show as-is.
+ * Create fails with its own copy for the per-hour creation limit, a taken ID
+ * and the plan caps, which the server words well enough to show as-is.
  */
 function getCreateErrorMessage(error: unknown, t: Translator): string {
   if (error instanceof AppwriteException) {
@@ -45,6 +53,9 @@ function getCreateErrorMessage(error: unknown, t: Translator): string {
       return t(
         'Too many environments created for this project in the last hour. Try again later.',
       )
+    }
+    if (error.type === 'project_environment_already_exists') {
+      return t('An environment with this ID already exists in this project.')
     }
     if (
       error.type === 'billing_plan_not_allowed' ||
@@ -63,10 +74,14 @@ export function CreateEnvironmentWizardView({
 }) {
   const t = useT()
   const navigate = useNavigate()
-  const { project, projectData } = useProject(projectId)
+  const { project } = useProject(projectId)
   const region = project?.region
 
   const [name, setName] = useState('')
+  // Suggested from the name until typed; blank leaves the ID to the server
+  const [environmentId, setEnvironmentId] = useState('')
+  const [idError, setIdError] = useState<string | undefined>(undefined)
+  const idTouched = useRef(false)
   const [startFrom, setStartFrom] = useState<EnvironmentStartFrom>('empty')
   const [selection, setSelection] = useState<ProjectEnvironmentCopySelection>(
     defaultProjectEnvironmentCopySelection,
@@ -85,23 +100,24 @@ export function CreateEnvironmentWizardView({
   const isCreating = createEnvironmentMutation.isPending
   const isCopy = startFrom === 'project'
 
-  // Environments are created from the production project: an environment's own
-  // URL here goes to its parent's. Read the live profile (including the
-  // experiment override); useConsoleProfile's first paint is the canonical
-  // cloud default, which has this flag off and would bounce to overview.
+  // Environments are created from production: opened inside an environment, this
+  // page leaves it once, on entry. It does not react to the active environment
+  // afterwards, so entering the environment just created here is not undone.
+  // Read the live profile (including the experiment override); useConsoleProfile's
+  // first paint is the canonical cloud default, which has this flag off and would
+  // bounce to overview.
+  const leftEnvironmentOnEntry = useRef(false)
   useEffect(() => {
     if (!getActiveProfileFeatures().projectEnvironments) {
       void navigate({ to: '/projects/$projectId', params: { projectId } })
       return
     }
-    if (projectData?.parentId) {
-      void navigate({
-        to: '/projects/$projectId/environments/create',
-        params: { projectId: projectData.parentId },
-        replace: true,
-      })
+    if (leftEnvironmentOnEntry.current) return
+    leftEnvironmentOnEntry.current = true
+    if (getActiveEnvironmentId(projectId)) {
+      setActiveEnvironment(projectId, null)
     }
-  }, [projectData?.parentId, projectId, navigate])
+  }, [projectId, navigate])
 
   useEffect(() => {
     if (nameSuggested.current || nameTouched.current || isLoadingEnvironments) {
@@ -113,6 +129,10 @@ export function CreateEnvironmentWizardView({
       project?.name ?? '',
     ])
     setName(suggested)
+    // An ID typed while the environments were loading is the user's; keep it.
+    if (!idTouched.current) {
+      setEnvironmentId(suggestProjectEnvironmentId(suggested))
+    }
     if (suggested) {
       requestAnimationFrame(() => nameInputRef.current?.select())
     }
@@ -121,9 +141,15 @@ export function CreateEnvironmentWizardView({
   const resources = isCopy ? projectEnvironmentCopyResources(selection) : []
   const isCopyEmpty = isCopy && resources.length === 0
   const trimmedName = name.trim()
+  const trimmedId = environmentId.trim()
+  const idTaken = environments.some(
+    (environment) => environment.$id === trimmedId,
+  )
   const canCreate =
     trimmedName.length > 0 &&
     trimmedName.length <= PROJECT_NAME_MAX_LENGTH &&
+    isValidProjectId(trimmedId) &&
+    !idTaken &&
     !isCopyEmpty
 
   const setGroup = (
@@ -151,6 +177,25 @@ export function CreateEnvironmentWizardView({
     return true
   }
 
+  const validateId = (): boolean => {
+    if (!isValidProjectId(trimmedId)) {
+      setIdError(
+        t(
+          'Use lowercase letters, numbers and hyphens, starting with a letter or a number.',
+        ),
+      )
+      return false
+    }
+    if (idTaken) {
+      setIdError(
+        t('An environment with this ID already exists in this project.'),
+      )
+      return false
+    }
+    setIdError(undefined)
+    return true
+  }
+
   const close = () =>
     void navigate({
       to: '/projects/$projectId',
@@ -159,17 +204,19 @@ export function CreateEnvironmentWizardView({
 
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault()
-    if (!validateName() || isCopyEmpty) return
+    const nameValid = validateName()
+    const idValid = validateId()
+    if (!nameValid || !idValid || isCopyEmpty) return
 
     try {
       const created = await createEnvironmentMutation.mutateAsync({
+        environmentId: trimmedId,
         name: trimmedName,
         resources,
       })
-      await navigate({
-        to: '/projects/$projectId',
-        params: { projectId: created.$id },
-      })
+      // Open the project in the new environment.
+      setActiveEnvironment(projectId, created.$id)
+      await navigate({ to: '/projects/$projectId', params: { projectId } })
     } catch (error: unknown) {
       toast.error(getCreateErrorMessage(error, t))
     }
@@ -225,6 +272,13 @@ export function CreateEnvironmentWizardView({
                 nameTouched.current = true
                 setName(event.target.value)
                 if (nameError) setNameError(undefined)
+                // The ID follows the name until it is typed by hand
+                if (!idTouched.current) {
+                  setEnvironmentId(
+                    suggestProjectEnvironmentId(event.target.value),
+                  )
+                  if (idError) setIdError(undefined)
+                }
               }}
               disabled={isCreating}
               maxLength={PROJECT_NAME_MAX_LENGTH}
@@ -232,6 +286,36 @@ export function CreateEnvironmentWizardView({
             />
             {nameError && (
               <p className="text-[12px] text-destructive">{nameError}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="environment-id">{t('Environment ID')}</Label>
+            <Input
+              id="environment-id"
+              type="text"
+              placeholder={t('Leave blank to auto-generate')}
+              value={environmentId}
+              onChange={(event) => {
+                idTouched.current = true
+                setEnvironmentId(event.target.value)
+                if (idError) setIdError(undefined)
+              }}
+              disabled={isCreating}
+              maxLength={PROJECT_ID_MAX_LENGTH}
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              className={cn('font-mono', idError && 'border-destructive')}
+            />
+            {idError ? (
+              <p className="text-[12px] text-destructive">{idError}</p>
+            ) : (
+              <p className="text-[12px] text-muted-foreground">
+                {t(
+                  'What your apps pass as the environment next to the project ID, so pick one you can type: staging, preview, qa.',
+                )}
+              </p>
             )}
           </div>
         </section>

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import {
   firewallListSearch,
+  firewallTabPath,
   parseFirewallListSearch,
   resolveFirewallListSearch,
 } from '@/lib/firewall/conditions'
@@ -42,5 +43,31 @@ describe('firewallListSearch', () => {
     ).toEqual({
       resourceType: 'api',
     })
+  })
+})
+
+describe('firewallTabPath', () => {
+  test('opens the Firewall tab of the selected function or site', () => {
+    expect(
+      firewallTabPath('project_1', {
+        resourceType: 'functions',
+        resourceId: 'function_1',
+      }),
+    ).toBe('/projects/project_1/functions/function_1/firewall')
+    expect(
+      firewallTabPath('project_1', {
+        resourceType: 'sites',
+        resourceId: ' site_1 ',
+      }),
+    ).toBe('/projects/project_1/sites/site_1/firewall')
+  })
+
+  test('opens project settings for the API or an incomplete selection', () => {
+    expect(firewallTabPath('project_1', { resourceType: 'api' })).toBe(
+      '/projects/project_1/settings/firewall',
+    )
+    expect(firewallTabPath('project_1', { resourceType: 'sites' })).toBe(
+      '/projects/project_1/settings/firewall',
+    )
   })
 })
