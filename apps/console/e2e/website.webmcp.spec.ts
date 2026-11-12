@@ -161,17 +161,23 @@ test.describe('WebMCP tools', () => {
     expect(dotSegments.code).toBe('invalid_path')
     await expect(page).toHaveURL(/\/home$/)
 
-    const pricing = await agent.call<{ navigated: boolean }>(
+    const pricing = await agent.call<{ navigating: boolean }>(
       'navigate_to_page',
       {
         path: '/pricing',
       },
     )
-    expect(pricing.navigated).toBe(true)
+    expect(pricing.navigating).toBe(true)
     await expect(page).toHaveURL(/\/pricing$/)
     await expect(page).toHaveTitle(/Pricing/)
 
-    await agent.call('open_sign_up')
+    // Sign-up is outside the public-site layouts: the call still answers, then
+    // the tools unregister once the tab leaves.
+    const signUp = await agent.call<{ navigating: boolean; url: string }>(
+      'open_sign_up',
+    )
+    expect(signUp.url).toMatch(/\/sign-up$/)
     await expect(page).toHaveURL(/\/sign-up/)
+    await expect.poll(async () => (await agent.tools()).length).toBe(0)
   })
 })

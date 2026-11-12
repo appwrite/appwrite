@@ -5,6 +5,7 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
+import { useSiteTools } from '@/lib/webmcp/site/use-site-tools'
 
 export const Route = createFileRoute('/docs')({
   ...marketingRouteLifetime,
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/docs')({
 })
 
 function DocsLayoutRoute() {
+  useSiteTools()
   return (
     <DocsPageShell>
       <Outlet />
