@@ -58,6 +58,7 @@ import {
   mapToQueryParam,
   queryParamToMap,
   findCompactFilterKeyInMap,
+  withFilter,
   getSelectedActivitySdkSources,
   toggleActivitySdkSourceInMap,
   type ActivitySdkSource,
@@ -82,7 +83,7 @@ import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
 import { ActivityLogVolumeChart } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogVolumeChart'
-import { ActivityActiveFilterChips } from '@/components/pages/projects/$projectId/activity/_components/ActivityActiveFilterChips'
+import { ActiveFilterChips } from '@/components/global/shared/ActiveFilterChips'
 import { ActivitySdkSourceQuickFilters } from '@/components/pages/projects/$projectId/activity/_components/ActivitySdkSourceQuickFilters'
 import { ActivityResourceIdentity } from '@/components/pages/projects/$projectId/activity/_components/ActivityResourceIdentity'
 import {
@@ -717,6 +718,11 @@ export function View({ projectId, initialData }: ViewProps) {
     () => queryParamToMap(queryFromSearch ?? null),
     [queryFromSearch],
   )
+  // The date range stays on the picker, not in the filter chips.
+  const chipFilterMap = useMemo(
+    () => new Map(Array.from(filterMap).filter(([key]) => key.c !== 'time')),
+    [filterMap],
+  )
   const selectedSdkSources = useMemo(
     () => getSelectedActivitySdkSources(filterMap),
     [filterMap],
@@ -881,9 +887,12 @@ export function View({ projectId, initialData }: ViewProps) {
               normalizedKey.v,
             )
           : queryStr
-      const next = new Map(filterMap)
-      if (replaceKey) next.delete(replaceKey)
-      next.set(normalizedKey, normalizedQueryStr)
+      const next = withFilter(
+        filterMap,
+        normalizedKey,
+        normalizedQueryStr,
+        replaceKey,
+      )
       navigate({
         search: (prev) => ({
           ...prev,
@@ -1335,10 +1344,11 @@ export function View({ projectId, initialData }: ViewProps) {
           hideToolbar={showsFirstRunEmptyState}
         />
         {!showsFirstRunEmptyState ? (
-          <ActivityActiveFilterChips
-            filterMap={filterMap}
+          <ActiveFilterChips
+            filterMap={chipFilterMap}
             columns={activityFilterColumns}
             countryLookups={countryLookups}
+            onApplyFilter={applyFilter}
             onRemoveFilter={removeFilter}
             onClearAllFilters={clearAllFilters}
           />
