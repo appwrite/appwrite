@@ -251,6 +251,12 @@ export function useBackupPolicies(
       options?.dbKind,
     ),
     isLoading: policies.isLoading || projectPolicies.isLoading,
+    isError: policies.isError || projectPolicies.isError,
+    error: policies.error ?? projectPolicies.error,
+    refetch: async () => {
+      await projectPolicies.refetch()
+      return policies.refetch()
+    },
   }
 }
 
