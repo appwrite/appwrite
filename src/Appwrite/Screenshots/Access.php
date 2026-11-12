@@ -4,6 +4,7 @@ namespace Appwrite\Screenshots;
 
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 
 /**
@@ -89,7 +90,7 @@ final readonly class Access
 
         return \array_values(\array_filter(
             $project->getPermissions(),
-            fn (string $permission): bool => \str_starts_with($permission, Database::PERMISSION_READ . '('),
+            fn (string $permission): bool => \str_starts_with($permission, PermissionType::Read->value . '('),
         ));
     }
 
