@@ -58,6 +58,30 @@ final class MultiplexingTest extends TestCase
         }
     }
 
+    /**
+     * A worker that starts while Redis is briefly unreachable builds its adapter
+     * before Redis answers. That must not fail the job that asked for the cache:
+     * the first command connects, as it does after any later disconnect.
+     */
+    public function testAnAdapterBuiltWhileRedisIsDownConnectsOnItsFirstCommand(): void
+    {
+        Services::compose('stop', 'redis');
+
+        try {
+            $this->runCo(function (): void {
+                $this->adapter = new RedisMultiplexing(Services::HOST, Services::REDIS_PORT);
+                $cache = new Cache($this->adapter);
+
+                Services::compose('up', '-d', '--wait', 'redis');
+
+                $this->assertSame($this->data, $cache->save($this->key, $this->data, $this->key));
+                $this->assertSame($this->data, $cache->load($this->key, 60, $this->key));
+            });
+        } finally {
+            Services::compose('up', '-d', '--wait', 'redis');
+        }
+    }
+
     public function testCacheSave(): void
     {
         $this->runCo(function (): void {

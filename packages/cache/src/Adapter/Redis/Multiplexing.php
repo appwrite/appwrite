@@ -108,6 +108,9 @@ class Multiplexing extends Versioned implements Adapter, Batchable, TelemetryFea
         $locked = $this->lockSend();
         try {
             $this->connect();
+        } catch (ConnectionException) {
+            // Unreachable for now: the first command connects, as it does after any
+            // teardown, so a cold worker does not fail the job that built the adapter.
         } finally {
             $this->unlockSend($locked);
         }
