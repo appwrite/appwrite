@@ -189,6 +189,13 @@ class Appwrite extends Destination
     private array $rowBuffer = [];
 
     /**
+     * Rows behind $rowBuffer. They are counted only after their batch is written, as failed if the write fails.
+     *
+     * @var array<Row>
+     */
+    private array $rowResources = [];
+
+    /**
      * Overwrite-mode orphan tracking, keyed by (database, table). Orphans are
      * destination keys not in `attributeKeys` / `indexKeys`. Entries removed
      * after their cleanup runs so the end-of-run sweep only visits tables
@@ -329,6 +336,7 @@ class Appwrite extends Destination
     private function resetRunState(): void
     {
         $this->rowBuffer = [];
+        $this->rowResources = [];
         $this->orphansByTable = [];
         $this->processedTwoWayPairs = [];
         $this->provisioningDatabases = [];
@@ -611,6 +619,11 @@ class Appwrite extends Destination
                 $this->dbForPlatform->setPreserveDates(false);
             }
 
+            // Buffered rows are counted once their batch is written
+            if (!$isLast && \in_array($responseResource, $this->rowResources, true)) {
+                continue;
+            }
+
             $this->cache->update($responseResource);
         }
 
@@ -682,6 +695,12 @@ class Appwrite extends Destination
         }
 
         $validator = new UID();
+        $exists = \array_key_exists(
+            $resource->getId(),
+            $this->cache->get($resource->getName())
+        );
+
+        $buffered = false;
 
         if (!$validator->isValid($resource->getId())) {
             $resource->setStatus(Resource::STATUS_ERROR, $validator->getDescription());
@@ -1582,6 +1601,7 @@ class Appwrite extends Destination
         }
 
         $validator = new UID();
+        $buffered = false;
 
         if (!$validator->isValid($resource->getId())) {
             $resource->setStatus(Resource::STATUS_ERROR, $validator->getDescription());
@@ -1591,55 +1611,49 @@ class Appwrite extends Destination
                 resourceId: $resource->getId(),
                 message: $validator->getDescription(),
             ));
-            return false;
-        }
-
-        $exists = \array_key_exists(
-            $resource->getId(),
-            $this->cache->get($resource->getName())
-        );
-
-        if ($exists) {
+        } elseif (\array_key_exists($resource->getId(), $this->cache->get($resource->getName()))) {
             $resource->setStatus(
                 Resource::STATUS_SKIPPED,
                 'Row has already been created'
             );
-            return false;
-        }
+        } else {
+            $data = $resource->getData();
 
-        $data = $resource->getData();
+            $hasCreatedAt = !empty($data['$createdAt']);
+            $hasUpdatedAt = !empty($data['$updatedAt']);
 
-        $hasCreatedAt = !empty($data['$createdAt']);
-        $hasUpdatedAt = !empty($data['$updatedAt']);
+            if (! $hasCreatedAt) {
+                $createdAt = $resource->getCreatedAt();
+                if (empty($createdAt)) {
+                    $createdAt = $data['created_at'] ?? $data['createdAt'] ?? null;
+                }
 
-        if (! $hasCreatedAt) {
-            $createdAt = $resource->getCreatedAt();
-            if (empty($createdAt)) {
-                $createdAt = $data['created_at'] ?? $data['createdAt'] ?? null;
+                $data['$createdAt'] = $this->normalizeDateTime($createdAt);
             }
 
-            $data['$createdAt'] = $this->normalizeDateTime($createdAt);
-        }
+            if (! $hasUpdatedAt) {
+                $updatedAt = $resource->getUpdatedAt();
+                if (empty($updatedAt)) {
+                    $updatedAt = $data['updated_at'] ?? $data['updatedAt'] ?? null;
+                }
 
-        if (! $hasUpdatedAt) {
-            $updatedAt = $resource->getUpdatedAt();
-            if (empty($updatedAt)) {
-                $updatedAt = $data['updated_at'] ?? $data['updatedAt'] ?? null;
+                if (empty($updatedAt)) {
+                    $data['$updatedAt'] = (string) $data['$createdAt'];
+                } else {
+                    $data['$updatedAt'] = $this->normalizeDateTime($updatedAt, $data['$createdAt']);
+                }
             }
 
-            if (empty($updatedAt)) {
-                $data['$updatedAt'] = (string) $data['$createdAt'];
-            } else {
-                $data['$updatedAt'] = $this->normalizeDateTime($updatedAt, $data['$createdAt']);
-            }
+            $this->rowBuffer[] = new UtopiaDocument(\array_merge([
+                '$id' => $resource->getId(),
+                '$permissions' => $resource->getPermissions(),
+            ], $data));
+            $this->rowResources[] = $resource;
+            $buffered = true;
         }
 
-        $this->rowBuffer[] = new UtopiaDocument(\array_merge([
-            '$id' => $resource->getId(),
-            '$permissions' => $resource->getPermissions(),
-        ], $data));
-
-        if ($isLast) {
+        // The last row of a batch writes the buffer, even when it was skipped itself
+        if ($isLast && !empty($this->rowBuffer)) {
             try {
                 $database = $this->dbForProject->getDocument(
                     self::META_DATABASES,
@@ -1696,34 +1710,47 @@ class Appwrite extends Destination
                             fn () => $dbForDatabases->createDocuments($collectionId, $this->rowBuffer)
                         ),
                     };
-                } catch (DuplicateException $e) {
-                    $resource->setStatus(Resource::STATUS_ERROR, 'Document already exists');
+                } catch (\Throwable $e) {
+                    // The batch is written as one, so none of its rows were stored
+                    $message = $e instanceof DuplicateException ? 'Document already exists' : $e->getMessage();
+                    foreach ($this->rowResources as $row) {
+                        $row->setStatus(Resource::STATUS_ERROR, $message);
+                        if ($row !== $resource) {
+                            $this->cache->update($row);
+                        }
+                    }
                     $this->addError(new Exception(
                         resourceName: $resource->getName(),
                         resourceGroup: $resource->getGroup(),
                         resourceId: $resource->getId(),
-                        message: 'Document already exists',
-                        previous: $e,
-                    ));
-                    return false;
-                } catch (StructureException $e) {
-                    $resource->setStatus(Resource::STATUS_ERROR, $e->getMessage());
-                    $this->addError(new Exception(
-                        resourceName: $resource->getName(),
-                        resourceGroup: $resource->getGroup(),
-                        resourceId: $resource->getId(),
-                        message: $e->getMessage(),
+                        message: $message,
                         previous: $e,
                     ));
                     return false;
                 }
+
+                foreach ($this->rowResources as $row) {
+                    if ($row !== $resource) {
+                        $row->setStatus(Resource::STATUS_SUCCESS);
+                        $this->cache->update($row);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // The last row is counted by import(), the rest of the batch here
+                foreach ($this->rowResources as $row) {
+                    if ($row !== $resource) {
+                        $row->setStatus(Resource::STATUS_ERROR, $e->getMessage());
+                        $this->cache->update($row);
+                    }
+                }
+                throw $e;
             } finally {
                 $this->rowBuffer = [];
+                $this->rowResources = [];
             }
         }
 
-
-        return true;
+        return $buffered;
     }
 
     /** Relationships route through deleteRelationship since deleteAttribute throws for relationship columns. */
