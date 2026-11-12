@@ -85,7 +85,12 @@ import { consoleProjectScopesQueryOptions } from '@/lib/react-query/hooks/consol
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
-import { useLocation, useMatches, useRouterState } from '@tanstack/react-router'
+import {
+  useLocation,
+  useMatches,
+  useRouter,
+  useRouterState,
+} from '@tanstack/react-router'
 import { useGlobalAnalyticsTracker } from '@/hooks/use-global-analytics-tracker'
 import {
   getConsoleRouteIds,
@@ -103,6 +108,8 @@ import {
   isRootHomeMatch,
 } from '@/lib/root-guest-redirect'
 import { cn } from '@/lib/utils'
+import { isSelfHostedConsoleProfile } from '@/lib/runtime-config-shared'
+import { registerSiteTools } from '@/lib/webmcp/site/tools'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -557,6 +564,16 @@ function RootBrowserApi() {
   return null
 }
 
+/** appwrite.io's WebMCP tools; self-hosted consoles have no marketing site to expose. */
+function RootWebMcp() {
+  const router = useRouter()
+  useEffect(() => {
+    if (isSelfHostedConsoleProfile(getRuntimeConfig().consoleProfile)) return
+    return registerSiteTools((path) => router.navigate({ href: path }))
+  }, [router])
+  return null
+}
+
 function RootAcquisitionSource() {
   const auth = useAuth()
   const account = auth.account as
@@ -679,6 +696,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           {/* Isolated so auth / query / loader updates do not re-render the page. */}
           <RootInitialLoadCoordinator>
             <RootBrowserApi />
+            <RootWebMcp />
             <RootAnalyticsTracker />
             <RootAcquisitionSource />
             <RootConsoleScopesPrefetch />
