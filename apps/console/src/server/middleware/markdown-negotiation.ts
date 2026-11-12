@@ -26,8 +26,14 @@ export const markdownNegotiationMiddleware = createMiddleware({
       `${page.slice(1)}.md`,
       'text/markdown; charset=utf-8',
       async () => {
-        const html = await (await fetch(new URL(page, request.url))).text()
-        return pageHtmlToMarkdown(html, DEFAULT_LLMS_ORIGIN)
+        const response = await fetch(new URL(page, request.url))
+        if (!response.ok) {
+          throw new Response('Not found', {
+            status: response.status,
+            headers: { 'Cache-Control': 'no-store' },
+          })
+        }
+        return pageHtmlToMarkdown(await response.text(), DEFAULT_LLMS_ORIGIN)
       },
     )
   }

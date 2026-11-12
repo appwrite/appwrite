@@ -40,9 +40,8 @@ export function pageHtmlToMarkdown(html: string, origin: string): string {
       : html.slice(start, end + '</main>'.length)
 
   const markdown = converter
-    .translate(main)
+    .translate(main.replace(/(href|src)="\/(?!\/)/g, `$1="${origin}/`))
     .replace(/\\_$/gm, '')
-    .replace(/\]\(\//g, `](${origin}/`)
 
   const heading = markdown.search(/^# /m)
   if (heading !== -1) return `${markdown.slice(heading).trim()}\n`
