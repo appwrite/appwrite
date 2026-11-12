@@ -326,6 +326,20 @@ final class TeamsCustomClientTest extends Scope
         $account = $this->client->call(Client::METHOD_GET, '/account', $ownerHeaders);
         $this->assertSame(200, $account['headers']['status-code']);
 
+        // With an email and a phone on file the invite proves neither, so it is refused too
+        $phone = $this->client->call(Client::METHOD_PATCH, '/account/phone', $ownerHeaders, [
+            'phone' => '+1202' . \random_int(1000000, 9999999),
+            'password' => $password,
+        ]);
+        $this->assertSame(200, $phone['headers']['status-code']);
+
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertSame(401, $confirmation['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $confirmation['body']['type']);
+
         // Signed in with every factor, the invite is accepted
         $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $ownerHeaders, [
             'userId' => $params['userId'],
