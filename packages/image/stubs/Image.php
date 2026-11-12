@@ -174,7 +174,7 @@ class Image
     }
 
     /**
-     * @param  string  $type  One of area, disk, file, map, memory, thread; any other is ignored
+     * @param  string  $type  One of area, disk, file, map, memory, thread, width, height; any other is ignored
      */
     public static function setResourceLimit(string $type, int $value): void
     {
