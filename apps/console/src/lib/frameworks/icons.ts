@@ -211,6 +211,7 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   zed: 'zed.svg',
   grok: 'grok-build.svg',
   'grok-build': 'grok-build.svg',
+  pi: 'pi.svg',
   gemini: 'google.svg',
   imagine: 'imagine.svg',
   'zed-industries': 'zed.svg',

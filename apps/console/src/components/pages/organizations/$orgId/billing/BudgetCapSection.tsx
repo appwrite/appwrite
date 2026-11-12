@@ -47,7 +47,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
   useEffect(() => {
     if (organization?.billingBudget !== undefined) {
       setBudget(
-        organization.billingBudget > 0
+        organization.billingBudget && organization.billingBudget > 0
           ? organization.billingBudget.toString()
           : '',
       )

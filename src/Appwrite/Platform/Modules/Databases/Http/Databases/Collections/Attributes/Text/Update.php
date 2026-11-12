@@ -15,6 +15,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -68,6 +69,7 @@ class Update extends Action
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', example: 'Hello World')
             ->param('newKey', null, new Nullable(new Key()), 'New Attribute Key.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -83,6 +85,7 @@ class Update extends Action
         ?bool          $required,
         ?string        $default,
         ?string        $newKey,
+        ?string        $description,
         UtopiaResponse $response,
         Database       $dbForProject,
         callable       $getDatabasesDB,
@@ -97,10 +100,11 @@ class Update extends Action
             getDatabasesDB: $getDatabasesDB,
             queueForEvents: $queueForEvents,
             authorization: $authorization,
-            type: Database::VAR_TEXT,
+            type: ColumnType::Text->value,
             default: $default,
             required: $required,
-            newKey: $newKey
+            newKey: $newKey,
+            description: $description
         );
 
         $response

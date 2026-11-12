@@ -95,7 +95,9 @@ import { useKeyboardShortcutsContext } from '@/components/global/providers/keybo
 import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
+import { ExperimentsPopover } from '@/components/global/shared/ExperimentsPopover'
 import { NotificationCenterPopover } from '@/components/global/shared/NotificationCenterPopover'
+import { hasQualityLabel } from '@/lib/experiments'
 import { useAgentChat } from '@/components/global/providers/AgentChat'
 import { isAgentPagePath } from '@/lib/assistant/agent-paths'
 import { Button } from '@/components/ui/button'
@@ -103,12 +105,15 @@ import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
+import { ConsoleAccountSwitcherDialog } from '@/components/global/shared/ConsoleAccountSwitcherDialog'
 import { ImpersonateConsoleUserDialog } from '@/components/global/shared/ImpersonateConsoleUserDialog'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { HalloweenCobwebs } from '@/components/global/shared/HalloweenCobwebs'
+import { useHalloween } from '@/hooks/use-halloween'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { resolveInitHref } from '@/lib/init/links'
@@ -128,13 +133,22 @@ import {
   MarketingProductsMobileNav,
   MarketingProductsNavPopover,
 } from '@/components/pages/marketing/MarketingProductsNavMenu'
+import {
+  isMarketingSolutionsNavItem,
+  isSolutionsMarketingPath,
+  MarketingSolutionsMobileNav,
+  MarketingSolutionsNavPopover,
+} from '@/components/pages/marketing/MarketingSolutionsNavMenu'
 import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
 import { useI18n } from '@/lib/i18n'
+import { useT } from '@/lib/i18n/translate'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
+import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 
 type MarketingHeaderNavItem = {
   label: string
   href: string
-  menu?: 'products'
+  menu?: 'products' | 'solutions'
   hasMenuIndicator?: boolean
 }
 
@@ -148,16 +162,17 @@ function getDefaultMarketingHeaderNav(
       menu: 'products',
     },
     {
-      label: copy.docs,
-      href: '/docs',
+      label: copy.solutions,
+      href: '/startups',
+      menu: 'solutions',
     },
     {
       label: copy.pricing,
       href: '/pricing',
     },
     {
-      label: copy.enterprise,
-      href: '/enterprise',
+      label: copy.docs,
+      href: '/docs',
     },
     {
       label: copy.customers,
@@ -194,6 +209,10 @@ function getActiveMarketingNavHref(
 ): string | null {
   if (isProductsMarketingPath(pathname)) {
     return items.find((item) => item.menu === 'products')?.href ?? null
+  }
+
+  if (isSolutionsMarketingPath(pathname)) {
+    return items.find((item) => item.menu === 'solutions')?.href ?? null
   }
 
   const path = normalizeMarketingNavPath(pathname)
@@ -428,6 +447,7 @@ export function ConsoleHeader({
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false)
+  const [switchAccountDialogOpen, setSwitchAccountDialogOpen] = useState(false)
   const projectConnectDialog = useProjectConnectDialog()
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
@@ -524,7 +544,10 @@ export function ConsoleHeader({
   const showNotifications =
     features.notifications && !showMarketingNav && !preLaunch
   const showConnectAndCreate = canShowConnectSection(access, features)
-  const canCreateProjectFlag = canCreateProject(access, features)
+  const t = useT()
+  const zeroAccount = useIsZeroAccount()
+  const canCreateProjectFlag =
+    canCreateProject(access, features) && !zeroAccount
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
   const canCreateUserFlag = canCreateUser(access, features)
   const canCreateBucketFlag = canCreateBucket(access, features)
@@ -651,6 +674,7 @@ export function ConsoleHeader({
     pathname: location.pathname,
     showMarketingNav,
   })
+  const showExperiments = hasQualityLabel(headerAccount?.labels)
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
   const { modKey: searchModKey, isMac } = usePlatform()
@@ -659,9 +683,10 @@ export function ConsoleHeader({
     isMac,
   )
   const logoColumnWidth = showMarketingNav ? 158 : 60
+  const halloween = useHalloween()
 
   return (
-    <div className="@container w-full overflow-visible">
+    <div className="@container relative w-full overflow-visible">
       <header
         className={cn(
           'h-14 min-h-14 items-center gap-1 overflow-visible border-b border-border bg-background @[640px]:gap-2',
@@ -723,6 +748,11 @@ export function ConsoleHeader({
                   {marketingNavItems.map((item) =>
                     isMarketingProductsNavItem(item) ? (
                       <MarketingProductsMobileNav
+                        key={item.label}
+                        isActive={item.href === activeMarketingNavHref}
+                      />
+                    ) : isMarketingSolutionsNavItem(item) ? (
+                      <MarketingSolutionsMobileNav
                         key={item.label}
                         isActive={item.href === activeMarketingNavHref}
                       />
@@ -949,7 +979,13 @@ export function ConsoleHeader({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{headerCopy.permissions.createProjects}</p>
+                            <p>
+                              {zeroAccount
+                                ? t(
+                                    'Claim this project to create more projects',
+                                  )
+                                : headerCopy.permissions.createProjects}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -978,7 +1014,23 @@ export function ConsoleHeader({
                           <span>{headerCopy.createMenu.newProject}</span>
                         </DropdownMenuItem>
                       )}
-                      {supportsMultiTenancy && (
+                      {supportsMultiTenancy && zeroAccount && (
+                        <ClaimToUnlock
+                          locked
+                          reason={t(
+                            'Claim this project to create organizations',
+                          )}
+                        >
+                          <DropdownMenuItem
+                            disabled
+                            className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                          >
+                            <Building2 className="h-4 w-4" />
+                            <span>{headerCopy.createMenu.newOrganization}</span>
+                          </DropdownMenuItem>
+                        </ClaimToUnlock>
+                      )}
+                      {supportsMultiTenancy && !zeroAccount && (
                         <DropdownMenuItem
                           {...analyticsAttrs('create-organization')}
                           onClick={() => {
@@ -1317,6 +1369,11 @@ export function ConsoleHeader({
                     key={item.label}
                     isActive={item.href === activeMarketingNavHref}
                   />
+                ) : isMarketingSolutionsNavItem(item) ? (
+                  <MarketingSolutionsNavPopover
+                    key={item.label}
+                    isActive={item.href === activeMarketingNavHref}
+                  />
                 ) : (
                   <MarketingNavLink
                     key={item.label}
@@ -1569,6 +1626,12 @@ export function ConsoleHeader({
                     <SupportPopover orgId={orgId} />
                   </div>
                 </>
+              ) : null}
+
+              {showExperiments ? (
+                <div className="flex shrink-0">
+                  <ExperimentsPopover />
+                </div>
               ) : null}
 
               {/* Notifications - gated by the notifications profile feature */}
@@ -2026,6 +2089,18 @@ export function ConsoleHeader({
                         <Eye className="h-4 w-4" />
                         <span>{headerCopy.accountMenu.impersonate}</span>
                       </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                        onSelect={() => {
+                          window.setTimeout(() => {
+                            setSwitchAccountDialogOpen(true)
+                          }, 0)
+                        }}
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>{t('Switch account')}</span>
+                      </DropdownMenuItem>
                     </>
                   )}
 
@@ -2048,12 +2123,17 @@ export function ConsoleHeader({
                 open={impersonateDialogOpen}
                 onOpenChange={setImpersonateDialogOpen}
               />
+              <ConsoleAccountSwitcherDialog
+                open={switchAccountDialogOpen}
+                onOpenChange={setSwitchAccountDialogOpen}
+              />
             </>
           )}
             </div>
           )}
         </div>
       </header>
+      {halloween && !showMarketingNav && <HalloweenCobwebs />}
     </div>
   )
 }

@@ -10,7 +10,7 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 
@@ -31,7 +31,7 @@ abstract class Base extends Action
     protected function replacePhoto(User $user, StreamInterface $photo, int $size, string $mimeType, Database $dbForProject, Device $deviceForFiles): Document
     {
         $userId = $user->getId();
-        $photoId = ID::unique();
+        $photoId = Id::unique();
         $path = $deviceForFiles->getPath(APP_STORAGE_PHOTOS . '/' . $userId . '/' . $photoId);
 
         $deviceForFiles->upload($photo, $path, $mimeType);

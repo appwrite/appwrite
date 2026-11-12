@@ -66,6 +66,7 @@ interface PlanSelectionProps {
   hasFreeOrgs: boolean
   isCreateMode?: boolean
   variant?: 'card' | 'inline'
+  orgId?: string
 }
 
 type PlanRecord = {
@@ -87,6 +88,7 @@ export function PlanSelection({
   hasFreeOrgs,
   isCreateMode = false,
   variant = 'card',
+  orgId,
 }: PlanSelectionProps) {
   const t = useT()
   const [enterpriseOpen, setEnterpriseOpen] = useState(false)
@@ -187,7 +189,7 @@ export function PlanSelection({
       className="h-8 shrink-0 text-[13px]"
       asChild
     >
-      <ContactSalesLink {...analyticsAttrs('upgrade-contact-sales')}>
+      <ContactSalesLink source="plan-picker" orgId={orgId}>
         {t('Contact sales')}
       </ContactSalesLink>
     </Button>

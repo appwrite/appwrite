@@ -26,6 +26,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Manage billing',
             href: '/docs/advanced/billing/payments',
           },
+          {
+            label: 'Project transfers',
+            href: '/docs/advanced/billing/project-transfers',
+          },
         ],
       },
       {
@@ -292,6 +296,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Azure',
             href: '/docs/advanced/self-hosting/platforms/azure',
+          },
+          {
+            label: 'Kubernetes',
+            href: '/docs/advanced/self-hosting/platforms/kubernetes',
           },
           {
             label: 'Coolify',
@@ -1973,6 +1981,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Execute',
             href: '/docs/products/functions/execute',
           },
+          {
+            label: 'Email triggers',
+            href: '/docs/products/functions/email',
+          },
         ],
       },
       {
@@ -2026,6 +2038,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
       {
         label: 'Providers',
         items: [
+          {
+            label: 'Push with Appwrite',
+            href: '/docs/products/messaging/appwrite-push',
+          },
           {
             label: 'Push with APNs',
             href: '/docs/products/messaging/apns',
@@ -2578,6 +2594,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Grok Build',
             href: '/docs/tooling/ai/agents/grok-build',
+          },
+          {
+            label: 'Pi',
+            href: '/docs/tooling/ai/agents/pi',
           },
         ],
       },

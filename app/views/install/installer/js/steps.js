@@ -29,7 +29,7 @@
 
     const {
         isValidEmail,
-        isValidPort,
+        isValidPublishedPort,
         isValidHostnameInput,
         isValidPassword
     } = Validation;
@@ -219,7 +219,12 @@
         bindInputToState(hostname, 'appDomain');
 
         // Follow the hostname until the operator sets the toggle themselves, after which
-        // their choice stands however the hostname changes.
+        // their choice stands however the hostname changes. An upgrade keeps the setting
+        // the installation already has.
+        if (forceHttps && isUpgradeMode?.()) {
+            forceHttps.dataset.touched = 'true';
+        }
+
         if (hostname && forceHttps) {
             const followHostname = () => {
                 if (forceHttps.dataset.touched === 'true') return;
@@ -476,8 +481,8 @@
 
                 const parsePort = (input, label) => {
                     const value = input?.value;
-                    if (!value || !isValidPort?.(value)) {
-                        setFieldError?.(input, `Please enter a valid ${label} port (1-65535)`);
+                    if (!value || !isValidPublishedPort?.(value)) {
+                        setFieldError?.(input, `Please enter a valid ${label} port (1-65535), optionally bound to a host IP like 127.0.0.1:80`);
                         return false;
                     }
                     return true;

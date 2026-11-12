@@ -81,7 +81,7 @@ Review the `baseline.json` diff like code: an added ERROR entry should come with
 | --- | --- |
 | Ungated `$auth->skip` / `Authorization::skip` + `getDocument`/`find`/`findOne` of a non-allowlisted name (`files`, `transactions`, or any new name) | **ERROR** `skip-ungated-load` |
 | Same skip gated on API-key / privileged callers (ternary or `if`), of allowlisted metadata / lookup / subquery collections, or of a variable collection | ok |
-| `$authorization->disable()` / `setDefaultStatus(false)` in a module or `app/controllers/api` handler | **ERROR** `global-authorization-disable` |
+| `$authorization->disable()` / `setStatus(false)` in a module or `app/controllers/api` handler | **ERROR** `global-authorization-disable` |
 | `/v1` route (module or `Http::*`) with no `->label('scope', …)` | **ERROR** `route-without-scope` |
 | `/v1` route with a non-public scope and no `api` (or `graphql`) group | **ERROR** `route-without-api-group` |
 | Public-scope forwarders, `mock`, `graphql`, non-`/v1` paths | ok |
@@ -95,7 +95,7 @@ Review the `baseline.json` diff like code: an added ERROR entry should come with
 | ROLE_GUESTS-scoped `Assoc` param of any name, in a class with no `ALLOWED_*` constant | **ERROR** `unbounded-map-to-outbound` |
 | Same param in a class declaring `ALLOWED_HEADERS` / `ALLOWED_QUERY` / `ALLOWED_COOKIES` / `ALLOWED_OPTIONS` / `ALLOWED_KEYS` | ok |
 | `BLOCKED_*` / `DENIED_*` / `DISALLOWED_*` / `FORBIDDEN_*` header or host list | **ERROR** `header-blocklist-filter` |
-| Guest-scoped POST/PUT/PATCH/DELETE with no `abuse-limit` (mock and `/v1/vcs/*/events` allowlisted) | **WARNING** `guest-write-without-abuse-limit` |
+| Guest-scoped POST/PUT/PATCH/DELETE with no `abuse` label (mock and `/v1/vcs/*/events` allowlisted) | **WARNING** `guest-write-without-abuse-limit` |
 | Any read of `X-Forwarded-For`, `X-Real-IP`, `Forwarded`, `CF-Connecting-IP`, `True-Client-IP`, `X-Forwarded-Host` / `-Proto`, … (`getHeader`, `getHeaderLine`, `getHeaders()[…]`, `getServer`, Swoole `header[…]`) | **ERROR** `client-ip-header` |
 | `Request::getIP()`, unrelated `x-*` headers | ok |
 | Placeholder secret literal (`your-secret-key`, `your-api-key`, `changeme`, `insecure-secret`, …) outside Doctor, or another class's `PLACEHOLDER` as a `getEnv` default | **ERROR** `default-secret-placeholder` |

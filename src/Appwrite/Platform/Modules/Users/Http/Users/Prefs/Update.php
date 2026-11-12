@@ -46,7 +46,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
             ->inject('response')
             ->inject('dbForProject')

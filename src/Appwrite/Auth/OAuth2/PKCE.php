@@ -2,8 +2,8 @@
 
 namespace Appwrite\Auth\OAuth2;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\OpenSSL\OpenSSL;
-use Utopia\System\System;
 
 /**
  * Proof Key for Code Exchange (PKCE) support for OAuth2 providers.
@@ -143,14 +143,14 @@ trait PKCE
             return '';
         }
 
-        return OpenSSL::decrypt(
-            $decodedData,
-            OpenSSL::CIPHER_AES_128_GCM,
-            $this->getPKCEStateKey(),
-            OPENSSL_RAW_DATA,
-            $decodedIv,
-            $decodedTag
-        ) ?: '';
+        foreach (EncryptionKey::accepted() as $key) {
+            $verifier = OpenSSL::decrypt($decodedData, OpenSSL::CIPHER_AES_128_GCM, $key, OPENSSL_RAW_DATA, $decodedIv, $decodedTag);
+            if (\is_string($verifier) && $verifier !== '') {
+                return $verifier;
+            }
+        }
+
+        return '';
     }
 
     private function isHex(string $value): bool
@@ -160,10 +160,10 @@ trait PKCE
 
     private function getPKCEStateKey(): string
     {
-        $key = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        $key = EncryptionKey::current();
 
         if ($key === '') {
-            throw new \Exception($this->getName() . ' OAuth2 requires _APP_OPENSSL_KEY_V1 to encrypt PKCE state.');
+            throw new \Exception($this->getName() . ' OAuth2 requires _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' to encrypt PKCE state.');
         }
 
         return $key;

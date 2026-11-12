@@ -35,7 +35,10 @@ import {
 } from '@/lib/react-query/hooks'
 import { useSelectableBillingPlans } from '@/hooks/use-selectable-billing-plans'
 import { prefetchOrganizationOverviewData } from '@/lib/organization-overview-prefetch'
-import { measureOpenAiAdsSubscriptionCreated } from '@/lib/openai-ads'
+import {
+  measureOpenAiAdsCheckoutStarted,
+  measureOpenAiAdsSubscriptionCreated,
+} from '@/lib/openai-ads'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { PlanSelection } from './change-plan/PlanSelection'
@@ -55,6 +58,7 @@ import { DowngradeAddonWarning } from './change-plan/DowngradeAddonWarning'
 import { DowngradeUsageWarning } from './change-plan/DowngradeUsageWarning'
 import { DowngradePlanLossWarning } from './change-plan/DowngradePlanLossWarning'
 import { resolveOrgToDelete } from '@/lib/billing/free-plan-conflict'
+import { linkSourcesBeforeUpgrade } from '@/lib/marketing/utm'
 import {
   fetchDeletedOrganizationImpact,
   type DeletedOrganizationImpact,
@@ -1221,9 +1225,20 @@ export function ChangePlanWizardFullscreen() {
 
   const isButtonDisabled = isSubmitting || submitBlockReason !== null
 
+  // OpenAI Ads conversion: a card added or a paid plan submitted.
+  const measureCheckoutStarted = () => {
+    if (!accountModel?.$id || !selectedPlan || selectedPlanIsFree) return
+    measureOpenAiAdsCheckoutStarted(accountModel.$id, {
+      id: selectedPlan,
+      price: resolveBillingPlanRecord(selectedPlan, selectablePlans)?.price,
+    })
+  }
+
   // Handle upgrade
   const handleUpgrade = async () => {
     if (!orgId || !selectedPlan || !paymentMethodId) return
+
+    measureCheckoutStarted()
 
     const planLabel = getBillingPlanDisplayLabel(selectedPlan)
     const showActivationStep = !selectedPlanIsFree
@@ -1237,6 +1252,7 @@ export function ChangePlanWizardFullscreen() {
     })
 
     try {
+      if (currentPlanIsFree) await linkSourcesBeforeUpgrade()
       const result = await updatePlanMutation.mutateAsync({
         organizationId: orgId,
         billingPlan: selectedPlan,
@@ -1549,6 +1565,8 @@ export function ChangePlanWizardFullscreen() {
       return
     }
 
+    measureCheckoutStarted()
+
     const planLabel = getBillingPlanDisplayLabel(selectedPlan)
     const showActivationStep = !selectedPlanIsFree
     let createdOrgId: string | null = null
@@ -1563,6 +1581,7 @@ export function ChangePlanWizardFullscreen() {
     })
 
     try {
+      if (!selectedPlanIsFree) await linkSourcesBeforeUpgrade()
       const result = await createOrgMutation.mutateAsync({
         organizationId,
         name: organizationName.trim(),
@@ -1713,6 +1732,7 @@ export function ChangePlanWizardFullscreen() {
   // Handle payment method added
   const handlePaymentMethodAdded = () => {
     setPaymentModalOpen(false)
+    measureCheckoutStarted()
     // Payment methods will be refetched automatically by the hook
   }
 
@@ -1905,6 +1925,7 @@ export function ChangePlanWizardFullscreen() {
                 hasFreeOrgs={hasFreeOrgs}
                 isCreateMode={isCreateMode}
                 variant="inline"
+                orgId={orgId}
               />
             ) : (
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

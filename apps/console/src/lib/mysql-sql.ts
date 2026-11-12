@@ -10,8 +10,9 @@ const MYSQL_TABLES_SYSTEM_SCHEMA_FILTER = `
 
 export const MYSQL_SIDEBAR_LIST_PAGE_SIZE = 50
 
+/** MySQL treats backslash as an escape inside string literals unless NO_BACKSLASH_ESCAPES is set, so double it first. */
 export function quoteMysqlStringLiteral(value: string): string {
-  return `'${value.replace(/'/g, "''")}'`
+  return `'${value.replaceAll('\\', '\\\\').replaceAll("'", "''")}'`
 }
 
 /** Strip leading line and block comments for statement classification. */

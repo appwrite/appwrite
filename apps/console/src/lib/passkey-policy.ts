@@ -37,15 +37,56 @@ function webHostnames(platforms: PasskeyPlatform[]): string[] {
   )
 }
 
+const FINGERPRINT_BYTES = 32
+
+const HEX_DIGITS = '0123456789ABCDEF'
+
+/** Whether a value is a SHA-256 certificate fingerprint, as Play Console and `keytool` print it. */
+export function isFingerprint(value: string): boolean {
+  const bytes = value.split(':')
+  return (
+    bytes.length === FINGERPRINT_BYTES &&
+    bytes.every(
+      (byte) =>
+        byte.length === 2 &&
+        [...byte.toUpperCase()].every((digit) => HEX_DIGITS.includes(digit)),
+    )
+  )
+}
+
+/**
+ * The WebAuthn origin an Android app signed with this certificate signs in
+ * from, mirroring `Appwrite\Auth\Passkey\Ceremony`.
+ */
+export function androidPasskeyOrigin(fingerprint: string): string {
+  const bytes = fingerprint
+    .split(':')
+    .map((byte) => String.fromCharCode(parseInt(byte, 16)))
+    .join('')
+  const hash = btoa(bytes)
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replaceAll('=', '')
+  return `android:apk-key-hash:${hash}`
+}
+
+function androidFingerprints(platforms: PasskeyPlatform[]): string[] {
+  return platforms.flatMap((platform) =>
+    platform.type === PlatformType.Android && 'fingerprints' in platform
+      ? (platform.fingerprints ?? [])
+      : [],
+  )
+}
+
 function hasLocalhostPlatform(platforms: PasskeyPlatform[]): boolean {
   return webHostnames(platforms).includes(LOCALHOST)
 }
 
 /**
  * Where passkeys work for a relying party ID, mirroring
- * `Appwrite\Auth\Passkey\Ceremony::getOrigins()`: web platforms on the
- * domain (wildcards included), the domain itself for Apple apps, and
- * localhost when it is a web platform. Previews an unsaved domain; the saved
+ * `Appwrite\Auth\Passkey\Ceremony::getOrigins()`: Android apps by their
+ * signing certificates, web platforms on the domain (wildcards included), the
+ * domain itself for Apple apps, and localhost when it is a web platform. Previews an unsaved domain; the saved
  * policy carries the server's own list.
  */
 export function platformPasskeyOrigins(
@@ -56,6 +97,9 @@ export function platformPasskeyOrigins(
   if (rpId !== '' && rpId !== LOCALHOST) {
     if (platforms.some((platform) => platform.type === PlatformType.Apple)) {
       origins.add(`https://${rpId}`)
+    }
+    for (const fingerprint of androidFingerprints(platforms)) {
+      origins.add(androidPasskeyOrigin(fingerprint))
     }
     for (const hostname of webHostnames(platforms)) {
       const domain = hostname.startsWith('*.') ? hostname.slice(2) : hostname

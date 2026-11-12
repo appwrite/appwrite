@@ -5,7 +5,7 @@
  * Pre-fills configuration from URL parameters.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -118,6 +118,8 @@ export function QuickDeployView({
     envKeysList.map((key) => ({ key, value: '', secret: false })),
   )
   const [domain, setDomain] = useState('')
+  // Domain follows the site name until the user edits it
+  const domainEditedRef = useRef(false)
   const [domainValid, setDomainValid] = useState(false)
   const [isDeploying, setIsDeploying] = useState(false)
 
@@ -147,7 +149,7 @@ export function QuickDeployView({
 
   // Generate domain when site name changes
   useEffect(() => {
-    if (siteName && !domain) {
+    if (siteName && !domainEditedRef.current) {
       setDomain(generateDomain(siteName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -180,6 +182,7 @@ export function QuickDeployView({
 
     setIsDeploying(true)
 
+    let createdSiteId: string | null = null
     try {
       // Get framework defaults
       const defaults = getFrameworkDefaults(framework)
@@ -196,6 +199,7 @@ export function QuickDeployView({
         outputDirectory: outputDirectory || defaults.outputDirectory,
         adapter: defaults.adapter || undefined,
       })
+      createdSiteId = site.$id
 
       // 2. Create domain rule
       if (domain) {
@@ -252,6 +256,18 @@ export function QuickDeployView({
       })
     } catch (error: unknown) {
       toast.error(error.message || t('Failed to create site'))
+      // The site exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the site instead.
+      if (createdSiteId) {
+        await queryClient.refetchQueries({
+          queryKey: ['sites', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/sites/$siteId',
+          params: { projectId, siteId: createdSiteId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }
@@ -332,7 +348,7 @@ export function QuickDeployView({
           </p>
           <Button asChild>
             <Link
-              to="/projects/$projectId/sites/create/repositories"
+              to="/projects/$projectId/sites/create"
               params={{ projectId: projectId! }}
             >
               {t('Import from Git')}
@@ -526,6 +542,9 @@ export function QuickDeployView({
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={() => {
+              domainEditedRef.current = true
+            }}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">

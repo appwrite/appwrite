@@ -219,7 +219,12 @@ class Email
             self::$disposableDomains = $data;
         }
 
-        return in_array($this->domain, self::$disposableDomains);
+        // A provider listed by its registrable domain owns every subdomain under it: user@6s.lucktaro.com is lucktaro.com.
+        // Matching on the public suffix list, not on any parent, keeps one site on a shared suffix such as it.com from listing the rest.
+        $registerable = $this->domainInstance->getRegisterable();
+
+        return in_array($this->domain, self::$disposableDomains)
+            || ($registerable !== '' && in_array($registerable, self::$disposableDomains));
     }
 
     /**

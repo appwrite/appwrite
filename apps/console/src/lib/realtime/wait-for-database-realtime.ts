@@ -12,6 +12,7 @@ import {
   resolveDedicatedRealtimeEngineAliases,
 } from './dedicated-database-cache'
 import { registerConsoleRealtimeListener } from './console-hub'
+import { realtimeEventSource } from './event-source'
 import { registerRegionalConsoleRealtimeListener } from './regional-console-hub'
 
 export type WaitForDatabaseRealtimeOptions = {
@@ -42,11 +43,10 @@ function isForProject(
   channels: string[],
   payload: Record<string, unknown> | null,
 ): boolean {
-  const projectChannel = `projects.${projectId}`
-  if (channels.includes(projectChannel)) return true
-  if (channels.some((c) => c.startsWith('projects.') && c.includes(projectId))) {
-    return true
-  }
+  // The project's channel, or the environment's while the Console is in one;
+  // any other project or environment is not this wait's.
+  const source = realtimeEventSource(projectId, channels)
+  if (source !== 'unknown') return source === 'current'
   const payloadProjectId = payload?.projectId
   if (typeof payloadProjectId === 'string' && payloadProjectId === projectId) {
     return true

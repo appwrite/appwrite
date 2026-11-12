@@ -216,7 +216,7 @@ void main() { // Init SDK
     .setProject('<PROJECT_ID>')                 // Your project ID
     .setLocale('fr')                             // Your locale
   ;
-  Future result = account.createVerification('https://example.com');
+  Future result = account.createVerification(url: 'https://example.com');
 
   result
     .then((response) {
@@ -234,11 +234,11 @@ import io.appwrite.services.Account
 val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                 // Your project ID
-    .setLocale('fr')                             // Your locale
+    .setLocale("fr")                             // Your locale
 
 val account = Account(client)
 
-val response = account.createVerification('https://example.com')
+val response = account.createVerification("https://example.com")
 ```
 
 ```client-apple
@@ -247,10 +247,10 @@ import Appwrite
 let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                 // Your project ID
-    .setLocale('fr')                             // Your locale
+    .setLocale("fr")                             // Your locale
 
 let account = Account(client)
 
-let token = try await account.createVerification('https://example.com')
+let token = try await account.createVerification(url: "https://example.com")
 ```
 {% /multicode %}

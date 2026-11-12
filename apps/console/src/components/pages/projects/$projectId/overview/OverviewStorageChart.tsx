@@ -27,16 +27,17 @@ import {
   createUsageChartAxisTickFormatter,
   formatCompactBytes,
 } from '@/lib/usage/format-metric'
-import {
-  fillChartPointsGaps,
-} from '@/lib/usage/usage-events-common'
+import { fillChartPointsGaps } from '@/lib/usage/usage-events-common'
 import { resolveUsageDateBounds } from '@/lib/usage/usage-date-range'
 import {
   DEFAULT_USAGE_CHART_INTERVAL,
   resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
-import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import {
+  UsageChartXAxis,
+  UsageChartYAxis,
+} from '@/components/global/shared/ChartXAxis'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
 import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import type { DateRange } from 'react-day-picker'
@@ -96,7 +97,14 @@ function buildSkeletonChartData(
   chartInterval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
 ): OverviewStorageChartPoint[] {
   const { from, to } = resolveUsageDateBounds(dateRange)
-  const resolvedInterval = resolveUsageChartIntervalForRange(chartInterval, dateRange)
+  const resolvedInterval = resolveUsageChartIntervalForRange(
+    chartInterval,
+    dateRange,
+    undefined,
+    {
+      refine: false,
+    },
+  )
   const shell = fillChartPointsGaps(new Map(), from, to, resolvedInterval)
   const peak = 2_000_000_000
 
@@ -139,7 +147,9 @@ function StorageTooltip({ active, payload }: StorageTooltipProps) {
 
   return (
     <div className="rounded-lg border border-border bg-popover px-3 py-2.5">
-      <p className="mb-2 text-[12px] font-medium text-foreground">{data.date}</p>
+      <p className="mb-2 text-[12px] font-medium text-foreground">
+        {data.date}
+      </p>
       <div className="space-y-1.5">
         {STORAGE_SERIES.map((series) => (
           <div
@@ -160,7 +170,9 @@ function StorageTooltip({ active, payload }: StorageTooltipProps) {
           </div>
         ))}
         <div className="flex items-center justify-between gap-6 border-t border-border pt-1.5">
-          <span className="text-[11px] text-muted-foreground">{t('Total')}</span>
+          <span className="text-[11px] text-muted-foreground">
+            {t('Total')}
+          </span>
           <span className="text-[12px] font-medium text-foreground">
             <MetricValueWithUnit
               value={format(data.total)}
@@ -200,15 +212,14 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
   const showEmptyState = !isLoading && chartData.length === 0
   const activeChartData = showChartSkeleton ? skeletonChartData : chartData
   const resolvedChartInterval = useMemo(
-    () => resolveUsageChartIntervalForRange(chartInterval, dateRange),
+    () =>
+      resolveUsageChartIntervalForRange(chartInterval, dateRange, undefined, {
+        refine: false,
+      }),
     [chartInterval, dateRange],
   )
   const axisMax = useMemo(
-    () =>
-      activeChartData.reduce(
-        (max, point) => Math.max(max, point.total),
-        0,
-      ),
+    () => activeChartData.reduce((max, point) => Math.max(max, point.total), 0),
     [activeChartData],
   )
   const yAxisTickFormatter = useMemo(
@@ -249,7 +260,9 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
             <OverviewChartPanelError
               title={t(errorTitle)}
               message={
-                typeof errorMessage === 'string' ? t(errorMessage) : errorMessage
+                typeof errorMessage === 'string'
+                  ? t(errorMessage)
+                  : errorMessage
               }
               onRetry={onRetry}
               upgradeOrgId={upgradeOrgId}
@@ -282,10 +295,7 @@ export const OverviewStorageChart = memo(function OverviewStorageChart({
                   {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
                   minHeight={OVERVIEW_CHART_HEIGHT}
                 >
-                  <AreaChart
-                    data={activeChartData}
-                    margin={USAGE_CHART_MARGIN}
-                  >
+                  <AreaChart data={activeChartData} margin={USAGE_CHART_MARGIN}>
                     <defs>
                       {showChartSkeleton ? (
                         <linearGradient

@@ -87,6 +87,19 @@ final class MimeTest extends TestCase
         $this->assertStringContainsString('color:red', quoted_printable_decode($markup));
     }
 
+    public function testThePlainAlternativeReadsEntitiesAsText(): void
+    {
+        $rendered = $this->render($this->email(
+            content: '<p>It&#039;s &lt;b&gt; &amp; &quot;caf&eacute;&quot; &#x263A;</p>',
+            html: true,
+        ));
+
+        [$plain, $markup] = \array_slice(explode('Content-Type: text/', $rendered), 1);
+
+        $this->assertStringContainsString('It\'s <b> & "café" ☺', quoted_printable_decode($plain));
+        $this->assertStringContainsString('It&#039;s &lt;b&gt;', quoted_printable_decode($markup));
+    }
+
     public function testAnAttachmentIsWrappedAroundTheBody(): void
     {
         $rendered = $this->render($this->email(

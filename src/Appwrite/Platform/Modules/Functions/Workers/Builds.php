@@ -9,7 +9,10 @@ use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
+use Appwrite\Vcs\Checkout;
+use Appwrite\Vcs\Checkout\Exception as CheckoutException;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\Validator\Directory;
 use Exception;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
@@ -27,6 +30,7 @@ use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Builds extends Action
 {
@@ -53,6 +57,18 @@ class Builds extends Action
         $warning = "[WARNING] Logs truncated. The output exceeded {$limit} characters.\n";
 
         return $warning . \substr($logs, -($limit - \strlen($warning)));
+    }
+
+    /**
+     * @throws BuildException
+     */
+    private function confine(string $checkout, string $directory, bool $create = false): string
+    {
+        try {
+            return (new Checkout($checkout))->resolve($directory, $create);
+        } catch (CheckoutException $exception) {
+            throw new BuildException($exception->getMessage(), previous: $exception);
+        }
     }
 
     /**
@@ -251,11 +267,11 @@ class Builds extends Action
         $owner = '';
         $repositoryName = '';
 
-        // Every other build flow submits its job straight from the request, so a
-        // deployment without a repository to push the template into never
-        // belongs here.
+        // Every other build flow submits its job straight from the request, so
+        // only a deployment with a repository to clone - to push a template
+        // into, or because only this worker can fetch it - belongs here.
         if (empty($providerRepositoryId)) {
-            throw new \Exception('Only template-into-repository deployments build through this worker');
+            throw new \Exception('Only repository deployments build through this worker');
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
@@ -278,12 +294,21 @@ class Builds extends Action
             // VCS and VCS+Temaplte
             $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
             $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
+            if (!(new Directory(\PHP_INT_MAX))->isValid($rootDirectory)) {
+                throw new BuildException('Root directory must stay inside the repository.');
+            }
             $rootDirectory = \rtrim($rootDirectory, '/');
             $rootDirectory = \ltrim($rootDirectory, '.');
             $rootDirectory = \ltrim($rootDirectory, '/');
 
-            $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
-            $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+            try {
+                $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
+                $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
+            } catch (RepositoryNotFound $e) {
+                // The repository moved, was deleted, or left the installation's selection
+                $type = $resource->getCollection() === 'sites' ? 'site' : 'function';
+                throw new BuildException("The repository is no longer available to the Git installation this {$type} deploys from. Reconnect the repository in the {$type}'s Git settings.", previous: $e);
+            }
 
             $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);
             $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
@@ -319,8 +344,11 @@ class Builds extends Action
             // Local refactoring for function folder with spaces
             if (str_contains($rootDirectory, ' ')) {
                 $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
-                $from = $tmpDirectory . '/' . $rootDirectory;
-                $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
+                $from = $this->confine($tmpDirectory, $rootDirectory);
+                $to = $this->confine($tmpDirectory, \dirname($rootDirectoryWithoutSpaces)) . '/' . \basename($rootDirectoryWithoutSpaces);
+                if (\file_exists($to) || \is_link($to)) {
+                    throw new BuildException('Root directory "' . $rootDirectoryWithoutSpaces . '" already exists in the repository.');
+                }
                 $exit = Console::execute((new Command('mv'))->argument($from)->argument($to), '', $stdout, $stderr);
 
                 if ($exit !== 0) {
@@ -336,6 +364,9 @@ class Builds extends Action
             $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
             $templateRootDirectory = $template->getAttribute('rootDirectory', '');
+            if (!(new Directory(\PHP_INT_MAX))->isValid($templateRootDirectory)) {
+                throw new BuildException('Template root directory must stay inside the template repository.');
+            }
             $templateRootDirectory = \rtrim($templateRootDirectory, '/');
             $templateRootDirectory = \ltrim($templateRootDirectory, '.');
             $templateRootDirectory = \ltrim($templateRootDirectory, '/');
@@ -351,27 +382,32 @@ class Builds extends Action
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
                 }
 
-                // Ensure directories
-                Console::execute((new Command('mkdir'))->flag('-p')->argument($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
-                Console::execute((new Command('mkdir'))->flag('-p')->argument($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                $source = $this->confine($tmpTemplateDirectory, $templateRootDirectory, true);
+                $destination = $this->confine($tmpDirectory, $rootDirectory, true);
 
-                // Merge template into user repo
+                // Merge template into user repo, keeping only links that stay inside the template
                 $rsync = (new Command('rsync'))
                     ->flag('-av')
+                    ->flag('--safe-links')
                     ->option('--exclude', '.git')
-                    ->argument($tmpTemplateDirectory . '/' . $templateRootDirectory . '/')
-                    ->argument($tmpDirectory . '/' . $rootDirectory);
-                Console::execute($rsync, '', $stdout, $stderr);
+                    ->argument($source . '/')
+                    ->argument($destination);
+                $exit = Console::execute($rsync, '', $stdout, $stderr);
+
+                if ($exit !== 0) {
+                    throw new \Exception('Unable to merge template into repository: ' . $stderr);
+                }
 
                 // Commit and push
-                $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' function';
+                $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' ' . ($resource->getCollection() === 'sites' ? 'site' : 'function');
                 $push = Command::and(
-                    (new Command('git'))->argument('config')->flag('--global')->argument('user.email')->argument(APP_VCS_GITHUB_EMAIL),
-                    (new Command('git'))->argument('config')->flag('--global')->argument('user.name')->argument(APP_VCS_GITHUB_USERNAME),
-                    (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-b')->argument($branchName),
+                    // A branch clone already has the branch; a commit clone is detached
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-B')->argument($branchName),
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('add')->argument('.'),
-                    (new Command('git'))->option('-C', $tmpDirectory)->argument('commit')->option('-m', $commitMessage),
-                    (new Command('git'))->option('-C', $tmpDirectory)->argument('push')->argument('origin')->argument($branchName),
+                    // The author is set for this commit only: concurrent builds writing the global config fail on each other's lock
+                    (new Command('git'))->option('-C', $tmpDirectory)->option('-c', 'user.email=' . APP_VCS_GITHUB_EMAIL)->option('-c', 'user.name=' . APP_VCS_GITHUB_USERNAME)->argument('commit')->option('-m', $commitMessage),
+                    // The provider's remote may need more than the clone URL carries
+                    $providerAdapter->generatePushCommand($cloneOwner, $cloneRepository, $tmpDirectory, $branchName),
                 );
                 $exit = Console::execute($push, '', $stdout, $stderr);
 
@@ -390,7 +426,7 @@ class Builds extends Action
                 $deployment->setAttribute('providerCommitHash', $providerCommitHash);
                 $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
                 $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
-                $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
+                $deployment->setAttribute('providerCommitMessage', $commitMessage);
                 $deployment->setAttribute('providerCommitUrl', $providerAdapter->getCommitUrl($cloneOwner, $cloneRepository, $providerCommitHash));
                 $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
                     'providerCommitHash' => $deployment->getAttribute('providerCommitHash'),
@@ -405,22 +441,34 @@ class Builds extends Action
                     ->trigger();
             }
 
-            // The only build reaching this worker is the template-into-repo push
-            // above (a git *write* the jobs-service artifact system has no
-            // primitive for). With the commit pushed, hand the build to the
-            // jobs-service like any other VCS commit, via the same Deployments
-            // service the HTTP endpoints use.
-            $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
-            $deployments->createFromVcs(
-                $resource,
-                $deployment,
-                $timeout,
-                $providerAdapter,
-                $cloneOwner,
-                $cloneRepository,
-                $ref,
-                $resource->getAttribute('providerRootDirectory', ''),
-            );
+            // A build reaches this worker for a git operation the jobs-service
+            // artifact system has no primitive for: the template-into-repo push
+            // above, or a clone only the provider's own tooling can make. With
+            // the commit pushed, hand the build to the jobs-service like any
+            // other VCS commit, via the same Deployments service the HTTP
+            // endpoints use - or, when the jobs-service cannot clone the
+            // provider itself, build the tree checked out here.
+            if ($providerAdapter->supportsRepositoryArchives() || $providerAdapter->supportsRepositoryCloneUrl()) {
+                $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
+                $deployments->createFromVcs(
+                    $resource,
+                    $deployment,
+                    $timeout,
+                    $providerAdapter,
+                    $cloneOwner,
+                    $cloneRepository,
+                    $ref,
+                    $resource->getAttribute('providerRootDirectory', ''),
+                );
+            } else {
+                $deployment->setAttribute('providerRootDirectory', $resource->getAttribute('providerRootDirectory', ''));
+                $deployments->createFromDirectory(
+                    $resource,
+                    $deployment,
+                    $timeout,
+                    $this->confine($tmpDirectory, $rootDirectory),
+                );
+            }
 
             Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
         } catch (\Throwable $th) {

@@ -1,0 +1,102 @@
+---
+layout: integration
+title: Deployments with Gitea
+description: Deploy Appwrite Sites and Functions from repositories on your own Gitea instance
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/deployments-gitea/cover.avif
+category: deployments
+product:
+    vendor: Gitea
+    description: "Gitea is a lightweight, open-source Git service that you host on your own infrastructure."
+platform:
+    - 'Self-hosted'
+---
+
+[Gitea](https://about.gitea.com) is a lightweight, open-source Git service you run on your own infrastructure. It packs repositories, pull requests, issues, and organizations into a single binary or container, so you can keep your code on the same infrastructure as your self-hosted Appwrite instance.
+
+# How does the integration work?
+
+Gitea is one of the Git providers a self-hosted Appwrite instance can deploy [Appwrite Sites](/docs/products/sites) and [Appwrite Functions](/docs/products/functions) from. You register Appwrite as an OAuth2 application on your Gitea instance and give Appwrite its credentials through environment variables. Each Appwrite project then connects to Gitea once, and its repositories appear in the repository picker.
+
+When you connect a repository, Appwrite registers a webhook on it for push and pull request events. Pushes to the production branch build and activate a deployment, and pushes to any other branch build a deployment that stays inactive until you activate it.
+
+{% info title="Self-hosted only" %}
+Gitea deployments are available on self-hosted Appwrite 2.0 and later. Starting with Appwrite 2.7, the create site and create function wizards, the repository picker, and the project's Git settings offer **Connect Gitea** when the `_APP_VCS_GITEA_*` variables are configured.
+{% /info %}
+
+# Prerequisites
+
+- A [self-hosted Appwrite](/docs/advanced/self-hosting) instance, version 2.7 or later for the **Connect Gitea** button.
+- A Gitea instance that the Appwrite server can reach, and that can reach your Appwrite domain to deliver webhooks.
+
+# How to implement
+
+To deploy from Gitea to Appwrite, there are several steps you must complete:
+
+## Step 1: Create an OAuth2 application in Gitea
+
+In Gitea, open **Settings** > **Applications** and create a new OAuth2 application. Organization owners and instance administrators can create one for an organization or for the whole instance instead.
+
+Give the application a name, such as `Appwrite`, and set its redirect URI to:
+
+```text
+https://<APPWRITE_DOMAIN>/v1/vcs/gitea/callback
+```
+
+`<APPWRITE_DOMAIN>` is your `_APP_CONSOLE_DOMAIN`, or `_APP_DOMAIN` when that is not set. Use `http://` only if `_APP_OPTIONS_FORCE_HTTPS` is `disabled`. Appwrite exchanges the authorization code with the client secret, so keep the application a confidential client.
+
+Copy the **Client ID** and **Client Secret**. Gitea shows the secret only once.
+
+## Step 2: Add Gitea to your Appwrite instance
+
+Open the `.env` file of your Appwrite installation and set the Gitea variables:
+
+```env
+_APP_VCS_GITEA_ENDPOINT=https://gitea.example.com
+_APP_VCS_GITEA_BROWSER_ENDPOINT=
+_APP_VCS_GITEA_CLIENT_ID=<CLIENT_ID>
+_APP_VCS_GITEA_CLIENT_SECRET=<CLIENT_SECRET>
+_APP_VCS_GITEA_WEBHOOK_SECRET=<RANDOM_STRING>
+```
+
+| Variable | Description |
+| --- | --- |
+| `_APP_VCS_GITEA_ENDPOINT` | URL of your Gitea instance, reachable from the Appwrite server. Required. |
+| `_APP_VCS_GITEA_BROWSER_ENDPOINT` | URL of your Gitea instance as your browser reaches it, when it differs from `_APP_VCS_GITEA_ENDPOINT`, for example when Appwrite and Gitea share a Docker network. Falls back to `_APP_VCS_GITEA_ENDPOINT` when empty. |
+| `_APP_VCS_GITEA_CLIENT_ID` | Client ID of the OAuth2 application. Required. |
+| `_APP_VCS_GITEA_CLIENT_SECRET` | Client secret of the OAuth2 application. Required. |
+| `_APP_VCS_GITEA_WEBHOOK_SECRET` | Any random string. Appwrite signs the repository webhooks it registers with it and validates incoming Gitea events against it. Required. |
+
+Appwrite registers webhooks pointing at `https://<_APP_DOMAIN>/v1/vcs/gitea/events`. If Gitea reaches Appwrite at a different address, such as a Docker-internal hostname, set `_APP_VCS_WEBHOOK_URL` to that base URL.
+
+Recreate the containers and check that the variables are applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+## Step 3: Connect Gitea to your Appwrite project
+
+In the Appwrite Console, open your project, go to **Project settings** > **Git configuration**, and click **Connect Gitea**. Gitea asks you to authorize the application. Appwrite requests the `read:repository`, `write:repository`, `read:organization`, `read:issue`, and `write:issue` scopes, so it can read your repositories, register webhooks, and comment on pull requests.
+
+After you approve, Gitea sends you back to the Console with the installation saved to the project.
+
+## Step 4: Create a Site or Function and push to deploy
+
+To deploy a site, go to **Sites**, click **Create site**, and select your Gitea repository under **Connect Git repository**. To deploy a function, go to **Functions**, click **Create function**, and select the repository under **Connect Git repository**. Confirm the build settings and deploy.
+
+Every push to the production branch now builds and activates a deployment. Pushes to other branches build without activating, so you can review a deployment before it serves traffic. [Build triggers](/docs/products/sites/deploy-from-git#build-triggers) limit which branches and file changes deploy.
+
+# Read more about Gitea and Appwrite
+
+If you would like to learn more about Gitea and Appwrite, we have some resources that you should visit:
+
+- [Appwrite 2.0 for self-hosted deployments](/blog/post/appwrite-2-self-hosted)
+- [Deploy Sites from Git](/docs/products/sites/deploy-from-git)
+- [Deploy Functions from Git](/docs/products/functions/deploy-from-git)
+- [Self-hosting environment variables](/docs/advanced/self-hosting/configuration/environment-variables)
+- [Gitea as an OAuth2 provider](https://docs.gitea.com/development/oauth2-provider)

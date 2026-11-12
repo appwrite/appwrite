@@ -14,6 +14,7 @@ use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Telemetry as TelemetryFeature;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
+use Utopia\Telemetry\Counter;
 use Utopia\Telemetry\UpDownCounter;
 
 /**
@@ -35,7 +36,7 @@ use Utopia\Telemetry\UpDownCounter;
  * again by the very next command, and at typical concurrency that is a
  * coroutine per command: creating one costs more CPU than the command itself.
  */
-class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeature
+class Multiplexing extends Versioned implements Adapter, Batchable, TelemetryFeature
 {
     private ?ConnectionContext $connection = null;
 
@@ -48,6 +49,8 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     private Telemetry $telemetry;
 
     private ?UpDownCounter $pendingDepth = null;
+
+    private ?Counter $writeFailures = null;
 
     /**
      * @param  float  $timeout connect timeout in seconds
@@ -120,6 +123,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     {
         $this->telemetry = $telemetry;
         $this->pendingDepth = null;
+        $this->writeFailures = null;
     }
 
     private function getPendingDepth(): UpDownCounter
@@ -128,6 +132,23 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             'cache.redis_multiplexing.pending.depth',
             description: 'Pending response channels awaiting RESP frames on the multiplexed connection.',
         );
+    }
+
+    private function getWriteFailures(): Counter
+    {
+        return $this->writeFailures ??= $this->telemetry->createCounter(
+            'cache.redis_multiplexing.write.failures',
+            description: 'Writes reported as false, by operation and the error that failed them.',
+        );
+    }
+
+    #[\Override]
+    protected function recordWriteFailure(string $operation, Throwable $error): void
+    {
+        $this->getWriteFailures()->add(1, [
+            'operation' => $operation,
+            'error' => new \ReflectionClass($error)->getShortName(),
+        ]);
     }
 
     /**
@@ -226,14 +247,16 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
 
         try {
             $value = $this->envelope->encode($data, time());
-            $this->command(['HSET', $key, $hash, $value]);
+            $this->command(['HSET', $key, $hash, $value, self::VERSION_FIELD, \bin2hex(\random_bytes(16))]);
 
             if ($ttl > 0) {
                 $this->command(['EXPIRE', $key, (string) $ttl]);
             }
 
             return $data;
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('save', $error);
+
             return false;
         }
     }
@@ -261,6 +284,9 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
+        $args[] = self::VERSION_FIELD;
+        $args[] = \bin2hex(\random_bytes(16));
+
         try {
             $this->command($args);
 
@@ -269,7 +295,9 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             }
 
             return $data;
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('saveMany', $error);
+
             return false;
         }
     }
@@ -294,7 +322,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
-        return $this->command(['HSET', $key, $hash, $payload]) !== false;
+        return $this->command(['HSET', $key, $hash, $payload, self::VERSION_FIELD, \bin2hex(\random_bytes(16))]) !== false;
     }
 
     /**
@@ -330,11 +358,6 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     protected function leaseEval(string $script, string $key, array $args): mixed
     {
         return $this->command(['EVAL', $script, '1', $key, ...$args]);
-    }
-
-    protected function leaseHget(string $key, string $field): mixed
-    {
-        return $this->command(['HGET', $key, $field]);
     }
 
     public function flush(): bool

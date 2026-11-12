@@ -606,65 +606,16 @@ class MetricTest extends TestCase
         $this->assertEquals(100, $array['value']);
     }
 
-    /**
-     * Test EVENT_COLUMNS constant
-     */
-    public function testEventColumnsConstant(): void
+    public function testOrdinalIsASharedDimension(): void
     {
-        $expected = [
-            'path', 'method', 'status',
-            'service', 'resourceType', 'resourceId', 'resourceInternalId',
-            'teamId', 'teamInternalId',
-            'country', 'region', 'hostname', 'ip',
-            'protocol', 'accept', 'acceptLanguage', 'queryKeys',
-            'ipReputation',
-            'city', 'continentCode', 'subdivisions',
-            'postalCode', 'latitude', 'longitude', 'timeZone', 'weatherCode',
-            'isp', 'autonomousSystemNumber', 'autonomousSystemOrganization',
-            'connectionType', 'connectionUsageType', 'connectionOrganization',
-            'osCode', 'osName', 'osVersion',
-            'clientType', 'clientCode', 'clientName', 'clientVersion',
-            'clientEngine', 'clientEngineVersion',
-            'sdk', 'sdkVersion',
-            'deviceName', 'deviceBrand', 'deviceModel',
-        ];
-        $this->assertSame($expected, Metric::EVENT_COLUMNS);
-    }
+        $this->assertSame('0', Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 0], 'event')['ordinal']);
+        $this->assertSame('1', Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 1], 'gauge')['ordinal']);
 
-    /**
-     * Test GAUGE_COLUMNS constant
-     */
-    public function testGaugeColumnsConstant(): void
-    {
-        $expected = ['service', 'resourceType', 'teamId', 'teamInternalId', 'resourceId', 'resourceInternalId', 'ordinal'];
-        $this->assertSame($expected, Metric::GAUGE_COLUMNS);
-    }
+        $unsplit = Metric::extractColumns(['resourceId' => 'db_a'], 'event');
+        $this->assertArrayHasKey('ordinal', $unsplit);
+        $this->assertNull($unsplit['ordinal']);
 
-    /**
-     * The replica ordinal is a gauge-only dimension: present in GAUGE_COLUMNS,
-     * the gauge schema and gauge indexes, extracted from tags into its column,
-     * and readable via the typed accessor. Events must not carry it.
-     */
-    public function testOrdinalIsGaugeOnly(): void
-    {
-        $this->assertContains('ordinal', Metric::GAUGE_COLUMNS);
-        $this->assertNotContains('ordinal', Metric::EVENT_COLUMNS);
-
-        $gaugeIds = array_column(Metric::getGaugeSchema(), '$id');
-        $this->assertContains('ordinal', $gaugeIds);
-
-        $eventIds = array_column(Metric::getEventSchema(), '$id');
-        $this->assertNotContains('ordinal', $eventIds);
-
-        $indexIds = array_column(Metric::getGaugeIndexes(), '$id');
-        $this->assertContains('index-ordinal', $indexIds);
-
-        $columns = Metric::extractColumns(['resourceId' => 'db_a', 'ordinal' => 1], 'gauge');
-        $this->assertSame('1', $columns['ordinal']);
-        $this->assertSame('db_a', $columns['resourceId']);
-
-        $metric = new Metric(['ordinal' => '2']);
-        $this->assertSame('2', $metric->getOrdinal());
+        $this->assertSame('2', new Metric(['ordinal' => '2'])->getOrdinal());
         $this->assertNull(new Metric([])->getOrdinal());
     }
 

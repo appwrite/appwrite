@@ -26,7 +26,9 @@ import {
   SearchCode,
   Send,
   Server,
+  ShieldCheck,
   Tags,
+  Timer,
   UserRound,
   Wifi,
 } from 'lucide-react'
@@ -48,8 +50,10 @@ import { useModalAwarePopover } from '@/lib/layout/modal-portal-host'
 import {
   FIREWALL_CONDITION_ATTRIBUTE_GROUPS,
   FIREWALL_CONDITION_ATTRIBUTES,
+  isAttributeAvailable,
   isPremiumAttribute,
   type FirewallConditionAttribute,
+  type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -84,11 +88,14 @@ export const ATTRIBUTE_ICONS: Record<FirewallConditionAttribute, LucideIcon> = {
   os: Monitor,
   browser: AppWindow,
   userAgent: UserRound,
+  sessionAge: Timer,
+  mfaAge: ShieldCheck,
 }
 
 interface ConditionAttributeSelectProps {
   value: FirewallConditionAttribute
   onValueChange: (value: FirewallConditionAttribute) => void
+  resourceType: FirewallResourceType
   disabled?: boolean
   premiumGeoEnabled: boolean
   triggerClassName?: string
@@ -97,6 +104,7 @@ interface ConditionAttributeSelectProps {
 export function ConditionAttributeSelect({
   value,
   onValueChange,
+  resourceType,
   disabled = false,
   premiumGeoEnabled,
   triggerClassName,
@@ -110,6 +118,12 @@ export function ConditionAttributeSelect({
     FIREWALL_CONDITION_ATTRIBUTES.find((attr) => attr.value === value)?.label ??
     value
   const SelectedIcon = ATTRIBUTE_ICONS[value] ?? Route
+  const groups = FIREWALL_CONDITION_ATTRIBUTE_GROUPS.map((group) => ({
+    ...group,
+    attributes: group.attributes.filter((attr) =>
+      isAttributeAvailable(attr.value, resourceType),
+    ),
+  })).filter((group) => group.attributes.length > 0)
 
   return (
     <div ref={rootRef} className="contents">
@@ -173,7 +187,7 @@ export function ConditionAttributeSelect({
               <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
                 {t('No types found')}
               </CommandEmpty>
-              {FIREWALL_CONDITION_ATTRIBUTE_GROUPS.map((group) => (
+              {groups.map((group) => (
                 <CommandGroup key={group.label} heading={t(group.label)}>
                   {group.attributes.map((attr) => {
                     const ItemIcon = ATTRIBUTE_ICONS[attr.value] ?? Route

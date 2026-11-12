@@ -66,6 +66,9 @@ enum Method: string
     case ContainsAll = 'containsAll';
     case ElemMatch = 'elemMatch';
 
+    // Relationship methods
+    case Relationship = 'relationship';
+
     // Aggregation methods
     case Count = 'count';
     case CountDistinct = 'countDistinct';
@@ -199,6 +202,7 @@ enum Method: string
             self::And,
             self::Or,
             self::ElemMatch,
+            self::Relationship,
             self::Having,
             self::Union,
             self::UnionAll => true,

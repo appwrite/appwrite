@@ -131,6 +131,69 @@ export function clearDismissedBannerPrefs(
 }
 
 /**
+ * Distinct console visit days (local `YYYY-MM-DD` keys) feeding the GitHub
+ * star wizard trigger. Pruned to its rolling window and capped at the visit
+ * threshold on every write; removed once the wizard is dismissed.
+ * Value: comma-separated day keys.
+ */
+export const USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS =
+  'console.githubStarVisitDays'
+
+export function parseGithubStarVisitDayPrefs(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  const raw = prefs?.[USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]
+  if (typeof raw === 'string') {
+    return raw ? raw.split(',').filter(Boolean) : []
+  }
+  return []
+}
+
+export function mergeGithubStarVisitDaysIntoPrefs(
+  prefs: UserPrefs | null | undefined,
+  days: readonly string[],
+): UserPrefs {
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]: days.join(','),
+  }
+}
+
+/** Drop the visit-day key (once dismissed it never feeds a decision again). */
+export function clearGithubStarVisitDaysFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): UserPrefs {
+  const next = { ...(prefs ?? {}) } as UserPrefs
+  delete next[USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]
+  return next
+}
+
+/**
+ * When the user last opened the previews popover. Previews introduced
+ * after it count as unseen. Value: ISO 8601 timestamp string.
+ */
+export const USER_PREFS_KEY_EXPERIMENTS_SEEN_AT = 'console.previews.seenAt'
+
+export function parseExperimentsSeenAt(
+  prefs: UserPrefs | null | undefined,
+): Date | null {
+  const raw = prefs?.[USER_PREFS_KEY_EXPERIMENTS_SEEN_AT]
+  if (typeof raw !== 'string' || !raw) return null
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+export function mergeExperimentsSeenAtPrefs(
+  prefs: UserPrefs | null | undefined,
+  seenAt: Date,
+): UserPrefs {
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_EXPERIMENTS_SEEN_AT]: seenAt.toISOString(),
+  }
+}
+
+/**
  * Project IDs where the user dismissed the Agents landing so project root
  * goes to Overview. Value: JSON string of project ID strings.
  */
@@ -3899,9 +3962,12 @@ export function parseAnalyticsCardTabsFromPrefs(
   if (typeof raw !== 'string') return {}
   try {
     const parsed = JSON.parse(raw) as unknown
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+      return {}
     const out: Record<string, string> = {}
-    for (const [card, tab] of Object.entries(parsed as Record<string, unknown>)) {
+    for (const [card, tab] of Object.entries(
+      parsed as Record<string, unknown>,
+    )) {
       if (
         ANALYTICS_CARD_TAB_ID_PATTERN.test(card) &&
         typeof tab === 'string' &&
@@ -4019,6 +4085,35 @@ export function mergeServiceListViewModeIntoPrefs(
   return {
     ...prefs,
     [getServiceListViewModeKey(scope)]: mode,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Playground mode (account prefs, shared across all projects)
+// ---------------------------------------------------------------------------
+
+export type PlaygroundMode = 'rest' | 'realtime'
+
+export const PLAYGROUND_MODE_DEFAULT: PlaygroundMode = 'rest'
+
+/** Full key: `console.playground.mode` - `"rest"` or `"realtime"`. */
+export const USER_PREFS_KEY_PLAYGROUND_MODE = 'console.playground.mode'
+
+export function parsePlaygroundMode(
+  prefs: UserPrefs | null | undefined,
+): PlaygroundMode {
+  const raw = prefs?.[USER_PREFS_KEY_PLAYGROUND_MODE]
+  if (raw === 'rest' || raw === 'realtime') return raw
+  return PLAYGROUND_MODE_DEFAULT
+}
+
+export function mergePlaygroundModeIntoPrefs(
+  prefs: UserPrefs,
+  mode: PlaygroundMode,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_PLAYGROUND_MODE]: mode,
   }
 }
 
@@ -4434,16 +4529,4 @@ export function mergeRecentImpersonationIntoAccountPrefs(
     ...(prefs ?? {}),
     [USER_PREFS_KEY_CONSOLE_IMPERSONATION_RECENT]: JSON.stringify(ids),
   }
-}
-
-/**
- * Cloud's passkeys rollout flag on the console user's prefs, set with Cloud's
- * `task-manage-flags`. The console only reads it. Value: `true` when shown.
- */
-export const USER_PREFS_KEY_PASSKEYS_FLAG = 'flags-passkeys'
-
-export function parsePasskeysFlag(
-  prefs: Record<string, unknown> | null | undefined,
-): boolean {
-  return Boolean(prefs?.[USER_PREFS_KEY_PASSKEYS_FLAG])
 }

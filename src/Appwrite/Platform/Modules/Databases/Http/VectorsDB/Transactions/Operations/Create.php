@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions\Operations;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations\Create as OperationsCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -29,6 +30,7 @@ class Create extends OperationsCreate
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: 'transactions',
@@ -62,6 +64,7 @@ class Create extends OperationsCreate
             ->param('operations', [], new ArrayList(new Operation(type: 'documentsdb')), 'Array of staged operations.', true, example: '[{"action":"create","databaseId":"<DATABASE_ID>","collectionId":"<COLLECTION_ID>","documentId":"<DOCUMENT_ID>","data":{"embeddings":[0.12,-0.55,0.88,1.02],"metadata":{"name":"First document"}}}]')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')

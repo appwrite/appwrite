@@ -6,7 +6,7 @@ import * as z from 'zod'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AppwriteException, ID } from '@appwrite.io/console'
-import { Bug, Eye, EyeOff } from 'lucide-react'
+import { Bug, Eye, EyeOff, Fingerprint } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,16 +38,53 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
 import { BitbucketIcon, GitHubIcon, GitLabIcon } from '@/lib/vcs/providers'
 
+// Google's standard four-color "G"; its branding rules forbid a monochrome one.
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
+      viewBox="0 0 48 48"
       className={className}
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
     >
-      <path d="M21.35 11.1h-9.17v2.96h5.27c-.23 1.24-1.4 3.64-5.27 3.64-3.17 0-5.76-2.62-5.76-5.85s2.59-5.85 5.76-5.85c1.8 0 3.01.77 3.7 1.43l2.52-2.43C16.18 3.55 14.23 2.7 12.18 2.7 6.99 2.7 2.78 6.92 2.78 12.15s4.21 9.45 9.4 9.45c5.43 0 9.02-3.81 9.02-9.18 0-.62-.07-1.07-.15-1.32z" />
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+      />
     </svg>
+  )
+}
+
+function Divider({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative">
+      <div className="absolute inset-0 flex items-center">
+        <span className="w-full border-t" />
+      </div>
+      <div className="relative flex justify-center text-xs uppercase">
+        <span className="bg-card px-2 text-muted-foreground">{children}</span>
+      </div>
+    </div>
+  )
+}
+
+function LastUsedBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
+      {children}
+    </span>
   )
 }
 
@@ -87,11 +124,11 @@ export type SignInSubmitOptions = {
   skipAccountCreate?: boolean
 }
 
-const OAUTH_PROVIDERS: {
+/** Accordion row. Google sits on its own full-width row below it. */
+const VCS_OAUTH_PROVIDERS: {
   id: OAuthLoginMethod
   Icon: (props: { className?: string }) => ReactNode
 }[] = [
-  { id: 'google', Icon: GoogleIcon },
   { id: 'github', Icon: GitHubIcon },
   { id: 'gitlab', Icon: GitLabIcon },
   { id: 'bitbucket', Icon: BitbucketIcon },
@@ -227,7 +264,7 @@ function oauthProviderLabel(
     if (provider === 'bitbucket') return t('Sign up with Bitbucket')
     return t('Sign up with GitHub')
   }
-  if (provider === 'google') return t('Login with Google')
+  if (provider === 'google') return t('Sign in with Google')
   if (provider === 'gitlab') return t('Login with GitLab')
   if (provider === 'bitbucket') return t('Login with Bitbucket')
   return t('Login with GitHub')
@@ -241,6 +278,8 @@ interface SignInProps {
   oauthLoading?: OAuthLoginMethod | null
   /** Lets the browser offer passkeys in the email field's autofill; runs on focus to restart the request. */
   onPasskeyAutofill?: () => void
+  /** Shows a "Sign in with a passkey" button that opens the browser's passkey prompt. */
+  onPasskeySignIn?: () => void
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
@@ -253,6 +292,7 @@ export function SignIn({
   isLoading,
   oauthLoading,
   onPasskeyAutofill,
+  onPasskeySignIn,
   redirect,
   preview = false,
 }: SignInProps) {
@@ -280,7 +320,9 @@ export function SignIn({
   const [showPassword, setShowPassword] = useState(false)
   const [expandedOAuth, setExpandedOAuth] = useState<OAuthLoginMethod>(() => {
     const last = getLastLoginMethod()
-    return isOAuthLoginMethod(last) ? last : DEFAULT_CONSOLE_OAUTH_LOGIN
+    return isOAuthLoginMethod(last) && last !== 'google'
+      ? last
+      : DEFAULT_CONSOLE_OAUTH_LOGIN
   })
 
   // Function to update last login method from storage
@@ -323,6 +365,7 @@ export function SignIn({
   }
 
   const formBusy = isLoading || isCreatingDemo
+  const showPasskeyButton = mode === 'sign-in' && !!onPasskeySignIn
 
   const handleCreateDemoUser = async () => {
     if (preview) {
@@ -416,72 +459,105 @@ export function SignIn({
           {onOAuthLogin && (
             <>
               <style>{OAUTH_ACCORDION_STYLES}</style>
-              <div className="oauth-login-row">
-                {OAUTH_PROVIDERS.map(({ id, Icon }) => {
-                  const label = oauthProviderLabel(id, mode, t)
-                  const shortLabel = oauthProviderName(id, t)
-                  const isLastUsed =
-                    mode === 'sign-in' && lastLoginMethod === id
-                  const isExpanded = expandedOAuth === id
-                  return (
-                    <div
-                      key={id}
-                      className={
-                        isExpanded
-                          ? 'relative min-w-0 is-expanded'
-                          : 'relative min-w-0'
-                      }
-                      onMouseEnter={() => setExpandedOAuth(id)}
-                    >
-                      {isLastUsed && (
-                        <span data-last-used={id} className="oauth-last-used">
-                          <span className="oauth-last-used-dot" />
-                          <span className="oauth-last-used-pill">
-                            {t('Last used')}
-                          </span>
-                        </span>
-                      )}
-                      <Button
-                        variant="outline"
-                        type="button"
-                        data-provider={id}
-                        aria-label={
-                          isLastUsed ? `${label}. ${t('Last used')}` : label
+              <div className="space-y-4">
+                <div className="oauth-login-row">
+                  {VCS_OAUTH_PROVIDERS.map(({ id, Icon }) => {
+                    const label = oauthProviderLabel(id, mode, t)
+                    const shortLabel = oauthProviderName(id, t)
+                    const isLastUsed =
+                      mode === 'sign-in' && lastLoginMethod === id
+                    const isExpanded = expandedOAuth === id
+                    return (
+                      <div
+                        key={id}
+                        className={
+                          isExpanded
+                            ? 'relative min-w-0 is-expanded'
+                            : 'relative min-w-0'
                         }
-                        className="h-9 w-full min-w-0 justify-center gap-0 overflow-hidden px-0 has-[>svg]:px-0"
-                        onClick={() => onOAuthLogin(id)}
-                        onFocus={() => setExpandedOAuth(id)}
-                        disabled={!!oauthLoading || formBusy}
+                        onMouseEnter={() => setExpandedOAuth(id)}
                       >
-                        <Icon className="size-4 shrink-0" />
-                        <span className="oauth-login-label">
-                          <span>
-                            <span className="oauth-login-label-text">
-                              <span className="oauth-login-label-short">
-                                {shortLabel}
-                              </span>
-                              <span className="oauth-login-label-full">
-                                {label}
+                        {isLastUsed && (
+                          <span data-last-used={id} className="oauth-last-used">
+                            <span className="oauth-last-used-dot" />
+                            <span className="oauth-last-used-pill">
+                              {t('Last used')}
+                            </span>
+                          </span>
+                        )}
+                        <Button
+                          variant="outline"
+                          type="button"
+                          data-provider={id}
+                          aria-label={
+                            isLastUsed ? `${label}. ${t('Last used')}` : label
+                          }
+                          className="h-9 w-full min-w-0 justify-center gap-0 overflow-hidden px-0 has-[>svg]:px-0"
+                          onClick={() => onOAuthLogin(id)}
+                          onFocus={() => setExpandedOAuth(id)}
+                          disabled={!!oauthLoading || formBusy}
+                        >
+                          <Icon className="size-4 shrink-0" />
+                          <span className="oauth-login-label">
+                            <span>
+                              <span className="oauth-login-label-text">
+                                <span className="oauth-login-label-short">
+                                  {shortLabel}
+                                </span>
+                                <span className="oauth-login-label-full">
+                                  {label}
+                                </span>
                               </span>
                             </span>
                           </span>
-                        </span>
-                      </Button>
-                    </div>
-                  )
-                })}
+                        </Button>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="relative">
+                  {mode === 'sign-in' && lastLoginMethod === 'google' && (
+                    <LastUsedBadge>{t('Last used')}</LastUsedBadge>
+                  )}
+                  <Button
+                    variant="outline"
+                    type="button"
+                    data-provider="google"
+                    className="h-9 w-full"
+                    onClick={() => onOAuthLogin('google')}
+                    disabled={!!oauthLoading || formBusy}
+                  >
+                    <GoogleIcon className="size-4" />
+                    {oauthProviderLabel('google', mode, t)}
+                  </Button>
+                </div>
               </div>
 
+              <Divider>
+                {showPasskeyButton ? t('Or') : t('Or continue with')}
+              </Divider>
+            </>
+          )}
+
+          {showPasskeyButton && (
+            <>
               <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    {t('Or continue with')}
-                  </span>
-                </div>
+                {lastLoginMethod === 'passkey' && (
+                  <LastUsedBadge>{t('Last used')}</LastUsedBadge>
+                )}
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="h-9 w-full"
+                  onClick={onPasskeySignIn}
+                  disabled={!!oauthLoading || formBusy}
+                >
+                  <Fingerprint className="size-4" />
+                  {t('Sign in with a passkey')}
+                </Button>
               </div>
+
+              <Divider>{t('Or continue with')}</Divider>
             </>
           )}
 
@@ -581,10 +657,8 @@ export function SignIn({
           <div className="relative">
             {mode === 'sign-in' &&
               (lastLoginMethod === 'email' ||
-                lastLoginMethod === 'passkey') && (
-                <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
-                  {t('Last used')}
-                </span>
+                (lastLoginMethod === 'passkey' && !showPasskeyButton)) && (
+                <LastUsedBadge>{t('Last used')}</LastUsedBadge>
               )}
             <Button
               type="submit"

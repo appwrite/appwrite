@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -16,6 +17,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
@@ -23,10 +25,10 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -75,7 +77,7 @@ class Create extends Action
                     ),
                 ]
             ))
-            ->label('abuse-limit', 10)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
             ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
@@ -83,6 +85,7 @@ class Create extends Action
             ->param('roles', [], new ArrayList(new Key(maxLength: APP_LIMIT_ROLE_LENGTH), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each ' . APP_LIMIT_ROLE_LENGTH . ' characters long.', false, ['project'], example: '["editor"]')
             ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator']) // TODO add our own built-in confirm page
             ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
+            ->param('membershipId', '', new CustomId(), 'Membership ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->inject('response')
             ->inject('project')
             ->inject('user')
@@ -100,9 +103,10 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, ?string $email, ?string $userId, ?string $phone, array $roles, ?string $url, ?string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, ?string $email, ?string $userId, ?string $phone, array $roles, ?string $url, ?string $name, ?string $membershipId, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
     {
         $email ??= '';
+        $membershipId ??= '';
         $userId ??= '';
         $phone ??= '';
         $url ??= '';
@@ -112,6 +116,7 @@ class Create extends Action
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $invitee = new Document();
         $hash = '';
+        $inviteeCreated = false;
 
         if (empty($url)) {
             if (! $isAppUser && ! $isPrivilegedUser) {
@@ -135,6 +140,17 @@ class Create extends Action
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
+
+        $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
+
+        // Same console rule as membership role updates: organization developer
+        // must not count as privileged enough to invite with arbitrary roles.
+        // Checked before the invitee is looked up or created below, so a
+        // caller who fails this check never causes a user account to exist.
+        if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
+        }
+
         if (! empty($userId)) {
             $invitee = $dbForProject->getDocument('users', $userId);
             if ($invitee->isEmpty()) {
@@ -229,7 +245,7 @@ class Create extends Action
 
             $hash = $proofForPassword->hash($proofForPassword->generate());
 
-            $userId = ID::unique();
+            $userId = Id::unique();
 
             $userDocument = new Document([
                 '$id' => $userId,
@@ -270,17 +286,51 @@ class Create extends Action
 
             try {
                 $invitee = $authorization->skip(fn () => $dbForProject->createDocument('users', $userDocument));
+                $inviteeCreated = true;
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
-        }
 
-        $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
+            foreach ([MESSAGE_TYPE_EMAIL => $email, MESSAGE_TYPE_SMS => $phone] as $providerType => $identifier) {
+                if (empty($identifier)) {
+                    continue;
+                }
 
-        // Same console rule as membership role updates: organization developer
-        // must not count as privileged enough to invite with arbitrary roles.
-        if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
+                try {
+                    $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($invitee->getId())),
+                            Permission::update(Role::user($invitee->getId())),
+                            Permission::delete(Role::user($invitee->getId())),
+                        ],
+                        'userId' => $invitee->getId(),
+                        'userInternalId' => $invitee->getSequence(),
+                        'providerType' => $providerType,
+                        'identifier' => $identifier,
+                    ])));
+                } catch (Duplicate) {
+                    // A deleted user's target lingers until the deletes worker removes it
+                    $existing = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+                        Query::equal('identifier', [$identifier]),
+                    ]));
+                    $owner = $authorization->skip(fn () => $dbForProject->getDocument('users', $existing->getAttribute('userId', '')));
+
+                    if (!$existing->isEmpty() && $owner->isEmpty()) {
+                        $authorization->skip(fn () => $dbForProject->updateDocument('targets', $existing->getId(), new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($invitee->getId())),
+                                Permission::update(Role::user($invitee->getId())),
+                                Permission::delete(Role::user($invitee->getId())),
+                            ],
+                            'userId' => $invitee->getId(),
+                            'userInternalId' => $invitee->getSequence(),
+                            'providerType' => $providerType,
+                        ])));
+                    }
+                }
+            }
+
+            $dbForProject->purgeCachedDocument('users', $invitee->getId());
         }
 
         $membership = $dbForProject->findOne('memberships', [
@@ -290,7 +340,7 @@ class Create extends Action
 
         $secret = $proofForToken->generate();
         if ($membership->isEmpty()) {
-            $membershipId = ID::unique();
+            $membershipId = ($membershipId === '' || $membershipId === 'unique()') ? Id::unique() : $membershipId;
             $membership = new Document([
                 '$id' => $membershipId,
                 '$permissions' => [
@@ -312,12 +362,31 @@ class Create extends Action
                 'search' => implode(' ', [$membershipId, $invitee->getId()]),
             ]);
 
-            $membership = ($isPrivilegedUser || $isAppUser) ?
-                $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
-                $dbForProject->createDocument('memberships', $membership);
-
-            if ($isPrivilegedUser || $isAppUser) {
-                $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            try {
+                if ($isPrivilegedUser || $isAppUser) {
+                    $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team) {
+                        $created = $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership));
+                        $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+                        return $created;
+                    });
+                } else {
+                    $membership = $dbForProject->createDocument('memberships', $membership);
+                }
+            } catch (Duplicate $th) {
+                if ($inviteeCreated) {
+                    $membershipCount = $authorization->skip(
+                        fn () => $dbForProject->count('memberships', [
+                            Query::equal('userInternalId', [$invitee->getSequence()]),
+                        ], 1)
+                    );
+                    if ($membershipCount === 0) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocuments('targets', [
+                            Query::equal('userInternalId', [$invitee->getSequence()]),
+                        ]));
+                        $authorization->skip(fn () => $dbForProject->deleteDocument('users', $invitee->getId()));
+                    }
+                }
+                throw new Exception(Exception::MEMBERSHIP_ALREADY_EXISTS);
             }
         } elseif ($membership->getAttribute('confirm') === false) {
             $secretHash = $proofForToken->hash($secret);
@@ -360,6 +429,29 @@ class Create extends Action
         if ($isPrivilegedUser || $isAppUser) {
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
+            // Recheck under the lock an address change takes, so the invite is never sent to an address the user just left
+            $moved = (! empty($email) || ! empty($phone)) && $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $invitee, $membership, $email, $phone, $secret, $proofForToken): bool {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $invitee->getId(), forUpdate: true));
+                $address = ! empty($email) ? $current->getAttribute('email') : $current->getAttribute('phone');
+                $destination = ! empty($email) ? $invitee->getAttribute('email') : $phone;
+
+                if ($address === $destination) {
+                    return false;
+                }
+
+                // Void only the secret this request wrote, never one a newer resend replaced it with
+                $stored = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+                if ($proofForToken->verify($secret, (string) $stored->getAttribute('secret'))) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['secret' => ''])));
+                }
+
+                return true;
+            });
+
+            if ($moved) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'The invitee address changed while the invitation was being sent. Send it again.');
+            }
+
             $url = Template::parseURL($url);
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId, 'teamName' => $team->getAttribute('name')]);
             $url = Template::unParseURL($url);
@@ -503,7 +595,7 @@ class Create extends Action
                 $message = $message->render();
 
                 $messageDoc = new Document([
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'data' => [
                         'content' => $message,
                     ],
@@ -530,18 +622,18 @@ class Create extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
-        // Same memberships privacy policy as reading the membership back
-        $showDetails = $isPrivilegedUser || $isAppUser || $invitee->getId() === $user->getId();
-        $showUserName = $showDetails || ($project->getAttribute('auths', [])['membershipsUserName'] ?? true);
-        $showUserEmail = $showDetails || ($project->getAttribute('auths', [])['membershipsUserEmail'] ?? true);
+        // The privacy policy only hides other members, a member always sees their own details
+        $auths = $project->getAttribute('auths', []);
+        $isVisible = $isPrivilegedUser || $isAppUser
+            || ($user->getSequence() !== null && $invitee->getSequence() === $user->getSequence());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(
                 $membership
                     ->setAttribute('teamName', $team->getAttribute('name'))
-                    ->setAttribute('userName', $showUserName ? $invitee->getAttribute('name') : '')
-                    ->setAttribute('userEmail', $showUserEmail ? $invitee->getAttribute('email') : ''),
+                    ->setAttribute('userName', $isVisible || ($auths['membershipsUserName'] ?? true) ? $invitee->getAttribute('name') : '')
+                    ->setAttribute('userEmail', $isVisible || ($auths['membershipsUserEmail'] ?? true) ? $invitee->getAttribute('email') : ''),
                 Response::MODEL_MEMBERSHIP
             );
     }

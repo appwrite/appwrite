@@ -15,11 +15,11 @@ import {
   EnterpriseCapabilityGroups,
   EnterpriseConsolidation,
   EnterpriseDeploymentModels,
-  EnterpriseLogoCloud,
   EnterpriseSharedBenefits,
   EnterpriseValueProps,
 } from '@/components/pages/enterprise/EnterpriseSections'
 import { SecurityComplianceSection } from '@/components/pages/enterprise/SecurityComplianceSection'
+import { SolutionLogoCloud } from '@/components/pages/solutions/Sections'
 import { MarketingFaqSection } from '@/components/pages/marketing/MarketingFaqSection'
 import { riseStyle } from '@/components/pages/products/_components/ArtParts'
 import { ProductToneBackdrop } from '@/components/pages/products/_components/ProductTone'
@@ -114,8 +114,8 @@ export function View() {
           title="Trusted by teams at scale"
           description="From global enterprises to fast-growing product companies, teams rely on Appwrite to ship secure applications."
         />
-        <div className="mt-14">
-          <EnterpriseLogoCloud />
+        <div className="mt-12">
+          <SolutionLogoCloud />
         </div>
       </ComparisonSection>
 

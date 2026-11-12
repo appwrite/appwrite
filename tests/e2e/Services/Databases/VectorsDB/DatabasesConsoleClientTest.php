@@ -9,9 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class DatabasesConsoleClientTest extends Scope
 {
@@ -24,7 +24,7 @@ final class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Vector Console DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -40,7 +40,7 @@ final class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Movies',
             'dimension' => 3,
             'permissions' => [
@@ -72,7 +72,7 @@ final class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'TvShows',
             'dimension' => 3,
             'permissions' => [

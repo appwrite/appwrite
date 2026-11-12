@@ -1,0 +1,13 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+    scanFiles:
+        - bin/MigrationCLI.php
+    excludePaths:
+        - tests/fixtures
+    treatPhpDocTypesAsCertain: false

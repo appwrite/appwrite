@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Bulk;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Upsert as DocumentsUpsert;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -39,9 +40,7 @@ class Upsert extends DocumentsUpsert
             ->label('audits.event', 'row.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', [
                 new Method(
                     namespace: $this->getSDKNamespace(),
@@ -58,10 +57,10 @@ class Upsert extends DocumentsUpsert
                     contentType: ContentType::JSON,
                 )
             ])
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Table ID.', false, ['dbForProject'])
             ->param('rows', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of row data as JSON objects. May contain partial rows.', false, ['plan'], example: '[{"$id":"example1","username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}]')
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -72,6 +71,8 @@ class Upsert extends DocumentsUpsert
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('eventProcessor')
+            ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

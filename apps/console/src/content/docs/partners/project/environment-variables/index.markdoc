@@ -163,7 +163,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -263,8 +263,8 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/id"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/id"
 )
 
 client := appwrite.NewClient(
@@ -279,7 +279,7 @@ response, error := project.CreateVariable(
     id.Unique(),
     "<KEY>",
     "<VALUE>",
-    appwrite.WithCreateVariableSecret(false),
+    project.WithCreateVariableSecret(false),
 )
 ```
 ```server-rust
@@ -405,7 +405,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -493,7 +493,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 client := appwrite.NewClient(
@@ -505,8 +505,8 @@ client := appwrite.NewClient(
 project := appwrite.NewProject(client)
 
 response, error := project.ListVariables(
-    appwrite.WithListVariablesQueries([]interface{}{}),
-    appwrite.WithListVariablesTotal(false),
+    project.WithListVariablesQueries([]interface{}{}),
+    project.WithListVariablesTotal(false),
 )
 ```
 ```server-rust
@@ -622,7 +622,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -705,7 +705,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 client := appwrite.NewClient(
@@ -849,7 +849,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -947,7 +947,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 client := appwrite.NewClient(
@@ -960,9 +960,9 @@ project := appwrite.NewProject(client)
 
 response, error := project.UpdateVariable(
     "<VARIABLE_ID>",
-    appwrite.WithUpdateVariableKey("<KEY>"),
-    appwrite.WithUpdateVariableValue("<VALUE>"),
-    appwrite.WithUpdateVariableSecret(false),
+    project.WithUpdateVariableKey("<KEY>"),
+    project.WithUpdateVariableValue("<VALUE>"),
+    project.WithUpdateVariableSecret(false),
 )
 ```
 ```server-rust
@@ -1077,7 +1077,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -1160,7 +1160,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 client := appwrite.NewClient(

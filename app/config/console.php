@@ -7,14 +7,14 @@
 use Appwrite\Auth\Passkey\Console as PasskeyConsole;
 use Appwrite\Network\Platform;
 use Utopia\Config\Config;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 $console = [
-    '$id' => ID::custom('console'),
-    '$sequence' => ID::custom('console'),
+    '$id' => Id::custom('console'),
+    '$sequence' => Id::custom('console'),
     'name' => 'Appwrite',
-    '$collection' => ID::custom('projects'),
+    '$collection' => Id::custom('projects'),
     'description' => 'Appwrite core engine',
     'logo' => '',
     'teamId' => null,
@@ -22,7 +22,7 @@ $console = [
     'keys' => [],
     'platforms' => [
         [
-            '$collection' => ID::custom('platforms'),
+            '$collection' => Id::custom('platforms'),
             'name' => 'Localhost',
             'type' => Platform::TYPE_WEB,
             'hostname' => 'localhost',
@@ -65,7 +65,7 @@ $console = [
         'gitlabEnabled' => true,
         // Auth\OAuth2\Gitlab reads its endpoint out of a JSON-encoded secret, so
         // _APP_CONSOLE_GITLAB_ENDPOINT travels with the credential. Stays empty when
-        // unconfigured so account.php keeps reporting the provider as disabled.
+        // unconfigured so the account OAuth2 routes keep reporting the provider as disabled.
         'gitlabSecret' => empty(System::getEnv('_APP_CONSOLE_GITLAB_SECRET', '')) ? '' : \json_encode([
             'clientSecret' => System::getEnv('_APP_CONSOLE_GITLAB_SECRET', ''),
             'endpoint' => System::getEnv('_APP_CONSOLE_GITLAB_ENDPOINT', 'https://gitlab.com'),

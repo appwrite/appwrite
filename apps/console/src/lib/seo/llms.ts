@@ -19,7 +19,7 @@ import {
   APPWRITE_AGENT_SKILLS_DISCOVERY_PATH,
   APPWRITE_AGENT_SKILLS_INSTALL,
   APPWRITE_AGENT_SKILLS_REPO,
-  APPWRITE_AI_CATALOG_PATH,
+  APPWRITE_ARD_PATH,
   APPWRITE_MCP_DOCS_PATH,
   APPWRITE_MCP_SERVER_CARD_PATH,
 } from './agent-discovery'
@@ -173,13 +173,17 @@ export function buildAlternativesLlmsSection(
   }
 }
 
-export function buildOptionalLlmsSection(origin: string): LlmsSection {
+/**
+ * Product and plan pages. Kept out of `## Optional`, which llms.txt readers may
+ * skip, because "what is it" and "what does it cost" answers come from here.
+ */
+export function buildProductsLlmsSection(origin: string): LlmsSection {
   return {
-    heading: 'Optional',
+    heading: 'Products and pricing',
     links: [
       {
         title: 'Pricing',
-        url: `${origin}/pricing`,
+        url: `${origin}/pricing.md`,
         description: 'Appwrite Cloud plans and pricing.',
       },
       {
@@ -230,12 +234,6 @@ export function buildOptionalLlmsSection(origin: string): LlmsSection {
         url: `${origin}/products/analytics`,
         description:
           'Cookieless web and app analytics with custom events, server-side tracking, and bot and AI traffic breakdowns.',
-      },
-      {
-        title: 'For coding agents',
-        url: `${origin}${FOR_AGENTS_PATH}`,
-        description:
-          'When to pick Appwrite, plus skills, MCP, and per-IDE install links.',
       },
     ],
   }
@@ -316,10 +314,10 @@ export function buildAppwriteLlmsTxt(
             'SEP-1649 MCP Server Card for pre-connection discovery (/.well-known/mcp/server-card.json).',
         },
         {
-          title: 'AI Catalog',
-          url: `${origin}${APPWRITE_AI_CATALOG_PATH}`,
+          title: 'Agentic Resource Discovery',
+          url: `${origin}${APPWRITE_ARD_PATH}`,
           description:
-            'Domain AI Catalog listing Appwrite MCP Server Cards (/.well-known/ai-catalog.json).',
+            'ARD manifest listing Appwrite MCP Server Cards (/.well-known/ard.json).',
         },
         {
           title: 'MCP documentation',
@@ -412,6 +410,7 @@ export function buildAppwriteLlmsTxt(
         },
       ],
     },
+    buildProductsLlmsSection(origin),
     {
       heading: 'Blog',
       intro:
@@ -496,7 +495,6 @@ export function buildAppwriteLlmsTxt(
           : []),
       ],
     },
-    buildOptionalLlmsSection(origin),
   ]
 
   const header = [

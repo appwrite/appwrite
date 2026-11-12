@@ -403,10 +403,7 @@ export function MysqlDatabaseComputeTierCard({
       </Table>
       {hasLockedDatabaseSpecifications(specs) ? (
         <div className="px-6 py-3">
-          <SpecificationsUpgradeNote
-            orgId={project?.teamId}
-            showContactSales
-          />
+          <SpecificationsUpgradeNote orgId={project?.teamId} />
         </div>
       ) : null}
     </div>

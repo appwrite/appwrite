@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PoliciesPasswordStrengthIntegrationTest extends Scope
 {
@@ -49,7 +49,7 @@ final class PoliciesPasswordStrengthIntegrationTest extends Scope
         $this->assertTrue($response['body']['symbols']);
 
         $weak = $this->client->call(Client::METHOD_POST, '/account', $signupHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'strength_weak_' . uniqid() . '@localhost.test',
             'password' => 'password123!',
             'name' => 'Weak Password User',
@@ -58,7 +58,7 @@ final class PoliciesPasswordStrengthIntegrationTest extends Scope
         $this->assertSame(400, $weak['headers']['status-code']);
 
         $valid = $this->client->call(Client::METHOD_POST, '/account', $signupHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'strength_valid_' . uniqid() . '@localhost.test',
             'password' => 'Password123!',
             'name' => 'Valid Password User',

@@ -47,6 +47,8 @@ type ComputeUsageSectionProps = {
   chartInterval: UsageChartInterval
   scope?: ComputeUsageScope
   onDateRangeChange?: (dateRange: DateRange | undefined) => void
+  /** Top consumers under each chart; off when the page shows one resource. */
+  showBreakdown?: boolean
 }
 
 export function ComputeUsageSection({
@@ -55,6 +57,7 @@ export function ComputeUsageSection({
   chartInterval,
   scope = 'combined',
   onDateRangeChange,
+  showBreakdown = true,
 }: ComputeUsageSectionProps) {
   const queryClient = useQueryClient()
   const { registerRefreshHandler, unregisterRefreshHandler } = useRefresh()
@@ -206,7 +209,7 @@ export function ComputeUsageSection({
         queryError={executionsQuery.error}
         formatTotal={formatExecutionsTotal}
         formatValue={formatExecutionsValue}
-        showBreakdown
+        showBreakdown={showBreakdown}
         breakdownItems={
           executionsQuery.isError
             ? []
@@ -238,7 +241,7 @@ export function ComputeUsageSection({
         formatTotal={formatGbHoursTotal}
         formatValue={formatGbHoursValue}
         axisFormat="gbhours"
-        showBreakdown
+        showBreakdown={showBreakdown}
         breakdownItems={
           gbHoursQuery.isError
             ? []

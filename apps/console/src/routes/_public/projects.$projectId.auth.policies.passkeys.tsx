@@ -2,12 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
-import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { canUsePasskeys } from '@/lib/passkeys'
-import {
-  ensureConsoleAccountQueryData,
-  projectQueryOptions,
-} from '@/lib/react-query/hooks'
+import { projectQueryOptions } from '@/lib/react-query/hooks'
 import { projectAuthSecurityQueryOptions } from '@/lib/project-settings'
 
 export const Route = createFileRoute(
@@ -35,17 +30,6 @@ export const Route = createFileRoute(
     const project = queryClient.getQueryData<Models.Project>(
       projectQueryOptions(projectId).queryKey,
     )
-    const features = getActiveProfileFeatures()
-    const account = features.passkeysFlag
-      ? await ensureConsoleAccountQueryData(queryClient).catch(() => null)
-      : null
-    if (!canUsePasskeys(features, account?.prefs)) {
-      throw redirect({
-        to: '/projects/$projectId/auth/policies/sessions',
-        params: { projectId },
-        replace: true,
-      })
-    }
     await queryClient.ensureQueryData(
       projectAuthSecurityQueryOptions(projectId, project?.region),
     )

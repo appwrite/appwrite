@@ -112,6 +112,8 @@ interface ServiceHeaderProps {
   hideTitle?: boolean
   /** Renders on the same row as the title (typically end-aligned); use for secondary actions next to the page title */
   titleRightContent?: React.ReactNode
+  /** Renders centered on the title row (e.g. a mode switch) */
+  titleCenterContent?: React.ReactNode
   /** Content to render after the border separator, before the toolbar */
   contentAfterBorder?: React.ReactNode
   /** Show a bottom border under the toolbar row (search/filters/actions) */
@@ -268,6 +270,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       breadcrumbs,
       hideTitle = false,
       titleRightContent,
+      titleCenterContent,
       contentAfterBorder,
       showToolbarBottomBorder = false,
       hideToolbar = false,
@@ -396,8 +399,13 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             {!hideTitle && (
               <div
                 className={cn(
-                  'flex flex-col gap-1 overflow-visible px-4 pt-6 sm:px-6',
-                  hasTabs ? 'pb-4' : contentAfterBorder ? 'pb-4' : 'pb-6',
+                  'flex flex-col gap-1 overflow-visible px-4 sm:px-6',
+                  titleCenterContent
+                    ? 'py-3'
+                    : cn(
+                        'pt-6',
+                        hasTabs || contentAfterBorder ? 'pb-4' : 'pb-6',
+                      ),
                   fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
                   fullWidthBorder && fullWidth && 'w-full',
                 )}
@@ -428,7 +436,9 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 <div
                   className={cn(
                     SERVICE_HEADER_TITLE_CONTAINER,
-                    'flex min-w-0 flex-row items-center justify-between gap-x-4',
+                    titleCenterContent
+                      ? 'grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4'
+                      : 'flex min-w-0 flex-row items-center justify-between gap-x-4',
                   )}
                 >
                   <h1 className="min-w-0 flex-1 overflow-hidden text-[17px] font-semibold leading-tight text-foreground">
@@ -438,10 +448,17 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       title
                     )}
                   </h1>
+                  {titleCenterContent ? (
+                    <div className="flex items-center justify-center">
+                      {titleCenterContent}
+                    </div>
+                  ) : null}
                   {titleRightContent ? (
                     <div className="flex shrink-0 items-center justify-end gap-2 overflow-visible @[560px]:gap-3">
                       {titleRightContent}
                     </div>
+                  ) : titleCenterContent ? (
+                    <div aria-hidden />
                   ) : null}
                 </div>
               </div>

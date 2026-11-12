@@ -10,11 +10,14 @@ import {
   useQueryClient,
   queryOptions,
   keepPreviousData,
+  type QueryClient,
 } from '@tanstack/react-query'
 import { ID, Query, WafRuleAction, type Models } from '@appwrite.io/console'
+import type { FirewallRule } from '@/lib/firewall/types'
+import type { FirewallSchedulePayload } from '@/lib/firewall/schedule'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
-import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME, LONG_STALE_TIME } from './constants'
+import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME } from './constants'
 import {
   CHALLENGE_DIFFICULTY_DEFAULT,
   CHALLENGE_TTL_DEFAULT,
@@ -43,9 +46,11 @@ import {
 import type {
   FirewallConditionAttribute,
   FirewallConditionDraft,
+  FirewallResourceSelection,
   FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import {
+  firewallTrafficOverviewQueryOptions,
   requestsBreakdownQueryOptions,
   PREMIUM_GEO_REQUEST_DIMENSIONS,
 } from './usage-events'
@@ -59,12 +64,17 @@ import type {
 } from '@/lib/usage/usage-events-common'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import type { DateRange } from 'react-day-picker'
-import type { UsageChartInterval } from '@/lib/usage/chart-interval'
 import {
-  fetchProjectFunctionsByIds,
-  functionsQueryOptions,
-} from './functions'
-import { fetchProjectSitesByIds, sitesQueryOptions } from './sites'
+  DEFAULT_USAGE_CHART_INTERVAL,
+  resolveUsageChartIntervalForRange,
+  type UsageChartInterval,
+} from '@/lib/usage/chart-interval'
+import { getStableUsageChartDateRange } from '@/lib/usage/usage-date-range'
+import { getUsageLogRetentionHoursFromPlan } from '@/lib/usage/usage-log-retention'
+import { fetchProjectFunctionsByIds } from './functions'
+import { fetchProjectSitesByIds } from './sites'
+import { fetchProject } from './projects'
+import { organizationPlanQueryOptions } from './organizations'
 
 export type CreateFirewallRuleInput = {
   ruleId?: string
@@ -90,6 +100,8 @@ export type CreateFirewallRuleInput = {
   challengeType?: string
   difficulty?: number
   ttl?: number
+  /** When the rule is active. Leave out for always active. */
+  schedule?: FirewallSchedulePayload
 }
 
 export type UpdateFirewallRuleInput = {
@@ -115,12 +127,13 @@ export type UpdateFirewallRuleInput = {
   challengeType?: string
   difficulty?: number
   ttl?: number
+  /** Leave out to keep the stored schedule; an empty object removes it. */
+  schedule?: FirewallSchedulePayload | Record<string, never>
 }
 
 function conditionsPayload(conditions?: string[]) {
   if (!conditions || conditions.length === 0) return undefined
-  // SDK types this as string; API expects Query string array.
-  return conditions as unknown as string
+  return conditions
 }
 
 function invalidateFirewallAttackMode(
@@ -141,7 +154,7 @@ export async function fetchFirewallRules(
   resourceId?: string,
 ) {
   if (!projectId) {
-    return { rules: [] as Models.WafRule[], total: 0 }
+    return { rules: [] as FirewallRule[], total: 0 }
   }
 
   const queries = [
@@ -176,9 +189,7 @@ export type FirewallResourceNameMap = Record<string, string>
 
 function normalizeFirewallResourceIds(resourceIds: string[]): string[] {
   return [
-    ...new Set(
-      resourceIds.filter((id) => typeof id === 'string' && id.trim()),
-    ),
+    ...new Set(resourceIds.filter((id) => typeof id === 'string' && id.trim())),
   ].sort()
 }
 
@@ -222,7 +233,7 @@ export async function fetchFirewallResourceNames(
 export async function fetchFirewallRule(
   projectId: string,
   ruleId: string,
-): Promise<Models.WafRule> {
+): Promise<FirewallRule> {
   if (!projectId || !ruleId) {
     throw new Error('Project ID and rule ID are required')
   }
@@ -361,6 +372,7 @@ async function createFirewallRule(
     priority: input.priority,
     enabled: input.enabled ?? true,
     conditions: conditionsPayload(input.conditions),
+    schedule: input.schedule,
   }
 
   switch (input.action) {
@@ -412,6 +424,7 @@ async function updateFirewallRule(
     priority: input.priority,
     enabled: input.enabled,
     conditions: conditionsPayload(input.conditions),
+    schedule: input.schedule,
   }
 
   switch (input.action) {
@@ -509,7 +522,7 @@ export async function fetchAttackModeRule(
   projectId: string,
   resourceType: FirewallResourceType,
   resourceId?: string,
-): Promise<Models.WafRule | null> {
+): Promise<FirewallRule | null> {
   if (!projectId) return null
   if (!isAttackModeScope(resourceType, resourceId)) return null
 
@@ -525,20 +538,19 @@ export async function fetchAttackModeRule(
     if (!isHttpNotFoundError(error)) throw error
   }
 
-  const queries = [
-    Query.equal('resourceType', resourceType),
-    Query.limit(25),
-  ]
+  const queries = [Query.equal('resourceType', resourceType), Query.limit(25)]
   const normalizedResourceId = resourceId?.trim()
   if (normalizedResourceId) {
     queries.unshift(Query.equal('resourceId', normalizedResourceId))
   }
 
-  const response = await waf.listRules({
-    queries,
-    search: ATTACK_MODE_RULE_NAME,
-    total: false,
-  }).catch(() => null)
+  const response = await waf
+    .listRules({
+      queries,
+      search: ATTACK_MODE_RULE_NAME,
+      total: false,
+    })
+    .catch(() => null)
 
   return (
     (response?.rules || []).find((rule) =>
@@ -563,7 +575,8 @@ export function attackModeRuleQueryOptions(
     ],
     queryFn: () =>
       fetchAttackModeRule(projectId!, resourceType, normalizedResourceId),
-    enabled: !!projectId && isAttackModeScope(resourceType, normalizedResourceId),
+    enabled:
+      !!projectId && isAttackModeScope(resourceType, normalizedResourceId),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -624,8 +637,7 @@ export function useSetFirewallAttackMode(
           name: existing.name,
           description: existing.description,
           priority: existing.priority,
-          difficulty:
-            challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
+          difficulty: challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
           ttl: challenge?.ttl ?? CHALLENGE_TTL_DEFAULT,
         })
       }
@@ -643,8 +655,7 @@ export function useSetFirewallAttackMode(
           description: ATTACK_MODE_RULE_DESCRIPTION,
           priority: ATTACK_MODE_PRIORITY,
           conditions,
-          difficulty:
-            challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
+          difficulty: challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
           ttl: challenge?.ttl ?? CHALLENGE_TTL_DEFAULT,
         })
       }
@@ -948,56 +959,76 @@ export function useFirewallConditionBreakdowns(
   )
 }
 
-/** Page size for the firewall resource scope picker (API / sites / functions). */
-export const FIREWALL_RESOURCE_PICKER_LIMIT = 25
-
 /**
- * Isolated query keys for the firewall resource picker so project realtime
- * invalidations on `['functions'|'sites', 'project', …]` do not refetch the
- * open dropdown on every deployment or execution event.
+ * Prefetch a Firewall tab: the rules for its scope, the unfiltered total the
+ * plan limit counts, the attack mode rule, and (in the background) traffic.
+ * Call from the function, site and project settings Firewall tab loaders.
  */
-export function firewallResourcePickerFunctionsQueryOptions(
-  projectId: string | null | undefined,
-  search?: string,
+export async function prefetchFirewallTabData(
+  queryClient: QueryClient,
+  projectId: string,
+  selection: FirewallResourceSelection,
 ) {
-  const base = functionsQueryOptions(
-    projectId,
-    0,
-    FIREWALL_RESOURCE_PICKER_LIMIT,
-    search,
-  )
-  return queryOptions({
-    ...base,
-    queryKey: [
-      'firewall',
-      'resource-picker',
-      'functions',
-      projectId,
-      search ?? null,
-    ],
-    staleTime: LONG_STALE_TIME,
+  const project = await queryClient.ensureQueryData({
+    queryKey: ['project', projectId],
+    queryFn: () => fetchProject(projectId),
+    staleTime: 5 * 60 * 1000,
   })
-}
 
-export function firewallResourcePickerSitesQueryOptions(
-  projectId: string | null | undefined,
-  search?: string,
-) {
-  const base = sitesQueryOptions(
-    projectId,
-    0,
-    FIREWALL_RESOURCE_PICKER_LIMIT,
-    search,
+  const plan = project?.teamId
+    ? await queryClient
+        .ensureQueryData(organizationPlanQueryOptions(project.teamId))
+        .catch(() => undefined)
+    : undefined
+
+  const dateRange = getStableUsageChartDateRange()
+  const chartInterval = resolveUsageChartIntervalForRange(
+    DEFAULT_USAGE_CHART_INTERVAL,
+    dateRange,
+    plan,
   )
-  return queryOptions({
-    ...base,
-    queryKey: [
-      'firewall',
-      'resource-picker',
-      'sites',
-      projectId,
-      search ?? null,
-    ],
-    staleTime: LONG_STALE_TIME,
-  })
+  const logRetentionHours = getUsageLogRetentionHoursFromPlan(plan)
+
+  await Promise.all([
+    queryClient.ensureQueryData(
+      firewallRulesQueryOptions(
+        projectId,
+        0,
+        DEFAULT_PAGE_SIZE,
+        undefined,
+        selection.resourceType,
+        selection.resourceId,
+      ),
+    ),
+    // Unfiltered total for plan limit checks.
+    queryClient.ensureQueryData(
+      firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
+    ),
+    ...(isAttackModeScope(selection.resourceType, selection.resourceId)
+      ? [
+          queryClient.ensureQueryData(
+            attackModeRuleQueryOptions(
+              projectId,
+              selection.resourceType,
+              selection.resourceId,
+            ),
+          ),
+        ]
+      : []),
+  ])
+
+  // Usage is non-critical: prefetch in background so a slow usage API does not
+  // block the rules list or navigation.
+  void queryClient
+    .prefetchQuery(
+      firewallTrafficOverviewQueryOptions(
+        projectId,
+        dateRange,
+        chartInterval,
+        logRetentionHours,
+        selection.resourceType,
+        selection.resourceId,
+      ),
+    )
+    .catch(() => undefined)
 }

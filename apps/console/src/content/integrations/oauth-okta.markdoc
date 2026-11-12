@@ -1,0 +1,73 @@
+---
+layout: integration
+title: OAuth with Okta
+description: Authenticate users with an existing Okta account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-okta/cover.avif
+category: auth
+product:
+    vendor: Okta
+    description: "Okta is an identity platform that companies use to manage sign-in, single sign-on, and access policies for employees, partners, and customers."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+Okta is an identity platform that companies use to manage sign-in for employees, partners, and customers. An Okta org holds users, groups, and policies, and it exposes OpenID Connect authorization servers that apps use to sign those users in. Many businesses already manage their staff in Okta, so supporting it lets them use the accounts and policies they have.
+
+# How does the integration work?
+
+You can use the Okta OAuth adapter in Appwrite Auth for user authentication and management. Users sign in with the Okta account their organization manages, and your app doesn't need to store another password for them.
+
+Appwrite sends users to an authorization server in your Okta org and requests the `openid`, `profile`, `email`, and `offline_access` scopes. It reads the user's name and email address from Okta's user info endpoint and marks the email as verified only when Okta reports it as verified.
+
+# How to implement
+
+To implement the Okta OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an app integration in Okta
+
+First, sign in to your Okta org as an administrator and open the Admin Console. Go to **Applications**, click **Create App Integration**, choose **OIDC - OpenID Connect** as the sign-in method, and choose **Web Application** as the application type.
+
+Give the app integration a name. Under **Grant type**, keep **Authorization Code** and also select **Refresh Token**, since Appwrite requests the `offline_access` scope. For **Sign-in redirect URIs**, temporarily add `https://temporary-endpoint.com/`. You will replace it with the URI from Appwrite in the next step. Choose who can access the app under **Assignments**, then click **Save**.
+
+On the app's **General** tab, save the **Client ID** and **Client secret** from the **Client Credentials** section. Also note your Okta domain, such as `trial-6400025.okta.com`, and the ID of the authorization server that should issue tokens. You can find authorization servers under **Security** > **API** > **Authorization Servers**. Okta orgs with API Access Management include one named `default`, whose ID is also `default`.
+
+## Step 2: Add the Okta OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Okta** under the **OAuth2 Providers** section.
+
+Fill in the following fields:
+
+| Field | Value |
+| --- | --- |
+| **Client ID** | The client ID of your Okta app integration. |
+| **Client Secret** | The client secret of your Okta app integration. |
+| **Domain** | Your Okta domain without the protocol, for example `trial-6400025.okta.com`. Don't use the admin domain, such as `trial-6400025-admin.okta.com`, or a full URL. Appwrite requires it before you can turn the provider on. |
+| **Authorization Server ID** | The ID of the authorization server that issues tokens, for example `default` or `aus000000000000000h7z`. |
+| **Prompt** | Optional. `login` asks the user to sign in again, `consent` asks for consent again, and `none` skips both screens. |
+
+Turn the provider on and click **Update**. Then copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/okta/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in Okta, edit your app integration and replace the temporary URL in **Sign-in redirect URIs** with this URI.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Okta` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Sign in with a user who is assigned to the app integration, and add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about Okta and Appwrite Auth
+
+If you would like to learn more about Okta and Appwrite Auth, we have some resources that you should visit:
+
+- [Sign users in to your web app using the redirect model](https://developer.okta.com/docs/guides/sign-into-web-app-redirect/)
+- [Okta authorization servers](https://developer.okta.com/docs/concepts/auth-servers/)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)
