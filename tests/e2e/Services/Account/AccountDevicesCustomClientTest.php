@@ -715,15 +715,13 @@ final class AccountDevicesCustomClientTest extends Scope
         /**
          * Test for FAILURE - the device still holds the session, but it can no longer be switched to
          */
-        $this->assertEventually(function () use ($headers, $deviceKey, $deviceCookie, $session) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', \array_merge($headers, [
-                'cookie' => $deviceKey . '=' . $deviceCookie,
-            ]), [
-                'sessionId' => $session['body']['$id'],
-            ]);
-            $this->assertEquals(404, $response['headers']['status-code']);
-            $this->assertEquals('user_device_session_not_found', $response['body']['type']);
-        });
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', \array_merge($headers, [
+            'cookie' => $deviceKey . '=' . $deviceCookie,
+        ]), [
+            'sessionId' => $session['body']['$id'],
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_device_session_not_found', $response['body']['type']);
     }
 
     public function testFallbackCookiesCarryTheDeviceAndTheSession(): void
