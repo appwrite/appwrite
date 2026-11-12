@@ -669,4 +669,5 @@ const MIGRATION_STALL_TIMEOUT = 60 * 60; // 1 hour
 
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',
+    '[skip appwrite]',
 ];
