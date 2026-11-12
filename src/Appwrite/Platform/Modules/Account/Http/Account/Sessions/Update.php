@@ -133,7 +133,12 @@ class Update extends Action
 
             if (!empty($appSecret) && isset($appSecret['version'])) {
                 $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-                $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
+                $iv = \hex2bin($appSecret['iv']);
+                $tag = \hex2bin($appSecret['tag']);
+                $appSecret = empty($key) || $iv === false || $tag === false ? false : OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, $iv, $tag);
+                if ($appSecret === false) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to decrypt the OAuth2 provider secret.');
+                }
             }
 
             $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, '', [], []);
