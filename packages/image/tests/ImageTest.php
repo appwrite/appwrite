@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Image\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Utopia\Image\Exception\CorruptImageException;
 use Utopia\Image\Exception\ImageException;
@@ -12,6 +13,8 @@ use Utopia\Image\Exception\LimitExceededException;
 use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Image;
 
+// The class under test comes from the utopia extension; CI's Extension job runs these with it loaded.
+#[RequiresPhpExtension('utopia')]
 final class ImageTest extends TestCase
 {
     protected function setUp(): void
@@ -1305,11 +1308,6 @@ final class ImageTest extends TestCase
 
     public function testRoundedCornersAfterABackgroundAreTransparent(): void
     {
-        // ImageMagick 6 flattens to an image with no alpha channel, so the corners it cuts are black.
-        if (! (new \ReflectionClass(Image::class))->isInternal() && \Imagick::getVersion()['versionNumber'] < 0x700) {
-            self::markTestSkipped('ImageMagick 7 keeps the alpha channel when flattening; this is ImageMagick 6.');
-        }
-
         $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $image->crop(256, 256)->setBackground('#336699')->setBorder(6, '#ff0000')->setBorderRadius(40);
 

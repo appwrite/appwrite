@@ -8,6 +8,8 @@ parameters:
     - tests
   bootstrapFiles:
     - app/init/constants.php
+  scanFiles:
+    - packages/image/stubs/Image.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:
