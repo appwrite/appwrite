@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import {
+  GitBranch,
   GitCommitHorizontal,
   MessageSquare,
   CircleCheck,
@@ -13,6 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -30,6 +32,7 @@ export function GitSilentModeCard({ func }: GitSilentModeCardProps) {
   const queryClient = useQueryClient()
   const silent = func.providerSilentMode ?? false
   const saved = {
+    branch: func.providerBranch || '',
     deployments: func.providerDeployments ?? true,
     summaries: !silent && (func.providerSummaries ?? true),
     statuses: !silent && (func.providerStatuses ?? true),
@@ -38,7 +41,13 @@ export function GitSilentModeCard({ func }: GitSilentModeCardProps) {
 
   useEffect(() => {
     setSettings(saved)
-  }, [saved.deployments, saved.summaries, saved.statuses, func.$id])
+  }, [
+    saved.branch,
+    saved.deployments,
+    saved.summaries,
+    saved.statuses,
+    func.$id,
+  ])
 
   const updateFunctionMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Function>) => {
@@ -67,6 +76,7 @@ export function GitSilentModeCard({ func }: GitSilentModeCardProps) {
   })
 
   const hasChanges =
+    settings.branch !== saved.branch ||
     settings.deployments !== saved.deployments ||
     settings.summaries !== saved.summaries ||
     settings.statuses !== saved.statuses
@@ -75,6 +85,7 @@ export function GitSilentModeCard({ func }: GitSilentModeCardProps) {
     updateFunctionMutation.mutate({
       // Silent mode overrides these switches, so saving them clears it
       providerSilentMode: false,
+      providerBranch: settings.branch || undefined,
       providerDeployments: settings.deployments,
       providerSummaries: settings.summaries,
       providerStatuses: settings.statuses,
@@ -113,6 +124,56 @@ export function GitSilentModeCard({ func }: GitSilentModeCardProps) {
     },
   ] as const
 
+  const branchDisabledReason = settings.deployments
+    ? ''
+    : t('Needs deploy on push. Manual deployments choose whether to go live.')
+  const branchRow = (
+    <div
+      className={`flex items-center gap-3 px-4 py-3 ${branchDisabledReason ? 'opacity-60' : ''}`}
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted">
+        <GitBranch className="h-4 w-4 text-muted-foreground" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <p className="text-[13px] font-medium text-foreground">
+            {t('Production branch')}
+          </p>
+          {branchDisabledReason && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info
+                  className="h-3.5 w-3.5 text-muted-foreground"
+                  aria-label={branchDisabledReason}
+                />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs text-[13px]">
+                {branchDisabledReason}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+        <p className="text-[12px] text-muted-foreground">
+          {t(
+            'Pushes to this branch go live. Other branches get preview deployments.',
+          )}
+        </p>
+      </div>
+      <BranchSelector
+        className="w-56 shrink-0"
+        label=""
+        projectId={projectId}
+        installationId={func.installationId}
+        providerRepositoryId={func.providerRepositoryId}
+        value={settings.branch}
+        onChange={(branch) => setSettings((prev) => ({ ...prev, branch }))}
+        disabled={
+          branchDisabledReason !== '' || updateFunctionMutation.isPending
+        }
+      />
+    </div>
+  )
+
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
@@ -130,46 +191,48 @@ export function GitSilentModeCard({ func }: GitSilentModeCardProps) {
             const Icon = row.icon
             const disabled = row.disabledReason !== ''
             return (
-              <label
-                key={row.key}
-                htmlFor={`function-git-${row.key}`}
-                className={`flex items-center gap-3 px-4 py-3 ${disabled ? 'opacity-60' : 'cursor-pointer'}`}
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted">
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-[13px] font-medium text-foreground">
-                      {row.label}
-                    </p>
-                    {disabled && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info
-                            className="h-3.5 w-3.5 text-muted-foreground"
-                            aria-label={row.disabledReason}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs text-[13px]">
-                          {row.disabledReason}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+              <Fragment key={row.key}>
+                <label
+                  htmlFor={`function-git-${row.key}`}
+                  className={`flex items-center gap-3 px-4 py-3 ${disabled ? 'opacity-60' : 'cursor-pointer'}`}
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <p className="text-[12px] text-muted-foreground">
-                    {row.description}
-                  </p>
-                </div>
-                <Switch
-                  id={`function-git-${row.key}`}
-                  checked={settings[row.key] && !disabled}
-                  onCheckedChange={(checked) =>
-                    setSettings((prev) => ({ ...prev, [row.key]: checked }))
-                  }
-                  disabled={disabled || updateFunctionMutation.isPending}
-                />
-              </label>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[13px] font-medium text-foreground">
+                        {row.label}
+                      </p>
+                      {disabled && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info
+                              className="h-3.5 w-3.5 text-muted-foreground"
+                              aria-label={row.disabledReason}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs text-[13px]">
+                            {row.disabledReason}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                    <p className="text-[12px] text-muted-foreground">
+                      {row.description}
+                    </p>
+                  </div>
+                  <Switch
+                    id={`function-git-${row.key}`}
+                    checked={settings[row.key] && !disabled}
+                    onCheckedChange={(checked) =>
+                      setSettings((prev) => ({ ...prev, [row.key]: checked }))
+                    }
+                    disabled={disabled || updateFunctionMutation.isPending}
+                  />
+                </label>
+                {row.key === 'deployments' && branchRow}
+              </Fragment>
             )
           })}
         </div>
