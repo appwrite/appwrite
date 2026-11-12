@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { formatDateTime } from '@/lib/date-utils'
 import {
+  isProjectBackupPolicy,
   useBackupPolicies,
   useBackupArchives,
   useDatabaseRestoreMigrations,
@@ -214,17 +215,26 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   })()
 
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
+  const databasePolicyCount = policies.filter(
+    (policy) => !isProjectBackupPolicy(policy),
+  ).length
   const archives: Models.BackupArchive[] = archivesData?.archives || []
   const archivesTotal =
     typeof archivesData?.total === 'bigint'
       ? Number(archivesData.total)
       : archivesData?.total || 0
   const isAtBackupPoliciesLimit = isBackupPoliciesAtPlanLimit(
-    policies.length,
+    databasePolicyCount,
     backupPoliciesLimit,
   )
   const showPlanLimitWarning =
-    backupPoliciesLimit > 0 && policies.length >= backupPoliciesLimit * 0.5
+    backupPoliciesLimit > 0 && databasePolicyCount >= backupPoliciesLimit * 0.5
+  const policiesBadge =
+    backupPoliciesLimit === 0
+      ? t('Unlimited')
+      : databasePolicyCount === policies.length
+        ? `${policies.length}/${backupPoliciesLimit}`
+        : String(policies.length)
   const createPolicyDisabledTooltip = isAtBackupPoliciesLimit
     ? t("You've reached the limit for this resource on your plan")
     : undefined
@@ -661,7 +671,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
       ) : null}
       {organizationPlan !== undefined ? (
         <PlanLimitWarning
-          currentCount={policies.length}
+          currentCount={databasePolicyCount}
           limit={backupPoliciesLimit}
           planName={planName}
           resourceName="backup policies"
@@ -701,9 +711,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
                 variant="secondary"
                 className="text-[12px] font-normal"
               >
-                {backupPoliciesLimit > 0
-                  ? `${policies.length}/${backupPoliciesLimit}`
-                  : t('Unlimited')}
+                {policiesBadge}
               </Badge>
             </div>
             {isAtBackupPoliciesLimit ? (
@@ -787,28 +795,38 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
                             <h4 className="text-[14px] font-medium text-foreground">
                               {policy.name || t('Unnamed Policy')}
                             </h4>
+                            {isProjectBackupPolicy(policy) ? (
+                              <Badge
+                                variant="secondary"
+                                className="text-[12px] font-normal"
+                              >
+                                {t('Project-wide')}
+                              </Badge>
+                            ) : null}
                           </div>
                           <p className="text-[13px] text-muted-foreground">
                             {scheduleText} • {retentionText}
                           </p>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <RowActionsMenuTrigger />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedPolicy(policy)
-                                setDeletePolicyDialogOpen(true)
-                              }}
-                            >
-                              <MenuItemContent icon={Trash2}>
-                                {t('Delete')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {isProjectBackupPolicy(policy) ? null : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <RowActionsMenuTrigger />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedPolicy(policy)
+                                  setDeletePolicyDialogOpen(true)
+                                }}
+                              >
+                                <MenuItemContent icon={Trash2}>
+                                  {t('Delete')}
+                                </MenuItemContent>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                       <div className="border-t border-border my-3" />
                       <div className="grid grid-cols-2 gap-4 text-[13px]">
@@ -1156,7 +1174,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
         }}
         isLoading={createPolicyMutation.isPending}
         databaseId={databaseId}
-        existingPoliciesCount={policies.length}
+        existingPoliciesCount={databasePolicyCount}
         backupPoliciesLimit={backupPoliciesLimit}
         orgId={project?.teamId}
         showContactSales={showContactSales}
