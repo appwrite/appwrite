@@ -5,7 +5,7 @@
  */
 
 import { useQuery, queryOptions } from '@tanstack/react-query'
-import { Query } from '@appwrite.io/console'
+import { BackupServices, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
@@ -59,6 +59,47 @@ export async function fetchBackupPolicies(
 
   const response = await projectSdk.backups.listPolicies({ queries })
   return response
+}
+
+export async function fetchProjectBackupPolicies(
+  projectId: string,
+): Promise<Models.BackupPolicyList> {
+  if (!projectId) {
+    return { policies: [], total: 0 }
+  }
+
+  return sdk.forProject(projectId).backups.listPolicies({
+    queries: [Query.isNull('resourceId'), Query.orderDesc('$createdAt')],
+  })
+}
+
+export function isProjectBackupPolicy(policy: Models.BackupPolicy): boolean {
+  return !policy.resourceId
+}
+
+export function coversDatabaseKind(
+  policy: Models.BackupPolicy,
+  dbKind: DatabaseRouteKind = 'tablesdb',
+): boolean {
+  return policy.services.some(
+    (service) => service === BackupServices.Databases || service === dbKind,
+  )
+}
+
+export function withProjectBackupPolicies(
+  list: Models.BackupPolicyList | undefined,
+  projectPolicies: Models.BackupPolicyList | undefined,
+  dbKind?: DatabaseRouteKind,
+): Models.BackupPolicyList | undefined {
+  if (!list) return list
+  const covering = (projectPolicies?.policies ?? []).filter((policy) =>
+    coversDatabaseKind(policy, dbKind),
+  )
+  if (covering.length === 0) return list
+  return {
+    total: Number(list.total) + covering.length,
+    policies: [...covering, ...list.policies],
+  }
 }
 
 /**
@@ -124,6 +165,22 @@ export function backupPoliciesQueryOptions(
   })
 }
 
+export function projectBackupPoliciesQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['backup-policies', 'project', projectId, 'project-wide'],
+    queryFn: () => fetchProjectBackupPolicies(projectId!),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 /**
  * Query options for fetching backup archives for a database
  *
@@ -176,10 +233,25 @@ export function useBackupPolicies(
     databaseId,
     options?.dbKind,
   )
-  return useQuery({
+  const projectQueryOpts = projectBackupPoliciesQueryOptions(projectId)
+  const enabled = options?.enabled ?? true
+  const policies = useQuery({
     ...queryOpts,
-    enabled: queryOpts.enabled && (options?.enabled ?? true),
+    enabled: queryOpts.enabled && enabled,
   })
+  const projectPolicies = useQuery({
+    ...projectQueryOpts,
+    enabled: projectQueryOpts.enabled && enabled,
+  })
+  return {
+    ...policies,
+    data: withProjectBackupPolicies(
+      policies.data,
+      projectPolicies.data,
+      options?.dbKind,
+    ),
+    isLoading: policies.isLoading || projectPolicies.isLoading,
+  }
 }
 
 /**
