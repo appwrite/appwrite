@@ -1,0 +1,11 @@
+id;name;age;city;country;email;phone;department;role;joined
+1;Alice;23;New York;USA;alice@example.com;555-0101;Engineering;Developer;2020-01-15
+2;Bob;30;London;UK;bob@example.com;555-0102;Data;Analyst;2019-05-20
+3;Charlie;25;Tokyo;Japan;charlie@example.com;555-0103;Product;Manager;2021-08-10
+4;Diana;28;Sydney;Australia;diana@example.com;555-0104;Engineering;Designer;2020-04-12
+5;Ethan;31;Toronto;Canada;ethan@example.com;555-0105;Marketing;Lead;2018-11-23
+6;Faith;27;Berlin;Germany;faith@example.com;555-0106;Finance;Accountant;2017-07-14
+7;George;35;Paris;France;george@example.com;555-0107;Legal;Advisor;2021-02-05
+8;Hannah;26;Singapore;Singapore;hannah@example.com;555-0108;Operations;Coordinator;2019-09-27
+9;Ian;29;Dubai;UAE;ian@example.com;555-0109;Engineering;QA;2022-03-19
+10;Julia;24;Zurich;Switzerland;julia@example.com;555-0110;Research;Scientist;2020-12-01

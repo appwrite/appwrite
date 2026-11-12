@@ -3,8 +3,6 @@
  * SLOW_CALL_THRESHOLD_MS is reported to Sentry. Does not throw or break the UI.
  */
 
-import * as Sentry from '@sentry/tanstackstart-react'
-import { initSentryClient } from '@/lib/sentry/init-client'
 import { isSentryReportingEnabled } from '@/lib/sentry/report-error'
 
 export const SLOW_CALL_THRESHOLD_MS = 5000
@@ -19,25 +17,28 @@ function reportSlowSdkCall(
   durationMs: number,
 ): void {
   if (!isSentryEnabled()) return
-  if (!initSentryClient()) return
-  try {
-    Sentry.captureMessage(`Slow Appwrite SDK call: ${scope}.${method}`, {
-      level: 'warning',
-      tags: {
-        sdk_scope: scope,
-        sdk_method: method,
-        duration_ms: String(durationMs),
-      },
-      extra: {
-        scope,
-        method,
-        durationMs,
-        thresholdMs: SLOW_CALL_THRESHOLD_MS,
-      },
-    })
-  } catch {
-    // Never break the app if Sentry fails
-  }
+  void import('@/lib/sentry/init-client').then(({ withSentryClient }) => {
+    try {
+      withSentryClient((Sentry) => {
+        Sentry.captureMessage(`Slow Appwrite SDK call: ${scope}.${method}`, {
+          level: 'warning',
+          tags: {
+            sdk_scope: scope,
+            sdk_method: method,
+            duration_ms: String(durationMs),
+          },
+          extra: {
+            scope,
+            method,
+            durationMs,
+            thresholdMs: SLOW_CALL_THRESHOLD_MS,
+          },
+        })
+      })
+    } catch {
+      // Never break the app if Sentry fails
+    }
+  })
 }
 
 function isPromiseLike(

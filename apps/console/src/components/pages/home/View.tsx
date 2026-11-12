@@ -47,14 +47,14 @@ import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 import type { ProductNavItemId } from '@/lib/products/types'
 import {
-  getMarketingHomeOgImage,
-  MARKETING_HOME_OG_IMAGE_HEIGHT,
-  MARKETING_HOME_OG_IMAGE_WIDTH,
   getMarketingPageMetaTags,
+  MARKETING_HOME_OG_IMAGE_PARAMS,
   MARKETING_HOMEPAGE_TITLE,
 } from '@/lib/marketing/route-meta'
 import { getEnglishCatalog, useI18n } from '@/lib/i18n'
 import { getDefaultSiteOrigin } from '@/lib/marketing/site-origin'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
+import { getOrganizationSchema, getWebSiteSchema } from '@/lib/seo/organization'
 
 const HOME_COPY = getEnglishCatalog().website.home
 
@@ -252,9 +252,7 @@ export function getHomePageHead() {
         pageName: 'Home',
         title: MARKETING_HOMEPAGE_TITLE,
         description: HOME_COPY.seoDescription,
-        ogImage: getMarketingHomeOgImage(),
-        ogImageWidth: MARKETING_HOME_OG_IMAGE_WIDTH,
-        ogImageHeight: MARKETING_HOME_OG_IMAGE_HEIGHT,
+        ogImageParams: MARKETING_HOME_OG_IMAGE_PARAMS,
       }),
       { property: 'og:url', content: canonical },
     ],
@@ -271,6 +269,15 @@ export function getHomePageHead() {
         as: 'image',
         href: HOME_HERO_DARK_SRC,
         media: '(prefers-color-scheme: dark)',
+      },
+    ],
+    scripts: [
+      {
+        type: 'application/ld+json',
+        children: stringifyJsonLd({
+          '@context': 'https://schema.org',
+          '@graph': [getOrganizationSchema(), getWebSiteSchema()],
+        }),
       },
     ],
   }

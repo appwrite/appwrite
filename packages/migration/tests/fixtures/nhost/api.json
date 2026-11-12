@@ -1,0 +1,266 @@
+{
+  "uuid": "906a95b0-f861-4ab4-9b11-b3c6372852e8",
+  "lastMigration": 27,
+  "name": "NHost",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 80,
+  "hostname": "",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "d2ef5c52-336a-420f-a962-15a7974ca7a5",
+      "type": "http",
+      "documentation": "Get File URL",
+      "method": "get",
+      "endpoint": "v1/files/:id/presignedurl",
+      "responses": [
+        {
+          "uuid": "e7d4239d-63aa-4111-a86a-304b7278817f",
+          "body": "{\n    \"error\": {\n        \"message\": \"you are not authorized\"\n    }\n}",
+          "latency": 0,
+          "statusCode": 403,
+          "label": "No Hasura Key",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        },
+        {
+          "uuid": "38bdd9f1-5786-46a0-8165-1c830dc05b6f",
+          "body": "{\n    \"url\": \"http://nhost-storage/v1/files/{{urlParam 'id'}}/presignedurl/content?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=XXXXXXXXXXXXXXXXXXXXXXXXXXXX&X-Amz-Date=2023XXXXXXXXXXXXXXX&X-Amz-Expires=30&X-Amz-SignedHeaders=host&X-Amz-Signature=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\",\n    \"expiration\": 30\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Success",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "header",
+              "modifier": "X-Hasura-Admin-Secret",
+              "value": "hasuraSecret",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "c9d0a861-f15d-4017-9092-3341deabf43b",
+      "type": "http",
+      "documentation": "Get File",
+      "method": "get",
+      "endpoint": "v1/files/:id/presignedurl/content",
+      "responses": [
+        {
+          "uuid": "5e7364e6-d39c-47d0-8a37-c8506273b1f2",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "FILE",
+          "filePath": "./tulips.png",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "header",
+              "modifier": "X-Amz-Algorithm",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            },
+            {
+              "target": "header",
+              "modifier": "X-Amz-Credential",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            },
+            {
+              "target": "header",
+              "modifier": "X-Amz-Date",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            },
+            {
+              "target": "header",
+              "modifier": "X-Amz-Expires",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            },
+            {
+              "target": "header",
+              "modifier": "X-Amz-SignedHeaders",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            },
+            {
+              "target": "header",
+              "modifier": "X-Amz-Signature",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            }
+          ],
+          "rulesOperator": "AND",
+          "disableTemplating": true,
+          "fallbackTo404": false,
+          "default": true
+        },
+        {
+          "uuid": "3c6335b4-cbfc-43ad-9a45-b2cc22d3f423",
+          "body": "{\n    \"error\": {\n        \"message\": \"signature already expired\"\n    }\n}",
+          "latency": 0,
+          "statusCode": 403,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "header",
+              "modifier": "X-Amz-Algorithm",
+              "value": "AWS4-HMAC-SHA256",
+              "invert": true,
+              "operator": "null"
+            },
+            {
+              "target": "header",
+              "modifier": "X-Amz-Date",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            },
+            {
+              "target": "header",
+              "modifier": "X-Amz-Expires",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            }
+          ],
+          "rulesOperator": "AND",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false
+        },
+        {
+          "uuid": "04f4b226-9933-4286-b086-7f28f05657de",
+          "body": "{\n    \"error\": {\n        \"message\": \"problem parsing X-Amz-Expires: strconv.Atoi: parsing \\\"\\\": invalid syntax\"\n    }\n}",
+          "latency": 0,
+          "statusCode": 400,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "de59d199-83fc-469a-8af6-f230f12cec79",
+      "type": "http",
+      "documentation": "Sanity Check",
+      "method": "get",
+      "endpoint": "",
+      "responses": [
+        {
+          "uuid": "3c3c843e-0784-4273-9cce-982acf3da07c",
+          "body": "{\"Hello\": \"World!\"}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "d2ef5c52-336a-420f-a962-15a7974ca7a5"
+    },
+    {
+      "type": "route",
+      "uuid": "c9d0a861-f15d-4017-9092-3341deabf43b"
+    },
+    {
+      "type": "route",
+      "uuid": "de59d199-83fc-469a-8af6-f230f12cec79"
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "proxyReqHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "proxyResHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "data": []
+}

@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { resolveHeadingId } from '@/lib/docs/markdoc-heading'
+import { markdocTableMinWidth } from '@/lib/docs/markdoc-table'
 import {
   DOCS_BODY_TEXT_CLASS,
   DOCS_TABLE_CELL_TEXT_CLASS,
@@ -80,7 +81,8 @@ export function Heading({
               'mb-3 mt-7 text-[18px] font-semibold leading-snug @[640px]:text-[19px]',
             level === 3 &&
               'mb-2 mt-6 text-[17px] font-semibold @[640px]:text-[18px]',
-            level >= 4 && 'mb-2 mt-5 text-[16px] font-semibold @[640px]:text-[17px]',
+            level >= 4 &&
+              'mb-2 mt-5 text-[16px] font-semibold @[640px]:text-[17px]',
           ]
         : [
             level === 1 &&
@@ -107,7 +109,10 @@ export function Heading({
         : 'size-3.5'
 
   const content = (
-    <DocsHeadingLink headingId={headingId} linkIconSizeClass={linkIconSizeClass}>
+    <DocsHeadingLink
+      headingId={headingId}
+      linkIconSizeClass={linkIconSizeClass}
+    >
       {displayChildren}
     </DocsHeadingLink>
   )
@@ -214,12 +219,17 @@ function normalizeMarkdocTableColumnWidths(
 function buildMarkdocTableColStyles(
   columnWidths: Array<number | undefined>,
 ): Array<CSSProperties | undefined> {
-  const fixedTotalPx = columnWidths.reduce((sum, width) => sum + (width ?? 0), 0)
+  const fixedTotalPx = columnWidths.reduce(
+    (sum, width) => sum + (width ?? 0),
+    0,
+  )
   const fillCount = columnWidths.filter((width) => width == null).length
 
   if (fillCount === 0) {
     return columnWidths.map((width) =>
-      width != null ? { width: `${width}px`, minWidth: `${width}px` } : undefined,
+      width != null
+        ? { width: `${width}px`, minWidth: `${width}px` }
+        : undefined,
     )
   }
 
@@ -282,6 +292,8 @@ export function MarkdocTableRoot({
     [columnWidths, hasColumnWidths],
   )
 
+  const minWidth = markdocTableMinWidth(columnWidths)
+
   const containerRef = useRef<HTMLDivElement>(null)
   const isOverflowing = useTableOverflow(containerRef)
 
@@ -296,6 +308,7 @@ export function MarkdocTableRoot({
       <Table
         withScrollContainer={false}
         className={hasColumnWidths ? 'table-fixed' : undefined}
+        style={minWidth ? { minWidth: `${minWidth}px` } : undefined}
       >
         {hasColumnWidths ? (
           <colgroup>
@@ -330,7 +343,11 @@ export function MarkdocTableBody({ children }: { children?: ReactNode }) {
 MarkdocTableBody.displayName = 'MarkdocTableBody'
 
 export function MarkdocTableRow({ children }: { children?: ReactNode }) {
-  return <TableRow className="border-b border-border hover:bg-muted/30">{children}</TableRow>
+  return (
+    <TableRow className="border-b border-border hover:bg-muted/30">
+      {children}
+    </TableRow>
+  )
 }
 MarkdocTableRow.displayName = 'MarkdocTableRow'
 
@@ -341,9 +358,7 @@ export function MarkdocTableHead({
   width?: number
 }) {
   return (
-    <TableHead
-      className={cn(tableHeadClassName, 'whitespace-normal bg-card')}
-    >
+    <TableHead className={cn(tableHeadClassName, 'whitespace-normal bg-card')}>
       {children}
     </TableHead>
   )
@@ -358,7 +373,9 @@ export function MarkdocTableCell({
   proseVariant?: MarkdocProseVariant
 }) {
   const cellTextClass =
-    proseVariant === 'blog' ? BLOG_TABLE_CELL_TEXT_CLASS : DOCS_TABLE_CELL_TEXT_CLASS
+    proseVariant === 'blog'
+      ? BLOG_TABLE_CELL_TEXT_CLASS
+      : DOCS_TABLE_CELL_TEXT_CLASS
 
   return (
     <TableCell
@@ -366,7 +383,10 @@ export function MarkdocTableCell({
         'px-4 py-3 align-top whitespace-normal',
         cellTextClass,
         '[&_strong]:font-semibold [&_strong]:text-foreground',
-        '[&_code]:[overflow-wrap:anywhere]',
+        // Narrow screens break inline code anywhere so tables can shrink to
+        // fit. Wider screens keep identifiers whole and fall back to the
+        // container's horizontal scroll when a table still doesn't fit.
+        '[&_code]:[overflow-wrap:anywhere] md:[&_code]:[overflow-wrap:break-word]',
       )}
     >
       <DocsMarkdocInTableProvider>{children}</DocsMarkdocInTableProvider>

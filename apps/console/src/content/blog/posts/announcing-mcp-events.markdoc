@@ -1,0 +1,122 @@
+---
+layout: post
+title: "Announcing MCP Events: your agent hears about changes in your Appwrite project"
+description: The Appwrite MCP server now supports MCP Events. Agents can subscribe to new users, failed function executions, finished deployments, new rows, and uploaded files, and react the moment they happen.
+date: 2026-10-19
+cover: /images/blog/announcing-mcp-events/cover.avif
+timeToRead: 5
+author: chirag-aggarwal
+category: announcements, ai
+featured: false
+faqs:
+  - question: "What are MCP Events?"
+    answer: "MCP Events is an extension to the Model Context Protocol that lets a client subscribe to things that happen on a server and hear about them when they occur. Instead of the agent polling with tool calls, the server pushes each event to the agent. The proposal is tracked as [SEP-3415](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415) in the MCP specification repository."
+  - question: "Which Appwrite events can an agent subscribe to?"
+    answer: "Six events at launch: `users.user.created`, `functions.execution.failed`, `functions.deployment.completed`, `sites.deployment.completed`, `tablesdb.row.created`, and `storage.file.created`. Every event takes a `project_id`, and most also take the ID of the function, site, table, or bucket to watch."
+  - question: "What is the difference between push and webhook delivery?"
+    answer: "Push delivery (`events/stream`) is for agents running on your machine, such as Pi with the `pi-mcp-events` extension. The agent holds a request open and events arrive on it. Webhook delivery (`events/subscribe`) is for clients that have a public HTTPS endpoint: the server sends a signed POST to that endpoint for every event."
+  - question: "Does the MCP server store my subscriptions?"
+    answer: "No. Each subscription is one Appwrite [webhook](/docs/apis/webhooks) in your own project, created with your OAuth token. The subscription details are encrypted and stored on that webhook, so the MCP server keeps no database of subscriptions. You can see these webhooks in the Appwrite Console, and they are deleted when you unsubscribe or close the stream."
+  - question: "What data does an event contain?"
+    answer: "Only IDs and metadata, such as `user_id` and `created_at` for a new user. Event payloads never contain row contents, emails, phone numbers, or execution logs. The agent fetches any details it needs with a normal tool call, using the same permissions you granted at sign in."
+  - question: "Do MCP Events count against my plan?"
+    answer: "Each active subscription or open stream uses one webhook in the project. The Free plan allows 2 webhooks per project, and Pro allows unlimited webhooks. If you reach the limit, the server returns a clear error so the agent can tell you to upgrade or unsubscribe from another event."
+---
+
+Until now, an AI agent connected to the Appwrite MCP server could only act when you asked it to. It could create a user, deploy a function, or read a table, but it had no way of knowing that something had changed in your project since the last time it looked. If a function started failing at 2 AM, the agent found out when you did.
+
+Today, we are announcing **MCP Events** for the [Appwrite MCP server](/docs/tooling/ai/mcp-servers). Your agent can now subscribe to events in your Appwrite project, such as a new user signing up, a function execution failing, or a deployment finishing, and react the moment they happen.
+
+In this demo, [Pi](https://pi.dev) subscribes to new users in an Appwrite project and goes idle. In a second terminal, Codex creates a user through the Appwrite MCP server. The event reaches Pi in about a second and wakes it up without a new prompt. Pi looks up the new user, reports back, and then unsubscribes.
+
+{% only_dark %}
+![Pi subscribes to new users in an Appwrite project and waits. Codex creates a user, the event wakes Pi, and Pi reports the new user and unsubscribes](/images/blog/announcing-mcp-events/dark/demo.gif)
+{% /only_dark %}
+{% only_light %}
+![Pi subscribes to new users in an Appwrite project and waits. Codex creates a user, the event wakes Pi, and Pi reports the new user and unsubscribes](/images/blog/announcing-mcp-events/demo.gif)
+{% /only_light %}
+
+# What are MCP Events {% #what-are-mcp-events %}
+
+MCP Events is an extension to the [Model Context Protocol](/blog/post/what-is-mcp) that lets a client subscribe to things that happen on a server. The proposal is tracked as [SEP-3415](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415) in the MCP specification repository, and the Appwrite MCP server implements it today.
+
+An MCP server that supports events adds three things to the protocol:
+
+- **Catalog:** `events/list` tells the client which events exist and which arguments each one takes.
+- **Subscriptions:** The client asks for an event with specific arguments, such as "new users in project X".
+- **Delivery:** The server sends each matching event to the client as it happens, without the client asking again.
+
+The change sounds small, but it turns the agent from something you have to prompt into something that can keep watching your project for you. You can ask it to "tell me when the deployment finishes", "investigate any failed execution of the `checkout` function", or "welcome every new user in our Slack", and walk away.
+
+On the Appwrite MCP server, each subscription is an Appwrite [webhook](/docs/apis/webhooks) in the project you subscribe to, created with your OAuth token, so the server keeps no database of subscriptions. The [Events documentation](/docs/tooling/ai/mcp-servers#events) covers how subscriptions work, their permissions, and their limits.
+
+## Two ways to receive events {% #delivery %}
+
+Agents run in very different places, so the Appwrite MCP server supports both delivery modes from the proposal:
+
+- **Push** (`events/stream`): for agents that run on your machine, such as Pi, which have no public URL that a server could call. The agent holds one request open, and the server streams each event back on it, with a heartbeat every 25 seconds to keep the connection alive.
+- **Webhook** (`events/subscribe`): for clients with a public HTTPS endpoint, such as hosted agents. The server verifies the endpoint with a challenge, then sends a signed POST to it for every event.
+
+# Events you can subscribe to {% #events %}
+
+The Appwrite MCP server launches with six events. Every event takes a required `project_id`, and payloads carry IDs and metadata only.
+
+| Event | Arguments | Delivered when | Payload |
+| --- | --- | --- | --- |
+| `users.user.created` | `project_id` | A user is created | `user_id`, `created_at` |
+| `functions.execution.failed` | `project_id`, `function_id` | An execution of the function fails | `function_id`, `execution_id`, `status`, `trigger`, `response_status_code`, `created_at` |
+| `functions.deployment.completed` | `project_id`, `function_id`, `status` (optional) | A deployment becomes `ready` or `failed` | `function_id`, `deployment_id`, `status`, `updated_at` |
+| `sites.deployment.completed` | `project_id`, `site_id`, `status` (optional) | A site deployment becomes `ready` or `failed` | `site_id`, `deployment_id`, `status`, `updated_at` |
+| `tablesdb.row.created` | `project_id`, `database_id`, `table_id` | A row is created in the table | `database_id`, `table_id`, `row_id`, `created_at` |
+| `storage.file.created` | `project_id`, `bucket_id` | A file is uploaded to the bucket | `bucket_id`, `file_id`, `mime_type`, `size`, `created_at` |
+
+Each subscription is scoped to the exact resource you name. These six events are a starting point, and we plan to add more based on what you want your agents to watch.
+
+# Try it with Pi {% #try-it %}
+
+[Pi](https://pi.dev) supports push delivery today through the [`pi-mcp-events`](https://github.com/mikekelly/pi-mcp-events) extension.
+
+1. Install the MCP adapter and the events extension:
+
+    ```bash
+    pi install npm:pi-mcp-adapter@^5.1.0
+    pi install npm:@realmikekelly/pi-mcp-events@^0.2.0
+    ```
+
+2. Add the Appwrite MCP server to `~/.pi/agent/mcp-adapter.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "appwrite": {
+          "url": "https://mcp.appwrite.io/",
+          "auth": "oauth"
+        }
+      }
+    }
+    ```
+
+3. Start Pi with `pi` and sign in to Appwrite when your browser opens.
+
+4. Ask Pi to subscribe:
+
+    `Subscribe with mcp_events to users.user.created on the appwrite server for project_id <PROJECT_ID>, then finish your turn and wait. Whenever an event arrives, look up that user and tell me their name and email.`
+
+Create a user in the Appwrite Console, or have another agent do it. Pi wakes up without a new prompt, looks up the user with the Appwrite tools, and reports their name and email.
+
+When you are done, ask Pi to unsubscribe. The server closes the stream and deletes the webhook it created for the subscription, so nothing is left behind in your project.
+
+# What's next {% #whats-next %}
+
+MCP Events is still a proposal, and client support is just getting started. We will keep the Appwrite MCP server in step with the specification as it evolves.
+
+Tell us which events you need on [Discord](https://appwrite.io/discord) or in the [MCP server repository](https://github.com/appwrite/mcp).
+
+# Resources {% #resources %}
+
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [MCP Events documentation](/docs/tooling/ai/mcp-servers#events)
+- [MCP Events design notes](https://github.com/appwrite/mcp/blob/main/docs/events.md)
+- [SEP-3415: Events extension](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415)
+- [pi-mcp-events on GitHub](https://github.com/mikekelly/pi-mcp-events)
+- [Discord community](https://appwrite.io/discord)

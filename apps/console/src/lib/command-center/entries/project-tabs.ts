@@ -19,6 +19,7 @@ import {
   Layers,
   Mail,
   Megaphone,
+  Radio,
   Send,
   Settings,
   Shield,
@@ -173,9 +174,26 @@ const PROJECT_TABS: CommandEntry[] = [
     description: 'Relying party ID and allowed origins for passkey sign-in',
     icon: Fingerprint,
     keywords: ['passkey', 'passkeys', 'webauthn', 'relying party', 'origins'],
-    available: (ctx) =>
-      ctx.passkeys && canShowAuthSecuritySettings(ctx.access, ctx.features),
+    available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/auth/policies/passkeys`,
+  },
+  {
+    id: 'project.tab.auth.policies.realtime',
+    scopes: ['project'],
+    kind: 'tab',
+    group: 'Auth',
+    label: 'Auth · Policies · Realtime',
+    description: 'Require a session to subscribe to realtime channels',
+    icon: Radio,
+    keywords: [
+      'realtime',
+      'websocket',
+      'guest',
+      'anonymous',
+      'unauthenticated',
+    ],
+    available: (ctx) => canShowAuthSecuritySettings(ctx.access, ctx.features),
+    to: (ctx) => `/projects/${ctx.projectId}/auth/policies/realtime`,
   },
   {
     id: 'project.tab.auth.social-providers',
@@ -388,19 +406,20 @@ const PROJECT_TABS: CommandEntry[] = [
     to: (ctx) => `/projects/${ctx.projectId}/settings/smtp`,
   },
 
-  // ── Security ────────────────────────────────────────────────────────────
   {
     id: 'project.tab.firewall',
     scopes: ['project'],
     kind: 'tab',
-    group: 'Security',
-    label: 'Security · Firewall rules',
+    group: 'Settings',
+    label: 'Settings · Firewall',
     description: 'IP allow/block lists and request rules',
     icon: Shield,
     keywords: ['firewall', 'rules', 'ip', 'allowlist', 'deny', 'rate limit'],
     available: () => isCloudProfile(),
-    to: (ctx) => `/projects/${ctx.projectId}/firewall`,
+    to: (ctx) => `/projects/${ctx.projectId}/settings/firewall`,
   },
+
+  // ── Security ────────────────────────────────────────────────────────────
   {
     id: 'project.create.firewall-rule',
     scopes: ['project'],

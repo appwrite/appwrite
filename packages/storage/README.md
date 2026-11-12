@@ -71,11 +71,29 @@ $device = new S3(
     'YOUR_BUCKET_NAME.s3.us-east-1.amazonaws.com', // Host
     'us-east-1', // Region
     Acl::Private, // Access control (default: private)
-    bucket: 'YOUR_BUCKET_NAME', // Optional: enables server-side copy
+    bucket: 'YOUR_BUCKET_NAME', // Optional: addresses bucket requests and enables server-side copy
 );
 ```
 
 When the bucket name is known, a same-device `copy()` — and therefore `move()` — runs entirely server side (`CopyObject`, or `UploadPartCopy` above 5 GB), so no bytes move through PHP. The provider-specific adapters below pass their bucket automatically. Without it, `copy()` falls back to a streamed download and re-upload.
+
+The bucket also decides where requests that address the bucket itself go: `listFiles()`, `listUploads()`, `deletePath()` and `delete($path, true)`. Like the AWS SDKs' force-path-style option, an endpoint is either:
+
+- **virtual-hosted**: the endpoint addresses the bucket (`YOUR_BUCKET_NAME.s3.us-east-1.amazonaws.com`, `http://minio:9000/YOUR_BUCKET_NAME/`, or `https://storage.example.com/s3/YOUR_BUCKET_NAME/`), and paths are keys in it.
+- **path-style**: the endpoint is the bare service (`http://minio:9000`), and every path, the root included, begins with `YOUR_BUCKET_NAME/`. Paths returned by `listFiles()` and `listUploads()` begin with it too.
+
+```php
+$device = new S3(
+    'YOUR_BUCKET_NAME/root', // Root path, starting with the bucket
+    'YOUR_ACCESS_KEY',
+    'YOUR_SECRET_KEY',
+    'http://minio:9000', // Host
+    'us-east-1', // Region
+    bucket: 'YOUR_BUCKET_NAME',
+);
+```
+
+Pass `pathStyle: true` or `pathStyle: false` to choose; by default a device with a bucket is path-style unless its host is the bucket name (a dotted domain named after the bucket), its host begins with `YOUR_BUCKET_NAME.`, or the last segment of the endpoint path is the bucket. Hosts compare case-insensitively, the endpoint path case-sensitively. A custom domain whose host is not the bucket name, or a service host that happens to begin with `YOUR_BUCKET_NAME.`, must say which it is. On a path-style device, a listing prefix outside the bucket, or holding a `.` or `..` segment, throws `InvalidArgumentException` before any request is made. `deletePath()` and `delete($path, true)` resolve `.` and `..`, and throw `InvalidArgumentException` for the whole root (`deletePath()` only), the whole bucket, or a directory outside the root. `delete()` refuses a path that names a bucket. `deletePath()` treats its path as a directory, so `deletePath('images')` leaves `images-archive/` alone. `deletePath()` and `delete($path, true)` throw `RemoteException` when the service keeps any of the objects, when a listing is not a ListObjectsV2 result, or when a truncated listing comes back without a new continuation token.
 
 The provider-specific adapters below build the host for you from a bucket and region. Every S3-family adapter also accepts optional named constructor arguments:
 
@@ -264,6 +282,7 @@ $device->move('source/path.jpg', 'target/path.jpg');
 Every file carries an ETag, reported by `getFileInfo()` and returned by every write, conditional or not. Naming it makes an operation apply to that version of the file and no other, which is what coordinating several processes through one file takes: a lock, a lease, or a dataset that must never be read half old and half new.
 
 ```php
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 
 // Write only where nothing is yet; exactly one of several racing callers succeeds
@@ -278,6 +297,13 @@ $etag = $device->replace('locks/refresh', new Stream($token), $etag, 'text/plain
 
 // Read only while the file still is the version you know
 $chunk = $device->read('dataset.bin', $offset, $length, $etag);
+
+// Read only if the file changed after a time: one request, and no body if it did not
+try {
+    $body = $device->read('report.pdf', modifiedSince: new DateTimeImmutable('-1 hour'));
+} catch (NotModifiedException) {
+    // Unchanged in the last hour
+}
 ```
 
 On S3 the check and the operation are one request (`If-None-Match`, `If-Match`), so nothing can slip in between. On the local disk the ETag is the file's MD5 hash. `create()` opens the file exclusively and has no window at all; `replace()` checks the hash before writing, so a replacement landing between the two goes unnoticed and the last writer wins. Local writes land by renaming a finished temporary file over the path, so a reader never sees two versions mixed and a write that fails part way leaves the previous one in place. A conditional read on `Local` pins the file open and hashes it, one full pass before the first byte comes back.

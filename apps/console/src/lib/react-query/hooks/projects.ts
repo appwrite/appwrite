@@ -9,7 +9,6 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
-  useQueries,
   queryOptions,
   keepPreviousData,
 } from '@tanstack/react-query'
@@ -234,7 +233,12 @@ export async function fetchActiveProjects(
       ]
     : []
 
-  const statusQueries = getProjectStatusQueries()
+  // Environments are reached through their project's switcher, not listed beside it.
+  const hideEnvironments = getActiveProfileFeatures().projectEnvironments
+  const statusQueries = [
+    ...getProjectStatusQueries(),
+    ...(hideEnvironments ? [Query.isNull('parentId')] : []),
+  ]
   const trimmedSearch = search?.trim() ?? ''
   const searchQueries = trimmedSearch
     ? [projectListSearchOrQuery(trimmedSearch)]
@@ -267,7 +271,8 @@ export async function fetchActiveProjects(
         direct.teamId === teamId &&
         // Pasting an id must not reveal a project outside the member's scope.
         (!isRestricted || allowedIdSet.has(direct.$id)) &&
-        projectMatchesActiveListStatus(direct)
+        projectMatchesActiveListStatus(direct) &&
+        !(hideEnvironments && direct.parentId)
       ) {
         return {
           projects: page === 0 ? [direct] : [],
@@ -336,6 +341,9 @@ export async function fetchProjectsByIds(
       Query.select(getProjectListSelect()),
       Query.equal('teamId', teamId),
       ...getProjectStatusQueries(),
+      ...(getActiveProfileFeatures().projectEnvironments
+        ? [Query.isNull('parentId')]
+        : []),
       idQuery,
       Query.limit(validIds.length),
     ],
@@ -623,6 +631,7 @@ export function projectsForTeamInfiniteQueryKey(
     search,
     excludeKey,
     projectRestrictionKey(restrictToProjectIds),
+    getActiveProfileFeatures().projectEnvironments,
   ]
 }
 
@@ -636,7 +645,14 @@ export function activeProjectsTotalQueryOptions(
 ) {
   const restrictKey = projectRestrictionKey(restrictToProjectIds)
   return queryOptions({
-    queryKey: ['projects', 'active', 'total', orgId, restrictKey],
+    queryKey: [
+      'projects',
+      'active',
+      'total',
+      orgId,
+      restrictKey,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () =>
       fetchActiveProjects(orgId!, 0, 1, '', undefined, restrictToProjectIds),
     enabled: !!orgId,
@@ -672,6 +688,7 @@ export function activeProjectsQueryOptions(
       search,
       excludeKey,
       restrictKey,
+      getActiveProfileFeatures().projectEnvironments,
     ],
     queryFn: () =>
       fetchActiveProjects(
@@ -705,7 +722,13 @@ export function pinnedProjectsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: ['projects', 'pinned', orgId, idsKey],
+    queryKey: [
+      'projects',
+      'pinned',
+      orgId,
+      idsKey,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId,
     staleTime: DEFAULT_STALE_TIME,
@@ -729,7 +752,13 @@ export function projectsByIdsQueryOptions(
   const idsKey =
     projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
-    queryKey: ['projects', 'by-ids', orgId, idsKey],
+    queryKey: [
+      'projects',
+      'by-ids',
+      orgId,
+      idsKey,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
     enabled: !!orgId && projectIds.length > 0,
     staleTime: DEFAULT_STALE_TIME,
@@ -928,7 +957,15 @@ export function useProjectsForTeam(
     error,
     refetch,
   } = useQuery({
-    queryKey: ['projects', 'team', teamId, page, limit, search],
+    queryKey: [
+      'projects',
+      'team',
+      teamId,
+      page,
+      limit,
+      search,
+      getActiveProfileFeatures().projectEnvironments,
+    ],
     queryFn: () => fetchActiveProjects(teamId!, page, limit, search),
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
@@ -1261,7 +1298,7 @@ export function platformsQueryOptions(projectId: string | null | undefined) {
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
     meta: {
-      // Overview / org cards prefetch platforms in the background; never hold the
+      // Project overview prefetches platforms in the background; never hold the
       // fullscreen initial loader for this non-critical call.
       skipInitialLoader: true,
     },
@@ -1294,47 +1331,6 @@ export function usePlatforms(projectId: string | null | undefined) {
     error,
     refetch,
   }
-}
-
-export type ProjectListPlatformsEntry = {
-  isLoading: boolean
-  isError: boolean
-  platforms: Models.PlatformList['platforms']
-  /** Skip fetch / show N/A (e.g. org budget-locked projects). */
-  unavailable?: boolean
-}
-
-/**
- * Fetches platforms for many projects in parallel (org project cards).
- */
-export function useProjectListPlatforms(
-  projectIds: string[],
-  enabled: boolean,
-): Map<string, ProjectListPlatformsEntry> {
-  const uniqueIds = useMemo(
-    () => [...new Set(projectIds.filter(Boolean))],
-    [projectIds],
-  )
-
-  const queries = useQueries({
-    queries: uniqueIds.map((projectId) => ({
-      ...platformsQueryOptions(projectId),
-      enabled: enabled && !!projectId,
-    })),
-  })
-
-  return useMemo(() => {
-    const map = new Map<string, ProjectListPlatformsEntry>()
-    uniqueIds.forEach((projectId, index) => {
-      const query = queries[index]
-      map.set(projectId, {
-        isLoading: query.isPending && !query.data && !query.isError,
-        isError: query.isError,
-        platforms: query.data?.platforms ?? [],
-      })
-    })
-    return map
-  }, [uniqueIds, queries])
 }
 
 /**

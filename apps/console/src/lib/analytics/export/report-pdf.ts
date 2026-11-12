@@ -87,7 +87,7 @@ function percentChange(current?: number | null, previous?: number | null) {
   return ((current - previous) / previous) * 100
 }
 
-function classifyTraffic(value?: string) {
+function classifyTraffic(value?: string | null) {
   const v = value?.trim().toLowerCase() ?? ''
   if (!v) return 'unclassified'
   return v.includes('human') ? 'human' : 'bot'

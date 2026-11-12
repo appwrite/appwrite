@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 final class OAuthGitHubIntegrationTest extends Scope
@@ -35,7 +35,7 @@ final class OAuthGitHubIntegrationTest extends Scope
 
         // Step 1: Create new organization (team)
         $team = $this->createTeamFixture($consoleHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'GitHub OAuth Org ' . uniqid(),
         ]);
         $this->assertSame(200, $team['headers']['status-code']);

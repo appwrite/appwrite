@@ -1,0 +1,71 @@
+---
+layout: integration
+title: MCP with Emergent
+description: Connect Emergent to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-emergent/cover.avif
+category: mcp
+product:
+    vendor: Emergent
+    description: "Emergent is an AI-powered development platform that turns ideas described in a prompt into working web and mobile apps."
+platform:
+    - 'Cloud'
+---
+
+[Emergent](https://emergent.sh) is an AI-powered development platform for building web and mobile apps. You describe the app you want in a prompt, and Emergent's agents build a working application that you keep refining in chat.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects Emergent to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that uses the HTTP transport and signs you in with OAuth, so there is nothing to install and no API key to create.
+
+Once connected, Emergent's agents can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation while they build. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+{% info title="Appwrite Cloud projects" %}
+The hosted MCP server signs in with your Appwrite Cloud account, so Emergent can reach your Cloud projects without any local setup.
+{% /info %}
+
+# How to implement
+
+To connect Emergent to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: Emergent asks you to sign in to Appwrite the first time it connects to the server.
+
+## Step 2: Add the Appwrite MCP server to Emergent
+
+On the Emergent homepage, click **Advanced Controls**, then **Select MCP Tools**, and click **New MCP Server**. Enter a name for the server, such as `appwrite`, and paste the following configuration:
+
+```json
+{
+  "mcpServers": {
+    "appwrite": {
+      "type": "http",
+      "url": "https://mcp.appwrite.io/"
+    }
+  }
+}
+```
+
+When Emergent first connects, complete the sign-in flow in your browser to sign in to your Appwrite account and authorize access.
+
+## Step 3: Test the integration
+
+Ask Emergent to work with your project, for example:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `Show me how to authenticate users with OAuth`
+
+# Read more about Emergent and the Appwrite MCP server
+
+If you would like to learn more about Emergent and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Connect the Appwrite MCP server to Emergent](/docs/tooling/ai/vibe-coding/emergent)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [The Appwrite MCP server is now remote: one URL, no API keys](/blog/post/announcing-remote-appwrite-mcp-server)
+- [Emergent](https://emergent.sh)

@@ -1,42 +1,17 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/explorer/View'
-import {
-  apiExplorerSpecQueryOptions,
-  projectQueryOptions,
-} from '@/lib/react-query/hooks'
-import { pageTitle } from '@/lib/utils/page-title'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_public/projects/$projectId/explorer')({
-  head: () => ({ meta: [{ title: pageTitle('Explorer') }] }),
   validateSearch: (search: Record<string, unknown>) => ({
-    service:
-      typeof search.service === 'string' && search.service.trim()
-        ? search.service.trim()
-        : undefined,
+    service: typeof search.service === 'string' ? search.service : undefined,
     operation:
-      typeof search.operation === 'string' && search.operation.trim()
-        ? search.operation.trim()
-        : undefined,
+      typeof search.operation === 'string' ? search.operation : undefined,
   }),
-  loader: async ({ params, context }) => {
-    if (typeof window === 'undefined') return undefined
-
-    const { projectId } = params
-    const { queryClient } = context
-
-    if (!projectId) return undefined
-
-    await Promise.all([
-      queryClient.ensureQueryData(projectQueryOptions(projectId)),
-      queryClient.ensureQueryData(apiExplorerSpecQueryOptions('server')),
-      queryClient.ensureQueryData(apiExplorerSpecQueryOptions('client')),
-    ])
-
-    return undefined
+  beforeLoad: ({ params, search }) => {
+    throw redirect({
+      to: '/projects/$projectId/playground',
+      params: { projectId: params.projectId },
+      search,
+      replace: true,
+    })
   },
-  component: ExplorerPage,
 })
-
-function ExplorerPage() {
-  return <View />
-}

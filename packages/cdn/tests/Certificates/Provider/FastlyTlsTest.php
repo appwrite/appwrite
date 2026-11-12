@@ -99,8 +99,148 @@ final class FastlyTlsTest extends TestCase
         ]);
 
         $provider = new FastlyTls('token', 'tls-config-id', 'certainly', $client);
-        $this->assertSame('2027-01-02 00:00:00.000', $provider->issueCertificate('cert', 'example.com', null));
+        // A week before expiry, by when Fastly should have renewed it
+        $this->assertSame('2027-01-25 00:00:00.000', $provider->issueCertificate('cert', 'example.com', null));
         $this->assertSame([['domain' => 'example.com', 'certificate' => 'cert_1']], $this->activations($client));
+    }
+
+    #[DataProvider('renewals')]
+    public function testStuckRenewalIsReportedBeforeExpiry(string $state, int $daysLeft, string $status): void
+    {
+        $subscription = $this->subscription(
+            state: $state,
+            authorizationState: 'passing',
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']],
+            expiries: ['cert_1' => $daysLeft],
+        );
+        $provider = new FastlyTls('token', '', 'certainly', new TestClient([$this->json($subscription), $this->json($subscription)]));
+
+        $this->assertSame($status, $provider->getCertificateStatus('example.com', null));
+        // Fastly still owns the renewal, so there is nothing to order
+        $this->assertFalse($provider->isRenewRequired('example.com', null));
+    }
+
+    /** @return iterable<string, array{string, int, string}> */
+    public static function renewals(): iterable
+    {
+        yield 'issued, renewal not due yet' => ['issued', 20, Status::ISSUED];
+        yield 'renewing, renewal not due yet' => ['renewing', 20, Status::RENEWING];
+        yield 'issued, close to expiry' => ['issued', 5, Status::EXPIRING];
+        yield 'renewing, close to expiry' => ['renewing', 5, Status::EXPIRING];
+        yield 'issued, expired' => ['issued', -1, Status::EXPIRING];
+        yield 'retried after expiry' => ['pending', -8, Status::EXPIRING];
+    }
+
+    public function testLapsedCertificateIsReportedAsFailed(): void
+    {
+        // Fastly gave up renewing: no order left, and the subscription still says issued
+        $warning = 'Found conflicting CAA record(s). Expected certainly.com.';
+        $subscription = $this->subscription(
+            state: 'issued',
+            authorizationState: 'failed',
+            warnings: [['type' => 'caa', 'instructions' => $warning]],
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']],
+            expiries: ['cert_1' => -3],
+            attributes: ['has_active_order' => false],
+        );
+        $provider = new FastlyTls('token', '', 'certainly', new TestClient([$this->json($subscription), $this->json($subscription)]));
+
+        try {
+            $provider->getCertificateStatus('example.com', null);
+            $this->fail('An expired certificate nothing renews has to be reported, not called issued.');
+        } catch (Certificate $exception) {
+            $this->assertSame(Status::FAILED, $exception->getStatus());
+            $this->assertStringContainsString($warning, $exception->getMessage());
+        }
+
+        $this->assertTrue($provider->isRenewRequired('example.com', null));
+    }
+
+    public function testLapsedCertificateIsRetried(): void
+    {
+        $lapsed = $this->subscription(
+            state: 'issued',
+            authorizationState: 'passing',
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']],
+            expiries: ['cert_1' => -3],
+            attributes: ['has_active_order' => false],
+        );
+        $client = new TestClient([
+            $this->json($lapsed),
+            $this->json('{"data":{"id":"sub_123","attributes":{"state":"pending"}}}'),
+        ]);
+
+        $this->assertNull(new FastlyTls('token', 'config', 'certainly', $client)->issueCertificate('cert', 'example.com', null));
+        $this->assertSame(['GET', 'PATCH'], array_column($client->calls, 'method'));
+        $this->assertSame('https://api.fastly.com/tls/subscriptions/sub_123?force=true', $client->calls[1]['url']);
+    }
+
+    public function testRenewedCertificateIsNotExpiring(): void
+    {
+        // The subscription keeps the certificate it replaced until that one expires
+        $client = new TestClient([$this->json($this->subscription(
+            state: 'renewing',
+            authorizationState: 'passing',
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_old'], ['type' => 'tls_certificate', 'id' => 'cert_new']],
+            expiries: ['cert_old' => 2, 'cert_new' => 30],
+        ))]);
+
+        $this->assertSame(Status::RENEWING, new FastlyTls('token', '', 'certainly', $client)->getCertificateStatus('example.com', null));
+    }
+
+    public function testCertificateExpiryIsTheNewestCertificates(): void
+    {
+        // During a renewal the subscription references both certificates
+        $client = new TestClient([$this->json([
+            'data' => [[
+                'id' => 'sub_123',
+                'attributes' => ['state' => 'renewing'],
+                'relationships' => ['tls_certificates' => ['data' => [['type' => 'tls_certificate', 'id' => 'cert_new'], ['type' => 'tls_certificate', 'id' => 'cert_old']]]],
+            ]],
+            'included' => [
+                ['type' => 'tls_certificate', 'id' => 'cert_new', 'attributes' => ['not_after' => '2027-06-01T00:00:00Z']],
+                ['type' => 'tls_certificate', 'id' => 'cert_old', 'attributes' => ['not_after' => '2026-01-01T00:00:00Z']],
+            ],
+        ])]);
+
+        $this->assertSame('2027-06-01 00:00:00.000', new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateExpiry('example.com', null));
+        // Read from the subscription lookup alone, without touching activations
+        $this->assertCount(1, $client->calls);
+    }
+
+    public function testCertificateExpiryOfAStuckRenewalIsInThePast(): void
+    {
+        $client = new TestClient([$this->json($this->subscription(
+            state: 'pending',
+            authorizationState: 'passing',
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']],
+            expiries: ['cert_1' => -3],
+        ))]);
+
+        $expiry = new FastlyTls('token', '', 'certainly', $client)->getCertificateExpiry('example.com', null);
+
+        $this->assertNotNull($expiry);
+        $this->assertLessThan(time(), strtotime($expiry . ' UTC'));
+    }
+
+    public function testCertificateExpiryIsUnknownWithoutACertificate(): void
+    {
+        $client = new TestClient([
+            $this->json(['data' => []]),
+            $this->json($this->subscription()),
+        ]);
+        $provider = new FastlyTls('token', 'tls-config-id', 'certainly', $client);
+
+        // No subscription, then a subscription still waiting on its first certificate
+        $this->assertNull($provider->getCertificateExpiry('example.com', null));
+        $this->assertNull($provider->getCertificateExpiry('example.com', null));
+    }
+
+    public function testRenewIsRequiredWithoutASubscription(): void
+    {
+        $client = new TestClient([$this->json(['data' => []])]);
+
+        $this->assertTrue(new FastlyTls('token', 'tls-config-id', 'certainly', $client)->isRenewRequired('example.com', null));
     }
 
     public function testRetriesFailedSubscriptionWithForce(): void
@@ -137,6 +277,89 @@ final class FastlyTlsTest extends TestCase
 
         // Nothing else is attempted: the deployed certificate is left serving.
         $this->assertCount(2, $client->calls);
+    }
+
+    public function testAbandonedOrderIsReportedAsFailed(): void
+    {
+        // Fastly keeps a subscription processing for good once its order ends without a certificate
+        $subscription = $this->abandoned();
+        $provider = new FastlyTls('token', '', 'certainly', new TestClient([$this->json($subscription), $this->json($subscription)]));
+
+        try {
+            $provider->getCertificateStatus('example.com', null);
+            $this->fail('An abandoned order has to be reported, not waited on.');
+        } catch (Certificate $exception) {
+            $this->assertSame(Status::FAILED, $exception->getStatus());
+            $this->assertStringContainsString('stopped trying', $exception->getMessage());
+        }
+
+        $this->assertTrue($provider->isRenewRequired('example.com', null));
+    }
+
+    public function testAbandonedOrderIsReplaced(): void
+    {
+        $client = new TestClient([
+            $this->json($this->abandoned()),
+            new Response(204),
+            $this->json('{"data":{"id":"sub_456","attributes":{"state":"pending"}}}', 201),
+        ]);
+
+        $this->assertNull(new FastlyTls('token', 'config', 'certainly', $client)->issueCertificate('cert', 'example.com', null));
+        $this->assertCount(3, $client->calls);
+        $this->assertSame('DELETE', $client->calls[1]['method']);
+        $this->assertSame('https://api.fastly.com/tls/subscriptions/sub_123?force=true', $client->calls[1]['url']);
+        $this->assertSame('POST', $client->calls[2]['method']);
+        $this->assertSame('https://api.fastly.com/tls/subscriptions', $client->calls[2]['url']);
+    }
+
+    public function testAbandonedOrderAlreadyDeletedIsStillReplaced(): void
+    {
+        $client = new TestClient([
+            $this->json($this->abandoned()),
+            new Response(404),
+            $this->json('{"data":{"id":"sub_456","attributes":{"state":"pending"}}}', 201),
+        ]);
+
+        $this->assertNull(new FastlyTls('token', 'config', 'certainly', $client)->issueCertificate('cert', 'example.com', null));
+        $this->assertSame(['GET', 'DELETE', 'POST'], array_column($client->calls, 'method'));
+    }
+
+    /**
+     * @param array<string, mixed> $attributes Attributes to set on the subscription, null to remove one
+     * @param list<array{type:string,id:string}> $certificates
+     */
+    #[DataProvider('orders')]
+    public function testSubscriptionWithAnOrderOrACertificateIsKept(string $state, array $attributes, array $certificates): void
+    {
+        $subscription = $this->subscription(
+            state: $state,
+            authorizationState: 'passing',
+            certificates: $certificates,
+            expiries: $certificates === [] ? [] : ['cert_1' => 30],
+            attributes: $attributes,
+        );
+        $client = new TestClient([$this->json($subscription), $this->json($subscription)]);
+        $provider = new FastlyTls('token', '', 'certainly', $client);
+
+        $this->assertFalse($provider->isRenewRequired('example.com', null));
+        $provider->issueCertificate('cert', 'example.com', null);
+        $this->assertSame(['GET', 'GET'], array_column($client->calls, 'method'));
+    }
+
+    /** @return iterable<string, array{string, array<string, mixed>, list<array{type:string,id:string}>}> */
+    public static function orders(): iterable
+    {
+        $idle = gmdate('Y-m-d\TH:i:s\Z', time() - 2 * 60 * 60);
+        $certificate = [['type' => 'tls_certificate', 'id' => 'cert_1']];
+
+        yield 'processing with an order' => ['processing', ['has_active_order' => true, 'updated_at' => $idle], []];
+        yield 'processing without the attribute' => ['processing', ['has_active_order' => null, 'updated_at' => $idle], []];
+        yield 'processing, updated recently' => ['processing', ['has_active_order' => false, 'updated_at' => gmdate('Y-m-d\TH:i:s\Z')], []];
+        yield 'processing without an update date' => ['processing', ['has_active_order' => false], []];
+        yield 'processing with a certificate' => ['processing', ['has_active_order' => false, 'updated_at' => $idle], $certificate];
+        yield 'issued without an order' => ['issued', ['has_active_order' => false, 'updated_at' => $idle], $certificate];
+        yield 'renewing without an order' => ['renewing', ['has_active_order' => false, 'updated_at' => $idle], $certificate];
+        yield 'pending without an order' => ['pending', ['has_active_order' => false, 'updated_at' => $idle], []];
     }
 
     public function testRejectsMalformedSuccessfulResponse(): void
@@ -194,6 +417,21 @@ final class FastlyTlsTest extends TestCase
             $this->assertSame([$warning], $exception->getWarnings());
             $this->assertCount(1, $exception->getChallenges());
             $this->assertStringContainsString($warning, $exception->getMessage());
+        }
+    }
+
+    public function testCaaConflictAsksForTheCaaRecordOnly(): void
+    {
+        $warning = 'Found conflicting CAA record(s). Expected certainly.com.';
+        $client = new TestClient([$this->json($this->subscription(state: 'failed', warnings: [['type' => 'caa', 'instructions' => $warning]]))]);
+
+        try {
+            new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateStatus('example.com', null);
+            $this->fail('A CAA conflict has to be reported.');
+        } catch (Certificate $exception) {
+            $this->assertSame(Status::FAILED, $exception->getStatus());
+            $this->assertSame('Fastly stopped trying to issue a certificate for example.com. ' . $warning . ' Update the CAA record, then retry.', $exception->getMessage());
+            $this->assertCount(1, $exception->getChallenges());
         }
     }
 
@@ -488,15 +726,25 @@ final class FastlyTlsTest extends TestCase
      * @param list<array{type:string,instructions:string}> $warnings
      * @param list<mixed>|null $challenges
      * @param list<array{type:string,id:string}> $certificates
+     * @param array<string, int> $expiries Days until each included certificate expires, by certificate ID
+     * @param array<string, mixed> $attributes Subscription attributes to set, null to remove one
      * @return array<string, mixed>
      */
-    private function subscription(string $state = 'pending', string $authorizationState = 'blocked', array $warnings = [], ?array $challenges = null, array $certificates = []): array
+    private function subscription(string $state = 'pending', string $authorizationState = 'blocked', array $warnings = [], ?array $challenges = null, array $certificates = [], array $expiries = [], array $attributes = []): array
     {
+        $included = [];
+        foreach ($expiries as $id => $days) {
+            $included[] = ['id' => $id, 'type' => 'tls_certificate', 'attributes' => ['not_after' => gmdate('Y-m-d\TH:i:s\Z', time() + $days * 24 * 60 * 60)]];
+        }
+
         return [
             'data' => [[
                 'id' => 'sub_123',
                 'type' => 'tls_subscription',
-                'attributes' => ['certificate_authority' => 'certainly', 'state' => $state, 'has_active_order' => true],
+                'attributes' => array_filter(
+                    [...['certificate_authority' => 'certainly', 'state' => $state, 'has_active_order' => true], ...$attributes],
+                    fn (mixed $value): bool => $value !== null,
+                ),
                 'relationships' => [
                     'tls_authorizations' => ['data' => [['id' => 'auth_1', 'type' => 'tls_authorization']]],
                     'tls_certificates' => ['data' => $certificates],
@@ -517,8 +765,22 @@ final class FastlyTlsTest extends TestCase
                     'warnings' => $warnings,
                 ],
                 'relationships' => ['tls_domain' => ['data' => ['id' => 'example.com', 'type' => 'tls_domain']]],
-            ]],
+            ], ...$included],
         ];
+    }
+
+    /**
+     * A subscription Fastly left processing two hours ago without an order or a certificate.
+     *
+     * @return array<string, mixed>
+     */
+    private function abandoned(): array
+    {
+        return $this->subscription(
+            state: 'processing',
+            authorizationState: 'passing',
+            attributes: ['has_active_order' => false, 'updated_at' => gmdate('Y-m-d\TH:i:s\Z', time() - 2 * 60 * 60)],
+        );
     }
 
     /** @return array<string, mixed> */

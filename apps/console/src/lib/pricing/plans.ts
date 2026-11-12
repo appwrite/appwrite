@@ -62,7 +62,6 @@ export const pricingPlans: readonly PricingPlan[] = [
     price: 'Custom',
     description:
       'For enterprises that need more power, premium support, and advanced security features.',
-    featuresIntro: 'Everything in Pro, plus:',
     features: [
       'Uptime SLAs',
       'Success manager',

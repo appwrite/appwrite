@@ -60,7 +60,7 @@ export function ImportZoneDialog({
 
     // Check file size
     if (selectedFile.size > MAX_FILE_SIZE) {
-      setError(`${t('File size must be less than')} ${MAX_FILE_SIZE / 1000 / 1000}MB`)
+      setError(`${t('File size must be less than')} ${MAX_FILE_SIZE / 1024 / 1024}MB`)
       setFile(null)
       return
     }
@@ -127,7 +127,7 @@ export function ImportZoneDialog({
               {file && !error && (
                 <p className="text-[12px] text-muted-foreground">
                   {t('File selected:')} {file.name} (
-                  {(file.size / 1000).toFixed(2)} KB)
+                  {(file.size / 1024).toFixed(2)} KB)
                 </p>
               )}
             </div>

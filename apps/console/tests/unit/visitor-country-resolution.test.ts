@@ -118,6 +118,8 @@ describe('pricing plan grid readiness', () => {
 
   it('shows Start only for eligible countries after ready', () => {
     expect(shouldShowStartPlan(true, 'IN')).toBe(true)
+    expect(shouldShowStartPlan(true, 'NG')).toBe(true)
+    expect(shouldShowStartPlan(true, 'PK')).toBe(true)
     expect(shouldShowStartPlan(true, 'US')).toBe(false)
     expect(shouldShowStartPlan(false, 'IN')).toBe(false)
   })

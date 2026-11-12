@@ -25,11 +25,11 @@ final class File implements Lock
     {
         $this->open();
 
-        if ($timeout <= 0.0) {
+        if ($timeout === 0.0) {
             return $this->tryAcquire();
         }
 
-        $deadline = microtime(true) + $timeout;
+        $deadline = $timeout < 0.0 ? INF : microtime(true) + $timeout;
         $delay = 0.01;
 
         do {

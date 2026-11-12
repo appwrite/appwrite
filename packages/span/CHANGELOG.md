@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Require `utopia-php/client` ^0.6.
+- `Pretty` escapes C0 controls and DEL in attribute keys, values, the action, and error text before writing, so a span cannot forge log lines or inject terminal sequences.
 - Sentry exporter: deliver envelopes exclusively through PSR-18. It defaults to `utopia-php/client` with its cURL adapter and accepts injected clients such as a coroutine-safe `Utopia\Client\Pool`.
 
 ## 3.0.0

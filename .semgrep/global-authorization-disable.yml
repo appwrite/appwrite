@@ -1,7 +1,7 @@
 rules:
   - id: php.appwrite.global-authorization-disable
     message: >
-      Authorization disable() / setDefaultStatus(false) in a route or
+      Authorization disable() / setStatus(false) in a route or
       module handler turns document permissions off for the rest of the
       request. Wrap the specific read in $authorization->skip(fn () => ...)
       behind an API-key / privileged gate instead. Lifecycle hooks
@@ -18,6 +18,6 @@ rules:
         - "**/app/controllers/general.php"
     pattern-either:
       - pattern: $AUTH->disable()
-      - pattern: $AUTH->setDefaultStatus(false)
+      - pattern: $AUTH->setStatus(false)
       - pattern: Authorization::disable()
-      - pattern: Authorization::setDefaultStatus(false)
+      - pattern: Authorization::setStatus(false)

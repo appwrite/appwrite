@@ -12,9 +12,10 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -37,7 +38,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Test Team ' . uniqid()
         ]);
 
@@ -859,6 +860,401 @@ final class RealtimeCustomClientTest extends Scope
         self::$user[$projectId]['sessionId'] = $refreshedSession['body']['$id'];
     }
 
+    public function testConnectionLimitPerUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => \uniqid() . 'limit@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/jwts', $server);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+        $headers = [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $clients = [];
+        for ($i = 0; $i < APP_LIMIT_REALTIME_CONNECTIONS; $i++) {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        }
+
+        // Guests are not held to the per-user limit.
+        $guest = $this->getWebsocket(['documents'], ['origin' => 'http://localhost']);
+        $this->assertSame('connected', \json_decode($guest->receive(), true)['type'] ?? null);
+        $guest->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['documents'], $headers);
+        // The client connects on its first receive, so read the error before waiting for the close.
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1008, $response['data']['code'] ?? null);
+        $this->assertSame('Too many open connections. Close an existing connection and try again.', $response['data']['message'] ?? null);
+        $this->receiveUntilClosed($client);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Closing a connection frees its slot once the server sees the close.
+        \array_pop($clients)->close();
+        $this->assertEventually(function () use ($headers, &$clients): void {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        });
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
+    }
+
+    public function testConnectionLimitPerGuest(): void
+    {
+        // Opening this many connections from one address would trip the abuse limit on new connections first.
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            $this->markTestSkipped('Abuse limits are enabled.');
+        }
+
+        $headers = ['origin' => 'http://localhost'];
+
+        /**
+         * Test for FAILURE
+         */
+        // Earlier tests may still hold guest connections from this address, so open until one is refused.
+        $clients = [];
+        $refused = null;
+        for ($i = 0; $i <= APP_LIMIT_REALTIME_GUEST_CONNECTIONS; $i++) {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $response = \json_decode($client->receive(), true);
+            if (($response['type'] ?? null) !== 'connected') {
+                $refused = $response;
+                $this->receiveUntilClosed($client);
+                break;
+            }
+            $clients[] = $client;
+        }
+
+        $this->assertNotNull($refused, 'Guest connections from one address were not limited.');
+        $this->assertSame('error', $refused['type'] ?? null);
+        $this->assertSame(1008, $refused['data']['code'] ?? null);
+        $this->assertSame('Too many open connections. Close an existing connection and try again.', $refused['data']['message'] ?? null);
+
+        /**
+         * Test for SUCCESS
+         */
+        \array_pop($clients)->close();
+        $this->assertEventually(function () use ($headers, &$clients): void {
+            $client = $this->getWebsocket(['documents'], $headers);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $clients[] = $client;
+        });
+
+        foreach ($clients as $client) {
+            $client->close();
+        }
+    }
+
+    public function testDenyRealtimeGuestsPolicy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $guest = ['origin' => 'http://localhost'];
+        $policy = fn (bool $enabled) => $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-realtime-guests', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], ['enabled' => $enabled]);
+
+        $this->assertSame(200, $policy(true)['headers']['status-code']);
+
+        // The guest cap test before this one closes many connections at once, which can hold up new ones for a few seconds.
+
+        try {
+            /**
+             * Test for FAILURE
+             */
+            $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('error', $response['type'] ?? null);
+            $this->assertSame(1008, $response['data']['code'] ?? null);
+            $this->assertSame('This project does not allow guests to subscribe. Sign in first.', $response['data']['message'] ?? null);
+            $this->receiveUntilClosed($client);
+
+            // Over a message the guest is refused but stays connected, so it can still sign in.
+            $client = $this->getWebsocket([], $guest, timeout: 10);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('error', $response['type'] ?? null);
+            $this->assertSame(401, $response['data']['code'] ?? null);
+            $this->assertSame('This project does not allow guests to subscribe. Sign in first.', $response['data']['message'] ?? null);
+
+            /**
+             * Test for SUCCESS
+             */
+            // Signing in over the same connection lets it subscribe.
+            $client->send(\json_encode(['type' => 'authentication', 'data' => ['session' => $this->getUser()['session']]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('authentication', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => [['channels' => ['documents']]]]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertSame('subscribe', $response['data']['to'] ?? null);
+            $this->assertTrue($response['data']['success'] ?? false);
+            $client->close();
+
+            $client = $this->getWebsocket(['documents'], [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $this->getUser()['session'],
+            ], timeout: 10);
+            $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+            $client->close();
+        } finally {
+            $policy(false);
+        }
+
+        $client = $this->getWebsocket(['documents'], $guest, timeout: 10);
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+        $client->close();
+    }
+
+    public function testConnectionChannelLimit(): void
+    {
+        $headers = ['origin' => 'http://localhost'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, APP_LIMIT_REALTIME_CHANNELS));
+        $client = $this->getWebsocket($channels, $headers);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type'] ?? null);
+        $this->assertCount(APP_LIMIT_REALTIME_CHANNELS, $response['data']['channels']);
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $channels[] = 'documents.' . (APP_LIMIT_REALTIME_CHANNELS + 1);
+        $client = $this->getWebsocket($channels, $headers);
+        // The client connects on its first receive, so read the error before waiting for the close.
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type'] ?? null);
+        $this->assertSame(1008, $response['data']['code'] ?? null);
+        $this->assertSame('channels must contain at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.', $response['data']['message'] ?? null);
+        $this->receiveUntilClosed($client);
+    }
+
+    public function testConnectionRequiresAllFactors(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'factors@localhost.test';
+        $password = 'password';
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $client = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        // Minted before any session exists, so it carries no session whose factors could count.
+        $sessionless = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server);
+        $this->assertSame(201, $sessionless['headers']['status-code']);
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $server, [
+            'emailVerification' => true,
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/mfa', $server, [
+            'mfa' => true,
+        ]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        // A password session still owes its second factor.
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $secret = $session['cookies']['a_session_' . $projectId];
+        $cookie = 'a_session_' . $projectId . '=' . $secret;
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', array_merge($client, ['cookie' => $cookie]));
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        $bound = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, [
+            'sessionId' => $session['body']['$id'],
+        ]);
+        $this->assertSame(201, $bound['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $authenticated = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $sessionless['body']['jwt'],
+        ]);
+        $response = json_decode($authenticated->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertSame($userId, $response['data']['user']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $pending = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookie,
+        ]);
+        $response = json_decode($pending->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+
+        $pendingJwt = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $bound['body']['jwt'],
+        ]);
+        $response = json_decode($pendingJwt->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+
+        $name = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/name', $server, [
+            'name' => 'Factors ' . $userId,
+        ]);
+        $this->assertSame(200, $name['headers']['status-code']);
+
+        $this->receiveUntilEvent($authenticated, fn (array $message): bool => \in_array("users.{$userId}.update.name", $message['data']['events'] ?? [], true));
+
+        foreach ([$pending, $pendingJwt] as $guest) {
+            try {
+                $guest->receive();
+                $this->fail('A session missing a factor received an account event');
+            } catch (TimeoutException) {
+                // No event reached the connection
+            }
+        }
+
+        $pending->send(\json_encode([
+            'type' => 'authentication',
+            'data' => ['session' => $secret],
+        ]));
+        $response = json_decode($pending->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(401, $response['data']['code']);
+
+        $authenticated->close();
+        $pending->close();
+        $pendingJwt->close();
+    }
+
+    public function testBlockedUserConnectsAsGuest(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'blocked@localhost.test';
+        $password = 'password';
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $secret = $session['cookies']['a_session_' . $projectId];
+        $cookie = 'a_session_' . $projectId . '=' . $secret;
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookie,
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertSame($userId, $response['data']['user']['$id']);
+        $client->close();
+
+        $status = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/status', $server, [
+            'status' => false,
+        ]);
+        $this->assertSame(200, $status['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookie,
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => ['session' => $secret],
+        ]));
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(403, $response['data']['code']);
+        $client->close();
+
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+        $client->close();
+    }
+
     public function testConnectionEndsWithSession(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -871,7 +1267,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -1056,6 +1452,224 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client, "users.{$userId}.delete");
     }
 
+    public function testConnectionEndsWithAccountClaim(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        // Someone registers an address they do not own and keeps a connection open
+        $register = function () use ($projectId, $headers): array {
+            $email = \uniqid('claimed-', true) . '@localhost.test';
+            $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'registrant-password',
+            ]);
+            $this->assertEquals(201, $account['headers']['status-code']);
+
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+                'email' => $email,
+                'password' => 'registrant-password',
+            ]);
+            $this->assertEquals(201, $session['headers']['status-code']);
+
+            $client = $this->getWebsocket(['account'], [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+            ]);
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('connected', $response['type']);
+            $this->assertEquals($account['body']['$id'], $response['data']['user']['$id']);
+
+            return [$account['body']['$id'], $email, $client];
+        };
+
+        // Closed before the claim's own event, which describes the claimant, reaches it.
+        $assertClosed = function (WebSocketClient $client): void {
+            $frames = $this->receiveUntilClosed($client);
+            foreach ($frames as $frame) {
+                $this->assertEmpty($frame['data']['payload'] ?? [], 'The registrant received the claimant\'s data: ' . \json_encode($frame));
+            }
+            $last = \end($frames);
+            $this->assertEquals('error', $last['type'] ?? null);
+            $this->assertEquals(401, $last['data']['code'] ?? null);
+        };
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with a magic URL
+         */
+        [$userId, $email, $client] = $register();
+
+        $token = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
+            'userId' => $userId,
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $mail = $this->getLastEmailByAddress($email);
+        $secret = \substr($mail['text'], \strpos($mail['text'], '&secret=') + 8, 64);
+
+        $session = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner accepts a team invitation signed out
+         */
+        [, $email, $client] = $register();
+
+        // Invited by a member, as an API key adds members without an invitation
+        $team = $this->client->call(Client::METHOD_POST, '/teams', \array_merge($headers, $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Claimed Invites',
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', \array_merge($headers, $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $invite = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html']);
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $invite['teamId'] . '/memberships/' . $invite['membershipId'] . '/status', $headers, [
+            'userId' => $invite['userId'],
+            'secret' => $invite['secret'],
+        ]);
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner resets the password
+         */
+        [$userId, $email, $client] = $register();
+
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $recovery['headers']['status-code']);
+
+        // The registrant still owns the account when recovery is requested, so it may see that
+        $this->receiveUntilEvent($client, fn (array $message) => \in_array("users.{$userId}.recovery.{$recovery['body']['$id']}.create", $message['data']['events'] ?? [], true));
+
+        $secret = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html'])['secret'];
+        $recovery = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+            'password' => 'claimant-password',
+        ]);
+        $this->assertEquals(200, $recovery['headers']['status-code']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with an ID token
+         */
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+        $provider = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', $console, [
+            'projectId' => $projectId,
+            'provider' => 'mock',
+            'enabled' => true,
+            'clientIds' => [],
+        ]);
+        $this->assertEquals(204, $provider['headers']['status-code']);
+
+        [$userId, $email, $client] = $register();
+
+        $idToken = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', $headers, [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => \uniqid('claimant-', true),
+                'email' => $email,
+                'email_verified' => true,
+            ]),
+            'header' => '',
+        ]);
+        $this->assertEquals(200, $idToken['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', $headers, [
+            'provider' => 'mock',
+            'idToken' => $idToken['body']['token'],
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $this->assertEquals($userId, $session['body']['userId']);
+        $assertClosed($client);
+
+        /**
+         * Test for SUCCESS - the address's owner signs in with OAuth
+         */
+        // The mock provider always returns this address, so a fresh project keeps it away from other tests
+        $oauthProjectId = $this->getProject(true)['$id'];
+        $oauthHeaders = \array_merge($headers, ['x-appwrite-project' => $oauthProjectId]);
+        $cookieKey = 'a_session_' . $oauthProjectId;
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $oauthHeaders, [
+            'userId' => Id::unique(),
+            'email' => 'useroauth@localhost.test',
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $oauthHeaders, [
+            'email' => 'useroauth@localhost.test',
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookieKey . '=' . $session['cookies'][$cookieKey],
+        ], $oauthProjectId);
+        $response = \json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $oauthProjectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+
+        // Follow the provider's redirects back to the app, as a browser would
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/mock', $oauthHeaders, [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $cookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
+        $browser = new Client();
+        $browser->setEndpoint('');
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $browser->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? [] : ['cookie' => $cookies], followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+        $this->assertArrayHasKey($cookieKey, $response['cookies']);
+        $assertClosed($client);
+    }
+
     public function testConnectionEndsWithImpersonatorSession(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1066,7 +1680,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
-        $targetId = ID::unique();
+        $targetId = Id::unique();
         $target = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $targetId,
             'email' => 'impersonation-target-' . $targetId . '@example.com',
@@ -1075,7 +1689,7 @@ final class RealtimeCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $actorId = ID::unique();
+        $actorId = Id::unique();
         $actor = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $actorId,
             'email' => 'impersonation-actor-' . $actorId . '@example.com',
@@ -1110,8 +1724,12 @@ final class RealtimeCustomClientTest extends Scope
             return $client;
         };
 
+        // Closed before the claim's own event, which describes the claimant, reaches it.
         $assertClosed = function (WebSocketClient $client): void {
             $frames = $this->receiveUntilClosed($client);
+            foreach ($frames as $frame) {
+                $this->assertEmpty($frame['data']['payload'] ?? [], 'The registrant received the claimant\'s data: ' . \json_encode($frame));
+            }
             $last = \end($frames);
             $this->assertEquals('error', $last['type'] ?? null);
             $this->assertEquals(401, $last['data']['code'] ?? null);
@@ -1180,6 +1798,111 @@ final class RealtimeCustomClientTest extends Scope
         $assertClosed($client);
     }
 
+    public function testImpersonationRequiresAllFactors(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $password = 'password123';
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $client = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $targetId = Id::unique();
+        $target = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $targetId,
+            'email' => 'factors-target-' . $targetId . '@example.com',
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $target['headers']['status-code']);
+
+        $actorId = Id::unique();
+        $actorEmail = 'factors-actor-' . $actorId . '@example.com';
+        $actor = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $actorId,
+            'email' => $actorEmail,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $actor['headers']['status-code']);
+
+        $impersonator = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/impersonator', $server, [
+            'impersonator' => true,
+        ]);
+        $this->assertSame(200, $impersonator['headers']['status-code']);
+
+        $impersonate = function (array $headers) use ($targetId): array {
+            $connection = $this->getWebsocket(['account'], [
+                'origin' => 'http://localhost',
+                'x-appwrite-impersonate-user-id' => $targetId,
+                ...$headers,
+            ]);
+
+            return [$connection, \json_decode($connection->receive(), true)];
+        };
+
+        /**
+         * Test for SUCCESS
+         */
+        $signIn = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, [
+            'email' => $actorEmail,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $signIn['headers']['status-code']);
+
+        [$complete, $response] = $impersonate([
+            'cookie' => 'a_session_' . $projectId . '=' . $signIn['cookies']['a_session_' . $projectId],
+        ]);
+        $this->assertSame('connected', $response['type']);
+        $this->assertSame($targetId, $response['data']['user']['$id']);
+        $complete->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/verification', $server, [
+            'emailVerification' => true,
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $actorId . '/mfa', $server, [
+            'mfa' => true,
+        ]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        $signIn = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, [
+            'email' => $actorEmail,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $signIn['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $signIn['cookies']['a_session_' . $projectId];
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [...$client, 'cookie' => $cookie]);
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        [$pending, $response] = $impersonate(['cookie' => $cookie]);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user'], 'A session missing a factor impersonated a user over realtime.');
+
+        $name = $this->client->call(Client::METHOD_PATCH, '/users/' . $targetId . '/name', $server, [
+            'name' => 'Factors ' . $targetId,
+        ]);
+        $this->assertSame(200, $name['headers']['status-code']);
+
+        try {
+            $frame = $pending->receive();
+            $this->fail('A session missing a factor received the impersonated user\'s event: ' . $frame);
+        } catch (TimeoutException) {
+            // No event reached the connection
+        }
+
+        $pending->close();
+    }
+
     public function testImpersonatedConnectionFollowsSessionExtension(): void
     {
         // Its own project: sessions here only last the 60s policy minimum.
@@ -1201,7 +1924,7 @@ final class RealtimeCustomClientTest extends Scope
 
         $setDuration(60);
 
-        $targetId = ID::unique();
+        $targetId = Id::unique();
         $target = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $targetId,
             'email' => 'extension-target-' . $targetId . '@example.com',
@@ -1210,7 +1933,7 @@ final class RealtimeCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $actorId = ID::unique();
+        $actorId = Id::unique();
         $actor = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $actorId,
             'email' => 'extension-actor-' . $actorId . '@example.com',
@@ -1286,7 +2009,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -1358,7 +2081,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -1464,7 +2187,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -1478,7 +2201,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -1520,7 +2243,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -1567,7 +2290,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans 2'
             ],
@@ -1613,7 +2336,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -1669,7 +2392,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -1678,7 +2401,7 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Scarlett Johansson',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -1958,7 +2681,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -2048,7 +2771,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -2062,7 +2785,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -2105,7 +2828,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Any',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -2114,7 +2837,7 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Users',
                     '$permissions' => [
                         Permission::read(Role::users()),
@@ -2123,21 +2846,21 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'User1',
                     '$permissions' => [
                         Permission::read(Role::user($user1Id)),
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'User2',
                     '$permissions' => [
                         Permission::read(Role::user($user2Id)),
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'User2',
                     '$permissions' => [
                         Permission::read(Role::user($user2Id)),
@@ -2470,14 +3193,14 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::user($user1Id)),
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Thor',
                     '$permissions' => [
                         Permission::read(Role::user($user2Id)),
@@ -2598,7 +3321,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -2612,7 +3335,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2656,7 +3379,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -2738,7 +3461,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -2812,7 +3535,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Bucket 1',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2831,7 +3554,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2981,7 +3704,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test timeout execution',
             'execute' => ['users'],
             'runtime' => 'node-22',
@@ -3101,6 +3824,24 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertContains("functions.*.executions.*", $responseUpdate['data']['events']);
         $this->assertContains("functions.*", $responseUpdate['data']['events']);
         $this->assertNotEmpty($responseUpdate['data']['payload']);
+        $this->assertArrayNotHasKey('logs', $responseUpdate['data']['payload']);
+        $this->assertArrayNotHasKey('errors', $responseUpdate['data']['payload']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/executions/' . $executionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $responseDelete = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("functions.{$functionId}.executions.{$executionId}.delete", $message['data']['events'] ?? [], true)
+        );
+        $this->assertSame($executionId, $responseDelete['data']['payload']['$id']);
+        $this->assertArrayNotHasKey('logs', $responseDelete['data']['payload']);
+        $this->assertArrayNotHasKey('errors', $responseDelete['data']['payload']);
 
         $client->close();
 
@@ -3143,7 +3884,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -3329,7 +4070,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Realtime Target User',
@@ -3355,7 +4096,7 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertEquals('connected', $response['type']);
 
         $team = $this->client->call(Client::METHOD_POST, '/teams', $adminHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Realtime Delete Team ' . uniqid(),
         ]);
         $this->assertEquals(201, $team['headers']['status-code']);
@@ -3400,6 +4141,146 @@ final class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    /**
+     * A membership event is addressed to the whole team, while the payload it carries is the
+     * HTTP response rendered for the writing caller — here an API key, which sees the new
+     * member's real id, name and email. The project's membership privacy policy must be
+     * applied to the broadcast too, or a teammate learns what the read endpoints hide.
+     */
+    public function testChannelMembershipsPrivacy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $adminHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $privacy = $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $adminHeaders, [
+            'userId' => false,
+            'userEmail' => false,
+            'userPhone' => false,
+            'userName' => false,
+            'userMFA' => false,
+            'userAccessedAt' => false,
+        ]);
+        $this->assertEquals(200, $privacy['headers']['status-code']);
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $adminHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Privacy Team ' . uniqid(),
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        // The teammate who listens: an ordinary confirmed member with no elevated scope
+        $teammate = $this->createRealtimeUser('Realtime Teammate');
+        $client = $this->getWebsocket(['memberships'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $teammate['cookie'],
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        $teammateMembership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $adminHeaders, [
+            'userId' => $teammate['$id'],
+            'roles' => ['member'],
+        ]);
+        $this->assertEquals(201, $teammateMembership['headers']['status-code']);
+
+        // Their connection re-resolves its roles on their own membership event, so it holds team:{teamId} from here on
+        $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships." . $teammateMembership['body']['$id'] . '.create', $message['data']['events'] ?? [], true)
+        );
+
+        $member = $this->createRealtimeUser('Realtime Private Member');
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $adminHeaders, [
+            'userId' => $member['$id'],
+            'roles' => ['member'],
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+        $membershipId = $membership['body']['$id'];
+
+        // The API key writing the membership sees the member's details, the team must not
+        $this->assertEquals($member['$id'], $membership['body']['userId']);
+        $this->assertEquals('Realtime Private Member', $membership['body']['userName']);
+        $this->assertEquals($member['email'], $membership['body']['userEmail']);
+
+        $createEvent = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships.{$membershipId}.create", $message['data']['events'] ?? [], true)
+        );
+
+        $payload = $createEvent['data']['payload'];
+        $this->assertArrayNotHasKey('userId', $payload);
+        $this->assertArrayNotHasKey('userName', $payload);
+        $this->assertArrayNotHasKey('userEmail', $payload);
+        $this->assertArrayNotHasKey('userPhone', $payload);
+        $this->assertArrayNotHasKey('mfa', $payload);
+        $this->assertEquals($membershipId, $payload['$id']);
+        $this->assertEquals($teamId, $payload['teamId']);
+        $this->assertEquals(['member'], $payload['roles']);
+
+        $roles = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membershipId, $adminHeaders, [
+            'roles' => ['member', 'editor'],
+        ]);
+        $this->assertEquals(200, $roles['headers']['status-code']);
+
+        $updateEvent = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships.{$membershipId}.update", $message['data']['events'] ?? [], true)
+        );
+
+        $payload = $updateEvent['data']['payload'];
+        $this->assertArrayNotHasKey('userId', $payload);
+        $this->assertArrayNotHasKey('userName', $payload);
+        $this->assertArrayNotHasKey('userEmail', $payload);
+        $this->assertEquals(['member', 'editor'], $payload['roles']);
+
+        $client->close();
+    }
+
+    /**
+     * Create a confirmed-capable user with a session, for membership realtime tests.
+     *
+     * @return array{'$id': string, email: string, cookie: string}
+     */
+    private function createRealtimeUser(string $name): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+
+        $user = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => $name,
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            '$id' => $user['body']['$id'],
+            'email' => $email,
+            'cookie' => $session['cookies']['a_session_' . $projectId],
+        ];
+    }
+
     public function testChannelsTablesDB()
     {
         $user = $this->getUser();
@@ -3415,7 +4296,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'TablesDB Cross API Realtime DB',
         ]);
 
@@ -3431,7 +4312,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Legacy Actors',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -3471,7 +4352,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -3541,7 +4422,7 @@ final class RealtimeCustomClientTest extends Scope
          * Both clients should receive an event that includes both document-
          * style and row-style channels on the shared database.
          */
-        $documentId = ID::unique();
+        $documentId = Id::unique();
 
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -3592,7 +4473,7 @@ final class RealtimeCustomClientTest extends Scope
          * Both clients should again receive an event that now also includes
          * the tablesdb-prefixed channels alongside the databases-prefixed ones.
          */
-        $rowId = ID::unique();
+        $rowId = Id::unique();
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -3651,7 +4532,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Legacy DB via TablesDB Route',
         ]);
 
@@ -3664,7 +4545,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Legacy Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -3699,7 +4580,7 @@ final class RealtimeCustomClientTest extends Scope
             $this->assertEquals('available', $column['body']['status']);
         }, 120000, 500);
 
-        $legacyRowId = ID::unique();
+        $legacyRowId = Id::unique();
 
         $legacyRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $legacyDatabaseId . '/tables/' . $legacyTableId . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -3765,7 +4646,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Row Update DB',
         ]);
 
@@ -3777,7 +4658,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Assembly',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -3814,7 +4695,7 @@ final class RealtimeCustomClientTest extends Scope
         }, 120000, 500);
 
         // Seed a row so we can listen to its update
-        $rowId = ID::unique();
+        $rowId = Id::unique();
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -3957,7 +4838,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Transactions DB',
         ]);
 
@@ -3968,7 +4849,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -4011,7 +4892,7 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($transaction['body']['$id']);
 
         $transactionId = $transaction['body']['$id'];
-        $documentId = ID::unique();
+        $documentId = Id::unique();
 
         $operationsResponse = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transactionId . '/operations', array_merge([
             'content-type' => 'application/json',
@@ -4159,7 +5040,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mirror Legacy DB',
         ]);
         $this->assertEquals(201, $legacyDatabase['headers']['status-code']);
@@ -4170,7 +5051,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Legacy Collection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4214,7 +5095,7 @@ final class RealtimeCustomClientTest extends Scope
         $connected = json_decode($legacyClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
 
-        $legacyDocumentId = ID::unique();
+        $legacyDocumentId = Id::unique();
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $legacyDatabaseId . '/collections/' . $legacyCollectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -4253,7 +5134,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mirror TablesDB',
         ]);
         $this->assertEquals(201, $tablesDatabase['headers']['status-code']);
@@ -4264,7 +5145,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Mirror Table',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4308,7 +5189,7 @@ final class RealtimeCustomClientTest extends Scope
         $connected = json_decode($tablesClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
 
-        $rowId = ID::unique();
+        $rowId = Id::unique();
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $tablesDatabaseId . '/tables/' . $tableId . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -4347,7 +5228,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mirror DocumentsDB',
         ]);
         $this->assertEquals(201, $documentsDatabase['headers']['status-code']);
@@ -4358,7 +5239,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Mirror Documents Collection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4382,7 +5263,7 @@ final class RealtimeCustomClientTest extends Scope
         $connected = json_decode($documentsClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
 
-        $documentsDocumentId = ID::unique();
+        $documentsDocumentId = Id::unique();
         $documentsDocument = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $documentsDatabaseId . '/collections/' . $documentsCollectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -4437,7 +5318,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Multi-Op DB',
         ]);
 
@@ -4448,7 +5329,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -4488,9 +5369,9 @@ final class RealtimeCustomClientTest extends Scope
         ]);
 
         $transactionId = $transaction['body']['$id'];
-        $documentId1 = ID::unique();
-        $documentId2 = ID::unique();
-        $documentId3 = ID::unique();
+        $documentId1 = Id::unique();
+        $documentId2 = Id::unique();
+        $documentId3 = Id::unique();
 
         $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transactionId . '/operations', array_merge([
             'content-type' => 'application/json',
@@ -4593,7 +5474,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Rollback DB',
         ]);
 
@@ -4604,7 +5485,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -4644,7 +5525,7 @@ final class RealtimeCustomClientTest extends Scope
         ]);
 
         $transactionId = $transaction['body']['$id'];
-        $documentId = ID::unique();
+        $documentId = Id::unique();
 
         $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transactionId . '/operations', array_merge([
             'content-type' => 'application/json',
@@ -4709,7 +5590,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'db-rel'
         ]);
         $databaseId = $database['body']['$id'];
@@ -4719,7 +5600,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'level1',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4736,7 +5617,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'level2',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4812,7 +5693,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'L2'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4826,7 +5707,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'L1'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4862,7 +5743,7 @@ final class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
-    public function testChannelDatabaseRelationshipDelete(): void
+    public function testCreateRelationshipPayloadAlignsWithUpdate()
     {
         if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
@@ -4880,6 +5761,311 @@ final class RealtimeCustomClientTest extends Scope
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
             'databaseId' => ID::unique(),
+            'name' => 'db-rel-create',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $level1 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'level1',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $level1Id = $level1['body']['$id'];
+
+        $level2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'level2',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $level2Id = $level2['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/string", $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/attributes/string", $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $level1Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/name', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $this->assertEventually(function () use ($databaseId, $level2Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level2Id . '/attributes/name', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/relationship", $headers, [
+            'relatedCollectionId' => $level2Id,
+            'type' => 'oneToOne',
+            'twoWay' => true,
+            'key' => 'level2Ref',
+            'onDelete' => 'cascade',
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $level1Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/level2Ref', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $doc2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'L2'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $doc2Id = $doc2['body']['$id'];
+
+        $client = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('connected', $response['type']);
+
+        $doc1 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'name' => 'L1',
+                'level2Ref' => $doc2Id,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $doc1['headers']['status-code']);
+        $doc1Id = $doc1['body']['$id'];
+        $this->assertArrayHasKey('level2Ref', $doc1['body']);
+
+        $event = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['data']['payload']['$id'] ?? null) === $doc1Id
+                && \in_array("databases.{$databaseId}.collections.{$level1Id}.documents.{$doc1Id}.create", $message['data']['events'] ?? [], true),
+            timeoutMs: 10000
+        );
+
+        $this->assertEquals('event', $event['type']);
+        $this->assertArrayHasKey('payload', $event['data']);
+        $this->assertEquals($doc1Id, $event['data']['payload']['$id']);
+        $this->assertEquals('L1', $event['data']['payload']['name']);
+        $this->assertArrayNotHasKey('level2Ref', $event['data']['payload']);
+
+        $client->close();
+    }
+
+    public function testTransactionCommitRelationshipPayloadAlignsWithUpdate()
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'db-rel-txn',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $level1 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'level1',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $level1Id = $level1['body']['$id'];
+
+        $level2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'level2',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $level2Id = $level2['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/string", $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/attributes/string", $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $level1Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/name', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $this->assertEventually(function () use ($databaseId, $level2Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level2Id . '/attributes/name', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/relationship", $headers, [
+            'relatedCollectionId' => $level2Id,
+            'type' => 'oneToOne',
+            'twoWay' => true,
+            'key' => 'level2Ref',
+            'onDelete' => 'cascade',
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $level1Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/level2Ref', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $doc2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'L2'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $doc2Id = $doc2['body']['$id'];
+        $doc1Id = ID::unique();
+
+        $client = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('connected', $response['type']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'ttl' => 3600,
+        ]);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $operationsResponse = $this->client->call(Client::METHOD_POST, '/databases/transactions/' . $transactionId . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $level1Id,
+                    'documentId' => $doc1Id,
+                    'action' => 'create',
+                    'data' => [
+                        'name' => 'L1',
+                        'level2Ref' => $doc2Id,
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::any()),
+                            Permission::delete(Role::any()),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $operationsResponse['headers']['status-code']);
+
+        $commitResponse = $this->client->call(Client::METHOD_PATCH, '/databases/transactions/' . $transactionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'commit' => true,
+        ]);
+        $this->assertEquals(200, $commitResponse['headers']['status-code']);
+
+        $event = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['data']['payload']['$id'] ?? null) === $doc1Id
+                && \in_array("databases.{$databaseId}.collections.{$level1Id}.documents.{$doc1Id}.create", $message['data']['events'] ?? [], true),
+            timeoutMs: 10000
+        );
+
+        $this->assertEquals('event', $event['type']);
+        $this->assertArrayHasKey('payload', $event['data']);
+        $this->assertEquals($doc1Id, $event['data']['payload']['$id']);
+        $this->assertEquals('L1', $event['data']['payload']['name']);
+        $this->assertArrayNotHasKey('level2Ref', $event['data']['payload']);
+
+        $client->close();
+    }
+
+    public function testChannelDatabaseRelationshipDelete(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => Id::unique(),
             'name' => 'Relationship Delete DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -4887,7 +6073,7 @@ final class RealtimeCustomClientTest extends Scope
         $collections = [];
         foreach (['parent', 'child'] as $side) {
             $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => $side,
                 'permissions' => [Permission::create(Role::any())],
                 'documentSecurity' => true,
@@ -4944,14 +6130,14 @@ final class RealtimeCustomClientTest extends Scope
             ];
 
             $child = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/documents', $headers, [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => ['name' => 'child'],
                 'permissions' => $permissions,
             ]);
             $childId = $child['body']['$id'];
 
             $parent = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/documents', $headers, [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [$key => \in_array($case['type'], ['oneToMany', 'manyToMany']) ? [$childId] : $childId],
                 'permissions' => $permissions,
             ]);
@@ -5004,7 +6190,7 @@ final class RealtimeCustomClientTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Relationship Delete Permissions DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -5012,7 +6198,7 @@ final class RealtimeCustomClientTest extends Scope
         $collections = [];
         foreach (['parent', 'child'] as $side) {
             $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => $side,
                 'permissions' => [Permission::create(Role::any())],
                 'documentSecurity' => true,
@@ -5044,7 +6230,7 @@ final class RealtimeCustomClientTest extends Scope
         }, 30000, 250);
 
         $child = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'child'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -5054,7 +6240,7 @@ final class RealtimeCustomClientTest extends Scope
         $childId = $child['body']['$id'];
 
         $parent = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['children' => [$childId]],
             'permissions' => [Permission::read(Role::user($user['$id']))],
         ]);
@@ -5119,7 +6305,7 @@ final class RealtimeCustomClientTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Relationship Delete TablesDB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -5127,7 +6313,7 @@ final class RealtimeCustomClientTest extends Scope
         $tables = [];
         foreach (['parent', 'child'] as $side) {
             $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
-                'tableId' => ID::unique(),
+                'tableId' => Id::unique(),
                 'name' => $side,
                 'permissions' => [Permission::create(Role::any())],
                 'rowSecurity' => true,
@@ -5164,14 +6350,14 @@ final class RealtimeCustomClientTest extends Scope
         ];
 
         $child = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['child'] . '/rows', $headers, [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => ['name' => 'child'],
             'permissions' => $permissions,
         ]);
         $childId = $child['body']['$id'];
 
         $parent = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['parent'] . '/rows', $headers, [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => ['children' => [$childId]],
             'permissions' => $permissions,
         ]);
@@ -5223,7 +6409,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Concurrent DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -5233,7 +6419,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Concurrent Collection',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -5299,7 +6485,7 @@ final class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ],
             [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => $payload,
                 'permissions' => [
                     Permission::read(Role::any()),
@@ -5383,7 +6569,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -5397,7 +6583,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -5441,7 +6627,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -5500,7 +6686,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans 2'
             ],
@@ -5558,7 +6744,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -5628,7 +6814,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'rows' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -5637,7 +6823,7 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Scarlett Johansson',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6003,7 +7189,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'rows' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6091,7 +7277,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -6105,7 +7291,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -6122,7 +7308,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -6159,7 +7345,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans 2'
             ],
@@ -6193,7 +7379,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -6237,7 +7423,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6246,7 +7432,7 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Scarlett Johansson',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6498,7 +7684,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6571,7 +7757,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors VDB',
         ]);
 
@@ -6583,7 +7769,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -6599,7 +7785,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [1.0, 0.0, 0.0],
                 'metadata' => ['name' => 'Chris Evans']
@@ -6751,7 +7937,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Atomic DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -6763,7 +7949,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Atomic Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -6797,7 +7983,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'score' => 10
             ],

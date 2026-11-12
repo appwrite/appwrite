@@ -133,7 +133,7 @@ final class ConsumerFetchLifecycleTest extends TestCase
         $this->assertLessThan(
             StreamConfig::secondsToNanos($timeout),
             $expires,
-            'A message dispatched at a shared boundary is dropped client-side while the server counts the delivery',
+            'The server has to end a waiting fetch within the timeout the caller gave',
         );
     }
 

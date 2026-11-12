@@ -42,10 +42,23 @@ For web, in order to capture the OAuth2 callback URL and send it to the applicat
 <title>Authentication complete</title>
 <p>Authentication is complete. If this does not happen automatically, please close the window.</p>
 <script>
-  window.opener.postMessage({
-    'flutter-web-auth-2': window.location.href
-  }, window.location.origin);
-  window.close();
+  function postAuthenticationMessage() {
+    const message = {
+      'flutter-web-auth-2': window.location.href
+    };
+
+    if (window.opener) {
+      window.opener.postMessage(message, window.location.origin);
+      window.close();
+    } else if (window.parent && window.parent !== window) {
+      window.parent.postMessage(message, window.location.origin);
+    } else {
+      localStorage.setItem('flutter-web-auth-2', window.location.href);
+      window.close();
+    }
+  }
+
+  postAuthenticationMessage();
 </script>
 ```
 
@@ -65,17 +78,34 @@ In production, Appwrite allows you to set multiple [custom-domains](/docs/produc
 
 Add your app **name** and **Bundle ID**. You can find your **Bundle Identifier** in the **General** tab for your app's primary target in XCode.
 
-The Appwrite SDK uses `ASWebAuthenticationSession` on iOS 12+ and `SFAuthenticationSession` on iOS 11 to allow OAuth authentication.
-You have to change your iOS Deployment Target in Xcode to be iOS >= 11 to be able to build your app on an emulator or a real device.
+The Appwrite SDK uses `ASWebAuthenticationSession` for OAuth authentication and needs no further setup for it.
+You have to change your iOS Deployment Target in Xcode to be iOS >= 13 to be able to build your app on an emulator or a real device.
 
 1. In **XCode**, open `Runner.xcworkspace` in your app's iOS folder.
 2. To view your app's settings, select the Runner project in the XCode project navigator. Then, in the main view sidebar, select the **Runner target**.
 3. Select the **General** tab.
-4. In **Deployment Info** > **Target**, select iOS 11.0 or above
+4. In **Minimum Deployments**, select iOS 13.0 or above
 {% /tabsitem %}
 
 {% tabsitem #android title="Android" %}
 Add your app's **name** and **package name**, Your package name is generally the **applicationId** in your app-level [build.gradle](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/build.gradle#L41) file.
+
+The SDK includes a native Android plugin, so it needs Android 7.0 (API 24) or later, and core library desugaring for `flutter_local_notifications`. Apps with a lower `minSdk` or without desugaring fail to build. Add both to `android/app/build.gradle.kts`:
+
+```kotlin
+android {
+    defaultConfig {
+        minSdk = 24
+    }
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+```
 
 In order to capture the Appwrite OAuth callback url, the following activity needs to be added inside the `<application>` tag, along side the existing `<activity>` tags in your [AndroidManifest.xml](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml).
 Be sure to replace the **<PROJECT_ID>** string with your actual Appwrite project ID.
@@ -87,7 +117,10 @@ You can find your Appwrite project ID in you project settings screen in your App
   <application ...>
     ...
     <!-- Add this inside the `<application>` tag, along side the existing `<activity>` tags -->
-    <activity android:name="com.linusu.flutter_web_auth_2.CallbackActivity" android:exported="true">
+    <activity
+      android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
+      android:exported="true"
+      android:taskAffinity="">
       <intent-filter android:label="flutter_web_auth_2">
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
@@ -115,22 +148,11 @@ Add your app **name** and **Bundle ID**. You can find your **Bundle Identifier**
 
 The Appwrite SDK uses `ASWebAuthenticationSession` on macOS 10.15+ to allow OAuth authentication. You have to change your macOS **Deployment Target** in XCode to be macOS >= 10.15 to be able to build your app for macOS.
 
-In order to capture the Appwrite OAuth 2 callback url, the following URL scheme needs to added to your `Info.plist`.
+macOS apps run in the App Sandbox, which blocks network requests until you allow them. Add this key to both `macos/Runner/DebugProfile.entitlements` and `macos/Runner/Release.entitlements`:
 
 ```xml
-<key>CFBundleURLTypes</key>
-<array>
-<dict>
-    <key>CFBundleTypeRole</key>
-    <string>Editor</string>
-    <key>CFBundleURLName</key>
-    <string>io.appwrite</string>
-    <key>CFBundleURLSchemes</key>
-    <array>
-        <string>appwrite-callback-<PROJECT_ID></string>
-    </array>
-</dict>
-</array>
+<key>com.apple.security.network.client</key>
+<true/>
 ```
 {% /tabsitem %}
 
@@ -158,7 +180,7 @@ You can skip optional steps.
 Install the Appwrite SDK for Flutter.
 
 ```sh
-flutter pub add appwrite:17.0.0
+flutter pub add appwrite:28.0.0
 ```
 
 {% /section %}

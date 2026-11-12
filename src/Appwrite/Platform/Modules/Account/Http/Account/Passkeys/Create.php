@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Passkeys;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\Auth\Passkey\Challenges;
 use Appwrite\Extend\Exception;
@@ -17,10 +18,10 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -59,8 +60,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{userId}')
+            ->label('abuse', [Limit::attempts(['projectId', 'url', 'userId'], 10)])
             ->param('passkeyId', 'unique()', new CustomId(), 'Passkey ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('name', '', new Text(128, 0), 'Passkey name, shown when listing passkeys. Max length: 128 chars.', true)
             ->inject('request')
@@ -92,7 +92,7 @@ class Create extends Action
         // Shown by the authenticator when picking a passkey; passkey-only accounts have no email or phone
         $userName = $user->getAttribute('email') ?: $user->getAttribute('phone') ?: $user->getAttribute('name') ?: $user->getId();
 
-        $passkeyId = $passkeyId === 'unique()' ? ID::unique() : $passkeyId;
+        $passkeyId = $passkeyId === 'unique()' ? Id::unique() : $passkeyId;
 
         // A registration restarted with the same ID replaces the pending one instead of conflicting with it.
         // The row lock keeps a verification that lands first from being deleted.
@@ -123,7 +123,7 @@ class Create extends Action
         $challenge = $ceremony->register($userName, $user->getAttribute('name') ?: $userName, $records);
 
         // Verification consumes the challenge the pending passkey points to, so a replaced registration's challenge is never used
-        $challengeId = ID::unique();
+        $challengeId = Id::unique();
 
         try {
             $passkey = $dbForProject->createDocument('authenticators', new Document([

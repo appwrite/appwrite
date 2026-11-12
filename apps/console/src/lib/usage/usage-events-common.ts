@@ -536,6 +536,7 @@ function mergeValuesByTime(
 ): Map<string, number> {
   const merged = new Map<string, number>()
   for (const group of groups) {
+    if (!group.time) continue
     merged.set(group.time, (merged.get(group.time) ?? 0) + group.value)
   }
   return merged

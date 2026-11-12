@@ -603,19 +603,6 @@ class OpenSRS extends Adapter
             'attributes' => $attributes,
         ];
 
-        $xpath = implode('/', [
-            '//body',
-            'data_block',
-            'dt_assoc',
-            'item[@key="attributes"]',
-            'dt_assoc',
-            'item[@key="details"]',
-            'dt_assoc',
-            'item[@key="' . $domain . '"]',
-            'dt_assoc',
-            'item[@key="is_success"]',
-        ]);
-
         $result = $this->send($message);
         $result = $this->sanitizeResponse($result);
 
@@ -624,7 +611,16 @@ class OpenSRS extends Adapter
             return true;
         }
 
-        $elements = $result->xpath($xpath);
+        // The per-domain verdict is matched in PHP rather than spliced into an
+        // XPath expression, which the domain string could otherwise alter.
+        $details = $result->xpath('//body/data_block/dt_assoc/item[@key="attributes"]/dt_assoc/item[@key="details"]/dt_assoc/item') ?: [];
+        $elements = [];
+        foreach ($details as $item) {
+            if ((string) $item['key'] === $domain) {
+                $elements = $item->xpath('dt_assoc/item[@key="is_success"]');
+                break;
+            }
+        }
         if (empty($elements)) {
             $elements = $result->xpath('//body/data_block/dt_assoc/item[@key="is_success"]');
         }
@@ -871,7 +867,7 @@ class OpenSRS extends Adapter
     private function createArray(string $key, array $ary): string
     {
         $result = [
-            '<item key="' . $key . '">',
+            '<item key="' . $this->escape($key) . '">',
             '<dt_array>',
         ];
 
@@ -888,7 +884,7 @@ class OpenSRS extends Adapter
     private function createAssoc(string $key, array $assoc): string
     {
         $result = [
-            '<item key="' . $key . '">',
+            '<item key="' . $this->escape($key) . '">',
             '<dt_assoc>',
         ];
 
@@ -933,7 +929,18 @@ class OpenSRS extends Adapter
             return $this->createArray($key, $value);
         }
 
-        return "<item key='{$key}'>{$value}</item>";
+        return "<item key='" . $this->escape($key) . "'>" . $this->escape($value) . '</item>';
+    }
+
+    /**
+     * XML-escapes a key or scalar for the envelope. The signature in send()
+     * covers the escaped bytes, so a value cannot close its element and add
+     * items of its own. Invalid UTF-8 becomes U+FFFD rather than blanking
+     * the whole field.
+     */
+    private function escape(string|int $value): string
+    {
+        return htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
     private function validateContact(array $contact): array
@@ -980,7 +987,7 @@ class OpenSRS extends Adapter
     {
         $contact = $this->validateContact($contact);
         $result = [
-            "<item key='{$type}'>",
+            "<item key='" . $this->escape($type) . "'>",
             '<dt_assoc>',
         ];
 
@@ -1128,6 +1135,10 @@ class OpenSRS extends Adapter
 
         $result = [];
         foreach ($contacts as $key => $val) {
+            // The key becomes an item attribute; SW_REGISTER knows only these four.
+            if (!\in_array($key, [self::CONTACT_TYPE_OWNER, self::CONTACT_TYPE_ADMIN, self::CONTACT_TYPE_TECH, self::CONTACT_TYPE_BILLING], true)) {
+                throw new InvalidContactException("Unknown contact type: {$key}");
+            }
             $result[$key] = $val->toArray();
         }
 

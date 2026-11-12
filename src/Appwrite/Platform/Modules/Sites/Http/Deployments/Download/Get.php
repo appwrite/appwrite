@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Download;
 
+use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Token;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -11,14 +12,16 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Psr\Http\Message\StreamInterface;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -59,11 +62,11 @@ class Get extends Action
                     )
                 ],
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
                 contentType: ContentType::ANY,
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
-            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Deployment ID.', false, ['dbForProject'])
             ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true, enum: new Enum(name: 'DeploymentDownloadType'))
             ->param('token', '', new Text(2048), 'Presigned source-download token for accessing this deployment without a session (jobs-service).', true)
             ->inject('response')
@@ -92,7 +95,8 @@ class Get extends Action
         // Access is granted either to a privileged caller (console/CLI via
         // session or API key) or to a valid presigned token bound to this
         // deployment + artifact type (used by the jobs-service).
-        $isPrivileged = $user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles());
+        $isPrivileged = $user->isPrivileged($authorization->getRoles())
+            || ($user->isKey($authorization->getRoles()) && \in_array('sites.read', $request->getScopes(), true));
         if (! $isPrivileged && ! Token::verify($token, $deploymentId, $type)) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -123,8 +127,10 @@ class Get extends Action
             default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
         };
 
-        // Not every storage device reports an empty path as missing.
-        if ($path === '' || !$device->exists($path)) {
+        // Builds can write the builds volume, so a local file is opened once and read only through that handle
+        $local = $device->getType() === DeviceType::Local;
+        $artifact = $local ? Deployments::openArtifact($device, $path) : null;
+        if ($local ? $artifact === null : !Deployments::isArtifact($device, $path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -133,7 +139,7 @@ class Get extends Action
             ? $deploymentId . '-source.tar.gz'
             : $deploymentId . '-output-' . \basename($path);
 
-        $size = $device->getFileSize($path);
+        $size = $artifact?->getSize() ?? $device->getFileSize($path);
         $rangeHeader = $request->getHeaderLine('range');
 
         $response
@@ -164,23 +170,39 @@ class Get extends Action
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send((string) $device->read($path, $start, ($end - $start + 1)));
+            $response->send($this->read($device, $path, $artifact, $start, $end - $start + 1));
             return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    (string) $device->read(
+                    $this->read(
+                        $device,
                         $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
+                        $artifact,
+                        $i * MAX_OUTPUT_CHUNK_SIZE,
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
                     ),
                     (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
                 );
             }
         } else {
-            $response->send((string) $device->read($path));
+            $response->send($this->read($device, $path, $artifact));
         }
+    }
+
+    /**
+     * A window of the deployment file: through the handle opened for a local file, by path elsewhere.
+     */
+    private function read(Device $device, string $path, ?StreamInterface $artifact, int $offset = 0, ?int $length = null): string
+    {
+        if ($artifact === null) {
+            return (string) $device->read($path, $offset, $length);
+        }
+
+        $artifact->seek($offset);
+
+        return $length === null ? $artifact->getContents() : $artifact->read($length);
     }
 }

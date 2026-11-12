@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 
 abstract class Action extends DatabasesAction
@@ -87,8 +88,23 @@ abstract class Action extends DatabasesAction
         return $this->getResource() . 'Id';
     }
 
+    protected function getNotFoundException(): string
+    {
+        return $this->isCollectionsAPI() ? Exception::DOCUMENT_NOT_FOUND : Exception::ROW_NOT_FOUND;
+    }
+
+    protected function getParentNotFoundException(): string
+    {
+        return $this->isCollectionsAPI() ? Exception::COLLECTION_NOT_FOUND : Exception::TABLE_NOT_FOUND;
+    }
+
     protected function getAttributeKey(): string
     {
         return $this->isCollectionsAPI() ? 'attribute' : 'column';
+    }
+
+    protected function getSDKNamespace(): string
+    {
+        return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }
 }

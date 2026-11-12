@@ -857,7 +857,7 @@ class ClickHouseTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `events` PREWHERE toDate(created) > ?', $result->query);
+        $this->assertSame('SELECT * FROM `events` PREWHERE (toDate(created) > ?)', $result->query);
         $this->assertSame(['2024-01-01'], $result->bindings);
     }
 
@@ -2493,7 +2493,7 @@ class ClickHouseTest extends TestCase
     {
         $result = new Builder()->from('t')->filter([Query::raw('x > ? AND y < ?', [1, 2])])->build();
         $this->assertBindingCount($result);
-        $this->assertSame('SELECT * FROM `t` WHERE x > ? AND y < ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (x > ? AND y < ?)', $result->query);
         $this->assertSame([1, 2], $result->bindings);
     }
 
@@ -3229,7 +3229,7 @@ class ClickHouseTest extends TestCase
             ->filter([Query::raw('x = ?', [null])])
             ->toRawSql();
 
-        $this->assertSame('SELECT * FROM `events` WHERE x = NULL', $sql);
+        $this->assertSame('SELECT * FROM `events` WHERE (x = NULL)', $sql);
     }
 
     public function testToRawSqlWithFloatBindings(): void
@@ -4657,6 +4657,12 @@ class ClickHouseTest extends TestCase
         new Builder()->from('t')->filter([Query::elemMatch('attr', [Query::equal('x', [1])])])->build();
     }
 
+    public function testFilterRelationshipThrowsException(): void
+    {
+        $this->expectException(UnsupportedException::class);
+        new Builder()->from('t')->filter([Query::relationship('attr', [Query::equal('x', [1])])])->build();
+    }
+
     public function testSampleZero(): void
     {
         $this->expectException(ValidationException::class);
@@ -5050,7 +5056,7 @@ class ClickHouseTest extends TestCase
     public function testToRawSqlWithNull(): void
     {
         $sql = new Builder()->from('t')->filter([Query::raw('col = ?', [null])])->toRawSql();
-        $this->assertSame('SELECT * FROM `t` WHERE col = NULL', $sql);
+        $this->assertSame('SELECT * FROM `t` WHERE (col = NULL)', $sql);
     }
 
     public function testToRawSqlMixedTypes(): void
@@ -5314,7 +5320,7 @@ class ClickHouseTest extends TestCase
             ])])
             ->build();
         $this->assertBindingCount($result);
-        $this->assertSame('SELECT * FROM `t` WHERE (`x` > ? AND custom_func(y) > ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`x` > ? AND (custom_func(y) > ?))', $result->query);
         $this->assertSame([1, 5], $result->bindings);
     }
 
@@ -5327,7 +5333,7 @@ class ClickHouseTest extends TestCase
             ])])
             ->build();
         $this->assertBindingCount($result);
-        $this->assertSame('SELECT * FROM `t` WHERE (`a` IN (?) OR b IS NOT NULL)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`a` IN (?) OR (b IS NOT NULL))', $result->query);
         $this->assertSame([1], $result->bindings);
     }
 
@@ -6587,7 +6593,7 @@ class ClickHouseTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE score > ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (score > ?)', $result->query);
         $this->assertContains(10, $result->bindings);
     }
 
@@ -6918,7 +6924,7 @@ class ClickHouseTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)', $result->query);
+        $this->assertSame('SELECT * FROM `users` WHERE EXISTS (SELECT `id` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))', $result->query);
     }
 
     public function testExplainClickHouse(): void
@@ -7025,7 +7031,7 @@ class ClickHouseTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING COUNT(*) > ?', $result->query);
+        $this->assertSame('SELECT COUNT(*) AS `cnt` FROM `events` GROUP BY `user_id` HAVING (COUNT(*) > ?)', $result->query);
         $this->assertSame([10], $result->bindings);
     }
 
@@ -7037,7 +7043,7 @@ class ClickHouseTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `events` WHERE a = ?', $result->query);
+        $this->assertSame('SELECT * FROM `events` WHERE (a = ?)', $result->query);
         $this->assertSame([1], $result->bindings);
     }
 
@@ -7050,7 +7056,7 @@ class ClickHouseTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `events` WHERE `b` IN (?) AND a = ?', $result->query);
+        $this->assertSame('SELECT * FROM `events` WHERE `b` IN (?) AND (a = ?)', $result->query);
         $this->assertContains(1, $result->bindings);
         $this->assertContains(2, $result->bindings);
     }
@@ -7478,7 +7484,7 @@ class ClickHouseTest extends TestCase
             ->build();
 
         $this->assertSame(
-            'SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE `orders`.`user_id` = `users`.`id`)',
+            'SELECT `id`, `name` FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`))',
             $result->query
         );
         $this->assertSame([], $result->bindings);
@@ -7521,7 +7527,7 @@ class ClickHouseTest extends TestCase
             ->build();
 
         $this->assertSame(
-            'SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE `orders`.`user_id` = `users`.`id`) AS `order_count` FROM `users`',
+            'SELECT `id`, `name`, (SELECT COUNT(*) AS `cnt` FROM `orders` WHERE (`orders`.`user_id` = `users`.`id`)) AS `order_count` FROM `users`',
             $result->query
         );
         $this->assertSame([], $result->bindings);
@@ -8629,7 +8635,7 @@ class ClickHouseTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE orders.customer_id = customers.id AND `total` > ?)', $result->query);
+        $this->assertSame('SELECT * FROM `customers` WHERE `active` IN (?) AND EXISTS (SELECT * FROM `orders` WHERE (orders.customer_id = customers.id) AND `total` > ?)', $result->query);
     }
 
     public function testConditionalAggregatesCountIfGroupByHaving(): void

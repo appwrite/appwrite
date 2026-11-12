@@ -36,6 +36,7 @@ export type InitTicketStackId =
   | 'emergent'
   | 'bolt'
   | 'zenflow'
+  | 'pi'
 
 export type InitTicketStackOption = {
   id: InitTicketStackId
@@ -72,6 +73,7 @@ export const INIT_TICKET_STACK_OPTIONS: InitTicketStackOption[] = [
   { id: 'node', label: 'Node.js', iconKey: 'node' },
   { id: 'zenflow', label: 'Zenflow', iconKey: 'zenflow' },
   { id: 'python', label: 'Python', iconKey: 'python' },
+  { id: 'pi', label: 'Pi', iconKey: 'pi' },
   { id: 'go', label: 'Go', iconKey: 'go' },
   { id: 'php', label: 'PHP', iconKey: 'php' },
   { id: 'ruby', label: 'Ruby', iconKey: 'ruby' },

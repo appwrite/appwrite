@@ -204,7 +204,10 @@ export function DocsHubFaq({ variant = 'page' }: DocsHubFaqProps) {
                     {item.question}
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="text-[13px] leading-6 text-muted-foreground">
+                <AccordionContent
+                  forceMount
+                  className="text-[13px] leading-6 text-muted-foreground"
+                >
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>

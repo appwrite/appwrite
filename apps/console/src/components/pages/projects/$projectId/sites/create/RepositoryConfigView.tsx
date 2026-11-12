@@ -5,7 +5,7 @@
  * Handles site details, branch selection, build settings, and domain configuration.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -127,6 +127,8 @@ export function RepositoryConfigView({
   const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
+  // Domain follows the site name until the user edits it
+  const domainEditedRef = useRef(!!formData.domain)
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
   const [isDeploying, setIsDeploying] = useState(false)
 
@@ -279,7 +281,7 @@ export function RepositoryConfigView({
 
   // Generate domain when site name changes
   useEffect(() => {
-    if (siteName && !domain) {
+    if (siteName && !domainEditedRef.current) {
       setDomain(generateDomain(siteName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -311,6 +313,7 @@ export function RepositoryConfigView({
 
     setIsDeploying(true)
 
+    let createdSiteId: string | null = null
     try {
       // Use framework defaults from SDK (buildRuntime, adapter, fallbackFile) for create
       const defaults = getFrameworkDefaults(framework)
@@ -333,6 +336,7 @@ export function RepositoryConfigView({
         providerSilentMode: silentMode,
         providerRootDirectory: rootDirectory || undefined,
       })
+      createdSiteId = site.$id
 
       // 2. Create domain rule
       if (domain) {
@@ -385,6 +389,18 @@ export function RepositoryConfigView({
       })
     } catch (error: unknown) {
       toast.error(error.message || t('Failed to create site'))
+      // The site exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the site instead.
+      if (createdSiteId) {
+        await queryClient.refetchQueries({
+          queryKey: ['sites', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/sites/$siteId',
+          params: { projectId, siteId: createdSiteId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }
@@ -628,7 +644,7 @@ export function RepositoryConfigView({
             className="h-8 text-[12px]"
           >
             <Link
-              to="/projects/$projectId/sites/create/repositories"
+              to="/projects/$projectId/sites/create"
               params={{ projectId: projectId! }}
             >
               {t('Change')}
@@ -743,6 +759,9 @@ export function RepositoryConfigView({
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={() => {
+              domainEditedRef.current = true
+            }}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
@@ -811,7 +830,9 @@ export function RepositoryConfigView({
                     {t('Silent mode')}
                   </Label>
                   <p className="text-[11px] text-muted-foreground">
-                    {t('Disable automated comments on repository commits')}
+                    {t(
+                      'Skip pull request comments, checks and deployment reports',
+                    )}
                   </p>
                 </div>
                 <Switch

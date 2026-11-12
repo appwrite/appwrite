@@ -92,6 +92,8 @@ export function ManualUploadView() {
   const [fallbackFile, setFallbackFile] = useState(formData.fallbackFile || '')
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
+  // Domain follows the site name until the user edits it
+  const domainEditedRef = useRef(!!formData.domain)
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
   const [uploadFile, setUploadFile] = useState<File | null>(
     formData.uploadFile || null,
@@ -113,7 +115,7 @@ export function ManualUploadView() {
 
   // Generate domain when site name changes
   useEffect(() => {
-    if (siteName && !domain) {
+    if (siteName && !domainEditedRef.current) {
       setDomain(generateDomain(siteName))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -191,6 +193,7 @@ export function ManualUploadView() {
 
     setIsDeploying(true)
 
+    let createdSiteId: string | null = null
     try {
       // 1. Create the site
       const defaults = getFrameworkDefaults(framework)
@@ -207,6 +210,7 @@ export function ManualUploadView() {
         fallbackFile:
           defaults.adapter === 'static' ? fallbackFile || undefined : undefined,
       })
+      createdSiteId = site.$id
 
       // 2. Create domain rule
       if (domain) {
@@ -264,6 +268,18 @@ export function ManualUploadView() {
       })
     } catch (error: unknown) {
       toast.error(error.message || t('Failed to create site'))
+      // The site exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the site instead.
+      if (createdSiteId) {
+        await queryClient.refetchQueries({
+          queryKey: ['sites', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/sites/$siteId',
+          params: { projectId, siteId: createdSiteId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }
@@ -296,7 +312,7 @@ export function ManualUploadView() {
         </h3>
         <div className="space-y-2">
           <Link
-            to="/projects/$projectId/sites/create/repositories"
+            to="/projects/$projectId/sites/create"
             params={{ projectId: projectId! }}
             className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -304,7 +320,7 @@ export function ManualUploadView() {
             {t('Import from Git')}
           </Link>
           <Link
-            to="/projects/$projectId/sites/create/templates"
+            to="/projects/$projectId/sites/create"
             params={{ projectId: projectId! }}
             className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -533,6 +549,9 @@ export function ManualUploadView() {
             value={domain}
             onChange={setDomain}
             onValidChange={setDomainValid}
+            onEdit={() => {
+              domainEditedRef.current = true
+            }}
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">

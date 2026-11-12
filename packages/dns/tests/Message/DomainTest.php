@@ -172,6 +172,78 @@ final class DomainTest extends TestCase
         Domain::decode($data, $offset);
     }
 
+    public function testDecodeAcceptsPointerChainAtLimit(): void
+    {
+        $data = self::pointerChain(Domain::MAX_POINTERS);
+        $offset = \strlen($data) - 2;
+
+        $this->assertSame('', Domain::decode($data, $offset));
+        $this->assertSame(\strlen($data), $offset);
+    }
+
+    public function testDecodeRejectsPointerChainOverLimit(): void
+    {
+        $data = self::pointerChain(Domain::MAX_POINTERS + 1);
+        $offset = \strlen($data) - 2;
+
+        $this->expectException(DecodingException::class);
+        $this->expectExceptionMessage('Domain name exceeds maximum compression pointer count');
+
+        Domain::decode($data, $offset);
+    }
+
+    public function testDecodeAcceptsNameAtMaximumLength(): void
+    {
+        $maxLabel = str_repeat('a', Domain::MAX_LABEL_LEN);
+        $name = implode('.', [$maxLabel, $maxLabel, $maxLabel, str_repeat('b', 61)]);
+        $data = Domain::encode($name);
+        $offset = 0;
+
+        $this->assertSame(Domain::MAX_DOMAIN_NAME_LEN, \strlen($data));
+        $this->assertSame($name, Domain::decode($data, $offset));
+    }
+
+    public function testDecodeRejectsNameOverMaximumLength(): void
+    {
+        $label = "\x3F" . str_repeat('a', Domain::MAX_LABEL_LEN);
+        $data = str_repeat($label, 4) . "\x00";
+        $offset = 0;
+
+        $this->expectException(DecodingException::class);
+        $this->expectExceptionMessage('Domain name exceeds maximum length of ' . Domain::MAX_DOMAIN_NAME_LEN . ' bytes');
+
+        Domain::decode($data, $offset);
+    }
+
+    public function testDecodeRejectsNameOverMaximumLengthAcrossPointers(): void
+    {
+        $label = "\x3F" . str_repeat('a', Domain::MAX_LABEL_LEN);
+        $suffix = str_repeat($label, 2) . "\x00";
+        $data = $suffix . str_repeat($label, 2) . "\xC0\x00";
+        $offset = \strlen($suffix);
+
+        $this->expectException(DecodingException::class);
+        $this->expectExceptionMessage('Domain name exceeds maximum length of ' . Domain::MAX_DOMAIN_NAME_LEN . ' bytes');
+
+        Domain::decode($data, $offset);
+    }
+
+    /**
+     * A root name followed by pointers that each reference the one before it.
+     */
+    private static function pointerChain(int $pointers): string
+    {
+        $data = "\x00";
+        $target = 0;
+        for ($i = 0; $i < $pointers; $i++) {
+            $position = \strlen($data);
+            $data .= pack('n', 0xC000 | $target);
+            $target = $position;
+        }
+
+        return $data;
+    }
+
     #[DataProvider('invalidDomainProvider')]
     public function testEncodeRejectsInvalidDomains(string $domain, string $expectedMessage): void
     {

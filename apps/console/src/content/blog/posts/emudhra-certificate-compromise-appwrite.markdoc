@@ -1,0 +1,117 @@
+---
+layout: post
+title: "eMudhra certificate compromise: Appwrite is patched"
+description: Appwrite Cloud and self-hosted Appwrite 2.6.0 and 1.9.8 now reject the compromised eMudhra certificate chains. Here's what we changed and how to upgrade.
+date: 2026-10-22
+cover: /images/blog/emudhra-certificate-compromise-appwrite/cover.avif
+timeToRead: 4
+author: chirag-aggarwal
+category: security
+featured: false
+faqs:
+  - question: "What is the eMudhra certificate compromise?"
+    answer: "In October 2026, the private keys of eight eMudhra intermediate certificates were compromised. Browsers and operating systems widely trusted those intermediates, so anyone with the keys can issue a certificate for any domain that passes normal certificate and hostname verification."
+  - question: "Is Appwrite affected by the eMudhra certificate compromise?"
+    answer: "Appwrite is patched. Appwrite Cloud runs patched images in every region, and self-hosted Appwrite 2.6.0 and 1.9.8 and later reject the compromised chains. Appwrite's own TLS certificates are not issued by eMudhra, so no Appwrite endpoint needs a new certificate."
+  - question: "Do I need to do anything on Appwrite Cloud?"
+    answer: "No. Appwrite Cloud's servers and workers already reject the compromised eMudhra chains, with TLS verification still enabled."
+  - question: "Which self-hosted Appwrite versions patch the eMudhra compromise?"
+    answer: "Appwrite 2.6.0 and 1.9.8 added the patch, and 2.6.1 and 1.9.9 include it. Upgrade 2.x installations to 2.6.1 and 1.9 installations to 1.9.9 using the [upgrade instructions](/docs/advanced/self-hosting/production/updates), then run the migration."
+  - question: "Are Appwrite's TLS certificates issued by eMudhra?"
+    answer: "No. Appwrite Cloud's API endpoints use certificates from Google Trust Services and Certainly, and Cloud issues Sites and Functions certificates through Certainly. Self-hosted Appwrite issues certificates through Let's Encrypt. See [TLS](/docs/advanced/security/tls) for details."
+  - question: "Should I disable certificate verification if a webhook stops working after the upgrade?"
+    answer: "No. If Appwrite now refuses to connect to one of your endpoints, that endpoint presents a compromised eMudhra chain. Replace its certificate and keep **Certificate verification (SSL/TLS)** enabled on the webhook."
+---
+
+In October 2026, the private keys of eight eMudhra intermediate certificates were compromised. Browsers and operating systems trusted those intermediates, so anyone holding the keys can issue a certificate for any domain, and clients that still trust the chains accept it as valid.
+
+Appwrite is patched:
+
+- **Appwrite Cloud** runs patched images in every region. No action is needed.
+- **Self-hosted Appwrite** rejects the compromised chains from [Appwrite 2.6.0 and 1.9.8](/changelog/entry/2026-10-21-1). Upgrade to 2.6.1 or 1.9.9, which include the patch.
+- **Appwrite's own certificates** are not issued by eMudhra, so no Appwrite endpoint or domain needs a new certificate.
+
+TLS verification stays enabled everywhere. We patched this by changing which certificates Appwrite trusts, not by relaxing any checks.
+
+# What the eMudhra compromise means for TLS clients
+
+When a client connects over HTTPS, it checks that the server's certificate chains to a trusted root and matches the hostname. A certificate forged with a compromised intermediate key passes both checks, because the intermediate itself is trusted. An attacker who can intercept traffic between a client and a server could then impersonate that server.
+
+Verifying certificates more strictly doesn't help. The only fix is to stop trusting the compromised chains, which means updating the trust store that each client uses. This is not a weakness in TLS encryption itself.
+
+# How Appwrite now rejects the compromised chains
+
+Appwrite's servers and workers make outbound HTTPS requests on your behalf. They deliver [webhooks](/docs/apis/webhooks), exchange tokens with OAuth2 providers, and call messaging providers, among other things. Those requests use the CA trust store of the Appwrite container. Before this update, that trust store accepted the eMudhra chains, as it did in most Linux images.
+
+The patch updates that trust store in Appwrite's images:
+
+- **Appwrite 2.6.0** requires Alpine's `ca-certificates` package at `20261020-r0` or later, which distrusts the compromised chains, and builds the embedded Go Git helper with Go 1.27.3, which adds an eMudhra denylist to `crypto/x509`.
+- **Appwrite 1.9.8** applies the same `ca-certificates` update.
+- **Both releases** also update the image stage that downloads dependencies, so the build itself rejects the chains.
+
+We tested Appwrite's cURL and Swoole HTTP clients against the public test hosts that Mozilla's Dennis Jackson maintains at [emudhra.we-have-a-problem.com](https://emudhra.we-have-a-problem.com/). Both clients reject the compromised chains and still accept normal HTTPS endpoints. Appwrite Cloud runs the same patched base image.
+
+# Upgrading self-hosted Appwrite
+
+Self-hosted 2.x installations should upgrade to [Appwrite 2.6.1](/docs/advanced/self-hosting/production/updates#upgrading-to-latest), and 1.9 installations to [Appwrite 1.9.9](/docs/advanced/self-hosting/production/updates#upgrading-1-9). Both include the eMudhra patch. From 2.6.0 or 1.9.8, the upgrade only replaces the images.
+
+[Back up your instance](/docs/advanced/self-hosting/production/backups), then run the upgrade and the [migration](/docs/advanced/self-hosting/production/updates#running-the-migration) for your version from the parent directory of your installation:
+
+{% tabs %}
+{% tabsitem #upgrade-2-x title="Appwrite 2.x" %}
+
+```sh
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="upgrade" \
+    appwrite/appwrite:2.6.1
+cd appwrite/
+docker compose exec appwrite migrate
+```
+
+{% /tabsitem %}
+{% tabsitem #upgrade-1-9 title="Appwrite 1.9" %}
+
+```sh
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="upgrade" \
+    appwrite/appwrite:1.9.9
+cd appwrite/
+docker compose exec appwrite migrate
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+To confirm that your instance rejects the compromised chains, run this from the `appwrite` directory. It requests a normal HTTPS endpoint and one of the compromised test hosts from inside the Appwrite container:
+
+```sh
+docker compose exec appwrite php -r '
+foreach (["example.com", "dv-g3b-emudhra.we-have-a-problem.com"] as $host) {
+    echo $host, ": ", @file_get_contents("https://$host/") === false ? "rejected" : "accepted", PHP_EOL;
+}'
+```
+
+A patched instance prints `accepted` for `example.com` and `rejected` for the test host. If the test host prints `accepted`, the container is still running an older image.
+
+# Replacing eMudhra certificates on your own endpoints
+
+Once patched, Appwrite refuses to connect to any endpoint that presents a compromised eMudhra chain. That includes webhook receivers, SMTP servers, and S3-compatible storage endpoints. If one of your integrations starts failing with a certificate error after the upgrade, replace that endpoint's certificate.
+
+Don't turn off **Certificate verification (SSL/TLS)** on a webhook to work around the error. That removes the protection against exactly the forged certificates this incident makes possible.
+
+Your own servers and apps need the same trust store update. Server code that calls Appwrite through an SDK uses the trust store of its operating system or runtime, so update its CA package. The [test site](https://emudhra.we-have-a-problem.com/) lists the patched `ca-certificates` versions for Alpine and Debian, and the patched Go releases.
+
+# Following the eMudhra remediation
+
+We are watching the incident for further updates, and we will patch Appwrite Cloud and self-hosted Appwrite again if anything changes. To report a security issue in Appwrite, email [security@appwrite.io](mailto:security@appwrite.io) or follow the [Appwrite security policy](https://github.com/appwrite/appwrite/security/policy).
+
+- [Upgrade self-hosted Appwrite](/docs/advanced/self-hosting/production/updates)
+- [TLS certificates in Appwrite](/docs/advanced/security/tls)
+- [Webhooks](/docs/apis/webhooks)
+- [Sign up for Appwrite Cloud](/sign-up)

@@ -14,7 +14,7 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
 }
 
-\ini_set('memory_limit', '512M');
+\ini_set('memory_limit', System::getEnv('_APP_MEMORY_LIMIT', '512M'));
 \ini_set('display_errors', 1);
 \ini_set('display_startup_errors', 1);
 \ini_set('default_socket_timeout', -1);

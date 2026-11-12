@@ -14,6 +14,7 @@ import {
   resolveLanguagePreference,
   type SupportedLanguage,
 } from '@/lib/i18n/active-language'
+import { ensureLanguageDictionary } from '@/lib/i18n/dictionaries/load'
 
 export type { SupportedLanguage }
 
@@ -45,6 +46,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.documentElement.lang = language
+  }, [language])
+
+  useEffect(() => {
+    void ensureLanguageDictionary(language)
   }, [language])
 
   const value = useMemo<I18nContextValue>(

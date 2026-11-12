@@ -13,12 +13,8 @@ function subscribeToTheme(onStoreChange: () => void) {
     attributeFilter: ['class'],
   })
 
-  const media = window.matchMedia('(prefers-color-scheme: dark)')
-  media.addEventListener('change', onStoreChange)
-
   return () => {
     observer.disconnect()
-    media.removeEventListener('change', onStoreChange)
   }
 }
 

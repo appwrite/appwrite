@@ -3,104 +3,69 @@
 namespace Utopia\Agents\Adapters;
 
 use Psr\Http\Client\ClientInterface;
-use Utopia\Agents\Adapters\OpenRouter\Models as OpenRouterModels;
+use Utopia\Agents\Request;
 use Utopia\Client\Psr18\StreamingClientInterface;
 
+/**
+ * OpenRouter, routing to any provider over an OpenAI-compatible API. Models
+ * are addressed as "provider/model", such as "anthropic/claude-sonnet-4.5".
+ */
 class OpenRouter extends OpenAI
 {
-    /**
-     * Default OpenRouter API endpoint
-     */
-    protected const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
-
-    protected ?string $httpReferer;
-
-    protected ?string $xTitle;
+    protected const string ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 
     /**
-     * Create a new OpenRouter adapter
-     *
-     * @throws \Exception
+     * @param  string|null  $referer  Your site URL, for OpenRouter rankings
+     * @param  string|null  $title  Your app name, for OpenRouter rankings
      */
     public function __construct(
         string $apiKey,
-        string $model = OpenRouterModels::MODEL_OPENAI_GPT_4O,
-        int $maxTokens = 1024,
-        float $temperature = 1.0,
+        string $model,
         ?string $endpoint = null,
         int $timeout = 90000,
-        ?string $httpReferer = null,
-        ?string $xTitle = null,
-        (ClientInterface&StreamingClientInterface)|null $client = null
+        (ClientInterface&StreamingClientInterface)|null $client = null,
+        protected ?string $referer = null,
+        protected ?string $title = null,
     ) {
-        $this->httpReferer = $httpReferer;
-        $this->xTitle = $xTitle;
-
-        parent::__construct(
-            $apiKey,
-            $model,
-            $maxTokens,
-            $temperature,
-            $endpoint ?? self::ENDPOINT,
-            $timeout,
-            $client
-        );
+        parent::__construct($apiKey, $model, $endpoint, $timeout, $client);
     }
 
-    /**
-     * Get available models
-     *
-     * @return array<string>
-     */
-    public function getModels(): array
-    {
-        return OpenRouterModels::MODELS;
-    }
-
-    /**
-     * Get the adapter name
-     */
     public function getName(): string
     {
         return 'openrouter';
     }
 
+    protected function tokens(): string
+    {
+        return 'max_tokens';
+    }
+
     /**
-     * @return array<string, string>
+     * OpenRouter takes reasoning effort as {"reasoning": {"effort": ...}}.
      */
+    protected function payload(Request $request): array
+    {
+        $payload = parent::payload($request);
+
+        if (isset($payload['reasoning_effort'])) {
+            $payload['reasoning'] = ['effort' => $payload['reasoning_effort']] + (\is_array($payload['reasoning'] ?? null) ? $payload['reasoning'] : []);
+            unset($payload['reasoning_effort']);
+        }
+
+        return $payload;
+    }
+
     protected function headers(): array
     {
         $headers = parent::headers();
 
-        if (! empty($this->httpReferer)) {
-            $headers['HTTP-Referer'] = $this->httpReferer;
+        if (! empty($this->referer)) {
+            $headers['HTTP-Referer'] = $this->referer;
         }
-
-        if (! empty($this->xTitle)) {
-            $headers['X-Title'] = $this->xTitle;
+        if (! empty($this->title)) {
+            $headers['X-Title'] = $this->title;
         }
 
         return $headers;
-    }
-
-    /**
-     * OpenRouter routes to many providers — schema support is not guaranteed.
-     */
-    public function isSchemaSupported(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Strip provider prefixes and colon suffixes from routed model IDs
-     * before OpenAI-specific checks (e.g. openai/gpt-5-nano:free → gpt-5-nano).
-     */
-    protected function normalizeModelForCompatibilityChecks(): string
-    {
-        $name = explode('/', $this->model, 2)[1] ?? $this->model;
-
-        $colonPos = strpos($name, ':');
-
-        return $colonPos !== false ? substr($name, 0, $colonPos) : $name;
     }
 }

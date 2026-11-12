@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 /**
@@ -50,7 +50,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $email = 'pwned_default_' . \uniqid() . '@localhost.test';
 
         $response = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => self::PWNED_PASSWORD,
             'name' => 'Default Policy User',
@@ -83,7 +83,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $email = 'pwned_off_' . \uniqid() . '@localhost.test';
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => self::PWNED_PASSWORD,
             'name' => 'Pwned Off User',
@@ -125,7 +125,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->updatePolicy(['enabled' => true, 'sessions' => true, 'users' => false]);
 
         $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_on_' . \uniqid() . '@localhost.test',
             'password' => self::PWNED_PASSWORD,
             'name' => 'Pwned On User',
@@ -140,7 +140,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->updatePolicy(['sessions' => false, 'users' => true]);
 
         $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_blocked_' . \uniqid() . '@localhost.test',
             'password' => self::PWNED_PASSWORD,
             'name' => 'Pwned Blocked User',
@@ -153,7 +153,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_clean_' . \uniqid() . '@localhost.test',
             'password' => $this->cleanPassword(),
             'name' => 'Clean User',
@@ -165,7 +165,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         // Importing an already hashed password never exposes the plaintext, so the policy cannot apply
         $response = $this->client->call(Client::METHOD_POST, '/users/sha', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_hashed_' . \uniqid() . '@localhost.test',
             'password' => \sha1(self::PWNED_PASSWORD),
             'passwordVersion' => 'sha1',
@@ -184,7 +184,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->updatePolicy(['enabled' => true, 'users' => false]);
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_update_' . \uniqid() . '@localhost.test',
             'password' => $this->cleanPassword(),
             'name' => 'Update User',
@@ -246,7 +246,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_account_recorded_' . \uniqid() . '@localhost.test',
             'password' => self::PWNED_PASSWORD,
             'name' => 'Pwned Account',
@@ -261,7 +261,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->updatePolicy(['users' => true]);
 
         $response = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_account_' . \uniqid() . '@localhost.test',
             'password' => self::PWNED_PASSWORD,
             'name' => 'Pwned Account',
@@ -274,7 +274,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_account_clean_' . \uniqid() . '@localhost.test',
             'password' => $this->cleanPassword(),
             'name' => 'Clean Account',
@@ -295,7 +295,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $password = $this->cleanPassword();
 
         $account = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Session Account',
@@ -360,7 +360,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $email = 'pwned_recovery_' . \uniqid() . '@localhost.test';
 
         $account = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $this->cleanPassword(),
             'name' => 'Recovery Account',
@@ -422,7 +422,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $email = 'pwned_signin_' . \uniqid() . '@localhost.test';
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => self::PWNED_PASSWORD,
             'name' => 'Sign In User',
@@ -501,7 +501,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $password = $this->cleanPassword();
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Sessions User',
@@ -703,7 +703,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $email = 'pwned_existing_' . \uniqid() . '@localhost.test';
 
         $account = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => self::PWNED_PASSWORD,
             'name' => 'Existing Account',
@@ -760,7 +760,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $emailA = 'pwned_flag_a_' . \uniqid() . '@localhost.test';
 
         $userA = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $emailA,
             'password' => self::PWNED_PASSWORD,
             'name' => 'Flag User A',
@@ -774,7 +774,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $this->updatePolicy(['enabled' => true]);
 
         $userB = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_flag_b_' . \uniqid() . '@localhost.test',
             'password' => $this->cleanPassword(),
             'name' => 'Flag User B',
@@ -790,7 +790,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
 
         // A hashed import never sees the plaintext, so nothing is known
         $userC = $this->client->call(Client::METHOD_POST, '/users/sha', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'pwned_flag_c_' . \uniqid() . '@localhost.test',
             'password' => \sha1(self::PWNED_PASSWORD),
             'passwordVersion' => 'sha1',
@@ -953,7 +953,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
          * Test for SUCCESS
          */
         $account = $this->client->call(Client::METHOD_POST, '/account', $this->clientHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Flag Account',
@@ -1031,7 +1031,7 @@ final class PoliciesPasswordPwnedIntegrationTest extends Scope
         $emailD = 'pwned_flag_d_' . \uniqid() . '@localhost.test';
 
         $userD = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $emailD,
             'password' => self::PWNED_PASSWORD,
             'name' => 'Flag User D',

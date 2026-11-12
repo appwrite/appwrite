@@ -1,3 +1,4 @@
+import { drawRaffleWinnerIndex } from '@/lib/init/draw-raffle-winner'
 import { formatInitPresenceDisplayName } from '@/lib/init/format-init-presence-display-name'
 import type { LaunchEventDailyPrize, LaunchEventOnlineUser } from '@/lib/init/types'
 import { buildInitSpinningGiveawayRaffleActivity } from '@/lib/init/init-presence-activity'
@@ -81,7 +82,7 @@ export function InitGiveawayRaffleBack({
   const handleRaffle = useCallback(() => {
     if (!canRaffle) return
 
-    const winnerIndex = Math.floor(Math.random() * participants.length)
+    const winnerIndex = drawRaffleWinnerIndex(participants.length)
     const nextWinner = participants[winnerIndex]
     const nextRotation = computeRaffleWheelRotation(winnerIndex, participants.length, rotation)
 

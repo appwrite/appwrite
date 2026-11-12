@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\Auth\Passkey\Challenges;
 use Appwrite\Extend\Exception;
@@ -14,7 +15,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 
@@ -52,8 +53,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},ip:{ip}')
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->inject('request')
             ->inject('response')
             ->inject('project')
@@ -77,7 +77,7 @@ class Create extends Action
         $challenge = $ceremony->authenticate();
 
         // Sign-in challenges belong to no user until the assertion names one
-        $stored = (new Challenges($dbForProject, $authorization))->issue(ID::unique(), Ceremony::TYPE_AUTHENTICATION, $ceremony, $challenge);
+        $stored = (new Challenges($dbForProject, $authorization))->issue(Id::unique(), Ceremony::TYPE_AUTHENTICATION, $ceremony, $challenge);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

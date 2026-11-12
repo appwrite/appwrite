@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Project;
 
-use Appwrite\Database\Factory;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 
 final class PoliciesPasswordRotationIntegrationTest extends Scope
@@ -31,8 +26,8 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
         $this->assertFalse($policy['body']['enabled']);
         $this->assertSame(31536000, $policy['body']['maxAge']);
 
-        $email = ID::unique() . '@localhost.test';
-        $password = 'Rotation-' . ID::unique();
+        $email = Id::unique() . '@localhost.test';
+        $password = 'Rotation-' . Id::unique();
         $userId = $this->createUser($email, $password);
         $this->setPasswordUpdate($userId, DateTime::format(new \DateTime('-366 days')));
 
@@ -46,8 +41,8 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
 
     public function testCreateSession(): void
     {
-        $email = ID::unique() . '@localhost.test';
-        $password = 'Rotation-' . ID::unique();
+        $email = Id::unique() . '@localhost.test';
+        $password = 'Rotation-' . Id::unique();
         $userId = $this->createUser($email, $password);
 
         try {
@@ -109,8 +104,8 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
 
     public function testCreateSessionAfterRecovery(): void
     {
-        $email = ID::unique() . '@localhost.test';
-        $password = 'Rotation-' . ID::unique();
+        $email = Id::unique() . '@localhost.test';
+        $password = 'Rotation-' . Id::unique();
         $userId = $this->createUser($email, $password);
         $this->setPasswordUpdate($userId, DateTime::format(new \DateTime('-2 days')));
 
@@ -132,7 +127,7 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
                 $this->assertStringContainsString('Password Reset', (string) $mail['subject']);
             });
             $secret = $this->extractQueryParamsFromEmailLink($mail['html'])['secret'];
-            $password = 'Reset-' . ID::unique();
+            $password = 'Reset-' . Id::unique();
 
             $recovery = $this->client->call(Client::METHOD_PUT, '/account/recovery', $this->clientHeaders(), [
                 'userId' => $userId,
@@ -158,7 +153,7 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
     private function createUser(string $email, string $password): string
     {
         $user = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -173,12 +168,9 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
         $seed = function () use ($userId, $date) {
             global $register;
             $pools = $register->get('pools');
-            $cache = new Cache(new Sharding(array_map(
-                fn (string $name) => new CachePool($pools->get($name)),
-                Config::getParam('pools-cache', []),
-            )));
+            $cache = $register->get('cache');
             $authorization = new Authorization();
-            $factory = new Factory($pools, $cache, $authorization);
+            $factory = $register->get('databaseFactory')($pools, $cache, $authorization);
 
             $authorization->skip(function () use ($factory, $userId, $date) {
                 $project = $factory->platform()->getDocument('projects', $this->getProject()['$id']);

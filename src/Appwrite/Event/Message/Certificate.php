@@ -20,6 +20,7 @@ final class Certificate extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
@@ -36,6 +37,7 @@ final class Certificate extends Base
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

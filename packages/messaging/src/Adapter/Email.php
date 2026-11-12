@@ -3,6 +3,7 @@
 namespace Utopia\Messaging\Adapter;
 
 use Utopia\Messaging\Adapter;
+use Utopia\Messaging\Message;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 
 abstract class Email extends Adapter
@@ -20,6 +21,22 @@ abstract class Email extends Adapter
     public function getMessageType(): string
     {
         return static::MESSAGE_TYPE;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    protected function telemetryAttributes(Message $message, array $attributes = []): array
+    {
+        $attributes = parent::telemetryAttributes($message, $attributes);
+
+        if ($message instanceof EmailMessage && $message->getTemplate() !== null) {
+            $attributes['template'] = $message->getTemplate();
+        }
+
+        return $attributes;
     }
 
     /**

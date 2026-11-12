@@ -34,6 +34,12 @@ class Site extends Model
                 'default' => '',
                 'example' => 'My Site',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the site.',
+                'default' => '',
+                'example' => 'Marketing site for the spring launch.',
+            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Site enabled.',

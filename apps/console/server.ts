@@ -96,8 +96,9 @@ import {
   isSeoIndexableHost,
 } from './src/lib/seo/indexing.ts'
 import {
-  AI_CATALOG_CONTENT_TYPE,
   APPWRITE_AI_CATALOG_PATH,
+  APPWRITE_ARD_PATH,
+  ARD_CONTENT_TYPE,
   APPWRITE_AGENT_SKILLS_DISCOVERY_PATH,
   APPWRITE_MCP_SERVER_CARD_PATH,
   DISCOVERY_CORS_HEADERS,
@@ -112,6 +113,10 @@ import {
   HTTP_STATUS_RELIABILITY_WELL_KNOWN_PATH,
   wellKnownChangePasswordResponse,
 } from './src/lib/seo/change-password-url.ts'
+import {
+  APPLE_APP_SITE_ASSOCIATION_WELL_KNOWN_PATH,
+  wellKnownAppleAppSiteAssociationResponse,
+} from './src/lib/seo/apple-app-site-association.ts'
 import {
   SECURITY_TXT_WELL_KNOWN_PATH,
   wellKnownSecurityTxtResponse,
@@ -302,6 +307,7 @@ function isServerTrackedExportFile(relativePath: string): boolean {
     normalized === 'robots.txt' ||
     normalized === 'sitemap.xml' ||
     normalized === '.well-known/mcp/server-card.json' ||
+    normalized === '.well-known/ard.json' ||
     normalized === '.well-known/ai-catalog.json' ||
     normalized === '.well-known/agent-skills/index.json'
   )
@@ -869,7 +875,7 @@ async function initializeServer() {
       '/console': redirectLegacyConsolePath,
       '/console/*': redirectLegacyConsolePath,
 
-      // MCP / agent discovery (SEP-1649 Server Card + AI Catalog). Excluded from
+      // MCP / agent discovery (SEP-1649 Server Card + ARD manifest). Excluded from
       // static registration so we can attach CORS + server-side pageviews.
       [APPWRITE_MCP_SERVER_CARD_PATH]: async (req: Request) =>
         discoveryExportResponse(
@@ -880,6 +886,15 @@ async function initializeServer() {
           ),
           MCP_SERVER_CARD_CONTENT_TYPE,
         ),
+      [APPWRITE_ARD_PATH]: async (req: Request) =>
+        discoveryExportResponse(
+          req,
+          await readClientExportOrFallback(
+            '.well-known/ard.json',
+            () => serializeDiscoveryJson(buildAiCatalogDocument()),
+          ),
+          ARD_CONTENT_TYPE,
+        ),
       [APPWRITE_AI_CATALOG_PATH]: async (req: Request) =>
         discoveryExportResponse(
           req,
@@ -887,7 +902,7 @@ async function initializeServer() {
             '.well-known/ai-catalog.json',
             () => serializeDiscoveryJson(buildAiCatalogDocument()),
           ),
-          AI_CATALOG_CONTENT_TYPE,
+          ARD_CONTENT_TYPE,
         ),
       [APPWRITE_AGENT_SKILLS_DISCOVERY_PATH]: async (req: Request) =>
         discoveryExportResponse(
@@ -908,6 +923,9 @@ async function initializeServer() {
         new Response('Not Found', { status: 404 }),
       [SECURITY_TXT_WELL_KNOWN_PATH]: (req: Request) =>
         wellKnownSecurityTxtResponse(req) ??
+        new Response('Not Found', { status: 404 }),
+      [APPLE_APP_SITE_ASSOCIATION_WELL_KNOWN_PATH]: (req: Request) =>
+        wellKnownAppleAppSiteAssociationResponse(req) ??
         new Response('Not Found', { status: 404 }),
 
       // Serve static assets (preloaded or on-demand). robots.txt, sitemap.xml,

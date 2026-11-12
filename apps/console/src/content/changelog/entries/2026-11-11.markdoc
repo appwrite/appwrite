@@ -1,0 +1,25 @@
+---
+layout: changelog
+title: "Autofill-ready email codes with origin-bound OTP-Token headers"
+date: 2026-11-11
+cover: /images/blog/announcing-otp-token-email-header/cover.avif
+tags: auth, security
+---
+
+Every Appwrite Auth email that carries a one-time code now includes an [`OTP-Token` header](/docs/products/auth/email-otp#code-autofill) that binds the code to the origin that requested it:
+
+```text
+OTP-Token: "123456"; origin="https://app.example.com"
+```
+
+The header comes from the [`OTP-Token` Internet-Draft](https://datatracker.ietf.org/doc/draft-goto-otp-token/). Mail clients, browsers, and password managers that support it can autofill the code on your app's origin and nowhere else. Appwrite adds it to email OTP sign-in, email verification codes, password recovery codes, and MFA email challenges. Appwrite adds it only for HTTPS origins and local development hosts, so server SDK calls and native apps get the same email as before.
+
+There's nothing to configure. Mark your code inputs with `autocomplete="one-time-code"` so browsers know where the code belongs. The header is also available in self-hosted Appwrite 2.7 and later.
+
+{% arrow_link href="/blog/post/announcing-otp-token-email-header" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/email-otp#code-autofill" %}
+Learn how code autofill works
+{% /arrow_link %}

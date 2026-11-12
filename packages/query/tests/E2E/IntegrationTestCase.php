@@ -37,26 +37,32 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function connectMysql(): PDO
     {
-        $this->mysql ??= new PDO(
+        return $this->mysql ??= $this->openMysql();
+    }
+
+    protected function openMysql(): PDO
+    {
+        return new PDO(
             'mysql:host=127.0.0.1;port=13306;dbname=query_test',
             'root',
             'test',
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
-
-        return $this->mysql;
     }
 
     protected function connectMariadb(): PDO
     {
-        $this->mariadb ??= new PDO(
+        return $this->mariadb ??= $this->openMariadb();
+    }
+
+    protected function openMariadb(): PDO
+    {
+        return new PDO(
             'mysql:host=127.0.0.1;port=13307;dbname=query_test',
             'root',
             'test',
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
-
-        return $this->mariadb;
     }
 
     protected function connectPostgres(): PDO
