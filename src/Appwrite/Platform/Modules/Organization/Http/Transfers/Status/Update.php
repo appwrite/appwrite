@@ -19,6 +19,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Span\Span;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -149,7 +150,12 @@ class Update extends Action
 
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
-        (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
+        // The claim has committed, so a screenshot failure is recorded rather than reported as a failed claim
+        try {
+            (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
+        } catch (\Throwable $th) {
+            Span::current()?->setError($th)->set('project.id', $project->getId());
+        }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
