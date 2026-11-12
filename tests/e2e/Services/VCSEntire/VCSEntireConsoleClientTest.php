@@ -32,6 +32,16 @@ final class VCSEntireConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(500, $response['headers']['status-code']);
+
+        // Starting an installation creates one, so read access alone is not enough
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/entire/authorize', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['vcs.read']),
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
     }
 
     public function testCreateInstallationWithoutReceipt(): void
