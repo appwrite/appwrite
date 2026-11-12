@@ -35,6 +35,7 @@ use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
+use Appwrite\Screenshots\RetryStrategy as ScreenshotsRetryStrategy;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -166,13 +167,24 @@ $container->set('jobs', function () {
     return new Jobs($client);
 }, []);
 
-$container->set('screenshots', function () {
+$container->set('screenshots', function (Telemetry $telemetry) {
     $client = (new Client(new CurlAdapter()))
         ->withBaseUri(System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1'))
         ->withTimeout((int) System::getEnv('_APP_SITES_TIMEOUT', 60));
 
-    return new ScreenshotsClient($client);
-}, []);
+    $delay = $telemetry->createHistogram('worker.screenshots.capture.retry.delay', 's');
+    $sleep = static function (float $seconds) use ($delay): void {
+        try {
+            $delay->record($seconds, ['resourceType' => RESOURCE_TYPE_SITES]);
+        } catch (\Throwable) {
+            // Telemetry should never affect screenshot processing.
+        }
+
+        \usleep((int) \round($seconds * 1_000_000));
+    };
+
+    return new ScreenshotsClient(new Retry($client, new ScreenshotsRetryStrategy(), $sleep));
+}, ['telemetry']);
 
 $container->set('autogravity', function (Cache $cache) {
     $host = System::getEnv('_APP_AUTOGRAVITY_HOST', '');
