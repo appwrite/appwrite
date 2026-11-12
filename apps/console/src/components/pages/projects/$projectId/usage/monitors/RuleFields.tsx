@@ -1,6 +1,14 @@
 import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Check, ChevronDown } from 'lucide-react'
+import {
+  BellRing,
+  Check,
+  ChevronDown,
+  CircleX,
+  Info,
+  TriangleAlert,
+  type LucideIcon,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
@@ -104,31 +112,55 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
   }
 }
 
-/** The levels a monitor can take, least urgent first, with what each one changes. */
+/**
+ * The levels a monitor can take, least urgent first, with what each one changes. The
+ * colors follow the console's status badges, so a level reads the same everywhere.
+ */
 export const SEVERITIES: {
   value: MonitorSeverity
   label: string
   hint: string
+  icon: LucideIcon
+  /** The icon's color, always shown. */
+  tone: string
+  /** The chip once selected. */
+  selected: string
 }[] = [
   {
     value: 'info',
     label: 'Info',
     hint: 'Worth knowing about. Nothing needs doing yet.',
+    icon: Info,
+    tone: 'text-blue-600 dark:text-blue-400',
+    selected:
+      'border-blue-500/60 bg-blue-500/10 text-blue-700 ring-blue-500/60 dark:text-blue-300',
   },
   {
     value: 'warning',
     label: 'Warning',
     hint: 'Look into it soon, before it becomes a problem.',
+    icon: TriangleAlert,
+    tone: 'text-amber-600 dark:text-amber-400',
+    selected:
+      'border-amber-500/60 bg-amber-500/10 text-amber-700 ring-amber-500/60 dark:text-amber-300',
   },
   {
     value: 'error',
     label: 'Error',
     hint: 'Something is broken and needs fixing.',
+    icon: CircleX,
+    tone: 'text-orange-600 dark:text-orange-400',
+    selected:
+      'border-orange-500/60 bg-orange-500/10 text-orange-700 ring-orange-500/60 dark:text-orange-300',
   },
   {
     value: 'critical',
     label: 'Critical',
     hint: "Rings on your phone even when it's on silent or in Do Not Disturb.",
+    icon: BellRing,
+    tone: 'text-red-600 dark:text-red-400',
+    selected:
+      'border-red-500/60 bg-red-500/10 text-red-700 ring-red-500/60 dark:text-red-300',
   },
 ]
 
@@ -688,7 +720,7 @@ export function RuleFields({
             aria-labelledby="alert-severity"
             className="mt-2 flex flex-wrap gap-2"
           >
-            {SEVERITIES.map(({ value, label }) => {
+            {SEVERITIES.map(({ value, label, icon: Icon, tone, ...level }) => {
               const selected = form.severity === value
               return (
                 <button
@@ -699,12 +731,13 @@ export function RuleFields({
                   disabled={disabled}
                   onClick={() => onChange({ severity: value })}
                   className={cn(
-                    'inline-flex h-8 items-center rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                    'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
                     selected
-                      ? 'border-foreground text-foreground ring-1 ring-inset ring-foreground'
+                      ? cn('font-medium ring-1 ring-inset', level.selected)
                       : 'border-border text-muted-foreground hover:bg-accent/40',
                   )}
                 >
+                  <Icon aria-hidden className={cn('h-3.5 w-3.5', tone)} />
                   {t(label)}
                 </button>
               )
