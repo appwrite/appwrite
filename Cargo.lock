@@ -694,7 +694,7 @@ dependencies = [
 [[package]]
 name = "ext-php-rs"
 version = "0.16.4"
-source = "git+https://github.com/ChiragAgg5k/ext-php-rs?rev=8daf41502b1da32bc3c64135dad2cb4b1b86dd6e#8daf41502b1da32bc3c64135dad2cb4b1b86dd6e"
+source = "git+https://github.com/ChiragAgg5k/ext-php-rs?rev=fb34246728d501d81b44348f679c7538f3d1d16a#fb34246728d501d81b44348f679c7538f3d1d16a"
 dependencies = [
  "anyhow",
  "bindgen",
@@ -717,7 +717,7 @@ dependencies = [
 [[package]]
 name = "ext-php-rs-build"
 version = "0.2.0"
-source = "git+https://github.com/ChiragAgg5k/ext-php-rs?rev=8daf41502b1da32bc3c64135dad2cb4b1b86dd6e#8daf41502b1da32bc3c64135dad2cb4b1b86dd6e"
+source = "git+https://github.com/ChiragAgg5k/ext-php-rs?rev=fb34246728d501d81b44348f679c7538f3d1d16a#fb34246728d501d81b44348f679c7538f3d1d16a"
 dependencies = [
  "anyhow",
 ]
@@ -725,7 +725,7 @@ dependencies = [
 [[package]]
 name = "ext-php-rs-derive"
 version = "0.12.4"
-source = "git+https://github.com/ChiragAgg5k/ext-php-rs?rev=8daf41502b1da32bc3c64135dad2cb4b1b86dd6e#8daf41502b1da32bc3c64135dad2cb4b1b86dd6e"
+source = "git+https://github.com/ChiragAgg5k/ext-php-rs?rev=fb34246728d501d81b44348f679c7538f3d1d16a#fb34246728d501d81b44348f679c7538f3d1d16a"
 dependencies = [
  "convert_case",
  "darling",
@@ -738,7 +738,7 @@ dependencies = [
 [[package]]
 name = "ext-php-rs-introspection"
 version = "0.2.1"
-source = "git+https://github.com/ChiragAgg5k/ext-php-rs?rev=8daf41502b1da32bc3c64135dad2cb4b1b86dd6e#8daf41502b1da32bc3c64135dad2cb4b1b86dd6e"
+source = "git+https://github.com/ChiragAgg5k/ext-php-rs?rev=fb34246728d501d81b44348f679c7538f3d1d16a#fb34246728d501d81b44348f679c7538f3d1d16a"
 
 [[package]]
 name = "fast_image_resize"
