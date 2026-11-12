@@ -139,7 +139,8 @@ class Update extends Action
         ]));
 
         if (!$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $user
@@ -202,7 +203,8 @@ class Update extends Action
             });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
-            throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $queueForEvents->setParam('userId', $user->getId());

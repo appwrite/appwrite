@@ -327,7 +327,8 @@ class Get extends Base
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!$identityWithMatchingUid->isEmpty()) {
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             if (!empty($providerEmail)) {
@@ -336,7 +337,8 @@ class Get extends Base
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 $userWithMatchingEmail = $dbForProject->find('users', [
@@ -344,7 +346,8 @@ class Get extends Base
                     Query::notEqual('$id', $userId),
                 ]);
                 if (!empty($userWithMatchingEmail)) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
             }
 
@@ -570,7 +573,8 @@ class Get extends Base
                         ]));
                     }
                 } catch (Duplicate) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
             }
         }
@@ -630,7 +634,8 @@ class Get extends Base
                 Query::notEqual('$id', $user->getId()),
             ]);
             if (!empty($userWithMatchingEmail)) {
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
@@ -679,7 +684,8 @@ class Get extends Base
                     Query::equal('identifier', [$email]),
                 ]));
                 if ($existingTarget->isEmpty() || $existingTarget->getAttribute('userInternalId') !== $user->getSequence()) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
             }
         }
@@ -733,7 +739,8 @@ class Get extends Base
                         $dbForProject->deleteDocument('users', $newUser->getId());
                     });
                 }
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
         } else {
             $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([

@@ -144,7 +144,8 @@ class Create extends Action
                 Query::equal('providerEmail', [$email]),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $userId = $userId === 'unique()' ? Id::unique() : $userId;
@@ -221,7 +222,8 @@ class Create extends Action
             try {
                 $recipient = $authorization->skip(fn () => $dbForProject->createDocument('users', $recipient));
             } catch (Duplicate) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
         }
 
