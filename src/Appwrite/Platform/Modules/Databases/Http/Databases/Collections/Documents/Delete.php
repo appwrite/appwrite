@@ -176,6 +176,7 @@ class Delete extends Action
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $documentId,
+                'documentUpdatedAt' => $document->getUpdatedAt(),
                 'action' => 'delete',
                 'data' => [],
             ]);

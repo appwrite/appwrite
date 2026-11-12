@@ -324,6 +324,105 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Regression: an upsert staged by a caller who can update a row but not read it is checked
+     * at commit against the version of the row it was staged on, so a write stamped before the
+     * staging still conflicts, whether the upsert inherits or supplies permissions.
+     */
+    public function testWriteOnlyUpsertConflictsWithWriteStampedBeforeStaging(): void
+    {
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $userHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $writeOnly = [Permission::update(Role::user($this->getUser()['$id']))];
+
+        // Document security on and no collection-level permissions, so the user can update
+        // the rows but never read them.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Write Only Upsert',
+            'permissions' => [],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collectionId, 'string'), $keyHeaders, [
+                'key' => 'owner',
+                'size' => 32,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collectionId);
+        }
+
+        $stagings = [
+            'inherited' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $rowId), $userHeaders, [
+                'data' => ['owner' => 'second'],
+                'transactionId' => $transactionId,
+            ]),
+            'supplied' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $rowId), $userHeaders, [
+                'data' => ['owner' => 'second'],
+                'permissions' => $writeOnly,
+                'transactionId' => $transactionId,
+            ]),
+            'operations' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $userHeaders, [
+                'operations' => [[
+                    'action' => 'upsert',
+                    'databaseId' => $this->getPermissionsDatabase(),
+                    $this->getContainerIdParam() => $collectionId,
+                    $this->getRecordIdParam() => $rowId,
+                    'data' => ['owner' => 'second'],
+                ]],
+            ]),
+        ];
+
+        foreach ($stagings as $staging => $stage) {
+            $rowId = Id::unique();
+            $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), $keyHeaders, [
+                $this->getRecordIdParam() => $rowId,
+                'data' => ['owner' => ''],
+                'permissions' => $writeOnly,
+            ]);
+            $this->assertEquals(201, $row['headers']['status-code'], $staging);
+
+            $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $rowId), $userHeaders);
+            $this->assertEquals(404, $read['headers']['status-code'], $staging);
+
+            $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $userHeaders);
+            $this->assertEquals(201, $transaction['headers']['status-code'], $staging);
+            $transactionId = $transaction['body']['$id'];
+
+            $staged = $stage($transactionId, $rowId);
+            $this->assertEquals(201, $staged['headers']['status-code'], $staging);
+
+            $write = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $rowId), $keyHeaders, [
+                'data' => [
+                    'owner' => 'first',
+                    '$updatedAt' => (new \DateTime($row['body']['$updatedAt']))->modify('+1 millisecond')->format('Y-m-d\TH:i:s.vP'),
+                ],
+            ]);
+            $this->assertEquals(200, $write['headers']['status-code'], $staging);
+
+            // MongoDB adapter doesn't map write conflicts to ConflictException, so it returns 500 instead of 409
+            $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $userHeaders, [
+                'commit' => true,
+            ]);
+            $this->assertContains($commit['headers']['status-code'], [409, 500], $staging);
+
+            $final = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $rowId), $keyHeaders);
+            $this->assertEquals(200, $final['headers']['status-code'], $staging);
+            $this->assertEquals('first', $final['body']['owner'], $staging);
+        }
+    }
+
+    /**
      * Test collection-level delete permission check on staging
      */
     public function testCollectionDeletePermissionDenied(): void

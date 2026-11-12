@@ -18,6 +18,7 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Filter;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
@@ -432,5 +433,71 @@ final class MigrationVersionsTest extends TestCase
         $user = $authorization->skip(fn () => $database->getDocument('users', 'legacy-user'));
 
         $this->assertSame('legacyuser@example.com', $user->getAttribute('emailCanonical'));
+    }
+
+    public function testV25LetsALegacyInstallStageTheRowVersion(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25TransactionLogs')
+            ->setNamespace('migration_transaction_logs_' . \uniqid());
+        $database->create();
+
+        (new Audit(new AdapterDatabase($database)))->setup();
+
+        foreach (Config::getParam('collections', [])['projects'] as $key => $collection) {
+            if ($key === 'transactionLogs' || ($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
+
+            $database->createCollection(Collection::create(
+                id: $key,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+
+        $database->createCollection(Collection::create(id: 'transactionLogs', attributes: [
+            Attribute::string('transactionInternalId', required: true),
+            Attribute::string('databaseInternalId', required: true),
+            Attribute::string('collectionInternalId', required: true),
+            Attribute::string('documentId'),
+            Attribute::string('action', size: 32, required: true),
+            Attribute::string('data', size: 5_000_000, required: true, filters: [Filter::Json]),
+        ]));
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $authorization->skip(fn () => $database->createDocument('transactionLogs', new Document([
+            '$id' => 'staged',
+            'transactionInternalId' => '1',
+            'databaseInternalId' => '1',
+            'collectionInternalId' => '1',
+            'documentId' => 'claim',
+            'documentUpdatedAt' => '2026-01-01T10:00:00.000+00:00',
+            'action' => 'update',
+            'data' => ['owner' => 'second'],
+        ])));
+
+        $log = $authorization->skip(fn () => $database->getDocument('transactionLogs', 'staged'));
+
+        $this->assertEquals(new \DateTime('2026-01-01T10:00:00.000+00:00'), new \DateTime($log->getAttribute('documentUpdatedAt')));
     }
 }

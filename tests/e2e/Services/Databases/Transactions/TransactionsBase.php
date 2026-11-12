@@ -987,6 +987,108 @@ trait TransactionsBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testCommitConflictsWithWriteStampedBeforeStaging(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'StagedVersionDB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Claims',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $owner = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), $headers, [
+                'key' => 'owner',
+                'size' => 32,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $owner['headers']['status-code']);
+
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        $stagings = [
+            'operations' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+                'operations' => [[
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'update',
+                    $this->getRecordIdParam() => $rowId,
+                    'data' => ['owner' => 'second'],
+                ]],
+            ]),
+            'update' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+                'data' => ['owner' => 'second'],
+                'transactionId' => $transactionId,
+            ]),
+            'upsert' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+                $this->getRecordIdParam() => $rowId,
+                'data' => ['owner' => 'second'],
+                'transactionId' => $transactionId,
+            ]),
+            'upsertPermissions' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+                $this->getRecordIdParam() => $rowId,
+                'data' => ['owner' => 'second'],
+                'permissions' => [Permission::read(Role::any())],
+                'transactionId' => $transactionId,
+            ]),
+            'delete' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+                'transactionId' => $transactionId,
+            ]),
+        ];
+
+        foreach ($stagings as $rowId => $stage) {
+            $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
+                $this->getRecordIdParam() => $rowId,
+                'data' => ['owner' => ''],
+            ]);
+            $this->assertEquals(201, $row['headers']['status-code']);
+
+            $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+            $this->assertEquals(201, $transaction['headers']['status-code']);
+            $transactionId = $transaction['body']['$id'];
+
+            $staged = $stage($transactionId, $rowId);
+            $this->assertContains($staged['headers']['status-code'], [200, 201, 204], $rowId);
+
+            $write = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+                'data' => [
+                    'owner' => 'first',
+                    '$updatedAt' => (new \DateTime($row['body']['$updatedAt']))->modify('+1 millisecond')->format('Y-m-d\TH:i:s.vP'),
+                ],
+            ]);
+            $this->assertEquals(200, $write['headers']['status-code'], $rowId);
+
+            $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+                'commit' => true,
+            ]);
+            $this->assertContains($commit['headers']['status-code'], [409, 500], $rowId);
+
+            $final = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers);
+            $this->assertEquals(200, $final['headers']['status-code'], $rowId);
+            $this->assertEquals('first', $final['body']['owner'], $rowId);
+        }
+    }
+
     /**
      * Test concurrent transactions with conflicting operations
      */
