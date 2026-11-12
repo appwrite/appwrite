@@ -1431,10 +1431,10 @@ trait AvatarsBase
         $this->assertEquals(200, $avif['headers']['status-code']);
         $this->assertEquals('image/avif', $avif['headers']['content-type']);
         $this->assertEquals('Accept', $avif['headers']['vary']);
-        $image = new \Imagick();
-        $image->readImageBlob($avif['body']);
-        $this->assertSame(400, $image->getImageWidth());
-        $this->assertSame(300, $image->getImageHeight());
+        $image = \imagecreatefromstring($avif['body']);
+        $this->assertNotFalse($image);
+        $this->assertSame(400, \imagesx($image));
+        $this->assertSame(300, \imagesy($image));
 
         $webp = $screenshot('image/webp,*/*');
         $this->assertEquals(200, $webp['headers']['status-code']);
