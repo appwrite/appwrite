@@ -117,6 +117,16 @@ class Update extends Action
             throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
         }
 
+        // A device keeps every session it holds until the sweep removes it, so expired or project-invalidated ones are refused here.
+        $invalidatedAt = $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
+        if (
+            ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt)
+            || ! $session->isSet('expire')
+            || DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) < DateTime::formatTz(DateTime::now())
+        ) {
+            throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
+        }
+
         $protocol = $request->getProtocol();
 
         // Session secrets are hashed, so the original can never be put back into a cookie. Switching

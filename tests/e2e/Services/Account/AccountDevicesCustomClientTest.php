@@ -672,6 +672,58 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals($refreshed['body']['expire'], $response['body']['expire']);
     }
 
+    public function testDeviceRefusesInvalidatedSessions(): void
+    {
+        // Invalidating every session is project-wide, so this runs in a project of its own
+        $project = $this->getProject(true);
+        $projectId = $project['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $email = \uniqid() . 'invalidated@localhost.test';
+        $user = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $device = $this->client->call(Client::METHOD_POST, '/account/devices', $headers);
+        $this->assertEquals(201, $device['headers']['status-code']);
+        $deviceCookie = $device['cookies'][$deviceKey];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', \array_merge($headers, [
+            'cookie' => $deviceKey . '=' . $deviceCookie,
+        ]), [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $deviceCookie = $session['cookies'][$deviceKey];
+
+        $invalidated = $this->client->call(Client::METHOD_DELETE, '/project/sessions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ]);
+        $this->assertEquals(204, $invalidated['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - the device still holds the session, but it can no longer be switched to
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', \array_merge($headers, [
+            'cookie' => $deviceKey . '=' . $deviceCookie,
+        ]), [
+            'sessionId' => $session['body']['$id'],
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_device_session_not_found', $response['body']['type']);
+    }
+
     public function testFallbackCookiesCarryTheDeviceAndTheSession(): void
     {
         $projectId = $this->getProject()['$id'];
