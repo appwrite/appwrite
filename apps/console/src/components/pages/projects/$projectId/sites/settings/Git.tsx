@@ -28,11 +28,7 @@ export function View() {
           keywords: ['git', 'github', 'branch', 'connect', 'deployment'],
         },
         node: (
-          <GitRepositoryCard
-            projectId={projectId}
-            siteId={siteId}
-            site={site}
-          />
+          <GitRepositoryCard projectId={projectId} siteId={siteId} site={site} />
         ),
       },
     ]
@@ -40,19 +36,8 @@ export function View() {
       items.push({
         id: 'silent-mode',
         search: {
-          title: 'Git automation',
-          keywords: [
-            'silent mode',
-            'automation',
-            'deploy on push',
-            'summaries',
-            'comments',
-            'commit status',
-            'checks',
-            'commits',
-            'pull request',
-            'deployment',
-          ],
+          title: 'Silent mode',
+          keywords: ['comments', 'commits', 'pull request'],
         },
         node: (
           <GitSilentModeCard

@@ -40,7 +40,6 @@ export const FUNCTION_SETTINGS_NAV: ResourceSettingsNavItem[] = [
       'vcs',
       'silent',
       'silent mode',
-      'automation',
       'comments',
       'commits',
       'pull request',

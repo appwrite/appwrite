@@ -41,19 +41,8 @@ export function View() {
       items.push({
         id: 'silent-mode',
         search: {
-          title: 'Git automation',
-          keywords: [
-            'silent mode',
-            'automation',
-            'deploy on push',
-            'summaries',
-            'comments',
-            'commit status',
-            'checks',
-            'commits',
-            'pull request',
-            'deployment',
-          ],
+          title: 'Silent mode',
+          keywords: ['comments', 'commits', 'pull request', 'deployment'],
         },
         node: <GitSilentModeCard func={func} />,
       })
