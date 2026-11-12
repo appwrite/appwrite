@@ -46,10 +46,14 @@ import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
+import { SendMessageContextSub, useTopicReach } from './SendMessageMenu'
 
 export type TopicContextMenuTopic = {
   $id: string
   name?: string | null
+  emailTotal: number
+  smsTotal: number
+  pushTotal: number
 }
 
 interface TopicContextMenuProps {
@@ -64,6 +68,7 @@ export function TopicContextMenu({
   children,
 }: TopicContextMenuProps) {
   const t = useT()
+  const reach = useTopicReach(topic)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -127,6 +132,12 @@ export function TopicContextMenu({
             <ContextMenuIcon icon={Settings} />
             {t('Settings')}
           </ContextMenuItem>
+          <ContextMenuSeparator />
+          <SendMessageContextSub
+            projectId={projectId}
+            topics={[topic.$id]}
+            reach={reach}
+          />
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>

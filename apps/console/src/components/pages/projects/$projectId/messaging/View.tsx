@@ -771,7 +771,13 @@ export function View() {
                           <TopicContextMenu
                             key={topic.$id}
                             projectId={projectId!}
-                            topic={{ $id: topic.$id, name: topic.name }}
+                            topic={{
+                              $id: topic.$id,
+                              name: topic.name,
+                              emailTotal: topic.emailTotal,
+                              smsTotal: topic.smsTotal,
+                              pushTotal: topic.pushTotal,
+                            }}
                           >
                             <TableRow
                               className={cn(

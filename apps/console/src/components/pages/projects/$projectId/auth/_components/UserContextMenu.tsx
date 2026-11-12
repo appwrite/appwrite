@@ -13,6 +13,7 @@ import {
   Target,
   Activity,
 } from 'lucide-react'
+import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import {
   ContextMenu,
@@ -47,6 +48,10 @@ import {
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
+import {
+  SendMessageContextSub,
+  useUserReach,
+} from '../../messaging/_components/SendMessageMenu'
 import { useT } from '@/lib/i18n/translate'
 
 export type UserContextMenuUser = {
@@ -57,6 +62,7 @@ export type UserContextMenuUser = {
   emailVerification?: boolean | null
   phoneVerification?: boolean | null
   status?: boolean | null
+  targets: Pick<Models.Target, 'providerType' | 'identifier' | 'name'>[]
 }
 
 interface UserContextMenuProps {
@@ -76,6 +82,7 @@ export function UserContextMenu({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const hasName = !!user.name
+  const reach = useUserReach(user.targets)
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteProjectUser(projectId, user.$id),
@@ -137,6 +144,12 @@ export function UserContextMenu({
             <ContextMenuIcon icon={Activity} />
             {t('Sessions')}
           </ContextMenuItem>
+          <ContextMenuSeparator />
+          <SendMessageContextSub
+            projectId={projectId}
+            users={[user.$id]}
+            reach={reach}
+          />
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
