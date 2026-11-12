@@ -1073,6 +1073,20 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Models and tools': 'מודלים וכלים',
   'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
   'No calls in this range': 'אין קריאות בטווח הזה',
+  'Installs and push': 'התקנות והתראות פוש',
+  'Installs, updates and push notifications from the tracking SDK':
+    'התקנות, עדכונים והתראות פוש מ-SDK המעקב',
+  'No installs tracked yet': 'עדיין לא נמדדו התקנות',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    'הוסיפו לאפליקציה את גרסת SDK המעקב העדכנית כדי לספור התקנות, עדכונים והתראות פוש.',
+  'Add the tracking SDK': 'הוספת SDK המעקב',
+  Installs: 'התקנות',
+  Updates: 'עדכונים',
+  'Push received': 'התראות פוש שהתקבלו',
+  'Push opened': 'התראות פוש שנפתחו',
+  'Push opened by message': 'התראות פוש שנפתחו לפי הודעה',
+  'No opened pushes with a message ID in this range':
+    'אין בטווח הזה התראות פוש שנפתחו עם מזהה הודעה',
   'Values of the props sent with your events':
     'ערכי ה-props שנשלחו עם האירועים',
   'No event props in this range': 'אין props של אירועים בטווח הזה',
