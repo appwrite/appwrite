@@ -24,6 +24,8 @@ class Update extends Action
 {
     use HTTP;
 
+    private const int RENEWAL_COOLDOWN = 15 * 60;
+
     public static function getName()
     {
         return 'updateRuleVerification';
@@ -92,8 +94,10 @@ class Update extends Action
 
         // A verified rule whose renewal failed or is blocked, or whose certificate expired, is checked again.
         // Maintenance stops after 5 failed attempts, so once DNS is fixed nothing else would renew it.
+        // This request and the worker both update the certificate, so a recent update means a renewal is queued or running.
         $renewal = $rule->getAttribute('status') === RULE_STATUS_VERIFIED
-            && (\in_array($certificate->getAttribute('status'), [Status::FAILED, Status::BLOCKED], true) || (!empty($expireDate) && \strtotime($expireDate) <= \time()));
+            && (\in_array($certificate->getAttribute('status'), [Status::FAILED, Status::BLOCKED], true) || (!empty($expireDate) && \strtotime($expireDate) <= \time()))
+            && \strtotime($certificate->getUpdatedAt() ?? '@0') <= \time() - self::RENEWAL_COOLDOWN;
 
         // If rule is already verified or in certificate generation state, don't queue for verification again
         if (!$renewal && ($rule->getAttribute('status') === RULE_STATUS_VERIFIED || $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING)) {
