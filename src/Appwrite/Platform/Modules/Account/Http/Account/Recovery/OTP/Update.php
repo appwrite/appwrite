@@ -110,7 +110,7 @@ class Update extends Action
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $secret, $proofForCode);

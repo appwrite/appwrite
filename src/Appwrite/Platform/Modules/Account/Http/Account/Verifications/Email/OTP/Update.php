@@ -81,7 +81,7 @@ class Update extends Action
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION_OTP, $secret, $proofForCode);
