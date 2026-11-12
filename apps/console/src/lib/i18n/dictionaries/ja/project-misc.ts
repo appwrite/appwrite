@@ -2016,7 +2016,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to rotate secret': 'シークレットのローテーションに失敗しました',
   'Failed to send test email': 'テストメールの送信に失敗しました',
   'Failed to start migration': '移行の開始に失敗しました',
-  'Failed to transfer project': 'プロジェクトの転送に失敗しました',
   'Failed to update SMTP settings': 'SMTP 設定の更新に失敗しました',
   'Failed to update project name': 'プロジェクト名の更新に失敗しました',
   'Failed to update protocol': 'プロトコルの更新に失敗しました',
@@ -2158,8 +2157,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search migrations...': 'マイグレーションを検索...',
   'Search webhooks...': 'Webhook を検索...',
   'Secure protocol': 'セキュアプロトコル',
-  'Select a different organization to transfer to.':
-    '転送先の別の組織を選択してください。',
   'Select at least one event': '少なくとも 1 つのイベントを選択',
   'Select at least one resource': '少なくとも 1 つのリソースを選択',
   'Select destination': '転送先を選択',
@@ -2218,12 +2215,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。',
   'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。今すぐコピーしてください。',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
-    'このプロジェクトを転送するには、現在の組織と転送先組織の両方のメンバーである必要があります。以下で転送先を選択してください。',
   'Transfer between organizations': '組織間の転送',
   'Transfer project': 'プロジェクトの転送',
-  'Transfer this project to the selected organization':
-    'このプロジェクトを選択した組織に転送',
   'URL is required': 'URL は必須です',
   'Update webhook': 'Webhook の更新',
   'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
@@ -2252,10 +2245,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'インポート中に既存の ID を持つ行に遭遇した場合。',
   'When enabled, all emails will be sent through your configured SMTP server.':
     '有効にすると、すべてのメールは設定した SMTP サーバー経由で送信されます。',
-  'You do not have any organizations you can transfer this project to.':
-    'このプロジェクトを転送できる組織がありません。',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
-    'このプロジェクトを転送できる組織がありません。転送するには、別の組織を作成または参加してください。',
   'an A or AAAA record': 'A または AAAA レコード',
   'and all its databases, functions, and files? This action cannot be undone.':
     'とそのすべてのデータベース、Functions、ファイル? この操作は元に戻せません。',

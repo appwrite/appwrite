@@ -1,9 +1,4 @@
-import {
-  ArrowLeftRight,
-  FlaskConical,
-  Layers,
-  type LucideIcon,
-} from 'lucide-react'
+import { FlaskConical, Layers, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,7 +27,6 @@ import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
 const EXPERIMENT_ICONS = {
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
-  projectTransfers: ArrowLeftRight,
 } as const satisfies Record<Experiment['flag'], LucideIcon>
 
 export function ExperimentsPopover() {

@@ -2,6 +2,8 @@ import {
   APPWRITE_API_CATALOG_PATH,
   APPWRITE_OPENAPI_PATH,
 } from '@/lib/seo/agent-discovery'
+import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
+import { APPWRITE_DESCRIPTION } from '@/lib/seo/organization'
 
 /** RFC 8288 links advertised on the homepage for agents. */
 export const HOME_LINK_HEADER = [
@@ -27,4 +29,33 @@ export function prefersMarkdown(accept: string | null): boolean {
   if (!accept) return false
   const markdown = quality(accept, 'text/markdown')
   return markdown > 0 && markdown > quality(accept, 'text/html')
+}
+
+/** YAML frontmatter block; values are JSON strings, which YAML reads as double-quoted scalars. */
+export function markdownFrontmatter(fields: Record<string, string>): string {
+  const lines = Object.entries(fields).map(
+    ([key, value]) => `${key}: ${JSON.stringify(value)}`,
+  )
+  return ['---', ...lines, '---', '', ''].join('\n')
+}
+
+/** Metadata for the homepage's markdown twin (`/index.md`, or `/` asking for markdown). */
+export const HOME_MARKDOWN_FRONTMATTER = markdownFrontmatter({
+  title: 'Appwrite',
+  description: APPWRITE_DESCRIPTION,
+  canonical: `${MARKETING_SITE_ORIGIN}/`,
+})
+
+/** Body of a 404 for clients that asked for markdown. */
+export function notFoundMarkdown(pathname: string): string {
+  return [
+    '# Page not found',
+    '',
+    `Nothing exists at \`${pathname}\` on appwrite.io.`,
+    '',
+    `- [Site index for agents](${MARKETING_SITE_ORIGIN}/llms.txt)`,
+    `- [Documentation](${MARKETING_SITE_ORIGIN}/docs.md)`,
+    `- [Sitemap](${MARKETING_SITE_ORIGIN}/sitemap.xml)`,
+    '',
+  ].join('\n')
 }

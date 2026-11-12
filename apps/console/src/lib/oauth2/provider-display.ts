@@ -66,6 +66,7 @@ export const OAUTH2_NEW_PROVIDER_LAUNCH_DATES: Partial<Record<string, string>> =
     [OAuthProvider.Cloudflare]: '2026-09-08',
     [OAuthProvider.Huggingface]: '2026-08-26',
     [OAuthProvider.Kakao]: '2026-09-08',
+    [OAuthProvider.Naver]: '2026-11-12',
     [OAuthProvider.Resend]: '2026-09-08',
     [OAuthProvider.Tiktok]: '2026-09-08',
     [OAuthProvider.Vipps]: '2026-11-04',

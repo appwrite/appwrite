@@ -394,7 +394,7 @@ abstract class Scope extends TestCase
         $actual = $this->getImagePixels($actualImageBlob);
 
         $this->assertSame(\strstr($expected, ':', true), \strstr($actual, ':', true), 'The image has a different size.');
-        $this->assertTrue($expected === $actual, 'The image has different pixels.');
+        $this->assertSame($actual, $expected, 'The image has different pixels.');
     }
 
     /**
