@@ -5,6 +5,8 @@ import { generateLlmsTxt } from '@/lib/seo/llms-content'
 import { markdownTwinPage } from '@/lib/seo/markdown-twins'
 import {
   HOME_LINK_HEADER,
+  HOME_MARKDOWN_FRONTMATTER,
+  notFoundMarkdown,
   prefersMarkdown,
 } from '@/lib/seo/markdown-negotiation'
 import { trackServerPageview } from '@/lib/server-analytics'
@@ -12,7 +14,8 @@ import { trackServerPageview } from '@/lib/server-analytics'
 /**
  * Homepage content negotiation: `Accept: text/markdown` gets the llms.txt hub,
  * and the HTML homepage advertises agent resources in `Link`. Marketing pages
- * get a `.md` twin converted from their rendered HTML.
+ * get a `.md` twin converted from their rendered HTML, and a 404 asked for as
+ * markdown gets a markdown body.
  */
 export const markdownNegotiationMiddleware = createMiddleware({
   type: 'request',
@@ -33,16 +36,41 @@ export const markdownNegotiationMiddleware = createMiddleware({
             headers: { 'Cache-Control': 'no-store' },
           })
         }
-        return pageHtmlToMarkdown(await response.text(), DEFAULT_LLMS_ORIGIN)
+        return pageHtmlToMarkdown(
+          await response.text(),
+          DEFAULT_LLMS_ORIGIN,
+          page,
+        )
       },
     )
   }
 
+  const markdown = prefersMarkdown(request.headers.get('accept'))
+
   if (pathname !== '/') {
-    return next()
+    if (markdown) {
+      // TanStack answers 406 unless HTML is acceptable; let the router run so a
+      // missing page still reports 404 (RFC 9110 lets us ignore Accept).
+      request.headers.append('Accept', 'text/html;q=0.1')
+    }
+    const result = await next()
+    if (!markdown || result.response?.status !== 404) {
+      return result
+    }
+    return {
+      ...result,
+      response: new Response(notFoundMarkdown(pathname), {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/markdown; charset=utf-8',
+          'Cache-Control': 'no-store',
+          Vary: 'Accept',
+        },
+      }),
+    }
   }
 
-  if (prefersMarkdown(request.headers.get('accept'))) {
+  if (markdown) {
     trackServerPageview(request)
     const response = await respondWithPrebuiltOrRuntime(
       'llms.txt',
@@ -52,7 +80,10 @@ export const markdownNegotiationMiddleware = createMiddleware({
     const headers = new Headers(response.headers)
     headers.set('Vary', 'Accept')
     headers.set('Link', HOME_LINK_HEADER)
-    throw new Response(response.body, { status: response.status, headers })
+    throw new Response(HOME_MARKDOWN_FRONTMATTER + (await response.text()), {
+      status: response.status,
+      headers,
+    })
   }
 
   const result = await next()

@@ -4,6 +4,7 @@
  * Sitemaps are generated via generate:sitemap.
  * Run manually when docs change: bun run generate:docs-exports
  */
+import { createHash } from 'node:crypto'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
@@ -241,6 +242,39 @@ async function generateLlmsFullTxt(): Promise<string> {
 
 type ExportFile = { relativePath: string; contents: string }
 
+async function fetchOk(url: string, accept?: string): Promise<Response> {
+  const response = await fetch(url, accept ? { headers: { Accept: accept } } : {})
+  if (!response.ok) throw new Error(`${url} returned ${response.status}`)
+  return response
+}
+
+/** Skills index pinned to the current appwrite/skills commit, with sha256 digests of each SKILL.md. */
+async function buildAgentSkillsIndex(): Promise<string> {
+  const document = buildAgentSkillsDiscoveryDocument()
+  try {
+    const commit = (
+      await (
+        await fetchOk(
+          'https://api.github.com/repos/appwrite/skills/commits/main',
+          'application/vnd.github.sha',
+        )
+      ).text()
+    ).trim()
+    const skills = await Promise.all(
+      document.skills.map(async (skill) => {
+        const url = skill.url.replace('/skills/main/', `/skills/${commit}/`)
+        const bytes = await (await fetchOk(url)).arrayBuffer()
+        const digest = createHash('sha256').update(new Uint8Array(bytes)).digest('hex')
+        return { ...skill, url, digest: `sha256:${digest}` }
+      }),
+    )
+    return serializeDiscoveryJson({ ...document, skills })
+  } catch (error) {
+    console.warn(`Agent skills index published without digests: ${String(error)}`)
+    return serializeDiscoveryJson(document)
+  }
+}
+
 async function buildExportFiles(): Promise<ExportFile[]> {
   const { blog, changelog, integrations } = await collectContentMeta()
   const alternatives = getAllAlternativeLlmsMeta()
@@ -290,6 +324,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: buildBlogMarkdownIndex(blog, SITE_ORIGIN),
     },
     {
+      relativePath: 'blog/llms.txt',
+      contents: buildBlogMarkdownIndex(blog, SITE_ORIGIN),
+    },
+    {
       relativePath: 'changelog.md',
       contents: buildChangelogMarkdownIndex(changelog, SITE_ORIGIN),
     },
@@ -316,7 +354,7 @@ async function buildExportFiles(): Promise<ExportFile[]> {
     },
     {
       relativePath: '.well-known/agent-skills/index.json',
-      contents: serializeDiscoveryJson(buildAgentSkillsDiscoveryDocument()),
+      contents: await buildAgentSkillsIndex(),
     },
     {
       relativePath: 'for-agents.md',
@@ -341,7 +379,11 @@ async function buildMarkdownTwins(clientDir: string): Promise<ExportFile[]> {
     if (!existsSync(html)) continue
     twins.push({
       relativePath: `${segment}.md`,
-      contents: pageHtmlToMarkdown(await readFile(html, 'utf-8'), SITE_ORIGIN),
+      contents: pageHtmlToMarkdown(
+        await readFile(html, 'utf-8'),
+        SITE_ORIGIN,
+        page,
+      ),
     })
   }
   return twins
