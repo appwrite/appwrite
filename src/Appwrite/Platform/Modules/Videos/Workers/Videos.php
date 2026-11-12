@@ -190,6 +190,8 @@ class Videos extends Action
             Span::add('caption.id', $videoMessage->caption->getId());
         }
 
+        $wait = \max(0, \time() - $message->getTimestamp());
+        Span::add('queue.wait', $wait);
         $this->record(
             $telemetry->createHistogram(
                 'worker.videos.queue.wait',
@@ -197,7 +199,7 @@ class Videos extends Action
                 'Seconds a videos message waited before a worker picked it up',
                 ['ExplicitBucketBoundaries' => self::WAIT_BUCKETS]
             ),
-            \max(0, \time() - $message->getTimestamp()),
+            $wait,
             ['action' => $action->value]
         );
 
@@ -440,8 +442,10 @@ class Videos extends Action
             $outcome = 'ready';
         } catch (\Throwable $th) {
             Span::add('error.stage', $stage);
-            if ($th instanceof Runtime) {
-                $this->runtime($telemetry, $th, 'ffmpeg', $stage);
+            // A rejected source carries the ffprobe run that rejected it.
+            $runtime = $th instanceof Runtime ? $th : $th->getPrevious();
+            if ($runtime instanceof Runtime) {
+                $this->runtime($telemetry, $runtime, 'ffmpeg', $stage);
             }
 
             $reason = $this->reason($th, $stage);
@@ -748,6 +752,9 @@ class Videos extends Action
         // abort, error park, e2e seed); it then stops ffmpeg and this pack never
         // resumes DB writes, even if status is set back to `started`.
         $halted = false;
+        // Every log line of this run names the job: the span is written only
+        // when the job ends, so these lines are all a killed worker leaves.
+        $tag = 'Rendition ' . $rendition->getId() . ' (project ' . $projectId . ', video ' . $videoId . ')';
 
         try {
             // Every rendition owns exactly one Encode message, so a message whose
@@ -786,6 +793,10 @@ class Videos extends Action
             Span::add('rendition.name', (string) $rendition->getAttribute('name', ''));
             Span::add('rendition.output', $output);
             Span::add('rendition.codec', $codec);
+            Console::info(
+                $tag . ' started as ' . $rendition->getAttribute('name', '')
+                . ' (' . $output . ', ' . $codec . ')'
+            );
             $stage = 'download';
             $this->notify(
                 $queueForRealtime,
@@ -851,11 +862,7 @@ class Videos extends Action
             Span::add('encoder.name', $packager->getName());
             Span::add('encoder.threads', $threads);
 
-            Console::info(
-                'Encoding video ' . $video->getId()
-                . ' as ' . $rendition->getAttribute('name')
-                . ' (' . $output . ')'
-            );
+            Console::info($tag . ' encoding (timeout ' . $timeout . 's, ' . $threads . ' threads)');
 
             // Apply loudnorm only when the probe found an audio stream.
             // On inputs under 3s loudnorm falls back to a linear gain from the
@@ -1007,6 +1014,7 @@ class Videos extends Action
             // persist/upload. A source read in place or over a URL is not ours.
             if (\str_starts_with($inPath, $workspace['inDir']) && \is_file($inPath) && !@\unlink($inPath)) {
                 Console::warning('Videos worker: failed to remove source after encode: ' . $inPath);
+                Span::add('source.cleanup_failed', true);
             }
             if ($last !== null && $last->speed > 0) {
                 $this->record(
@@ -1086,7 +1094,7 @@ class Videos extends Action
                 $permissions
             );
 
-            Console::info('Rendition ' . $rendition->getId() . ' conversion done');
+            Console::info($tag . ' conversion done');
 
             $stage = 'upload';
             $phaseStart = \microtime(true);
@@ -1097,8 +1105,7 @@ class Videos extends Action
             $storageBytes = $uploader->finish();
             $this->phase($telemetry, VideoAction::Encode->value, 'upload', $phaseStart);
             Span::add('rendition.size', $storageBytes);
-            Span::add('upload.chunks', $uploader->chunks());
-            Span::add('upload.speed', $uploader->speed());
+            Console::info($tag . ' upload done');
 
             $stage = 'finalize';
             $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
@@ -1136,6 +1143,7 @@ class Videos extends Action
             );
             $outcome = 'ready';
             $status = Base::STATUS_READY;
+            Console::info($tag . ' ready');
         } catch (\Throwable $th) {
             $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             // The progress listener stopped ffmpeg because the row left `started`.
@@ -1190,8 +1198,10 @@ class Videos extends Action
             // adds error.type/message/file/line; only the stage and ffmpeg detail
             // are added here.
             Span::add('error.stage', $stage);
-            if ($th instanceof Runtime) {
-                $this->runtime($telemetry, $th, 'ffmpeg', $stage);
+            // A rejected source carries the ffprobe run that rejected it.
+            $runtime = $th instanceof Runtime ? $th : $th->getPrevious();
+            if ($runtime instanceof Runtime) {
+                $this->runtime($telemetry, $runtime, 'ffmpeg', $stage);
             }
 
             // The owner's problem: recorded as a warning, not raised to the harness.
@@ -1206,12 +1216,21 @@ class Videos extends Action
             // write still in flight after the delete would leave an object
             // behind, and the workspace cleanup would pull its file away.
             $uploader?->abandon();
+            // On every path: a failed or halted run is where what reached the
+            // store matters. A failed write is thrown from the segment listener,
+            // so without the flag it reads as an encode failure.
+            if ($uploader !== null) {
+                Span::add('upload.chunks', $uploader->chunks());
+                Span::add('upload.speed', $uploader->speed());
+                Span::add('upload.failed', $uploader->failed());
+            }
 
             Span::add('rendition.outcome', $outcome);
             Span::add('rendition.status', $status);
             Span::add('rendition.claimed', $claimed);
             if ($outcome === 'halted') {
                 Span::add('rendition.halt_status', $status);
+                Span::add('rendition.halt_stage', $stage);
             }
             if ($last !== null) {
                 Span::add('encode.progress', \round($last->percent, 2));
@@ -1241,7 +1260,8 @@ class Videos extends Action
                         $computeMs
                     );
                 } catch (\Throwable $th) {
-                    Console::error('Failed to publish video usage: ' . $th->getMessage());
+                    Console::error('Failed to publish video usage for ' . $tag . ': ' . $th->getMessage());
+                    Span::add('usage.publish_failed', true);
                 }
             }
 
@@ -1454,7 +1474,6 @@ class Videos extends Action
         try {
             $info = $encoder->probe($inPath);
         } catch (\Throwable $th) {
-            Console::warning('Videos worker: caption probe failed for ' . $video->getId() . ': ' . $th->getMessage());
             Span::add('captions.error.stage', 'probe');
             Span::add('warning.message', 'Caption probe failed: ' . $th->getMessage());
             if ($th instanceof Runtime) {
@@ -1464,16 +1483,6 @@ class Videos extends Action
         }
 
         $tracks = $info->tracks(Track::SUBTITLE);
-        $streams = \array_map(
-            static fn (Track $track) => $track->type . ':' . ($track->codec ?? 'unknown'),
-            $info->tracks
-        );
-        Console::info(
-            'Videos worker: found ' . \count($tracks)
-            . ' caption stream(s) in source for video ' . $video->getId()
-            . ' streams=[' . \implode(', ', $streams) . ']'
-        );
-
         $textStreams = 0;
         foreach ($tracks as $track) {
             if (\in_array(\strtolower((string) ($track->codec ?? '')), self::TEXT_CAPTION_CODECS, true)) {
@@ -1482,6 +1491,13 @@ class Videos extends Action
         }
         Span::add('captions.streams', \count($tracks));
         Span::add('captions.text_streams', $textStreams);
+        Span::add(
+            'captions.source_tracks',
+            \implode(', ', \array_map(
+                static fn (Track $track) => $track->type . ':' . ($track->codec ?? 'unknown'),
+                $info->tracks
+            ))
+        );
 
         $extracted = $telemetry->createCounter('worker.videos.captions.extracted', null, 'Embedded caption tracks by extraction result');
         $assignedDefault = false;
@@ -1493,23 +1509,8 @@ class Videos extends Action
 
         foreach ($tracks as $track) {
             $codec = \strtolower((string) ($track->codec ?? ''));
-            $language = $track->language ?? 'und';
-
-            Console::info(
-                'Videos worker: caption stream index=' . $track->index
-                . ' codec=' . ($track->codec ?? 'unknown')
-                . ' language=' . $language
-                . ' default=' . ($track->default ? 'yes' : 'no')
-                . ' title=' . ($track->title ?? '')
-                . ' video=' . $video->getId()
-            );
 
             if ($codec === '' || !\in_array($codec, self::TEXT_CAPTION_CODECS, true)) {
-                Console::warning(
-                    'Videos worker: skipping non-text caption stream '
-                    . $track->index . ' (' . ($track->codec ?? 'unknown') . ') on video '
-                    . $video->getId()
-                );
                 $this->record($extracted, 1, ['result' => 'skipped_non_text', 'codec' => $codec !== '' ? $codec : 'unknown']);
                 $skipped++;
                 continue;
@@ -1539,10 +1540,6 @@ class Videos extends Action
             try {
                 $encoder->subtitle($inPath, $track->index, $vttPath, self::SUBTITLE_TIMEOUT);
             } catch (\Throwable $th) {
-                Console::warning(
-                    'Videos worker: failed extracting caption stream '
-                    . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
-                );
                 $this->record($extracted, 1, ['result' => 'failed', 'codec' => $codec]);
                 $failed++;
                 $retry = true;
@@ -1559,12 +1556,14 @@ class Videos extends Action
             }
 
             if (!\is_file($vttPath) || \filesize($vttPath) === 0) {
-                Console::warning(
-                    'Videos worker: empty VTT for caption stream '
-                    . $track->index . ' on video ' . $video->getId()
-                );
                 $this->record($extracted, 1, ['result' => 'skipped_empty', 'codec' => $codec]);
                 $skipped++;
+                Span::add('captions.empty.stream', $track->index);
+                Span::add('captions.empty.codec', $codec);
+                // A failed extract already owns warning.message; keep that one.
+                if ($failed === 0) {
+                    Span::add('warning.message', 'Empty VTT for caption stream ' . $track->index);
+                }
                 continue;
             }
 
@@ -1619,19 +1618,7 @@ class Videos extends Action
                 );
                 $registered++;
                 $this->record($extracted, 1, ['result' => 'registered', 'codec' => $codec]);
-                Console::info(
-                    'Videos worker: registered embedded caption ' . $caption->getId()
-                    . ' code=' . $code
-                    . ' name=' . $name
-                    . ' default=' . ($caption->getAttribute('default', false) ? 'yes' : 'no')
-                    . ' bytes=' . \filesize($vttPath)
-                    . ' for video ' . $video->getId()
-                );
             } catch (\Throwable $th) {
-                Console::warning(
-                    'Videos worker: failed registering embedded caption stream '
-                    . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
-                );
                 $this->record($extracted, 1, ['result' => 'failed', 'codec' => $codec]);
                 $failed++;
                 $retry = true;
@@ -1663,7 +1650,9 @@ class Videos extends Action
                                 $permissions
                             );
                         } catch (\Throwable $park) {
-                            Console::warning('Videos worker: failed to park embedded caption ' . $caption->getId() . ': ' . $park->getMessage());
+                            // The failed extract or registration owns warning.message.
+                            Console::error('Videos worker: failed to park embedded caption ' . $caption->getId() . ': ' . $park->getMessage());
+                            Span::add('captions.error.park_failed', true);
                         }
                     }
                 }
@@ -1699,22 +1688,12 @@ class Videos extends Action
                     ],
                     $permissions
                 );
-                Console::info(
-                    'Videos worker: set default embedded caption ' . $caption->getId()
-                    . ' on video ' . $video->getId()
-                );
+                Span::add('captions.default.id', $caption->getId());
                 break;
             }
         }
 
-        Console::info(
-            'Videos worker: embedded caption extract done for video ' . $video->getId()
-            . ' registered=' . $registered
-            . ' skipped=' . $skipped
-            . ' failed=' . $failed
-            . ' streams=' . \count($tracks)
-            . ' retry=' . ($retry ? 'yes' : 'no')
-        );
+        Span::add('captions.extracted', $registered > 0);
         Span::add('captions.registered', $registered);
         Span::add('captions.skipped', $skipped);
         Span::add('captions.failed', $failed);
@@ -1887,6 +1866,12 @@ class Videos extends Action
         Span::add('source.size', (int) $file->getAttribute('sizeOriginal', 0));
         Span::add('source.encrypted', !empty($file->getAttribute('openSSLCipher')));
         Span::add('source.compression', (string) $file->getAttribute('algorithm', Compression::NONE));
+        // A copy can take as long as the file is large, and the span is printed
+        // only when the job ends.
+        Console::info(
+            'Reading video ' . $video->getId() . ' of project ' . $project->getId()
+            . ' for ' . $action . ' (' . (int) $file->getAttribute('sizeOriginal', 0) . ' bytes)'
+        );
         $inPath = $this->source($deviceForFiles, $file, $workspace['inDir']);
         $this->phase($telemetry, $action, 'download', $phaseStart);
 
@@ -1943,10 +1928,7 @@ class Videos extends Action
                         $telemetry
                     );
                 } catch (\Throwable $th) {
-                    Console::warning(
-                        'Videos worker: embedded caption extract failed for '
-                        . $video->getId() . ': ' . $th->getMessage()
-                    );
+                    Span::add('captions.extracted', false);
                     Span::add('captions.error.stage', 'extract');
                     Span::add('warning.message', 'Embedded caption extract failed: ' . $th->getMessage());
                 }
@@ -1984,6 +1966,7 @@ class Videos extends Action
         // leaves nothing behind, which is all that matters here.
         if (!(new Local(\rtrim($root, '/')))->deletePath(\substr($basePath, \strlen($root))) && \is_dir($basePath)) {
             Console::error('Failed removing files from [' . $basePath . ']');
+            Span::add('workspace.cleanup_failed', true);
         }
     }
 

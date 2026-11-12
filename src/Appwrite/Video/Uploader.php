@@ -153,6 +153,14 @@ final class Uploader
     }
 
     /**
+     * Whether a write failed and ended the uploads.
+     */
+    public function failed(): bool
+    {
+        return $this->failure !== null;
+    }
+
+    /**
      * Average upload throughput in MB/s over active write time.
      */
     public function speed(): float

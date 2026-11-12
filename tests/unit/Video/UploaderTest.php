@@ -62,6 +62,7 @@ final class UploaderTest extends TestCase
 
             $this->assertSame(600, $bytes);
             $this->assertSame(3, $uploader->chunks());
+            $this->assertFalse($uploader->failed());
             $this->assertGreaterThan(0.0, $uploader->speed());
             $this->assertSame(
                 [$this->path . 'segment_1.ts', $this->path . 'segment_2.ts', $this->path . 'segment_3.ts'],
@@ -131,6 +132,9 @@ final class UploaderTest extends TestCase
 
             $uploader->abandon();
 
+            // What the run reports after giving up: one segment up, then the failure.
+            $this->assertTrue($uploader->failed());
+            $this->assertSame(1, $uploader->chunks());
             $this->assertSame([$this->path . 'segment_1.ts'], $store->writes);
             $this->assertFileDoesNotExist($segments[0]->path);
             $this->assertSame(['segment_2.ts', 'segment_3.ts', 'segment_4.ts'], $this->left(), 'segments not uploaded must stay for the cleanup');
