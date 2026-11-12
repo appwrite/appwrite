@@ -1306,9 +1306,14 @@ class GitHub extends Git
             'filter' => 'latest',
         ]);
         $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
-        if (($headers['status-code'] ?? 0) === 403) {
+        $statusCode = \is_numeric($headers['status-code'] ?? null) ? (int) $headers['status-code'] : 0;
+        if ($statusCode === 403) {
             parent::updateCheck($owner, $repositoryName, $SHA, $state, $name, $title, '', $detailsUrl);
             return;
+        }
+        // An unread list would start a second run beside the existing one
+        if ($statusCode >= 400) {
+            throw new Exception("Failed to list check runs: HTTP $statusCode", $statusCode);
         }
 
         $body = \is_array($response['body'] ?? null) ? $response['body'] : [];
