@@ -3950,6 +3950,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Critical: '重要',
   "Rings on your phone even when it's on silent or in Do Not Disturb.":
     'スマートフォンがサイレントやおやすみモードでも鳴ります。',
+  Severity: '重大度',
+  Warning: '警告',
+  'Worth knowing about. Nothing needs doing yet.': '知っておくべき情報です。まだ対応は不要です。',
+  'Look into it soon, before it becomes a problem.': '問題になる前に、早めに確認してください。',
+  'Something is broken and needs fixing.': '何かが壊れていて、修正が必要です。',
   'Critical. Rings on phones even on silent.':
     '重要。サイレントでもスマートフォンが鳴ります。',
   'Rings on phones even on silent': 'サイレントでもスマートフォンが鳴ります',

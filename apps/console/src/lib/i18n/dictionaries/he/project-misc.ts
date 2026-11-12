@@ -3876,6 +3876,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Critical: 'קריטי',
   "Rings on your phone even when it's on silent or in Do Not Disturb.":
     "מצלצל בטלפון גם כשהוא במצב שקט או ב'נא לא להפריע'.",
+  Severity: 'חומרה',
+  Warning: 'אזהרה',
+  'Worth knowing about. Nothing needs doing yet.':
+    'כדאי לדעת. עדיין אין צורך לעשות דבר.',
+  'Look into it soon, before it becomes a problem.':
+    'כדאי לבדוק בקרוב, לפני שזה יהפוך לבעיה.',
+  'Something is broken and needs fixing.': 'משהו לא עובד וצריך תיקון.',
   'Critical. Rings on phones even on silent.':
     'קריטי. מצלצל בטלפונים גם במצב שקט.',
   'Rings on phones even on silent': 'מצלצל בטלפונים גם במצב שקט',

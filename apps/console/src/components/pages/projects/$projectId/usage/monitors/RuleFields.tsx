@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import {
   bucketsQueryOptions,
   databasesQueryOptions,
@@ -27,6 +26,7 @@ import {
   type AlertMetric,
   type AlertResourceType,
   type MonitorInput,
+  type MonitorSeverity,
   type ParsedMonitor,
 } from '@/lib/appwrite/monitors'
 import {
@@ -61,7 +61,7 @@ export type RuleForm = {
   window: number
   cooldown: number
   notify: string[]
-  critical: boolean
+  severity: MonitorSeverity
 }
 
 const RESOURCE_PICKER_LIMIT = 100
@@ -78,7 +78,7 @@ export function emptyRuleForm(): RuleForm {
     window: 3600,
     cooldown: 3600,
     notify: ['owner'],
-    critical: false,
+    severity: 'warning',
   }
 }
 
@@ -100,9 +100,37 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
     window: rule.window,
     cooldown: rule.cooldown,
     notify: rule.notify,
-    critical: rule.critical,
+    severity: rule.severity,
   }
 }
+
+/** The levels a monitor can take, least urgent first, with what each one changes. */
+export const SEVERITIES: {
+  value: MonitorSeverity
+  label: string
+  hint: string
+}[] = [
+  {
+    value: 'info',
+    label: 'Info',
+    hint: 'Worth knowing about. Nothing needs doing yet.',
+  },
+  {
+    value: 'warning',
+    label: 'Warning',
+    hint: 'Look into it soon, before it becomes a problem.',
+  },
+  {
+    value: 'error',
+    label: 'Error',
+    hint: 'Something is broken and needs fixing.',
+  },
+  {
+    value: 'critical',
+    label: 'Critical',
+    hint: "Rings on your phone even when it's on silent or in Do Not Disturb.",
+  },
+]
 
 /** Organization roles the form offers to notify; the server validates `notify` against its own list. */
 export const NOTIFY_ROLES = ['owner', 'developer']
@@ -173,7 +201,7 @@ export function monitorInputFromForm(
     window: metricDefinition(form.metric).counter ? form.window : undefined,
     cooldown: form.cooldown,
     notify: form.notify,
-    critical: form.critical,
+    severity: form.severity,
   }
 }
 
@@ -651,26 +679,43 @@ export function RuleFields({
                 'Project webhooks and functions can also listen to its alert events.',
               )}
         </p>
-        <div className="mt-4 flex items-start justify-between gap-4 rounded-xl border border-border p-4">
-          <div>
-            <Label
-              htmlFor="alert-critical"
-              className="text-[13px] font-semibold"
-            >
-              {t('Critical')}
-            </Label>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
-              {t(
-                "Rings on your phone even when it's on silent or in Do Not Disturb.",
-              )}
-            </p>
+        <div className="mt-4">
+          <Label id="alert-severity" className="text-[13px] font-semibold">
+            {t('Severity')}
+          </Label>
+          <div
+            role="radiogroup"
+            aria-labelledby="alert-severity"
+            className="mt-2 flex flex-wrap gap-2"
+          >
+            {SEVERITIES.map(({ value, label }) => {
+              const selected = form.severity === value
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={disabled}
+                  onClick={() => onChange({ severity: value })}
+                  className={cn(
+                    'inline-flex h-8 items-center rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                    selected
+                      ? 'border-foreground text-foreground ring-1 ring-inset ring-foreground'
+                      : 'border-border text-muted-foreground hover:bg-accent/40',
+                  )}
+                >
+                  {t(label)}
+                </button>
+              )
+            })}
           </div>
-          <Switch
-            id="alert-critical"
-            checked={form.critical}
-            onCheckedChange={(critical) => onChange({ critical })}
-            disabled={disabled}
-          />
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            {t(
+              SEVERITIES.find(({ value }) => value === form.severity)?.hint ??
+                '',
+            )}
+          </p>
         </div>
       </section>
 
