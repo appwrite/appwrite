@@ -514,10 +514,12 @@ class Alerts extends Action
                     'title' => ($status === Status::Firing ? 'Firing: ' : 'Resolved: ') . (string) $monitor->getAttribute('name'),
                     'body' => \implode(' ', \array_filter([$email->summary(), $notice['location']])),
                     'tag' => 'alert:' . $alert->getId(),
-                    'critical' => $monitor->getAttribute('severity') === Severity::Critical->value,
+                    // The severity the alert opened with, so editing the monitor later
+                    // does not change how this alert's pushes are delivered.
+                    'critical' => $alert->getAttribute('severity') === Severity::Critical->value,
                     'data' => [
                         'type' => 'alert',
-                        'severity' => (string) $monitor->getAttribute('severity', Severity::Warning->value),
+                        'severity' => (string) $alert->getAttribute('severity', Severity::Warning->value),
                         'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
                         'alertId' => $alert->getId(),
                         'monitorId' => $monitor->getId(),
