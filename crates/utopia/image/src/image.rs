@@ -9,8 +9,8 @@ use crate::color::Color;
 use crate::decode;
 use crate::encode;
 use crate::error::{Error, Result};
-use crate::frame::{Format, Frame};
-use crate::options::{FocalPoint, Gravity, OutputFormat};
+use crate::frame::{self, Format, Frame};
+use crate::options::{FocalPoint, Gravity, OutputFormat, canvas_bytes, check_pixels};
 use crate::transform::{self, RoundRect};
 
 /// A decoded image (every frame of an animation), transformed in place and
@@ -177,6 +177,10 @@ impl Image {
         let dims = |v: i64| u32::try_from(v.max(0)).unwrap_or(u32::MAX);
         let (w, h, rw, rh) = (dims(width), dims(height), dims(resize_width), dims(resize_height));
         if self.frames.len() > 1 {
+            // Every frame is resampled to the target and kept, and the
+            // transforms below each check one canvas only: what the whole
+            // animation costs is checked here, before the first allocation.
+            self.check_frames(w, h)?;
             for frame in &mut self.frames {
                 if center {
                     transform::crop_thumbnail(frame, w, h)?;
@@ -377,6 +381,14 @@ impl Image {
             }
         }
         Ok(())
+    }
+
+    /// Fails when resampling every frame to a `width` x `height` canvas would
+    /// hold more pixels than the budget. A frame's new canvas replaces its old
+    /// pixels, so the peak is whichever of the two sets of frames is larger.
+    fn check_frames(&self, width: u32, height: u32) -> Result<()> {
+        let after = canvas_bytes(width.into(), height.into()).saturating_mul(self.frames.len() as u64);
+        check_pixels(frame::retained(&self.frames).max(after))
     }
 
     /// The width that keeps the aspect ratio at `height`.

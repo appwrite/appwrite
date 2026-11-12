@@ -9,8 +9,8 @@ use image::{Rgba, RgbaImage};
 
 use crate::color::Color;
 use crate::error::{Error, Result};
-use crate::frame::{Format, Frame, Page};
-use crate::options::check_dimensions;
+use crate::frame::{self, Format, Frame, Page};
+use crate::options::{canvas_bytes, check_dimensions, check_pixels};
 
 /// Resamples `src` to `width` x `height` with `filter`.
 fn resample(src: &RgbaImage, width: u32, height: u32, filter: FilterType, alpha: bool) -> Result<RgbaImage> {
@@ -393,6 +393,9 @@ pub(crate) fn flatten(frames: &[Frame]) -> Result<Frame> {
     let width = if first.page.width == 0 { first.width() } else { first.page.width };
     let height = if first.page.height == 0 { first.height() } else { first.page.height };
     check_dimensions(width.into(), height.into())?;
+    // Every frame stays alive while the canvas is composited, so the whole
+    // image is charged, not the canvas alone.
+    check_pixels(frame::retained(frames).saturating_add(canvas_bytes(width.into(), height.into())))?;
     let background = first.background;
     let mut canvas = RgbaImage::from_pixel(width, height, Rgba(background.0));
     for frame in frames {
