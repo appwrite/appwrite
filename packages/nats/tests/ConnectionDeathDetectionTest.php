@@ -404,6 +404,32 @@ final class ConnectionDeathDetectionTest extends TestCase
     }
 
     /**
+     * With reconnect off, the tick cannot rebuild the connection, but it has
+     * still seen the socket go. Leaving the status at connected would let the
+     * next publish write into the dead socket and return success.
+     */
+    public function testTickMarksAClosedSocketDeadWhenReconnectIsOff(): void
+    {
+        $fake = new FakeTransport();
+        $conn = $this->connect($fake, ['pingInterval' => 300.0, 'allowReconnect' => false]);
+
+        $fake->closedByServer = true;
+
+        try {
+            $conn->tick();
+            $this->fail('A tick that cannot reconnect must report the close');
+        } catch (ConnectionException) {
+        }
+
+        $this->assertFalse($conn->isConnected());
+        $this->assertSame(1, substr_count($fake->written, 'CONNECT '), 'Reconnect is off');
+
+        $this->expectException(ConnectionException::class);
+        $this->expectExceptionMessage('Not connected');
+        $conn->publish('orders', 'lost');
+    }
+
+    /**
      * The payoff, and the reported failure: a JetStream command on a connection
      * the server closed while it was parked. The write lands in a kernel buffer
      * and succeeds, so the close surfaces on the reply read -- inside a request

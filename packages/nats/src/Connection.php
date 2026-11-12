@@ -393,12 +393,18 @@ final class Connection
     }
 
     /**
-     * Drive connection maintenance without consuming a message: send the
-     * keepalive PING when it is due, and recycle the connection when the server
-     * has stopped answering. A holder that keeps a connection open without
-     * reading from it -- a pooled publisher, say -- must call this on an
-     * interval shorter than the server's ping deadline, because nothing else
-     * in this class runs on its own.
+     * Drive connection maintenance: send the keepalive PING when it is due,
+     * recycle the connection when the server has stopped answering, and take a
+     * short, bounded read so a socket the server has closed is noticed and
+     * rebuilt here rather than by the next command. A holder that keeps a
+     * connection open without reading from it -- a pooled publisher, say --
+     * must call this on an interval shorter than the server's ping deadline,
+     * because nothing else in this class runs on its own.
+     *
+     * The read dispatches whatever it finds, exactly as processMessage() does:
+     * subscription messages already waiting are delivered from here, so a
+     * callback subscription's closure runs inside the tick, and an exception
+     * it throws propagates out of it.
      *
      * This reads the socket, so the caller must hold the connection
      * exclusively for the call. Pool maintenance satisfies that by sweeping
@@ -486,6 +492,14 @@ final class Connection
                 $this->attemptReconnect();
                 return null;
             }
+
+            // Not rebuilding it is no reason to keep claiming it. Left at
+            // connected, the next publish() writes into the dead socket and
+            // returns success.
+            if ($this->status !== self::STATUS_CLOSED) {
+                $this->recycleDeadConnection(false);
+            }
+
             throw $e;
         }
 
