@@ -6,6 +6,10 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- `Decorator\Retry::stream()` now retries a transient error response that carries a body, such as a proxy's `503` error page, when the adapter supports response streaming. The error body is held until the strategy decides, then discarded on retry or delivered to the sink once. Previously the body counted as delivered bytes, so the strategy was never consulted.
+
 ### Breaking
 
 - `Adapter` gains `withDestinations()`. A custom adapter must implement it and check the address each connection actually reaches, on every connection and every redirect hop, throwing `DestinationException` on a refused address and dropping proxy settings unless the destinations permit a proxy. `Decorator` forwards the setting.

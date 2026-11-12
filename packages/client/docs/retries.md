@@ -24,7 +24,11 @@ With no configuration it uses `Backoff`, the default best-practice strategy:
 `RequestExceptionInterface` failures (a bad URI, a malformed response) are never
 retried — see [error handling](error-handling.md) for that distinction. Streaming
 requests are retried only when the failure occurs before any byte reaches the sink,
-since replaying would duplicate delivered data.
+since replaying would duplicate delivered data. When the adapter exposes response
+headers before streaming (`supportsResponseStreaming()`), the body of an error
+response (status `400` or above) is held back until the strategy decides: it is
+discarded if the request is retried, or delivered to the sink once if not, so a
+proxy's `503` error page does not count as delivered data.
 
 ## Tuning the default
 
