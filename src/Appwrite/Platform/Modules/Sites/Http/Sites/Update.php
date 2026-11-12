@@ -110,9 +110,9 @@ class Update extends Base
             ->param('deploymentRetention', null, new Nullable(new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION)), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the site.', true)
-            ->param('providerComments', null, new Nullable(new Boolean()), 'Post a build comment on pull requests for the repo linked to the site. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
-            ->param('providerAutoDeploy', null, new Nullable(new Boolean()), 'Deploy every push that matches the branch and path rules for the repo linked to the site. When disabled, deploy manually.', true)
-            ->param('providerCommitStatus', null, new Nullable(new Boolean()), 'Report the build status on each commit for the repo linked to the site. Ignored in silent mode.', true)
+            ->param('providerSummaries', null, new Nullable(new Boolean()), 'Post a build summary on pull requests for the repo linked to the site. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
+            ->param('providerDeployments', null, new Nullable(new Boolean()), 'Deploy every push that matches the branch and path rules for the repo linked to the site. When disabled, deploy manually.', true)
+            ->param('providerStatuses', null, new Nullable(new Boolean()), 'Report the build status on each commit for the repo linked to the site. Ignored in silent mode.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -159,9 +159,9 @@ class Update extends Base
         ?int $deploymentRetention,
         ?array $scopes,
         ?string $description,
-        ?bool $providerComments,
-        ?bool $providerAutoDeploy,
-        ?bool $providerCommitStatus,
+        ?bool $providerSummaries,
+        ?bool $providerDeployments,
+        ?bool $providerStatuses,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -386,9 +386,9 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'providerComments' => $providerComments ?? $site->getAttribute('providerComments', true),
-            'providerAutoDeploy' => $providerAutoDeploy ?? $site->getAttribute('providerAutoDeploy', true),
-            'providerCommitStatus' => $providerCommitStatus ?? $site->getAttribute('providerCommitStatus', true),
+            'providerSummaries' => $providerSummaries ?? $site->getAttribute('providerSummaries', true),
+            'providerDeployments' => $providerDeployments ?? $site->getAttribute('providerDeployments', true),
+            'providerStatuses' => $providerStatuses ?? $site->getAttribute('providerStatuses', true),
             'providerBranches' => $providerBranches ?? $site->getAttribute('providerBranches', []),
             'providerPaths' => $providerPaths ?? $site->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
