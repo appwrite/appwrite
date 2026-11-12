@@ -2,6 +2,7 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Alert\Severity;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Migration\Migration;
 use Exception;
@@ -719,6 +720,15 @@ class V25 extends Migration
 
     protected function migrateDocument(Document $document): Document
     {
+        // A column added to existing rows leaves them null, not at its default.
+        if (\in_array($document->getCollection(), ['monitors', 'monitorAlerts'], true)) {
+            if (empty($document->getAttribute('severity'))) {
+                $document->setAttribute('severity', Severity::Warning->value);
+            }
+
+            return $document;
+        }
+
         if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
             $retired = ['devKeys.read', 'devKeys.write', 'assistant.read'];
             $scopes = $document->getAttribute('scopes', []);
