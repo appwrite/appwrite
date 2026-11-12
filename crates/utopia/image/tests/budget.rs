@@ -110,4 +110,23 @@ fn pixels_past_the_budget_fail_before_they_are_allocated() {
     let mut image = Image::new(&wide).expect("a 400x4 animation fits the budget");
     image.crop(100, 100, Gravity::TopLeft, None).expect("the cover canvas fits the budget");
     assert_eq!((image.width(), image.height()), (100, 100));
+
+    // A border grows the frame it is applied to and nothing else, and a
+    // squarer frame covers a 200x50 target with a taller canvas: the cover
+    // canvas comes from the largest frame, not from the image's size. The
+    // budget the crop needs, to the byte: nine 400x100 frames and the
+    // bordered 1200x900 one, plus the 200x150 that frame is resampled to and
+    // the 200x50 cropped out of it.
+    let needed = (9 * 400 * 100 + 1200 * 900 + 200 * 150 + 200 * 50) * 4;
+    let bordered = |limit: i64| {
+        set_resource_limit(Resource::Memory, limit);
+        set_resource_limit(Resource::Map, 0);
+        let mut image = Image::new(&animation_gif(10, 400, 100)).expect("a 400x100 animation fits the budget");
+        image.set_border(400, "#ff0000").expect("the bordered frame fits the budget");
+        image
+    };
+    assert!(exhausted(bordered(needed - 1).crop(200, 50, Gravity::Center, None)));
+    let mut image = bordered(needed);
+    image.crop(200, 50, Gravity::Center, None).expect("the crop fits the budget exactly");
+    assert_eq!((image.width(), image.height()), (200, 50));
 }
