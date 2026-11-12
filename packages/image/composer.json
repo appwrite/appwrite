@@ -25,11 +25,10 @@
     },
     "require": {
         "php": ">=8.1",
-        "ext-imagick": "*",
-        "ext-gd": "*"
+        "ext-utopia": "*"
     },
-    "suggest": {
-        "ext-imagick": "Imagick extension is required for Imagick adapter"
+    "require-dev": {
+        "ext-imagick": "*"
     },
     "minimum-stability": "dev"
 }
