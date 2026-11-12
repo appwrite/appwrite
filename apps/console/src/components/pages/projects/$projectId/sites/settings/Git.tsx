@@ -45,6 +45,7 @@ export function View() {
             'silent mode',
             'automation',
             'deploy on push',
+            'production branch',
             'summaries',
             'comments',
             'commit status',
