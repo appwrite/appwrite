@@ -297,6 +297,21 @@ class Update extends Action
 
                         $bulkDocuments[$operation->getId()] = [];
 
+                        // The first operation on a document must find it as it was staged. Its
+                        // $updatedAt is stamped before a concurrent commit becomes visible, so
+                        // comparing it with the staging time misses that commit.
+                        $stagedUpdatedAt = $operation['documentUpdatedAt'] ?? null;
+                        if (
+                            $stagedUpdatedAt !== null
+                            && \in_array($action, ['update', 'upsert', 'delete', 'increment', 'decrement'], true)
+                            && !isset($state[$collectionId][$documentId])
+                        ) {
+                            $current = $dbForDatabases->getAuthorization()->skip(fn () => $dbForDatabases->getDocument($collectionId, $documentId, forUpdate: true));
+                            if (!$current->isEmpty() && new \DateTime($current->getUpdatedAt()) != new \DateTime($stagedUpdatedAt)) {
+                                throw new ConflictException('Document was updated after it was staged');
+                            }
+                        }
+
                         switch ($action) {
                             case 'create':
                                 $this->handleCreateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
