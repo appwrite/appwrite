@@ -432,7 +432,10 @@ class V25 extends Migration
                     break;
 
                 case 'identities':
-                    foreach (['photo', 'providerIdToken'] as $attribute) {
+                    // providerEmailVerification defaults to false, so every identity that
+                    // predates it counts as unverified until its next sign-in refreshes it.
+                    // An unverified providerEmail cannot claim an address or adopt an account.
+                    foreach (['photo', 'providerIdToken', 'providerEmailVerification'] as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Throwable $th) {

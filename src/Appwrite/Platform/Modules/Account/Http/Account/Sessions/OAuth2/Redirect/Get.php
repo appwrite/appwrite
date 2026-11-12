@@ -316,6 +316,8 @@ class Get extends Base
         }
         $providerEmail = $oauth2->getUserEmail($accessToken);
         $email = $providerEmail;
+        // Trust the provider's userinfo claim, not the mere fact an email was returned
+        $isVerified = $oauth2->isEmailVerified($accessToken);
 
         // Check if this identity is connected to a different user
         if (!$user->isEmpty()) {
@@ -333,6 +335,7 @@ class Get extends Base
             if (!empty($providerEmail)) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
+                    Query::equal('providerEmailVerification', [true]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
@@ -388,8 +391,6 @@ class Get extends Base
         $newTarget = null;
 
         if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
-            $isVerified = $oauth2->isEmailVerified($accessToken);
-
             $identity = $dbForProject->findOne('identities', [
                 Query::equal('provider', [$provider]),
                 Query::equal('providerUid', [$oauth2ID]),
@@ -479,8 +480,12 @@ class Get extends Base
 
             // If user is not found, check if there is an identity with the same email
             if ($user->isEmpty() && !empty($providerEmail)) {
+                // Only an address the other provider verified can hand over its account.
+                // Without this a user who links a provider that returns someone else's
+                // unverified address pre-hijacks that person's future sign-in.
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
+                    Query::equal('providerEmailVerification', [true]),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
                     if (!$isVerified) {
@@ -591,8 +596,6 @@ class Get extends Base
                 'emailIsFree' => null,
             ];
 
-            $isVerified = $oauth2->isEmailVerified($accessToken);
-
             try {
                 $parsedEmail = new Email($providerEmail);
                 $canonical = $parsedEmail->getCanonical();
@@ -696,6 +699,7 @@ class Get extends Base
             if (!empty($providerEmail)) {
                 $identitiesWithMatchingEmail = $dbForProject->find('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
+                    Query::equal('providerEmailVerification', [true]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!empty($identitiesWithMatchingEmail)) {
@@ -717,6 +721,7 @@ class Get extends Base
                     'provider' => $provider,
                     'providerUid' => $oauth2ID,
                     'providerEmail' => $providerEmail,
+                    'providerEmailVerification' => !empty($providerEmail) && $isVerified,
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => $refreshToken,
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
@@ -737,6 +742,9 @@ class Get extends Base
             }
         } else {
             $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                // The flag describes the stored address, which this flow never rewrites.
+                // A provider that moved the account to another address no longer attests it.
+                'providerEmailVerification' => $isVerified && !empty($providerEmail) && $identity->getAttribute('providerEmail') === $providerEmail,
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
