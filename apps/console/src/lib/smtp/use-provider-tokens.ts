@@ -4,8 +4,8 @@ import {
   QuickSetupReauthorizeRequiredError,
   resolveProviderAccessToken,
   type ProviderAccessToken,
+  type QuickSetupOAuthProvider,
 } from './quick-setup-oauth'
-import type { AvailableSmtpQuickSetupProvider } from './providers'
 
 /**
  * Holds provider access tokens for the current page and runs API calls with
@@ -28,12 +28,17 @@ export function useProviderTokens() {
    */
   const callWith = useCallback(
     async <T>(
-      provider: AvailableSmtpQuickSetupProvider,
+      provider: QuickSetupOAuthProvider,
       run: (accessToken: string) => Promise<T>,
     ): Promise<T> => {
       let current = tokensRef.current.get(provider.id)
       if (!current || isProviderTokenExpired(current.expiry)) {
-        const resolved = await resolveProviderAccessToken(provider.id)
+        // The token lives on the account identity Appwrite links, which is
+        // keyed by the OAuth provider name (e.g. `google`), not the quick-setup
+        // id (e.g. `fcm`). They coincide for Resend but not for FCM.
+        const resolved = await resolveProviderAccessToken(
+          provider.oauth.provider,
+        )
         if (!resolved) throw new QuickSetupReauthorizeRequiredError()
         current = resolved
         tokensRef.current.set(provider.id, current)
@@ -52,15 +57,12 @@ export function useProviderTokens() {
   )
 
   /** Caches a token for the provider. False means a new authorization is due. */
-  const prime = useCallback(
-    async (provider: AvailableSmtpQuickSetupProvider) => {
-      const token = await resolveProviderAccessToken(provider.id)
-      if (!token) return false
-      tokensRef.current.set(provider.id, token)
-      return true
-    },
-    [],
-  )
+  const prime = useCallback(async (provider: QuickSetupOAuthProvider) => {
+    const token = await resolveProviderAccessToken(provider.oauth.provider)
+    if (!token) return false
+    tokensRef.current.set(provider.id, token)
+    return true
+  }, [])
 
   /** Drops a cached token, e.g. after the identity behind it was deleted. */
   const forget = useCallback((providerId: string) => {
