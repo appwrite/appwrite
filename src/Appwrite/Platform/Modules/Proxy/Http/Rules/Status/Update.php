@@ -95,7 +95,7 @@ class Update extends Action
 
         // A verified rule whose renewal failed or is blocked, or whose certificate expired, is checked again.
         // Maintenance stops after 5 failed attempts, so once DNS is fixed nothing else would renew it.
-        // This request and the worker both update the certificate, so a recent update means a renewal is queued or running.
+        // This request and the worker both update the certificate, so renewals are at most one per cooldown after the last queue, run or result.
         $renewal = $rule->getAttribute('status') === RULE_STATUS_VERIFIED
             && (\in_array($certificate->getAttribute('status'), [Status::FAILED, Status::BLOCKED], true) || (!empty($expireDate) && \strtotime($expireDate) <= \time()))
             && \strtotime($certificate->getUpdatedAt() ?? '@0') <= \time() - self::RENEWAL_COOLDOWN;
