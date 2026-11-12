@@ -16,6 +16,7 @@ use Utopia\Cdn\Certificates\Status;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -109,6 +110,8 @@ class Update extends Action
             return;
         }
 
+        $claimed = true;
+
         try {
             // Appwrite-owned subdomains ride a wildcard record, so the worker never checks their DNS either
             if ($rule->getAttribute('owner') !== 'Appwrite') {
@@ -132,7 +135,13 @@ class Update extends Action
                 if (!$renewal) {
                     $reset->setAttribute('status', '');
                 }
-                $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, $reset));
+                // A renewal claims the certificate as read, so a concurrent request that read it too conflicts and queues nothing
+                $readAt = $renewal ? new \DateTime($certificate->getUpdatedAt()) : null;
+                try {
+                    $certificate = $authorization->skip(fn () => $dbForPlatform->withRequestTimestamp($readAt, fn () => $dbForPlatform->updateDocument('certificates', $certificateId, $reset)));
+                } catch (Conflict) {
+                    $claimed = false;
+                }
             }
         } catch (Exception $err) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
@@ -144,14 +153,16 @@ class Update extends Action
 
         // Issue a TLS certificate when DNS verification is successful. The worker
         // does not verify DNS again: verifyRule() above just did.
-        $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
-            project: $project,
-            domain: new Document([
-                'domain' => $rule->getAttribute('domain'),
-                'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-            ]),
-            skipDomainValidation: true,
-        ));
+        if ($claimed) {
+            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                project: $project,
+                domain: new Document([
+                    'domain' => $rule->getAttribute('domain'),
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                ]),
+                skipDomainValidation: true,
+            ));
+        }
 
         $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
         $rule->setAttribute('expireAt', $certificate->getAttribute('expireDate', ''));
