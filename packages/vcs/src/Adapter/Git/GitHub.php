@@ -1306,7 +1306,7 @@ class GitHub extends Git
             'filter' => 'latest',
         ]);
         $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
-        $statusCode = (int) ($headers['status-code'] ?? 0);
+        $statusCode = \is_numeric($headers['status-code'] ?? null) ? (int) $headers['status-code'] : 0;
         if ($statusCode === 403) {
             parent::updateCheck($owner, $repositoryName, $SHA, $state, $name, $title, '', $detailsUrl);
             return;
