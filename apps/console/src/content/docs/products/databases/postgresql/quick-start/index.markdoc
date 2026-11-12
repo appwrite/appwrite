@@ -1,0 +1,112 @@
+---
+layout: article
+title: Quick start
+description: Create a managed PostgreSQL database in the Appwrite Console, run SQL in the editor, and connect with psql, Prisma, or Drizzle over TLS.
+---
+
+You can create a PostgreSQL database and run your first query in a few minutes.
+
+# Create a database {% #create %}
+
+{% info title="Available regions" %}
+Native databases are available in every [Appwrite Cloud region](/docs/products/network/regions). A database takes the region of the project that owns it and there is no per-database region selector, so create your project in the region closest to your users before you start.
+{% /info %}
+
+1. In your project, go to **Databases**.
+2. Click **Create database**.
+3. Under **Choose database type**, select **PostgreSQL** from the **Native databases** group.
+4. Give your database a name, and optionally a custom database ID. This step appears once you pick a type.
+
+{% only_dark %}
+![Create database type selection](/images/docs/products/databases/postgresql/dark/create-database-type.avif)
+{% /only_dark %}
+{% only_light %}
+![Create database type selection](/images/docs/products/databases/postgresql/create-database-type.avif)
+{% /only_light %}
+
+5. Under **Specifications**, select your preferred tier.
+6. Optionally configure **Read replicas** and **Point-in-time recovery (PITR)**. You can change both later.
+
+{% only_dark %}
+![Database specifications](/images/docs/products/databases/postgresql/dark/create-database-specs.avif)
+{% /only_dark %}
+{% only_light %}
+![Database specifications](/images/docs/products/databases/postgresql/create-database-specs.avif)
+{% /only_light %}
+
+7. Review the database summary and click **Create database**.
+
+Your database starts provisioning and becomes ready shortly after. You land in the SQL editor once it is created.
+
+# Run your first queries {% #first-queries %}
+
+{% only_dark %}
+![SQL editor](/images/docs/products/databases/postgresql/dark/sql-editor-run.avif)
+{% /only_dark %}
+{% only_light %}
+![SQL editor](/images/docs/products/databases/postgresql/sql-editor-run.avif)
+{% /only_light %}
+
+The **SQL editor** tab gives you an editor with formatting, query explain, and a results panel, without leaving the browser.
+
+The editor runs one statement per query, so run these three in turn rather than pasting them together.
+
+Create a table:
+
+```sql
+CREATE TABLE books (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    author TEXT NOT NULL
+);
+```
+
+Insert a row:
+
+```sql
+INSERT INTO books (title, author)
+VALUES ('The Hitchhiker''s Guide to the Galaxy', 'Douglas Adams');
+```
+
+Read it back:
+
+```sql
+SELECT * FROM books;
+```
+
+# Get your connection details {% #credentials %}
+
+To connect from outside the Console:
+
+1. Open your database and click **Credentials**.
+2. The **Details** tab shows the host, port, username, password, and database name.
+3. The **DSN**, **.env**, **Prisma**, **Drizzle**, and **psql** tabs have ready-made snippets for each workflow.
+
+# Connect with psql {% #psql %}
+
+Copy the command from the **psql** tab of the credentials dialog, or build it from the details. The port shown there is `6432`, the connection pooler, which is what you want for everyday use:
+
+```bash
+PGSSLMODE=require psql -h <host> -p 6432 -U admin -d <database>
+```
+
+Port `5432` reaches the database directly, bypassing the pooler. Use it for migrations and other work that needs one session for the whole run.
+
+Enter the password when prompted. You can run the same queries from your terminal that you ran in the SQL editor, or connect from your application with any PostgreSQL driver. See [Connections](/docs/products/databases/postgresql/connections) for driver examples.
+
+# Next steps {% #next-steps %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Connect from your application with any PostgreSQL driver or ORM.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/extensions" title="Extensions" %}
+Install PostgreSQL extensions like PostGIS and pgvector.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/backups" title="Backups" %}
+Configure backup policies and point-in-time recovery.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/monitoring" title="Monitoring" %}
+Watch compute, connections, storage, and workload metrics live.
+{% /cards_item %}
+{% /cards %}

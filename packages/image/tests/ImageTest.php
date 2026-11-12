@@ -6,6 +6,10 @@ namespace Utopia\Image\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Image\Exception\CorruptImageException;
+use Utopia\Image\Exception\ImageException;
+use Utopia\Image\Exception\LimitExceededException;
+use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Image;
 
 final class ImageTest extends TestCase
@@ -38,6 +42,16 @@ final class ImageTest extends TestCase
         }
     }
 
+    private function requireDecoder(string $format, string $data): void
+    {
+        try {
+            $probe = new \Imagick();
+            $probe->readImageBlob($data);
+        } catch (\ImagickException $exception) {
+            self::markTestSkipped("The {$format} decoder is not usable: {$exception->getMessage()}");
+        }
+    }
+
     private function jpegWithExifOrientation(int $orientation): string
     {
         $source = new \Imagick();
@@ -50,6 +64,59 @@ final class ImageTest extends TestCase
         $segment = "\xff\xe1" . pack('n', \strlen($exif) + 2) . $exif;
 
         return substr($jpeg, 0, 2) . $segment . substr($jpeg, 2);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unsupportedFormatProvider(): iterable
+    {
+        yield 'pixel enumeration text' => ["# ImageMagick pixel enumeration: 1,1,255,srgb\n0,0: (255,0,0)  #FF0000  red\n"];
+        yield 'portable pixmap' => ["P3\n1 1\n255\n255 0 0\n"];
+        yield 'vector graphics' => ["push graphic-context\nviewbox 0 0 1 1\npop graphic-context\n"];
+        yield 'svg' => ['<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'];
+        yield 'postscript' => ["%!PS-Adobe-3.0\nshowpage\n"];
+        yield 'empty' => [''];
+    }
+
+    #[DataProvider('unsupportedFormatProvider')]
+    public function testRejectsFormatsOutsideTheAllowList(string $data): void
+    {
+        $this->expectException(UnsupportedFormatException::class);
+        $this->expectExceptionMessage('Unsupported image format');
+
+        new Image($data);
+    }
+
+    public function testAvifInput(): void
+    {
+        $this->requireEncoder('AVIF');
+
+        $source = new \Imagick();
+        $source->newImage(20, 10, 'red');
+        $source->setImageFormat('avif');
+
+        $image = new Image($source->getImageBlob());
+        $image->crop(10, 10);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output('png') ?? '');
+        $this->assertSame(10, $output->getImageWidth());
+        $this->assertSame(10, $output->getImageHeight());
+    }
+
+    public function testHeicInput(): void
+    {
+        $heic = file_get_contents(__DIR__ . '/resources/resize/100x100.heic') ?: '';
+        $this->requireDecoder('HEIC', $heic);
+
+        $image = new Image($heic);
+        $image->crop(50, 50);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output('png') ?? '');
+        $this->assertSame(50, $output->getImageWidth());
+        $this->assertSame(50, $output->getImageHeight());
     }
 
     public function testJpeg(): void
@@ -113,6 +180,37 @@ final class ImageTest extends TestCase
         $this->assertSame('JPEG', $image->getImageFormat());
 
         unlink($target);
+    }
+
+    /**
+     * @return array<string, array{int, int, int, int, string, int, int}>
+     */
+    public static function skewedCrops(): array
+    {
+        return [
+            'landscape, 1px wide' => [6, 2, 1, 0, Image::GRAVITY_TOP_LEFT, 1, 1],
+            'landscape, 1px wide, center' => [6, 2, 1, 0, Image::GRAVITY_CENTER, 1, 1],
+            'landscape, 1px high' => [6, 2, 0, 1, Image::GRAVITY_BOTTOM_RIGHT, 3, 1],
+            'portrait, 1px high' => [2, 6, 0, 1, Image::GRAVITY_TOP_LEFT, 1, 1],
+            'portrait, 1px high, center' => [2, 6, 0, 1, Image::GRAVITY_CENTER, 1, 1],
+            'portrait, 1px wide' => [2, 6, 1, 0, Image::GRAVITY_RIGHT, 1, 3],
+        ];
+    }
+
+    #[DataProvider('skewedCrops')]
+    public function testCropKeepsADerivedSideOfAtLeastOnePixel(int $sourceWidth, int $sourceHeight, int $width, int $height, string $gravity, int $expectedWidth, int $expectedHeight): void
+    {
+        $source = new \Imagick();
+        $source->newImage($sourceWidth, $sourceHeight, 'red', 'png');
+
+        $image = new Image($source->getImageBlob());
+        $image->crop($width, $height, $gravity);
+
+        $result = new \Imagick();
+        $result->readImageBlob($image->output('png', 100) ?: '');
+
+        $this->assertSame($expectedWidth, $result->getImageWidth());
+        $this->assertSame($expectedHeight, $result->getImageHeight());
     }
 
     public function testCropFocalUsesNormalizedCoordinates(): void
@@ -1137,5 +1235,127 @@ final class ImageTest extends TestCase
             $this->assertSame(20, $frame->getImageWidth());
             $this->assertSame(20, $frame->getImageHeight());
         }
+    }
+
+    public function testCorruptImageThrows(): void
+    {
+        $png = file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '';
+
+        $this->expectException(CorruptImageException::class);
+        $this->expectExceptionMessage('Corrupt or truncated image');
+
+        new Image(substr($png, 0, 200));
+    }
+
+    public function testUnknownOutputTypeThrows(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+
+        $this->expectException(UnsupportedFormatException::class);
+        $this->expectExceptionMessage('Unsupported output format: bmp');
+
+        $image->output('bmp');
+    }
+
+    public function testDimensionsOverTheLimitThrow(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+
+        $this->expectException(LimitExceededException::class);
+        $this->expectExceptionMessage('Image exceeds the size or memory limits');
+
+        $image->crop(60000, 10);
+    }
+
+    public function testEveryImageFailureIsAnImageException(): void
+    {
+        try {
+            new Image('not an image');
+            $this->fail('Expected an ImageException');
+        } catch (ImageException $exception) {
+            $this->assertInstanceOf(UnsupportedFormatException::class, $exception);
+        }
+    }
+
+    /**
+     * @return array<string, array{\Closure(Image): mixed, string}>
+     */
+    public static function invalidArguments(): array
+    {
+        return [
+            'negative width' => [fn (Image $image) => $image->crop(-1, 10), 'Width and height must not be negative'],
+            'negative height at a gravity' => [fn (Image $image) => $image->crop(10, -1, Image::GRAVITY_TOP), 'Width and height must not be negative'],
+            'negative border' => [fn (Image $image) => $image->setBorder(-1, '#ff0000'), 'Border width must not be negative'],
+            'negative radius' => [fn (Image $image) => $image->setBorderRadius(-1), 'Corner radius must not be negative'],
+            'unknown border colour' => [fn (Image $image) => $image->setBorder(2, 'no-such-colour'), 'Invalid color: no-such-colour'],
+            'unknown background colour' => [fn (Image $image) => $image->setBackground('no-such-colour'), 'Invalid color: no-such-colour'],
+        ];
+    }
+
+    #[DataProvider('invalidArguments')]
+    public function testInvalidArgumentsThrow(\Closure $call, string $message): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+
+        $call($image);
+    }
+
+    public function testRoundedCornersAfterABackgroundAreTransparent(): void
+    {
+        // ImageMagick 6 flattens to an image with no alpha channel, so the corners it cuts are black.
+        if (! (new \ReflectionClass(Image::class))->isInternal() && \Imagick::getVersion()['versionNumber'] < 0x700) {
+            self::markTestSkipped('ImageMagick 7 keeps the alpha channel when flattening; this is ImageMagick 6.');
+        }
+
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image->crop(256, 256)->setBackground('#336699')->setBorder(6, '#ff0000')->setBorderRadius(40);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output('png') ?? '');
+
+        // Flattening leaves an alpha channel, so the corner is cut away, and the border is stroked.
+        $this->assertEqualsWithDelta(0, $output->getImagePixelColor(1, 1)->getColorValue(\Imagick::COLOR_ALPHA), 0.01);
+        $edge = $output->getImagePixelColor(128, 3)->getColor();
+        $this->assertGreaterThan(200, $edge['r']);
+        $this->assertLessThan(60, $edge['g']);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function rotatedOutputs(): array
+    {
+        return [
+            'jpg, centre' => ['jpg', Image::GRAVITY_CENTER],
+            'jpg, gravity' => ['jpg', Image::GRAVITY_TOP_LEFT],
+            'webp, gravity' => ['webp', Image::GRAVITY_TOP_LEFT],
+            'png, gravity' => ['png', Image::GRAVITY_TOP_LEFT],
+            'avif, centre' => ['avif', Image::GRAVITY_CENTER],
+            'avif, gravity' => ['avif', Image::GRAVITY_TOP_LEFT],
+        ];
+    }
+
+    /**
+     * The EXIF rotation is applied to the pixels, so the output must not ask a viewer for it again.
+     */
+    #[DataProvider('rotatedOutputs')]
+    public function testARotatedSourceIsTurnedOnce(string $type, string $gravity): void
+    {
+        if ($type === 'avif') {
+            $this->requireEncoder('AVIF');
+        }
+
+        // 20x10, tagged as needing a quarter turn: upright it is 10x20.
+        $image = new Image($this->jpegWithExifOrientation(6));
+        $image->crop(20, 10, $gravity);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output($type, 90) ?? '');
+
+        $this->assertSame([10, 20], [$output->getImageWidth(), $output->getImageHeight()]);
+        $this->assertContains($output->getImageOrientation(), [\Imagick::ORIENTATION_UNDEFINED, \Imagick::ORIENTATION_TOPLEFT]);
     }
 }

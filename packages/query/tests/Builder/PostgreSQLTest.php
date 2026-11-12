@@ -44,6 +44,8 @@ use Utopia\Query\Hook\Filter;
 use Utopia\Query\Query;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Tests\AssertsBindingCount;
+use Utopia\Query\Tokenizer\PostgreSQL as PostgreSQLTokenizer;
+use Utopia\Query\Tokenizer\TokenType;
 
 class PostgreSQLTest extends TestCase
 {
@@ -1274,7 +1276,7 @@ class PostgreSQLTest extends TestCase
         $result = new Builder()
             ->from('items')
             ->sortAsc('id')
-            ->cursorAfter(5)
+            ->cursorAfter(['_cursor' => 5])
             ->limit(10)
             ->build();
         $this->assertBindingCount($result);
@@ -1289,7 +1291,7 @@ class PostgreSQLTest extends TestCase
         $result = new Builder()
             ->from('items')
             ->sortAsc('id')
-            ->cursorBefore(5)
+            ->cursorBefore(['_cursor' => 5])
             ->limit(10)
             ->build();
         $this->assertBindingCount($result);
@@ -1803,7 +1805,7 @@ class PostgreSQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM "t" WHERE score > ?', $result->query);
+        $this->assertSame('SELECT * FROM "t" WHERE (score > ?)', $result->query);
         $this->assertContains(10, $result->bindings);
     }
 
@@ -2389,7 +2391,7 @@ class PostgreSQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT COUNT(*) AS "cnt" FROM "orders" GROUP BY "user_id" HAVING SUM("amount") > ?', $result->query);
+        $this->assertSame('SELECT COUNT(*) AS "cnt" FROM "orders" GROUP BY "user_id" HAVING (SUM("amount") > ?)', $result->query);
     }
 
     public function testWhereRawAppendsFragmentAndBindings(): void
@@ -2400,7 +2402,7 @@ class PostgreSQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM "users" WHERE a = ?', $result->query);
+        $this->assertSame('SELECT * FROM "users" WHERE (a = ?)', $result->query);
         $this->assertSame([1], $result->bindings);
     }
 
@@ -2413,7 +2415,7 @@ class PostgreSQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM "users" WHERE "b" IN (?) AND a = ?', $result->query);
+        $this->assertSame('SELECT * FROM "users" WHERE "b" IN (?) AND (a = ?)', $result->query);
         $this->assertContains(1, $result->bindings);
         $this->assertContains(2, $result->bindings);
     }
@@ -3103,7 +3105,7 @@ class PostgreSQLTest extends TestCase
             ->from('posts')
             ->select(['id', 'title'])
             ->filter([Query::equal('status', ['published'])])
-            ->cursorAfter('abc123')
+            ->cursorAfter(['_cursor' => 'abc123'])
             ->limit(10)
             ->build();
 
@@ -3607,7 +3609,7 @@ class PostgreSQLTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" AS "s" WHERE orders.id = s.order_id', $result->query);
+        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" AS "s" WHERE (orders.id = s.order_id)', $result->query);
     }
 
     public function testUpdateFromWithWhereFilter(): void
@@ -3621,7 +3623,7 @@ class PostgreSQLTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" WHERE "orders"."active" IN (?) AND orders.id = shipments.order_id', $result->query);
+        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" WHERE "orders"."active" IN (?) AND (orders.id = shipments.order_id)', $result->query);
     }
 
     public function testUpdateFromWithBindings(): void
@@ -3634,7 +3636,7 @@ class PostgreSQLTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" AS "s" WHERE orders.id = s.order_id AND s.region = ?', $result->query);
+        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" AS "s" WHERE (orders.id = s.order_id AND s.region = ?)', $result->query);
         $this->assertContains('US', $result->bindings);
     }
 
@@ -3661,7 +3663,7 @@ class PostgreSQLTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" AS "s" WHERE orders.id = s.order_id RETURNING "orders"."id"', $result->query);
+        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" AS "s" WHERE (orders.id = s.order_id) RETURNING "orders"."id"', $result->query);
     }
 
     public function testUpdateFromNoAssignmentsThrows(): void
@@ -3682,7 +3684,7 @@ class PostgreSQLTest extends TestCase
             ->delete();
         $this->assertBindingCount($result);
 
-        $this->assertSame('DELETE FROM "orders" USING "old_orders" WHERE orders.id = old_orders.id', $result->query);
+        $this->assertSame('DELETE FROM "orders" USING "old_orders" WHERE (orders.id = old_orders.id)', $result->query);
     }
 
     public function testDeleteUsingWithBindings(): void
@@ -3693,7 +3695,7 @@ class PostgreSQLTest extends TestCase
             ->delete();
         $this->assertBindingCount($result);
 
-        $this->assertSame('DELETE FROM "orders" USING "expired" WHERE orders.id = expired.id AND expired.reason = ?', $result->query);
+        $this->assertSame('DELETE FROM "orders" USING "expired" WHERE (orders.id = expired.id AND expired.reason = ?)', $result->query);
         $this->assertContains('timeout', $result->bindings);
     }
 
@@ -3706,7 +3708,7 @@ class PostgreSQLTest extends TestCase
             ->delete();
         $this->assertBindingCount($result);
 
-        $this->assertSame('DELETE FROM "orders" USING "expired" WHERE "orders"."status" IN (?) AND orders.id = expired.id', $result->query);
+        $this->assertSame('DELETE FROM "orders" USING "expired" WHERE "orders"."status" IN (?) AND (orders.id = expired.id)', $result->query);
     }
 
     public function testDeleteUsingReturning(): void
@@ -3718,7 +3720,7 @@ class PostgreSQLTest extends TestCase
             ->delete();
         $this->assertBindingCount($result);
 
-        $this->assertSame('DELETE FROM "orders" USING "expired" WHERE orders.id = expired.id RETURNING "orders"."id"', $result->query);
+        $this->assertSame('DELETE FROM "orders" USING "expired" WHERE (orders.id = expired.id) RETURNING "orders"."id"', $result->query);
     }
 
     public function testDeleteUsingWithoutCondition(): void
@@ -4396,6 +4398,67 @@ class PostgreSQLTest extends TestCase
         $this->assertSame('SELECT * FROM "t" WHERE "data"->\'level1\'->\'level2\'->>\'leaf\' IN (?)', $result->query);
     }
 
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function nestedObjectKeyProvider(): array
+    {
+        return [
+            'quote in the last key' => ["meta.a' IN ('x') OR secret='s2' OR 'x", 'meta.a'],
+            'quote in a middle key' => ["meta.n' OR secret='s2' OR 'x.c", 'meta.n.c'],
+            'concatenated subquery' => ["meta.a'||(select 1)||'", 'meta.a'],
+            'trailing line comment' => ["meta.a' OR 1=1 --", 'meta.a'],
+            'backslash before a quote' => ["meta.a\\' OR secret='s2' OR 'x", 'meta.a\\b'],
+        ];
+    }
+
+    #[DataProvider('nestedObjectKeyProvider')]
+    public function testObjectFilterNestedKeyDoesNotChangeStatementShape(string $attribute, string $plainAttribute): void
+    {
+        $this->assertSame(
+            $this->objectFilterShape($plainAttribute),
+            $this->objectFilterShape($attribute),
+        );
+    }
+
+    public function testObjectFilterNestedKeyRejectsNulByte(): void
+    {
+        $query = Query::equal("meta.a\0b", ['x']);
+        $query->setAttributeType(ColumnType::Object->value);
+
+        $this->expectException(ValidationException::class);
+
+        new Builder()
+            ->from('t')
+            ->filter([$query])
+            ->build();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function objectFilterShape(string $attribute): array
+    {
+        $query = Query::equal($attribute, ['x']);
+        $query->setAttributeType(ColumnType::Object->value);
+
+        $result = new Builder()
+            ->from('t')
+            ->filter([$query])
+            ->build();
+        $this->assertSame(['x'], $result->bindings);
+
+        $shape = [];
+        foreach (new PostgreSQLTokenizer()->tokenize($result->query) as $token) {
+            if ($token->type === TokenType::Whitespace) {
+                continue;
+            }
+            $shape[] = $token->type === TokenType::String ? '<string>' : $token->value;
+        }
+
+        return $shape;
+    }
+
     public function testVectorFilterDefault(): void
     {
         $result = new Builder()
@@ -4619,7 +4682,7 @@ class PostgreSQLTest extends TestCase
             ->returning(['orders.id', 'orders.status'])
             ->update();
 
-        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" AS "s" WHERE "orders"."warehouse" IN (?) AND orders.id = s.order_id AND s.date > ? RETURNING "orders"."id", "orders"."status"', $result->query);
+        $this->assertSame('UPDATE "orders" SET "status" = ? FROM "shipments" AS "s" WHERE "orders"."warehouse" IN (?) AND (orders.id = s.order_id AND s.date > ?) RETURNING "orders"."id", "orders"."status"', $result->query);
         $this->assertBindingCount($result);
     }
 
@@ -4632,7 +4695,7 @@ class PostgreSQLTest extends TestCase
             ->returning(['orders.id'])
             ->delete();
 
-        $this->assertSame('DELETE FROM "orders" USING "blacklist" WHERE "orders"."created_at" < ? AND orders.user_id = blacklist.user_id RETURNING "orders"."id"', $result->query);
+        $this->assertSame('DELETE FROM "orders" USING "blacklist" WHERE "orders"."created_at" < ? AND (orders.user_id = blacklist.user_id) RETURNING "orders"."id"', $result->query);
         $this->assertBindingCount($result);
     }
 
@@ -5909,7 +5972,7 @@ class PostgreSQLTest extends TestCase
             ->filter([Query::raw('score BETWEEN ? AND ?', [10, 90])])
             ->build();
 
-        $this->assertSame('SELECT * FROM "t" WHERE score BETWEEN ? AND ?', $result->query);
+        $this->assertSame('SELECT * FROM "t" WHERE (score BETWEEN ? AND ?)', $result->query);
         $this->assertSame([10, 90], $result->bindings);
         $this->assertBindingCount($result);
     }
@@ -5919,7 +5982,7 @@ class PostgreSQLTest extends TestCase
         $result = new Builder()
             ->from('t')
             ->sortDesc('id')
-            ->cursorBefore(100)
+            ->cursorBefore(['_cursor' => 100])
             ->limit(25)
             ->build();
 
@@ -6172,7 +6235,7 @@ class PostgreSQLTest extends TestCase
             ->havingRaw('SUM("amount") > ? AND COUNT(*) > ?', [1000, 5])
             ->build();
 
-        $this->assertSame('SELECT COUNT(*) AS "cnt", SUM("amount") AS "total" FROM "orders" WHERE "status" IN (?) GROUP BY "user_id" HAVING SUM("amount") > ? AND COUNT(*) > ?', $result->query);
+        $this->assertSame('SELECT COUNT(*) AS "cnt", SUM("amount") AS "total" FROM "orders" WHERE "status" IN (?) GROUP BY "user_id" HAVING (SUM("amount") > ? AND COUNT(*) > ?)', $result->query);
         $this->assertSame(['active', 1000, 5], $result->bindings);
         $this->assertBindingCount($result);
     }

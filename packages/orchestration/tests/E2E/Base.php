@@ -694,7 +694,6 @@ abstract class Base extends TestCase
         $this->assertSame($statsName1[0]->getContainerId(), $stats1[0]->getContainerId());
         $this->assertSame($statsName1[0]->getContainerName(), $stats1[0]->getContainerName());
         $this->assertSame($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
-        $this->assertSame($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
 
         $this->assertSame($stats[1]->getContainerId(), $stats1[0]->getContainerId());
         $this->assertSame($stats[1]->getContainerName(), $stats1[0]->getContainerName());

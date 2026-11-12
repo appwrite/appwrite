@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Deploy Appwrite Sites and Functions from Bitbucket"
+date: 2026-09-03
+cover: /images/blog/announcing-bitbucket-support/cover.avif
+tags: integrations, functions, sites
+---
+
+**Bitbucket** joins GitHub and GitLab as a Git provider for Appwrite Sites and Functions. Connect it from **Project settings** > **Git configuration**, or from the empty state in the Site and Function creation wizards.
+
+Every Bitbucket workspace your account can reach appears as a selectable owner in the repository picker, alongside owners from any other provider connected to the project. Pushes to your production branch build and activate, and other branches build into a preview link for review.
+
+Commit, branch, and pull request links resolve to Bitbucket's own URL shapes rather than GitHub's, and repositories are recognized by their URL as well as their recorded provider, so connections made before this release resolve correctly too.
+
+Every commit also receives a commit status on Bitbucket, green when the Appwrite build succeeds and red when it fails, so a pull request shows deployment health without leaving Bitbucket. Appwrite comments on the pull request as well, listing every preview the push triggered across your Sites, Functions, and projects, with the deployment status, a link to the build logs, the preview URL, and a QR code that opens the preview on a phone.
+
+{% arrow_link href="/blog/post/announcing-bitbucket-support" %}
+Read the announcement
+{% /arrow_link %}

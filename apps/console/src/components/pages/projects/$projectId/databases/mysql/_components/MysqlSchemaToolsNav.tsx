@@ -1,0 +1,74 @@
+import { Link } from '@tanstack/react-router'
+import { Network, Play } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import {
+  SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+  SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
+  secondarySidebarNavLinkClassName,
+} from '@/lib/layout/secondary-sidebar-nav'
+import {
+  mysqlNav,
+  type MysqlDatabaseTab,
+} from '@/lib/mysql-database-routes'
+import { MYSQL_RUN_QUERY_PLAY_ICON_CLASS } from './mysql-chrome'
+import { useT } from '@/lib/i18n/translate'
+
+type MysqlSchemaToolsNavProps = {
+  projectId: string
+  databaseId: string
+  activeTab?: MysqlDatabaseTab
+  className?: string
+}
+
+function schemaToolLinkClass(active: boolean) {
+  return cn(
+    secondarySidebarNavLinkClassName(active, 'transition-colors duration-150'),
+    SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
+    'gap-1.5 text-[12px]',
+  )
+}
+
+export function MysqlSchemaToolsNav({
+  projectId,
+  databaseId,
+  activeTab,
+  className,
+}: MysqlSchemaToolsNavProps) {
+  const t = useT()
+  const nav = mysqlNav({ projectId, databaseId })
+
+  const items = [
+    {
+      key: 'sql',
+      link: nav.sql(),
+      active: activeTab === 'sql',
+      icon: Play,
+      iconClassName: MYSQL_RUN_QUERY_PLAY_ICON_CLASS,
+      label: t('SQL editor'),
+    },
+    {
+      key: 'visualizer',
+      link: nav.visualizer(),
+      active: activeTab === 'visualizer',
+      icon: Network,
+      iconClassName: 'h-3.5 w-3.5 shrink-0',
+      label: t('Visualizer'),
+    },
+  ] as const
+
+  return (
+    <ul
+      className={cn('m-0 flex w-full list-none flex-col gap-1 p-0', className)}
+      aria-label={t('Schema tools')}
+    >
+      {items.map(({ key, link, active, icon: Icon, iconClassName, label }) => (
+        <li key={key} className="w-full min-w-0">
+          <Link {...link} className={schemaToolLinkClass(active)}>
+            <Icon className={iconClassName} />
+            <span className={SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS}>{label}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}

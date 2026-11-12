@@ -1,0 +1,27 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="kilimanjaroGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="kilimanjaroBack">
+<path d="M96 296L136 230L156 206L166 214L176 196L190 214L206 242L236 296Z"/>
+</g>
+<g id="kilimanjaro">
+<path d="M96 296C130 250 170 196 204 150C214 136 226 126 248 124C266 124 278 132 290 146C320 182 352 238 386 296Z"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#kilimanjaroBack" fill="#19191C"/>
+<use href="#kilimanjaroBack" fill="url(#kilimanjaroGrad)"/>
+<use href="#kilimanjaroBack" stroke="#FD366E" stroke-width="1.36239"/>
+<use href="#kilimanjaro" fill="#19191C"/>
+<use href="#kilimanjaro" fill="url(#kilimanjaroGrad)"/>
+<use href="#kilimanjaro" stroke="#FD366E" stroke-width="1.36239"/>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M204 150L214 156L224 146L234 158L246 146L258 158L270 148L282 156L290 146"/><path d="M228 160L222 196"/><path d="M252 162L256 204"/><path d="M276 162L290 200"/><path d="M180 182L168 220"/><path d="M310 176L326 214"/><path d="M334 296V246L322 236"/><path d="M334 258L348 240"/><path d="M300 236C310 222 362 220 376 236H300Z"/><path d="M134 296V266L126 260"/><path d="M134 274L144 262"/><path d="M110 260C118 250 152 248 160 260H110Z"/></g>
+</svg>

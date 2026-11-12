@@ -6,6 +6,7 @@ namespace Utopia\NATS\Transport;
 
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Exception\TlsException;
 
 final class TcpTransport implements Transport
 {
@@ -149,10 +150,13 @@ final class TcpTransport implements Transport
             }
         }
 
+        error_clear_last();
         $result = @stream_socket_enable_crypto($stream, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT);
 
         if ($result !== true) {
-            throw new ConnectionException('Failed to upgrade connection to TLS');
+            $reason = error_get_last()['message'] ?? 'no reason given';
+            $this->close();
+            throw new TlsException("Failed to upgrade connection to TLS: {$reason}");
         }
     }
 

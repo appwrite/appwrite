@@ -1,0 +1,84 @@
+---
+layout: post
+title: How Lorari scaled to 130+ fitness studios solo with Appwrite
+description: Learn how solo founder Marti Mestre Faus built Lorari on Appwrite Cloud and onboarded 130+ yoga and pilates studios serving 13,000 students in seven months.
+date: 2026-09-09
+cover: /images/blog/customer-story-lorari/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: customer-stories
+featured: false
+callToAction: true
+faqs:
+  - question: "What is Lorari?"
+    answer: "Lorari is a class management platform for yoga, pilates, and dance studios, built in Barcelona by solo founder Marti Mestre Faus. Studios get a dashboard for schedules, recurring bookings, waitlists, memberships, payments, and events. Each studio's students get a branded web app on their phone to book, cancel, and pay for classes."
+  - question: "How does Lorari use Appwrite?"
+    answer: "Lorari runs on Appwrite Cloud. It uses [Appwrite TablesDB](/docs/products/databases/tablesdb) for studios, students, classes, bookings, and memberships, [Appwrite Storage](/docs/products/storage) for studio branding and uploads, and [Appwrite Auth](/docs/products/auth) for studio and student accounts. The front end is built with React and Node.js."
+  - question: "How fast has Lorari grown?"
+    answer: "Lorari launched in February 2026. By September 2026 it had onboarded over 130 studios with around 13,000 students using their studio's branded app, and was adding roughly 10% more studios every week. Most studios are in Spain, with others in Mexico and Argentina."
+  - question: "Why did Lorari choose Appwrite over Firebase or Supabase?"
+    answer: "Marti tried Firebase and found it too complex to start with as a first-time app builder, and Supabase did not click for him. Appwrite's Console and documentation made the data model easy to understand, so he could build his first app without prior backend experience and keep the same backend as the product scaled."
+  - question: "Can a non-engineer build a SaaS product with Appwrite?"
+    answer: "Yes. Marti learned software development while building Lorari on Appwrite. Because [Appwrite Cloud](https://cloud.appwrite.io) provides auth, databases, storage, and functions as managed services, a solo founder can focus on product logic instead of infrastructure, then scale without changing the backend. Starting today is easier still with AI. The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) lets tools like Claude Code, Codex, and Cursor read the docs and operate on your project directly, [Appwrite skills](/docs/tooling/ai/skills) give those agents accurate, SDK-specific knowledge so they generate correct code, and [quick start prompts](/docs/tooling/ai/quickstart-prompts) walk an AI assistant through wiring auth and databases into a React, Next.js, or Flutter app in one step."
+  - question: "Does Appwrite support recurring bookings and waitlists?"
+    answer: "Appwrite does not ship booking features directly, but Lorari models them with [Appwrite TablesDB](/docs/products/databases/tablesdb). Recurring reservations, cancellations, and waitlist promotion are rows and queries in Lorari's tables, with permissions scoping each studio's data to its own staff and students."
+---
+
+Marti Mestre Faus did not set out to build a company. While still in college in Barcelona, he built a small tool for a friend who taught weekend yoga classes. She was tracking who had signed up for each session, how many credits each student had left, and who had paid, all across WhatsApp threads, spreadsheets, and paper.
+
+That tool was the first thing Marti ever shipped. He learned software development by building it, and he built it on Appwrite.
+
+After graduating, he took the same idea, rebuilt it for any studio that runs group classes, and named it [Lorari](https://www.lorari.com/). Seven months after launch, over 130 yoga, pilates, and fitness studios run their daily operations on it.
+
+# The challenge
+
+Small studios have a management problem that is bigger than it looks. A single yoga center might have 120 active clients across daily classes. Each class has a fixed group of recurring students, a handful of one-off bookings, and a waitlist that has to fill spots when someone cancels at the last minute. Memberships renew monthly and have to be marked as paid. Events need ticketing and a shareable link.
+
+None of that is hard to describe. All of it is hard to run by hand, and most studios were doing exactly that with WhatsApp, Excel, or a notebook.
+
+Marti's goal was to take that manual process and make it, in his words, "12 to 20 times simpler." The constraints were tight. He was a solo founder, bootstrapped, and shipping product changes every week. He needed a backend that would let him build the first version without infrastructure experience, and then keep up as studios signed on.
+
+# What is Lorari?
+
+Lorari gives every studio two things: a dashboard for the team, and a branded app for their students.
+
+On the dashboard, studios see their calendar of classes and who is coming to each one. Recurring students are booked automatically every week, cancellations free their spot, and the waitlist fills it. Staff can browse their full client list, see how full each group is on a given day, track memberships, and mark payments as received.
+
+Payments run through Stripe for cards, or through bank direct debit where studios prefer it. Studios can also host events. Lorari handles the ticket sales and gives them a link to share on Instagram.
+
+Each studio's students install a web app on their phone that carries the studio's name and icon. From there they can see the schedule, book or cancel a class, join a waitlist, and pay. Lorari also sends payment reminders and gives studios analytics on how their bookings are growing and which days are busiest.
+
+# Building Lorari with Appwrite
+
+Marti found Appwrite on LinkedIn in early 2024. He evaluated the alternatives first.
+
+> "I tried Firebase. It was too complex for me to start with. I tried Supabase and I didn't like the feeling. I started with Appwrite and it's been super easy, so there's no reason to start searching for others."
+
+What sold him was the developer experience. As someone building his first app, the Console made the data model legible: a project has databases, databases have tables, tables have rows. He liked the look of it too, the pink on dark that he describes as "red over black," and he says it felt simple from the first session. He did not have to learn infrastructure to get a working product.
+
+> "I was trying to learn to build my first app, and I saw the design and everything was so clear. I think you've done a huge UX job."
+
+That simplicity is also what he sells to studios. Marti says Appwrite makes things simple for developers the same way he tries to make class management simple for his clients, and the Console was his reference point for what that should feel like.
+
+Lorari's front end is built with React and Node.js. On the backend, Appwrite Cloud handles:
+
+- **[Appwrite TablesDB](/docs/products/databases/tablesdb)** for studios, students, classes, recurring reservations, waitlists, memberships, and events, each modeled as a table and scoped per studio with permissions
+- **[Appwrite Storage](/docs/products/storage)** for studio branding and uploaded files
+- **[Appwrite Auth](/docs/products/auth)** for both studio staff and the thousands of students logging into their studio's app
+
+The heavier API routes run on Cloudflare Workers with Hono, and the web app is hosted on Vercel. Marti is now evaluating [Appwrite Sites](/docs/products/sites) so that hosting and backend live in one place.
+
+# Lorari today
+
+Lorari launched publicly in February 2026. By September, the numbers looked like this:
+
+- Over 130 studios onboarded
+- Around 13,000 students using their studio's branded app
+- Roughly 10% week-over-week growth in customers
+- Customers across three continents, primarily in Spain, Mexico, and Argentina
+
+Marti still runs Lorari alone, and he has turned down investors to keep it bootstrapped. Demos convert well enough that growth is compounding on its own. Every week, the app changes, and every week, more studios stop managing their classes on WhatsApp.
+
+> "I started alone. With Appwrite, I could ship and iterate like a 10-person engineering team, all scaling perfectly."
+
+Lorari is proof that a first-time developer can start on Appwrite with nothing, validate a product fast, and stay on the same backend as it scales to thousands of daily users. Learn more about Lorari by visiting their [website](https://www.lorari.com/).

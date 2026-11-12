@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Jobs\Event;
 
+use Appwrite\Auth\JobsSecret;
 use Appwrite\Event\Message\Jobs as JobsMessage;
 use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Utopia\Response;
-use OpenRuntimes\Orchestrator\Callback\Signature;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Scope\HTTP;
@@ -51,7 +51,7 @@ class Create extends Action
         $secret = System::getEnv('_APP_JOBS_SECRET', '');
         $signature = $request->getHeaderLine('x-signature-256');
 
-        if ($secret === '' || ! Signature::verify($body, $signature, $secret)) {
+        if (!JobsSecret::verify($body, $signature, $secret)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'Invalid jobs signature.');
         }
 

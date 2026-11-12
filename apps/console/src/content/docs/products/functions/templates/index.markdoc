@@ -1,0 +1,128 @@
+---
+layout: article
+title: Templates
+description: "Learn about Appwrite Functions' templates that let you jump start function development to extend your Appwrite APIs."
+---
+Appwrite provides a variety of Function Templates to help you jump start your function development.
+You can use Appwrite Function Templates as examples or boilerplates to add new functionality to your Appwrite project.
+
+# Find templates {% #find-templates %}
+You can find all available templates by navigating to the Appwrite Console, under your project > **Functions** > **Templates**.
+
+{% only_dark %}
+![Templates screen](/images/docs/functions/templates/dark/templates.avif)
+{% /only_dark %}
+{% only_light %}
+![Templates screen](/images/docs/functions/templates/templates.avif)
+{% /only_light %}
+
+You can filter functions by searching, filter by use case, or filter by runtime.
+Click **Create function** to create a function from a template.
+
+# Create with templates {% #create-with-templates %}
+
+The create function wizard has five steps.
+
+## Configuration {% #configuration %}
+Pick a display name for your function and an ID. You will later use the ID to programmatically execute or configure the function.
+Pick the runtime language you wish the function to be created in, not all runtimes are available for all templates.
+
+## Variables {% #variables %}
+Appwrite Functions uses [environment variables](/docs/products/functions/develop#environment-variables)
+to pass constants and secrets to your Appwrite Functions. You'll provide information like API keys and other
+secrets to integrations in this step. If you need an Appwrite API key, you'll be propted to generate one.
+
+## Connect {% #connect %}
+You can choose to clone a new repository to your GitHub profile or organization, or to connect to an existing repository.
+
+If you choose connect to an existing repository, the function's code will be cloned to the root folder
+you specify under the **Branch** step.
+
+## Repository {% #repository %}
+Configure the connected respository for your Appwrite Function. This will be the repository
+holding the source code for your function. When the code in this repository is updated, new 
+deployments will be created.
+
+## Branch {% #branch %}
+Production branch specifies the branch connected to your Appwrite Function. When new commits are made to
+this branch, a new deployment is automatically created and deployed.
+
+The root directory specifies the folder holding your function template's code.
+
+When a PR is made to the branch, a new deployment is built, but not activated.
+A comment is made to your PR about the build, unless you enable **Silent mode**.
+
+# Available templates {% #available-templates %}
+{% table %}
+* Template {% width=100 %}
+* Description
+* Runtimes {% width=200 %}
+---
+* Starter
+* A simple starter function that returns "Hello, world!"
+* Node.js, Python, PHP, Dart, Node.js (TypeScript), Bun, Deno, Ruby, Kotlin, C++, .NET, Java, Swift, Go, Rust
+---
+* Sync with Meilisearch
+* Syncs rows in an Appwrite database table to a Meilisearch index to add search-as-you-type search boxes to your app.
+* Node.js, Python, PHP, Node.js (TypeScript), Bun, Deno, Ruby, Kotlin
+---
+* WhatsApp with Vonage
+* Simple bot to answer WhatsApp messages.
+* Node.js, Python, PHP, Dart, Node.js (TypeScript), Bun, Deno, Ruby
+---
+* Prompt ChatGPT
+* Ask question, and let OpenAI GPT-3.5-turbo answer.
+* Node.js, Python, PHP, Dart
+---
+* Censor with Redact
+* Automatically remove sensitive data from messages.
+* Node.js, Python, Dart
+---
+* Email Contact Form
+* Sends an email with the contents of a HTML form.
+* Node.js, Python, PHP
+---
+* Sync with Algolia
+* Intuitive search bar for any data in Appwrite Databases.
+* Node.js, Python, PHP
+---
+* Discord Command Bot
+* Add Discord commands to your servers using Discord Interactions.
+* Node.js, Python, Go
+---
+* Github Issue Bot
+* Automate the process of responding to newly opened issues on a GitHub repository.
+* Node.js, Node.js (TypeScript)
+---
+* Analyze with PerspectiveAPI
+* Automate moderation by using AI to measure the toxicity of messages.
+* Node.js
+---
+* Generate PDF
+* Generate PDFs programmatically with Appwrite Functions.
+* Node.js
+---
+* Payments with Stripe
+* Receive card payments and store paid orders.
+* Node.js
+---
+* Push Notification with FCM
+* Send push notifications to your users using Firebase Cloud Messaging (FCM).
+* Node.js
+---
+* Slack Command Bot
+* Simple command bot using Slack API
+* Node.js
+---
+* Storage Cleaner
+* Storage cleaner function to remove all files older than X number of days from the specified bucket.
+* Node.js
+---
+* Subscriptions with Stripe
+* Receive recurring card payments and grant subscribers extra permissions.
+* Node.js
+---
+* URL Shortener
+* Generate URL with short ID and redirect to the original URL when visited.
+* Node.js
+{% /table %}

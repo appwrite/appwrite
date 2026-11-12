@@ -27,7 +27,7 @@ class Get extends Action
             ->setHttpPath('/v1/databases/transactions/:transactionId')
             ->desc('Get transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'rows.read')
+            ->label('scope', ['documents.read', 'rows.read'])
             ->label('usage.resource', 'transaction/{request.transactionId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
@@ -48,7 +48,7 @@ class Get extends Action
                     replaceWith: 'tablesDB.getTransaction',
                 )
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Transaction ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
@@ -58,7 +58,7 @@ class Get extends Action
     {
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
 
-        if ($transaction->isEmpty()) {
+        if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
 

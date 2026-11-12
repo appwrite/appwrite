@@ -14,6 +14,8 @@ abstract class Type
     public const PHONE = 'phone';
     public const RECOVERY_CODE = 'recoveryCode';
     public const CUSTOM = 'custom';
+    public const PASSKEY = 'passkey';
+    public const USER_VERIFICATION = 'userVerification';
 
     public function setLabel(string $label): self
     {

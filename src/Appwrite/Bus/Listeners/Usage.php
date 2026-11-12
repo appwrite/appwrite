@@ -85,15 +85,9 @@ class Usage extends Listener
 
     private function handleRequestCompleted(RequestCompleted $event, Context $usage): void
     {
-        $fileSize = 0;
-        $file = $event->request->getFiles('file');
-        if (!empty($file)) {
-            $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-        }
-
         $deployment = new Document($event->deployment);
 
-        $inbound = $event->request->getSize() + $fileSize;
+        $inbound = $event->request->getSize();
         $outbound = $event->response->getSize();
 
         if ($deployment->getAttribute('resourceType') === 'sites') {

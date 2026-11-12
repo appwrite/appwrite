@@ -1,0 +1,286 @@
+---
+layout: article
+title: User photos
+description: Show a profile photo for any user with one Avatars call. Appwrite resolves OAuth2 identity photos, Gravatar, Libravatar, and initials, with a built-in placeholder as a fallback.
+---
+
+The user photos endpoint returns the best available profile photo for a user. Appwrite tries each photo source in priority order and returns the first one that has an image, so the call always returns a picture, even for users who never uploaded one.
+
+Use it anywhere your app shows a person: the account menu, comment threads, member lists, or a list of pending invites.
+
+# Photo sources {% #sources %}
+
+Appwrite checks these sources in order and stops at the first one that returns an image:
+
+| Priority | Source | Tried when |
+| -------- | ------ | ---------- |
+| 1 | OAuth2 identity photo | The user has an identity from an [OAuth2 provider that exposes a photo](#oauth2-providers). |
+| 2 | [Gravatar](https://gravatar.com) | An email address is known, from the user or an `emailHash`. |
+| 3 | [Libravatar](https://www.libravatar.org) | An email address is known, from the user or an `emailHash`. |
+| 4 | Initials | A name is known, from the user or a `name`. |
+| 5 | Placeholder | Always. A neutral person icon. |
+
+Appwrite skips a source when it has nothing to look up with, and moves on when a remote source has no photo, times out, or returns an error. Initials and the placeholder use the same neutral gray background, so a user's avatar doesn't change color when it moves between them.
+
+# Get the signed-in user's photo {% #current-user %}
+
+Pass `current()` as the `userId` to resolve the photo of the user who is signed in. Calling `getPhoto` with no `userId`, `emailHash`, or `name` does the same.
+
+{% multicode %}
+```client-web
+import { Client, Avatars } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const avatars = new Avatars(client);
+
+const result = avatars.getPhoto({
+    userId: 'current()',
+    width: 128,
+    height: 128
+});
+
+console.log(result); // Resource URL
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final avatars = Avatars(client);
+
+final bytes = await avatars.getPhoto(
+    userId: 'current()',
+    width: 128,
+    height: 128,
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let avatars = Avatars(client)
+
+let byteBuffer = try await avatars.getPhoto(
+    width: 128,
+    height: 128,
+    userId: "current()"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Avatars
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val avatars = Avatars(client)
+
+val bytes = avatars.getPhoto(
+    width = 128,
+    height = 128,
+    userId = "current()"
+)
+```
+```client-react-native
+import { Client, Avatars } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const avatars = new Avatars(client);
+
+const result = await avatars.getPhoto({
+    userId: 'current()',
+    width: 128,
+    height: 128
+});
+
+console.log(result); // ArrayBuffer
+```
+{% /multicode %}
+
+The web SDK returns a URL that you can use as the `src` of an `<img>` tag. The browser loads that URL on its own, so the request only carries the user's session when the browser sends the Appwrite session cookie. If your Appwrite endpoint isn't on a [custom domain](/docs/products/network/custom-domains#third-party-cookies) that shares your app's domain, pass the user's ID instead of `current()`.
+
+# Get another user's photo {% #other-users %}
+
+Pass any user's ID as the `userId` to show their photo, for example next to a comment or in a member list. Appwrite resolves the photo from everything it knows about that user: their OAuth2 identities, their email address, and their name.
+
+{% multicode %}
+```client-web
+const result = avatars.getPhoto({
+    userId: '<USER_ID>',
+    width: 64,
+    height: 64
+});
+```
+```client-flutter
+final bytes = await avatars.getPhoto(
+    userId: '<USER_ID>',
+    width: 64,
+    height: 64,
+);
+```
+```client-apple
+let byteBuffer = try await avatars.getPhoto(
+    width: 64,
+    height: 64,
+    userId: "<USER_ID>"
+)
+```
+```client-android-kotlin
+val bytes = avatars.getPhoto(
+    width = 64,
+    height = 64,
+    userId = "<USER_ID>"
+)
+```
+```client-react-native
+const result = await avatars.getPhoto({
+    userId: '<USER_ID>',
+    width: 64,
+    height: 64
+});
+```
+{% /multicode %}
+
+The response is only the image. The user's email address and identities never leave Appwrite. If the user doesn't exist, the request fails with a `404` `user_not_found` error.
+
+# Get a photo from an email hash or name {% #email-hash %}
+
+To show an avatar for someone who isn't a user in your project yet, such as an invitee, pass an `emailHash`, a `name`, or both. Appwrite looks the hash up on Gravatar and Libravatar, renders the name as initials, and falls back to the placeholder.
+
+`emailHash` is the SHA-256 hash of the email address, trimmed and lowercased, as a 64-character hex string. Appwrite only accepts the hash, so the address itself never appears in a URL.
+
+{% multicode %}
+```client-web
+async function hashEmail(email) {
+    const data = new TextEncoder().encode(email.trim().toLowerCase());
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('');
+}
+
+const result = avatars.getPhoto({
+    emailHash: await hashEmail('walter@example.com'),
+    name: 'Walter White',
+    width: 64,
+    height: 64
+});
+```
+```client-flutter
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
+
+final emailHash = sha256
+    .convert(utf8.encode('walter@example.com'.trim().toLowerCase()))
+    .toString();
+
+final bytes = await avatars.getPhoto(
+    emailHash: emailHash,
+    name: 'Walter White',
+    width: 64,
+    height: 64,
+);
+```
+```client-apple
+import CryptoKit
+
+let email = "walter@example.com"
+    .trimmingCharacters(in: .whitespacesAndNewlines)
+    .lowercased()
+let emailHash = SHA256.hash(data: Data(email.utf8))
+    .map { String(format: "%02x", $0) }
+    .joined()
+
+let byteBuffer = try await avatars.getPhoto(
+    width: 64,
+    height: 64,
+    emailHash: emailHash,
+    name: "Walter White"
+)
+```
+```client-android-kotlin
+import java.security.MessageDigest
+
+val emailHash = MessageDigest.getInstance("SHA-256")
+    .digest("walter@example.com".trim().lowercase().toByteArray())
+    .joinToString("") { "%02x".format(it) }
+
+val bytes = avatars.getPhoto(
+    width = 64,
+    height = 64,
+    emailHash = emailHash,
+    name = "Walter White"
+)
+```
+```client-react-native
+import * as Crypto from 'expo-crypto';
+
+const emailHash = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    'walter@example.com'.trim().toLowerCase()
+);
+
+const result = await avatars.getPhoto({
+    emailHash,
+    name: 'Walter White',
+    width: 64,
+    height: 64
+});
+```
+{% /multicode %}
+
+Without a `userId`, Appwrite resolves the photo from the `emailHash` and `name` alone and leaves the signed-in user out, so their own photo never shows up for someone else.
+
+## Override a user's email or name {% #overrides %}
+
+When you pass a `userId` together with an `emailHash` or a `name`, the value you pass replaces only the matching detail of that user. The rest of the user's sources stay in the chain. For example, passing a `userId` and a `name` still tries the user's OAuth2 photo and email first, and renders your `name` as initials instead of the user's own.
+
+# Parameters {% #parameters %}
+
+The `getPhoto` method accepts the following parameters. All of them are optional.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| userId | string | ID of the user to resolve the photo for. Pass `current()` for the signed-in user. |
+| emailHash | string | SHA-256 hash of the trimmed, lowercase email address, as 64 hex characters. Looked up on Gravatar and Libravatar. |
+| name | string | Name to render initials from. Up to 128 characters. |
+| width | integer | Width of the output image in pixels, between `0-2000`. Defaults to `256`. |
+| height | integer | Height of the output image in pixels, between `0-2000`. Defaults to `256`. |
+| quality | integer | Output image quality, between `0-100`. Defaults to `100`. |
+| output | string | Output format: `png`, `jpg`, or `webp`. Defaults to `png`. |
+| rating | string | Maximum Gravatar and Libravatar image rating: `g`, `pg`, `r`, or `x`. Defaults to `g`. |
+
+Appwrite sends every photo with `Cache-Control: private, no-store`, because a user's photo can change at any time. Browsers and CDNs don't cache them, so a new photo shows up the next time the image loads.
+
+# Supported OAuth2 providers {% #oauth2-providers %}
+
+When a user signs in with [OAuth2](/docs/products/auth/oauth2), Appwrite stores the provider's profile photo URL on their [identity](/docs/products/auth/identities). The photo is updated each time the user signs in again and whenever the OAuth2 session is refreshed, so providers with expiring photo URLs stay current. If a user has several identities with photos, the most recently updated one wins.
+
+These providers supply a profile photo:
+
+Auth0, Autodesk, Bitbucket, Box, Dailymotion, Discord, Disqus, Dropbox, Etsy, Facebook, Figma, Gitea, GitHub, GitLab, Google, Hugging Face, Kakao, Kick, LinkedIn, Notion, PayPal, Salesforce, Slack, Spotify, TikTok, Twitch, WordPress, X, Yahoo, Yammer, Yandex, Zoho, and Zoom.
+
+[Native sign-in](/docs/products/auth/native-sign-in) with Google stores the photo from the ID token's `picture` claim.
+
+Other providers don't give Appwrite a photo URL. These include Apple, Amazon, Microsoft, Authentik, FusionAuth, Keycloak, Okta, and generic OpenID Connect. Users who sign in with them fall through to Gravatar, Libravatar, initials, or the placeholder.
+
+# Use cases {% #use-cases %}
+
+User photos are commonly used in:
+
+- **Account menus**: Show the signed-in user's photo in the app header
+- **Comments and activity feeds**: Show each author's photo from their user ID
+- **Team and member lists**: Show photos for everyone on a team
+- **Invitations**: Show a Gravatar or initials for invitees who don't have an account yet

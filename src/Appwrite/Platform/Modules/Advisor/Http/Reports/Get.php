@@ -45,7 +45,7 @@ class Get extends Action
                     ),
                 ]
             ))
-            ->param('reportId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Report ID.', false, ['dbForPlatform'])
+            ->param('reportId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Report ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')

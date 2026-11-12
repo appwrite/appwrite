@@ -7,6 +7,7 @@ namespace Utopia\NATS\Tests;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
+use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\MaxPayloadException;
 use Utopia\NATS\JetStream\Consumer;
 use Utopia\NATS\JetStream\ConsumerInfo;
@@ -132,7 +133,48 @@ final class ConsumerFetchLifecycleTest extends TestCase
         $this->assertLessThan(
             StreamConfig::secondsToNanos($timeout),
             $expires,
-            'A message dispatched at a shared boundary is dropped client-side while the server counts the delivery',
+            'The server has to end a waiting fetch within the timeout the caller gave',
         );
+    }
+
+    public function testFetchKeepsThePullExceptionWhenUnsubscribeAlsoFails(): void
+    {
+        // Oversized pull throws MaxPayloadException after the inbox is open.
+        // A dead socket on the cleanup UNSUB used to replace that diagnosis
+        // with ConnectionException via PHP's finally semantics (#198).
+        // Inbox release on the throw path is covered by
+        // testFetchReleasesItsInboxSubscriptionWhenItThrows; this case only
+        // asserts the pull exception wins when cleanup also fails.
+        $fake = new FakeTransport(['max_payload' => 4]);
+        $fake->onWrite = static function (string $wire): void {
+            if (\str_starts_with($wire, 'UNSUB ')) {
+                throw new ConnectionException('Failed to reconnect to any NATS server');
+            }
+        };
+        $conn = $this->connect($fake);
+        $consumer = $this->consumer($conn);
+
+        try {
+            $consumer->fetch(1, 0.02);
+            $this->fail('Expected the oversized pull request to raise');
+        } catch (MaxPayloadException) {
+            // expected — not ConnectionException from the dying unsubscribe
+        }
+    }
+
+    public function testFetchSurfacesUnsubscribeFailureAfterASuccessfulPull(): void
+    {
+        $fake = new FakeTransport();
+        $fake->onWrite = static function (string $wire): void {
+            if (\str_starts_with($wire, 'UNSUB ')) {
+                throw new ConnectionException('Failed to reconnect to any NATS server');
+            }
+        };
+        $conn = $this->connect($fake);
+        $consumer = $this->consumer($conn);
+
+        $this->expectException(ConnectionException::class);
+        $this->expectExceptionMessage('Failed to reconnect to any NATS server');
+        $consumer->fetch(1, 0.02);
     }
 }

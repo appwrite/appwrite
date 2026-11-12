@@ -177,6 +177,7 @@ class Client
             'multipart/form-data' => $this->flatten($params),
             'application/graphql' => $params[0],
             'text/plain' => $params,
+            'image/png' => $params,
             default => http_build_query($params),
         };
 

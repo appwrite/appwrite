@@ -11,7 +11,7 @@ final class RangeTest extends TestCase
 {
     public function testCanValidateIntegerRange(): void
     {
-        $range = new Range(0, 5, \Utopia\Validator::TYPE_INTEGER);
+        $range = new Range(0, 5, \Utopia\Validator\Validator::TYPE_INTEGER);
 
         // Assertions for integer
         $this->assertTrue($range->isValid(0));
@@ -25,13 +25,13 @@ final class RangeTest extends TestCase
         $this->assertSame(0, $range->getMin());
         $this->assertSame(5, $range->getMax());
         $this->assertFalse($range->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_INTEGER, $range->getFormat());
-        $this->assertSame(\Utopia\Validator::TYPE_INTEGER, $range->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_INTEGER, $range->getFormat());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_INTEGER, $range->getType());
     }
 
     public function testCanValidateFloatRange(): void
     {
-        $range = new Range(0, 1, \Utopia\Validator::TYPE_FLOAT);
+        $range = new Range(0, 1, \Utopia\Validator\Validator::TYPE_FLOAT);
 
         $this->assertTrue($range->isValid(0.0));
         $this->assertTrue($range->isValid(1.0));
@@ -44,14 +44,14 @@ final class RangeTest extends TestCase
         $this->assertSame(0, $range->getMin());
         $this->assertSame(1, $range->getMax());
         $this->assertFalse($range->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_FLOAT, $range->getFormat());
-        $this->assertSame(\Utopia\Validator::TYPE_FLOAT, $range->getType(), \Utopia\Validator::TYPE_FLOAT);
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_FLOAT, $range->getFormat());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_FLOAT, $range->getType(), \Utopia\Validator\Validator::TYPE_FLOAT);
     }
 
     public function canValidateInfinityRange(): void
     {
-        $integer = new Range(5, INF, \Utopia\Validator::TYPE_INTEGER);
-        $float = new Range(-INF, 45.6, \Utopia\Validator::TYPE_FLOAT);
+        $integer = new Range(5, INF, \Utopia\Validator\Validator::TYPE_INTEGER);
+        $float = new Range(-INF, 45.6, \Utopia\Validator\Validator::TYPE_FLOAT);
 
         $this->assertTrue($integer->isValid(25));
         $this->assertFalse($integer->isValid(3));

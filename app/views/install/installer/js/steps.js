@@ -29,7 +29,7 @@
 
     const {
         isValidEmail,
-        isValidPort,
+        isValidPublishedPort,
         isValidHostnameInput,
         isValidPassword
     } = Validation;
@@ -138,7 +138,6 @@
         State.setStateIfEmpty?.('httpsPort', root.querySelector('#https-port')?.value);
         State.setStateIfEmpty?.('emailCertificates', root.querySelector('#ssl-email')?.value);
         State.setStateIfEmpty?.('forceHttps', root.querySelector('#force-https')?.checked);
-        State.setStateIfEmpty?.('assistantOpenAIKey', root.querySelector('#assistant-openai-key')?.value);
     };
 
     const applyStep1State = (root) => {
@@ -157,11 +156,6 @@
         const forceHttps = root.querySelector('#force-https');
         if (forceHttps && typeof formState.forceHttps === 'boolean') {
             forceHttps.checked = formState.forceHttps;
-        }
-
-        const assistantKey = root.querySelector('#assistant-openai-key');
-        if (assistantKey && formState.assistantOpenAIKey) {
-            assistantKey.value = formState.assistantOpenAIKey;
         }
 
         if (formState.database) {
@@ -221,12 +215,16 @@
         const httpsPort = root.querySelector('#https-port');
         const sslEmail = root.querySelector('#ssl-email');
         const forceHttps = root.querySelector('#force-https');
-        const assistantKey = root.querySelector('#assistant-openai-key');
 
         bindInputToState(hostname, 'appDomain');
 
         // Follow the hostname until the operator sets the toggle themselves, after which
-        // their choice stands however the hostname changes.
+        // their choice stands however the hostname changes. An upgrade keeps the setting
+        // the installation already has.
+        if (forceHttps && isUpgradeMode?.()) {
+            forceHttps.dataset.touched = 'true';
+        }
+
         if (hostname && forceHttps) {
             const followHostname = () => {
                 if (forceHttps.dataset.touched === 'true') return;
@@ -246,13 +244,11 @@
         bindInputToState(httpsPort, 'httpsPort');
         bindInputToState(sslEmail, 'emailCertificates');
         bindCheckboxToState(forceHttps, 'forceHttps');
-        bindInputToState(assistantKey, 'assistantOpenAIKey');
 
         bindErrorClear?.(hostname);
         bindErrorClear?.(httpPort);
         bindErrorClear?.(httpsPort);
         bindErrorClear?.(sslEmail);
-        bindErrorClear?.(assistantKey);
 
         const checked = root.querySelector('input[name="database"]:checked');
         if (checked) {
@@ -485,8 +481,8 @@
 
                 const parsePort = (input, label) => {
                     const value = input?.value;
-                    if (!value || !isValidPort?.(value)) {
-                        setFieldError?.(input, `Please enter a valid ${label} port (1-65535)`);
+                    if (!value || !isValidPublishedPort?.(value)) {
+                        setFieldError?.(input, `Please enter a valid ${label} port (1-65535), optionally bound to a host IP like 127.0.0.1:80`);
                         return false;
                     }
                     return true;

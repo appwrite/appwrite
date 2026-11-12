@@ -1,0 +1,99 @@
+---
+layout: article
+title: Domains
+description: Register, transfer, and manage domains with Appwrite. Buy domains, configure DNS, and connect them to Sites, Functions, and APIs from your organization.
+---
+
+Appwrite **Domains** is organization-level domain management on Appwrite Cloud. You can register new names, transfer existing registrations, delegate DNS for domains you own elsewhere, and connect hostnames to [Sites](/docs/products/sites), [Functions](/docs/products/functions), and [custom API endpoints](/docs/advanced/platform/custom-domains).
+
+Appwrite acts as your registrar for purchases and transfers. Billing, renewal, and registrant details are tied to your organization. You can also [change organization](/docs/products/domains/change-organization) to move a domain between orgs you control without transferring registration away from Appwrite.
+
+# How it works {% #how-it-works %}
+
+Domain setup on Appwrite has two layers:
+
+1. **Organization domain** (the apex zone, for example `example.com`) proves your organization controls the name and can host its authoritative DNS zone under **Organization** > **Domains**.
+2. **Product hostname** (for example `www.example.com`, `api.example.com`, or `hooks.example.com`) is added on a Site, Function, or project **Custom domains** settings. Appwrite verifies DNS, issues TLS, and routes HTTPS traffic through the [Appwrite Network](/docs/products/network).
+
+You can register or transfer the apex through Appwrite, or [add an external domain](/docs/products/domains/external) and point nameservers to `ns1.appwrite.zone` and `ns2.appwrite.zone`. Subdomains and apex hostnames can also be verified with CNAME records at your current DNS provider. See [Connect to products](/docs/products/domains/connect) for apex vs subdomain patterns and multi-product layouts.
+
+{% info title="Appwrite Cloud" %}
+Domains is available on Appwrite Cloud. Self-hosted deployments do not include domain registration or organization-level domain management.
+{% /info %}
+
+# Getting started {% #getting-started %}
+
+Register or add your first domain and verify DNS in a few steps. The quick start covers all three entry paths: buy, transfer in, or add external.
+
+{% arrow_link href="/docs/products/domains/quick-start" %}
+Quick start
+{% /arrow_link %}
+
+# Concepts {% #concepts %}
+
+Core ideas behind registration, billing, and DNS for organization domains.
+
+{% cards %}
+{% cards_item href="/docs/products/domains/registration" title="Registration" %}
+How Appwrite registers domains, registrant contacts, and what happens after checkout.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/renewal" title="Renewal" %}
+Auto-renewal, expiration, and keeping domains active on your organization.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/dns" title="DNS records" %}
+Zones, record types, locked entries, and how organization DNS relates to product hostnames.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/presets" title="DNS presets" %}
+One-click MX and SPF record sets for Google Workspace, Outlook, Mailgun, and other email providers.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/pricing" title="Pricing" %}
+Registration, transfer, and renewal costs billed through your organization.
+{% /cards_item %}
+{% /cards %}
+
+# Guides {% #guides %}
+
+Step-by-step guides for common domain tasks in the Console.
+
+{% cards %}
+{% cards_item href="/docs/products/domains/register" title="Register a domain" %}
+Search availability, complete checkout, and open the new domain in your organization.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/transfer" title="Transfer a domain" %}
+Move registration into Appwrite from another registrar using an authorization code.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/external" title="Add external domain" %}
+Delegate DNS to Appwrite while keeping registration at your current registrar.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/manage-dns" title="Manage DNS records" %}
+Add, edit, import, and use presets for email and third-party services on organization domains.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/connect" title="Connect to products" %}
+Attach apex and subdomains to Sites, Functions, and project APIs with verification and TLS.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/change-organization" title="Change organization" %}
+Reassign a domain to another organization you own without a registrar transfer.
+{% /cards_item %}
+{% cards_item href="/docs/products/domains/delete" title="Delete a domain" %}
+Remove a domain from your organization and understand impact on DNS and product hostnames.
+{% /cards_item %}
+{% /cards %}
+
+# Platform integration {% #platform-integration %}
+
+Organization **Domains** manages the zone. Product docs cover routing behavior, generated URLs, and advanced DNS patterns shared across Appwrite.
+
+{% cards %}
+{% cards_item href="/docs/products/network/dns" title="Appwrite DNS" %}
+Apex domains, CNAME flattening, and nameserver delegation across the platform.
+{% /cards_item %}
+{% cards_item href="/docs/products/sites/domains" title="Sites domains" %}
+Custom domains, branch URLs, and domain rule types for web apps.
+{% /cards_item %}
+{% cards_item href="/docs/products/functions/domains" title="Functions domains" %}
+Custom and generated domains for HTTP-triggered serverless functions.
+{% /cards_item %}
+{% cards_item href="/docs/advanced/platform/custom-domains" title="Custom API domains" %}
+Branded project API endpoints and first-party cookie configuration.
+{% /cards_item %}
+{% /cards %}

@@ -16,11 +16,16 @@ use GraphQL\Type\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
+use Utopia\Database\Validator\Queries\Base as Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\DI\Container;
 use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
+use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 final class BuilderTest extends TestCase
 {
@@ -166,6 +171,58 @@ final class BuilderTest extends TestCase
 
         $this->assertCount(1, $fields);
         $this->assertSame(['name'], \array_keys($fields[0]['args']));
+    }
+
+    public function testMultipleMapsToItsDeclaredType(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $method = new Method(
+            namespace: 'test',
+            group: null,
+            name: 'createGraphQLMultipleTest',
+            description: 'Create test.',
+            auth: [],
+            responses: [
+                new SDKResponse(code: 201, model: Response::MODEL_ANY),
+            ],
+        );
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->param('resource', [], new Multiple([], Validator::TYPE_ARRAY), 'Resources.', true)
+            ->param('url', '', new Multiple([new Text(256)], Validator::TYPE_STRING), 'URL.');
+
+        $fields = \iterator_to_array($this->mapRoute($route, $method));
+
+        $this->assertSame('[String]', (string) $fields[0]['args']['resource']['type']);
+        $this->assertSame('String!', (string) $fields[0]['args']['url']['type']);
+    }
+
+    public function testLimitOffsetQueriesMapToAStringListAsOnMain(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $method = new Method(
+            namespace: 'test',
+            group: null,
+            name: 'listGraphQLLimitOffsetTest',
+            description: 'List test.',
+            auth: [],
+            responses: [
+                new SDKResponse(code: 200, model: Response::MODEL_ANY),
+            ],
+        );
+
+        $route = (new Route('GET', '/v1/tests'))
+            ->desc('List test')
+            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Queries.', true);
+
+        $fields = \iterator_to_array($this->mapRoute($route, $method));
+
+        $this->assertSame('[String]', (string) $fields[0]['args']['queries']['type']);
     }
 
     private function mapRoute(Route $route, Method $method): iterable

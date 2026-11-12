@@ -142,6 +142,7 @@ final class ReliabilityTest extends TestCase
 
         // An unchanged snapshot costs string compares only.
         $scheduler->reconcile();
+        // @phpstan-ignore method.alreadyNarrowedType (The scheduler can change this counter through its factory callback.)
         $this->assertSame(10000, $made->count);
 
         // 100 updated, 50 removed, 50 added: exactly 150 rows re-made.

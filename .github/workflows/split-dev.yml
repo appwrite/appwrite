@@ -43,12 +43,21 @@ jobs:
           # the persisted GITHUB_TOKEN header would override the app token on push
           persist-credentials: false
 
+      - name: Resolve mirrors
+        id: mirrors
+        env:
+          PACKAGES: ${{ inputs.package }}
+        run: echo "repositories=$(echo $PACKAGES | tr ' ' ',')" >> "$GITHUB_OUTPUT"
+
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
         with:
           app-id: ${{ vars.SPLIT_APP_ID }}
           private-key: ${{ secrets.SPLIT_APP_PRIVATE_KEY }}
           owner: utopia-php
+          repositories: ${{ steps.mirrors.outputs.repositories }}
+          permission-contents: write
+          permission-workflows: write
 
       - name: Publish dev branch
         if: inputs.action == 'publish'
