@@ -133,7 +133,6 @@ export function GitRepositoryCard({
     if (!site) return
     setSelectedDir(site.providerRootDirectory || '')
   }, [
-    site?.providerBranch,
     site?.providerRootDirectory,
     site?.installationId,
     site?.providerRepositoryId,

@@ -123,7 +123,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   useEffect(() => {
     setSelectedDir(func.providerRootDirectory || '')
   }, [
-    func.providerBranch,
     func.providerRootDirectory,
     func.installationId,
     func.providerRepositoryId,
