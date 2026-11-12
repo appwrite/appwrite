@@ -73,6 +73,8 @@ export function GitSilentModeCard({
 
   const handleSave = () => {
     updateSiteMutation.mutate({
+      // Silent mode overrides these switches, so saving them clears it
+      providerSilentMode: false,
       providerDeployments: settings.deployments,
       providerSummaries: settings.summaries,
       providerStatuses: settings.statuses,
