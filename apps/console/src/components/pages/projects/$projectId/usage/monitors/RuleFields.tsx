@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import {
   BellRing,
   Check,
@@ -715,34 +716,33 @@ export function RuleFields({
           <Label id="alert-severity" className="text-[13px] font-semibold">
             {t('Severity')}
           </Label>
-          <div
-            role="radiogroup"
+          {/* Radix gives the group one tab stop and moves the selection with the arrow keys. */}
+          <RadioGroupPrimitive.Root
             aria-labelledby="alert-severity"
+            value={form.severity}
+            onValueChange={(severity) =>
+              onChange({ severity: severity as MonitorSeverity })
+            }
+            disabled={disabled}
+            orientation="horizontal"
             className="mt-2 flex flex-wrap gap-2"
           >
-            {SEVERITIES.map(({ value, label, icon: Icon, tone, ...level }) => {
-              const selected = form.severity === value
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  disabled={disabled}
-                  onClick={() => onChange({ severity: value })}
-                  className={cn(
-                    'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                    selected
-                      ? cn('font-medium ring-1 ring-inset', level.selected)
-                      : 'border-border text-muted-foreground hover:bg-accent/40',
-                  )}
-                >
-                  <Icon aria-hidden className={cn('h-3.5 w-3.5', tone)} />
-                  {t(label)}
-                </button>
-              )
-            })}
-          </div>
+            {SEVERITIES.map(({ value, label, icon: Icon, tone, ...level }) => (
+              <RadioGroupPrimitive.Item
+                key={value}
+                value={value}
+                className={cn(
+                  'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
+                  form.severity === value
+                    ? cn('font-medium ring-1 ring-inset', level.selected)
+                    : 'border-border text-muted-foreground hover:bg-accent/40',
+                )}
+              >
+                <Icon aria-hidden className={cn('h-3.5 w-3.5', tone)} />
+                {t(label)}
+              </RadioGroupPrimitive.Item>
+            ))}
+          </RadioGroupPrimitive.Root>
           <p className="mt-2 text-[12px] text-muted-foreground">
             {t(
               SEVERITIES.find(({ value }) => value === form.severity)?.hint ??
