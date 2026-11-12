@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Organization\Http\Transfers\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Screenshots\Access;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -63,6 +64,7 @@ class Update extends Action
             ->inject('targetUser')
             ->inject('authorization')
             ->inject('auditContext')
+            ->inject('getProjectDB')
             ->callback($this->action(...));
     }
 
@@ -75,6 +77,7 @@ class Update extends Action
         User $targetUser,
         Authorization $authorization,
         AuditContext $auditContext,
+        callable $getProjectDB,
     ) {
         // Taking a project in is the same move as giving one away, so the claiming
         // organization answers for it with an owner too
@@ -145,6 +148,8 @@ class Update extends Action
         }));
 
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+
+        (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
