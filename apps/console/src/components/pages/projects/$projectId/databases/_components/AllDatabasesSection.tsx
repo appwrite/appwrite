@@ -785,7 +785,7 @@ export function AllDatabasesSection({
         map.set(db.$id, true)
         return
       }
-      if (projectBackupPolicyQuery.isLoading) {
+      if (projectBackupPolicyQuery.isLoading || projectBackupPolicyQuery.isError) {
         map.set(db.$id, null)
         return
       }
@@ -804,6 +804,7 @@ export function AllDatabasesSection({
     productBackupPolicyQueries,
     productDatabasesOnPage,
     projectBackupPolicyQuery.data,
+    projectBackupPolicyQuery.isError,
     projectBackupPolicyQuery.isLoading,
   ])
 
