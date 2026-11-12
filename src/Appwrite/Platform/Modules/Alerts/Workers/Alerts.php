@@ -283,7 +283,7 @@ class Alerts extends Action
                 'region' => (string) $monitor->getAttribute('region', ''),
                 'status' => State::Firing->value,
                 'rules' => $monitor->getAttribute('rules', []),
-                'severity' => (string) $monitor->getAttribute('severity', Severity::Warning->value),
+                'severity' => $monitor->getAttribute('severity') ?: Severity::Warning->value,
                 'type' => (string) $monitor->getAttribute('type'),
                 'resourceType' => (string) $monitor->getAttribute('resourceType'),
                 'resourceId' => (string) $monitor->getAttribute('resourceId'),
@@ -519,7 +519,7 @@ class Alerts extends Action
                     'critical' => $alert->getAttribute('severity') === Severity::Critical->value,
                     'data' => [
                         'type' => 'alert',
-                        'severity' => (string) $alert->getAttribute('severity', Severity::Warning->value),
+                        'severity' => $alert->getAttribute('severity') ?: Severity::Warning->value,
                         'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
                         'alertId' => $alert->getId(),
                         'monitorId' => $monitor->getId(),
