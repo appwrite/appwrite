@@ -2,17 +2,26 @@ import { useRouter } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import { isSelfHostedConsoleProfile } from '@/lib/runtime-config-shared'
-import { registerSiteTools } from '@/lib/webmcp/site/tools'
+import { hasWebMcp } from '@/lib/webmcp/site/detect'
 
 /**
  * Registers appwrite.io's WebMCP tools while a public-site layout is mounted.
- * Called from those layouts, not the root, so the tools ship in a route
- * chunk the page HTML lists, where scanners look for them.
+ * The tools chunk loads only when WEBMCP_DETECT_SCRIPT found WebMCP.
  */
 export function useSiteTools(): void {
   const router = useRouter()
   useEffect(() => {
     if (isSelfHostedConsoleProfile(getRuntimeConfig().consoleProfile)) return
-    return registerSiteTools((path) => router.navigate({ href: path }))
+    if (!hasWebMcp()) return
+    let unregister: (() => void) | undefined
+    let unmounted = false
+    void import('@/lib/webmcp/site/tools').then(({ registerSiteTools }) => {
+      if (unmounted) return
+      unregister = registerSiteTools((path) => router.navigate({ href: path }))
+    })
+    return () => {
+      unmounted = true
+      unregister?.()
+    }
   }, [router])
 }

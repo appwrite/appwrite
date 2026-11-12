@@ -5,6 +5,7 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
+import { WEBMCP_DETECT_SCRIPT } from '@/lib/webmcp/site/detect'
 import { useSiteTools } from '@/lib/webmcp/site/use-site-tools'
 
 export const Route = createFileRoute('/docs')({
@@ -12,6 +13,7 @@ export const Route = createFileRoute('/docs')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   notFoundComponent: NotFoundView,
+  head: () => ({ scripts: [WEBMCP_DETECT_SCRIPT] }),
   component: DocsLayoutRoute,
 })
 
