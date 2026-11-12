@@ -154,7 +154,7 @@ class Update extends Action
         try {
             (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
         } catch (\Throwable $th) {
-            Span::current()?->setError($th)->set('project.id', $project->getId());
+            Span::add('screenshots.error', $th->getMessage());
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
