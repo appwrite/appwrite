@@ -45,6 +45,21 @@ class Get extends Action
 
     private const GRAVITY_AUTO = 'auto';
 
+    // The values of Image::getGravityTypes(), spelled out: routes are also built by tooling that runs without the
+    // utopia extension (spec generation), where the class does not exist.
+    private const GRAVITY_TYPES = [
+        self::GRAVITY_AUTO,
+        'center',
+        'top-left',
+        'top',
+        'top-right',
+        'left',
+        'right',
+        'bottom-left',
+        'bottom',
+        'bottom-right',
+    ];
+
     public static function getName()
     {
         return 'getFilePreview';
@@ -85,7 +100,7 @@ class Get extends Action
             ->param('fileId', '', new UID(), 'File ID')
             ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
             ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
-            ->param('gravity', Image::GRAVITY_CENTER, new WhiteList([self::GRAVITY_AUTO, ...Image::getGravityTypes()]), 'Image crop gravity. Can be one of ' . implode(",", [self::GRAVITY_AUTO, ...Image::getGravityTypes()]), true, enum: new Enum(name: 'ImageGravity'))
+            ->param('gravity', 'center', new WhiteList(self::GRAVITY_TYPES), 'Image crop gravity. Can be one of ' . implode(",", self::GRAVITY_TYPES), true, enum: new Enum(name: 'ImageGravity'))
             ->param('quality', -1, new Range(-1, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
             ->param('borderWidth', 0, new Range(0, 100), 'Preview image border in pixels. Pass an integer between 0 to 100. Defaults to 0.', true)
             ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
