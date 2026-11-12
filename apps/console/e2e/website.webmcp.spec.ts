@@ -177,30 +177,36 @@ test.describe('WebMCP tools', () => {
   test('records each call as an analytics event, without its input', async ({
     page,
   }) => {
-    await agent.call('search_docs', { query: 'create a row' })
-    await agent.call('get_doc_page', { path: '/blog/post/appwrite-realtime' })
+    const inputs = ['create a row', '/blog/post/appwrite-realtime']
+    await agent.call('search_docs', { query: inputs[0] })
+    await agent.call('get_doc_page', { path: inputs[1] })
 
+    const events = () =>
+      page.evaluate(() =>
+        (
+          window as unknown as {
+            __analytics: Array<[string, Record<string, unknown>]>
+          }
+        ).__analytics
+          .filter(([name]) => name === 'WebMCP Tool Called')
+          .map(([, props]) => props),
+      )
     await expect
-      .poll(() =>
-        page.evaluate(() =>
-          (
-            window as unknown as {
-              __analytics: Array<[string, Record<string, unknown>]>
-            }
-          ).__analytics
-            .filter(([name]) => name === 'WebMCP Tool Called')
-            .map(([, props]) => ({
-              tool: props.tool,
-              status: props.status,
-              code: props.code,
-              query: props.query,
-            })),
-        ),
+      .poll(async () =>
+        (await events()).map(({ tool, status, code }) => ({
+          tool,
+          status,
+          code,
+        })),
       )
       .toEqual([
         { tool: 'search_docs', status: 'success' },
         { tool: 'get_doc_page', status: 'error', code: 'invalid_path' },
       ])
+    const sent = JSON.stringify(await events())
+    for (const input of inputs) {
+      expect(sent, input).not.toContain(input)
+    }
   })
 
   test('navigate_to_page and open_sign_up move the tab on this site only', async ({
