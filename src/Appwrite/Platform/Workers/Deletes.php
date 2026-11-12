@@ -2026,7 +2026,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Executor $executor, Bus $bus, callable $locks): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Executor $executor, Bus $bus, ?callable $locks): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -2038,7 +2038,7 @@ class Deletes extends Action
          */
         $collection = $document->getAttribute('resourceType');
         $resourceId = $document->getAttribute('resourceId');
-        $locks($collection . ':deployments:' . $projectId . ':' . $resourceId, 30, function () use ($dbForProject, $collection, $resourceId, $deploymentId) {
+        $repoint = function () use ($dbForProject, $collection, $resourceId, $deploymentId) {
             // Builds refresh the latest deployment without this lock. The request timestamp makes the write
             // conflict when one did so after this read, so a newer deployment is not rolled back.
             for ($attempt = 0; $attempt < 3; $attempt++) {
@@ -2065,7 +2065,13 @@ class Deletes extends Action
                     // Re-check which deployment is latest now.
                 }
             }
-        }, 10.0);
+        };
+
+        if (\is_null($locks)) {
+            $repoint();
+        } else {
+            $locks($collection . ':deployments:' . $projectId . ':' . $resourceId, 30, $repoint, 10.0);
+        }
 
         /**
          * Delete deployment files
