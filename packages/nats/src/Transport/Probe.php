@@ -15,6 +15,8 @@ final class Probe
 {
     private const int READ_BUFFER = 8192;
 
+    private const string COROUTINE_STREAM = 'socket/coroutine';
+
     private ?\Socket $socket = null;
 
     private bool $imported = false;
@@ -32,7 +34,8 @@ final class Probe
 
     public function ready(): bool
     {
-        if (stream_get_meta_data($this->stream)['unread_bytes'] > 0) {
+        $meta = stream_get_meta_data($this->stream);
+        if ($meta['unread_bytes'] > 0) {
             return true;
         }
 
@@ -41,11 +44,22 @@ final class Probe
             return self::peek($socket);
         }
 
+        $coroutine = $meta['stream_type'] === self::COROUTINE_STREAM;
+
         // A peek rather than stream_select(): select() fails outright on a
         // descriptor numbered at or above FD_SETSIZE.
         stream_set_blocking($this->stream, false);
         try {
-            return @stream_socket_recvfrom($this->stream, 1, STREAM_PEEK) !== false;
+            if ($coroutine) {
+                swoole_clear_error();
+            }
+            if (@stream_socket_recvfrom($this->stream, 1, STREAM_PEEK) !== false) {
+                return true;
+            }
+
+            // A hooked stream's failed peek leaves its errno in swoole_last_error(),
+            // so a reset can be told apart from an idle socket there too.
+            return $coroutine && !self::wouldBlock(swoole_last_error());
         } finally {
             stream_set_blocking($this->stream, true);
         }
@@ -92,7 +106,12 @@ final class Probe
         $error = socket_last_error($socket);
         socket_clear_error($socket);
 
-        return !\in_array($error, [SOCKET_EAGAIN, SOCKET_EWOULDBLOCK], true);
+        return !self::wouldBlock($error);
+    }
+
+    private static function wouldBlock(int $error): bool
+    {
+        return !\defined('SOCKET_EAGAIN') || \in_array($error, [SOCKET_EAGAIN, SOCKET_EWOULDBLOCK], true);
     }
 
     /** Swoole's socket hooks replace socket_recv() with a coroutine read that ignores MSG_PEEK. */

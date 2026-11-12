@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Utopia\NATS\Tests\Transport;
 
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
+use Swoole\Runtime;
 use Utopia\NATS\Tests\Support\Peer;
 use Utopia\NATS\Tests\Support\Wait;
 use Utopia\NATS\Transport\TlsTransport;
@@ -79,6 +82,27 @@ final class TlsTransportPollTest extends TestCase
         $this->assertTrue(Wait::until($transport->poll(...)), 'A reset must read as ready, so the next read reports it');
 
         $transport->close();
+    }
+
+    #[RequiresPhpExtension('swoole')]
+    #[RequiresPhpExtension('sockets')]
+    #[RunInSeparateProcess]
+    public function testHookedResetByThePeerIsReadable(): void
+    {
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+        $states = [];
+
+        Coroutine\run(function () use (&$states): void {
+            [$transport, $peer] = $this->connect();
+            $peer->send("INFO {}\r\n");
+            $transport->readLine(1.0);
+            $states['idle'] = $transport->poll();
+            $peer->reset();
+            $states['reset'] = $transport->poll();
+            $transport->close();
+        });
+
+        $this->assertSame(['idle' => false, 'reset' => true], $states);
     }
 
     public function testClosedTransportIsReadable(): void

@@ -11,6 +11,7 @@ use Swoole\Coroutine;
 use Swoole\Runtime;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Tests\Support\Peer;
 use Utopia\NATS\Tests\Support\Wait;
 use Utopia\NATS\Transport\TcpTransport;
 
@@ -161,6 +162,28 @@ final class TcpTransportPollTest extends TestCase
         });
 
         $this->assertSame(['idle' => false, 'data' => true, 'read' => "PING\r\n", 'closed' => true], $states);
+    }
+
+    #[RequiresPhpExtension('swoole')]
+    #[RequiresPhpExtension('sockets')]
+    #[RunInSeparateProcess]
+    public function testHookedResetByThePeerIsReadable(): void
+    {
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+        $states = [];
+
+        Coroutine\run(static function () use (&$states): void {
+            $peer = new Peer();
+            $transport = new TcpTransport();
+            $transport->connect('127.0.0.1', $peer->port, 1.0);
+            $peer->accept();
+            $states['idle'] = $transport->poll();
+            $peer->reset();
+            $states['reset'] = $transport->poll();
+            $transport->close();
+        });
+
+        $this->assertSame(['idle' => false, 'reset' => true], $states);
     }
 
     private function connect(): TcpTransport
