@@ -127,7 +127,8 @@ impl Image {
     #[php(defaults(r#type = "\"\"", quality = 75))]
     pub fn save(&mut self, path: Option<String>, r#type: String, quality: i64) -> PhpResult<Option<Binary<u8>>> {
         let format = format(&r#type).map_err(thrown)?;
-        match path {
+        // An empty path asks for the bytes, as null does.
+        match path.filter(|path| !path.is_empty()) {
             Some(path) => self.0.save(path, format, quality).map(|()| None),
             None => self.0.output(format, quality).map(|blob| Some(Binary::from(blob))),
         }

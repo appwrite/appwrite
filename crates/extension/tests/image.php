@@ -57,6 +57,7 @@ $image = new Image(png(16, 8));
 $image->crop(8, 8, Image::GRAVITY_TOP_LEFT)->setBorderRadius(2)->setOpacity(0.5)->setRotation(90)->setBackground('#ffffff');
 check('jpeg output', substr($image->output('jpg', 80), 0, 2) === "\xff\xd8");
 check('save() without a path', substr($image->save(null, 'gif'), 0, 3) === 'GIF');
+check('save() to an empty path', substr($image->save('', 'gif'), 0, 3) === 'GIF');
 
 $path = sys_get_temp_dir() . '/utopia-extension-' . getmypid() . '/out.png';
 check('save() to a path', $image->save($path, 'png') === null && is_file($path));

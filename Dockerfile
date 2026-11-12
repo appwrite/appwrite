@@ -1,7 +1,3 @@
-# true builds the utopia PHP extension (crates/extension) and loads it, so the
-# Utopia classes it registers run in Rust. See crates/extension/README.md.
-ARG UTOPIA_EXTENSION=false
-
 FROM composer:2 AS composer
 
 # Distrust the compromised eMudhra chains before downloading dependencies.
@@ -19,6 +15,23 @@ COPY composer.json /usr/local/src/
 RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
+
+# The utopia extension, built against the base image's own PHP headers and
+# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
+FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS extension-build
+
+RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
+    rustup-init -y --profile minimal --default-toolchain 1.97.1
+
+WORKDIR /usr/local/src
+
+COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY .cargo ./.cargo
+COPY crates ./crates
+
+RUN . "$HOME/.cargo/env" && \
+    cargo build --release --locked -p utopia-extension && \
+    strip target/release/libutopia.so
 
 FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS base
 
@@ -127,38 +140,11 @@ RUN chmod +x /usr/local/bin/doctor && \
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
-# The utopia extension, built against the base image's own PHP headers and
-# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
-FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS extension-build
-
-RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
-    rustup-init -y --profile minimal --default-toolchain 1.97.1
-
-WORKDIR /usr/local/src
-
-COPY Cargo.toml Cargo.lock rustfmt.toml ./
-COPY .cargo ./.cargo
-COPY crates ./crates
-
-RUN . "$HOME/.cargo/env" && \
-    cargo build --release --locked -p utopia-extension && \
-    strip target/release/libutopia.so
-
-# One of the two stages below becomes `runtime`; BuildKit builds only the one
-# UTOPIA_EXTENSION names, so the default build never compiles Rust.
-FROM base AS extension-false
-
-FROM base AS extension-true
-
+# Registers Utopia\Image\Image; see crates/extension/README.md.
 COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
-# libheif-x265 is libheif's HEVC encoder plugin: with it HEIC output works, for
-# the extension and for Imagick alike. x265 is GPL-2.0-or-later.
-RUN apk add --no-cache libheif-x265 && \
-    echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
+RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
 
-FROM extension-${UTOPIA_EXTENSION} AS runtime
-
-FROM runtime AS production
+FROM base AS production
 
 RUN rm -rf /usr/src/code/app/config/specs && \
     find /usr -name '*.a' -delete 2>/dev/null || true && \
@@ -171,7 +157,7 @@ CMD [ "php", "app/http.php" ]
 
 FROM appwrite/base:2.2.11-xdebug@sha256:aea31a119dae19d5d3ac41765e8bc5e9d1298c8bc495a89b2f41592f886665bb AS xdebug
 
-FROM runtime AS development
+FROM base AS development
 
 # Revalidate bind-mounted source files when development workers reload.
 RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/local/etc/php/conf.d/zzz-opcache-dev.ini
