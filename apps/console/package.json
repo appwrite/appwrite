@@ -210,7 +210,7 @@
     "prettier": "^3.5.3",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.50.0",
-    "vite": "npm:rolldown-vite@7.3.1",
+    "vite": "npm:rolldown-vite@8.0.0",
     "vite-plugin-devtools-json": "^1.0.0",
     "webmcp-types": "^0.1.10"
   }
