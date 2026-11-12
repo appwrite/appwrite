@@ -1,5 +1,10 @@
 # Change Log
 
+## 28.12.1
+
+* Fixed: `terminal` lists organizations on Cloud
+* Fixed: output masks every response field the API marks as a password
+
 ## 28.12.0
 
 * Breaking: `push` no longer deletes databases, tables or columns missing from the config; pass `--prune`
