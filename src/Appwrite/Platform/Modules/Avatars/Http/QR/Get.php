@@ -61,20 +61,27 @@ class Get extends Action
 
     public function action(string $text, int $size, int $margin, bool $download, Response $response)
     {
-        $options = new QROptions([
+        $matrix = (new QRCode(new QROptions([
             'addQuietzone' => true,
             'quietzoneSize' => $margin,
-            'outputType' => QRCode::OUTPUT_IMAGICK,
-            'scale' => 15,
-        ]);
+        ])))->getMatrix($text);
 
-        $qrcode = new QRCode($options);
+        // One square of path for every dark module, drawn 15 pixels to a module
+        $modules = '';
+        foreach ($matrix->matrix(true) as $y => $row) {
+            foreach ($row as $x => $dark) {
+                $modules .= $dark ? "M{$x} {$y}h1v1h-1Z" : '';
+            }
+        }
+
+        $scale = 15;
+        $image = Image::create($matrix->size() * $scale, $matrix->size() * $scale, '#ffffff')
+            ->path($modules, '#000000', scale: $scale);
 
         if ($download) {
             $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
         }
 
-        $image = new Image($qrcode->render($text));
         $image->crop((int) $size, (int) $size);
 
         $response

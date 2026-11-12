@@ -25,6 +25,11 @@ Over `crates/utopia/image`, with the signatures in `packages/image/stubs/Image.p
 `crates/extension/tests/image.php` runs without Composer; `packages/image/tests` is the
 full suite, and is skipped where the extension is not loaded.
 
+Beyond previews, the class draws what Appwrite used ImageMagick for: `Image::create()` makes a
+canvas, `path()` fills SVG path data and `text()` draws a line of text from a TrueType or OpenType
+file (no kerning or shaping), which is how the fallback and initials avatars are made.
+`Image::hasGlyph()` says whether a font draws a character.
+
 The extension turns on the crate's `libwebp` and `libheif` features, so it needs
 libheif's headers to build (`libheif-dev`) and the library at run time; libwebp is
 built from source. AVIF and HEIC follow the system's libheif, as they do for

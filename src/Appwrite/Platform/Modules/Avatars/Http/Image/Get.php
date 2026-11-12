@@ -70,10 +70,6 @@ class Get extends Action
         $output = 'png';
         $type = 'png';
 
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
         try {
             $res = $clientForAvatars->sendRequest((new RequestFactory())->createRequest(RequestMethod::GET, $url));
         } catch (\Throwable) {

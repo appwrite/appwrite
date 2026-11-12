@@ -234,13 +234,12 @@ trait TokensBase
         $this->assertEquals('image/png', $filePreview['headers']['content-type']);
         $this->assertNotEmpty($filePreview['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($filePreview['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
+        $image = \getimagesizefromstring($filePreview['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
     }
 
     public function testCustomPreviewFileWithToken(): void
@@ -271,13 +270,12 @@ trait TokensBase
         $this->assertEquals('image/png', $customFilePreview['headers']['content-type']);
         $this->assertNotEmpty($customFilePreview['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($customFilePreview['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+        $image = \getimagesizefromstring($customFilePreview['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
     }
 
     public function testViewFileWithToken(): void
@@ -299,13 +297,12 @@ trait TokensBase
 
         $this->assertEquals(200, $fileView['headers']['status-code']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($fileView['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
+        $image = \getimagesizefromstring($fileView['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
     }
 
     public function testDownloadFileWithToken(): void
@@ -327,13 +324,12 @@ trait TokensBase
 
         $this->assertEquals(200, $fileDownload['headers']['status-code']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($fileDownload['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
+        $image = \getimagesizefromstring($fileDownload['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
     }
 
     public function testFileAccessWithFileSecurity(): void
@@ -408,13 +404,12 @@ trait TokensBase
             $this->assertEquals('image/png', $response['headers']['content-type']);
 
             if ($endpoint === 'download') {
-                $image = new \Imagick();
-                $image->readImageBlob($response['body']);
-                $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
+                $image = \getimagesizefromstring($response['body']);
+                $original = \getimagesize(__DIR__ . '/../../../resources/logo.png');
 
-                $this->assertSame($original->getImageWidth(), $image->getImageWidth());
-                $this->assertSame($original->getImageHeight(), $image->getImageHeight());
-                $this->assertSame('PNG', $image->getImageFormat());
+                $this->assertSame($original[0], $image[0]);
+                $this->assertSame($original[1], $image[1]);
+                $this->assertSame('image/png', $image['mime']);
             }
         }
 
