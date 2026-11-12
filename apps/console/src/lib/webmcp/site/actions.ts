@@ -183,6 +183,8 @@ export async function navigateToPage(
       'path must start with / and stay on this site.',
     )
   }
-  await navigate(page)
-  return { navigated: true, url: toUrl(page) }
+  // Leaving the layout unregisters this tool, and a tool unregistered while it
+  // runs never delivers its result; so answer first, then navigate.
+  setTimeout(() => void navigate(page))
+  return { navigating: true, url: toUrl(page) }
 }
