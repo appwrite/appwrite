@@ -2628,7 +2628,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:1.3.1
+    image: openruntimes/executor:1.3.5
     restart: unless-stopped
     networks:
       - appwrite
