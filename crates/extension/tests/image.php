@@ -93,4 +93,12 @@ check('empty canvas', thrown(fn () => Image::create(0, 4)) === 'InvalidArgumentE
 Image::setResourceLimit('memory', 64 * 1024 * 1024);
 Image::setResourceLimit('unknown', 1);
 
+Image::setResourceLimit('width', 8);
+check('width limit', thrown(fn () => new Image(png(16, 8))) === 'Exception: Image exceeds the size or memory limits');
+Image::setResourceLimit('width', 50000);
+Image::setResourceLimit('height', 4);
+check('height limit', thrown(fn () => new Image(png(16, 8))) === 'Exception: Image exceeds the size or memory limits');
+Image::setResourceLimit('height', 50000);
+check('limits restored', (new Image(png(16, 8)))->getWidth() === 16);
+
 exit(empty($failed) ? 0 : 1);
