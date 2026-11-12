@@ -1456,6 +1456,47 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testUpdateSiteKeepsOmittedSettings(): void
+    {
+        $site = $this->createSite([
+            'siteId' => Id::unique(),
+            'name' => 'Keep settings',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'enabled' => false,
+            'logging' => false,
+            'timeout' => 20,
+            'installCommand' => 'npm ci',
+            'buildCommand' => 'npm run build',
+            'startCommand' => 'npm start',
+            'outputDirectory' => './dist',
+            'adapter' => 'static',
+            'fallbackFile' => 'index.html',
+            'deploymentRetention' => 7,
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        $site = $this->updateSite([
+            '$id' => $site['body']['$id'],
+            'name' => 'Keep settings updated',
+            'framework' => 'other',
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals('Keep settings updated', $site['body']['name']);
+        $this->assertFalse($site['body']['enabled']);
+        $this->assertFalse($site['body']['logging']);
+        $this->assertEquals(20, $site['body']['timeout']);
+        $this->assertEquals('npm ci', $site['body']['installCommand']);
+        $this->assertEquals('npm run build', $site['body']['buildCommand']);
+        $this->assertEquals('npm start', $site['body']['startCommand']);
+        $this->assertEquals('./dist', $site['body']['outputDirectory']);
+        $this->assertEquals('static', $site['body']['adapter']);
+        $this->assertEquals('index.html', $site['body']['fallbackFile']);
+        $this->assertEquals(7, $site['body']['deploymentRetention']);
+    }
+
     public function testUpdateSite(): void
     {
         $site = $this->createSite([
