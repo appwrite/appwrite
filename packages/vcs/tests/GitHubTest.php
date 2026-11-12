@@ -239,6 +239,32 @@ final class GitHubTest extends Base
         $this->assertSame(['method' => 'POST', 'path' => '/repos/owner/repo/check-runs'], $adapter->captured[1]);
     }
 
+    public function testUpdateCheckFailsWhenRunsCannotBeListed(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<string> */
+            public array $methods = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->methods[] = $method;
+
+                return [
+                    'body' => [],
+                    'headers' => ['status-code' => 500],
+                ];
+            }
+        };
+
+        try {
+            $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...');
+            $this->fail('Expected the failed listing to throw');
+        } catch (\Exception) {
+        }
+
+        $this->assertSame(['GET'], $adapter->methods);
+    }
+
     public function testUpdateCheckFallsBackToAStatusWithoutChecks(): void
     {
         $adapter = new class (new Cache(new None())) extends GitHub {
