@@ -190,6 +190,83 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "advanced/environments",
+    "title": "Project environments",
+    "description": "Give an Appwrite Cloud project development, staging, and QA environments with their own databases, storage, users, functions, and sites, under the same project ID and bill.",
+    "excerpt": "A **project environment** is a separate copy of your project's backend for work that shouldn't touch production, such as staging, development, or QA. Each environment has its own databases, storage, users, functions, sites, and settings. It shares the project's endpoint, project ID, organization, region, and bill. The project itself is **Production**. Environments sit under it, and the Console switches between them from the project sidebar. Apps reach an environment with the same endpoint and project ID as production, plus the…",
+    "breadcrumbs": [
+      "Environments",
+      "Getting started",
+      "Overview"
+    ]
+  },
+  {
+    "slug": "advanced/environments/connect",
+    "title": "Connect to an environment",
+    "description": "Point Appwrite SDKs, the REST API, the CLI, and the MCP server at a project environment with the project ID and the environment ID.",
+    "excerpt": "An environment has no project ID of its own. Apps reach it with the **same endpoint and project ID as production**, plus the **environment ID** you picked when you created it, such as . Leave the environment ID out and the same code acts on production. The **Get started** page of an environment lists all three values to copy. SDKs Add next to when you create the client: The SDKs page shows the same setup for every client and server…",
+    "breadcrumbs": [
+      "Environments",
+      "Guides",
+      "Connect to an environment"
+    ]
+  },
+  {
+    "slug": "advanced/environments/copy",
+    "title": "Copy a project into an environment",
+    "description": "Learn what an Appwrite project environment copies from its project, from database schemas and buckets to functions, sites, and settings, and what always stays behind.",
+    "excerpt": "When you create an environment as a **Clone of the project**, Appwrite copies the project into it once. Each part of the project copies its **structure and settings** by default. Parts that hold data, such as rows, files, and users, copy that data only when you tick it. A copy is a one-time snapshot. Changes made to production afterwards don't reach the environment, and changes made in the environment never reach production. What a copy includes | Group | Structure…",
+    "breadcrumbs": [
+      "Environments",
+      "Concepts",
+      "Copy a project"
+    ]
+  },
+  {
+    "slug": "advanced/environments/create",
+    "title": "Create an environment",
+    "description": "Create an Appwrite project environment from the Console, as an empty environment or as a copy of the project, and switch between production and its environments.",
+    "excerpt": "An environment is created from its project. It lands in the project's organization and region, and it's ready to use as soon as it's created. Open the environment switcher 1. Open your project in the Appwrite Console. 2. Click the environment switcher in the project sidebar, above **Overview**. It shows **Production** with a green dot. 3. Click **Create environment**. Name the environment 1. Enter a **Name**, such as . The Console suggests one that isn't taken yet. 2. Check the…",
+    "breadcrumbs": [
+      "Environments",
+      "Getting started",
+      "Create an environment"
+    ]
+  },
+  {
+    "slug": "advanced/environments/limits",
+    "title": "Limits and billing",
+    "description": "How many environments each Appwrite Cloud plan includes per project, the request and user limits of an environment, and how environment usage is billed.",
+    "excerpt": "Project environments are part of your Appwrite Cloud plan. They don't count as projects, and their usage is billed under the project they belong to. Environments per plan | Plan | Environments per project | |---|---| | Free | 5 | | Pro | 5 | | Enterprise | 25 by default, or custom | Production, the project itself, isn't counted. A Pro project can have production and five environments. A project can create as many environments in an hour…",
+    "breadcrumbs": [
+      "Environments",
+      "Concepts",
+      "Limits and billing"
+    ]
+  },
+  {
+    "slug": "advanced/environments/manage",
+    "title": "Manage environments",
+    "description": "Rename, reorder, and delete Appwrite project environments, and learn what happens to environments when their project is transferred or deleted.",
+    "excerpt": "Environments are managed from the environment switcher in the project sidebar. Production, the project itself, is always first and can't be renamed or deleted from the switcher. Rename an environment 1. Switch to the environment. 2. Open the environment switcher and click **Rename environment**. 3. Enter the new name and click **Rename**. Only the name changes. The environment ID stays the same, so apps, CLI configs, and CI jobs that use it keep working. Reorder environments With two or more…",
+    "breadcrumbs": [
+      "Environments",
+      "Guides",
+      "Manage environments"
+    ]
+  },
+  {
+    "slug": "advanced/environments/workflow",
+    "title": "Development workflow",
+    "description": "Move Appwrite changes from a development environment to staging and production with one CLI config, one API key per environment, and a CI pipeline.",
+    "excerpt": "Environments let one Appwrite project carry a release from development to production. This guide sets up a common flow: - A dev environment, where schema changes, functions, and sites are built and tried. - A staging environment, which gets every change merged to your main branch, so it can be checked against a production-shaped backend. - Production, the project itself, which gets a change when you publish a release. The same CLI config file describes the backend for all three.…",
+    "breadcrumbs": [
+      "Environments",
+      "Guides",
+      "Development workflow"
+    ]
+  },
+  {
     "slug": "advanced/migrations",
     "title": "Migrations",
     "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
@@ -2761,7 +2838,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/documentsdb/backups",
     "title": "Backups",
     "description": "Learn how to back up and restore your DocumentsDB databases, ensuring data security and seamless recovery.",
-    "excerpt": "Backups protect your DocumentsDB data by capturing a full copy of a database that you can restore later. Every backup is **encrypted** and taken as a **hot** backup, so your database keeps serving traffic with zero downtime and recovery stays fast. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. Backup policies Backup policies automate your backups on a schedule. To create one, open your database's **Backups** tab…",
+    "excerpt": "Backups protect your DocumentsDB data by capturing a full copy of a database that you can restore later. Every backup is **encrypted** and taken as a **hot** backup, so your database keeps serving traffic with zero downtime and recovery stays fast. Backups belong to the project. Project environments don't have backups of their own, so back up the project instead. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on…",
     "breadcrumbs": [
       "DocumentsDB",
       "Concepts",
@@ -3815,7 +3892,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/tablesdb/backups",
     "title": "Backups",
     "description": "Learn how to efficiently back up your databases on Appwrite Cloud, ensuring data security and seamless recovery.",
-    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups on Cloud. All backups are **hot** backups, ensuring zero downtime and fast recovery. Learn how to efficiently back up your databases to ensure data security and smooth recovery. Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary. Backup policies Backup policies allow you to automate your backup process. The Enterprise plan allows for more customization and…",
+    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups on Cloud. All backups are **hot** backups, ensuring zero downtime and fast recovery. Learn how to efficiently back up your databases to ensure data security and smooth recovery. Backups belong to the project. Project environments don't have backups of their own, so back up the project instead. Appwrite Backups allow you to automate database backups using backup policies, supporting pre-defined, custom retention & other options. You can also create manual backups whenever necessary.…",
     "breadcrumbs": [
       "Databases",
       "Concepts",
@@ -4167,7 +4244,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/databases/vectorsdb/backups",
     "title": "Backups",
     "description": "Learn how to back up and restore your VectorsDB databases, ensuring data security and seamless recovery.",
-    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups. All backups are **hot** backups, ensuring zero downtime and fast recovery. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. A backup captures the database along with its collections, documents, and embeddings. Backup policies Backup policies automate your backups on a schedule. To create one, open your database's **Backups** tab and click **Create policy**, then choose a preset policy or add…",
+    "excerpt": "Appwrite Backups enable seamless, **encrypted** database backups. All backups are **hot** backups, ensuring zero downtime and fast recovery. Backups belong to the project. Project environments don't have backups of their own, so back up the project instead. You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand. A backup captures the database along with its collections, documents, and embeddings. Backup policies Backup policies automate your backups on a schedule.…",
     "breadcrumbs": [
       "VectorsDB",
       "Concepts",

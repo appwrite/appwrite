@@ -135,7 +135,7 @@ If you would like to help us extend our platforms and SDKs stack, you are more t
 
 # Project environments {% #environments %}
 
-On Appwrite Cloud, a project can have environments, such as `staging`, each with its own resources and users. An environment has no project ID of its own. To act in one, keep the ID of the project it belongs to in `setProject` and add the environment's ID with `setEnvironment`. Leave `setEnvironment` out to act in the project itself.
+On Appwrite Cloud, a project can have [environments](/docs/advanced/environments), such as `staging`, each with its own resources and users. An environment has no project ID of its own. To act in one, keep the ID of the project it belongs to in `setProject` and add the environment's ID with `setEnvironment`. Leave `setEnvironment` out to act in the project itself.
 
 {% tabs %}
 {% tabsitem #environments-client title="Client SDKs" %}
@@ -248,7 +248,7 @@ val client = Client()
 {% /tabsitem %}
 {% /tabs %}
 
-The client sends the environment's ID in the `X-Appwrite-Environment` header with every request. Realtime connections and the URLs the SDK builds, such as file previews and avatars, carry it as the `environment` query parameter. An environment has its own users and API keys, so authenticate with a session or an API key created in that environment.
+The client sends the environment's ID in the `X-Appwrite-Environment` header with every request. Realtime connections and the URLs the SDK builds, such as file previews and avatars, carry it as the `environment` query parameter. An environment has its own users and API keys, so authenticate with a session or an API key created in that environment. [Learn more about connecting to an environment](/docs/advanced/environments/connect).
 
 # Protocols {% #protocols %}
 We are always looking to add new SDKs to our platform. If the SDK you are looking for is still missing, labeled as beta or experimental, or you simply do not want to integrate with an SDK, you can always integrate with Appwrite directly using any standard HTTP, GraphQL, or WebSocket clients and the relevant Appwrite protocol.

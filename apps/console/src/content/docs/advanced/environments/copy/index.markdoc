@@ -1,0 +1,57 @@
+---
+layout: article
+title: Copy a project into an environment
+description: Learn what an Appwrite project environment copies from its project, from database schemas and buckets to functions, sites, and settings, and what always stays behind.
+---
+
+When you create an environment as a **Clone of the project**, Appwrite copies the project into it once. Each part of the project copies its **structure and settings** by default. Parts that hold data, such as rows, files, and users, copy that data only when you tick it.
+
+A copy is a one-time snapshot. Changes made to production afterwards don't reach the environment, and changes made in the environment never reach production.
+
+# What a copy includes {% #includes %}
+
+| Group | Structure and settings | Data, when you tick it |
+|---|---|---|
+| Databases | Databases, tables, columns, and indexes | Rows and documents |
+| Storage | Buckets and their settings | Files |
+| Auth | Teams, auth methods, security policies, and OAuth2 providers | Users and memberships |
+| Functions | Functions, their variables, and their active deployment | Every deployment |
+| Sites | Sites, their variables, and their active deployment | Every deployment |
+| Messaging | Providers and topics | |
+| Settings | Platforms, SMTP, enabled services, project variables, and email templates | |
+
+The copy covers TablesDB, DocumentsDB, and VectorsDB databases. A resource whose ID you chose, such as a database, table, bucket, or function, keeps that ID in the environment, so code that names a table by ID works in both.
+
+# What stays behind {% #excludes %}
+
+A copy never includes:
+
+- **API keys.** Create new keys in the environment. A production key can't act in it.
+- **Webhooks.** Add the webhooks the environment needs, pointing at your test receivers.
+- **Custom domains and domain rules.** Hostnames belong to the project.
+- **Messages already sent.** Providers and topics are copied, not message history.
+- **Backup policies and backups.** Environments don't have backups.
+
+# Users {% #users %}
+
+An environment holds at most 100 users. When you copy users, Appwrite copies the newest 90 with their password hashes, so copied accounts can sign in with the same passwords, and 10 places stay free for test accounts. Memberships of users who aren't copied are left out.
+
+# How the copy runs {% #how-it-runs %}
+
+The environment is created right away, and the copy runs in the background as a migration of the environment. In the Console, a card in the bottom-right corner shows its progress, and a failed copy links to the migration's details under the environment's **Settings** > **Migrations**.
+
+A copy can't be repeated on an existing environment. To start over from production, [delete the environment](/docs/advanced/environments/manage#delete) and create it again.
+
+# Copy with the API {% #api %}
+
+Pass the resource types to copy in `resources` when you [create the environment with the API](/docs/advanced/environments/create#api). A structural type such as `database`, `table`, `column`, `index`, `bucket`, `team`, `function`, or `site` copies the structure and its settings. Add `row`, `document`, `file`, `user`, `membership`, `deployment`, or `site-deployment` to copy what it holds.
+
+| Group | Structure types | Data types |
+|---|---|---|
+| Databases | `database`, `documentsdb`, `vectorsdb`, `table`, `collection`, `column`, `attribute`, `index` | `row`, `document` |
+| Storage | `bucket` | `file` |
+| Auth | `team`, `auth-methods`, `policies`, `oauth2-provider` | `user`, `membership` |
+| Functions | `function`, `environment-variable` | `deployment` |
+| Sites | `site`, `site-variable` | `site-deployment` |
+| Messaging | `provider`, `topic`, `subscriber` | |
+| Settings | `platform`, `smtp`, `project-variable`, `project-protocols`, `project-labels`, `project-services`, `project-email-template` | |

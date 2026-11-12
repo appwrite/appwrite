@@ -1,0 +1,108 @@
+---
+layout: article
+title: Development workflow
+description: Move Appwrite changes from a development environment to staging and production with one CLI config, one API key per environment, and a CI pipeline.
+difficulty: intermediate
+readtime: 8
+---
+
+Environments let one Appwrite project carry a release from development to production. This guide sets up a common flow:
+
+- A dev environment, where schema changes, functions, and sites are built and tried.
+- A staging environment, which gets every change merged to your main branch, so it can be checked against a production-shaped backend.
+- Production, the project itself, which gets a change when you publish a release.
+
+The same CLI config file describes the backend for all three. Only the environment ID and the API key change between them.
+
+# Create the environments {% #create %}
+
+[Create two environments](/docs/advanced/environments/create) in your project: `dev` and `staging`. Choose **Clone of the project** for both, so they start with production's databases, buckets, functions, and settings.
+
+Then create an API key inside each environment, and one in production. Switch to the environment in the Console, open **API Keys**, and create a key with the scopes your deploy needs, such as `tables.write`, `buckets.write`, and `functions.write`. Each key acts only in the environment it was created in.
+
+# Link the CLI to the development environment {% #link %}
+
+In your repository, link the project with the `dev` environment:
+
+```sh
+appwrite init project --project-id "<PROJECT_ID>" --environment-id dev
+```
+
+Pull the backend into `appwrite.config.json`:
+
+```sh
+appwrite pull all
+```
+
+Commit `appwrite.config.json`. It holds the project ID, the endpoint, and the definitions of your tables, buckets, functions, and sites. Build in `dev` from here: change the config, then push it.
+
+```sh
+appwrite push all
+```
+
+When a change works in `dev`, open a pull request with the updated config.
+
+{% info title="Keep the environment ID out of the config in CI" %}
+`appwrite init project` saves `environmentId` in `appwrite.config.json`. CI jobs set `APPWRITE_ENVIRONMENT_ID`, which takes precedence over the config file, so each job picks its own environment whatever the file says. Remove `environmentId` from the committed file if you don't want local commands to default to `dev`.
+{% /info %}
+
+# Deploy to staging and production from CI {% #ci %}
+
+The pipeline runs the same commands for both targets. Only three values change:
+
+| Value | Staging | Production |
+|---|---|---|
+| `APPWRITE_PROJECT_ID` | Your project ID | Your project ID |
+| `APPWRITE_ENVIRONMENT_ID` | `staging` | Not set |
+| API key | A key created in `staging` | A key created in production |
+
+With GitHub Actions, create two [GitHub environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment), `staging` and `production`. Add an `APPWRITE_API_KEY` secret to each with its key, and an `APPWRITE_ENVIRONMENT_ID` variable set to `staging` in the `staging` environment only.
+
+Then add a workflow that deploys to staging on every push to `main`, and to production when a release is published:
+
+```yaml
+name: Deploy Appwrite
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'release' && 'production' || 'staging' }}
+    env:
+      APPWRITE_PROJECT_ID: <PROJECT_ID>
+      APPWRITE_ENVIRONMENT_ID: ${{ vars.APPWRITE_ENVIRONMENT_ID }}
+      APPWRITE_REASON: Deploy ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the Appwrite CLI
+        run: npm install -g appwrite-cli
+
+      - name: Configure the CLI
+        run: |
+          appwrite client \
+            --endpoint https://<REGION>.cloud.appwrite.io/v1 \
+            --key "${{ secrets.APPWRITE_API_KEY }}"
+
+      - name: Deploy
+        run: appwrite push all --all --force
+```
+
+When `APPWRITE_ENVIRONMENT_ID` is empty, the CLI acts on the project itself, so the production job needs no special case. `APPWRITE_REASON` records the commit next to every change in the environment's **Activity** tab. [Learn more about the CLI in CI](/docs/tooling/command-line/non-interactive).
+
+{% info title="Settings are pushed to production separately" %}
+`appwrite push all` skips project settings in an environment. Change auth methods, SMTP, and other project settings in each environment from the Console, or push them to production from a job without an environment ID.
+{% /info %}
+
+# Point your app at each environment {% #app %}
+
+Give each build of your app the same endpoint and project ID, and the environment ID of its target. A preview deployment of your frontend can use `staging`, and the production build leaves the environment ID out. See [Connect to an environment](/docs/advanced/environments/connect#sdks).
+
+# Start staging over {% #reset %}
+
+A copy is a one-time snapshot. When `staging` drifts too far from production, [delete it](/docs/advanced/environments/manage#delete) and create it again as a clone of the project, then create a new API key in it and update the `staging` secret in CI.

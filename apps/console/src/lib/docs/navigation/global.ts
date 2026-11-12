@@ -171,6 +171,13 @@ export const DOCS_GLOBAL_NAV: DocsNavTree = [
         isParent: true,
       },
       {
+        label: 'Environments',
+        href: '/docs/advanced/environments',
+        icon: 'environments',
+        isParent: true,
+        new: true,
+      },
+      {
         label: 'Network',
         href: '/docs/products/network',
         icon: 'share',

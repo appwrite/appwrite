@@ -111,6 +111,58 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
     ],
   },
   {
+    prefix: 'advanced/environments',
+    parent: {
+      href: '/docs',
+      label: 'Environments',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/advanced/environments',
+          },
+          {
+            label: 'Create an environment',
+            href: '/docs/advanced/environments/create',
+          },
+        ],
+      },
+      {
+        label: 'Concepts',
+        items: [
+          {
+            label: 'Copy a project',
+            href: '/docs/advanced/environments/copy',
+          },
+          {
+            label: 'Limits and billing',
+            href: '/docs/advanced/environments/limits',
+          },
+        ],
+      },
+      {
+        label: 'Guides',
+        items: [
+          {
+            label: 'Connect to an environment',
+            href: '/docs/advanced/environments/connect',
+          },
+          {
+            label: 'Development workflow',
+            href: '/docs/advanced/environments/workflow',
+          },
+          {
+            label: 'Manage environments',
+            href: '/docs/advanced/environments/manage',
+          },
+        ],
+      },
+    ],
+  },
+  {
     prefix: 'advanced/migrations',
     parent: {
       href: '/docs',
