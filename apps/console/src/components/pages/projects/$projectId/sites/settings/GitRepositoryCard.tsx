@@ -30,6 +30,7 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { Lock, ExternalLink, Loader2, X } from 'lucide-react'
+import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
@@ -58,6 +59,9 @@ export function GitRepositoryCard({
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
 
   // Form state
+  const [selectedBranch, setSelectedBranch] = useState(
+    site?.providerBranch || '',
+  )
   const [selectedDir, setSelectedDir] = useState(
     site?.providerRootDirectory || '',
   )
@@ -131,8 +135,10 @@ export function GitRepositoryCard({
   // Keep form in sync when saved repo fields change (not on every site refetch)
   useEffect(() => {
     if (!site) return
+    setSelectedBranch(site.providerBranch || '')
     setSelectedDir(site.providerRootDirectory || '')
   }, [
+    site?.providerBranch,
     site?.providerRootDirectory,
     site?.installationId,
     site?.providerRepositoryId,
@@ -148,7 +154,10 @@ export function GitRepositoryCard({
     },
     onSuccess: (updated) => {
       toast.success(t('Repository settings updated successfully'))
-      queryClient.setQueryData(['site', 'project', projectId, siteId], updated)
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
@@ -211,7 +220,10 @@ export function GitRepositoryCard({
     onSuccess: (updated) => {
       toast.success(t('Repository connected successfully'))
       setSelectedRepositoryId('')
-      queryClient.setQueryData(['site', 'project', projectId, siteId], updated)
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
@@ -240,8 +252,12 @@ export function GitRepositoryCard({
     onSuccess: (updated) => {
       toast.success(t('Repository disconnected successfully'))
       setDisconnectDialogOpen(false)
+      setSelectedBranch('')
       setSelectedDir('')
-      queryClient.setQueryData(['site', 'project', projectId, siteId], updated)
+      queryClient.setQueryData(
+        ['site', 'project', projectId, siteId],
+        updated,
+      )
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
@@ -252,7 +268,9 @@ export function GitRepositoryCard({
   })
 
   const handleSaveConfiguration = () => {
-    const hasChanges = selectedDir !== (site?.providerRootDirectory || '')
+    const hasChanges =
+      selectedBranch !== site?.providerBranch ||
+      selectedDir !== (site?.providerRootDirectory || '')
 
     if (!hasChanges) {
       toast.info(t('No changes to save'))
@@ -260,6 +278,7 @@ export function GitRepositoryCard({
     }
 
     updateSiteMutation.mutate({
+      providerBranch: selectedBranch || undefined,
       providerRootDirectory: selectedDir || undefined,
     })
   }
@@ -277,8 +296,11 @@ export function GitRepositoryCard({
   }
 
   const hasChanges = useMemo(() => {
-    return selectedDir !== (site?.providerRootDirectory || '')
-  }, [selectedDir, site])
+    return (
+      selectedBranch !== site?.providerBranch ||
+      selectedDir !== (site?.providerRootDirectory || '')
+    )
+  }, [selectedBranch, selectedDir, site])
 
   // The site document stores the provider's repository id, not its name, so a
   // failed lookup falls back to the installation owner instead of an empty row.
@@ -447,16 +469,34 @@ export function GitRepositoryCard({
               </VcsInstallationErrorAlert>
             )}
 
-            <RootDirectoryPicker
-              projectId={projectId ?? undefined}
-              installationId={installationId}
-              providerRepositoryId={providerRepositoryId}
-              branch={site?.providerBranch || 'main'}
-              value={selectedDir}
-              onChange={setSelectedDir}
-              label={t('Root directory')}
-              description={t('Choose the directory containing your site code')}
-            />
+            <fieldset className="rounded-lg border border-border p-4 space-y-4">
+              <legend className="text-[13px] font-medium text-foreground px-2">
+                {t('Branch Settings')}
+              </legend>
+
+              <BranchSelector
+                projectId={projectId ?? undefined}
+                installationId={installationId}
+                providerRepositoryId={providerRepositoryId}
+                value={selectedBranch}
+                onChange={setSelectedBranch}
+                label={t('Production branch')}
+                suppressInstallationError={!!repositoryErrorKind}
+              />
+
+              <RootDirectoryPicker
+                projectId={projectId ?? undefined}
+                installationId={installationId}
+                providerRepositoryId={providerRepositoryId}
+                branch={selectedBranch || 'main'}
+                value={selectedDir}
+                onChange={setSelectedDir}
+                label={t('Root directory')}
+                description={t(
+                  'Choose the directory containing your site code',
+                )}
+              />
+            </fieldset>
           </div>
         )}
       </div>
