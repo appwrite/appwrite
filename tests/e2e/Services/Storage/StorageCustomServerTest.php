@@ -1675,6 +1675,19 @@ final class StorageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(404, $file['headers']['status-code']);
+
+        $binary = \tempnam(\sys_get_temp_dir(), 'binary');
+        \file_put_contents($binary, \random_bytes(1024));
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile($binary, 'image/png', 'binary.png'),
+        ]);
+        \unlink($binary);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_file_type_unsupported', $file['body']['type']);
     }
 
     public function testIdleChunkedUploadDeletedByMaintenance(): void
