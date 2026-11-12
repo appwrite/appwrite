@@ -67,12 +67,12 @@ final class ListCacheTest extends TestCase
         $this->assertSame('stored', ListCache::purged([$listCache], fn (): string => 'stored'));
         $version = $listCache->getVersion();
         $listCache->save([self::FIELD => ['row']], $version);
-        $this->assertSame(['row'], $cache->load($this->key, self::TTL, self::FIELD));
+        $this->assertSame(['row'], $listCache->load(self::FIELD, self::TTL, $version));
 
         $this->assertSame('updated', ListCache::purged([$listCache], fn (): string => 'updated'));
-        $this->assertFalse($cache->load($this->key, self::TTL, self::FIELD));
+        $this->assertFalse($listCache->load(self::FIELD, self::TTL, $listCache->getVersion()));
         $listCache->save([self::FIELD => ['stale row']], $version);
-        $this->assertFalse($cache->load($this->key, self::TTL, self::FIELD));
+        $this->assertFalse($listCache->load(self::FIELD, self::TTL, $listCache->getVersion()));
         $this->assertNotSame($version, $listCache->getVersion());
         $this->assertGreaterThan(0, $this->redis->ttl('v2:'.$this->key.':version'));
     }
@@ -91,7 +91,7 @@ final class ListCacheTest extends TestCase
 
         $listCache->save([self::FIELD => ['row']], $version);
 
-        $this->assertSame(['row'], $this->cache->load($this->key, self::TTL, self::FIELD));
+        $this->assertSame(['row'], $listCache->load(self::FIELD, self::TTL, $version));
     }
 
     public function testReadRacingAPermissionWriteIsNotSaved(): void
@@ -102,7 +102,25 @@ final class ListCacheTest extends TestCase
         ListCache::purged([$listCache], fn (): string => 'stored');
         $listCache->save([self::FIELD => ['row read before the write']], $version);
 
-        $this->assertFalse($this->cache->load($this->key, self::TTL, self::FIELD), 'A list read before a permission write was cached after it');
+        $this->assertFalse($listCache->load(self::FIELD, self::TTL, $listCache->getVersion()), 'A list read before a permission write was cached after it');
+    }
+
+    public function testReadSavedAfterAPurgeOvertookItsVersionIsNotServed(): void
+    {
+        $cache = new Interleaved(new Redis($this->redis));
+        $listCache = new ListCache($cache, $this->key);
+        $version = $listCache->getVersion();
+
+        // The permission write lands between the save's version comparison and its write of the rows.
+        $cache->between(function () use ($listCache): void {
+            ListCache::purged([$listCache], fn (): string => 'revoked');
+        });
+        $listCache->save([self::FIELD => ['row read before the revocation']], $version);
+
+        $this->assertFalse(
+            $listCache->load(self::FIELD, self::TTL, $listCache->getVersion()),
+            'A list read taken before a permission write was served after the purge that followed it',
+        );
     }
 
     public function testReadIsNotSavedWhenItsVersionCannotBeRead(): void
@@ -116,7 +134,7 @@ final class ListCacheTest extends TestCase
         $listCache->save([self::FIELD => ['row']], $version);
 
         $this->assertNull($version);
-        $this->assertFalse($this->cache->load($this->key, self::TTL, self::FIELD));
+        $this->assertFalse($listCache->load(self::FIELD, self::TTL, $listCache->getVersion()));
     }
 
     public function testPurgeFailureBeforeTheWriteRefusesIt(): void
