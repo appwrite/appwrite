@@ -54,7 +54,7 @@ cd appwrite/
 docker compose exec appwrite migrate
 ```
 
-If you maintain your own `docker-compose.yml`, set the `openruntimes-executor` image to `openruntimes/executor:1.3.1` and run `docker compose up -d`.
+If you maintain your own `docker-compose.yml`, set the `openruntimes-executor` image to `openruntimes/executor:1.3.5` and run `docker compose up -d`.
 
 To rotate the executor secret, set a new `_APP_EXECUTOR_SECRET` in `.env` and run `docker compose up -d`. This recreates the API, the workers and the executor together, so nothing needs the old value.
 
