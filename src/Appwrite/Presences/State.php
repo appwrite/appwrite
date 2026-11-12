@@ -754,7 +754,14 @@ class State
 
     public function purgeListCache(Database $dbForProject): bool
     {
-        return $this->getListCache($dbForProject)->purge();
+        // Runs after the write committed, so a cache outage is recorded rather than failing the request
+        try {
+            return $this->getListCache($dbForProject)->purge();
+        } catch (Throwable $th) {
+            Span::current()?->setError($th);
+
+            return false;
+        }
     }
 
     /**
