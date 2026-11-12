@@ -143,6 +143,28 @@ trait AvatarsBase
         return [];
     }
 
+    public function testCachedAvatarSendsOneCacheControl(): void
+    {
+        // Fresh params so the first call misses the Appwrite cache
+        $params = ['width' => \random_int(10, 2000), 'height' => \random_int(10, 2000)];
+        $headers = ['x-appwrite-project' => $this->getProject()['$id']];
+
+        $miss = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', $headers, $params);
+        $this->assertEquals(200, $miss['headers']['status-code']);
+        $this->assertEquals('miss', $miss['headers']['x-appwrite-cache']);
+        // Every Cache-Control line counts: browsers combine them, so a second `no-store` line would win
+        $this->assertSame(['private, max-age=2592000'], $miss['headerValues']['cache-control']);
+        $this->assertArrayNotHasKey('pragma', $miss['headerValues']);
+        $this->assertArrayNotHasKey('expires', $miss['headerValues']);
+
+        $this->assertEventually(function () use ($headers, $params) {
+            $hit = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', $headers, $params);
+            $this->assertEquals('hit', $hit['headers']['x-appwrite-cache']);
+            $this->assertCount(1, $hit['headerValues']['cache-control']);
+            $this->assertStringStartsWith('private, max-age=', $hit['headers']['cache-control']);
+        });
+    }
+
     public function testGetFlag(): array
     {
         /**

@@ -110,18 +110,19 @@ class Client
     public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true, bool $followRedirects = true, int $timeout = 120): array
     {
         $responseHeaders = [];
-        $ch = $this->handle($method, $path, $headers, $params, $followRedirects, $timeout, $responseHeaders);
+        $responseHeaderValues = [];
+        $ch = $this->handle($method, $path, $headers, $params, $followRedirects, $timeout, $responseHeaders, $responseHeaderValues);
 
         $responseBody = curl_exec($ch);
 
-        return $this->response($ch, $method, $path, $params, $decode, $responseHeaders, $responseBody);
+        return $this->response($ch, $method, $path, $params, $decode, $responseHeaders, $responseBody, $responseHeaderValues);
     }
 
     /**
      * Send several requests at the same time and return each response in request order.
      *
      * @param array<int, array{0: string, 1: string, 2: array<string, string>, 3: mixed}> $requests `[method, path, headers, params]` per request
-     * @return array<int, array{headers: array, cookies: array, body: mixed}>
+     * @return array<int, array{headers: array, headerValues: array<string, list<string>>, cookies: array, body: mixed}>
      * @throws Exception
      */
     public function callConcurrently(array $requests, bool $decode = true): array
@@ -129,10 +130,12 @@ class Client
         $multi = curl_multi_init();
         $handles = [];
         $responseHeaders = [];
+        $responseHeaderValues = [];
 
         foreach ($requests as $index => [$method, $path, $headers, $params]) {
             $responseHeaders[$index] = [];
-            $handles[$index] = $this->handle($method, $path, $headers, $params, true, 120, $responseHeaders[$index]);
+            $responseHeaderValues[$index] = [];
+            $handles[$index] = $this->handle($method, $path, $headers, $params, true, 120, $responseHeaders[$index], $responseHeaderValues[$index]);
             curl_multi_add_handle($multi, $handles[$index]);
         }
 
@@ -147,7 +150,7 @@ class Client
         foreach ($handles as $index => $ch) {
             curl_multi_remove_handle($multi, $ch);
             [$method, $path, , $params] = $requests[$index];
-            $responses[$index] = $this->response($ch, $method, $path, $params, $decode, $responseHeaders[$index], curl_multi_getcontent($ch));
+            $responses[$index] = $this->response($ch, $method, $path, $params, $decode, $responseHeaders[$index], curl_multi_getcontent($ch), $responseHeaderValues[$index]);
         }
         curl_multi_close($multi);
 
@@ -156,10 +159,12 @@ class Client
 
     /**
      * Build a curl handle for a request; response headers are collected into `$responseHeaders` as it runs.
+     * `$responseHeaders` keeps the last line of each header; `$responseHeaderValues` keeps every line of the
+     * final response, since a header the server sends twice (like two Cache-Control lines) counts as both.
      *
      * @throws Exception
      */
-    private function handle(string $method, string $path, array $headers, mixed $params, bool $followRedirects, int $timeout, array &$responseHeaders): \CurlHandle
+    private function handle(string $method, string $path, array $headers, mixed $params, bool $followRedirects, int $timeout, array &$responseHeaders, array &$responseHeaderValues): \CurlHandle
     {
         $headers = array_merge($this->headers, $headers);
         $ch = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
@@ -200,15 +205,22 @@ class Client
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
         curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
         curl_setopt($ch, CURLOPT_COOKIEFILE, ''); // enable in-memory RFC 6265 cookie engine
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders, &$responseHeaderValues) {
             $len = strlen($header);
+
+            if (str_starts_with($header, 'HTTP/')) { // a new response (after a redirect) starts its own set
+                $responseHeaderValues = [];
+            }
+
             $header = explode(':', $header, 2);
 
             if (count($header) < 2) { // ignore invalid headers
                 return $len;
             }
 
-            $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
+            $name = strtolower(trim($header[0]));
+            $responseHeaders[$name] = trim($header[1]);
+            $responseHeaderValues[$name][] = trim($header[1]);
 
             return $len;
         });
@@ -234,11 +246,11 @@ class Client
     }
 
     /**
-     * Turn a finished curl handle into the `headers`, `cookies` and `body` array every call returns.
+     * Turn a finished curl handle into the `headers`, `headerValues`, `cookies` and `body` array every call returns.
      *
      * @throws Exception
      */
-    private function response(\CurlHandle $ch, string $method, string $path, mixed $params, bool $decode, array $responseHeaders, string|bool|null $responseBody): array
+    private function response(\CurlHandle $ch, string $method, string $path, mixed $params, bool $decode, array $responseHeaders, string|bool|null $responseBody, array $responseHeaderValues = []): array
     {
         $cookies = [];
         $responseType   = $responseHeaders['content-type'] ?? '';
@@ -292,6 +304,7 @@ class Client
 
         return [
             'headers' => $responseHeaders,
+            'headerValues' => $responseHeaderValues,
             'cookies' => $cookies,
             'body' => $responseBody
         ];

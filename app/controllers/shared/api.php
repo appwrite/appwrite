@@ -870,11 +870,9 @@ Http::init()
             } else {
                 $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
                 Span::add('storage.cache.hit', false);
-                $response
-                    ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->addHeader('Expires', '0')
-                    ->addHeader('X-Appwrite-Cache', 'miss');
+                // No cache policy here: headers append, so a no-store default would sit next to the policy the
+                // action sets and win in the browser. Every cached route sets its own, and errors get no-store.
+                $response->addHeader('X-Appwrite-Cache', 'miss');
             }
         }
     });

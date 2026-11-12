@@ -1587,6 +1587,24 @@ trait StorageBase
         }, 10_000, 500);
     }
 
+    public function testFilePreviewErrorSendsOneCacheControl(): void
+    {
+        $data = $this->setupBucketFile();
+
+        // A cached route that fails: the error response carries only the error handler's no-store policy
+        $missing = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . Id::unique() . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 120,
+        ]);
+
+        $this->assertEquals(404, $missing['headers']['status-code']);
+        $this->assertSame(['no-cache, no-store, must-revalidate'], $missing['headerValues']['cache-control']);
+        $this->assertSame(['no-cache'], $missing['headerValues']['pragma']);
+        $this->assertSame(['0'], $missing['headerValues']['expires']);
+    }
+
     public function testFilePreviewCacheControlOnCacheHit(): void
     {
         $data = $this->setupBucketFile();
@@ -1627,7 +1645,10 @@ trait StorageBase
 
         $this->assertEquals(200, $preview['headers']['status-code']);
         $this->assertEquals('image/png', $preview['headers']['content-type']);
-        $this->assertEquals('private, max-age=2592000', $preview['headers']['cache-control']);
+        // Every Cache-Control line counts: browsers combine them, so a second `no-store` line would win
+        $this->assertSame(['private, max-age=2592000'], $preview['headerValues']['cache-control']);
+        $this->assertArrayNotHasKey('pragma', $preview['headerValues']);
+        $this->assertArrayNotHasKey('expires', $preview['headerValues']);
         $this->assertEquals('miss', $preview['headers']['x-appwrite-cache']);
         $this->assertNotEmpty($preview['body']);
 
@@ -1655,6 +1676,7 @@ trait StorageBase
 
         $this->assertEquals(200, $cachedPreview['headers']['status-code']);
         $this->assertEquals('image/png', $cachedPreview['headers']['content-type']);
+        $this->assertCount(1, $cachedPreview['headerValues']['cache-control']);
         $this->assertStringStartsWith('private, max-age=', $cachedPreview['headers']['cache-control']);
         $this->assertNotEmpty($cachedPreview['body']);
 
