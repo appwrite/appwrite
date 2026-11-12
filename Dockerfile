@@ -20,7 +20,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.2.10 AS base
+FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -129,7 +129,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 # The utopia extension, built against the base image's own PHP headers and
 # libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
-FROM appwrite/base:2.2.10 AS extension-build
+FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS extension-build
 
 RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
     rustup-init -y --profile minimal --default-toolchain 1.97.1
@@ -169,7 +169,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.2.10-xdebug AS xdebug
+FROM appwrite/base:2.2.11-xdebug@sha256:aea31a119dae19d5d3ac41765e8bc5e9d1298c8bc495a89b2f41592f886665bb AS xdebug
 
 FROM runtime AS development
 
@@ -179,7 +179,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.2.10 ships without XDebug, so it cannot reach production or
+# appwrite/base:2.2.11 ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.
