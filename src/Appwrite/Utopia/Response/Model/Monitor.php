@@ -2,10 +2,12 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
+use Utopia\Database\Document;
 
 class Monitor extends Model
 {
@@ -100,9 +102,17 @@ class Monitor extends Model
                 'example' => ['owner'],
                 'array' => true,
             ])
+            ->addRule('severity', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'How urgent the monitor\'s alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it.',
+                'default' => Severity::Warning->value,
+                'example' => Severity::Warning->value,
+                'enum' => Severity::values(),
+                'enumSDKName' => 'MonitorSeverity',
+            ])
             ->addRule('critical', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the monitor is critical: its alerts may be delivered with higher urgency by the notification channels that support it.',
+                'description' => 'Deprecated: use `severity`. Whether the monitor\'s severity is `critical`.',
                 'default' => false,
                 'example' => false,
             ])
@@ -151,5 +161,15 @@ class Monitor extends Model
     public function getType(): string
     {
         return Response::MODEL_MONITOR;
+    }
+
+    /**
+     * `critical` predates `severity` and stays for clients that read it.
+     */
+    public function filter(Document $document): Document
+    {
+        $document->setAttribute('critical', $document->getAttribute('severity') === Severity::Critical->value);
+
+        return $document;
     }
 }
