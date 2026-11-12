@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia\PHPStan;
+namespace Utopia\Validator\PHPStan;
 
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ExtendedMethodReflection;

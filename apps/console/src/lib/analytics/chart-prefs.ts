@@ -5,6 +5,7 @@ import {
   serializeUsageChartDateRange,
   type SerializedUsageChartDateRange,
 } from '@/lib/usage/usage-date-range'
+import type { UsageDateRangePresetContext } from '@/lib/usage/usage-date-range-presets'
 import {
   parseAnalyticsChartDateRangeFromPrefs,
   parseAnalyticsChartIntervalFromPrefs,
@@ -33,9 +34,13 @@ function defaultDateRange(): DateRange {
  * Presets resolve to a fresh window ("Last 7 days" means the last 7 days
  * today, not the 7 days it meant when it was saved); custom ranges are kept
  * as absolute dates.
+ *
+ * `context.since` (the property's creation date) anchors "All time"; the
+ * loader and the View pass the same value so their query keys match.
  */
 export function resolveAnalyticsChartSelection(
   prefs: UserPrefs | null | undefined,
+  context?: UsageDateRangePresetContext,
 ): AnalyticsChartSelection {
   const stored = parseAnalyticsChartDateRangeFromPrefs(prefs)
   const interval =
@@ -48,7 +53,7 @@ export function resolveAnalyticsChartSelection(
     }
   }
   return {
-    dateRange: parseUsageChartDateRange(stored),
+    dateRange: parseUsageChartDateRange(stored, context),
     presetId: stored.preset ?? null,
     interval,
   }

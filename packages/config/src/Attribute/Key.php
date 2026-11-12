@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Config\Attribute;
 
 use Attribute;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 #[Attribute]
 class Key

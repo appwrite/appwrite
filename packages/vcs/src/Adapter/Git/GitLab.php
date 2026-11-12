@@ -4,7 +4,7 @@ namespace Utopia\VCS\Adapter\Git;
 
 use Exception;
 use Utopia\Cache\Cache;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -923,6 +923,9 @@ class GitLab extends Git
 
         $responseHeaders = $response['headers'] ?? [];
         $responseHeadersStatusCode = $responseHeaders['status-code'] ?? 0;
+        if ($responseHeadersStatusCode === 404) {
+            throw new RepositoryNotFound("Branch not found: {$branch}");
+        }
         if ($responseHeadersStatusCode >= 400) {
             throw new Exception("Failed to get latest commit: HTTP {$responseHeadersStatusCode}", $responseHeadersStatusCode);
         }
@@ -1037,7 +1040,8 @@ class GitLab extends Git
                 $repositoryName = $project['name'] ?? '';
                 $repositoryUrl = $project['web_url'] ?? '';
                 $owner = $project['namespace'] ?? '';
-                $branch = str_replace('refs/heads/', '', $payloadArray['ref'] ?? '');
+                $ref = \is_string($payloadArray['ref'] ?? null) ? $payloadArray['ref'] : '';
+                $branch = str_starts_with($ref, 'refs/heads/') ? substr($ref, \strlen('refs/heads/')) : $ref;
                 $branchUrl = !empty($repositoryUrl) && !empty($branch) ? $repositoryUrl . '/-/tree/' . $branch : '';
 
                 $affectedFiles = [];

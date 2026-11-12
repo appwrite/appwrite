@@ -11,13 +11,23 @@ This guide covers how to configure sites in your self-hosted Appwrite instance. 
 Not all site runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server.
 To enable a runtime, add it to the `_APP_SITES_RUNTIMES` environment variable as a comma-separated list.
 
-The three runtimes currently available for Sites are the Static, Node.js 22, and Flutter 3.41 runtimes.
+Any runtime on the [runtimes list](/docs/products/functions/runtimes) can be enabled here. Flutter and Static are for Sites only. This example enables Static, Node.js 22, and Flutter 3.41:
 
 ```bash
 _APP_SITES_RUNTIMES=static-1,node-22,flutter-3.41
 ```
 
 You can also configure the maximum timeout that can be set on individual Appwrite Sites. The maximum configurable timeout can be increased by changing the `_APP_SITES_TIMEOUT` environment variable. This environment variable changes the configurable maximum but does not alter existing configurations of individual sites.
+
+{% partial file="update-variables.md" /%}
+
+# Configure streaming responses {% #streaming %}
+
+Streaming is enabled by default, so a server-rendered site whose framework [streams HTML](/docs/products/sites/develop#streaming-responses) sends each chunk to the browser as soon as the chunk is ready. To send each response only once it is complete, set `_APP_COMPUTE_STREAMING` to `disabled`. The setting applies to both functions and sites.
+
+```bash
+_APP_COMPUTE_STREAMING=disabled
+```
 
 {% partial file="update-variables.md" /%}
 

@@ -1,42 +1,30 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { Plus, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUpdatePasskeyPolicy } from '@/lib/react-query/hooks/auth'
 import {
-  MAX_PASSKEY_ORIGINS,
+  projectQueryOptions,
+  useConsoleVariables,
+  usePlatforms,
+} from '@/lib/react-query/hooks'
+import {
   MAX_PASSKEY_RP_ID_LENGTH,
-  normalizePasskeyOrigin,
-  passkeyOriginError,
   passkeyRpIdError,
+  platformPasskeyOrigins,
+  suggestPasskeyRpIds,
   type PasskeyPolicy,
 } from '@/lib/passkey-policy'
+import { PasskeyOrigins } from '../PasskeyOrigins'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
 const PASSKEYS_DOCS_URL = '/docs/products/auth/passkeys'
-
-type OriginRow = { id: number; value: string }
-
-let nextRowId = 0
-
-function originRows(origins: string[]): OriginRow[] {
-  const values = origins.length > 0 ? origins : ['']
-  return values.map((value) => ({ id: nextRowId++, value }))
-}
-
-function cleanOrigins(values: string[]): string[] {
-  return values.map(normalizePasskeyOrigin).filter((origin) => origin !== '')
-}
-
-function sameOrigins(a: string[], b: string[]): boolean {
-  return a.length === b.length && a.every((origin, i) => origin === b[i])
-}
 
 export function PasskeyRelyingPartyCard({
   projectId,
@@ -51,69 +39,42 @@ export function PasskeyRelyingPartyCard({
   const t = useT()
   const fieldId = useId()
   const [rpId, setRpId] = useState(currentPolicy.rpId)
-  const [origins, setOrigins] = useState(() =>
-    originRows(currentPolicy.origins),
-  )
   const mutation = useUpdatePasskeyPolicy(projectId)
   const syncedPolicy = useRef(currentPolicy)
+  const { platforms } = usePlatforms(projectId)
+  const { data: project } = useQuery(projectQueryOptions(projectId))
+  const { sitesDomain, functionsDomain } = useConsoleVariables(project?.region)
 
   useEffect(() => {
     // Adopt the stored policy only when it changes, so a refused save keeps the
-    // edits on screen while a successful one picks up the server's normalised
-    // origins once the refetch lands (the mutation stays pending until then).
+    // edit on screen (the mutation stays pending until the refetch lands).
     if (mutation.isPending || syncedPolicy.current === currentPolicy) return
     syncedPolicy.current = currentPolicy
     setRpId(currentPolicy.rpId)
-    setOrigins(originRows(currentPolicy.origins))
   }, [currentPolicy, mutation.isPending])
 
   const nextRpId = rpId.trim()
-  const nextOrigins = cleanOrigins(origins.map((row) => row.value))
-  const rpIdChanged = nextRpId !== currentPolicy.rpId
-  const originsChanged = !sameOrigins(
-    nextOrigins,
-    cleanOrigins(currentPolicy.origins),
-  )
-  const hasChanges = rpIdChanged || originsChanged
-
+  const hasChanges = nextRpId !== currentPolicy.rpId
   const rpIdError = passkeyRpIdError(nextRpId)
-  const originErrors = origins.map((row, index) => {
-    const value = normalizePasskeyOrigin(row.value)
-    if (value === '') return null
-    const isDuplicate = origins
-      .slice(0, index)
-      .some((earlier) => normalizePasskeyOrigin(earlier.value) === value)
-    if (isDuplicate) return 'This origin is already in the list.'
-    return passkeyOriginError(value, nextRpId)
-  })
-  const hasErrors = rpIdError !== null || originErrors.some(Boolean)
+  // The server computes the origins; an unsaved domain is previewed from the platforms.
+  const origins = hasChanges
+    ? platformPasskeyOrigins(nextRpId, platforms)
+    : currentPolicy.origins
+  const suggestions =
+    nextRpId === ''
+      ? suggestPasskeyRpIds(
+          platforms,
+          [sitesDomain, functionsDomain].filter((domain): domain is string =>
+            Boolean(domain),
+          ),
+        )
+      : []
   // Passkeys fail closed, so clearing the relying party stops sign-in for everyone.
-  const breaksSignIn =
-    methodEnabled && (nextRpId === '' || nextOrigins.length === 0)
-
-  const updateOrigin = (id: number, value: string) => {
-    setOrigins((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, value } : row)),
-    )
-  }
-
-  const removeOrigin = (id: number) => {
-    setOrigins((prev) => {
-      const rest = prev.filter((row) => row.id !== id)
-      return rest.length > 0 ? rest : originRows([])
-    })
-  }
-
-  const addOrigin = () => {
-    setOrigins((prev) => [...prev, ...originRows([''])])
-  }
+  const breaksSignIn = methodEnabled && origins.length === 0
 
   const handleSubmit = () => {
     mutation.mutate(
-      {
-        ...(rpIdChanged ? { rpId: nextRpId } : {}),
-        ...(originsChanged ? { origins: nextOrigins } : {}),
-      },
+      { rpId: nextRpId },
       {
         onSuccess: () => {
           toast.success(t('Updated passkey settings'))
@@ -126,8 +87,6 @@ export function PasskeyRelyingPartyCard({
   }
 
   const rpIdHelpId = `${fieldId}-rp-id-help`
-  const originsLabelId = `${fieldId}-origins-label`
-  const originsHelpId = `${fieldId}-origins-help`
 
   return (
     <div
@@ -156,7 +115,7 @@ export function PasskeyRelyingPartyCard({
         </div>
         <p className="text-[13px] text-muted-foreground mt-2">
           {t(
-            'Passkeys are bound to the domain of your app. Users can only sign in with a passkey once a relying party ID and at least one origin are set, and the Passkey auth method is enabled.',
+            'Passkeys are bound to the domain of your app, and work on your web platforms on that domain or its subdomains. A localhost web platform works without a domain for local development.',
           )}{' '}
           <DocsRouteLink className="link-neutral" href={PASSKEYS_DOCS_URL}>
             {t('Learn more')}
@@ -192,78 +151,54 @@ export function PasskeyRelyingPartyCard({
             {rpIdError
               ? t(rpIdError)
               : t(
-                  'The domain of the app where users sign in, not your Appwrite endpoint. Use localhost for local development.',
+                  'The domain of the app where users sign in, not your Appwrite endpoint. It cannot change once users have passkeys.',
                 )}
           </p>
+          {suggestions.length > 0 && (
+            <div
+              className="flex flex-wrap items-center gap-1.5"
+              data-testid="passkey-rp-id-suggestions"
+            >
+              <span className="text-[12px] text-muted-foreground">
+                {t('From your platforms:')}
+              </span>
+              {suggestions.map((domain) => (
+                <Button
+                  key={domain}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-6 px-2 text-[12px] font-mono"
+                  onClick={() => setRpId(domain)}
+                  disabled={mutation.isPending}
+                >
+                  {domain}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
-        <div
-          role="group"
-          aria-labelledby={originsLabelId}
-          aria-describedby={originsHelpId}
-          className="space-y-2 max-w-[420px]"
-        >
-          <Label id={originsLabelId} className="text-[13px]">
-            {t('Allowed origins')}
-          </Label>
-          <p id={originsHelpId} className="text-[12px] text-muted-foreground">
-            {t(
-              'The exact origins your app is served from, on the relying party ID or one of its subdomains.',
-            )}
-          </p>
-          <div className="space-y-2">
-            {origins.map((row, index) => {
-              const error = originErrors[index]
-              const errorId = `${fieldId}-origin-${row.id}-error`
-              return (
-                <div key={row.id} className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={row.value}
-                      placeholder="https://example.com"
-                      autoComplete="off"
-                      spellCheck={false}
-                      aria-label={`${t('Origin URL')} ${index + 1}`}
-                      onChange={(e) => updateOrigin(row.id, e.target.value)}
-                      disabled={mutation.isPending}
-                      aria-invalid={error !== null}
-                      aria-describedby={error ? errorId : undefined}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`${t('Remove origin')} ${index + 1}`}
-                      onClick={() => removeOrigin(row.id)}
-                      disabled={
-                        mutation.isPending ||
-                        (origins.length === 1 && row.value === '')
-                      }
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                  {error && (
-                    <p id={errorId} className="text-[12px] text-destructive">
-                      {t(error)}
-                    </p>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 text-[13px]"
-            onClick={addOrigin}
-            disabled={
-              mutation.isPending || origins.length >= MAX_PASSKEY_ORIGINS
-            }
+        <div className="space-y-2 max-w-[420px]">
+          <p className="text-[13px] font-medium">{t('Where passkeys work')}</p>
+          {origins.length > 0 ? (
+            <PasskeyOrigins
+              origins={origins}
+              data-testid="passkey-platform-origins"
+            />
+          ) : (
+            <p className="text-[12px] text-muted-foreground">
+              {nextRpId
+                ? t('No web platform on this domain yet.')
+                : t('Set a relying party ID to see where passkeys work.')}
+            </p>
+          )}
+          <Link
+            to="/projects/$projectId/apps"
+            params={{ projectId }}
+            className="link-neutral text-[12px]"
           >
-            <Plus />
-            {t('Add origin')}
-          </Button>
+            {t('Manage platforms')}
+          </Link>
         </div>
         {breaksSignIn && (
           <p
@@ -271,7 +206,7 @@ export function PasskeyRelyingPartyCard({
             className="max-w-[420px] rounded-lg border border-border bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground"
           >
             {t(
-              'The Passkey auth method is enabled. Without a relying party ID and at least one origin, users cannot sign in with a passkey.',
+              'The Passkey auth method is enabled. Without a relying party ID that has a web platform, users cannot sign in with a passkey.',
             )}
           </p>
         )}
@@ -280,7 +215,7 @@ export function PasskeyRelyingPartyCard({
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={!hasChanges || hasErrors || mutation.isPending}
+          disabled={!hasChanges || rpIdError !== null || mutation.isPending}
           onClick={handleSubmit}
         >
           {t('Update')}

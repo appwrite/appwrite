@@ -13,7 +13,6 @@ import {
   Zap,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { TrustedByLogo } from '@/components/global/shared/TrustedByLogo'
 import { AppwriteMark } from '@/components/pages/alternative-to/$competitor/_components/ComparisonParts'
 import { riseStyle } from '@/components/pages/products/_components/ArtParts'
 import { PLATFORM_PRODUCTS } from '@/lib/alternatives/platform'
@@ -27,43 +26,9 @@ import {
   enterpriseValueProps,
   enterpriseVendorSprawl,
 } from '@/lib/enterprise/content'
-import { allCustomerLogos } from '@/lib/home/customer-logos'
 import { useT } from '@/lib/i18n/translate'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 import { cn } from '@/lib/utils'
-
-/* -------------------------------------------------------------------------------------------------
- * Customer logos: an open cloud, no tiles
- * -----------------------------------------------------------------------------------------------*/
-
-export function EnterpriseLogoCloud() {
-  return (
-    <ul className="mx-auto grid max-w-6xl grid-cols-3 items-center gap-x-6 gap-y-10 sm:grid-cols-4 lg:grid-cols-5 lg:gap-x-12">
-      {allCustomerLogos.map((logo, index) => (
-        <li
-          key={logo.src}
-          className="product-hero-rise flex min-h-8 items-center justify-center"
-          style={riseStyle(60 + index * 40)}
-        >
-          <TrustedByLogo
-            src={logo.src}
-            alt={logo.alt}
-            width={logo.width}
-            height={logo.height}
-            mask={logo.mask}
-            maskSrc={logo.maskSrc}
-            inverseMask={logo.inverseMask}
-            interactive={false}
-            className={cn(
-              'w-auto opacity-70 transition-opacity duration-200 hover:opacity-100',
-              logo.size === 'lg' ? 'max-h-6 sm:max-h-7' : 'max-h-5 sm:max-h-6',
-            )}
-          />
-        </li>
-      ))}
-    </ul>
-  )
-}
 
 /* -------------------------------------------------------------------------------------------------
  * Value props: open benefits with tone ticks
@@ -251,7 +216,7 @@ export function EnterpriseDeploymentModels() {
           return (
             <div
               key={option.title}
-              className={cn('product-hero-rise relative isolate', index === 0 ? 'md:pe-14' : 'md:ps-14')}
+              className={cn('product-hero-rise relative isolate', index === 0 ? 'md:pe-24' : 'md:ps-24')}
               style={riseStyle(100 + index * 160)}
             >
               <span

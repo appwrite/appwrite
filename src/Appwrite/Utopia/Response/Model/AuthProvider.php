@@ -37,6 +37,7 @@ class AuthProvider extends Model
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Auth Provider is active and can be used to create session.',
+                'default' => false,
                 'example' => '',
             ])
         ;

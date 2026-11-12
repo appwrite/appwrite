@@ -66,8 +66,9 @@ final class PrefetchTest extends TestCase
             \Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
             $broker = $name === 'redis'
                 ? new Redis(new RedisConnection('127.0.0.1', 16379), new Locking(new RedisConnection('127.0.0.1', 16379)))
-                // NATS holds released work back for releaseDelay; see Broker\Nats::release().
-                : new Nats(fn (): \Utopia\NATS\Connection => NatsConnection::connect(new ConnectionOptions(servers: 'nats://127.0.0.1:14225', transportFactory: fn (): \Utopia\NATS\Transport\SwooleTransport => new SwooleTransport())), releaseDelay: 0.2);
+                // One delivery allowed: a hand-back that spent an attempt would
+                // dead-letter all 99 on their next arrival instead of running them.
+                : new Nats(fn (): \Utopia\NATS\Connection => NatsConnection::connect(new ConnectionOptions(servers: 'nats://127.0.0.1:14225', transportFactory: fn (): \Utopia\NATS\Transport\SwooleTransport => new SwooleTransport())), maxDeliver: 1);
             $queue = new Queue('shutdown_' . bin2hex(random_bytes(6)));
             $broker->publishMany($queue, array_fill(0, 100, ['n' => 1]));
             $adapter = new Swoole($broker, 1);
@@ -86,8 +87,10 @@ final class PrefetchTest extends TestCase
             $remaining = $broker->receive($queue, 1, 100);
             $this->assertCount(99, $remaining);
             foreach ($remaining as $message) {
+                $this->assertSame(0, $message->getAttempts(), 'handing back work that never started spends no attempt');
                 $broker->commit($queue, $message);
             }
+            $this->assertSame(0, $broker->getQueueSize($queue, true), 'nothing that never started was dead-lettered');
             $broker->close();
         });
         $this->assertSame(1, $handled);

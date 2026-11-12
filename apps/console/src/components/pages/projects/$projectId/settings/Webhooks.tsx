@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   fetchProjectWebhook,
   useDeleteWebhook,
-  useProjectWebhooks} from '@/lib/react-query/hooks'
+  useProjectWebhooks,
+} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -10,7 +12,8 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,13 +22,15 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle} from '@/components/ui/dialog'
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import {
   Copy,
@@ -36,7 +41,8 @@ import {
   Pencil,
   Square,
   Trash2,
-  Webhook as WebhookIcon} from 'lucide-react'
+  Webhook as WebhookIcon,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
@@ -56,7 +62,8 @@ import {
   copyResourceAsJson,
   copyToClipboard,
   openInNewTab,
-  openInNewWindow} from '@/lib/utils/context-menu'
+  openInNewWindow,
+} from '@/lib/utils/context-menu'
 import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
@@ -89,6 +96,29 @@ export function Webhooks({
   const [webhookToDelete, setWebhookToDelete] = useState<Models.Webhook | null>(
     null,
   )
+  const [initial, setInitial] = useState<
+    { name?: string; events?: string[] } | undefined
+  >(undefined)
+
+  // `?events=` (and `?name=`) opens a new webhook already subscribed to them, as
+  // the alerts quick action links here. The query is dropped once acted on.
+  const search = useSearch({ strict: false }) as {
+    events?: string[]
+    name?: string
+  }
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!search.events?.length) return
+    setInitial({ name: search.name, events: search.events })
+    setSelectedWebhook(null)
+    setDrawerOpen(true)
+    void navigate({
+      to: '/projects/$projectId/settings/webhooks',
+      params: { projectId },
+      search: {},
+      replace: true,
+    })
+  }, [search.events, search.name, navigate, projectId])
 
   const { webhooks, isLoading } = useProjectWebhooks(projectId)
   const deleteMutation = useDeleteWebhook(projectId)
@@ -102,6 +132,7 @@ export function Webhooks({
   const openCreateDrawer = () => {
     openDialogAfterOverlayCloses(() => {
       setSelectedWebhook(null)
+      setInitial(undefined)
       setDrawerOpen(true)
     })
   }
@@ -111,6 +142,7 @@ export function Webhooks({
     const handleCreate = () => {
       openDialogAfterOverlayCloses(() => {
         setSelectedWebhook(null)
+        setInitial(undefined)
         setDrawerOpen(true)
       })
     }
@@ -167,7 +199,8 @@ export function Webhooks({
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || t('Failed to delete webhook'))
-      }})
+      },
+    })
   }
 
   const getWebhookHref = (webhook: Models.Webhook) =>
@@ -188,11 +221,7 @@ export function Webhooks({
           createDisabledTooltip={createDisabledTooltip}
         />
       ) : paginatedWebhooks.length === 0 ? (
-        <EmptyState
-          icon={WebhookIcon}
-          hasFilters
-          variant="card"
-        />
+        <EmptyState icon={WebhookIcon} hasFilters variant="card" />
       ) : (
         <>
           <div className="rounded-lg border border-border bg-card">
@@ -232,149 +261,153 @@ export function Webhooks({
                     onUpdate={handleUpdate}
                     onDelete={requestDelete}
                   >
-                  <TableRow
-                    className="cursor-pointer"
-                    onClick={() => handleUpdate(webhook)}
-                  >
-                    <TableCell className="px-4 py-3">
-                      <CopyableId id={webhook.$id} size="xs" />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-medium">
-                      {webhook.name}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <Badge variant="info" className="text-[10px] shrink-0">
-                        {webhook.events?.length || 0} {t('events')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <span className="truncate text-[13px] text-muted-foreground">
-                        {webhook.url}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      {webhook.enabled ? (
-                        <Badge
-                          variant="success"
-                          className="text-[10px] shrink-0"
-                        >
-                          {t('Enabled')}
+                    <TableRow
+                      className="cursor-pointer"
+                      onClick={() => handleUpdate(webhook)}
+                    >
+                      <TableCell className="px-4 py-3">
+                        <CopyableId id={webhook.$id} size="xs" />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 font-medium">
+                        {webhook.name}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <Badge variant="info" className="text-[10px] shrink-0">
+                          {webhook.events?.length || 0} {t('events')}
                         </Badge>
-                      ) : (
-                        <Badge
-                          variant="inactive"
-                          className="text-[10px] shrink-0"
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <span className="truncate text-[13px] text-muted-foreground">
+                          {webhook.url}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {webhook.enabled ? (
+                          <Badge
+                            variant="success"
+                            className="text-[10px] shrink-0"
+                          >
+                            {t('Enabled')}
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="inactive"
+                            className="text-[10px] shrink-0"
+                          >
+                            {t('Disabled')}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end">
+                        <DateTooltip date={webhook.$createdAt} />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end">
+                        <DateTooltip date={webhook.$updatedAt} />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end">
+                        <div
+                          className="flex justify-end"
+                          onClick={(event) => event.stopPropagation()}
                         >
-                          {t('Disabled')}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end">
-                      <DateTooltip date={webhook.$createdAt} />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end">
-                      <DateTooltip date={webhook.$updatedAt} />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-end">
-                      <div
-                        className="flex justify-end"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <RowActionsMenuTrigger
-                              aria-label={`${t('Actions for')} ${webhook.name}`}
-                            />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuItem
-                              onClick={() => handleUpdate(webhook)}
-                            >
-                              <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>
-                                <MenuItemIcon icon={Copy} />
-                                {t('Copy')}
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    copyToClipboard('ID', webhook.$id)
-                                  }
-                                >
-                                  <MenuItemContent icon={Copy}>
-                                    {t('Copy ID')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    copyToClipboard('Name', webhook.name)
-                                  }
-                                >
-                                  <MenuItemContent icon={Copy}>
-                                    {t('Copy name')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    copyToClipboard(
-                                      'Link',
-                                      getWebhookHref(webhook),
-                                    )
-                                  }
-                                >
-                                  <MenuItemContent icon={Link2}>
-                                    {t('Copy link')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    void copyResourceAsJson(() =>
-                                      fetchProjectWebhook(
-                                        projectId,
-                                        webhook.$id,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  <MenuItemContent icon={FileJson}>
-                                    {t('Copy as JSON')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() =>
-                                openInNewTab(getWebhookHref(webhook))
-                              }
-                            >
-                              <MenuItemContent icon={ExternalLink}>
-                                {t('Open in new tab')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                openInNewWindow(getWebhookHref(webhook))
-                              }
-                            >
-                              <MenuItemContent icon={Square}>
-                                {t('Open in new window')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => requestDelete(webhook)}
-                            >
-                              <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <RowActionsMenuTrigger
+                                aria-label={`${t('Actions for')} ${webhook.name}`}
+                              />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem
+                                onClick={() => handleUpdate(webhook)}
+                              >
+                                <MenuItemContent icon={Pencil}>
+                                  {t('Update')}
+                                </MenuItemContent>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                  <MenuItemIcon icon={Copy} />
+                                  {t('Copy')}
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      copyToClipboard('ID', webhook.$id)
+                                    }
+                                  >
+                                    <MenuItemContent icon={Copy}>
+                                      {t('Copy ID')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      copyToClipboard('Name', webhook.name)
+                                    }
+                                  >
+                                    <MenuItemContent icon={Copy}>
+                                      {t('Copy name')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      copyToClipboard(
+                                        'Link',
+                                        getWebhookHref(webhook),
+                                      )
+                                    }
+                                  >
+                                    <MenuItemContent icon={Link2}>
+                                      {t('Copy link')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      void copyResourceAsJson(() =>
+                                        fetchProjectWebhook(
+                                          projectId,
+                                          webhook.$id,
+                                        ),
+                                      )
+                                    }
+                                  >
+                                    <MenuItemContent icon={FileJson}>
+                                      {t('Copy as JSON')}
+                                    </MenuItemContent>
+                                  </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                              </DropdownMenuSub>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  openInNewTab(getWebhookHref(webhook))
+                                }
+                              >
+                                <MenuItemContent icon={ExternalLink}>
+                                  {t('Open in new tab')}
+                                </MenuItemContent>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  openInNewWindow(getWebhookHref(webhook))
+                                }
+                              >
+                                <MenuItemContent icon={Square}>
+                                  {t('Open in new window')}
+                                </MenuItemContent>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => requestDelete(webhook)}
+                              >
+                                <MenuItemContent icon={Trash2}>
+                                  {t('Delete')}
+                                </MenuItemContent>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   </WebhookContextMenu>
                 ))}
               </TableBody>
@@ -405,6 +438,7 @@ export function Webhooks({
         webhook={selectedWebhook}
         onSuccess={() => setSelectedWebhook(null)}
         onDelete={requestDelete}
+        initial={selectedWebhook ? undefined : initial}
       />
 
       <Dialog
@@ -419,7 +453,9 @@ export function Webhooks({
             <DialogDescription className="text-[13px] mt-2">
               {t('Are you sure you want to delete')}{' '}
               <strong>{webhookToDelete?.name || t('this webhook')}</strong>?{' '}
-              {t('It will stop receiving events immediately. This action cannot be undone.')}
+              {t(
+                'It will stop receiving events immediately. This action cannot be undone.',
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

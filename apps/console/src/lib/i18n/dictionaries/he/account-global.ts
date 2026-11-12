@@ -406,7 +406,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Login with Bitbucket': 'התחברות עם Bitbucket',
   'Login with GitHub': 'התחברות עם GitHub',
   'Login with GitLab': 'התחברות עם GitLab',
-  'Login with Google': 'התחברות עם Google',
+  'Sign in with Google': 'התחברות עם Google',
   Login: 'התחברות',
   'New Password': 'סיסמה חדשה',
   'No verification methods are available for this account. Contact support if you need help signing in.':
@@ -845,8 +845,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'This permanently deletes the model credentials.':
     'פעולה זו מוחקת את פרטי הגישה של המודל לצמיתות.',
   'Delete model': 'מחיקת מודל',
-  'Model deleted': 'המודל נמחק',
-  'Failed to delete model': 'מחיקת המודל נכשלה',
   'Failed to resolve project': 'פתרון הפרויקט נכשל',
   'Appwrite MCP connected': 'Appwrite MCP חובר',
   'Appwrite MCP disconnected': 'Appwrite MCP נותק',
@@ -1262,7 +1260,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Close panel': 'סגירת החלונית',
   'Switch to dark mode': 'מעבר למצב כהה',
   'Switch to light mode': 'מעבר למצב בהיר',
-  'Use system theme': 'שימוש בערכת הנושא של המערכת',
 
   // GitHub Education program sign-up flow (/education/join)
   'Appwrite and GitHub': 'Appwrite ו-GitHub',
@@ -1299,6 +1296,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Signing you in': 'מחברים אתכם',
   'Please wait while we confirm your magic URL.':
     'המתינו בזמן שאנחנו מאמתים את ה-Magic URL שלכם.',
+  'Continue and sign in to this project instead?':
+    'להמשיך ולהתחבר לפרויקט הזה במקום זאת?',
   'Unable to sign you in': 'לא ניתן לחבר אתכם',
   'Go to sign in': 'מעבר להתחברות',
   'Access granted': 'הגישה אושרה',
@@ -1359,4 +1358,106 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Remove profile photo': 'הסרת תמונת פרופיל',
   'Your avatar goes back to the picture from your connected sign-in provider, Gravatar, or your initials. You can upload a new photo at any time.':
     'האווטאר שלכם יחזור לתמונה מספק ה-OAuth המחובר, ל-Gravatar או לראשי התיבות שלכם. אפשר להעלות תמונה חדשה בכל עת.',
+  // Console passkeys: sign-in and account management
+  'Sign in with a passkey': 'התחברות עם מפתח גישה',
+  'Failed to sign in with a passkey': 'ההתחברות עם מפתח גישה נכשלה',
+  'Passkeys are not set up for this domain.':
+    'מפתחות גישה לא הוגדרו עבור הדומיין הזה.',
+  'That passkey is not recognized. It may have been removed from your account.':
+    'מפתח הגישה הזה לא מזוהה. ייתכן שהוא הוסר מהחשבון שלכם.',
+  'The passkey sign-in expired. Please try again.':
+    'תוקף ההתחברות עם מפתח הגישה פג. נסו שוב.',
+  'Passkey sign-in is not available right now.':
+    'התחברות עם מפתח גישה אינה זמינה כרגע.',
+  'This account has been blocked.': 'החשבון הזה נחסם.',
+  'Your browser could not use a passkey. Please try again.':
+    'הדפדפן שלכם לא הצליח להשתמש במפתח גישה. נסו שוב.',
+  'For your security, sign in again before changing your passkeys.':
+    'לביטחונכם, התחברו מחדש לפני שינוי מפתחות הגישה.',
+  'You can add up to 10 passkeys. Remove one to add another.':
+    'ניתן להוסיף עד 10 מפתחות גישה. הסירו אחד כדי להוסיף אחר.',
+  'This passkey is already added to your account.':
+    'מפתח הגישה הזה כבר נוסף לחשבון שלכם.',
+  'The passkey could not be verified. Please try again.':
+    'לא ניתן היה לאמת את מפתח הגישה. נסו שוב.',
+  'The request expired. Please try again.': 'תוקף הבקשה פג. נסו שוב.',
+  'Passkeys are not available right now.': 'מפתחות גישה אינם זמינים כרגע.',
+  'Sign in again': 'התחברות מחדש',
+  'Passkey added': 'מפתח הגישה נוסף',
+  'Failed to add passkey': 'הוספת מפתח הגישה נכשלה',
+  'Passkey renamed': 'שם מפתח הגישה שונה',
+  'Failed to rename passkey': 'שינוי שם מפתח הגישה נכשל',
+  'Passkey deleted': 'מפתח הגישה נמחק',
+  'Failed to delete passkey': 'מחיקת מפתח הגישה נכשלה',
+  'Sign in with your fingerprint, face or device PIN instead of a password.':
+    'התחברו עם טביעת אצבע, זיהוי פנים או קוד PIN של המכשיר במקום סיסמה.',
+  'Add passkey': 'הוספת מפתח גישה',
+  'Passkeys are not supported in this browser.':
+    'מפתחות גישה אינם נתמכים בדפדפן הזה.',
+  'Failed to load passkeys': 'טעינת מפתחות הגישה נכשלה',
+  'Try again': 'נסו שוב',
+  'No passkeys yet': 'אין עדיין מפתחות גישה',
+  'Add a passkey to sign in without your password.':
+    'הוסיפו מפתח גישה כדי להתחבר בלי הסיסמה שלכם.',
+  Added: 'נוסף',
+  'Passkey name': 'שם מפתח הגישה',
+  'Save name': 'שמירת השם',
+  'Rename passkey': 'שינוי שם מפתח הגישה',
+  'Delete passkey': 'מחיקת מפתח הגישה',
+  'Your browser will ask you to create a passkey on this device or in your password manager.':
+    'הדפדפן יבקש מכם ליצור מפתח גישה במכשיר הזה או במנהל הסיסמאות שלכם.',
+  'You will no longer be able to sign in with this passkey. This action cannot be undone.':
+    'לא תוכלו עוד להתחבר עם מפתח הגישה הזה. לא ניתן לבטל פעולה זו.',
+  'Set up auto-pay': 'הגדרת תשלום אוטומטי',
+  'Auto-pay is set up': 'התשלום האוטומטי הוגדר',
+  'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
+
+  // Zero projects
+  'Build window ended': 'חלון הבנייה הסתיים',
+  'Build window ended.': 'חלון הבנייה הסתיים.',
+  'Claim it to keep it': 'תבעו בעלות כדי לשמור עליו',
+  'Claim project': 'תביעת בעלות על הפרויקט',
+  'Claim this project to create more projects':
+    'תבעו בעלות על הפרויקט כדי ליצור פרויקטים נוספים',
+  'Claim this project to create organizations':
+    'תבעו בעלות על הפרויקט כדי ליצור ארגונים',
+  'Claim this project to set a password':
+    'תבעו בעלות על הפרויקט כדי להגדיר סיסמה',
+  'Claim this project to set an email':
+    'תבעו בעלות על הפרויקט כדי להגדיר אימייל',
+  'Claim within {time} or the project is deleted.':
+    'תבעו בעלות בתוך {time}, אחרת הפרויקט יימחק.',
+  'This project is paused and its data is kept until the claim deadline. Claim it to keep building.':
+    'הפרויקט מושהה והנתונים שלו נשמרים עד המועד האחרון לתביעת בעלות. תבעו בעלות כדי להמשיך לבנות.',
+  'Claim your project': 'תביעת בעלות על הפרויקט',
+  'Could not sign out. Try again.': 'לא ניתן היה להתנתק. נסו שוב.',
+  'Project deleted': 'הפרויקט נמחק',
+  'This is a temporary project. Open the claim link you were given to keep it.':
+    'זהו פרויקט זמני. פתחו את קישור תביעת הבעלות שקיבלתם כדי לשמור עליו.',
+  'This project was not claimed in time and has been deleted.':
+    'לא נתבעה בעלות על הפרויקט בזמן והוא נמחק.',
+  'This project was not claimed in time, so it and its data were deleted.':
+    'לא נתבעה בעלות על הפרויקט בזמן, ולכן הוא והנתונים שלו נמחקו.',
+  'Zero project': 'פרויקט Zero',
+  '{time} left to build': 'נותרו {time} לבנייה',
+  'A project moves into one of your organizations. Create one to receive it.':
+    'פרויקט עובר לאחד מהארגונים שלכם. צרו ארגון כדי לקבל אותו.',
+  'Could not create the organization': 'לא ניתן היה ליצור את הארגון',
+  'Create a free organization': 'יצירת ארגון חינמי',
+  'Create an account to keep this project, with everything already built in it.':
+    'צרו חשבון כדי לשמור את הפרויקט, עם כל מה שכבר בניתם בו.',
+  'Sign in or create an account to claim this project.':
+    'התחברו או צרו חשבון כדי לתבוע בעלות על הפרויקט.',
+  'The build window ended and the project is paused. Create an account to claim it and bring it back with all its data.':
+    'חלון הבנייה הסתיים והפרויקט מושהה. צרו חשבון כדי לתבוע בעלות עליו ולהחזיר אותו עם כל הנתונים שלו.',
+  'Project already claimed': 'כבר נתבעה בעלות על הפרויקט',
+  'This project now belongs to an account. Sign in to that account to open it.':
+    'הפרויקט שייך עכשיו לחשבון. התחברו לחשבון הזה כדי לפתוח אותו.',
+  'Owner role required': 'נדרש תפקיד בעלים',
+  'Only an owner of the organization can claim a project into it.':
+    'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו.',
+  'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.':
+    'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו. צרו ארגון בבעלותכם כדי לקבל אותו.',
+  'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.':
+    'עד שתיתבע בעלות על הפרויקט, האתר נפתח רק במכשיר שפתח את קישור הבעלים שלו. השתמשו קודם ב-Visit באותו מכשיר.',
 }

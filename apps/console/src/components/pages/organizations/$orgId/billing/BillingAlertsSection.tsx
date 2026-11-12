@@ -13,6 +13,11 @@ import {
   useOrganizationById,
   useUpdateOrganizationBudget,
 } from '@/lib/react-query/hooks'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  budgetRecipients,
+  changedBudgetRecipients,
+} from '@/lib/appwrite/organization-budget'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 
@@ -23,9 +28,12 @@ import { useT } from '@/lib/i18n/translate'
  * - List of configured alerts with toggle switches
  * - Add new alert with threshold dropdown
  * - Remove existing alerts
+ * - Pick the organization roles the alerts are emailed to, in editions
+ *   that return `budgetNotify`
  *
  * Props:
  * - orgId?: string - Organization ID
+ * - recipientsEnabled?: boolean - Whether the recipients picker may show
  *
  * State:
  * - alerts: number[] - Current alert threshold percentages
@@ -33,11 +41,23 @@ import { useT } from '@/lib/i18n/translate'
 
 const AVAILABLE_THRESHOLDS = [25, 50, 75, 90, 100]
 
+const RECIPIENT_ROLES = [
+  { value: 'owner', label: 'Owner' },
+  { value: 'developer', label: 'Developer' },
+  { value: 'editor', label: 'Editor' },
+  { value: 'analyst', label: 'Analyst' },
+  { value: 'billing', label: 'Billing' },
+] as const
+
 interface BillingAlertsSectionProps {
   orgId?: string
+  recipientsEnabled?: boolean
 }
 
-export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
+export function BillingAlertsSection({
+  orgId,
+  recipientsEnabled = false,
+}: BillingAlertsSectionProps) {
   const t = useT()
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const updateBudgetMutation = useUpdateOrganizationBudget()
@@ -48,6 +68,7 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
   const alerts = organization?.budgetAlerts || []
   const budget = organization?.billingBudget || 0
   const enabled = budget > 0
+  const recipients = recipientsEnabled ? budgetRecipients(organization) : null
 
   const usedThresholds = alerts
   const availableThresholds = AVAILABLE_THRESHOLDS.filter(
@@ -91,6 +112,29 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : t('Failed to remove alert'),
+      )
+    }
+  }
+
+  const handleRecipientsChange = async (next: string[]) => {
+    if (!orgId || !recipients) return
+
+    const notify = changedBudgetRecipients(recipients, next)
+    if (!notify) return
+
+    try {
+      await updateBudgetMutation.mutateAsync({
+        organizationId: orgId,
+        budget,
+        alerts,
+        notify,
+      })
+      toast.success(t('Recipients updated'))
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t('Failed to update recipients'),
       )
     }
   }
@@ -142,7 +186,9 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
       {/* Description */}
       <div className="border-t border-border px-6 py-4">
         <p className="text-[13px] text-muted-foreground">
-          {t('Get notified when your spending reaches certain thresholds of your budget.')}
+          {t(
+            'Get notified when your spending reaches certain thresholds of your budget.',
+          )}
         </p>
       </div>
 
@@ -191,6 +237,50 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
           <p className="text-[13px] text-muted-foreground">
             {t('No billing alerts configured')}
           </p>
+        </div>
+      )}
+
+      {/* Recipients */}
+      {recipients && (
+        <div className="border-t border-border px-6 py-4">
+          <p className="text-[13px] font-medium text-foreground">
+            {t('Recipients')}
+          </p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
+            {t('Members with these roles are emailed when an alert fires.')}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+            {RECIPIENT_ROLES.map((role) => {
+              const checked = recipients.includes(role.value)
+              return (
+                <label
+                  key={role.value}
+                  className="flex items-center gap-2 text-[13px] text-foreground has-[button:disabled]:cursor-not-allowed has-[button:disabled]:opacity-60"
+                >
+                  <Checkbox
+                    checked={checked}
+                    disabled={
+                      updateBudgetMutation.isPending ||
+                      (checked && recipients.length === 1)
+                    }
+                    onCheckedChange={(next) =>
+                      handleRecipientsChange(
+                        next === true
+                          ? [...recipients, role.value]
+                          : recipients.filter((value) => value !== role.value),
+                      )
+                    }
+                  />
+                  {t(role.label)}
+                </label>
+              )
+            })}
+          </div>
+          {recipients.length === 1 && (
+            <p className="mt-2 text-[12px] text-muted-foreground">
+              {t('At least one role must receive budget alerts.')}
+            </p>
+          )}
         </div>
       )}
 

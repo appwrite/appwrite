@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Notifications;
 
 use Ahc\Jwt\JWT;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 /**
@@ -509,7 +509,7 @@ trait NotificationsBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin',
         ], [
-            'webhookId' => ID::unique(),
+            'webhookId' => Id::unique(),
             'name' => $webhookName,
             'events' => ['users.*.create'],
             'url' => 'http://request-catcher-webhook:1/',
@@ -531,7 +531,7 @@ trait NotificationsBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
             ], $this->getHeaders()), [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'password' => 'password',
                 'name' => 'Webhook Failure Driver',
@@ -598,7 +598,7 @@ trait NotificationsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Stranger',

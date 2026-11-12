@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { Download, Plus, X } from 'lucide-react'
-import type { Models } from '@appwrite.io/console'
+import { Download, Globe, Plus, Shield, X } from 'lucide-react'
+import type { AnalyticsPropertyType, Models } from '@appwrite.io/console'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -16,6 +24,11 @@ import {
   useUpdateAnalyticsProperty,
   type UpdateAnalyticsPropertyInput,
 } from '@/lib/react-query/hooks'
+import {
+  ANALYTICS_PROPERTY_TYPES,
+  ANALYTICS_PROPERTY_TYPE_META,
+  propertyType,
+} from '@/lib/analytics-wizard/property-types'
 import { DeleteProperty } from './DeleteProperty'
 import { InstallTrackingDialog } from './InstallTrackingDialog'
 
@@ -46,6 +59,8 @@ export function PropertySettings({
   const [originInput, setOriginInput] = useState('')
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [installOpen, setInstallOpen] = useState(false)
+  // The Install modal opens in proxy mode from the ad blockers card.
+  const [installWithProxy, setInstallWithProxy] = useState(false)
 
   // Re-seed the form whenever the property is refetched.
   useEffect(() => {
@@ -104,6 +119,43 @@ export function PropertySettings({
   return (
     <div className="w-full px-4 py-4 sm:px-6">
       <div className="space-y-6">
+        {/* Details: first, same card as Functions and Sites settings. */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Details')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t('Identifiers and timestamps for this property.')}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4 space-y-1">
+            <p className="text-[13px] text-muted-foreground">
+              {t('Property ID:')}{' '}
+              <span className="ms-1.5">
+                <CopyableId id={property.$id} size="sm" />
+              </span>
+            </p>
+            <p className="text-[13px] text-muted-foreground">
+              {t('Created:')}{' '}
+              <DateTooltip
+                date={new Date(property.$createdAt)}
+                showFormattedDate
+                className="text-foreground"
+              />
+            </p>
+            <p className="text-[13px] text-muted-foreground">
+              {t('Last updated:')}{' '}
+              <DateTooltip
+                date={new Date(property.$updatedAt || property.$createdAt)}
+                showFormattedDate
+                className="text-foreground"
+              />
+            </p>
+          </div>
+        </div>
+
         {/* Integration: the instructions live in the Install modal. */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
@@ -116,23 +168,14 @@ export function PropertySettings({
                   'Add tracking to your site or app with the Web or Flutter SDK, or send events over REST.',
                 )}
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-muted-foreground">
-                <span className="inline-flex items-center gap-2">
-                  {t('Property ID')}
-                  <CopyableId id={property.$id} size="xs" />
-                </span>
-                {property.snippetId ? (
-                  <span className="inline-flex items-center gap-2">
-                    {t('Snippet ID')}
-                    <CopyableId id={property.snippetId} size="xs" />
-                  </span>
-                ) : null}
-              </div>
             </div>
             <Button
               size="sm"
               className="h-9 gap-1.5 text-[13px]"
-              onClick={() => setInstallOpen(true)}
+              onClick={() => {
+                setInstallWithProxy(false)
+                setInstallOpen(true)
+              }}
             >
               <Download className="h-3.5 w-3.5" />
               {t('Install')}
@@ -144,7 +187,84 @@ export function PropertySettings({
           onOpenChange={setInstallOpen}
           projectId={projectId}
           property={property}
+          initialProxy={installWithProxy}
         />
+
+        {/* Ad blockers: two ways to serve tracking from a domain you own. */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Ad blockers')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(
+                'Ad blockers can stop requests to analytics services, so some visits are never counted. Serving tracking from a domain you own recovers most of them.',
+              )}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="divide-y divide-border">
+            <div className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+              <div className="flex min-w-0 items-start gap-3">
+                <Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-foreground">
+                    {t('Custom domain')}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+                    {t(
+                      'Serve the Appwrite API on your own domain and use it as the endpoint in your tracking code. Visitor locations stay accurate with no extra setup.',
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 shrink-0 text-[13px]"
+                onClick={() =>
+                  navigate({
+                    to: '/projects/$projectId/settings/domains',
+                    params: { projectId },
+                  })
+                }
+              >
+                {t('Custom domains')}
+              </Button>
+            </div>
+            <div className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+              <div className="flex min-w-0 items-start gap-3">
+                <Shield className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[13px] font-medium text-foreground">
+                      {t('Proxy')}
+                    </p>
+                    <Badge variant="success" className="text-[10px] shrink-0">
+                      {t('Recommended')}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
+                    {t(
+                      'Forward events through a small proxy on your site. Requests never leave your domain, so it holds up best against blocking.',
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 shrink-0 text-[13px]"
+                onClick={() => {
+                  setInstallWithProxy(true)
+                  setInstallOpen(true)
+                }}
+              >
+                {t('Set up proxy')}
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* Name */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -177,6 +297,42 @@ export function PropertySettings({
             >
               {t('Update')}
             </Button>
+          </div>
+        </div>
+
+        {/* Type */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Type')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t('Only changes which panels the dashboard shows.')}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <Select
+              value={propertyType(property)}
+              onValueChange={(next) =>
+                applyUpdate(
+                  { type: next as AnalyticsPropertyType },
+                  t('Type updated'),
+                )
+              }
+              disabled={isBusy}
+            >
+              <SelectTrigger className="h-9 w-full max-w-sm text-[13px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ANALYTICS_PROPERTY_TYPES.map((id) => (
+                  <SelectItem key={id} value={id}>
+                    {t(ANALYTICS_PROPERTY_TYPE_META[id].label)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -216,6 +372,44 @@ export function PropertySettings({
           </div>
         </div>
 
+        {/* User identification */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('User identification')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(
+                "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.",
+              )}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="property-identify-users"
+                checked={!!property.identifyUsers}
+                disabled={isBusy}
+                onCheckedChange={(checked) =>
+                  applyUpdate(
+                    { identifyUsers: checked },
+                    checked
+                      ? t('User identification enabled')
+                      : t('User identification disabled'),
+                  )
+                }
+              />
+              <Label
+                htmlFor="property-identify-users"
+                className="text-[13px] text-foreground"
+              >
+                {t('Identify signed-in users')}
+              </Label>
+            </div>
+          </div>
+        </div>
+
         {/* Domain */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
@@ -226,7 +420,9 @@ export function PropertySettings({
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
-              {t('Primary domain being tracked. Optional for native apps.')}
+              {t(
+                'Primary domain being tracked. May be empty for mobile and agent properties.',
+              )}
             </p>
             <Input
               value={domain}
@@ -326,44 +522,6 @@ export function PropertySettings({
             >
               {t('Update')}
             </Button>
-          </div>
-        </div>
-
-        {/* Identifiers */}
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              {t('Property details')}
-            </h3>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4 space-y-3">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <span className="text-[13px] text-muted-foreground">
-                {t('Property ID')}
-              </span>
-              <CopyableId id={property.$id} size="xs" />
-            </div>
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <span className="text-[13px] text-muted-foreground">
-                {t('Snippet ID')}
-              </span>
-              {property.snippetId ? (
-                <CopyableId id={property.snippetId} size="xs" />
-              ) : (
-                <span className="text-[13px] text-muted-foreground">-</span>
-              )}
-            </div>
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <span className="text-[13px] text-muted-foreground">
-                {t('Created')}
-              </span>
-              <DateTooltip
-                date={new Date(property.$createdAt)}
-                showFormattedDate
-                className="text-[13px] text-foreground"
-              />
-            </div>
           </div>
         </div>
 

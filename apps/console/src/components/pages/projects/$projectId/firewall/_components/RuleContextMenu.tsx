@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import type { FirewallRule } from '@/lib/firewall/types'
 import {
   Copy,
   ExternalLink,
@@ -23,6 +23,10 @@ import {
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { fetchFirewallRule } from '@/lib/react-query/hooks'
 import {
+  firewallTabPath,
+  resolveFirewallListSearch,
+} from '@/lib/firewall/conditions'
+import {
   buildConsoleUrl,
   copyResourceAsJson,
   copyToClipboard,
@@ -34,12 +38,12 @@ import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface RuleContextMenuProps {
   projectId: string
-  rule: Models.WafRule
+  rule: FirewallRule
   canWrite: boolean
   togglePending?: boolean
-  onUpdate: (rule: Models.WafRule) => void
-  onToggleEnabled: (rule: Models.WafRule) => void
-  onDelete: (rule: Models.WafRule) => void
+  onUpdate: (rule: FirewallRule) => void
+  onToggleEnabled: (rule: FirewallRule) => void
+  onDelete: (rule: FirewallRule) => void
   children: React.ReactNode
 }
 
@@ -54,7 +58,9 @@ export function RuleContextMenu({
   children,
 }: RuleContextMenuProps) {
   const t = useT()
-  const ruleHref = buildConsoleUrl(`/projects/${projectId}/firewall`)
+  const ruleHref = buildConsoleUrl(
+    firewallTabPath(projectId, resolveFirewallListSearch(rule)),
+  )
 
   return (
     <ContextMenu>
@@ -81,9 +87,7 @@ export function RuleContextMenu({
             {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            <ContextMenuItem
-              onSelect={() => copyToClipboard('ID', rule.$id)}
-            >
+            <ContextMenuItem onSelect={() => copyToClipboard('ID', rule.$id)}>
               <ContextMenuIcon icon={Copy} />
               {t('Copy ID')}
             </ContextMenuItem>
@@ -93,9 +97,7 @@ export function RuleContextMenu({
               <ContextMenuIcon icon={Copy} />
               {t('Copy name')}
             </ContextMenuItem>
-            <ContextMenuItem
-              onSelect={() => copyToClipboard('Link', ruleHref)}
-            >
+            <ContextMenuItem onSelect={() => copyToClipboard('Link', ruleHref)}>
               <ContextMenuIcon icon={Link2} />
               {t('Copy link')}
             </ContextMenuItem>

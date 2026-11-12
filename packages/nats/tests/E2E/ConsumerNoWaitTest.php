@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Utopia\NATS\Tests\E2E;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Connection;
+use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\JetStream\AckPolicy;
 use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\JetStream;
 use Utopia\NATS\JetStream\StorageType;
 use Utopia\NATS\JetStream\StreamConfig;
+use Utopia\NATS\Tests\Support\LateReadTransport;
+use Utopia\NATS\Transport\TcpTransport;
 
 /**
  * What a no_wait pull request costs against a real server.
@@ -148,5 +152,81 @@ final class ConsumerNoWaitTest extends TestCase
             $elapsed,
             'A waiting fetch must return near its own timeout, not the server default',
         );
+    }
+
+    /**
+     * The server answers a no_wait pull at once and counts every message in the
+     * answer as delivered. A caller that reads it after the short timeout -- a
+     * coroutine held off by busy neighbours -- must still get all of them, or
+     * the rest sit unacknowledged until ackWait and are charged an attempt.
+     */
+    #[DataProvider('lateness')]
+    public function testNoWaitFetchReadAfterItsTimeoutLeavesNothingDeliveredBehind(string $how): void
+    {
+        [$stream, $subject] = $this->createStream();
+        for ($i = 0; $i < 5; $i++) {
+            $this->js->publish($subject, "m{$i}");
+        }
+
+        $late = new LateReadTransport(new TcpTransport());
+        $conn = Connection::connect(new ConnectionOptions(
+            servers: $this->getServerUrl(),
+            transportFactory: fn (string $scheme): LateReadTransport => $late,
+        ));
+        $consumer = $conn->jetStream()->createConsumer($stream, new ConsumerConfig(
+            durableName: 'late',
+            ackPolicy: AckPolicy::Explicit,
+            filterSubject: $subject,
+        ));
+
+        if ($how === 'held off') {
+            // Far past the timeout: however long the reader is held off, the
+            // answer is already on the socket.
+            $late->delayNextRead(1.2);
+        } else {
+            // Not readable until well after the timeout, as on a slow link.
+            $late->arriveAfter(0.3);
+        }
+        $batch = $consumer->fetch(5, 0.05, true);
+
+        $this->assertCount(5, $batch, 'The whole answer reaches the caller');
+        $this->assertSame(
+            0,
+            $consumer->info(true)->numAckPending - \count($batch),
+            'Every delivery the server counted is one the caller holds',
+        );
+
+        $conn->close();
+    }
+
+    /** @return array<string, array{string}> */
+    public static function lateness(): array
+    {
+        return [
+            'reader held off the socket' => ['held off'],
+            'reply still in transit' => ['in transit'],
+        ];
+    }
+
+    public function testPartialNoWaitFetchReturnsWithoutWaitingOutTheTimeout(): void
+    {
+        [$stream, $subject] = $this->createStream();
+        $consumer = $this->js->createConsumer($stream, new ConsumerConfig(
+            durableName: 'partial',
+            ackPolicy: AckPolicy::Explicit,
+            filterSubject: $subject,
+        ));
+        $this->js->publish($subject, 'm0');
+        $this->js->publish($subject, 'm1');
+
+        // Fewer messages than asked for: the server sends them and then 404s,
+        // which is what has to end the fetch.
+        $timeout = 2.0;
+        $started = microtime(true);
+        $batch = $consumer->fetch(5, $timeout, true);
+        $elapsed = microtime(true) - $started;
+
+        $this->assertCount(2, $batch);
+        $this->assertLessThan($timeout / 4, $elapsed, 'A partial no_wait reply must not wait out the timeout');
     }
 }

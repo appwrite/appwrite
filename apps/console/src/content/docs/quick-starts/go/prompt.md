@@ -31,7 +31,7 @@ go mod init go-appwrite/main
 
 ## Step 3: Install Appwrite SDK
 
-- Run: `go get github.com/appwrite/sdk-for-go`
+- Run: `go get github.com/appwrite/sdk-for-go/v7`
 
 ## Step 4: Import Appwrite and initialize client (ask user for details; never assume)
 
@@ -44,11 +44,11 @@ go mod init go-appwrite/main
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/client"
-    "github.com/appwrite/sdk-for-go/tablesdb"
-    "github.com/appwrite/sdk-for-go/models"
-    "github.com/appwrite/sdk-for-go/query"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/client"
+    "github.com/appwrite/sdk-for-go/v7/tablesdb"
+    "github.com/appwrite/sdk-for-go/v7/models"
+    "github.com/appwrite/sdk-for-go/v7/query"
 )
 
 var (
@@ -68,7 +68,7 @@ func main() {
 
 ## Step 5: Initialize database
 
-- Add import for id: `"github.com/appwrite/sdk-for-go/id"`
+- Add import for id: `"github.com/appwrite/sdk-for-go/v7/id"`
 - Add the `prepareDatabase` function to create a todo database and table with columns:
 
 ```go

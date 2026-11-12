@@ -326,7 +326,7 @@ function topWaitRows(samples) {
     }
 
     return samples.map((sample) => {
-        return `| ${markdownText(sample.name).replace(/\|/g, '\\|')} | ${formatMs(sample.value)} |`;
+        return `| ${markdownText(sample.name).replaceAll('\\', '\\\\').replaceAll('|', '\\|')} | ${formatMs(sample.value)} |`;
     });
 }
 

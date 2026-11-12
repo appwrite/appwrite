@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\JobsSecret;
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Storage\Bytes;
@@ -10,7 +11,7 @@ use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
@@ -84,10 +85,16 @@ class Doctor extends Action
             Console::log('🟢 AAAA record target is valid (' . System::getEnv('_APP_DOMAIN_TARGET_AAAA') . ')');
         }
 
-        if (EncryptionKey::isInsecure(System::getEnv('_APP_OPENSSL_KEY_V1'))) {
+        if (EncryptionKey::isInsecure(EncryptionKey::current())) {
             Console::log('🔴 Not using a unique secret key for encryption');
         } else {
             Console::log('🟢 Using a unique secret key for encryption');
+        }
+
+        if (JobsSecret::isInsecure(System::getEnv('_APP_JOBS_SECRET'))) {
+            Console::log('🔴 Not using a unique secret key for jobs callbacks');
+        } else {
+            Console::log('🟢 Using a unique secret key for jobs callbacks');
         }
 
         if (System::getEnv('_APP_ENV', 'development') !== 'production') {

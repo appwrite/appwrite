@@ -68,6 +68,7 @@ describe('generateAgentSetupMarkdown', () => {
       'zed',
       'opencode',
       'grok',
+      'pi',
     ]) {
       expect(markdown).toContain(
         `npx --yes skills add appwrite/skills -g -a ${agent} -s '*' -y`,

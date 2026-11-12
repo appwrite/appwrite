@@ -6,6 +6,7 @@ import {
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
 import { SOC2_SETTINGS_KEYWORDS } from '@/lib/settings-search/org-settings-cards'
+import { getDpaDownloadUrl } from '@/lib/legal/dpa'
 import { useT } from '@/lib/i18n/translate'
 import { useParams } from '@tanstack/react-router'
 import { BaaSettingsCard } from './_components/BaaSettingsCard'
@@ -64,7 +65,11 @@ export function ComplianceTab() {
               size="sm"
               className="h-9 text-[13px]"
               onClick={() => {
-                window.open('/legal/dpa.pdf', '_blank', 'noopener,noreferrer')
+                window.open(
+                  getDpaDownloadUrl(),
+                  '_blank',
+                  'noopener,noreferrer',
+                )
               }}
             >
               {t('Download DPA')}
@@ -128,7 +133,9 @@ export function ComplianceTab() {
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30">
             <Button variant="outline" size="sm" className="h-9 text-[13px]" asChild>
-              <ContactSalesLink>{t('Contact sales')}</ContactSalesLink>
+              <ContactSalesLink source="compliance" orgId={organizationId}>
+                {t('Contact sales')}
+              </ContactSalesLink>
             </Button>
           </div>
         </div>

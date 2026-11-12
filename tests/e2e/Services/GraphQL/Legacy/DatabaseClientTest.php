@@ -9,15 +9,19 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\GraphQL\Base;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Tests\E2E\Services\GraphQL\QueryJoinCombos;
+use Tests\E2E\Services\GraphQL\QueryJoinPermissions;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class DatabaseClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
     use Base;
+    use QueryJoinPermissions;
+    use QueryJoinCombos;
 
     /**
      * Cached database data
@@ -51,7 +55,7 @@ final class DatabaseClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DATABASE);
-        $databaseId = ID::unique();
+        $databaseId = Id::unique();
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -92,7 +96,7 @@ final class DatabaseClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_COLLECTION);
-        $collectionId = ID::unique();
+        $collectionId = Id::unique();
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -237,7 +241,7 @@ final class DatabaseClientTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'age' => 35,
@@ -290,7 +294,7 @@ final class DatabaseClientTest extends Scope
         $payload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Bulk',
             ],
         ];
@@ -303,7 +307,7 @@ final class DatabaseClientTest extends Scope
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Operations',
             'documentSecurity' => false,
             'permissions' => [
@@ -341,7 +345,7 @@ final class DatabaseClientTest extends Scope
         $query = $this->getQuery(self::CREATE_DOCUMENTS);
         $documents = [];
         for ($i = 1; $i <= 10; $i++) {
-            $documents[] = ['$id' => ID::unique(), 'name' => 'Doc #' . $i];
+            $documents[] = ['$id' => Id::unique(), 'name' => 'Doc #' . $i];
         }
 
         $payload['query'] = $query;
@@ -437,7 +441,7 @@ final class DatabaseClientTest extends Scope
                 'databaseId' => $data['databaseId'],
                 'collectionId' => $data['collectionId'],
                 'documents' => [
-                    ['$id' => ID::unique(), 'name' => 'Doc #1000'],
+                    ['$id' => Id::unique(), 'name' => 'Doc #1000'],
                     ['name' => 'Doc #11'],
                 ],
             ],
@@ -656,7 +660,7 @@ final class DatabaseClientTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'name' => 'To Be Deleted',
                     'age' => 25,

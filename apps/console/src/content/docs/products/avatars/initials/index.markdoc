@@ -70,7 +70,7 @@ let byteBuffer = try await avatars.getInitials(
 import io.appwrite.Client
 import io.appwrite.services.Avatars
 
-val client = Client()
+val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 

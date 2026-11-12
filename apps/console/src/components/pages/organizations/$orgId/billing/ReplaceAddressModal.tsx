@@ -34,7 +34,6 @@ import {
   useCountries,
   useLocale,
 } from '@/lib/react-query/hooks'
-import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 
 interface ReplaceAddressModalProps {

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Advisor\Http\Reports;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -38,9 +39,7 @@ class Delete extends Action
             ->label('resourceType', RESOURCE_TYPE_REPORTS)
             ->label('audits.event', 'report.delete')
             ->label('audits.resource', 'report/{request.reportId}')
-            ->label('abuse-key', 'projectId:{projectId},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['projectId', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'advisor',
                 group: 'reports',
@@ -55,7 +54,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('reportId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Report ID.', false, ['dbForPlatform'])
+            ->param('reportId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Report ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')

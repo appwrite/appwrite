@@ -43,12 +43,17 @@ interface PhotoAvatarProps {
   useCurrentUser?: boolean
   /** When true, screenshot mode replaces this avatar with the demo user photo. */
   isCurrentUser?: boolean
+  /**
+   * Optional email for Gravatar/Libravatar when `userId` is omitted or
+   * `getPhoto({ userId })` fails. Hashed client-side; never sent raw.
+   */
+  email?: string
   /** Used only for initials fallback when the photo is unavailable. */
   name?: string
   /**
    * What shows under the photo while it loads: the user's initials (default)
-   * or a plain surface. A photo that fails to load still falls back to
-   * initials either way.
+   * or a plain surface. A photo that fails to load falls back to `email`
+   * (Gravatar) when provided, otherwise initials.
    */
   placeholder?: 'initials' | 'blank'
   size?: AvatarSize
@@ -147,6 +152,7 @@ export function PhotoAvatar({
   projectId,
   useCurrentUser = false,
   isCurrentUser = false,
+  email,
   name,
   placeholder = 'initials',
   size = 'md',
@@ -239,6 +245,16 @@ export function PhotoAvatar({
   }, [src])
 
   if (failed || !src) {
+    if (email?.trim()) {
+      return (
+        <EmailAvatar
+          email={email}
+          name={name}
+          size={size}
+          className={className}
+        />
+      )
+    }
     return <InitialsAvatar name={name} size={size} className={className} />
   }
 

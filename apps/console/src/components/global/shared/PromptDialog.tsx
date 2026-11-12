@@ -31,6 +31,7 @@ export type PromptDialogField = {
   multiline?: boolean
   /** Block submit while the trimmed value is empty. Defaults to true. */
   required?: boolean
+  maxLength?: number
 }
 
 type PromptDialogProps = {
@@ -160,6 +161,7 @@ function PromptDialogForm({
             value: values[field.name] ?? '',
             placeholder: field.placeholder ? t(field.placeholder) : undefined,
             autoFocus: index === 0,
+            maxLength: field.maxLength,
             disabled: isSubmitting,
             onChange: (
               event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,

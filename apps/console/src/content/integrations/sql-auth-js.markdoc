@@ -1,0 +1,140 @@
+---
+layout: integration
+title: Auth.js with managed PostgreSQL and MySQL
+description: Store Auth.js users, accounts, and sessions in an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-auth-js/cover.avif
+category: databases
+product:
+    vendor: Auth.js
+    description: 'Auth.js, formerly NextAuth.js, is an open-source authentication library that stores users, accounts, and sessions through database adapters.'
+platform:
+    - 'Cloud'
+---
+
+[Auth.js](https://authjs.dev/), formerly NextAuth.js, is an open-source authentication library for web applications. It persists users, accounts, sessions, and verification tokens through a database adapter, which is what makes database sessions, account linking, and email sign-in possible.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are managed database engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Auth.js reaches them through the same official adapters you would use with any other PostgreSQL or MySQL server, [`@auth/prisma-adapter`](https://authjs.dev/getting-started/adapters/prisma) or [`@auth/drizzle-adapter`](https://authjs.dev/getting-started/adapters/drizzle), so there is no Appwrite-specific configuration.
+
+Your app runtime connects through the database's connection pooler, which absorbs the connection churn of serverless platforms, while schema migrations run over a direct connection to the engine.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To store Auth.js data in an Appwrite native database, there are several steps you must complete. The examples use the Prisma adapter, and the Drizzle adapter follows the same pattern.
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the connection string from the **DSN** or **.env** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Set the connection strings
+
+Give Prisma two URLs: a pooled one for the running app and a direct one for migrations. Store them in environment variables and never commit them.
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+# Runtime: pooler, transaction mode
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require&pgbouncer=true"
+
+# Migrations: direct connection to the engine
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+`pgbouncer=true` turns off server-side prepared statements, which the pooler's transaction mode does not support. If you run `prisma migrate dev`, point `SHADOW_DATABASE_URL` at a separate database or branch, never at `DIRECT_URL`.
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default?sslaccept=strict"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default?sslaccept=strict"
+```
+
+To send runtime traffic through the pooler, move only `DATABASE_URL` to port `6033` and keep `DIRECT_URL` on `3306`.
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Add the Auth.js schema and migrate
+
+Add the four Auth.js models, `User`, `Account`, `Session`, and `VerificationToken`, to `prisma/schema.prisma` with the `postgresql` or `mysql` provider. Point the Prisma CLI at `DIRECT_URL` in `prisma.config.ts`, because migrations need a session connection with DDL privileges:
+
+```ts
+import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
+
+export default defineConfig({
+    schema: 'prisma/schema.prisma',
+    migrations: { path: 'prisma/migrations' },
+    datasource: { url: env('DIRECT_URL') }
+});
+```
+
+Create the tables before the app serves traffic. On PostgreSQL, run `npx prisma migrate dev --name authjs-init` while developing. On MySQL, generate the migration SQL with `npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script` and save it as a migration file under `prisma/migrations`. In CI and production, apply committed migrations on either engine with `npx prisma migrate deploy`. Always migrate as the primary `admin` user.
+
+## Step 4: Wire the adapter into Auth.js
+
+Create one Prisma Client with the driver adapter for your engine, pointed at the runtime `DATABASE_URL`:
+
+{% tabs %}
+{% tabsitem #client-postgresql title="PostgreSQL" %}
+```ts
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+
+export const prisma = new PrismaClient({ adapter });
+```
+{% /tabsitem %}
+
+{% tabsitem #client-mysql title="MySQL" %}
+```ts
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import { PrismaClient } from '../generated/prisma/client';
+
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL);
+
+export const prisma = new PrismaClient({ adapter });
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Then pass it to Auth.js through the `adapter` key:
+
+```ts
+import NextAuth from 'next-auth';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { prisma } from './prisma';
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+    adapter: PrismaAdapter(prisma),
+    session: { strategy: 'database' },
+    providers: [
+        // your providers, for example GitHub or Google
+    ]
+});
+```
+
+## Step 5: Test the integration
+
+Sign in to your app with one of your providers. With the `database` session strategy, Auth.js writes a row to the sessions table and stores only an opaque session ID in an `HttpOnly` cookie, so you can confirm the sign-in by querying that table. For pull-request previews, create a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch, run `prisma migrate deploy` against it, and test sign-ins on throwaway data.
+
+# Read more about Auth.js and Appwrite Databases
+
+If you would like to learn more about Auth.js and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Auth.js with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/auth-js)
+- [Use Auth.js with a native MySQL database](/docs/products/databases/mysql/integrations/auth-js)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Auth.js database adapters](https://authjs.dev/getting-started/database)

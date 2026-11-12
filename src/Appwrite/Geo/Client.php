@@ -6,7 +6,7 @@ use Psr\Http\Client\ClientInterface;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
 use Utopia\Client\Client as HttpClient;
 use Utopia\Client\Pool as HttpClientPool;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Pool as Connections;
 use Utopia\Psr7\Method;

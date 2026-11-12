@@ -51,5 +51,5 @@ export function isInitTicketStorageConfigured(): boolean {
 export function getInitTicketStorageFileViewUrl(fileId: string): string {
   const { endpoint, projectId, bucketId } = getInitTicketStorageConfig()
   const params = new URLSearchParams({ project: projectId })
-  return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view?${params.toString()}`
+  return `${endpoint}/storage/buckets/${encodeURIComponent(bucketId)}/files/${encodeURIComponent(fileId)}/view?${params.toString()}`
 }

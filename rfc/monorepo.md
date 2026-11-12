@@ -181,12 +181,12 @@ Two steps with very different cost. Step A rides inside each absorb PR; step B i
 | Package | Today | Standard | Appwrite files |
 |---|---|---|---|
 | `validators` | `Utopia\Validator` (base class), `Utopia\Validator\*`, `Utopia\PHPStan` | `Utopia\Validator\Validator`, `Utopia\Validator\PHPStan\*` | 39 |
-| `console` | `Utopia\Console` | `Utopia\Console\Console` | 77 |
+| `console` | `Utopia\Console`, `Utopia\Command` | `Utopia\Console\Console`, `Utopia\Console\Command` | 96 (done; ships as `console/0.3.0`) |
 | `client` | `Utopia\Client`, `Utopia\Psr18\*` | `Utopia\Client\Client`, `Utopia\Client\Psr18\*` | 2 |
 
 Each ships as a major on its mirror with a one-major `class_alias` shim for the old name (`src/compat.php`, autoloaded via `files`), so external consumers upgrade at their own pace. Appwrite and Cloud are updated in the same PR. When the last of the three lands, the bare `Utopia\` list leaves the root autoload for good.
 
-`client` took step B in `utopia-php/monorepo` and released it as `0.5.0` before its absorb, so it never joined the bare `Utopia\` list. Packages here are not installed by Composer, so `bin/monorepo autoload` copies each package's `autoload.files` into the root, which is how the shim loads in Appwrite. The shim registers its aliases up front and guarded: PHP never autoloads a name while checking a declared type, and a package's test run loads both the root and the package autoloader.
+`client` took step B in `utopia-php/monorepo` and released it as `0.5.0` before its absorb, so it never joined the bare `Utopia\` list. `validators` took step B here as `2.0.0`. Its siblings moved to the new base-class name in the same PR and require `^2.0`, so until 2.0.0 is on Packagist they install only `--linked`, which `check` now takes as `test` does. Packages here are not installed by Composer, so `bin/monorepo autoload` copies each package's `autoload.files` into the root, which is how the shim loads in Appwrite. The shim registers its aliases up front and guarded: PHP never autoloads a name while checking a declared type, and a package's test run loads both the root and the package autoloader.
 
 ## Phases
 
@@ -261,6 +261,8 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
 
 `validators` and `console` (step B); `client` did it as `0.5.0` before its absorb. One PR per package: rename, `class_alias` shim, major release on the mirror, Appwrite call sites updated in the same PR. Remove the bare `Utopia\` list from the root map with the last one. Cloud follows through `server-ce`.
 
+Done: `console` in #14261 and `validators` in #14263. The root autoload no longer declares the bare `Utopia\` prefix, and `BARE` in `bin/monorepo` is empty, so `validate` rejects that prefix for every package.
+
 ### Phase 7. Retire the old homes and move Cloud
 
 - Archive `utopia-php/monorepo` with a README pointer here. Archive `fastly` and `replication` (`nats` already lives in `packages/`); place `reputation` per the phase 0 decision.
@@ -287,6 +289,7 @@ Exit: `composer.lock` contains no `utopia-php/*` package.
   - `dsn`: 4 findings (it had no PHPStan config on its standalone repository): the untyped `$params` array, `parse_url()`'s integer port stored in a `?string` property, and `getParam()` returning the `mixed` parsed query value.
   - `emails`: 25 findings, all in `src` (its standalone repository analysed it at level 4): unvalued `array` types on the canonical providers' domain lists and `Email`'s parts and domain caches, and concatenation of `mixed` parts in `Email`.
   - `http`: 394 findings (level 7 in the monorepo): 81 in `src`, casts and offset access on `mixed` request globals, Swoole server stats and the `__utopia__` coroutine context in the FPM and Swoole adapters, and the `mixed` param and injection definitions in `Http`; 313 in its tests, mostly calls on nullable `?Request`, `?Response`, `?Route` and `?Http` fixtures in `RequestTest`, `HttpTest` and `RouteTest`.
+  - `migration`: 1,716 findings (its standalone repository analysed it at level 3): 1,453 in `src`, nearly all arguments and offset access on the `mixed` SDK, REST and PDO results the sources read, led by `Sources\Appwrite` (481), `Destinations\Appwrite` (184), `Sources\Firebase` (104) and `Sources\NHost` (89); 263 in its tests, mostly the decoded rows in the Supabase and NHost e2e tests and the untyped mock source and destination.
   - `mqtt`: 82 findings (its own repository analysed it at level max under PHPStan 1): `chr()` arguments not narrowed to `int<0, 255>` and casts from `mixed` in the packet codecs and `Property`, untyped Swoole client and request fields in `Client` and the Swoole adapter, and loosely typed data providers and e2e assertions in its tests.
   - `nats`: 445 findings (level 5 in the monorepo): 292 in `src`, nearly all arguments, offset access and casts on the decoded `mixed` JSON in the `fromArray()` builders of the JetStream, KeyValue and ObjectStore configs and infos (`StreamConfig`, `ConsumerConfig`), `ServerInfo` and `Connection`; 153 in its tests, generator key types and decoded protocol frames in `ConnectionDeathDetectionTest`, `ParserTest` and `RequestsTest`, and decoded service replies in the `ServiceTest` and `ServiceExtrasTest` e2e tests.
   - `openapi`: 166 findings (level 5 in the monorepo), nearly all offset access on the decoded `mixed` document in its readers.

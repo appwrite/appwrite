@@ -42,6 +42,7 @@ import { VCSDetectionType } from '@appwrite.io/console'
 import {
   useRepositories,
   useNamespacesForInstallations,
+  useConsoleVariables,
 } from '@/lib/react-query/hooks'
 import { getVcsInstallationErrorKind } from '@/lib/utils/error-formatting'
 import { VcsInstallationErrorState } from '@/components/global/shared/VcsInstallationError'
@@ -117,7 +118,8 @@ export function RepositoryPicker({
 }: RepositoryPickerProps) {
   const t = useT()
   const { features } = useConsoleProfile()
-  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features.extraVcsOAuth)
+  const { vcsProviders } = useConsoleVariables()
+  const vcsOAuthProviders = getVisibleVcsOAuthProviders(features, vcsProviders)
   const vcsAuthUrl = (
     provider?: VcsProviderId,
     mode: 'create' | 'update' = 'create',

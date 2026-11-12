@@ -11,7 +11,7 @@ import { z } from 'zod'
 
 const searchSchema = z
   .object({
-    createOrg: z.boolean().optional(),
+    createOrg: z.stringbool().optional(),
   })
   .passthrough()
 

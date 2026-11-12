@@ -33,7 +33,6 @@ export interface CommandContext {
   features: ConsoleProfileFeatures
   access: ConsoleAccess
   /** The signed-in user sees project passkey settings (Cloud rollout flag). */
-  passkeys: boolean
   isMobile: boolean
   /** Imperative navigation (history-pushing). */
   navigate: (to: string) => void
@@ -51,7 +50,7 @@ export interface CommandContext {
     onOrgInviteMember?: () => void
     onOrgCreateProject?: () => void
     onToggleTerminal?: () => void
-    onSetTheme?: (theme: 'light' | 'dark' | 'system') => void
+    onSetTheme?: (theme: 'light' | 'dark') => void
     /** Open project Connect dialog on the MCP tab. */
     onOpenConnectMcp?: () => void
   }

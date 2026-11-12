@@ -1,10 +1,14 @@
 import type { Models } from '@appwrite.io/console'
 import type { DateRange } from 'react-day-picker'
-import { endOfDay, startOfDay, subDays, subHours } from 'date-fns'
 import {
   getLogRetentionFloor,
+  isUsageDateRangePresetWithinRetention,
   UNLIMITED_LOG_RETENTION_HOURS,
 } from '@/lib/date-range-retention'
+import {
+  getUsageDateRangePresetByValue,
+  type UsageDateRangePreset,
+} from '@/lib/usage/usage-date-range-presets'
 
 /** Fallback when plan retention is unknown (Pro default). */
 export const DEFAULT_ACTIVITY_LOG_RETENTION_DAYS = 30
@@ -51,35 +55,62 @@ export function getActivityLogRetentionFloor(
 }
 
 /**
- * Default picker range for plan retention days.
- *
- * Matches DateRangePicker quick-select math:
- * - Sub-day: rolling `subHours(now, hours)` → `now` (e.g. Last hour)
- * - Whole days: inclusive calendar window `subDays(now, days - 1)` → today
- *   (e.g. 30 days → Last 30 days uses offset 29, not 30×24h)
+ * Fixed-length picker presets, longest first. WTD / MTD / Yesterday are
+ * skipped: they vary by calendar and are a poor default visit window.
  */
+const ACTIVITY_DEFAULT_DATE_RANGE_PRESET_CANDIDATES = [
+  '30d',
+  '7d',
+  '24h',
+  'today',
+  '6h',
+  '1h',
+] as const
+
+function activityRetentionHoursForDefaultRange(days: number): number {
+  if (
+    !Number.isFinite(days) ||
+    days <= 0 ||
+    days >= UNLIMITED_ACTIVITY_LOG_RETENTION_THRESHOLD
+  ) {
+    return DEFAULT_ACTIVITY_LOG_RETENTION_HOURS
+  }
+  return days * 24
+}
+
+/**
+ * Longest DateRangePicker preset that is equal to or shorter than plan
+ * retention, so the view opens on a quick-select instead of a custom span.
+ */
+export function getDefaultActivityDateRangePreset(
+  days: number,
+): UsageDateRangePreset {
+  const retentionHours = activityRetentionHoursForDefaultRange(days)
+  let best: UsageDateRangePreset | undefined
+  let bestDurationMs = -1
+
+  for (const value of ACTIVITY_DEFAULT_DATE_RANGE_PRESET_CANDIDATES) {
+    const preset = getUsageDateRangePresetByValue(value)
+    if (!preset) continue
+    if (!isUsageDateRangePresetWithinRetention(preset, retentionHours)) {
+      continue
+    }
+    const range = preset.getRange()
+    const durationMs = range.to.getTime() - range.from.getTime()
+    if (durationMs > bestDurationMs) {
+      best = preset
+      bestDurationMs = durationMs
+    }
+  }
+
+  return best ?? getUsageDateRangePresetByValue('1h')!
+}
+
+/** Default picker range: the snapped preset's live window. */
 export function getDefaultActivityDateRangeFromRetentionDays(
   days: number,
 ): DateRange {
-  const now = new Date()
-  const safeDays =
-    !Number.isFinite(days) || days <= 0
-      ? DEFAULT_ACTIVITY_LOG_RETENTION_DAYS
-      : days >= UNLIMITED_ACTIVITY_LOG_RETENTION_THRESHOLD
-        ? DEFAULT_ACTIVITY_LOG_RETENTION_DAYS
-        : days
-
-  const hoursExact = safeDays * 24
-  if (hoursExact < 24) {
-    const hours = Math.max(1, Math.round(hoursExact))
-    return { from: subHours(now, hours), to: now }
-  }
-
-  const wholeDays = Math.max(1, Math.round(safeDays))
-  return {
-    from: startOfDay(subDays(now, wholeDays - 1)),
-    to: endOfDay(now),
-  }
+  return getDefaultActivityDateRangePreset(days).getRange()
 }
 
 /**

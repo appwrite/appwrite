@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Auth\Validator;
 
 use Appwrite\Auth\Validator\PersonalData;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class PersonalDataTest extends TestCase
@@ -79,5 +80,41 @@ final class PersonalDataTest extends TestCase
         $this->assertFalse($this->object->isValid('something.EMAIL'));
         $this->assertFalse($this->object->isValid('EMAIL.something'));
         $this->assertFalse($this->object->isValid('something.EMAIL.something'));
+    }
+
+    #[DataProvider('denyListCases')]
+    public function testDenyList(bool $strict, array $denyList, mixed $password, bool $valid): void
+    {
+        $validator = new PersonalData(name: 'ProfileName', strict: $strict, denyList: $denyList);
+
+        $this->assertSame($valid, $validator->isValid($password));
+    }
+
+    public static function denyListCases(): \Iterator
+    {
+        yield 'exact' => [false, ['appwrite'], 'appwrite', false];
+        yield 'substring' => [false, ['appwrite'], 'MyAppWrite2026!', false];
+        yield 'capitalized term' => [false, ['APPWRITE'], 'MyAppWrite2026!', false];
+        yield 'multiple' => [false, ['other', 'appwrite'], 'MyAppWrite2026!', false];
+        yield 'empty list' => [false, [], 'MyAppWrite2026!', true];
+        yield 'strict match' => [true, ['AppWrite'], 'MyAppWrite2026!', false];
+        yield 'strict case differs' => [true, ['appwrite'], 'MyAppWrite2026!', true];
+        yield 'zero' => [false, ['0'], 'Default2026!', false];
+        yield 'strict zero' => [true, ['0'], 'Default2026!', false];
+        yield 'no unicode folding' => [false, ['ÄCME'], 'Myäcme2026!', true];
+        yield 'whitespace preserved' => [false, [' appwrite '], 'MyAppWrite2026!', true];
+        yield 'profile still blocked' => [false, [], 'MyProfileName2026!', false];
+        yield 'empty terms skipped' => [false, [''], 'SafePassword!', true];
+        yield 'short' => [false, [], 'short', false];
+        yield 'long' => [false, [], str_repeat('a', 257), false];
+        yield 'type' => [false, [], null, false];
+    }
+
+    public function testPasswordless(): void
+    {
+        $validator = new PersonalData(allowEmpty: true, denyList: ['appwrite', '0']);
+
+        $this->assertTrue($validator->isValid(''));
+        $this->assertFalse($validator->isValid(null));
     }
 }

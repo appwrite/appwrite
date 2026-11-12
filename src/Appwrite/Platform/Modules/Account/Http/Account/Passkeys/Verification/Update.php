@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Verification;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\Auth\Passkey\Challenges;
 use Appwrite\Extend\Exception;
@@ -10,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Passkeys\Exception as PasskeyException;
 use Utopia\Database\Database;
@@ -55,10 +57,10 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{userId}')
-            ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Passkey ID.', false, ['dbForProject'])
+            ->label('abuse', [Limit::attempts(['projectId', 'url', 'userId'], 10)])
+            ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Passkey ID.', false, ['dbForProject'])
             ->param('credential', [], new Assoc(), 'Registration credential returned by the authenticator, in the JSON form produced by `PublicKeyCredential.toJSON()`.')
+            ->inject('request')
             ->inject('response')
             ->inject('user')
             ->inject('session')
@@ -74,6 +76,7 @@ class Update extends Action
     public function action(
         string $passkeyId,
         array $credential,
+        Request $request,
         Response $response,
         Document $user,
         Document $session,
@@ -82,7 +85,7 @@ class Update extends Action
         Authorization $authorization,
     ): void {
         // Configuration changes invalidate outstanding challenges
-        $ceremony = Ceremony::fromProject($project) ?? throw new Exception(Exception::USER_INVALID_TOKEN);
+        $ceremony = Ceremony::fromProject($project, $request->getOrigin()) ?? throw new Exception(Exception::USER_INVALID_TOKEN);
 
         $passkey = $dbForProject->getDocument('authenticators', $passkeyId);
         if (!$this->isPending($passkey, $user)) {

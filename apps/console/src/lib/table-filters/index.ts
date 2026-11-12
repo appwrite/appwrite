@@ -25,6 +25,7 @@ export {
   mapToQueryParam,
   compactFilterKeysEqual,
   findCompactFilterKeyInMap,
+  withFilter,
   buildListSearchParams,
   parseListSearch,
   urlFromRouterLocation,
@@ -78,7 +79,14 @@ export {
 export {
   getActivitiesFilterColumns,
   activitiesFilterColumns,
+  activityResourceTypeLabel,
+  ACTIVITY_SDK_FILTER_COLUMN_ID,
+  ACTIVITY_SDK_SOURCE_CLI,
+  ACTIVITY_SDK_SOURCE_MCP,
+  getSelectedActivitySdkSources,
+  toggleActivitySdkSourceInMap,
 } from './filter-configs/activities'
+export type { ActivitySdkSource } from './filter-configs/activities'
 export {
   getActivityFilterQueryParts,
   maxIso,

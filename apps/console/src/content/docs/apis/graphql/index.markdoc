@@ -243,24 +243,26 @@ const client = new Client()
 const graphql = new Graphql(client);
 
 const mutation = graphql.mutation({
-    query: `mutation CreateAccount(
-        $email: String!,
-        $password: String!,
-        $name: String
-    ) {
-        accountCreate(
-            email: $email,
-            password: $password,
-            name: $name,
-            userId: "unique()"
+    query: {
+        query: `mutation CreateAccount(
+            $email: String!,
+            $password: String!,
+            $name: String
         ) {
-            _id
+            accountCreate(
+                email: $email,
+                password: $password,
+                name: $name,
+                userId: "unique()"
+            ) {
+                _id
+            }
+        }`,
+        variables: {
+            email: '...',
+            password: '...',
+            name: '...'
         }
-    }`,
-    variables: {
-        email: '...',
-        password: '...',
-        name: '...'
     }
 });
 
@@ -279,7 +281,7 @@ final client = Client()
 
 final graphql = Graphql(client);
 
-Future mutation = graphql.mutation({
+Future mutation = graphql.mutation(query: {
     'query': '''mutation CreateAccount(
         \$email: String!,
         \$password: String!,
@@ -317,7 +319,7 @@ let client = Client()
 let graphql = Graphql(client)
 
 do {
-    let response = try await graphql.mutation([
+    let response = try await graphql.mutation(query: [
         "query": """
             mutation CreateAccount(
                 $email: String!,

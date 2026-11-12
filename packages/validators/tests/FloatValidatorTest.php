@@ -21,7 +21,7 @@ final class FloatValidatorTest extends TestCase
         $this->assertFalse($validator->isValid('23.5'));
         $this->assertFalse($validator->isValid('23'));
         $this->assertFalse($validator->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_FLOAT, $validator->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_FLOAT, $validator->getType());
     }
 
     public function testCanValidateLoosely(): void
@@ -37,6 +37,6 @@ final class FloatValidatorTest extends TestCase
         $this->assertFalse($validator->isValid('abc'));
         $this->assertFalse($validator->isValid(true));
         $this->assertFalse($validator->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_FLOAT, $validator->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_FLOAT, $validator->getType());
     }
 }

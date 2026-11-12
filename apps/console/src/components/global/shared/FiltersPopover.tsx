@@ -3,6 +3,7 @@
  * Use with table-filters URL state; parent provides filterMap and navigate callbacks.
  */
 
+import type { ReactNode } from 'react'
 import { Filter, X } from 'lucide-react'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -57,6 +58,8 @@ export interface FiltersPopoverProps {
   /** Called when user clicks Reset. Omit to hide the reset control. */
   onReset?: () => void
   triggerClassName?: string
+  /** Joined to the Filters split button (e.g. activity Via MCP / Via CLI). */
+  afterTrigger?: ReactNode
 }
 
 export function FiltersPopover({
@@ -77,13 +80,15 @@ export function FiltersPopover({
   defaultSortParam,
   onReset,
   triggerClassName,
+  afterTrigger,
 }: FiltersPopoverProps) {
   const t = useT()
   const hasFilters = filterMap.size > 0
+  const hasAfterTrigger = afterTrigger != null
   return (
     // Split button while filters are active: [ Filters 2 | × ]. The clear
     // control sits beside the trigger (not inside it) because buttons can't
-    // be nested.
+    // be nested. `afterTrigger` continues the same control (quick filters).
     <div className="inline-flex shrink-0 items-stretch">
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
@@ -94,7 +99,7 @@ export function FiltersPopover({
           className={cn(
             'border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground',
             serviceHeaderFiltersButton,
-            hasFilters && 'rounded-e-none',
+            (hasFilters || hasAfterTrigger) && 'rounded-e-none',
             triggerClassName,
           )}
         >
@@ -149,11 +154,13 @@ export function FiltersPopover({
         title={t('Clear filters')}
         className={cn(
           'h-auto w-9 shrink-0 rounded-s-none border-s-0 border-border bg-transparent p-0 text-muted-foreground hover:bg-accent hover:text-foreground',
+          hasAfterTrigger && 'rounded-e-none',
         )}
       >
         <X className="h-3.5 w-3.5" />
       </Button>
     ) : null}
+    {afterTrigger}
     </div>
   )
 }

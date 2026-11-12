@@ -4,7 +4,7 @@ namespace Utopia\VCS\Adapter\Git;
 
 use Exception;
 use Utopia\Cache\Cache;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -791,6 +791,9 @@ class Bitbucket extends Git
 
         $responseHeaders = $response['headers'] ?? [];
         $statusCode = $responseHeaders['status-code'] ?? 0;
+        if ($statusCode === 404) {
+            throw new RepositoryNotFound("Branch not found: {$branch}");
+        }
         if ($statusCode >= 400) {
             throw new Exception("Failed to get latest commit: HTTP {$statusCode}", $statusCode);
         }

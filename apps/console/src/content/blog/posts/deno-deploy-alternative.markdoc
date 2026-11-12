@@ -1,0 +1,82 @@
+---
+layout: post
+title: "Appwrite Deno Functions as a Deno Deploy alternative"
+description: Deno Deploy shuts down in six months. Appwrite is open source. Cloud and self-hosted stay independent, so you can keep writing Deno without a vendor host.
+date: 2026-10-09
+cover: /images/blog/deno-deploy-alternative/cover.avif
+timeToRead: 4
+author: eldad-fux
+category: products
+featured: false
+unlisted: false
+faqs:
+  - question: "What is happening to Deno Deploy?"
+    answer: "Deno Deploy keeps running for six months from the October 9, 2026 announcement, then shuts down. Paying customers get help moving to Cloudflare Workers. The Deno team is [joining Cloudflare](https://deno.com/blog/cloudflare). Official Deno runtime development ends after one year of monthly bug-fix and security releases. Deno stays open source."
+  - question: "What is the best Deno Deploy alternative if I want to keep writing Deno?"
+    answer: "[Appwrite Functions](/docs/products/functions) let you keep TypeScript on Deno 2.x without moving to Cloudflare Workers. Cloud currently offers `deno-2.0` and `deno-2.6`. Auth, Databases, and Storage sit in the same project. If you later want Node.js, Bun, Python, or Go, you change the runtime, not the vendor."
+  - question: "Why is Appwrite a Deno Deploy alternative?"
+    answer: "Appwrite is open source. [Functions](/docs/products/functions) run in containers we maintain, next to Auth, Databases, and Storage in the same project. The same stack runs on [Appwrite Cloud](https://cloud.appwrite.io) or on your own machines via [self-hosting](/docs/advanced/self-hosting). There is no Deno Deploy account in that path."
+  - question: "Does Deno joining Cloudflare affect Appwrite users?"
+    answer: "No. The move has no effect on [Appwrite Cloud](https://cloud.appwrite.io) or [self-hosted](/docs/advanced/self-hosting) Appwrite. We do not run on Deno Deploy. Functions run in Open Runtimes containers we maintain. Cloud and self-hosted are the same independent stack, so you are not locked to Deno the company or to Cloudflare."
+  - question: "Can I self-host Appwrite Deno Functions?"
+    answer: "Yes. The same Functions product runs on [Appwrite Cloud](https://cloud.appwrite.io) or on your own Docker stack. There is no Deno Deploy account in that path, and no requirement to use Cloudflare for compute."
+---
+
+On October 9, 2026, Ryan Dahl wrote that the Deno team is [joining Cloudflare](https://deno.com/blog/cloudflare). Deno Deploy keeps running for six months, then it shuts down. Paying customers are pointed at Cloudflare Workers.
+
+If you shipped TypeScript on Deploy, you need a new host. Workers is the official offer. It is not the only one.
+
+**This announcement has no effect on Appwrite users.** [Appwrite Cloud](https://cloud.appwrite.io) and [self-hosted](/docs/advanced/self-hosting) Appwrite do not run on Deno Deploy. Functions run in containers we maintain. Both products are the same open-source stack, free of that vendor lock.
+
+**You can move a Deploy service to [Appwrite Functions](/docs/products/functions) on Deno 2.6, keep TypeScript, and run it on Cloud or on your own machines.** You change the handler. You do not take a dependency on Deno Deploy, and you do not have to adopt Workers.
+
+We did not build Appwrite as a Deno host. Deno is one [runtime](/docs/products/functions/runtimes) among Node.js, Bun, Python, Go, and others. You can land on Deno today, and leave it later, without a second vendor migration.
+
+# Why we built Appwrite to stay self-sustained
+
+We built Appwrite because too many products were assembled from vendors we did not own. The first time a hosted layer disappeared, the lesson was permanent. The piece you do not control is the piece that can take the rest of the work with it.
+
+Our conviction has not changed. Appwrite is **open source**. It should stay **self-sustained**. Auth, databases, storage, functions, and hosting should live in one stack you can read, run, and keep. We use third parties where that is reasonable. We do not rent the parts that would take the product down if that company changed direction.
+
+That is why the Deno team joining Cloudflare changes nothing for people already on Appwrite. Cloud infrastructure and self-hosted installations are independent of Deno the company and of Cloudflare. There is no Deploy account in the path, and no lock that would force a migration this week.
+
+Deno Deploy is the failure mode we refused to build. The runtime is open source. The host was not. When the company puts its energy into Cloudflare instead of Deploy, the hosted layer has no remaining job. Official runtime work ends after a year of patches. JSR survives. Your `fetch` handler does not get the same courtesy.
+
+Workers can be the right move if you already want that model. [Their joint post](https://blog.cloudflare.com/deno-joins-cloudflare/) is clear about that direction.
+
+We would rather you run an open-source function in a container we maintain, next to data you control.
+
+# What you get if you land on Appwrite
+
+An Appwrite function has its own URL, variables, permissions, and deployments. It runs in an Open Runtimes container. You trigger it over [HTTP, the SDK, a platform event, or a schedule](/docs/products/functions/execute).
+
+Cloud currently has `deno-2.0` and `deno-2.6`. Self-host if you want more versions, or the whole product on your machines. Git deploy and the [local CLI](/docs/products/functions/develop-locally) use the same image. [Auth](/docs/products/auth), [Databases](/docs/products/databases), and [Storage](/docs/products/storage) are already in the project.
+
+Most Deploy apps are a `fetch` handler. Appwrite wants a default export that uses `req` and `res`. The rewrite is the wrapper.
+
+```deno
+export default async ({ req, res }: any) => {
+  if (req.method === "GET") {
+    return res.text("Hello, World!");
+  }
+
+  return res.json({ ok: true, body: req.bodyJson });
+};
+```
+
+Create a function on `deno-2.6` from the [quick start](/docs/products/functions/quick-start), copy your modules, map the request, and keep Deploy up until you have seen traffic. If the project was a frontend, use [Appwrite Sites](/docs/products/sites).
+
+You do not have to stay on Deno because the old host was Deno. Move that one function to Node, Bun, or Python if Deno was only the host. The project stays put.
+
+# Trying Appwrite Deno Functions
+
+If you already run Appwrite, this week is a non-event. Your Cloud project and your self-hosted instance keep running.
+
+If you are leaving Deploy, you have six months to move a handler. Create a function, pick Deno 2.6, and deploy. Appwrite is open source, so the same stack is on Cloud or on your own machines.
+
+- [Appwrite Functions](/docs/products/functions)
+- [Functions runtimes](/docs/products/functions/runtimes)
+- [Functions quick start](/docs/products/functions/quick-start)
+- [Appwrite Cloud](https://cloud.appwrite.io)
+- [Self-host Appwrite](/docs/advanced/self-hosting)
+- [Deno is joining Cloudflare](https://deno.com/blog/cloudflare)

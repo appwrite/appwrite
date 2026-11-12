@@ -82,10 +82,9 @@ function AnalyticsPage() {
     )
   }
 
-  // Property detail page
-  const isChildRoute = matches.some(
-    (match) =>
-      match.routeId === '/_public/projects/$projectId/analytics/$propertyId',
+  // Property pages: the layout and its tabs (Analytics, Settings).
+  const isChildRoute = matches.some((match) =>
+    match.routeId.startsWith('/_public/projects/$projectId/analytics/$propertyId'),
   )
   if (isChildRoute) {
     return <Outlet />

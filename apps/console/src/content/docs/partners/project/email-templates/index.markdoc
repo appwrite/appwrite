@@ -130,7 +130,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -218,7 +218,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -230,8 +230,8 @@ func main() {
 
     project := appwrite.NewProject(client)
     result, err := project.ListEmailTemplates(
-        appwrite.WithListEmailTemplatesQueries([]interface{}{}),
-        appwrite.WithListEmailTemplatesTotal(false),
+        project.WithListEmailTemplatesQueries([]interface{}{}),
+        project.WithListEmailTemplatesTotal(false),
     )
 
     if err != nil {
@@ -370,7 +370,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -464,7 +464,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -477,7 +477,7 @@ func main() {
     project := appwrite.NewProject(client)
     result, err := project.GetEmailTemplate(
         "verification",
-        appwrite.WithGetEmailTemplateLocale("en"),
+        project.WithGetEmailTemplateLocale("en"),
     )
 
     if err != nil {
@@ -650,7 +650,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -774,7 +774,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -787,13 +787,13 @@ func main() {
     project := appwrite.NewProject(client)
     result, err := project.UpdateEmailTemplate(
         "verification",
-        appwrite.WithUpdateEmailTemplateLocale("en"),
-        appwrite.WithUpdateEmailTemplateSubject("<SUBJECT>"),
-        appwrite.WithUpdateEmailTemplateMessage("<MESSAGE>"),
-        appwrite.WithUpdateEmailTemplateSenderName("<SENDER_NAME>"),
-        appwrite.WithUpdateEmailTemplateSenderEmail("email@example.com"),
-        appwrite.WithUpdateEmailTemplateReplyToEmail("email@example.com"),
-        appwrite.WithUpdateEmailTemplateReplyToName("<REPLY_TO_NAME>"),
+        project.WithUpdateEmailTemplateLocale("en"),
+        project.WithUpdateEmailTemplateSubject("<SUBJECT>"),
+        project.WithUpdateEmailTemplateMessage("<MESSAGE>"),
+        project.WithUpdateEmailTemplateSenderName("<SENDER_NAME>"),
+        project.WithUpdateEmailTemplateSenderEmail("email@example.com"),
+        project.WithUpdateEmailTemplateReplyToEmail("email@example.com"),
+        project.WithUpdateEmailTemplateReplyToName("<REPLY_TO_NAME>"),
     )
 
     if err != nil {

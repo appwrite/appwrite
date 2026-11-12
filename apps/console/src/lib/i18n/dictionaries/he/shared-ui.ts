@@ -54,7 +54,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   then: 'ואז',
   'already exists': 'כבר קיים',
   'is longer than 8192 allowed characters': 'ארוך מ-8192 התווים המותרים',
-  'contact sales': 'צרו קשר עם מכירות',
   'to include more repos.': 'כדי לכלול repos נוספים.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
 
@@ -261,6 +260,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'File uploaded': 'הקובץ הועלה',
   'Filter name': 'שם הסינון',
   Filters: 'סינונים',
+  'Filtered by': 'מסונן לפי',
+  'Change operator': 'שינוי אופרטור',
+  'Change value': 'שינוי ערך',
   'Find a branch...': 'חיפוש ענף...',
   'Fix payment': 'הסדרת התשלום',
   'Authorize payment': 'אישור תשלום',
@@ -297,6 +299,16 @@ export const heSharedUiDictionary: Record<string, string> = {
   Integer: 'מספר שלם',
   'Invalid JSON format': 'פורמט JSON לא תקין',
   'Invalid format': 'פורמט לא תקין',
+
+  // Custom ID field (IdInput)
+  'Invalid ID format': 'פורמט מזהה לא תקין',
+  'ID is too long': 'המזהה ארוך מדי',
+  'Allowed characters: letters and numbers only':
+    'תווים מותרים: אותיות וספרות בלבד',
+  'Allowed characters: lowercase letters, numbers, non-leading hyphen':
+    'תווים מותרים: אותיות קטנות, ספרות ומקף שאינו בתחילת המזהה',
+  'Allowed characters: alphanumeric, non-leading hyphen, underscore, period':
+    'תווים מותרים: אותיות וספרות, מקף שאינו בתחילת המזהה, קו תחתון ונקודה',
   'Join 24k+ developers': 'הצטרפו ליותר מ-24 אלף מפתחים',
   'Skip for now': 'דילוג לעכשיו',
   'Help other Appwriters on Discord and grow with the community.':
@@ -385,6 +397,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'My filters': 'הסינונים שלי',
   'Name, email, phone, or user ID…': 'שם, אימייל, טלפון או מזהה משתמש…',
   'Need more resources?': 'צריכים משאבים נוספים?',
+  'Higher CPU and memory are available on Enterprise.':
+    'משאבי CPU וזיכרון גבוהים יותר זמינים בתוכנית Enterprise.',
   'Next image': 'התמונה הבאה',
 
   // Empty states
@@ -484,6 +498,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Refresh repositories': 'רענון repos',
   'Reject non-essential': 'דחיית עוגיות לא חיוניות',
   'Remove filter': 'הסרת סינון',
+  'Filter by this value': 'סינון לפי ערך זה',
+  'Exclude this value': 'החרגת ערך זה',
   'Remove scope': 'הסרת הרשאה',
   Rename: 'שינוי שם',
   'Rename saved filter': 'שינוי שם סינון שמור',
@@ -845,7 +861,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   Theme: 'ערכת נושא',
   'Light theme': 'ערכת נושא בהירה',
   'Dark theme': 'ערכת נושא כהה',
-  'System theme': 'ערכת נושא לפי המערכת',
 
   // Refresh toasts (default label)
   'data refreshed successfully': 'הנתונים רועננו בהצלחה',
@@ -864,7 +879,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Focus search': 'מעבר לשדה החיפוש',
   'Set theme to light': 'החלפה לערכת נושא בהירה',
   'Set theme to dark': 'החלפה לערכת נושא כהה',
-  'Set theme to system': 'החלפה לערכת נושא לפי המערכת',
 
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'פתיחה או סגירה של הטרמינל',
@@ -998,9 +1012,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'חיבור פלטפורמות (ווב, iOS, Android, Flutter, שרת)',
   'Server API keys and tokens': 'מפתחות API וטוקנים לשרת',
-  // pragma: allowlist secret
-  'Browse and test Appwrite REST API endpoints':
-    'עיון ובדיקה של נקודות הקצה של Appwrite REST API', // pragma: allowlist secret
+  'Test REST API endpoints and Realtime subscriptions':
+    'בדיקת נקודות קצה של REST API ומינויי Realtime',
   'Users, teams, sessions and authentication providers':
     'משתמשים, צוותים, סשנים וספקי אימות',
   'Manage databases, tables and collections':
@@ -1013,7 +1026,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Adaptive video streaming, renditions and subtitles':
     'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
-  'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
   'Website analytics and traffic insights': 'אנליטיקת אתרים ותובנות תעבורה',
   'Project settings, custom domains, variables, webhooks':
@@ -1042,6 +1054,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Hide member name, email, or MFA status from other team members':
     'הסתרת שם, אימייל או סטטוס MFA של חבר צוות משאר חברי הצוות',
   'Auth · Policies · Passwords': 'אימות · מדיניות · סיסמאות',
+  'Security · Passkeys': 'אבטחה · מפתחות גישה',
+  'Sign in with a fingerprint, face or device PIN':
+    'התחברות עם טביעת אצבע, זיהוי פנים או קוד PIN של המכשיר',
   'Auth · Policies · Passkeys': 'אימות · מדיניות · מפתחות גישה',
   'Relying party ID and allowed origins for passkey sign-in':
     'מזהה צד מסתמך ומקורות מורשים להתחברות עם מפתח גישה',
@@ -1088,7 +1103,27 @@ export const heSharedUiDictionary: Record<string, string> = {
     'שרת SMTP מותאם אישית לאימיילים יוצאים',
   Advisor: 'יועץ',
   Firewall: 'חומת אש',
-  'Security · Firewall rules': 'אבטחה · כללי חומת אש',
+  'Settings · Firewall': 'הגדרות · חומת אש',
+  'Firewall has moved': 'חומת האש עברה למקום אחר',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'כללי חומת האש נמצאים עכשיו ליד מה שהם מגינים עליו: לשונית חומת אש בכל פונקציה ובכל אתר, ואחת בהגדרות הפרויקט עבור ה-API.',
+  'Got it': 'הבנתי',
+  'Open API firewall': 'פתיחת חומת האש של ה-API',
+  // Function and site overview cards, filter chips
+  '1 rule': 'כלל אחד',
+  '{count} rules': '{count} כללים',
+  'vs previous 24 hours': 'לעומת 24 השעות הקודמות',
+  'No blocked traffic yet': 'עדיין אין תעבורה חסומה',
+  'Denied requests will show up here.': 'בקשות שנדחו יופיעו כאן.',
+  '24 hours ago': 'לפני 24 שעות',
+  'No requests yet': 'עדיין אין בקשות',
+  'No bandwidth yet': 'עדיין אין תעבורת נתונים',
+  Humans: 'בני אדם',
+  Bots: 'בוטים',
+  only: 'בלבד',
+  On: 'פעיל',
+  SSR: 'SSR',
+  Static: 'סטטי',
   'IP allow/block lists and request rules':
     'רשימות היתר/חסימה של IP וכללי בקשות',
 
@@ -1337,6 +1372,11 @@ export const heSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 מושק היום ב-Product Hunt',
   'Appwrite 2.0 on Product Hunt': 'Appwrite 2.0 ב-Product Hunt',
   'Share your take': 'שתפו את דעתכם',
+  'Just launched': 'הושק עכשיו',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'MCP1 מבית Appwrite: כתובת URL אחת לכל שרתי ה-MCP',
+  'MCP1 by Appwrite is live': 'MCP1 מבית Appwrite הושק',
+  'Try MCP1': 'נסו את MCP1',
   'Created by': 'נוצר על ידי',
   'Authorized resources': 'משאבים מורשים',
   'No scopes granted': 'לא הוענקו הרשאות גישה',
@@ -1375,4 +1415,27 @@ export const heSharedUiDictionary: Record<string, string> = {
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
+  Previews: 'תצוגות מקדימות',
+  'Early access. Saved in this browser.': 'גישה מוקדמת. נשמר בדפדפן הזה.',
+  'Appwrite Analytics': 'Appwrite Analytics',
+  'Visitor, page, and campaign tracking.':
+    'מעקב אחרי מבקרים, עמודים וקמפיינים.',
+  'Project environments': 'סביבות פרויקט',
+  'Switch or clone staging and production.':
+    'מעבר או שכפול בין staging לפרודקשן.',
+  'Project transfers': 'העברות פרויקטים',
+  'Move a project to another organization.': 'העברת פרויקט לארגון אחר.',
+  'Repository not available': 'ה-repo לא זמין',
+  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
+    'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
+  // Halloween caution tape
+  Caution: 'זהירות',
+  'Spooky zone': 'אזור מפחיד',
+  // GitHub star wizard
+  'Enjoying Appwrite?': 'נהנים מ-Appwrite?',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwrite הוא קוד פתוח שנבנה בשקיפות מלאה. כוכב עוזר ליותר מפתחים לגלות אותו.',
+  'No thanks': 'לא תודה',
+  'One-time ask, promise. May your builds be ever green.':
+    'מבקשים רק פעם אחת, מבטיחים. שה-builds שלכם יהיו תמיד ירוקים.',
 }

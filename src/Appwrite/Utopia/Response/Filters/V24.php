@@ -4,9 +4,9 @@ namespace Appwrite\Utopia\Response\Filters;
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
-use Utopia\System\System;
 
 // Convert 1.9.3 Data format to 1.9.2 format
 class V24 extends Filter
@@ -45,7 +45,7 @@ class V24 extends Filter
             return '';
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256');
+        $jwt = new JWT(EncryptionKey::current(), 'HS256');
 
         try {
             return $jwt->decode($token, false)['projectId'] ?? '';

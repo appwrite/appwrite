@@ -81,6 +81,9 @@ final class BotDetector
         'gtmetrix' => ['GTmetrix', 'site monitor'],
     ];
 
+    /** @var list<string> */
+    private const array SUFFIXES = ['bot', 'crawler', 'spider', 'scraper', 'slurp'];
+
     public static function detect(string $userAgent): ?Bot
     {
         if ($userAgent === '') {
@@ -94,14 +97,92 @@ final class BotDetector
             }
         }
 
-        if (preg_match(
-            '/(?:^|[\s;()+_-])([a-z0-9_-]*(?:bot|crawler|spider|scraper|slurp))(?:[\/\s;()+_-]|$)/i',
-            $userAgent,
-            $matches,
-        ) === 1) {
-            return new Bot(trim($matches[1], '_-'), 'crawler');
+        $token = self::token($userAgent, $lower);
+        if ($token !== null) {
+            return new Bot(trim($token, '_-'), 'crawler');
         }
 
         return null;
+    }
+
+    /**
+     * The first word ending in a bot suffix, where a word is a run of letters, digits, `_` and `-` that starts at the
+     * beginning, after a space, `;`, `(`, `)`, `+`, `_` or `-`, and ends at the end or before one of those or `/`.
+     * Each run is scanned once, so the cost stays linear in the length of the user agent.
+     */
+    private static function token(string $userAgent, string $lower): ?string
+    {
+        $length = \strlen($lower);
+        $position = 0;
+        while ($position < $length) {
+            if (!self::isWord($lower[$position])) {
+                $position++;
+                continue;
+            }
+
+            $start = $position;
+            while ($position < $length && self::isWord($lower[$position])) {
+                $position++;
+            }
+
+            $first = self::firstStart($lower, $start, $position);
+            if ($first === null) {
+                continue;
+            }
+
+            for ($end = $position; $end > $first; $end--) {
+                if (!self::closes($lower, $end, $position)) {
+                    continue;
+                }
+                foreach (self::SUFFIXES as $suffix) {
+                    $offset = $end - \strlen($suffix);
+                    if ($offset >= $first && substr_compare($lower, $suffix, $offset, \strlen($suffix)) === 0) {
+                        return substr($userAgent, $first, $end - $first);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Where the earliest word inside the run from $start to $end may begin.
+     */
+    private static function firstStart(string $lower, int $start, int $end): ?int
+    {
+        if ($start === 0 || self::isSeparator($lower[$start - 1])) {
+            return $start;
+        }
+
+        for ($position = $start; $position < $end - 1; $position++) {
+            if ($lower[$position] === '_' || $lower[$position] === '-') {
+                return $position + 1;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether a word can end at $end inside the run that stops at $runEnd.
+     */
+    private static function closes(string $lower, int $end, int $runEnd): bool
+    {
+        if ($end < $runEnd) {
+            return $lower[$end] === '_' || $lower[$end] === '-';
+        }
+
+        return $end === \strlen($lower) || $lower[$end] === '/' || self::isSeparator($lower[$end]);
+    }
+
+    private static function isWord(string $character): bool
+    {
+        return ctype_alnum($character) || $character === '_' || $character === '-';
+    }
+
+    private static function isSeparator(string $character): bool
+    {
+        return ctype_space($character) || str_contains(';()+', $character);
     }
 }

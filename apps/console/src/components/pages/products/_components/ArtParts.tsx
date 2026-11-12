@@ -119,6 +119,26 @@ export function ArtChip({
   )
 }
 
+/** Monochrome brand mark (GitHub circle and similar) tinted with currentColor. */
+export function ArtIconMask({ src, className }: { src: string; className?: string }) {
+  return (
+    <span
+      className={cn('inline-block shrink-0 bg-current', className)}
+      style={{
+        WebkitMaskImage: `url(${src})`,
+        maskImage: `url(${src})`,
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
+      }}
+      aria-hidden
+    />
+  )
+}
+
 /** Tone-tinted square holding a small icon (not for product logos). */
 export function ArtIconBadge({
   icon: Icon,
@@ -129,6 +149,8 @@ export function ArtIconBadge({
   tone?: 'primary' | 'secondary' | 'neutral' | 'success'
   className?: string
 }) {
+  if (!Icon) return null
+
   return (
     <span
       className={cn(

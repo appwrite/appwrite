@@ -60,11 +60,11 @@ final class Distributed implements Lock
             return true;
         }
 
-        if ($timeout <= 0.0) {
+        if ($timeout === 0.0) {
             return false;
         }
 
-        $deadline = microtime(true) + $timeout;
+        $deadline = $timeout < 0.0 ? INF : microtime(true) + $timeout;
         $delay = self::BACKOFF_MIN;
 
         while (microtime(true) < $deadline) {
@@ -202,7 +202,17 @@ final class Distributed implements Lock
     {
         $method = 'eval';
 
-        return $this->redis->$method($script, $arguments, 1);
+        try {
+            return $this->redis->$method($script, $arguments, 1);
+        } catch (\RedisException $e) {
+            // phpredis leaves the socket open when a script reply times out, and the
+            // next command on this connection would read that reply as its own
+            if ($this->redis->isConnected()) {
+                $this->redis->close();
+            }
+
+            throw $e;
+        }
     }
 
     /**

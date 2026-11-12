@@ -1,0 +1,31 @@
+---
+layout: changelog
+title: Patched Node.js runtimes for the October 2026 security release
+date: 2026-10-23
+tags: security, functions, sites, firewall
+---
+
+Functions and sites on Node.js 22, 24 and 26 now run a patched version of Node.js that fixes the vulnerabilities in the [Node.js October 2026 security release](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
+
+- **Appwrite Cloud:** functions and sites on these runtimes are updated automatically. You don't need to redeploy.
+- **Self-hosted Appwrite:** run these commands from your Appwrite directory. Your functions and sites start on the patched runtimes the next time they run. The commands stop any executions in progress, so run them at a quiet time.
+
+```bash
+# Pull the patched version of every runtime image on this server
+docker images 'openruntimes/*' --format '{{.Repository}}:{{.Tag}}' \
+  | grep -v executor | xargs -r -n1 docker pull &&
+# Stop the executor so it doesn't start new runtimes
+docker compose stop openruntimes-executor &&
+# Remove the runtimes still running on the old images
+docker ps -aq --filter label=openruntimes-executor | xargs -r docker rm -f &&
+# Start the executor again
+docker compose start openruntimes-executor
+```
+
+On Appwrite Cloud, the Appwrite firewall also blocks known attack requests for these vulnerabilities before they reach your functions and sites, whichever runtime version they use. This is only a precaution, so move to a patched runtime as soon as possible.
+
+Node.js 16, 18, 19, 20, 21, 23 and 25 are end-of-life, and Node.js doesn't release fixes for them. If a function or site uses one of these versions, change its runtime to Node.js 22, 24 or 26 in its settings and create a new deployment.
+
+{% arrow_link href="/docs/products/functions/runtimes" %}
+View the supported runtimes
+{% /arrow_link %}

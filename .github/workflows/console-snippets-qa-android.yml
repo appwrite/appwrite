@@ -160,7 +160,9 @@ jobs:
             apk: src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       # GitHub-hosted runners left only ~14 GB free, which the SDK caches,
       # Gradle builds, and the emulator system image + AVD overflowed (flutter
@@ -259,7 +261,7 @@ jobs:
       # whatever platforms and build-tools each lane declares, and the
       # emulator runner installs the system image through sdkmanager.
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
 
       # Tauri's Rust cross-compile does not go through AGP's auto-install; it
       # needs the NDK on disk and NDK_HOME exported.
@@ -272,7 +274,7 @@ jobs:
 
       - name: Install Flutter
         if: matrix.id == 'flutter'
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           cache: true
@@ -364,7 +366,7 @@ jobs:
           echo "Endpoint found in the bundled assets."
 
       - name: Install and run the Maestro flow on an emulator
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 34
           target: google_apis
@@ -409,7 +411,7 @@ jobs:
 
       - name: Upload Maestro logs and screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: connect-qa-android-${{ matrix.id }}
           path: apps/console/tests/connect-qa/android/artifacts/

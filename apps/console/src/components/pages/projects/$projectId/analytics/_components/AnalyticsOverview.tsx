@@ -1,4 +1,4 @@
-import { useMemo, type KeyboardEvent, type ReactNode } from 'react'
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import type { DateRange } from 'react-day-picker'
 import {
@@ -9,11 +9,12 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import { USAGE_CHART_FADE_IN_CLASS_NAME } from '@/lib/usage/usage-chart-loading'
 import { useUsageChartBrushSelect } from '@/hooks/use-usage-chart-brush'
 import {
@@ -23,6 +24,11 @@ import {
 import { ChartSeriesDot } from '@/components/global/shared/ChartSeriesDot'
 import { AnimatedCounter } from '@/components/global/shared/AnimatedCounter'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip as UiTooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { UsageChartBrushReferenceArea } from '../../usage/_components/UsageChartBrushReferenceArea'
 import {
   OVERVIEW_CHART_HEIGHT,
@@ -32,7 +38,6 @@ import {
   overviewChartPanelErrorClass,
 } from '../../overview/chart-panel'
 import {
-  ANALYTICS_PAGEVIEW_EVENT,
   analyticsStatsQueryOptions,
   useAnalyticsEventMetrics,
   useAnalyticsStats,
@@ -43,7 +48,7 @@ import {
 import { compareModeLabel, formatAnalyticsRangeLabel } from './CompareControl'
 import { MetricInfo, type AnalyticsMetricInfoKey } from './MetricInfo'
 import { useAnalyticsFilters } from './analytics-filters-context'
-import { ActiveFilterChips } from './ActiveFilterChips'
+import { AnalyticsFilterChips } from './AnalyticsFilterChips'
 import { ChangeBadge } from './ChangeBadge'
 import { ANALYTICS_FILTER_UNSUPPORTED_MESSAGE } from '@/lib/analytics/analytics-filters'
 import { useT } from '@/lib/i18n/translate'
@@ -56,34 +61,44 @@ import {
 } from './chart-series'
 import {
   formatDuration,
+  formatExactNumber,
   formatNumber,
   formatPercent,
   formatRatio,
+  isCompactNumber,
 } from './format'
 
 const CURRENT_COLOR = 'var(--chart-brand)'
 const PREVIOUS_COLOR = 'var(--muted-foreground)'
 const GRADIENT_ID = 'analyticsOverviewGradient'
+const SKELETON_GRADIENT_ID = 'analyticsOverviewSkeletonGradient'
+const SKELETON_CHART_STROKE = 'hsl(var(--muted-foreground) / 0.4)'
+const SKELETON_CHART_FILL = 'hsl(var(--muted-foreground))'
+const SKELETON_WAVE = [
+  0.42, 0.58, 0.51, 0.68, 0.59, 0.72, 0.64, 0.7, 0.55, 0.74, 0.62, 0.69,
+] as const
 
 /** Every overview metric; each one can drive the chart. */
 export type AnalyticsChartMetric =
   | 'visitors'
   | 'visits'
   | 'pageviews'
+  | 'events'
+  | 'users'
   | 'viewsPerVisit'
   | 'bounceRate'
   | 'visitDuration'
   | 'engagementTime'
 
-type SeriesMetric = 'visitors' | 'visits' | 'pageviews'
+type SeriesMetric = 'visitors' | 'visits' | 'pageviews' | 'events' | 'users'
 type AggregateMetric = Exclude<AnalyticsChartMetric, SeriesMetric>
 
 /**
- * The tabs at the top of the overview: the seven metrics that matter most for
- * a website (scroll depth stays in the exports). Every tab drives the chart,
+ * The tabs at the top of the overview: the metrics that matter most for a
+ * website (scroll depth stays in the exports). Every tab drives the chart,
  * from one of two sources:
- * - `series`: the API's interval series (visitors, visits; pageviews via the
- *   pageview event), one request for the whole chart.
+ * - `series`: the API's interval series (visitors, visits, pageviews, events,
+ *   users), one request for the whole chart.
  * - `aggregate`: rates and durations only exist on the flat aggregate, so the
  *   chart reads it per bucket window (see `buildBucketWindows`).
  */
@@ -101,21 +116,45 @@ const OVERVIEW_METRICS: {
   { key: 'visitors', label: 'Unique visitors', info: 'uniqueVisitors', format: formatNumber, source: 'series', axis: 'count' },
   { key: 'visits', label: 'Visits', info: 'visits', format: formatNumber, source: 'series', axis: 'count' },
   { key: 'pageviews', label: 'Pageviews', info: 'pageviews', format: formatNumber, source: 'series', axis: 'count' },
+  { key: 'events', label: 'Events', info: 'events', format: formatNumber, source: 'series', axis: 'count' },
+  { key: 'users', label: 'Users', info: 'users', format: formatNumber, source: 'series', axis: 'count' },
   { key: 'viewsPerVisit', label: 'Views per visit', info: 'viewsPerVisit', format: formatRatio, source: 'aggregate', axis: 'ratio' },
   { key: 'bounceRate', label: 'Bounce rate', info: 'bounceRate', format: formatPercent, source: 'aggregate', axis: 'percent', invert: true },
   { key: 'visitDuration', label: 'Visit duration', info: 'visitDuration', format: formatDuration, source: 'aggregate', axis: 'duration' },
   { key: 'engagementTime', label: 'Engagement time', info: 'engagementTime', format: formatDuration, source: 'aggregate', axis: 'duration' },
 ]
 
+// In display order; the first leads the chart. Flutter's lifecycle events
+// never interact, so bounce rate reads oddly on apps. Agents relay from
+// servers, where visitors mean little.
+const METRICS_BY_TYPE: Record<
+  AnalyticsPropertyType,
+  readonly AnalyticsChartMetric[]
+> = {
+  [AnalyticsPropertyType.Web]: OVERVIEW_METRICS.map(({ key }) => key),
+  [AnalyticsPropertyType.Mobile]: [
+    'visitors',
+    'visits',
+    'pageviews',
+    'events',
+    'users',
+    'viewsPerVisit',
+    'visitDuration',
+    'engagementTime',
+  ],
+  [AnalyticsPropertyType.Agent]: ['events', 'visits', 'users', 'visitDuration'],
+}
+
 /** Value of a series-backed metric for one bucket. */
 function bucketValue(
   metric: SeriesMetric,
   base: AnalyticsChartPoint | undefined,
-  pageviews: AnalyticsChartPoint | undefined,
 ): number | undefined {
   if (metric === 'visitors') return base?.visitors
   if (metric === 'visits') return base?.sessions
-  return pageviews?.events
+  if (metric === 'events') return base?.events
+  if (metric === 'users') return base?.users
+  return base?.pageviews
 }
 
 function axisFormatter(
@@ -154,6 +193,9 @@ function MetricTab({
   info,
   value,
   format,
+  exact,
+  previousExact,
+  compareLabel,
   change,
   invert,
   isActive,
@@ -165,6 +207,12 @@ function MetricTab({
   info: AnalyticsMetricInfoKey
   value: number | undefined
   format: (value: number) => string
+  /** Exact digits shown on hover when the displayed value is compact (1.2K). */
+  exact?: string
+  /** Comparison-window value, formatted for the tooltip. */
+  previousExact?: string
+  /** "Previous period" / "Same period last year" / custom label. */
+  compareLabel?: string
   change: number | undefined
   invert?: boolean
   isActive: boolean
@@ -174,8 +222,23 @@ function MetricTab({
   /** Omitted for aggregate-only metrics: the tab shows a value, no plot. */
   onClick?: () => void
 }) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  const [infoHovered, setInfoHovered] = useState(false)
   const interactive = !!onClick
-  return (
+  // Card-owned tooltip: exact count, the comparison-window number, or why
+  // the figure is unavailable. Not on the value itself so hover works
+  // anywhere on the metric.
+  const comparison =
+    previousExact !== undefined && compareLabel
+      ? `${t('vs')} ${previousExact} · ${compareLabel}`
+      : undefined
+  // Compact counts already have an exact line. When comparing, always show
+  // the current figure too so the tooltip is a pair, not just the baseline.
+  const currentLabel =
+    exact ?? (value !== undefined && comparison ? format(value) : undefined)
+  const tooltip = hint ?? (currentLabel || comparison ? { exact: currentLabel, comparison } : undefined)
+  const card = (
     <div
       // A div with button semantics, because the info hint inside it is
       // itself a button and buttons cannot be nested.
@@ -193,7 +256,6 @@ function MetricTab({
             'aria-pressed': isActive,
           }
         : {})}
-      title={hint}
       className={cn(
         'flex min-w-0 select-none flex-col items-start gap-0.5 overflow-hidden rounded-md border px-3 py-1.5 text-start transition-colors',
         interactive &&
@@ -210,7 +272,12 @@ function MetricTab({
         <span className="truncate" title={label}>
           {label}
         </span>
-        <MetricInfo info={info} />
+        <span
+          onPointerEnter={() => setInfoHovered(true)}
+          onPointerLeave={() => setInfoHovered(false)}
+        >
+          <MetricInfo info={info} />
+        </span>
       </span>
       <span className="flex items-baseline gap-x-2 whitespace-nowrap">
         {unavailable || value === undefined ? (
@@ -224,7 +291,9 @@ function MetricTab({
               formatDisplay={format}
               className={cn(
                 'text-[20px] font-semibold',
-                isActive || !interactive ? 'text-foreground' : 'text-foreground/80',
+                isActive || !interactive
+                  ? 'text-foreground'
+                  : 'text-foreground/80',
                 USAGE_CHART_FADE_IN_CLASS_NAME,
               )}
             />
@@ -233,6 +302,31 @@ function MetricTab({
         )}
       </span>
     </div>
+  )
+
+  if (!tooltip) return card
+
+  return (
+    <UiTooltip open={open && !infoHovered} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>{card}</TooltipTrigger>
+      <TooltipContent
+        side="top"
+        className={cn('text-[12px]', !hint && 'tabular-nums')}
+      >
+        {typeof tooltip === 'string' ? (
+          tooltip
+        ) : (
+          <span className="flex flex-col gap-0.5">
+            {tooltip.exact ? <span>{tooltip.exact}</span> : null}
+            {tooltip.comparison ? (
+              <span className={tooltip.exact ? 'text-background/70' : undefined}>
+                {tooltip.comparison}
+              </span>
+            ) : null}
+          </span>
+        )}
+      </TooltipContent>
+    </UiTooltip>
   )
 }
 
@@ -264,11 +358,16 @@ type AnalyticsOverviewProps = {
   onActiveSeriesChange: (series: AnalyticsChartMetric) => void
   /** Loader-prefetched aggregate for the default window, if any. */
   fallbackStats?: Models.AnalyticsMetric
+  /** Loader-prefetched series for the default window, if any. */
+  fallbackSeries?: { points: Models.AnalyticsMetric[]; total: number }
   compareMode: AnalyticsCompareMode
   /** Resolved comparison window; `null` when comparison is off. */
   comparisonRange: AnalyticsRange | null
   /** "Try again" in the chart's error state. */
   onRefresh: () => void
+  /** Include the Users tab (see useShowUsersPanel). */
+  showUsers: boolean
+  type: AnalyticsPropertyType
 }
 
 /**
@@ -289,11 +388,15 @@ export function AnalyticsOverview({
   activeSeries,
   onActiveSeriesChange,
   fallbackStats,
+  fallbackSeries,
   compareMode,
   comparisonRange,
   onRefresh,
+  showUsers,
+  type,
 }: AnalyticsOverviewProps) {
   const t = useT()
+  const [hasRevealed, setHasRevealed] = useState(false)
   const isComparing = comparisonRange !== null
   // Hooks can't be conditional: with comparison off, pass a null property ID
   // so the comparison queries stay disabled, and any range as a placeholder.
@@ -324,17 +427,8 @@ export function AnalyticsOverview({
   )
   const previousStats = isComparing ? comparisonStats : undefined
 
-  // Aggregate metrics can't be read with a page / event filter, so while one
-  // is active the chart falls back to visitors (the tab explains why).
-  const requestedMetric =
-    OVERVIEW_METRICS.find((metric) => metric.key === activeSeries) ?? OVERVIEW_METRICS[0]
-  const activeMetric =
-    requestedMetric.source === 'aggregate' && statsUnsupported
-      ? OVERVIEW_METRICS[0]
-      : requestedMetric
-
   const {
-    data: seriesData,
+    data: seriesFromHook,
     isLoading: seriesLoading,
     error: seriesError,
   } = useAnalyticsEventMetrics(
@@ -345,6 +439,9 @@ export function AnalyticsOverview({
     interval,
     filters,
   )
+  // The loader's prefetch is unfiltered, so only use it without filters.
+  const seriesData =
+    seriesFromHook ?? (filters.length === 0 ? fallbackSeries : undefined)
   const { data: comparisonSeriesData } = useAnalyticsEventMetrics(
     projectId,
     comparePropertyId,
@@ -354,6 +451,21 @@ export function AnalyticsOverview({
     filters,
   )
   const previousSeriesData = isComparing ? comparisonSeriesData : undefined
+
+  // `users` counts identified traffic only, so it stays hidden on properties
+  // that never record a user ID rather than showing a permanent 0.
+  const metrics = METRICS_BY_TYPE[type]
+    .filter((key) => showUsers || key !== 'users')
+    .map((key) => OVERVIEW_METRICS.find((metric) => metric.key === key)!)
+
+  // Aggregate metrics can't be read with some filters, so while one is
+  // active the chart falls back to the first tab (the tab explains why).
+  const requestedMetric =
+    metrics.find((metric) => metric.key === activeSeries) ?? metrics[0]
+  const activeMetric =
+    requestedMetric.source === 'aggregate' && statsUnsupported
+      ? metrics[0]
+      : requestedMetric
 
   const chartPoints = useMemo(
     () => buildAnalyticsChartPoints(seriesData?.points ?? [], range, interval),
@@ -369,40 +481,6 @@ export function AnalyticsOverview({
           )
         : [],
     [previousSeriesData, comparisonRange, interval],
-  )
-
-  // Pageviews per bucket = the series filtered to the pageview event. Only
-  // fetched when it's needed: Pageviews is plotted, or the flat aggregate
-  // can't give the total (page / event filter active).
-  const needsPageviews = activeMetric.key === 'pageviews' || statsUnsupported
-  const { data: pageviewSeriesData, error: pageviewError } =
-    useAnalyticsEventMetrics(
-      projectId,
-      needsPageviews ? propertyId : null,
-      ANALYTICS_PAGEVIEW_EVENT,
-      range,
-      interval,
-      filters,
-    )
-  const { data: comparisonPageviewData } = useAnalyticsEventMetrics(
-    projectId,
-    needsPageviews && isComparing ? propertyId : null,
-    ANALYTICS_PAGEVIEW_EVENT,
-    compareRange,
-    interval,
-    filters,
-  )
-  const pageviewPoints = useMemo(
-    () =>
-      buildAnalyticsChartPoints(pageviewSeriesData?.points ?? [], range, interval),
-    [pageviewSeriesData, range, interval],
-  )
-  const previousPageviewPoints = useMemo(
-    () =>
-      isComparing && comparisonPageviewData && comparisonRange
-        ? buildAnalyticsChartPoints(comparisonPageviewData.points, comparisonRange, interval)
-        : [],
-    [isComparing, comparisonPageviewData, comparisonRange, interval],
   )
 
   // ── Aggregate-backed metrics: one flat read per bucket window ──
@@ -449,7 +527,37 @@ export function AnalyticsOverview({
   const windowsSettled =
     windowResults.length > 0 &&
     windowResults.every((result) => result.data !== undefined || result.isError)
+  const comparisonWindowsSettled =
+    comparisonWindowResults.length === 0 ||
+    comparisonWindowResults.every(
+      (result) => result.data !== undefined || result.isError,
+    )
   const windowsError = windowResults.find((result) => result.isError)?.error
+
+  const hasSeries =
+    activeMetric.source === 'aggregate'
+      ? windowsSettled
+      : seriesData !== undefined
+  const comparisonReady =
+    !isComparing ||
+    (activeMetric.source === 'aggregate'
+      ? comparisonWindowsSettled
+      : previousSeriesData !== undefined)
+  // First paint waits for the current series and, when compare is on (the
+  // default), the comparison series too. Otherwise the dashed previous-period
+  // line lands from cache first, then the area remounts onto the full series.
+  const bothReady = hasSeries && comparisonReady
+  if (bothReady && !hasRevealed) {
+    setHasRevealed(true)
+  }
+  const revealed = hasRevealed || bothReady
+  const loadError =
+    activeMetric.source === 'aggregate'
+      ? (windowsError ?? statsError)
+      : (statsError ?? seriesError)
+  const showError = !!loadError && !hasSeries
+  const showSkeleton = !showError && !revealed
+  const showComparisonLine = isComparing && comparisonReady && !showSkeleton
 
   // The comparison window is aligned by bucket index, so the dashed line sits
   // under the matching hour / day of the current window. A custom window of a
@@ -461,10 +569,9 @@ export function AnalyticsOverview({
     activeMetric.source === 'aggregate'
       ? windowValues(chartPoints.length, windows, windowData, metricKey as AggregateMetric)
       : chartPoints.map(
-          (point, index) =>
-            bucketValue(metricKey as SeriesMetric, point, pageviewPoints[index]) ?? 0,
+          (point) => bucketValue(metricKey as SeriesMetric, point) ?? 0,
         )
-  const previousValues: (number | null)[] = !isComparing
+  const previousValues: (number | null)[] = !showComparisonLine
     ? []
     : activeMetric.source === 'aggregate'
       ? windowValues(
@@ -474,14 +581,14 @@ export function AnalyticsOverview({
           metricKey as AggregateMetric,
         )
       : previousPoints.map(
-          (point, index) =>
-            bucketValue(metricKey as SeriesMetric, point, previousPageviewPoints[index]) ??
-            null,
+          (point) => bucketValue(metricKey as SeriesMetric, point) ?? null,
         )
   const chartData = chartPoints.map((point, index) => ({
     ...point,
-    value: currentValues[index] ?? null,
-    previous: isComparing ? (previousValues[index] ?? null) : undefined,
+    value: showSkeleton
+      ? SKELETON_WAVE[index % SKELETON_WAVE.length]
+      : (currentValues[index] ?? null),
+    previous: showComparisonLine ? (previousValues[index] ?? null) : undefined,
     previousFullDate: (previousPoints[index] ?? comparisonGrid[index])?.fullDate,
   }))
 
@@ -489,34 +596,26 @@ export function AnalyticsOverview({
   // deduplicates visitors / visits across the whole window (summing a daily
   // series would count a returning visitor once per day). Summed buckets are
   // only a fallback while the aggregate loads, or when a filter rules it out.
-  const sum = (points: AnalyticsChartPoint[], key: 'visitors' | 'sessions' | 'events') =>
-    points.reduce((total, point) => total + point[key], 0)
+  const sum = (
+    points: AnalyticsChartPoint[],
+    key: 'visitors' | 'sessions' | 'pageviews' | 'events',
+  ) => points.reduce((total, point) => total + point[key], 0)
   const metricTotal = (
     key: AnalyticsChartMetric,
     aggregate: Models.AnalyticsMetric | undefined,
     base: AnalyticsChartPoint[],
-    pageviews: AnalyticsChartPoint[],
     hasBase: boolean,
-    hasPageviews: boolean,
   ): number | undefined => {
     if (aggregate) return aggregate[key] ?? 0
     if (key === 'visitors') return hasBase ? sum(base, 'visitors') : undefined
     if (key === 'visits') return hasBase ? sum(base, 'sessions') : undefined
-    if (key === 'pageviews') return hasPageviews ? sum(pageviews, 'events') : undefined
+    if (key === 'pageviews') return hasBase ? sum(base, 'pageviews') : undefined
+    if (key === 'events') return hasBase ? sum(base, 'events') : undefined
     return undefined // bounce rate / duration only exist on the aggregate
   }
 
-  const hasSeries =
-    activeMetric.source === 'aggregate'
-      ? windowsSettled
-      : (activeMetric.key === 'pageviews' ? pageviewSeriesData : seriesData) !== undefined
-  const loadError =
-    activeMetric.source === 'aggregate'
-      ? (windowsError ?? statsError)
-      : (statsError ?? (activeMetric.key === 'pageviews' ? pageviewError : seriesError))
-  const showError = !!loadError && !hasSeries
   const isEmpty =
-    hasSeries && chartData.every((point) => !point.value)
+    !showSkeleton && hasSeries && chartData.every((point) => !point.value)
 
   // ── Chart helpers ──
   const brushPoints = useMemo(
@@ -545,34 +644,37 @@ export function AnalyticsOverview({
   const activeSeriesLabel = t(activeMetric.label)
 
   // ── Metric tabs ──
-  const tabs = OVERVIEW_METRICS.map((metric) => {
+  const tabs = metrics.map((metric) => {
     const value = metricTotal(
       metric.key,
       stats,
       chartPoints,
-      pageviewPoints,
       seriesData !== undefined,
-      pageviewSeriesData !== undefined,
     )
     const previous = isComparing
       ? metricTotal(
           metric.key,
           previousStats,
           previousPoints,
-          previousPageviewPoints,
           previousSeriesData !== undefined,
-          comparisonPageviewData !== undefined,
         )
       : undefined
-    // Aggregate-only metrics can't be shown with a page / event filter; say
-    // so rather than quietly showing unfiltered numbers.
+    // Aggregate-only metrics can't be shown with some filters; say so rather
+    // than quietly showing unfiltered numbers.
     const blockedByFilter = metric.source === 'aggregate' && statsUnsupported
+    // Per-bucket distinct users don't add up to a range total, so Users has
+    // no fallback total; its chart still plots per bucket.
+    const totalBlocked = metric.key === 'users' && statsUnsupported
     return {
       ...metric,
       value,
+      previous,
       change: isComparing ? analyticsChangePercent(value, previous) : undefined,
       unavailable: value === undefined,
-      hint: blockedByFilter ? t(ANALYTICS_FILTER_UNSUPPORTED_MESSAGE) : undefined,
+      hint:
+        blockedByFilter || totalBlocked
+          ? t(ANALYTICS_FILTER_UNSUPPORTED_MESSAGE)
+          : undefined,
       blockedByFilter,
     }
   })
@@ -580,13 +682,18 @@ export function AnalyticsOverview({
   return (
     <div className="w-full">
       {/* Active filters, removable in place. Hidden when none. */}
-      <ActiveFilterChips />
+      <AnalyticsFilterChips />
 
       {/* Series totals. Filters, interval, date range, comparison and
           refresh live in the standard ServiceHeader toolbar above. */}
       <div className="border-b border-border px-4 py-3 sm:px-6">
-        {/* One row of seven on wide screens; wraps to 4 / 2 columns. */}
-        <div className="-mx-3 grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-4 xl:grid-cols-7">
+        {/* One row on wide screens; wraps to 4 / 2 columns. */}
+        <div
+          className={cn(
+            '-mx-3 grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-4',
+            tabs.length > 8 ? 'xl:grid-cols-9' : 'xl:grid-cols-8',
+          )}
+        >
           {tabs.map((tab) => (
             <MetricTab
               key={tab.key}
@@ -594,6 +701,19 @@ export function AnalyticsOverview({
               info={tab.info}
               value={tab.value}
               format={tab.format}
+              exact={
+                tab.axis === 'count' && isCompactNumber(tab.value)
+                  ? formatExactNumber(tab.value)
+                  : undefined
+              }
+              previousExact={
+                tab.previous === undefined
+                  ? undefined
+                  : tab.axis === 'count'
+                    ? formatExactNumber(tab.previous)
+                    : tab.format(tab.previous)
+              }
+              compareLabel={isComparing ? compareLabel : undefined}
               change={tab.change}
               invert={tab.invert}
               isActive={activeMetric.key === tab.key}
@@ -620,7 +740,7 @@ export function AnalyticsOverview({
                 {activeSeriesLabel}
               </span>
             </div>
-            {isComparing ? (
+            {showComparisonLine ? (
               <div className="flex items-center gap-1.5">
                 <span
                   className="h-0 w-3 border-t-2 border-dashed"
@@ -657,16 +777,20 @@ export function AnalyticsOverview({
             </div>
           ) : (
             <div
-              key={hasSeries ? 'data' : 'empty'}
+              key={showSkeleton ? 'skeleton' : 'data'}
               className={cn(
                 surfaceClassName,
                 'relative',
-                hasSeries && USAGE_CHART_FADE_IN_CLASS_NAME,
+                showSkeleton && 'pointer-events-none',
+                !showSkeleton && USAGE_CHART_FADE_IN_CLASS_NAME,
               )}
+              aria-busy={showSkeleton || undefined}
               aria-label={
-                canSelect
-                  ? t('Drag on the chart to select a date range')
-                  : undefined
+                showSkeleton
+                  ? t('Loading analytics data')
+                  : canSelect
+                    ? t('Drag on the chart to select a date range')
+                    : undefined
               }
             >
               <ResponsiveContainer
@@ -679,24 +803,45 @@ export function AnalyticsOverview({
                   {...chartProps}
                 >
                   <defs>
-                    <linearGradient
-                      id={GRADIENT_ID}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor={CURRENT_COLOR}
-                        stopOpacity={0.2}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor={CURRENT_COLOR}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
+                    {showSkeleton ? (
+                      <linearGradient
+                        id={SKELETON_GRADIENT_ID}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={SKELETON_CHART_FILL}
+                          stopOpacity={0.14}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={SKELETON_CHART_FILL}
+                          stopOpacity={0.02}
+                        />
+                      </linearGradient>
+                    ) : (
+                      <linearGradient
+                        id={GRADIENT_ID}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={CURRENT_COLOR}
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={CURRENT_COLOR}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    )}
                   </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -717,10 +862,15 @@ export function AnalyticsOverview({
                     ]}
                   />
                   <Tooltip
-                    isAnimationActive={false}
-                    cursor={!isSelecting}
+                    {...CHART_ANIMATION_DISABLED}
+                    cursor={!showSkeleton && !isSelecting}
                     content={({ active, payload }) => {
-                      if (isSelecting || !active || !payload?.length) {
+                      if (
+                        showSkeleton ||
+                        isSelecting ||
+                        !active ||
+                        !payload?.length
+                      ) {
                         return null
                       }
                       const point = payload[0]?.payload as
@@ -741,7 +891,7 @@ export function AnalyticsOverview({
                               {point.value == null ? '–' : activeMetric.format(point.value)}
                             </span>
                           </div>
-                          {isComparing && point.previous != null ? (
+                          {showComparisonLine && point.previous != null ? (
                             <>
                               <div className="mt-1 flex items-center justify-between gap-6">
                                 <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -770,7 +920,7 @@ export function AnalyticsOverview({
                       )
                     }}
                   />
-                  {isComparing ? (
+                  {showComparisonLine ? (
                     <Line
                       type="monotone"
                       dataKey="previous"
@@ -781,7 +931,7 @@ export function AnalyticsOverview({
                       strokeDasharray="4 4"
                       dot={false}
                       activeDot={false}
-                      isAnimationActive={false}
+                      {...CHART_ANIMATION_DISABLED}
                     />
                   ) : null}
                   <Area
@@ -789,16 +939,25 @@ export function AnalyticsOverview({
                     dataKey="value"
                     // Grouped aggregate windows leave gaps between points.
                     connectNulls
-                    stroke={CURRENT_COLOR}
+                    stroke={showSkeleton ? SKELETON_CHART_STROKE : CURRENT_COLOR}
                     strokeWidth={2}
-                    fill={`url(#${GRADIENT_ID})`}
+                    fill={
+                      showSkeleton
+                        ? `url(#${SKELETON_GRADIENT_ID})`
+                        : `url(#${GRADIENT_ID})`
+                    }
                     dot={false}
-                    activeDot={{
-                      r: 4,
-                      fill: CURRENT_COLOR,
-                      stroke: 'var(--background)',
-                      strokeWidth: 2,
-                    }}
+                    activeDot={
+                      showSkeleton
+                        ? false
+                        : {
+                            r: 4,
+                            fill: CURRENT_COLOR,
+                            stroke: 'var(--background)',
+                            strokeWidth: 2,
+                          }
+                    }
+                    {...CHART_ANIMATION_DISABLED}
                   />
                   <UsageChartBrushReferenceArea
                     left={brushLeft}

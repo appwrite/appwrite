@@ -1,0 +1,36 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="onePillarGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="onePillarBack">
+<path d="M120 262H362V296H120Z"/>
+</g>
+<g id="onePillar">
+<path d="M233 206H249V282H233Z"/>
+<path d="M206 222L233 240V248L206 230Z"/>
+<path d="M276 222L249 240V248L276 230Z"/>
+<path d="M186 196H296V206H186Z"/>
+<path d="M198 150H284V196H198Z"/>
+<path d="M166 140C188 148 200 150 214 150H268C282 150 294 148 316 140L306 154H176Z"/>
+<path d="M200 150L214 116H268L282 150Z"/>
+<path d="M212 116L224 104H258L270 116Z"/>
+<path d="M239.25 86H242.75V104H239.25Z"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#onePillarBack" fill="#19191C"/>
+<use href="#onePillarBack" fill="url(#onePillarGrad)"/>
+<use href="#onePillarBack" stroke="#FD366E" stroke-width="1.36239"/>
+<use href="#onePillar" fill="#19191C"/>
+<use href="#onePillar" fill="url(#onePillarGrad)"/>
+<use href="#onePillar" stroke="#FD366E" stroke-width="1.36239"/>
+<g fill="#19191C" stroke="#FD366E" stroke-width="1.36239"><path d="M214 162H236V196H214Z"/><path d="M246 162H268V196H246Z"/></g>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M198 158H284"/><path d="M225 162V196"/><path d="M257 162V196"/><path d="M214 128H268"/><path d="M136 274H196"/><path d="M286 274H346"/><path d="M150 284H220"/><path d="M262 284H332"/><path d="M241 86L232 80"/><path d="M241 86L250 80"/></g>
+</svg>

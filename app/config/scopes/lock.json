@@ -1,5 +1,7 @@
 {
     "project": [
+        "alerts.read",
+        "alerts.write",
         "assistant.read",
         "attributes.read",
         "attributes.write",
@@ -48,6 +50,8 @@
         "migrations.write",
         "mocks.read",
         "mocks.write",
+        "monitors.read",
+        "monitors.write",
         "platforms.read",
         "platforms.write",
         "policies.read",
@@ -64,6 +68,8 @@
         "providers.write",
         "reports.read",
         "reports.write",
+        "reviews.read",
+        "reviews.write",
         "rows.read",
         "rows.write",
         "rules.read",

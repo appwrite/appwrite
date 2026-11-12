@@ -70,18 +70,58 @@ function AccordionTrigger({
   )
 }
 
+function AccordionContentBody({
+  className,
+  children,
+  trackClosed,
+}: {
+  className?: string
+  children: React.ReactNode
+  trackClosed: boolean
+}) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const [closed, setClosed] = React.useState(trackClosed)
+
+  React.useLayoutEffect(() => {
+    if (!trackClosed) return
+    const content = ref.current?.parentElement
+    if (!content) return
+
+    const sync = () => setClosed(content.getAttribute('data-state') !== 'open')
+    sync()
+    const observer = new MutationObserver(sync)
+    observer.observe(content, { attributes: true, attributeFilter: ['data-state'] })
+    return () => observer.disconnect()
+  }, [trackClosed])
+
+  return (
+    <div ref={ref} inert={trackClosed ? closed : undefined} className="min-h-0 overflow-hidden">
+      <div className={cn('pt-0 pb-4', className)}>{children}</div>
+    </div>
+  )
+}
+
 function AccordionContent({
   className,
   children,
+  forceMount,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Content>) {
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm"
+      forceMount={forceMount}
+      className={cn(
+        'overflow-hidden text-sm [overflow-anchor:none]',
+        forceMount
+          ? 'grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none data-[state=open]:grid-rows-[1fr]'
+          : 'data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down',
+      )}
       {...props}
     >
-      <div className={cn('pt-0 pb-4', className)}>{children}</div>
+      <AccordionContentBody className={className} trackClosed={Boolean(forceMount)}>
+        {children}
+      </AccordionContentBody>
     </AccordionPrimitive.Content>
   )
 }

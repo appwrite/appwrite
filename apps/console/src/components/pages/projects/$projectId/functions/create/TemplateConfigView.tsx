@@ -39,6 +39,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
+import { isTemplateVariableSecret } from '@/lib/template-variables'
 import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
@@ -169,7 +170,7 @@ export function TemplateConfigView({
         const templateVars = template.variables.map((v) => ({
           key: v.name,
           value: resolveTemplatePlaceholder(v.value || '', context),
-          secret: v.secret || false,
+          secret: isTemplateVariableSecret(v),
         }))
         setVariables(templateVars)
       }
@@ -262,6 +263,13 @@ export function TemplateConfigView({
       return
     }
 
+    // The template deployment needs the template's repository; check it before
+    // the function is created, not after.
+    if (!template.providerRepositoryId || !template.providerOwner) {
+      toast.error(t('Template is missing repository information'))
+      return
+    }
+
     setIsDeploying(true)
     const projectSdk = sdk.forProject(projectId)
     const finalFunctionId = (functionId?.trim() || ID.unique()) as string
@@ -284,16 +292,13 @@ export function TemplateConfigView({
       formData.installationId &&
       formData.providerRepositoryId
 
+    let created = false
     try {
       await projectSdk.functions.create({
         functionId: finalFunctionId,
         name: functionName.trim(),
         runtime: runtime as Runtime,
-        execute: isPublic
-          ? ['any']
-          : template.permissions?.length
-            ? template.permissions
-            : [],
+        execute: isPublic ? ['any'] : [],
         events: template.events?.length ? template.events : undefined,
         schedule: template.cron || undefined,
         timeout: template.timeout ?? undefined,
@@ -316,6 +321,7 @@ export function TemplateConfigView({
             }),
         buildSpecification: specification || undefined,
       })
+      created = true
 
       await projectSdk.proxy.createFunctionRule({
         domain: domainTrimmed,
@@ -335,11 +341,6 @@ export function TemplateConfigView({
 
       // Use template deployment so the deployment has source code (same as sites).
       // Payload must match backend expectation: repository name, owner, rootDirectory path in repo (e.g. php/starter), tag reference (e.g. 0.2.*).
-      if (!template.providerRepositoryId || !template.providerOwner) {
-        toast.error(t('Template is missing repository information'))
-        setIsDeploying(false)
-        return
-      }
       const runtimeRoot = selectedRuntimeObj?.providerRootDirectory?.trim()
       // Derive path when template does not provide it (e.g. appwrite/templates uses php/starter, node/starter).
       const rootDirectory =
@@ -374,6 +375,18 @@ export function TemplateConfigView({
       toast.error(
         err instanceof Error ? err.message : t('Failed to create function'),
       )
+      // The function exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the function instead.
+      if (created) {
+        await queryClient.refetchQueries({
+          queryKey: ['functions', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/functions/$functionId',
+          params: { projectId, functionId: finalFunctionId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }
@@ -767,7 +780,7 @@ export function TemplateConfigView({
                       <span className="text-destructive ms-1">*</span>
                     )}
                   </Label>
-                  {templateVar?.secret && (
+                  {variable.secret && (
                     <span className="text-[10px] text-muted-foreground">
                       {t('Secret')}
                     </span>
@@ -795,7 +808,7 @@ export function TemplateConfigView({
                     templateVar?.placeholder ||
                     `${t('Enter')} ${variable.key}`
                   }
-                  type={templateVar?.secret ? 'password' : 'text'}
+                  type={variable.secret ? 'password' : 'text'}
                   className="h-9 text-[13px] font-mono"
                 />
               </div>

@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { NumberInput } from '@/components/ui/number-input'
 import {
   Select,
   SelectContent,
@@ -14,10 +15,13 @@ import { Plus, Trash2, Route } from 'lucide-react'
 import {
   FIREWALL_HTTP_METHODS,
   createEmptyConditionDraft,
+  defaultOperatorForAttribute,
   getOperatorsForAttribute,
   isDynamicKeyAttribute,
   isNoValueOperator,
   isOperatorAllowedForAttribute,
+  isAttributeAvailable,
+  isSecondsAttribute,
   isTextMatchOperator,
   type FirewallConditionAttribute,
   type FirewallConditionDraft,
@@ -42,6 +46,12 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import {
+  createTimeUnitPair,
+  fromSeconds,
+  toSeconds,
+  type TimeUnit,
+} from '@/lib/utils/time-unit-converter'
 import type { ReactNode } from 'react'
 import {
   ATTRIBUTE_ICONS,
@@ -105,6 +115,71 @@ function RailLabel({ children }: { children: ReactNode }) {
     <span className="relative z-10 bg-card px-1.5 text-[13px] font-semibold leading-none text-foreground">
       {children}
     </span>
+  )
+}
+
+const DURATION_UNITS: TimeUnit[] = ['seconds', 'minutes', 'hours', 'days']
+
+const DURATION_UNIT_LABELS: Record<string, string> = {
+  seconds: 'Seconds',
+  minutes: 'Minutes',
+  hours: 'Hours',
+  days: 'Days',
+}
+
+/** Prefilled when switching to session / MFA age: shows as 5 minutes. */
+const DEFAULT_DURATION_SECONDS = '300'
+
+/**
+ * Duration input for session / MFA age. The draft value stays in seconds; the
+ * unit starts at the one with the smallest whole value (300 → 5 minutes).
+ */
+function ConditionDurationInput({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: string
+  disabled?: boolean
+  onChange: (value: string) => void
+}) {
+  const t = useT()
+  const seconds = Number(value) || 0
+  const [unit, setUnit] = useState<TimeUnit>(
+    () => createTimeUnitPair(seconds, { units: DURATION_UNITS }).unit,
+  )
+  // Six decimals keep one-second resolution in every unit (a day's error
+  // stays under 0.05s), so the shown value always maps back to the stored one.
+  const amount = Number(fromSeconds(seconds, unit).toFixed(6))
+
+  return (
+    <div className="flex w-full gap-2">
+      <NumberInput
+        value={amount}
+        min={0}
+        disabled={disabled}
+        className="h-9 min-w-0 flex-1 font-mono text-[13px] tabular-nums"
+        onValueChange={(next) =>
+          onChange(String(Math.round(toSeconds(next, unit))))
+        }
+      />
+      <Select
+        value={unit}
+        disabled={disabled}
+        onValueChange={(next) => setUnit(next as TimeUnit)}
+      >
+        <SelectTrigger className="h-9 w-[9.5rem] shrink-0 text-[13px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {DURATION_UNITS.map((option) => (
+            <SelectItem key={option} value={option}>
+              {t(DURATION_UNIT_LABELS[option])}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   )
 }
 
@@ -350,6 +425,16 @@ function ConditionValueInput({
         />
       )
 
+    case 'sessionAge':
+    case 'mfaAge':
+      return (
+        <ConditionDurationInput
+          value={value}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      )
+
     case 'headers':
     case 'query':
       return (
@@ -389,8 +474,7 @@ export function ConditionsBuilder({
   className,
 }: ConditionsBuilderProps) {
   const t = useT()
-  const showThen =
-    action != null && (onActionChange != null || actionReadOnly)
+  const showThen = action != null && (onActionChange != null || actionReadOnly)
   const pathPlaceholder = PATH_PLACEHOLDERS[resourceType] ?? 'e.g. /v1/account'
 
   // Premium geo attributes (city / state) are only selectable when the project
@@ -428,13 +512,13 @@ export function ConditionsBuilder({
           condition.operator,
         )
           ? condition.operator
-          : ('equal' as FirewallConditionOperator)
+          : defaultOperatorForAttribute(attribute)
         return {
           ...condition,
           attribute,
           operator: nextOperator,
           // Clear value/key when switching attribute; method/country need discrete picks.
-          value: '',
+          value: isSecondsAttribute(attribute) ? DEFAULT_DURATION_SECONDS : '',
           key: '',
         }
       }),
@@ -477,8 +561,7 @@ export function ConditionsBuilder({
             <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border" />
           </div>
           {conditions.map((condition, index) => {
-            const AttributeIcon =
-              ATTRIBUTE_ICONS[condition.attribute] ?? Route
+            const AttributeIcon = ATTRIBUTE_ICONS[condition.attribute] ?? Route
             const operators = getOperatorsForAttribute(condition.attribute)
             return (
               <div key={condition.id} className="contents">
@@ -491,6 +574,7 @@ export function ConditionsBuilder({
                       <div className="flex min-w-0 items-center gap-2">
                         <ConditionAttributeSelect
                           value={condition.attribute}
+                          resourceType={resourceType}
                           disabled={disabled}
                           premiumGeoEnabled={premiumGeoEnabled}
                           onValueChange={(attribute) =>
@@ -559,6 +643,27 @@ export function ConditionsBuilder({
                           }
                         />
                       )}
+
+                      {!isAttributeAvailable(
+                        condition.attribute,
+                        resourceType,
+                      ) ? (
+                        <p className="text-[12px] text-destructive">
+                          {t(
+                            'Sites requests have no user session. Remove this condition or pick another.',
+                          )}
+                        </p>
+                      ) : isSecondsAttribute(condition.attribute) ? (
+                        <p className="text-[12px] text-muted-foreground">
+                          {resourceType === 'api'
+                            ? t(
+                                'Empty for guests and API keys. Add an "Is empty" condition in a separate rule to block them too.',
+                              )
+                            : t(
+                                'Read from the user JWT (x-appwrite-user-jwt) on the request. Empty when the request has none.',
+                              )}
+                        </p>
+                      ) : null}
                     </div>
 
                     <Button

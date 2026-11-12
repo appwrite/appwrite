@@ -1,16 +1,8 @@
-import { useId, useMemo, useState } from 'react'
+import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { AnalyticsDimension, type Models } from '@appwrite.io/console'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
-import {
-  Bot,
-  Download,
-  Eye,
-  Globe,
-  MousePointerClick,
-  Plus,
-  Users,
-} from 'lucide-react'
+import { Bot, Download, Globe, Plus, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip as UiTooltip,
@@ -60,10 +52,98 @@ const CHART_COLOR = 'var(--chart-brand)'
 
 /** Left column: headline, stat tiles, sources row. */
 const LEFT_COLUMN_CLASS = 'flex min-w-0 flex-col gap-4 lg:h-[176px]'
-/** Chart box (plus its 20px axis-label row below). */
-const CHART_HEIGHT_CLASS = 'h-[156px]'
+/**
+ * Chart frame (chart plus its axis-label row), matching the left column's
+ * 176px so both sides line up.
+ */
+const CHART_FRAME_CLASS =
+  'flex h-[176px] min-w-0 flex-col rounded-lg border border-border/60 bg-background/40 px-3 pb-2.5 pt-3'
+
+/** Start-side fade for the not-linked preview (the chart box is forced LTR). */
+const PREVIEW_FADE_STYLE = {
+  maskImage: 'linear-gradient(to right, transparent, black 60%)',
+  WebkitMaskImage: 'linear-gradient(to right, transparent, black 60%)',
+} as const
 /** Sources row, reserved even when empty. */
 const SOURCES_ROW_CLASS = 'flex h-6 min-w-0 items-center gap-1.5 overflow-hidden'
+
+/**
+ * Source chips that never get cut mid-word: every chip stays in the row at
+ * its natural width, and the ones that don't fit entirely are made
+ * invisible. Hiding with `visibility` (not `display`) keeps layout unchanged,
+ * so measuring can't loop. Re-measured when the row or any chip resizes
+ * (window resize, fonts loading, new data).
+ */
+function TopSourceChips({
+  projectId,
+  propertyId,
+  sources,
+}: {
+  projectId: string
+  propertyId: string
+  sources: Models.AnalyticsMetric[]
+}) {
+  const t = useT()
+  const rowRef = useRef<HTMLDivElement>(null)
+  // null until the first measure (runs before paint, so nothing flashes).
+  const [fitting, setFitting] = useState<number | null>(null)
+  const sourcesKey = sources.map((source) => source.value).join('\n')
+
+  useLayoutEffect(() => {
+    const row = rowRef.current
+    if (!row) return
+    const chips = Array.from(
+      row.querySelectorAll<HTMLElement>('[data-source-chip]'),
+    )
+    const measure = () => {
+      const box = row.getBoundingClientRect()
+      let count = 0
+      for (const chip of chips) {
+        const rect = chip.getBoundingClientRect()
+        // Half a pixel of slack for subpixel layout; works in RTL too.
+        if (rect.left < box.left - 0.5 || rect.right > box.right + 0.5) break
+        count++
+      }
+      setFitting(count)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(row)
+    for (const chip of chips) observer.observe(chip)
+    return () => observer.disconnect()
+  }, [sourcesKey])
+
+  return (
+    <div ref={rowRef} className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+      {sources.map((source, index) => {
+        const hidden = fitting !== null && index >= fitting
+        return (
+          // Opens the dashboard filtered to this source.
+          <Link
+            key={source.value}
+            data-source-chip
+            to="/projects/$projectId/analytics/$propertyId"
+            params={{ projectId, propertyId }}
+            search={{ query: sourceFilterQuery(source.value!) }}
+            title={t('View analytics for this source')}
+            aria-hidden={hidden || undefined}
+            tabIndex={hidden ? -1 : undefined}
+            className={cn(
+              'inline-flex h-6 max-w-[11rem] shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-background/60 pe-2 ps-1 text-[11px] text-foreground transition-colors hover:border-foreground/30 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              hidden && 'invisible',
+            )}
+          >
+            <SourceFavicon value={source.value} />
+            <span className="truncate">{source.value}</span>
+            <span className="tabular-nums text-muted-foreground">
+              {formatNumber(source.visitors)}
+            </span>
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
 
 /** `https://www.Example.com:443/x` → `example.com`, for matching. */
 export function normalizeSiteHost(value: string | null | undefined): string {
@@ -180,21 +260,18 @@ function TrendChart({
 }
 
 function MiniStat({
-  icon: Icon,
   label,
   value,
   change,
   invert,
 }: {
-  icon: typeof Users
   label: string
   value: string | null
   change?: number
   invert?: boolean
 }) {
   return (
-    <div className="flex h-[52px] min-w-0 items-center gap-2.5 rounded-lg border border-border/60 bg-background/40 px-3">
-      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+    <div className="flex h-[52px] min-w-0 items-center rounded-lg border border-border/60 bg-background/40 px-3">
       <div className="min-w-0">
         <p className="truncate text-[11px] text-muted-foreground">{label}</p>
         <p className="flex h-5 items-baseline gap-1.5">
@@ -310,11 +387,12 @@ export function SiteAnalyticsCard({
   const resolving = propertiesLoading || domainsLoading
   const statsLoaded = stats !== undefined
   const hasTraffic =
-    !!stats && (stats.events > 0 || stats.visitors > 0 || stats.pageviews > 0)
+    !!stats &&
+    (stats.events > 0 || stats.visitors > 0 || (stats.pageviews ?? 0) > 0)
   const comparable =
     !!previousStats &&
-    (previousStats.visitors > 0 || previousStats.pageviews > 0)
-  const change = (current?: number, previous?: number) =>
+    (previousStats.visitors > 0 || (previousStats.pageviews ?? 0) > 0)
+  const change = (current?: number | null, previous?: number | null) =>
     comparable ? analyticsChangePercent(current, previous) : undefined
   const topSources = sources
     .filter((row) => isKnownBreakdownValue(row.value))
@@ -326,13 +404,6 @@ export function SiteAnalyticsCard({
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-border bg-card/50">
-      {/* Soft brand glow in the corner. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -end-24 -top-24 h-64 w-64 rounded-full opacity-[0.12] blur-3xl"
-        style={{ backgroundColor: CHART_COLOR }}
-      />
-
       {/* Header: fixed h-16 whatever sits on the right. */}
       <div className="relative flex h-16 items-center justify-between gap-3 px-6">
         <div className="flex min-w-0 items-center">
@@ -366,8 +437,7 @@ export function SiteAnalyticsCard({
         {resolving || property ? (
           <div className={LEFT_COLUMN_CLASS}>
             <div className="h-[60px]">
-              <p className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                <Users className="h-3.5 w-3.5" />
+              <p className="text-[12px] text-muted-foreground">
                 {t('Visitors')}
               </p>
               <div className="mt-1.5 flex h-[34px] items-baseline gap-2.5">
@@ -397,20 +467,17 @@ export function SiteAnalyticsCard({
             </div>
             <div className="grid grid-cols-3 gap-2">
               <MiniStat
-                icon={Eye}
                 label={t('Pageviews')}
                 value={resolving ? null : value((s) => formatNumber(s.pageviews))}
                 change={change(stats?.pageviews, previousStats?.pageviews)}
               />
               <MiniStat
-                icon={MousePointerClick}
                 label={t('Bounce rate')}
                 value={resolving ? null : value((s) => formatPercent(s.bounceRate))}
                 change={change(stats?.bounceRate, previousStats?.bounceRate)}
                 invert
               />
               <MiniStat
-                icon={Globe}
                 label={t('Visit duration')}
                 value={resolving ? null : value((s) => formatDuration(s.visitDuration))}
                 change={change(stats?.visitDuration, previousStats?.visitDuration)}
@@ -424,23 +491,11 @@ export function SiteAnalyticsCard({
               {resolving || sourcesLoading ? (
                 <span className="h-5 w-40 animate-pulse rounded-full bg-muted" />
               ) : topSources.length > 0 ? (
-                topSources.map((source) => (
-                  // Opens the dashboard filtered to this source.
-                  <Link
-                    key={source.value}
-                    to="/projects/$projectId/analytics/$propertyId"
-                    params={{ projectId, propertyId: property!.$id }}
-                    search={{ query: sourceFilterQuery(source.value!) }}
-                    title={t('View analytics for this source')}
-                    className="inline-flex h-6 max-w-[11rem] shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-background/60 pe-2 ps-1 text-[11px] text-foreground transition-colors hover:border-foreground/30 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <SourceFavicon value={source.value} />
-                    <span className="truncate">{source.value}</span>
-                    <span className="tabular-nums text-muted-foreground">
-                      {formatNumber(source.visitors)}
-                    </span>
-                  </Link>
-                ))
+                <TopSourceChips
+                  projectId={projectId}
+                  propertyId={property!.$id}
+                  sources={topSources}
+                />
               ) : (
                 <span className="text-[11px] text-muted-foreground/70">
                   {t('None yet')}
@@ -471,12 +526,13 @@ export function SiteAnalyticsCard({
           </div>
         )}
 
-        {/* Chart column: fixed box + label row in every state. */}
-        <div className="flex flex-col">
-          <div className={cn('relative rounded-lg', CHART_HEIGHT_CLASS, FORCE_LTR_CLASS)}>
+        {/* Chart column: a framed box (chart + label row), same height as
+            the left column, in every state. */}
+        <div className={CHART_FRAME_CLASS}>
+          <div className={cn('relative min-h-0 flex-1', FORCE_LTR_CLASS)}>
             <div aria-hidden className="absolute inset-0" style={DOT_GRID_STYLE} />
             {resolving || (property && series === undefined) ? (
-              <div className="absolute inset-x-0 bottom-0 top-6 animate-pulse rounded-lg bg-muted/40" />
+              <div className="absolute inset-x-0 bottom-0 top-6 animate-pulse rounded-md bg-muted/40" />
             ) : property ? (
               hasTraffic ? (
                 <div className={cn('absolute inset-0', USAGE_CHART_FADE_IN_CLASS_NAME)}>
@@ -498,17 +554,22 @@ export function SiteAnalyticsCard({
               ) : null
             ) : (
               // Not linked: decorative preview, fading in from the start side.
-              <div className="absolute inset-0 opacity-70" aria-hidden>
+              // A mask (not a card-coloured overlay) so it fades into
+              // whatever is behind the frame.
+              <div
+                className="absolute inset-0 opacity-70"
+                style={PREVIEW_FADE_STYLE}
+                aria-hidden
+              >
                 <TrendChart
                   data={PREVIEW_SERIES}
                   valueLabel=""
                   interactive={false}
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-card via-card/20 to-transparent" />
               </div>
             )}
           </div>
-          <div className="mt-2 flex h-3 justify-between text-[10px] leading-3 text-muted-foreground">
+          <div className="mt-2 flex h-3 shrink-0 justify-between text-[10px] leading-3 text-muted-foreground">
             {property || resolving ? (
               <>
                 <span>{t('24 hours ago')}</span>
@@ -528,7 +589,7 @@ export function SiteAnalyticsCard({
             {/* Only once stats say there's no traffic: never flashes in. */}
             {statsLoaded && !hasTraffic ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={() => setInstallOpen(true)}
@@ -537,7 +598,12 @@ export function SiteAnalyticsCard({
                 {t('Install tracking')}
               </Button>
             ) : null}
-            <Button size="sm" className="h-9 text-[13px]" asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 text-[13px]"
+              asChild
+            >
               <Link
                 to="/projects/$projectId/analytics/$propertyId"
                 params={{ projectId, propertyId: property.$id }}
@@ -554,7 +620,12 @@ export function SiteAnalyticsCard({
                 : t('Add a domain to this site first.')}
             </p>
             {canCreate && primaryDomain ? (
-              <Button size="sm" className="h-9 text-[13px]" asChild>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-9 text-[13px]"
+                asChild
+              >
                 <Link
                   to="/projects/$projectId/analytics/add"
                   params={{ projectId }}
@@ -568,7 +639,12 @@ export function SiteAnalyticsCard({
               <UiTooltip>
                 <TooltipTrigger asChild>
                   <span tabIndex={0}>
-                    <Button size="sm" className="h-9 text-[13px]" disabled>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      disabled
+                    >
                       <Plus className="me-1.5 h-4 w-4" />
                       {t('Add analytics')}
                     </Button>

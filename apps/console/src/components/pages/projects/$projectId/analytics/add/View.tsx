@@ -1,14 +1,36 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
+import { AnalyticsPropertyType } from '@appwrite.io/console'
+import {
+  ArrowRight,
+  BrainCircuit,
+  Check,
+  ChevronDown,
+  Copy,
+  ExternalLink,
+} from 'lucide-react'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { getProjectApiEndpoint } from '@/lib/appwrite/sdk'
+import {
+  getAIChatIDEs,
+  generateAIChatDeeplink,
+  openAIChatDeeplink,
+  type IDEConfig,
+} from '@/lib/config/ide'
 import {
   useAnalyticsFirstEvent,
   useAnalyticsProperty,
@@ -20,15 +42,18 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
 import {
   ANALYTICS_PLATFORM_META,
+  buildAnalyticsSetupPrompt,
   isAnalyticsPlatform,
   type AnalyticsPlatform,
 } from '@/lib/analytics-wizard/snippets'
+import { ANALYTICS_PROPERTY_TYPE_META } from '@/lib/analytics-wizard/property-types'
 import { IntegrationSnippets } from '../_components/IntegrationSnippets'
-import { PlatformCards } from './_components/PlatformCards'
+import { PlatformCards, TypeCards } from './_components/PlatformCards'
 import { EventAside } from './_components/EventAside'
 
 export type AddPropertySearchState = {
   step?: 'configure' | 'setup'
+  type?: AnalyticsPropertyType
   platform?: AnalyticsPlatform
   propertyId?: string
   /** Legacy two-part configure step; ignored (configure is one page now). */
@@ -43,16 +68,10 @@ type ViewProps = {
   search: AddPropertySearchState
 }
 
-function normalizePlatform(
-  value: AnalyticsPlatform | undefined,
-): AnalyticsPlatform {
-  return isAnalyticsPlatform(value) ? value : 'web'
-}
-
 /**
  * Two stages, no progress bar:
  *
- * 1. Configure - name, domain, platform and an optional custom ID on one page.
+ * 1. Configure - name, type, domain, SDK and an optional custom ID on one page.
  * 2. Install - the snippet for the chosen platform while we wait for the
  *    first event. The user can skip at any point; tracking keeps working and
  *    the snippet is always available again in the property's settings.
@@ -62,7 +81,6 @@ export function View({ projectId, search }: ViewProps) {
   const navigate = useNavigate()
 
   const step = search.step === 'setup' && search.propertyId ? 'setup' : 'configure'
-  const platform = normalizePlatform(search.platform)
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -82,6 +100,17 @@ export function View({ projectId, search }: ViewProps) {
     projectId,
     step === 'setup' ? search.propertyId : undefined,
   )
+
+  // Only the setup step loads the property; there its saved type beats ?type=.
+  const type = property?.type ?? search.type ?? AnalyticsPropertyType.Web
+  const typePlatforms = ANALYTICS_PROPERTY_TYPE_META[type].platforms
+  // A platform the type doesn't offer (stale or hand-edited URL) falls back
+  // to the type's default SDK.
+  const platform =
+    isAnalyticsPlatform(search.platform) &&
+    typePlatforms.includes(search.platform)
+      ? search.platform
+      : typePlatforms[0]
 
   const { eventReceived, firstEventName } = useAnalyticsFirstEvent(
     projectId,
@@ -107,7 +136,8 @@ export function View({ projectId, search }: ViewProps) {
       // owns those values.
       search: {
         step: search.step,
-        platform: search.platform,
+        type: search.type,
+        platform,
         propertyId: search.propertyId,
         ...patch,
       },
@@ -137,11 +167,20 @@ export function View({ projectId, search }: ViewProps) {
       {
         propertyId,
         name: name.trim(),
-        domain: domain.trim() || undefined,
+        domain:
+          type === AnalyticsPropertyType.Agent
+            ? undefined
+            : domain.trim() || undefined,
+        type,
       },
       {
         onSuccess: (created) => {
-          updateSearch({ step: 'setup', propertyId: created.$id, platform })
+          updateSearch({
+            step: 'setup',
+            propertyId: created.$id,
+            type,
+            platform,
+          })
         },
         onError: (error) => setCreateError(getErrorMessage(error)),
       },
@@ -149,6 +188,52 @@ export function View({ projectId, search }: ViewProps) {
   }
 
   const platformMeta = ANALYTICS_PLATFORM_META[platform]
+
+  // "Set up with AI": the whole install for the selected platform, phrased
+  // for a coding agent. Same prompt as the property's Install dialog.
+  const promptText = useMemo(
+    () =>
+      property
+        ? buildAnalyticsSetupPrompt(platform, {
+            endpoint: getProjectApiEndpoint(projectId),
+            projectId,
+            trackingId: property.$id,
+            domain: property.domain,
+            propertyName: property.name,
+          })
+        : null,
+    [platform, projectId, property],
+  )
+
+  // IDEs with an AI-chat deeplink, as in the Connect app wizard.
+  const aiChatIDEs = useMemo(() => getAIChatIDEs(), [])
+  const [copied, setCopied] = useState(false)
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current)
+    },
+    [],
+  )
+
+  const handleCopyPrompt = async () => {
+    if (!promptText) return
+    try {
+      await navigator.clipboard.writeText(promptText)
+      setCopied(true)
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current)
+      copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Silent: the button keeps its "Copy prompt" icon, as in the app wizard.
+    }
+  }
+
+  const handleOpenInIDE = (ide: IDEConfig) => {
+    if (!promptText) return
+    const deeplink = generateAIChatDeeplink(ide, promptText)
+    if (deeplink) openAIChatDeeplink(deeplink)
+  }
 
   return (
     <WizardLayout
@@ -216,7 +301,31 @@ export function View({ projectId, search }: ViewProps) {
                 <p className="text-[12px] text-destructive">{nameError}</p>
               )}
             </div>
+          </section>
 
+          <section className="space-y-3">
+            <div>
+              <Label>{t('Type')}</Label>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                {t(
+                  'Decides which panels the dashboard shows. You can change it later in settings.',
+                )}
+              </p>
+            </div>
+            <TypeCards
+              value={type}
+              onChange={(next) =>
+                updateSearch({
+                  type: next,
+                  platform: ANALYTICS_PROPERTY_TYPE_META[next].platforms[0],
+                })
+              }
+              disabled={createMutation.isPending}
+            />
+          </section>
+
+          {/* Agents have no domain to track. */}
+          {type !== AnalyticsPropertyType.Agent ? (
             <div className="space-y-2">
               <Label htmlFor="add-property-domain">
                 {t('Domain')}{' '}
@@ -230,22 +339,34 @@ export function View({ projectId, search }: ViewProps) {
                 onChange={(e) => setDomain(e.target.value)}
                 disabled={createMutation.isPending}
               />
+              {type === AnalyticsPropertyType.Web ? (
+                <p className="text-[12px] text-muted-foreground">
+                  {t(
+                    'The site you are tracking. Page paths in reports link to it.',
+                  )}
+                </p>
+              ) : null}
             </div>
-          </section>
+          ) : null}
 
-          <section className="space-y-3">
-            <div>
-              <Label>{t('Platform')}</Label>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                {t('Decides which install snippet you get next. You can switch any time.')}
-              </p>
-            </div>
-            <PlatformCards
-              value={platform}
-              onChange={(next) => updateSearch({ platform: next })}
-              disabled={createMutation.isPending}
-            />
-          </section>
+          {typePlatforms.length > 1 ? (
+            <section className="space-y-3">
+              <div>
+                <Label>{t('SDK')}</Label>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  {t(
+                    'Decides which install snippet you get next. You can switch any time.',
+                  )}
+                </p>
+              </div>
+              <PlatformCards
+                platforms={typePlatforms}
+                value={platform}
+                onChange={(next) => updateSearch({ platform: next })}
+                disabled={createMutation.isPending}
+              />
+            </section>
+          ) : null}
 
           {/* Same pattern as the other create forms: label + collapsed ID chip. */}
           <div className="space-y-2">
@@ -279,6 +400,76 @@ export function View({ projectId, search }: ViewProps) {
             firstEventName={firstEventName}
           />
 
+          {/* Fastest path: hand the whole setup to a coding agent. */}
+          <div className="overflow-hidden rounded-xl border border-border bg-card/50">
+            <div className="px-5 py-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-[14px] font-semibold text-foreground">
+                  {t('Set up with AI')}
+                </h3>
+                <Badge variant="success" className="text-[10px]">
+                  {t('Recommended')}
+                </Badge>
+              </div>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">
+                {t(
+                  'Hand off a ready-made prompt with your endpoint and project ID to your favourite AI tool, or copy it anywhere.',
+                )}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 border-t border-border px-5 py-4">
+              <Button
+                type="button"
+                size="sm"
+                className="h-9 gap-1.5 text-[13px]"
+                disabled={!promptText}
+                onClick={() => void handleCopyPrompt()}
+              >
+                {copied ? <Check /> : <Copy />}
+                {t('Copy prompt')}
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-1.5 text-[13px]"
+                    disabled={!promptText}
+                  >
+                    <BrainCircuit />
+                    {t('Open in tool')}
+                    <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="z-[10050] min-w-[200px]"
+                >
+                  {aiChatIDEs.map((ide) => (
+                    <DropdownMenuItem
+                      key={ide.id}
+                      onClick={() => handleOpenInIDE(ide)}
+                    >
+                      <img
+                        src={ide.iconPath}
+                        alt={ide.name}
+                        className="h-4 w-4"
+                      />
+                      <span className="ms-2">
+                        {t('Prompt')} {ide.name}
+                      </span>
+                      <ExternalLink
+                        className="ms-auto h-2.5 w-2.5 shrink-0 text-muted-foreground/30"
+                        strokeWidth={1.25}
+                      />
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
           <div className="overflow-hidden rounded-xl border border-border bg-card/50">
             <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
               <div className="min-w-0">
@@ -295,12 +486,6 @@ export function View({ projectId, search }: ViewProps) {
                     {t('Property ID')}
                     <CopyableId id={property.$id} size="xs" />
                   </span>
-                  {property.snippetId && (
-                    <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
-                      {t('Snippet ID')}
-                      <CopyableId id={property.snippetId} size="xs" />
-                    </span>
-                  )}
                 </div>
               ) : null}
             </div>
@@ -309,6 +494,7 @@ export function View({ projectId, search }: ViewProps) {
                 <IntegrationSnippets
                   projectId={projectId}
                   property={property}
+                  platforms={typePlatforms}
                   platform={platform}
                   onPlatformChange={(next) => updateSearch({ platform: next })}
                 />

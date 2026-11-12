@@ -12,13 +12,15 @@ use Utopia\Usage\Usage;
  * Lifecycle-local connection to the shared OSS usage namespace.
  *
  * Self-hosted constructs this from enabled / DSN / HTTP client and lazily
- * builds Usage. To attach an already-pooled Usage (one client, schema out
- * of band), use Connection::fromUsage(). Callers that need the raw Utopia
+ * builds Usage. To attach an already-pooled Usage (one client, schema applied
+ * by the usage-setup task), use Connection::fromUsage(). Callers that need the raw Utopia
  * Usage object use getUsage(); do not register a second usage resource.
  */
 class Connection
 {
     private const int READY_TTL_SECONDS = 15;
+
+    private const string HEALTH_TENANT = '__health__';
 
     private ?Usage $usage = null;
     private bool $ready = false;
@@ -34,8 +36,8 @@ class Connection
     }
 
     /**
-     * Wrap an already-built Usage instance. isEnabled and isReady are true;
-     * setup() does not run DDL.
+     * Wrap an already-built Usage instance. isEnabled and isReady are true
+     * without a health check; setup() still applies the schema.
      */
     public static function fromUsage(Usage $usage): self
     {
@@ -107,9 +109,10 @@ class Connection
         }
 
         try {
-            $usage->findAcrossTenants([Query::limit(1)], Usage::TYPE_EVENT);
-            $usage->findAcrossTenants([Query::limit(1)], Usage::TYPE_GAUGE);
-            $usage->findDaily('__health__', [Query::limit(1)]);
+            // A tenant with no rows lets ClickHouse skip purged rows through the primary key.
+            $usage->find(self::HEALTH_TENANT, [Query::limit(1)], Usage::TYPE_EVENT);
+            $usage->find(self::HEALTH_TENANT, [Query::limit(1)], Usage::TYPE_GAUGE);
+            $usage->findDaily(self::HEALTH_TENANT, [Query::limit(1)]);
         } catch (\Throwable $th) {
             return [
                 'enabled' => true,
@@ -128,11 +131,8 @@ class Connection
             return true;
         }
 
-        if (
-            $this->ready
-            && (microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS
-        ) {
-            return true;
+        if ((microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS) {
+            return $this->ready;
         }
 
         $this->ready = ($this->healthCheck()['schemaReady'] ?? false) === true;
@@ -143,10 +143,6 @@ class Connection
 
     public function setup(): void
     {
-        if ($this->wrapped) {
-            return;
-        }
-
         if ($this->enabled) {
             $this->ready = false;
             $this->checkedAt = 0.0;

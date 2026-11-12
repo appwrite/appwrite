@@ -1,9 +1,11 @@
 import { createStart } from '@tanstack/react-start'
 import { agentDiscoveryMiddleware } from '@/server/middleware/agent-discovery'
+import { appleAppSiteAssociationMiddleware } from '@/server/middleware/apple-app-site-association'
 import { changePasswordUrlMiddleware } from '@/server/middleware/change-password-url'
 import { hostCanonicalMiddleware } from '@/server/middleware/host-canonical'
 import { legacyRedirectsMiddleware } from '@/server/middleware/legacy-redirects'
 import { legacyConsolePathMiddleware } from '@/server/middleware/legacy-console-path'
+import { markdownNegotiationMiddleware } from '@/server/middleware/markdown-negotiation'
 import { rootGuestRedirectMiddleware } from '@/server/middleware/root-guest-redirect'
 import { runtimeConfigMiddleware } from '@/server/middleware/runtime-config'
 import { securityTxtMiddleware } from '@/server/middleware/security-txt'
@@ -23,6 +25,7 @@ export const startInstance = createStart(() => ({
     // Password-manager well-known URL (W3C change-password) before other gates.
     changePasswordUrlMiddleware,
     securityTxtMiddleware,
+    appleAppSiteAssociationMiddleware,
     // Apex host before other gates so www/new never serve duplicate content.
     hostCanonicalMiddleware,
     seoIndexingMiddleware,
@@ -31,6 +34,7 @@ export const startInstance = createStart(() => ({
     legacyConsolePathMiddleware,
     preLaunchMiddleware,
     selfHostedRoutesMiddleware,
+    markdownNegotiationMiddleware,
     rootGuestRedirectMiddleware,
   ],
 }))

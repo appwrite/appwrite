@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use OpenRuntimes\Orchestrator\Jobs;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
@@ -22,7 +23,7 @@ final class UploadCallbacksTest extends TestCase
         $previousKey = getenv('_APP_OPENSSL_KEY_V1');
         putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
         try {
-            $deployment = new Document(['$id' => 'deployment', '$sequence' => '1', 'type' => 'manual', 'buildCommands' => 'npm ci']);
+            $deployment = new Document(['$id' => 'deployment', '$sequence' => '1', 'type' => 'manual', 'buildCommands' => 'npm ci', 'adapter' => 'ssr', 'fallbackFile' => '404.html', 'buildDuration' => 0, 'buildEndedAt' => '2026-01-01T00:00:00.000+00:00']);
             $database = $this->createStub(Database::class);
             $database->method('updateDocument')->willReturnCallback(static function (string $collection, string $id, Document $update) use ($deployment): Document {
                 $deployment->setAttributes($update->getArrayCopy());
@@ -39,12 +40,16 @@ final class UploadCallbacksTest extends TestCase
                 $requests[] = json_decode((string) $request->getBody(), true, flags: JSON_THROW_ON_ERROR);
                 return new Response(202, body: new Stream('{"id":"build","status":"accepted"}'));
             });
-            $deployments = new Deployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost']);
+            $deployments = new Deployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost'], $this->createStub(BuildPublisher::class));
             $result = $deployments->createFromUpload(new Document([
                 '$id' => 'function', '$collection' => 'functions', 'runtime' => array_key_first(Config::getParam('runtimes-v2')),
             ]), clone $deployment, 137);
 
             $this->assertSame('waiting', $result->getAttribute('status'));
+            $this->assertSame('', $result->getAttribute('adapter'));
+            $this->assertNull($result->getAttribute('buildDuration'));
+            $this->assertNull($result->getAttribute('buildEndedAt'));
+            $this->assertSame('404.html', $result->getAttribute('fallbackFile'));
             $this->assertCount(1, $requests);
             // The real SDK serializes the callback filter sent to the service;
             // without this event a failed pre-job extraction is never delivered.

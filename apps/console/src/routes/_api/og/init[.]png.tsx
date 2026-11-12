@@ -1,13 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getCoverImageExtension, getCoverImageMimeType } from '@/lib/cover-generator/cover-image-format'
-import { runWithCoverRenderContext } from '@/lib/cover-generator/render-context'
 import { INIT_PAGE_OG_IMAGE_PARAMS } from '@/lib/init/init-seo'
 import { parseOgImageRenderData } from '@/lib/seo/og-image'
 
 export const Route = createFileRoute('/_api/og/init.png')({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async () => {
         const searchParams = new URLSearchParams()
         searchParams.set('title', INIT_PAGE_OG_IMAGE_PARAMS.title)
         searchParams.set('subtitle', INIT_PAGE_OG_IMAGE_PARAMS.subtitle)
@@ -17,11 +16,8 @@ export const Route = createFileRoute('/_api/og/init.png')({
         const data = parseOgImageRenderData(searchParams)
 
         try {
-          const siteOrigin = new URL(request.url).origin
           const { renderCoverImage } = await import('@/lib/cover-generator/render-cover')
-          const image = await runWithCoverRenderContext(siteOrigin, () =>
-            renderCoverImage(data),
-          )
+          const image = await renderCoverImage(data)
           const body = image.buffer.slice(
             image.byteOffset,
             image.byteOffset + image.byteLength,

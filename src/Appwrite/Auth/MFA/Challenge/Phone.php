@@ -10,7 +10,9 @@ class Phone extends Challenge
 {
     public static function verify(Document $challenge, string $otp): bool
     {
-        return $challenge->getAttribute('code') === $otp;
+        $code = $challenge->getAttribute('code');
+
+        return \is_string($code) && \hash_equals($code, $otp);
     }
 
     public static function challenge(Document $challenge, Document $user, string $otp): bool
