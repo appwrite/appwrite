@@ -19,6 +19,7 @@ use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
@@ -235,15 +236,33 @@ class Screenshots extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
-                'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
-            ]));
+            // Preview builds are captured too, but only the active deployment represents the site. The request
+            // timestamp makes the write conflict when the site was updated after this read, such as by an activation.
+            for ($attempt = 0; $attempt < 3; $attempt++) {
+                $site = $dbForProject->getDocument('sites', $site->getId());
+                if (!$site->isEmpty() && $site->getAttribute('deploymentId') !== $deployment->getId()) {
+                    break;
+                }
 
-            // Unless the site is gone: its Deletes worker may have read this deployment before the update above.
-            if ($site->isEmpty()) {
-                $files = $captured;
-                throw new PermanentFailure('Site deleted during capture');
+                try {
+                    if (!$site->isEmpty()) {
+                        $site = $dbForProject->withRequestTimestamp(new \DateTime($site->getUpdatedAt()), fn () => $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                            'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
+                            'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
+                        ])));
+                    }
+                } catch (ConflictException) {
+                    // Re-check which deployment is active now.
+                    continue;
+                }
+
+                // Unless the site is gone: its Deletes worker may have read this deployment before the update above.
+                if ($site->isEmpty()) {
+                    $files = $captured;
+                    throw new PermanentFailure('Site deleted during capture');
+                }
+
+                break;
             }
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
