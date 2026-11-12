@@ -6,6 +6,7 @@ use Appwrite\AppwriteException;
 use Appwrite\Enums\ProjectAuthMethodId;
 use Appwrite\Enums\ProjectPolicyId;
 use Appwrite\Enums\ProjectProtocolId;
+use Appwrite\Models\PolicyAccountDevices;
 use Appwrite\Models\PolicyDenyRealtimeGuests;
 use Appwrite\Models\PolicyPasskey;
 use Appwrite\Models\PolicyPasswordPwned;
@@ -833,6 +834,7 @@ class Appwrite extends Source
         $passwordRotation = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDROTATION());
         $passkey = $this->getPolicyIfSupported(ProjectPolicyId::PASSKEY());
         $denyRealtimeGuests = $this->getPolicyIfSupported(ProjectPolicyId::DENYREALTIMEGUESTS());
+        $accountDevices = $this->getPolicyIfSupported(ProjectPolicyId::ACCOUNTDEVICES());
 
         $policies = new Policies(
             $this->projectId,
@@ -878,6 +880,7 @@ class Appwrite extends Source
             ],
             passkeyRpId: $passkey instanceof PolicyPasskey ? $passkey->rpId : null,
             denyRealtimeGuests: $denyRealtimeGuests instanceof PolicyDenyRealtimeGuests ? $denyRealtimeGuests->enabled : null,
+            accountDevices: $accountDevices instanceof PolicyAccountDevices ? $accountDevices->enabled : null,
         );
 
         $this->callback([$policies]);
