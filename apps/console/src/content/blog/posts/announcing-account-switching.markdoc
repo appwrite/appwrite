@@ -1,0 +1,124 @@
+---
+layout: post
+title: "Announcing account switching: one browser, many accounts"
+description: Appwrite Auth now supports account switching, so users can stay signed in to several accounts in one browser or app and switch between them in one call.
+date: 2026-11-13
+cover: /images/blog/announcing-account-switching/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: announcements
+featured: false
+faqs:
+  - question: "What is account switching in Appwrite Auth?"
+    answer: "Account switching lets one browser or app install stay signed in to several accounts at once and switch which one is active. It's built on devices: a device holds the session of every account signed in on that browser or app, and tracks which session is active. See [Account switching](/docs/products/auth/account-switching)."
+  - question: "How is account switching different from linking identities?"
+    answer: "[Identities](/docs/products/auth/identities) link several sign-in methods, such as email and GitHub, to one account. Account switching keeps separate accounts, each with its own user and session, and lets the user move between them."
+  - question: "Do I need to change my sign-in code to support account switching?"
+    answer: "Barely. Call `account.createDevice()` when your app starts. After that, every session you create with any sign-in method joins the device and becomes the active account, so your existing sign-in screens work unchanged. You add an account picker that calls `account.getDevice()` and `account.updateDeviceSession()`."
+  - question: "How do I sign out one account without signing out the others?"
+    answer: "Call `account.deleteSession({ sessionId: 'current' })`. Only the active account is signed out. The device keeps the other accounts and has no active account until you switch to one with `account.updateDeviceSession()`. To sign out of every account at once, call `account.deleteDevice({ deviceId: 'current' })`."
+  - question: "Can I turn account switching off for my project?"
+    answer: "Yes. Account switching is on by default. Turn it off under **Auth** > **Policies** > **Sessions** > **Account switching** in the Appwrite Console, or with the Project service's `updateAccountDevicesPolicy` method. When it's off, browsers and apps can't create new devices and each one keeps a single active session."
+  - question: "Is account switching available on self-hosted Appwrite?"
+    answer: "Account switching is live on Appwrite Cloud and ships in the next self-hosted Appwrite release."
+---
+
+Plenty of people have more than one account in the same app. A personal account and a work account. A customer login and an admin login. A freelancer with one account per client. On most apps built with Appwrite, moving between them meant signing out, signing back in, and getting bounced through the whole sign-in flow every time.
+
+You couldn't work around it on the server either. Appwrite refused to create a session while another one was active, with a `user_session_already_exists` error. The workarounds were a second browser profile, a private window, or storing session secrets yourself and swapping them by hand, which means writing and securing your own session store.
+
+Today, we are announcing **account switching** in Appwrite Auth.
+
+# What account switching gives you
+
+- **Several accounts, one browser.** A browser or app install stays signed in to several accounts at once, with one active at a time.
+- **One call to switch.** `updateDeviceSession` makes another account active, and every request after it runs as that account.
+- **Every sign-in method.** Email and password, OAuth2, magic URL, email OTP, phone, passkeys, anonymous, and custom tokens all add accounts the same way.
+- **No secrets to manage.** Appwrite carries session and device secrets in cookies. Your code only handles session IDs.
+- **No changes to the rest of your app.** The active account's session sits in the same cookie as before, so database, storage, functions, and realtime calls keep working without extra parameters.
+- **A project-level switch.** Account switching is on by default, and you can turn it off per project.
+
+# How account switching works
+
+Account switching adds one concept to Appwrite Auth: the **device**. A device belongs to one browser or app install. It holds the session of every account signed in there and remembers which one is active. Appwrite keeps the device secret in its own cookie, next to the session cookie.
+
+Once a device exists, every new session joins it and becomes the active one. If the user was already signed in when the device was created, that session joins too. A device holds one session per account, so signing in again as an account it already holds replaces the old session instead of piling up duplicates.
+
+Switching writes the chosen session's secret to the session cookie. That's why nothing else in your app has to know about devices. To every other endpoint, the request looks like a normal signed-in request from the active account.
+
+# Add account switching to your app
+
+The whole flow is four Account methods on top of the sign-in code you already have:
+
+```client-web
+import { Client, Account } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+// On app start. Returns the existing device if there is one.
+await account.createDevice();
+
+// Sign in as usual. Each new session joins the device and becomes active.
+await account.createEmailPasswordSession({
+    email: 'work@example.com',
+    password: '<PASSWORD>'
+});
+
+// Build an account picker from the device's sessions
+const device = await account.getDevice({ deviceId: 'current' });
+
+for (const session of device.sessions) {
+    const active = session.$id === device.activeSessionId;
+    console.log(session.userName, active ? '(active)' : '');
+}
+
+// Switch to another account, then reload the user
+await account.updateDeviceSession({
+    deviceId: 'current',
+    sessionId: '<SESSION_ID>'
+});
+
+const user = await account.get();
+```
+
+Signing out works at two levels. `deleteSession` with `current` signs out the active account and leaves the others signed in, with no account active until the user picks one. `deleteDevice` signs out of every account on the device and clears both cookies.
+
+The [Account switching docs](/docs/products/auth/account-switching) cover the same flow for Flutter, Apple, and Android.
+
+# Control account switching per project
+
+Account switching is on for every project by default. To turn it off, open **Auth** > **Policies** > **Sessions** in the Appwrite Console and turn off **Allow account switching** in the **Account switching** card. You can also call `updateAccountDevicesPolicy` from the Project service with an API key.
+
+With the policy off, browsers and apps can't create new devices, and each one goes back to a single active session.
+
+# Account switching and session security
+
+Switching never hands an old secret back to the browser. Appwrite stores session secrets hashed, so it can't restore one into a cookie. Each switch issues a fresh secret for the chosen session, and any other copy of that session stops working. Keep each session on the device that created it.
+
+The device secret rotates too, every time a session joins. The cookie keeps up with this on its own, so a stolen copy of an old device cookie stops working as soon as the user signs in to another account.
+
+Your existing controls still apply. Each account's session counts toward your project's [session limit](/docs/products/auth/security#session-limits), and [forcing a sign out of all users](/docs/products/auth/security#force-sign-out-all-users) ends every session a device holds.
+
+# When to use account switching
+
+Reach for account switching when one person legitimately owns several accounts in your app:
+
+- **Personal and work accounts** in productivity, email, and messaging apps.
+- **Agencies and freelancers** who manage one account per client.
+- **Creators and community managers** who run several brand or channel accounts.
+- **Support and QA teams** who test with a handful of separate accounts.
+
+If you need several sign-in methods for the same account, link [identities](/docs/products/auth/identities) instead. If a trusted operator needs to see your app as one of your users, use [impersonation](/docs/products/auth/impersonation), which doesn't require that user's credentials.
+
+# Getting started with account switching in Appwrite Auth
+
+Account switching is live on [Appwrite Cloud](/sign-up) today and ships in the next self-hosted Appwrite release. Call `createDevice` when your app starts, add an account picker, and your users can stop signing out to change accounts.
+
+- [Account switching](/docs/products/auth/account-switching)
+- [Auth security and session limits](/docs/products/auth/security)
+- [Account API reference](/docs/references/cloud/client-web/account)
+- [Sign up for Appwrite Cloud](/sign-up)

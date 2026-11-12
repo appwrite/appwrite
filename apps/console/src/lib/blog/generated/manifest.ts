@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-account-switching",
+    "href": "/blog/post/announcing-account-switching",
+    "title": "Announcing account switching: one browser, many accounts",
+    "description": "Appwrite Auth now supports account switching, so users can stay signed in to several accounts in one browser or app and switch between them in one call.",
+    "date": "2026-11-13",
+    "lastUpdated": "2026-11-13",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-account-switching/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-activity-reasons",
     "href": "/blog/post/announcing-activity-reasons",
     "title": "Announcing reasons in Activity: see why every change was made",

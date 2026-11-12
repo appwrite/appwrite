@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Stay signed in to several accounts with account switching"
+date: 2026-11-13
+cover: /images/blog/announcing-account-switching/cover.avif
+tags: auth, sdk, console
+---
+
+Appwrite Auth now supports [account switching](/docs/products/auth/account-switching). One browser or app install can stay signed in to several accounts at once and switch the active one, without signing out and back in.
+
+Call `account.createDevice()` when your app starts. Every session you create after that, with any sign-in method, joins the device and becomes the active account. `account.getDevice()` lists the signed-in accounts for your account picker, and `account.updateDeviceSession()` switches between them. The active account's session stays in the usual session cookie, so the rest of your app works unchanged.
+
+Account switching is on by default. You can turn it off under **Auth** > **Policies** > **Sessions** in the Appwrite Console. It ships in the next self-hosted Appwrite release.
+
+{% arrow_link href="/blog/post/announcing-account-switching" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/account-switching" %}
+Add account switching to your app
+{% /arrow_link %}
