@@ -180,7 +180,12 @@ impl Image {
             // Every frame is resampled to the target and kept, and the
             // transforms below each check one canvas only: what the whole
             // animation costs is checked here, before the first allocation.
-            self.check_frames(w, h)?;
+            let cover = if center {
+                transform::cover(w, h, dims(self.width), dims(self.height))
+            } else {
+                (resize_width, resize_height)
+            };
+            self.check_frames(w, h, cover)?;
             for frame in &mut self.frames {
                 if center {
                     transform::crop_thumbnail(frame, w, h)?;
@@ -383,12 +388,16 @@ impl Image {
         Ok(())
     }
 
-    /// Fails when resampling every frame to a `width` x `height` canvas would
-    /// hold more pixels than the budget. A frame's new canvas replaces its old
-    /// pixels, so the peak is whichever of the two sets of frames is larger.
-    fn check_frames(&self, width: u32, height: u32) -> Result<()> {
-        let after = canvas_bytes(width.into(), height.into()).saturating_mul(self.frames.len() as u64);
-        check_pixels(frame::retained(&self.frames).max(after))
+    /// Fails when cropping every frame to `width` x `height` through a `cover`
+    /// canvas would hold more pixels than the budget. A frame's new canvas
+    /// replaces its old pixels, so the frames peak at whichever of the two
+    /// sets is larger; on top of them the frame being worked on holds its
+    /// cover canvas and the canvas cropped out of it at once.
+    fn check_frames(&self, width: u32, height: u32, cover: (i64, i64)) -> Result<()> {
+        let target = canvas_bytes(width.into(), height.into());
+        let frames = target.saturating_mul(self.frames.len() as u64);
+        let working = canvas_bytes(cover.0.max(0) as u64, cover.1.max(0) as u64).saturating_add(target);
+        check_pixels(frame::retained(&self.frames).max(frames).saturating_add(working))
     }
 
     /// The width that keeps the aspect ratio at `height`.

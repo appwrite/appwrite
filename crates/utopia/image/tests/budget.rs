@@ -19,12 +19,14 @@ fn oversized_frame_gif() -> Vec<u8> {
     gif
 }
 
-/// A GIF of `frames` 1x1 frames on a 1x1 logical screen: a handful of bytes a
-/// frame in the file and four bytes a frame decoded, so it fits any budget
-/// however many frames it carries.
-fn tiny_animation_gif(frames: usize) -> Vec<u8> {
+/// A GIF of `frames` 1x1 frames on a `width` x `height` logical screen: a
+/// handful of bytes a frame in the file, and a screen-sized canvas a frame
+/// decoded, so a 1x1 screen costs four bytes a frame however many it carries.
+fn animation_gif(frames: usize, width: u16, height: u16) -> Vec<u8> {
     let mut gif = b"GIF89a".to_vec();
-    gif.extend_from_slice(&[1, 0, 1, 0, 0x80, 0, 0]); // 1x1 screen, a 2-colour global table
+    gif.extend_from_slice(&width.to_le_bytes());
+    gif.extend_from_slice(&height.to_le_bytes());
+    gif.extend_from_slice(&[0x80, 0, 0]); // a 2-colour global table
     gif.extend_from_slice(&[0, 0, 0, 0xFF, 0xFF, 0xFF]);
     for _ in 0..frames {
         gif.extend_from_slice(&[0x2C, 0, 0, 0, 0, 1, 0, 1, 0, 0]); // frame: 1x1 at the origin
@@ -73,7 +75,7 @@ fn pixels_past_the_budget_fail_before_they_are_allocated() {
     // decodes within any budget, so what it costs is only visible at the crop,
     // which resamples every frame to the target and keeps it: 64 frames of
     // 300x300 is 23 MB of pixels, past a 4 MB budget.
-    let animation = tiny_animation_gif(64);
+    let animation = animation_gif(64, 1, 1);
     set_resource_limit(Resource::Memory, 4 * 1024 * 1024);
     set_resource_limit(Resource::Map, 0);
     let mut image = Image::new(&animation).expect("a 1x1 animation fits any budget");
@@ -93,4 +95,19 @@ fn pixels_past_the_budget_fail_before_they_are_allocated() {
     set_resource_limit(Resource::Map, 536_870_912);
     let mut image = Image::new(&animation).expect("a 1x1 animation fits any budget");
     assert!(exhausted(image.crop(2000, 2000, Gravity::Center, None)));
+
+    // The frame being cropped holds the canvas covering the target as well:
+    // 20 frames of a 400x4 animation cropped to 100x100 are 800 KB, but the
+    // 10000x100 canvas each is scaled to first is another 4 MB.
+    let wide = animation_gif(20, 400, 4);
+    set_resource_limit(Resource::Memory, 4_500_000);
+    set_resource_limit(Resource::Map, 0);
+    let mut image = Image::new(&wide).expect("a 400x4 animation fits the budget");
+    assert!(exhausted(image.crop(100, 100, Gravity::TopLeft, None)));
+
+    // Room for that canvas on top of the frames: the crop goes through.
+    set_resource_limit(Resource::Memory, 5_000_000);
+    let mut image = Image::new(&wide).expect("a 400x4 animation fits the budget");
+    image.crop(100, 100, Gravity::TopLeft, None).expect("the cover canvas fits the budget");
+    assert_eq!((image.width(), image.height()), (100, 100));
 }

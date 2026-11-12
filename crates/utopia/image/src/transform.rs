@@ -75,6 +75,21 @@ pub(crate) fn crop(frame: &mut Frame, width: u32, height: u32, x: i64, y: i64) {
     frame.page.y = y0;
 }
 
+/// The canvas [`crop_thumbnail`] resamples a `frame_width` x `frame_height`
+/// frame to before it crops the centre out: the one covering `width` x
+/// `height`. What the crop of a whole animation has to budget for alongside
+/// the frames themselves.
+pub(crate) fn cover(width: u32, height: u32, frame_width: u32, frame_height: u32) -> (i64, i64) {
+    let ratio_x = f64::from(width) / f64::from(frame_width);
+    let ratio_y = f64::from(height) / f64::from(frame_height);
+    let round = |v: f64| -> i64 { if v >= 0.0 { (v + 0.5).floor() as i64 } else { (v - 0.5).ceil() as i64 } };
+    if ratio_x > ratio_y {
+        (i64::from(width), round(ratio_x * f64::from(frame_height)))
+    } else {
+        (round(ratio_y * f64::from(frame_width)), i64::from(height))
+    }
+}
+
 /// Imagick's `cropThumbnailImage()`: scale to cover `width` x `height`, then
 /// crop the centre.
 pub(crate) fn crop_thumbnail(frame: &mut Frame, width: u32, height: u32) -> Result<()> {
@@ -82,14 +97,7 @@ pub(crate) fn crop_thumbnail(frame: &mut Frame, width: u32, height: u32) -> Resu
     if (ow, oh) == (width, height) {
         return Ok(());
     }
-    let ratio_x = f64::from(width) / f64::from(ow);
-    let ratio_y = f64::from(height) / f64::from(oh);
-    let round = |v: f64| -> i64 { if v >= 0.0 { (v + 0.5).floor() as i64 } else { (v - 0.5).ceil() as i64 } };
-    let (new_w, new_h) = if ratio_x > ratio_y {
-        (i64::from(width), round(ratio_x * f64::from(oh)))
-    } else {
-        (round(ratio_y * f64::from(ow)), i64::from(height))
-    };
+    let (new_w, new_h) = cover(width, height, ow, oh);
     if new_w <= 0 || new_h <= 0 {
         return Err(Error::process("zero image size"));
     }
