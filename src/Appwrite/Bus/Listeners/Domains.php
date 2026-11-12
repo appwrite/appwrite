@@ -41,6 +41,7 @@ class Domains extends Listener
 
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
+            Query::equal('confirm', [true]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]);
 
