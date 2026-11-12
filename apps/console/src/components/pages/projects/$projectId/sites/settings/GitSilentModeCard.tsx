@@ -33,16 +33,11 @@ export function GitSilentModeCard({
 }: GitSilentModeCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const git = site as Models.Site & {
-    providerDeployments?: boolean
-    providerSummaries?: boolean
-    providerStatuses?: boolean
-  }
   const silent = site.providerSilentMode ?? false
   const saved = {
-    deployments: git.providerDeployments ?? true,
-    summaries: !silent && (git.providerSummaries ?? true),
-    statuses: !silent && (git.providerStatuses ?? true),
+    deployments: site.providerDeployments ?? true,
+    summaries: !silent && (site.providerSummaries ?? true),
+    statuses: !silent && (site.providerStatuses ?? true),
   }
   const [settings, setSettings] = useState(saved)
 
@@ -81,7 +76,7 @@ export function GitSilentModeCard({
       providerDeployments: settings.deployments,
       providerSummaries: settings.summaries,
       providerStatuses: settings.statuses,
-    } as Partial<Models.Site>)
+    })
   }
 
   const rows = [
