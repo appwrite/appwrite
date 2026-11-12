@@ -4,7 +4,7 @@ namespace Appwrite\Task\Validator;
 
 use Cron\CronExpression;
 use Utopia\Schedule\Trigger\Cron as Trigger;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Cron extends Validator
 {

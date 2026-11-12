@@ -19,8 +19,8 @@ composer require utopia-php/console
 <?php
 require_once __DIR__.'/vendor/autoload.php';
 
-use Utopia\Console;
-use Utopia\Command;
+use Utopia\Console\Console;
+use Utopia\Console\Command;
 
 Console::success('Ready to work!');
 
@@ -53,7 +53,7 @@ Console::error('Red log');        // stderr
 
 ### Execute commands
 
-`Console::execute()` returns the exit code and writes stdout and stderr into the referenced output variables. Pass a timeout (in seconds) to stop long-running processes and an optional progress callback to stream intermediate output. Prefer `Utopia\Command` or argv arrays when you want structured command building.
+`Console::execute()` returns the exit code and writes stdout and stderr into the referenced output variables. Pass a timeout (in seconds) to stop long-running processes and an optional progress callback to stream intermediate output. Prefer `Utopia\Console\Command` or argv arrays when you want structured command building.
 
 ```php
 $command = new Command(PHP_BINARY)
@@ -112,6 +112,22 @@ $logs = Command::appendStdout(
 
 Plain commands execute in argv mode. Composed, grouped, and redirected commands execute through shell syntax.
 
+### Ban commands built as strings
+
+The package ships two PHPStan checks that keep every command on `Command`. `DisallowRawShellExtension` reports `exec()`, `shell_exec()`, `system()`, `passthru()`, `popen()`, `escapeshellarg()` and `escapeshellcmd()`. `DisallowShellStringRule` reports `proc_open()` and `Console::execute()` given a string. `proc_open()` with an argv array stays allowed, for a child that needs the terminal.
+
+```neon
+rules:
+    - Utopia\Console\PHPStan\DisallowShellStringRule
+services:
+    -
+        class: Utopia\Console\PHPStan\DisallowRawShellExtension
+        tags:
+            - phpstan.restrictedFunctionUsageExtension
+```
+
+Their identifiers are `function.disallowedShell` and `staticMethod.disallowedShell`.
+
 ### Create a daemon
 
 Use `Console::loop()` to build daemons without tight loops. The helper sleeps between iterations and periodically triggers garbage collection.
@@ -119,7 +135,7 @@ Use `Console::loop()` to build daemons without tight loops. The helper sleeps be
 ```php
 <?php
 
-use Utopia\Console;
+use Utopia\Console\Console;
 
 Console::loop(function () {
     echo "Hello World\n";

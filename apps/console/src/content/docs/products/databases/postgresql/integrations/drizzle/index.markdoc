@@ -1,0 +1,193 @@
+---
+layout: article
+title: Drizzle
+description: Use Drizzle ORM with an Appwrite native PostgreSQL database. Configure the driver, run migrations against the direct connection, and pool runtime traffic from serverless environments.
+---
+
+Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so [Drizzle ORM](https://orm.drizzle.team/) works against it with no Appwrite-specific configuration. Point Drizzle's driver at the connection string from the [Connections](/docs/products/databases/postgresql/connections) page and use Drizzle Kit, the query builder, and the rest of the toolchain as you would against any PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
+{% /info %}
+
+# Set the connection string {% #connection-string %}
+
+In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN**, **.env**, or **Drizzle** tab, or fetch it with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials). Put it in your environment, never commit it:
+
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+
+# Install and configure the driver {% #driver %}
+
+Drizzle talks to PostgreSQL through one of two driver packages. Pick the one already in your stack:
+
+```bash
+# node-postgres
+npm install drizzle-orm pg
+npm install -D drizzle-kit @types/pg
+
+# or postgres.js
+npm install drizzle-orm postgres
+npm install -D drizzle-kit
+```
+
+With **node-postgres**, import `drizzle` from `drizzle-orm/node-postgres` and hand it the connection string:
+
+```ts
+import { drizzle } from 'drizzle-orm/node-postgres';
+
+export const db = drizzle(process.env.DATABASE_URL!);
+```
+
+With **postgres.js**, import `drizzle` from `drizzle-orm/postgres-js`. For a direct connection to the engine you can pass the URL straight through:
+
+```ts
+import { drizzle } from 'drizzle-orm/postgres-js';
+
+export const db = drizzle(process.env.DATABASE_URL!);
+```
+
+When you pool through the connection pooler in transaction mode (see [Pool connections from serverless](#pooling)), postgres.js must disable prepared statements. Build the client yourself with `prepare: false` and pass it to `drizzle`:
+
+```ts
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+
+const client = postgres(process.env.DATABASE_URL!, { prepare: false });
+
+export const db = drizzle({ client });
+```
+
+Define your tables in a schema file Drizzle Kit can read:
+
+```ts
+import { pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  createdAt: timestamp('created_at').notNull().defaultNow()
+});
+```
+
+# Configure Drizzle Kit {% #config %}
+
+Drizzle Kit reads `drizzle.config.ts` for migrations and introspection. Set the `dialect`, point `schema` at your table definitions, and pass the connection string through `dbCredentials`:
+
+```ts
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  dialect: 'postgresql',
+  schema: './src/schema.ts',
+  out: './drizzle',
+  dbCredentials: {
+    url: process.env.DATABASE_URL!
+  }
+});
+```
+
+# Run migrations {% #migrate %}
+
+Generate SQL migration files from your schema, then apply them:
+
+```bash
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+`generate` diffs your schema against the last snapshot and writes a timestamped `.sql` file into the `out` directory; `migrate` applies any pending files to the database. Point Drizzle Kit at the **direct** engine port (`5432`), not the pooler, because migrations issue DDL that needs a session-level connection. The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/products/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
+
+To apply migrations from your application at startup instead of the CLI, use the matching `migrate` helper for your driver:
+
+```ts
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import { db } from './db';
+
+await migrate(db, { migrationsFolder: './drizzle' });
+```
+
+# Query with Drizzle {% #query %}
+
+Once the schema is migrated, use the query builder:
+
+```ts
+import { desc } from 'drizzle-orm';
+import { db } from './db';
+import { users } from './schema';
+
+const [user] = await db
+  .insert(users)
+  .values({ email: 'ada@example.com' })
+  .returning();
+
+const recent = await db
+  .select()
+  .from(users)
+  .orderBy(desc(users.createdAt))
+  .limit(10);
+```
+
+On long-running servers, create the `db` instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse it, and rely on the pooler to absorb cold-start connection churn.
+
+# Pool connections from serverless {% #pooling %}
+
+Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) by connecting on the pooler port (`6432`) on the same hostname.
+
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements, so server-side prepared statements are unavailable. Keep `drizzle.config.ts` and the startup migrator pointed at `DIRECT_URL` so DDL still runs over a session-level connection:
+
+```env
+# Runtime: pooled, transaction mode
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+
+# Migrations & introspection: direct connection to the engine
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+With **postgres.js**, disable prepared statements by building the client with `prepare: false`, as shown in [Install and configure the driver](#driver).
+
+```ts
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  dialect: 'postgresql',
+  schema: './src/schema.ts',
+  out: './drizzle',
+  dbCredentials: {
+    url: process.env.DIRECT_URL!
+  }
+});
+```
+
+If your application relies on prepared statements, advisory locks, `LISTEN`/`NOTIFY`, temporary tables, or `SET LOCAL`, switch the pooler to **session mode** and remove `prepare: false` with postgres.js. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` (and the pooled variant as `DATABASE_URL`).
+3. Run `drizzle-kit migrate` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network security" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

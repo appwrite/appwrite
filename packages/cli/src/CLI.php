@@ -6,9 +6,9 @@ use Exception;
 use Utopia\CLI\Adapters\Generic;
 use Utopia\DI\Container;
 use Utopia\Servers\Hook;
-use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Validator;
 
 class CLI
 {
@@ -212,7 +212,7 @@ class CLI
         $output = [];
 
         foreach ($args as &$arg) {
-            if (substr($arg, 0, 2) === '--') {
+            if (str_starts_with($arg, '--')) {
                 $arg = substr($arg, 2);
             }
         }

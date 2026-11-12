@@ -1,0 +1,5 @@
+services:
+    -
+        class: Utopia\Console\PHPStan\DisallowRawShellExtension
+        tags:
+            - phpstan.restrictedFunctionUsageExtension

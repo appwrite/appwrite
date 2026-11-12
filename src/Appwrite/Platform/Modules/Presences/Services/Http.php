@@ -16,10 +16,10 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         $this
-            ->addAction(UpsertPresence::getName(), new UpsertPresence())
-            ->addAction(GetPresence::getName(), new GetPresence())
-            ->addAction(ListPresences::getName(), new ListPresences())
-            ->addAction(UpdatePresence::getName(), new UpdatePresence())
-            ->addAction(DeletePresence::getName(), new DeletePresence());
+            ->addAction('upsertPresence', UpsertPresence::class)
+            ->addAction('getPresence', GetPresence::class)
+            ->addAction('listPresences', ListPresences::class)
+            ->addAction('updatePresence', UpdatePresence::class)
+            ->addAction('deletePresence', DeletePresence::class);
     }
 }

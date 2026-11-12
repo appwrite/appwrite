@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 
+use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -11,12 +13,13 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -59,15 +62,19 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
-            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
-            ->inject('project')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForFunctions')
-            ->inject('locks')
+            ->inject('deployments')
+            ->inject('project')
+            ->inject('dbForPlatform')
+            ->inject('vcsFactory')
+            ->inject('platform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -75,12 +82,16 @@ class Delete extends Action
         string $functionId,
         string $deploymentId,
         Response $response,
-        Document $project,
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
         Device $deviceForFunctions,
-        callable $locks
+        Deployments $deployments,
+        Document $project,
+        Database $dbForPlatform,
+        VcsFactory $vcsFactory,
+        array $platform,
+        Authorization $authorization,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -101,54 +112,16 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        // The Console deletes deployments in parallel, so repointing must not pick one that another request is deleting.
         try {
-            $function = $locks('functions:deployments:' . $project->getId() . ':' . $functionId, 30, function () use ($dbForProject, $functionId, $deployment) {
-                try {
-                    if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-                    }
-                } catch (TransactionException) {
-                    $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
+            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+            }
+        } catch (TransactionException) {
+            $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
 
-                    if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-                    }
-                }
-
-                $function = $dbForProject->getDocument('functions', $functionId);
-
-                if ($function->getAttribute('latestDeploymentId') === $deployment->getId()) {
-                    $latestDeployment = $dbForProject->findOne('deployments', [
-                        Query::equal('resourceType', ['functions']),
-                        Query::equal('resourceInternalId', [$function->getSequence()]),
-                        Query::orderDesc('$createdAt'),
-                    ]);
-                    $function = $dbForProject->updateDocument(
-                        'functions',
-                        $function->getId(),
-                        new Document([
-                            'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
-                            'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
-                            'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
-                            'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
-                        ])
-                    );
-                }
-
-                if ($function->getAttribute('deploymentId') === $deployment->getId()) { // Reset function deployment
-                    $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
-                        'deploymentId' => '',
-                        'deploymentInternalId' => '',
-                        'deploymentCreatedAt' => null,
-                    ]));
-                }
-
-                return $function;
-            }, 10.0);
-        } catch (Contention) {
-            $response->addHeader('Retry-After', '5');
-            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment deletion is busy. Try again.');
+            if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+            }
         }
 
         if (!empty($deployment->getAttribute('sourcePath', ''))) {
@@ -156,6 +129,43 @@ class Delete extends Action
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }
+
+        // A build still running would write its output after the deletes worker has cleared it.
+        if (!\in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'], true)) {
+            try {
+                $deployments->cancel($deployment->getId());
+            } catch (\Throwable) {
+            }
+        }
+
+        if ($function->getAttribute('latestDeploymentId') === $deployment->getId()) {
+            $latestDeployment = $dbForProject->findOne('deployments', [
+                Query::equal('resourceType', ['functions']),
+                Query::equal('resourceInternalId', [$function->getSequence()]),
+                Query::orderDesc('$createdAt'),
+            ]);
+            $function = $dbForProject->updateDocument(
+                'functions',
+                $function->getId(),
+                new Document([
+                    'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt(),
+                    'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                    'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                    'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+                ])
+            );
+        }
+
+        if ($function->getAttribute('deploymentId') === $deployment->getId()) { // Reset function deployment
+            $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+                'deploymentId' => '',
+                'deploymentInternalId' => '',
+                'deploymentCreatedAt' => '',
+            ])));
+        }
+
+        // The provider stops offering the deployed resource's links
+        $authorization->skip(fn () => GitAction::report('deleted', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

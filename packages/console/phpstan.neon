@@ -6,3 +6,5 @@ parameters:
     paths:
         - src
         - tests
+    excludePaths:
+        - tests/PHPStan/resources

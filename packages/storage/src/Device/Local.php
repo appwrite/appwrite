@@ -9,6 +9,7 @@ use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Exception\NotFoundException;
+use Utopia\Storage\Exception\NotModifiedException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\UploadException;
@@ -246,8 +247,12 @@ class Local extends Device
      *
      * @throws StorageException
      */
-    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface
+    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null, ?\DateTimeInterface $modifiedSince = null): StreamInterface
     {
+        if ($etag !== null && $modifiedSince instanceof \DateTimeInterface) {
+            throw new \InvalidArgumentException('A read cannot be conditional on both an ETag and a time');
+        }
+
         if (! $this->exists($path)) {
             throw new NotFoundException('File not found');
         }
@@ -255,6 +260,15 @@ class Local extends Device
         $handle = fopen($path, 'rb');
         if ($handle === false) {
             throw new StorageException('Failed to read file ' . $path);
+        }
+
+        if ($modifiedSince instanceof \DateTimeInterface) {
+            $stat = fstat($handle);
+            if ($stat !== false && $stat['mtime'] <= $modifiedSince->getTimestamp()) {
+                fclose($handle);
+
+                throw new NotModifiedException('File ' . $path . ' has not been modified');
+            }
         }
 
         if ($etag !== null && $this->hashHandle($handle, $path) !== $etag) {
@@ -479,7 +493,8 @@ class Local extends Device
      */
     public function delete(string $path, bool $recursive = false): bool
     {
-        if (is_dir($path) && $recursive) {
+        // A symbolic link is unlinked, never followed into what it points at.
+        if ($recursive && is_dir($path) && ! is_link($path)) {
             $entries = scandir($path);
 
             if ($entries === false) {
@@ -522,7 +537,7 @@ class Local extends Device
         $files = $this->scanDirectory($path);
 
         foreach ($files as $file) {
-            if (is_dir($file)) {
+            if (is_dir($file) && ! is_link($file)) {
                 $this->deletePath(substr_replace($file, '', 0, \strlen($this->getRoot() . DIRECTORY_SEPARATOR)));
             } else {
                 $this->delete($file, true);
@@ -556,6 +571,7 @@ class Local extends Device
             size: $this->getFileSize($path),
             modifiedAt: $modified === false ? null : new \DateTimeImmutable('@' . $modified),
             etag: $this->getFileHash($path),
+            mimeType: $this->getFileMimeType($path),
         );
     }
 
@@ -721,19 +737,21 @@ class Local extends Device
 
     /**
      * Get all files and directories directly inside a directory, hidden entries included.
+     * Names are taken literally, so an entry named like a glob pattern matches nothing else.
      *
      * @return string[]
      */
     private function scanDirectory(string $dir): array
     {
         $dir = rtrim($dir, DIRECTORY_SEPARATOR);
-        $files = glob($dir . DIRECTORY_SEPARATOR . '*') ?: [];
+        $entries = is_dir($dir . DIRECTORY_SEPARATOR) ? scandir($dir . DIRECTORY_SEPARATOR) : false;
 
-        /**
-         * Hidden files
-         */
-        foreach (glob($dir . DIRECTORY_SEPARATOR . '.[!.]*') ?: [] as $file) {
-            $files[] = $file;
+        $files = [];
+        foreach ($entries ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $files[] = $dir . DIRECTORY_SEPARATOR . $entry;
         }
 
         return $files;

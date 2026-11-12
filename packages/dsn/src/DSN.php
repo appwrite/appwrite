@@ -2,7 +2,7 @@
 
 namespace Utopia\DSN;
 
-class DSN
+class DSN implements \Stringable
 {
     /**
      * @var string
@@ -74,8 +74,65 @@ class DSN
         $this->password = isset($parts['pass']) ? \urldecode($parts['pass']) : null;
         $this->host = $parts['host'];
         $this->port = $parts['port'] ?? null;
-        $this->path = isset($parts['path']) ? ltrim((string) $parts['path'], '/') : '';
+        $this->path = isset($parts['path']) ? \rawurldecode(\ltrim((string) $parts['path'], '/')) : '';
         $this->query = $parts['query'] ?? null;
+    }
+
+    /**
+     * Build a DSN from its parts, encoding each one.
+     *
+     * Splicing values into a DSN string lets a value reshape it: a `?` in a path
+     * starts the query, an `@` in a user moves the host. Each part here is read
+     * back exactly as given, or the DSN is refused.
+     *
+     * @param  array<string, string>  $params
+     *
+     * @throws \InvalidArgumentException When a part cannot be represented as given
+     */
+    public static function from(
+        string $scheme,
+        string $host,
+        #[\SensitiveParameter] ?string $user = null,
+        #[\SensitiveParameter] ?string $password = null,
+        ?int $port = null,
+        string $path = '',
+        array $params = [],
+    ): self {
+        if ($user === null && $password !== null) {
+            throw new \InvalidArgumentException('Unable to build DSN: a password needs a user');
+        }
+
+        $dsn = $scheme . '://';
+        if ($user !== null) {
+            $dsn .= \rawurlencode($user) . ($password === null ? '' : ':' . \rawurlencode($password)) . '@';
+        }
+        $dsn .= $host . ($port === null ? '' : ':' . $port);
+        if ($path !== '') {
+            $dsn .= '/' . \implode('/', \array_map(\rawurlencode(...), \explode('/', $path)));
+        }
+        if ($params !== []) {
+            $dsn .= '?' . \http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+        }
+
+        $parsed = new self($dsn);
+        unset($dsn);
+
+        // getParam() reads the query with parse_str, which nests `a[b]` and rewrites `.` and spaces in keys
+        \parse_str($parsed->query ?? '', $query);
+
+        if (
+            $parsed->scheme !== $scheme
+            || $parsed->host !== $host
+            || $parsed->user !== $user
+            || $parsed->password !== $password
+            || $parsed->port !== ($port === null ? null : (string) $port)
+            || $parsed->path !== $path
+            || $query !== $params
+        ) {
+            throw new \InvalidArgumentException('Unable to build DSN: a part does not survive encoding');
+        }
+
+        return $parsed;
     }
 
     /**
@@ -166,5 +223,25 @@ class DSN
         parse_str($this->query, $this->params);
 
         return $this->params[$key] ?? $default;
+    }
+
+    /**
+     * Return the DSN, with each part encoded as {@see from()} encodes it.
+     */
+    public function __toString(): string
+    {
+        $dsn = $this->scheme . '://';
+        if ($this->user !== null) {
+            $dsn .= \rawurlencode($this->user) . ($this->password === null ? '' : ':' . \rawurlencode($this->password)) . '@';
+        }
+        $dsn .= $this->host . ($this->port === null ? '' : ':' . $this->port);
+        if ($this->path !== null && $this->path !== '') {
+            $dsn .= '/' . \implode('/', \array_map(\rawurlencode(...), \explode('/', $this->path)));
+        }
+        if ($this->query !== null) {
+            $dsn .= '?' . $this->query;
+        }
+
+        return $dsn;
     }
 }

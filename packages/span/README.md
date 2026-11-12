@@ -170,7 +170,7 @@ Span::setExporters(new Exporter\Pretty(
 ));
 ```
 
-Colourful, multi-line output for local development. Attributes are displayed with aligned values, duration is colour-coded (green < 100ms, yellow < 1s, red >= 1s), and errors are highlighted in red. Writes to stdout (info) or stderr (errors).
+Colourful, multi-line output for local development. Attributes are displayed with aligned values, duration is colour-coded (green < 100ms, yellow < 1s, red >= 1s), and errors are highlighted in red. Writes to stdout (info) or stderr (errors). Control characters in attribute keys, values, and error text are escaped before writing.
 
 ```
 http.request · 12.3ms · abc12345

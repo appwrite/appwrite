@@ -61,11 +61,17 @@ class FakeTransport implements Transport
     public function connect(float $timeout, bool $tls): void
     {
         $this->connected = true;
+        $this->closed = false;
         $this->tls = $tls;
     }
 
     public function read(int $length, float $timeout): string
     {
+        // As Native and Swoole do: a closed transport has no stream to read.
+        if ($this->closed) {
+            throw new \LogicException('The transport is not connected');
+        }
+
         if ($this->pending === '') {
             throw new ConnectionException('The server closed the connection');
         }
@@ -82,6 +88,10 @@ class FakeTransport implements Transport
 
     public function write(string $data, float $timeout): void
     {
+        if ($this->closed) {
+            throw new \LogicException('The transport is not connected');
+        }
+
         if ($this->failWriting !== null && str_contains($data, $this->failWriting)) {
             throw new ConnectionException('The connection dropped mid-write');
         }

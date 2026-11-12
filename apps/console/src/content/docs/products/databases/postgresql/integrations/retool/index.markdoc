@@ -1,0 +1,95 @@
+---
+layout: article
+title: Retool
+description: Connect Retool to an Appwrite native PostgreSQL database to build internal and admin tools. Retrieve credentials from the Console, configure the PostgreSQL resource with TLS, and allow Retool Cloud network access when needed.
+---
+
+An Appwrite [native PostgreSQL database](/docs/products/databases/postgresql) exposes a standard PostgreSQL connection, so [Retool](https://retool.com/) connects to it through the built-in **PostgreSQL** resource. Use the database hostname, generated database name, and credentials from Appwrite, then build queries, tables, and forms in Retool for dashboards and admin panels.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and permission to create resources in Retool. In the Appwrite Console, open the database and click **Credentials**. Use the **Details** tab for individual values, or copy a ready-made string from the **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tab. You can also fetch credentials with the API by calling `postgresql.get()`, which returns `hostname`, `connectionUser`, `connectionPassword`, and `connectionString`. See [Connections](/docs/products/databases/postgresql/connections) for the full flow.
+{% /info %}
+
+# Choose credentials {% #credentials %}
+
+The primary user is `admin`, and the database name is generated for each database. The connection string has this form: `postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>`.
+
+Use `admin` for initial setup or schema work because it owns the database and can run DDL. For a Retool app that only needs application-level access, create a narrower PostgreSQL role from the database **Roles** tab in the Console, then grant only the table privileges the app needs from the SQL editor or `psql`. For example, a dashboard role usually needs `SELECT`, while an admin tool may need `SELECT`, `INSERT`, `UPDATE`, and `DELETE` on specific tables.
+
+{% arrow_link href="/docs/products/databases/postgresql/connections#roles" %}
+Read more about database roles
+{% /arrow_link %}
+
+# Create the PostgreSQL resource {% #resource %}
+
+In Retool, go to **Resources**, click **Create new** > **Resource**, search for `PostgreSQL`, and select the PostgreSQL tile. Give the resource a clear **Name** and optional **Description** that identifies the Appwrite database and environment.
+
+In **Resource credentials**, either paste the Appwrite connection string or fill in the fields manually:
+
+| Retool setting | Value |
+|----------------|-------|
+| Host | `db-<hash>.<region>.appwrite.center` |
+| Port | `5432` |
+| Database name | `<database>` |
+| Connection options | Optional PostgreSQL parameters, such as `application_name=retool` |
+| Authentication | **Username and password** |
+| Username | `admin` or a narrower PostgreSQL role |
+| Password | The password from the Appwrite credentials dialog or API response |
+
+In **Advanced options**, choose an outbound region if your Retool organization uses regional egress and you want the resource traffic to originate near your Appwrite database.
+
+Enable **SSL/TLS**. Appwrite Cloud terminates TLS at the edge, and the certificate is signed by a public CA. If Retool shows **Reject unauthorized**, keep it enabled. If Retool shows **Verification mode**, choose **Full verification**. Leave **CA certificate** empty.
+
+Click **Test connection**. If the test succeeds, click **Create resource**.
+
+# Pick the connection path {% #connection-path %}
+
+For most Retool apps, connect directly to PostgreSQL on port `5432`. Retool uses prepared statements for PostgreSQL queries, and Appwrite's transaction-mode pooler does not preserve session-level state across statements. If you use the Appwrite [connection pooler](/docs/products/databases/postgresql/connection-pooling), configure it in **session** mode for Retool.
+
+{% arrow_link href="/docs/products/databases/postgresql/connection-pooling#modes" %}
+Compare pooler modes
+{% /arrow_link %}
+
+# Allow Retool Cloud through the network {% #network %}
+
+If you enabled an [IP allowlist](/docs/products/databases/postgresql/network-security#ip-allowlist) for the database, add the Retool Cloud egress addresses for the resource's outbound region. Retool's default outbound region is `us-west-2`, and Retool also documents `eu-central-1` and `ap-southeast-1` egress addresses. Retrieve the current list from [Retool's IP address documentation](https://docs.retool.com/data-sources/reference/ip-allowlist-cloud-orgs) instead of copying static addresses into your runbook.
+
+If you leave the database allowlist open, rely on TLS plus database credentials and least-privilege roles to protect access.
+
+{% arrow_link href="/docs/products/databases/postgresql/network-security#ip-allowlist" %}
+Configure the IP allowlist
+{% /arrow_link %}
+
+# Build an admin tool {% #build %}
+
+After the resource is connected, create PostgreSQL queries in Retool and wire them to components:
+
+- Use **SQL mode** for read queries that feed a **Table**, chart, or other display component.
+- Use **GUI mode** actions such as **Insert a record**, **Update an existing record**, and **Delete a record** for forms and editable tables.
+- Bind table edits to the **Save changes** event and refresh the read query after writes complete.
+- Show a confirmation modal before delete actions.
+
+Reference component values with Retool's `{{ }}` embedded expressions. Retool converts PostgreSQL queries to prepared statements by default, which separates values from SQL text and helps prevent SQL injection. Keep that protection enabled unless you have a specific, reviewed reason to disable it.
+
+Use database roles as the last line of defense. A dashboard role with only `SELECT` cannot write even if a query is misconfigured. A data-entry role with table-level write privileges can create, update, and delete rows without also owning the schema.
+
+# Use a branch for staging {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are API-created, isolated copies of a PostgreSQL database with their own connection details. Create a branch for staging or preview work, fetch its `connectionString`, and configure a second Retool PostgreSQL resource against that branch. Delete the branch when the staging tool is no longer needed.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql" title="PostgreSQL" %}
+Create and manage a native PostgreSQL database.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the primary password, and create database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network security" %}
+TLS, IP allowlists, and other network controls.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Create isolated database copies for staging and preview environments.
+{% /cards_item %}
+{% /cards %}

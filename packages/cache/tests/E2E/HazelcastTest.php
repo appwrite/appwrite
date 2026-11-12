@@ -61,4 +61,16 @@ final class HazelcastTest extends Base
 
         $this->assertEquals(false, $result);
     }
+
+    public function testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge(): void
+    {
+        try {
+            self::$cache->purge(\str_repeat('k', 300));
+            $this->fail('A purge Hazelcast rejected must not read as a purge of a missing key');
+        } catch (MemcachedException $error) {
+            $this->assertStringContainsString('Failed to purge', $error->getMessage());
+        }
+
+        $this->assertFalse(self::$cache->purge('test:missing'));
+    }
 }

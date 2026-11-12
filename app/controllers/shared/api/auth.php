@@ -14,20 +14,29 @@ use Utopia\System\System;
 
 Http::init()
     ->groups(['mfaProtected'])
+    ->inject('user')
+    ->inject('session')
+    ->action(function (User $user, Document $session) {
+        if (!$user->sessionChallengeRecent($session->getId())) {
+            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        }
+    });
+
+Http::init()
+    ->groups(['recentSession'])
     ->inject('session')
     ->action(function (Document $session) {
-        $isSessionFresh = false;
-
-        $lastUpdate = $session->getAttribute('mfaUpdatedAt');
-        if (!empty($lastUpdate)) {
-            $now = DateTime::now();
-            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
-
-            $isSessionFresh = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
+        if ($session->isEmpty()) {
+            return; // Scope checks reject guests
         }
 
-        if (!$isSessionFresh) {
-            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        // Signed in, or completed an MFA challenge, within the window
+        $recent = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -SESSION_RECENT_DURATION));
+        $signedInAt = DateTime::formatTz($session->getCreatedAt());
+        $verifiedAt = DateTime::formatTz($session->getAttribute('mfaUpdatedAt'));
+
+        if ($signedInAt < $recent && ($verifiedAt === null || $verifiedAt < $recent)) {
+            throw new Exception(Exception::USER_REAUTHENTICATION_REQUIRED);
         }
     });
 
@@ -99,6 +108,12 @@ Http::init()
             case 'email-otp':
                 if (($auths[Config::getParam('auth')['email-otp']['key']] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
+                }
+                break;
+
+            case 'passkey':
+                if (($auths[Config::getParam('auth')['passkey']['key']] ?? false) !== true) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkey authentication is disabled for this project');
                 }
                 break;
 

@@ -1,0 +1,192 @@
+import { useState, useEffect } from 'react'
+import { useParams } from '@tanstack/react-router'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Info } from 'lucide-react'
+import { useOrganizations } from '@/lib/react-query/hooks'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  MARKETPLACE_CATEGORY_LABELS,
+  type MarketplaceAppCategory,
+} from '@/lib/marketplace/types'
+import { useT } from '@/lib/i18n/translate'
+
+export type CreateMarketplaceAppInput = {
+  name: string
+  shortDescription: string
+  description: string
+  category: MarketplaceAppCategory
+}
+
+interface CreateMarketplaceAppProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onCreate: (input: CreateMarketplaceAppInput) => void | Promise<void>
+  isSubmitting?: boolean
+}
+
+export function CreateMarketplaceApp({
+  open,
+  onOpenChange,
+  onCreate,
+  isSubmitting = false,
+}: CreateMarketplaceAppProps) {
+  const t = useT()
+  const { orgId } = useParams({ strict: false })
+  const { organizations } = useOrganizations()
+  const currentTeamName =
+    organizations.find((org) => org.$id === orgId)?.name ?? orgId ?? ''
+  const [name, setName] = useState('')
+  const [shortDescription, setShortDescription] = useState('')
+  const [category, setCategory] = useState<MarketplaceAppCategory>('devtools')
+
+  useEffect(() => {
+    if (!open) {
+      setName('')
+      setShortDescription('')
+      setCategory('devtools')
+    }
+  }, [open])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name.trim() || !shortDescription.trim() || isSubmitting) return
+    await onCreate({
+      name: name.trim(),
+      shortDescription: shortDescription.trim(),
+      // Only the tagline is set on creation; the description starts empty.
+      description: '',
+      category,
+    })
+  }
+
+  const canSubmit = name.trim().length > 0 && shortDescription.trim().length > 0
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
+          <DialogTitle>{t('Create app')}</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            {t('Create an OAuth2 app listing for the marketplace.')}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+
+        <form onSubmit={handleSubmit}>
+          <div className="px-6 pb-4 pt-0 space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="marketplace-app-team">{t('Team')}</Label>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={t(
+                          'The app is created in your current team. Switch teams to create it in another team.',
+                        )}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <Info className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="max-w-64 text-[12px] text-pretty"
+                    >
+                      {t(
+                        'The app is created in your current team. Switch teams to create it in another team.',
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Input
+                id="marketplace-app-team"
+                value={currentTeamName}
+                disabled
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="marketplace-app-name">{t('Name')}</Label>
+              <Input
+                id="marketplace-app-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t('My integration')}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="marketplace-app-short">{t('Tagline')}</Label>
+              <Input
+                id="marketplace-app-short"
+                value={shortDescription}
+                onChange={(e) => setShortDescription(e.target.value)}
+                placeholder={t('One line summary')}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="marketplace-app-category">{t('Category')}</Label>
+              <Select
+                value={category}
+                onValueChange={(v) =>
+                  setCategory(v as MarketplaceAppCategory)
+                }
+              >
+                <SelectTrigger id="marketplace-app-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(
+                    Object.keys(
+                      MARKETPLACE_CATEGORY_LABELS,
+                    ) as MarketplaceAppCategory[]
+                  ).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {t(MARKETPLACE_CATEGORY_LABELS[key])}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button type="submit" disabled={!canSubmit || isSubmitting}>
+              {t('Create app')}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}

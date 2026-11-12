@@ -20,6 +20,14 @@ class PolicyPasswordDictionary extends PolicyBase
             'default' => false,
             'example' => true,
         ]);
+
+        $this->addRule('denyList', [
+            'type' => self::TYPE_STRING,
+            'description' => 'Custom passwords blocked by case-sensitive equality when enabled.',
+            'default' => [],
+            'example' => ['AcmeDefault123!'],
+            'array' => true,
+        ]);
     }
 
     public function getName(): string

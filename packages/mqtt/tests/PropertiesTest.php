@@ -48,6 +48,33 @@ final class PropertiesTest extends TestCase
         $this->assertSame(['projectId' => 'proj-1', 'subId' => 'orders'], $parsed->user());
     }
 
+    public function testUserPropertiesKeepNumericKeys(): void
+    {
+        $encoded = (new Properties())
+            ->add(new Property(Property::USER, ['7' => 'seven']))
+            ->add(new Property(Property::USER, ['region' => 'fra']))
+            ->encode();
+
+        [$parsed] = Properties::parse($encoded, 0);
+
+        $this->assertSame(['7' => 'seven', 'region' => 'fra'], $parsed->user());
+    }
+
+    public function testManyUserPropertiesMergeInLinearTime(): void
+    {
+        $properties = new Properties();
+        for ($index = 0; $index < 40_000; $index++) {
+            $properties->add(new Property(Property::USER, ["key{$index}" => 'value']));
+        }
+
+        $start = microtime(true);
+        $user = $properties->user();
+        $elapsed = microtime(true) - $start;
+
+        $this->assertCount(40_000, $user);
+        $this->assertLessThan(0.5, $elapsed);
+    }
+
     public function testAuthMethodAndDataRoundTrip(): void
     {
         $encoded = (new Properties())
@@ -78,6 +105,18 @@ final class PropertiesTest extends TestCase
         $offset = Properties::skip($wire, 0);
 
         $this->assertSame('PAYLOAD', substr($wire, $offset));
+    }
+
+    public function testTruncatedBlockThrows(): void
+    {
+        $this->expectExceptionMessage('Malformed MQTT property block');
+        Properties::parse("\x0A\x01\x01", 0);
+    }
+
+    public function testPropertyOverrunningBlockThrows(): void
+    {
+        $this->expectExceptionMessage('Malformed MQTT property block');
+        Properties::parse("\x02\x11\x00\x00\x00\x00", 0);
     }
 
     public function testUnknownPropertyIdThrows(): void

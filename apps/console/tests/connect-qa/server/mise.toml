@@ -1,0 +1,5 @@
+[tools]
+hurl = "latest"  # Assertion the HTTP response
+"github:commander-cli/commander" = "latest" # Assertion for CLI response
+
+# Per-platform runtimes are added by the CI/CD workflow

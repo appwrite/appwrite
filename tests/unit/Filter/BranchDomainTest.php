@@ -98,6 +98,30 @@ final class BranchDomainTest extends TestCase
         $this->assertStringEndsWith('.appwrite.network', $domain);
     }
 
+    public function testResourceHashSeparatesProjectAndResource(): void
+    {
+        $filter = new BranchDomainFilter();
+
+        $first = $filter->apply(['branch' => 'main', 'resourceId' => 'site1', 'projectId' => '23', 'sitesDomain' => 'appwrite.network']);
+        $second = $filter->apply(['branch' => 'main', 'resourceId' => 'site12', 'projectId' => '3', 'sitesDomain' => 'appwrite.network']);
+
+        $this->assertNotSame($first, $second);
+        $this->assertSame('branch-main-' . \substr(\hash('sha256', '23:site1'), 0, BranchDomainFilter::RESOURCE_HASH_LENGTH) . '.appwrite.network', $first);
+    }
+
+    public function testLegacyDomainIsUnchanged(): void
+    {
+        $domain = (new BranchDomainFilter())->apply([
+            'branch' => 'feature/login',
+            'resourceId' => 'site123',
+            'projectId' => 'proj456',
+            'sitesDomain' => 'appwrite.network',
+            'legacy' => true,
+        ]);
+
+        $this->assertSame('branch-feature-login-4b08480.appwrite.network', $domain);
+    }
+
     public function testInvalidHostnameIsRefused(): void
     {
         // A sites domain carrying a path is enough to break the result, as the

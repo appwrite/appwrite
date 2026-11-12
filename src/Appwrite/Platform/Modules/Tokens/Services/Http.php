@@ -15,11 +15,11 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
         $this
-            ->addAction(CreateFileToken::getName(), new CreateFileToken())
-            ->addAction(GetToken::getName(), new GetToken())
-            ->addAction(ListFileTokens::getName(), new ListFileTokens())
-            ->addAction(UpdateToken::getName(), new UpdateToken())
-            ->addAction(DeleteToken::getName(), new DeleteToken())
+            ->addAction('createFileToken', CreateFileToken::class)
+            ->addAction('getToken', GetToken::class)
+            ->addAction('listFileTokens', ListFileTokens::class)
+            ->addAction('updateToken', UpdateToken::class)
+            ->addAction('deleteToken', DeleteToken::class)
         ;
 
     }

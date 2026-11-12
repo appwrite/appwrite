@@ -1,0 +1,19 @@
+[tools]
+node = "24"          # Scaffolding + dev servers for every framework under test
+maestro = "latest"   # Maestro CLI (github:mobile-dev-inc/maestro)
+java = "temurin-21"  # Maestro needs Java 17+
+
+# Run the auth E2E flow against a dev server on <port>.
+#   mise run test          -> http://localhost:3000  (next-js-*, react-create-react-app)
+#   mise run test 5173     -> http://localhost:5173  (react-vite, vue-vite, sveltekit)
+#   mise run test 5173 --headless --test-output-dir=maestro-artifacts
+[tasks.test]
+description = "Run the Maestro auth flow against a dev server on <port>"
+usage = '''
+arg "<port>" help="Port the app dev server is listening on" default="3000"
+flag "-f --flow <flow>" help="Flow file to run" default=".maestro/auth.yaml"
+arg "[maestro_args]..." help="Extra flags passed straight to `maestro test`"
+'''
+# eval: usage shell-quotes $usage_maestro_args; without eval the quotes reach
+# maestro as literal characters and flags like --debug-output=<path> break.
+run = 'eval maestro test -p web -e BASE_URL=http://localhost:$usage_port $usage_flow $usage_maestro_args'

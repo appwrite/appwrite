@@ -1,0 +1,79 @@
+---
+layout: post
+title: "Announcing inversion queries: Exclusion rules made simple"
+description: Adding five new NOT operators to let you exclude what you don’t need while keeping queries efficient.
+date: 2025-09-04
+lastUpdated: 2026-06-29
+cover: /images/blog/announcing-inversion-queries/cover.avif
+timeToRead: 5
+author: jake-barnby
+category: announcements
+featured: false
+faqs:
+  - question: "What are inversion queries in Appwrite?"
+    answer: "Inversion queries are a set of `NOT` operators that let you filter by exclusion directly in [Appwrite Databases](/docs/products/databases) queries. Instead of fetching a broad result set and filtering on the client, you describe everything except the rows you want to skip. This keeps payloads small and logic on the server."
+  - question: "Which NOT operators does Appwrite support?"
+    answer: "Appwrite supports `notContains`, `notSearch`, `notBetween`, `notStartsWith`, and `notEndsWith`. Each mirrors its positive counterpart, so if you already use `contains` or `startsWith`, the inverted version slots in cleanly. You can combine them with other [query operators](/docs/products/databases/queries) for precise control."
+  - question: "Do inversion queries use the same indexes as positive queries?"
+    answer: "Yes, `NOT` operators use the same indexes as their positive counterparts. Be aware that `NOT` conditions can be less selective: an index helps narrow the rows considered, but excluding values doesn't always reduce the candidate set as much as including them. Profile heavy queries and pair NOT with selective positive filters where possible."
+  - question: "When should I use a NOT query instead of filtering on the client?"
+    answer: "Use a NOT query whenever the excluded set is a small fraction of the total rows or when the result would otherwise be large. That includes moderation pipelines, AB testing exclusions, search filters that hide categories, and compliance rules that skip flagged records. Server-side exclusion always beats fetching everything and filtering twice."
+  - question: "Can I combine multiple NOT operators in one query?"
+    answer: "Yes, you can compose multiple `not*` operators with other filters in the same query. For example, you might exclude records that contain banned keywords AND don't start with a test prefix AND aren't in a restricted date range. [Appwrite](/docs/products/databases) applies them together at query time."
+  - question: "Are inversion queries available on self-hosted Appwrite?"
+    answer: "Yes, inversion queries are available on both Appwrite Cloud and self-hosted deployments. If you're on a recent self-hosted version, the new `NOT` operators are exposed through your client SDKs just like the existing query operators."
+---
+When you need to exclude certain records, the usual approach is to fetch a broad set of rows, sometimes even the entire table, and then filter them in your application code.
+
+It works, but it also means you are moving more data across the network than necessary, increasing payload sizes, and adding extra logic to your client. In smaller projects this might not be noticeable, but as your datasets grow, it quickly becomes inefficient.
+
+That changes today.
+
+We’re introducing **inversion Queries:** A new set of `NOT` operators that let you filter by exclusion directly in your Appwrite queries.
+
+# Excluding data just got easier
+
+Exclusion rules come in many forms. Sometimes you need to ignore rows that contain a specific keyword, sometimes you want values that fall outside a numeric range, and other times you need to filter out records based on prefixes or suffixes. These are standard requirements, but they often require extra application-side filtering after fetching results.
+
+With inversion queries, you can express these cases directly in your database calls. The new set of `NOT` operators gives you a way to describe “everything except” conditions without leaving the query itself.
+
+They include:
+
+- `notContains`: Find rows where the column does not contain the given substring
+- `notSearch`: Find rows where the column does not match the search query
+- `notBetween`: Find rows where the column is not between two given values
+- `notStartsWith`: Find rows where the column does not start with the given value
+- `notEndsWith`: Find rows where the column does not end with the given value
+
+# Why does this matter?
+
+By moving negative filters into the query engine itself, you gain:
+
+- **Efficiency**: Smaller result sets, fewer wasted reads.
+- **Cleaner code**: Exclusion logic lives in the query, not your app layer.
+- **Flexibility**: Easy to add “everything except…” rules without restructuring queries.
+- **Composability**: Combine `not*` operators with other filters for precise control.
+- **Index-awareness**: These operators use the same indexes as their positive counterparts, though keep in mind that `NOT` conditions can sometimes be less selective.
+
+# Practical use cases
+
+Inversion queries open the door to workflows like: 
+
+- **Moderation pipelines**: Block banned keywords at the query level.
+- **AB testing**: Exclude users already bucketed into an experiment.
+- **Search filters**: Hide categories or tags from results without post-filtering.
+- **Data hygiene**: Skip over ranges of test accounts or synthetic data.
+- **Compliance**: Avoid restricted or flagged records directly in queries.
+
+# Get started
+
+Inversion queries are available now in **Appwrite Cloud and Self-Hosted**.
+
+Next time you find yourself writing “fetch everything, then filter out X,” let the database do the heavy lifting. Your code stays lean, your queries stay efficient, and your apps stay faster.
+
+# More resources
+
+- [Read the documentation to get started](/docs/products/databases/queries)
+- [Announcing Opt-in relationship loading: Granular control for smarter data fetching](/blog/post/announcing-opt-in-relationship-loading)
+- [Announcing an improved Appwrite Databases experience. A completely new look & feel.](/blog/post/announcing-appwrite-databases-new-ui)
+- [Announcing Database Upsert: Simplify your database interactions](/blog/post/announcing-database-upsert)

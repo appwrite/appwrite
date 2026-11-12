@@ -3,9 +3,11 @@
 namespace Utopia\Query\Tests\E2E\Builder;
 
 use PDOException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Query\Builder\PostgreSQL as Builder;
 use Utopia\Query\Builder\VectorMetric;
 use Utopia\Query\Query;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\Tests\E2E\IntegrationTestCase;
 
 class PostgreSQLIntegrationTest extends IntegrationTestCase
@@ -809,6 +811,128 @@ class PostgreSQLIntegrationTest extends IntegrationTestCase
 
         $this->assertCount(1, $rows);
         $this->assertSame(1, (int) $rows[0]['id']); // @phpstan-ignore cast.int
+    }
+
+    public function testObjectFilterMatchesNestedKeyContainingQuote(): void
+    {
+        $this->createObjectDocuments();
+
+        $this->assertSame([3], $this->findObjectDocuments(Query::equal("meta.a'b", ['x'])));
+        $this->assertSame([5], $this->findObjectDocuments(Query::equal("meta.n'x.c", ['x'])));
+    }
+
+    public function testObjectFilterMatchesNestedKeyContainingBackslash(): void
+    {
+        $this->createObjectDocuments();
+
+        $this->assertSame([4], $this->findObjectDocuments(Query::equal('meta.a\\b', ['x'])));
+
+        $this->postgresStatement('SET standard_conforming_strings = off');
+        try {
+            $this->assertSame([4], $this->findObjectDocuments(Query::equal('meta.a\\b', ['x'])));
+        } finally {
+            $this->postgresStatement('SET standard_conforming_strings = on');
+        }
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function nestedObjectKeyProvider(): array
+    {
+        return [
+            'quote in the last key' => ["meta.a' IN ('x') OR secret='s2' OR 'x"],
+            'quote in a middle key' => ["meta.n' OR secret='s2' OR 'x.c"],
+            'trailing line comment' => ["meta.a' OR 1=1 --"],
+            'backslash before a quote' => ["meta.a\\' OR secret='s2' OR 'x"],
+        ];
+    }
+
+    #[DataProvider('nestedObjectKeyProvider')]
+    public function testObjectFilterNestedKeyOnlyNamesAKey(string $attribute): void
+    {
+        $this->createObjectDocuments();
+
+        $this->assertSame([], $this->findObjectDocuments(Query::equal($attribute, ['x'])));
+        $this->assertSame([1, 2, 3, 4, 5], $this->findObjectDocuments(Query::isNull($attribute)));
+
+        $this->postgresStatement('SET standard_conforming_strings = off');
+        try {
+            $this->assertSame([], $this->findObjectDocuments(Query::equal($attribute, ['x'])));
+        } finally {
+            $this->postgresStatement('SET standard_conforming_strings = on');
+        }
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function jsonPathKeyProvider(): array
+    {
+        return [
+            'comma' => ['a,b'],
+            'closing brace' => ['a}'],
+            'double quote' => ['a"b'],
+            'trailing newline' => ["a\n"],
+            'leading space' => [' a'],
+            'null keyword' => ['NULL'],
+        ];
+    }
+
+    #[DataProvider('jsonPathKeyProvider')]
+    public function testJsonbSetPathWritesOnlyTheNamedKey(string $key): void
+    {
+        $this->createObjectDocuments();
+
+        $update = new Builder()
+            ->from('documents')
+            ->setJsonPath('meta', '$.' . $key, 'v')
+            ->filter([Query::equal('id', [1])])
+            ->update();
+        $this->executeOnPostgres($update);
+
+        $this->assertSame([1], $this->findObjectDocuments(Query::equal('meta.' . $key, ['v'])));
+        $this->assertSame([1], $this->findObjectDocuments(Query::equal('meta.a', ['x'])));
+    }
+
+    private function createObjectDocuments(): void
+    {
+        $this->trackPostgresTable('documents');
+        $this->postgresStatement('DROP TABLE IF EXISTS "documents" CASCADE');
+        $this->postgresStatement('
+            CREATE TABLE "documents" (
+                "id" INT PRIMARY KEY,
+                "meta" JSONB NOT NULL,
+                "secret" TEXT NOT NULL
+            )
+        ');
+        $this->postgresStatement(<<<'SQL'
+            INSERT INTO "documents" ("id", "meta", "secret") VALUES
+            (1, '{"a":"x","n":{"c":"y"}}', 's1'),
+            (2, '{"a":"y"}', 's2'),
+            (3, '{"a''b":"x"}', 's3'),
+            (4, '{"a\\b":"x"}', 's4'),
+            (5, '{"n''x":{"c":"x"}}', 's5')
+            SQL);
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function findObjectDocuments(Query $filter): array
+    {
+        $filter->setAttributeType(ColumnType::Object->value);
+
+        $rows = $this->executeOnPostgres(
+            new Builder()
+                ->from('documents')
+                ->select(['id'])
+                ->filter([$filter])
+                ->sortAsc('id')
+                ->build()
+        );
+
+        return \array_map(static fn (array $row): int => (int) $row['id'], $rows); // @phpstan-ignore cast.int
     }
 
     public function testFullOuterJoin(): void

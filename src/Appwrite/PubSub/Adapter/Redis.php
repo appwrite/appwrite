@@ -21,6 +21,9 @@ class Redis implements Adapter
 
     public function subscribe($channels, $callback)
     {
+        // A subscriber waits for the next message for as long as it takes
+        $this->client->setOption(\Redis::OPT_READ_TIMEOUT, -1);
+
         return $this->client->subscribe($channels, $callback);
     }
 

@@ -9,9 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class StorageConsoleClientTest extends Scope
 {
@@ -26,7 +26,7 @@ final class StorageConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Console Bucket Transformations Disabled',
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -36,7 +36,7 @@ final class StorageConsoleClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'transformations.png'),
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -79,7 +79,7 @@ final class StorageConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Permissions',
             'fileSecurity' => true,
         ]);
@@ -91,7 +91,7 @@ final class StorageConsoleClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'test.png'),
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -116,7 +116,7 @@ final class StorageConsoleClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $targetId = ID::unique();
+        $targetId = Id::unique();
         $target = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $targetId,
             'email' => 'impersonation-storage-target-' . $targetId . '@example.com',
@@ -125,7 +125,7 @@ final class StorageConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $actorId = ID::unique();
+        $actorId = Id::unique();
         $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $actorId,
             'email' => 'impersonation-storage-actor-' . $actorId . '@example.com',
@@ -137,7 +137,7 @@ final class StorageConsoleClientTest extends Scope
         ]);
 
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $adminHeaders, [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Impersonation Test Bucket',
             'fileSecurity' => true,
             'permissions' => [
@@ -152,7 +152,7 @@ final class StorageConsoleClientTest extends Scope
             $adminHeaders,
             ['content-type' => 'multipart/form-data']
         ), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::user($targetId)),
@@ -184,5 +184,91 @@ final class StorageConsoleClientTest extends Scope
             'impersonateuserid' => $targetId,
         ]);
         $this->assertEquals(200, $view['headers']['status-code']);
+    }
+
+    public function testConsoleDefaultBucketIsPrivate(): void
+    {
+        $guest = [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => 'console',
+        ];
+        $owner = \array_merge($guest, ['cookie' => 'a_session_console=' . $this->createConsoleSession()]);
+        $other = \array_merge($guest, ['cookie' => 'a_session_console=' . $this->createConsoleSession()]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/default/files', \array_merge($owner, [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(\realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/default/files/' . $fileId, $owner);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([$guest, $other] as $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/default/files', $headers);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertNotContains($fileId, \array_column($response['body']['files'], '$id'));
+
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/default/files/' . $fileId, $headers);
+            $this->assertSame(404, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/default/files/' . $fileId . '/download', $headers);
+            $this->assertSame(404, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/default/files/' . $fileId, \array_merge($headers, [
+                'content-type' => 'application/json',
+            ]), [
+                'name' => 'renamed.png',
+            ]);
+            $this->assertSame(401, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/default/files/' . $fileId, $headers);
+            $this->assertSame(401, $response['headers']['status-code']);
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/default/files', \array_merge($guest, [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(\realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/default/files/' . $fileId, $owner);
+        $this->assertSame(204, $response['headers']['status-code']);
+    }
+
+    private function createConsoleSession(): string
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ];
+        $email = Id::unique() . '@localhost.test';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        return $session['cookies']['a_session_console'];
     }
 }

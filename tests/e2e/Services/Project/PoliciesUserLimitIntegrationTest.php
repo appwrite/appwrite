@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PoliciesUserLimitIntegrationTest extends Scope
 {
@@ -35,7 +35,7 @@ final class PoliciesUserLimitIntegrationTest extends Scope
 
         $signup = function () use ($signupHeaders): array {
             return $this->client->call(Client::METHOD_POST, '/account', $signupHeaders, [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => 'limit_' . uniqid() . '@localhost.test',
                 'password' => 'password1234',
                 'name' => 'Limit User',

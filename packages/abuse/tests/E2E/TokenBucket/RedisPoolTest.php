@@ -2,8 +2,8 @@
 
 namespace Utopia\Abuse\Tests\E2E\TokenBucket;
 
-use Utopia\Abuse\Adapters\TokenBucket;
-use Utopia\Abuse\Adapters\TokenBucket\RedisPool as AdapterRedisPool;
+use Utopia\Abuse\Adapter\TokenBucket;
+use Utopia\Abuse\Adapter\TokenBucket\RedisPool as AdapterRedisPool;
 use Utopia\Abuse\Tests\E2E\Services;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
@@ -15,6 +15,7 @@ class RedisPoolTest extends Base
      */
     protected static ?Pool $pool = null;
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         if (isset(self::$pool)) {
@@ -29,6 +30,7 @@ class RedisPoolTest extends Base
         }, timeout: 0.0);
     }
 
+    #[\Override]
     public function getAdapter(string $key, int $tokens, float $refillRate): TokenBucket
     {
         $pool = self::$pool;
@@ -38,16 +40,15 @@ class RedisPoolTest extends Base
         return new AdapterRedisPool('tb-pool-' . $key, $tokens, $refillRate, $pool);
     }
 
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
         if (!isset(self::$pool)) {
             return;
         }
 
-        self::$pool->use(function (mixed $redis): void {
-            if ($redis instanceof \Redis) {
-                $redis->close();
-            }
+        self::$pool->use(function (\Redis $redis): void {
+            $redis->close();
         });
         self::$pool = null;
     }

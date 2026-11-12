@@ -10,3 +10,5 @@ packages/*/tests
 packages/*/docs
 packages/*/docker-compose.yml
 packages/*/vendor
+apps
+target

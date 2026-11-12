@@ -6,7 +6,7 @@ namespace Appwrite\Auth\Validator;
 
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 final class EmailWhitelist extends Validator

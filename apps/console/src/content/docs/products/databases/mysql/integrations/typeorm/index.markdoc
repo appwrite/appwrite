@@ -1,0 +1,192 @@
+---
+layout: article
+title: TypeORM
+description: Use TypeORM with an Appwrite native MySQL database. Configure the DataSource, run migrations against the direct connection, and pool runtime traffic from serverless environments.
+---
+
+Appwrite's native MySQL database is a standard MySQL engine (default **8.4**), so [TypeORM](https://typeorm.io/) works against it with no Appwrite-specific configuration. Point TypeORM's `mysql2` driver at the connection string from the [Connections](/docs/products/databases/mysql/connections) page and use entities, the query builder, and migrations as you would against any MySQL server. TypeORM 1.x (current) requires Node 20+ and mysql2 only; `typeorm@0.3` remains on the `legacy` tag.
+
+{% info title="Before you start" %}
+You'll need a native MySQL database in a `ready` state and its credentials. See [native MySQL databases](/docs/products/databases/mysql) to create one and [Connections](/docs/products/databases/mysql/connections) to retrieve the connection string. The username is `admin.<hash>`, and the database name is `default`.
+{% /info %}
+
+# Set the connection string {% #connection-string %}
+
+Fetch the connection details with [`mysql.get()`](/docs/products/databases/mysql/connections#credentials). That call returns one `connectionString` on the engine port (`3306`). Use it as `DIRECT_URL`, copy it to `DATABASE_URL`, and change only the port to `6033` for the [connection pooler](/docs/products/databases/mysql/connection-pooling). Never commit them:
+
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+
+Use the pooled `DATABASE_URL` (port `6033`) for runtime traffic and `DIRECT_URL` (port `3306`) for the TypeORM CLI and migration runners. Connections on Appwrite Cloud are encrypted with TLS. If your runtime or driver configuration does not infer TLS from the connection string, configure SSL on the DataSource and keep certificate verification enabled against Node's standard trust store. See [Network security](/docs/products/databases/mysql/network-security) for TLS and network controls.
+
+# Install and configure TypeORM {% #driver %}
+
+Install TypeORM and `mysql2`:
+
+```bash
+npm install typeorm mysql2 reflect-metadata
+npm install -D @types/node typescript ts-node
+```
+
+Enable decorator metadata in `tsconfig.json` if you use entity decorators (`"emitDecoratorMetadata": true` and `"experimentalDecorators": true`).
+
+Create a runtime `DataSource` that reads `DATABASE_URL`:
+
+```ts
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
+import { User } from './entities/User';
+
+export const AppDataSource = new DataSource({
+  type: 'mysql',
+  url: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: true },
+  synchronize: false,
+  logging: false,
+  entities: [User],
+  migrations: ['src/migrations/**/*.ts'],
+  subscribers: []
+});
+```
+
+Create a separate migrations DataSource for the CLI that reads `DIRECT_URL` (for example `src/data-source.migrations.ts`):
+
+```ts
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
+import { User } from './entities/User';
+
+export default new DataSource({
+  type: 'mysql',
+  url: process.env.DIRECT_URL,
+  ssl: { rejectUnauthorized: true },
+  synchronize: false,
+  logging: false,
+  entities: [User],
+  migrations: ['src/migrations/**/*.ts'],
+  subscribers: []
+});
+```
+
+`ssl: { rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. Keep `synchronize: false` outside of local prototypes. Schema changes in production and CI should go through TypeORM migrations against the direct engine port (`3306`).
+
+Add short `package.json` script aliases so you do not retype the long CLI:
+
+```json
+{
+  "scripts": {
+    "typeorm:generate": "typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.migrations.ts",
+    "typeorm:migrate": "typeorm-ts-node-commonjs migration:run -d src/data-source.migrations.ts"
+  }
+}
+```
+
+Define an entity:
+
+```ts
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column({ type: 'varchar', length: 255, unique: true })
+  email!: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
+}
+```
+
+# Run migrations {% #migrate %}
+
+Point the TypeORM CLI at the migrations DataSource so it uses `DIRECT_URL`, not the pooler. Migrations issue DDL that needs a session-level connection:
+
+```bash
+npm run typeorm:generate
+npm run typeorm:migrate
+```
+
+Or call the CLI directly:
+
+```bash
+npx typeorm-ts-node-commonjs migration:generate src/migrations/InitUsers -d src/data-source.migrations.ts
+npx typeorm-ts-node-commonjs migration:run -d src/data-source.migrations.ts
+```
+
+The `admin.<hash>` user owns the `default` database and can run schema changes.
+
+You can also run pending migrations from a one-off job that initializes the migrations DataSource:
+
+```ts
+import MigrationsDataSource from './data-source.migrations';
+
+await MigrationsDataSource.initialize();
+await MigrationsDataSource.runMigrations();
+await MigrationsDataSource.destroy();
+```
+
+Do not call `AppDataSource.runMigrations()` when `DATABASE_URL` points at the transaction-mode pooler.
+
+# Query with TypeORM {% #query %}
+
+Once the schema is migrated, use the repository API with the runtime DataSource:
+
+```ts
+import { AppDataSource } from './data-source';
+import { User } from './entities/User';
+
+await AppDataSource.initialize();
+
+const users = AppDataSource.getRepository(User);
+
+const user = await users.save({ email: 'ada@example.com' });
+
+const recent = await users.find({
+  order: { createdAt: 'DESC' },
+  take: 10
+});
+```
+
+On long-running servers, initialize the `DataSource` once at module scope and reuse it. On serverless, keep a single initialized instance per module scope so warm invocations reuse it, and use the pooler for runtime traffic. Always call `destroy()` during graceful shutdown on long-running processes.
+
+# Pool connections from serverless {% #pooling %}
+
+Each running instance opens its own connections to the engine. On serverless and edge platforms such as Vercel, Netlify, and Cloudflare, short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/mysql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6033`) on the same hostname.
+
+Keep the migrations DataSource pointed at `DIRECT_URL` so DDL still runs over a session-level connection.
+
+Wire the runtime DataSource to `DATABASE_URL` and the CLI / migrations DataSource to `DIRECT_URL`. Cap pool size on the runtime DataSource so each serverless isolate opens only a few backend connections through the pooler.
+
+The pooler defaults to transaction mode, which does not keep a backend connection across statements. Session-level features such as user variables and temporary tables need the direct port or a session-mode pooler. See the [pooler modes](/docs/products/databases/mysql/connection-pooling#modes) page for the trade-offs. Confirm the pooler port on the [Connections](/docs/products/databases/mysql/connections) page if your project shows a different value.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/mysql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` and `DATABASE_URL` for the preview or CI job.
+3. Run TypeORM migrations, then run your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against representative data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/mysql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql/network-security" title="Network security" %}
+TLS and network controls for native MySQL databases.
+{% /cards_item %}
+{% /cards %}

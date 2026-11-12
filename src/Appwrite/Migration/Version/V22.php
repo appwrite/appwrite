@@ -5,7 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -516,7 +516,7 @@ class V22 extends Migration
 
             switch ($id) {
                 case '_metadata':
-                    if (!$this->dbForProject->getCollection('builds')->isEmpty()) {
+                    if ($this->dbForProject->findCollection('builds') !== null) {
                         $this->dbForProject->deleteCollection('builds');
                     }
                     break;

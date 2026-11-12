@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class TeamsServerTest extends Scope
 {
@@ -33,7 +33,7 @@ final class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => ID::unique(),
+                'teamId' => Id::unique(),
                 'name' => 'Team Name',
                 'roles' => ['admin', 'developer', 'guest'],
             ],
@@ -363,7 +363,7 @@ final class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => ID::unique(),
+                'teamId' => Id::unique(),
                 'name' => 'Team To Delete',
                 'roles' => ['admin', 'developer', 'guest'],
             ],

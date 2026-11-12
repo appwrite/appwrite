@@ -1,0 +1,172 @@
+---
+layout: article
+title: Rails
+description: Use Ruby on Rails and ActiveRecord with an Appwrite native PostgreSQL database. Configure database.yml, run migrations against the direct database port, and size the ActiveRecord pool.
+---
+
+A native PostgreSQL database is a standard PostgreSQL engine, so [Ruby on Rails](https://rubyonrails.org/) works against it through ActiveRecord with no Appwrite-specific configuration. Point `config/database.yml` at the connection details from the [Connections](/docs/products/databases/postgresql/connections) page and use ActiveRecord, migrations, and the rest of the Rails toolchain exactly as you would against any PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. In the Appwrite Console, open the database and click **Credentials**. Use the **Details** tab for individual values, or copy a ready-made string from the **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tab. You can also call `postgresql.get()` from the Appwrite API to read `hostname`, `connectionUser`, `connectionPassword`, and `connectionString`. The primary user is `admin`, and the database name is generated for each database.
+{% /info %}
+
+# Install the database driver {% #driver %}
+
+ActiveRecord talks to PostgreSQL through the `pg` driver gem. Add it to your `Gemfile`:
+
+```ruby
+# Gemfile
+gem 'pg'
+```
+
+The `pg` gem builds against `libpq`, so the PostgreSQL client headers must be available at install time.
+
+Then install:
+
+```bash
+bundle install
+```
+
+# Set the connection string {% #connection-string %}
+
+Copy the connection string from the Console **Credentials** dialog, or fetch it with the [API](/docs/products/databases/postgresql/connections#credentials). Keep it in an environment variable and do not commit it:
+
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+The TLS parameter (`sslmode=require`) is already part of the string Appwrite returns. Appwrite Cloud terminates TLS at the edge, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see the [Network](/docs/products/databases/postgresql/network-security) page.
+
+# Configure database.yml {% #database-yml %}
+
+Rails reads `DATABASE_URL` automatically. The simplest configuration points the `url` at the environment variable and lets ActiveRecord parse the host, port, database, and credentials out of it:
+
+```yaml
+# config/database.yml
+production:
+  adapter: postgresql
+  url: <%= ENV["DATABASE_URL"] %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+```
+
+If you'd rather set the fields explicitly, the discrete keys map one-to-one to the values from the [Connections](/docs/products/databases/postgresql/connections#credentials) response. Use ERB to read each value from the environment so no secret lands in source control:
+
+```yaml
+# config/database.yml
+production:
+  adapter: postgresql
+  host: <%= ENV["DB_HOST"] %>       # db-<hash>.<region>.appwrite.center
+  port: <%= ENV.fetch("DB_PORT", 5432) %>
+  database: <%= ENV["DB_NAME"] %>   # <database>
+  username: <%= ENV.fetch("DB_USER", "admin") %>
+  password: <%= ENV["DB_PASSWORD"] %>
+  sslmode: require
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+```
+
+When both `DATABASE_URL` and explicit keys are present, Rails merges them. `sslmode` and `pool` can still be set in `database.yml`, so a `url`-based config can carry the TLS parameter in the string and override `pool` in the YAML.
+
+# Size the connection pool {% #pool %}
+
+ActiveRecord manages a per-process connection pool. The `pool:` value caps how many backend connections a single Rails process holds, and it defaults to `5`. It must be large enough for every thread that checks out a connection, your Puma worker threads plus any background job threads in the same process.
+
+```yaml
+production:
+  adapter: postgresql
+  url: <%= ENV["DATABASE_URL"] %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+```
+
+Tying `pool` to `RAILS_MAX_THREADS` keeps it aligned with Puma's thread count. Each Puma **worker** is a separate process with its own pool, so the backend connection count is roughly `pool × workers × server instances`. Keep that product within your specification's `maxConnections`, see [specifications](/docs/products/databases/postgresql#specifications).
+
+# Run migrations {% #migrate %}
+
+Generate and apply migrations the usual way:
+
+```bash
+bin/rails db:migrate
+```
+
+Migrations issue DDL and need a session-level connection, so run them against the direct PostgreSQL port `5432`, not the transaction-mode pooler. Point `DATABASE_URL` (or a separate migration URL) at the direct port when you run `db:migrate`. The primary `admin` user owns the database and can run schema changes. Narrower [database roles](/docs/products/databases/postgresql/connections#roles) should only receive the privileges your application needs.
+
+# Use ActiveRecord {% #activerecord %}
+
+Once `database.yml` is configured, models work with no further setup. Define a migration and model, then query through ActiveRecord:
+
+```ruby
+# db/migrate/20240101000000_create_users.rb
+class CreateUsers < ActiveRecord::Migration[7.1]
+  def change
+    create_table :users do |t|
+      t.string :email, null: false
+      t.timestamps
+    end
+    add_index :users, :email, unique: true
+  end
+end
+```
+
+Define the matching model:
+
+```ruby
+# app/models/user.rb
+class User < ApplicationRecord
+  validates :email, presence: true, uniqueness: true
+end
+```
+
+Create and query records as usual:
+
+```ruby
+User.create!(email: 'ada@example.com')
+
+recent = User.order(created_at: :desc).limit(10)
+```
+
+ActiveRecord opens connections lazily and reuses them from the pool, so a long-running Puma server keeps a small, stable set of backend connections rather than opening one per request.
+
+# Pooling for a long-running server {% #pooling %}
+
+A Rails app under Puma is a long-running process: it holds an ActiveRecord pool for its lifetime. That pairs naturally with the direct PostgreSQL port `5432`, sized so `pool × workers` stays within your connection budget. This is the recommended setup for a persistent server.
+
+If you instead route through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) to absorb spikes or many app instances, prefer **session mode**, which keeps a backend connection for the whole client session and behaves like a direct connection to ActiveRecord. The pooler defaults to **transaction mode**, which hands out a different backend connection per transaction. ActiveRecord uses server-side prepared statements by default, and those are tied to one backend connection, so on the transaction-mode pooler you must disable them:
+
+```yaml
+production:
+  adapter: postgresql
+  url: <%= ENV["DATABASE_URL"] %>       # pooler host, port 6432
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+  prepared_statements: false
+```
+
+See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the mode trade-offs. Whichever runtime connection you choose, always run `bin/rails db:migrate` against the direct PostgreSQL port.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are instant, isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DATABASE_URL` for the job.
+3. Run `bin/rails db:migrate` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+A branch has no pooler and exposes the PostgreSQL port directly, which gives migrations the session-level connection they need. Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for high-concurrency workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}
+
+For ActiveRecord and migration details beyond this guide, see the [Rails configuration guide](https://guides.rubyonrails.org/configuring.html).

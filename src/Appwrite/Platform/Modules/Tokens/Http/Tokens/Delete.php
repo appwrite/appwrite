@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Tokens\Http\Tokens;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -36,9 +37,7 @@ class Delete extends Action
         ->label('audits.resource', 'token/{request.tokenId}')
         ->label('usage.metric', 'tokens.{scope}.requests.delete')
         ->label('usage.params', ['tokenId:{request.tokenId}'])
-        ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-        ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-        ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+        ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
         ->label('sdk', new Method(
             namespace: 'tokens',
             group: 'tokens',
@@ -55,7 +54,7 @@ class Delete extends Action
             ],
             contentType: ContentType::NONE
         ))
-        ->param('tokenId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Token ID.', false, ['dbForProject'])
+        ->param('tokenId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Token ID.', false, ['dbForProject'])
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')

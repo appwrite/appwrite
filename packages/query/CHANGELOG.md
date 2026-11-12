@@ -1,0 +1,143 @@
+# Changelog
+
+All notable changes to `utopia-php/query` are documented in this file.
+
+## 0.7.3
+
+### Fixed
+
+- Raw conditions are enclosed in parentheses where they are ANDed with other
+  conditions: `Query::raw()` filters, `whereRaw()` in SELECT, UPDATE and
+  DELETE, `havingRaw()`, `JoinBuilder::whereRaw()` and `onRaw()`, the
+  PostgreSQL builder's `updateFromWhere()` and `deleteUsing()`, and `Raw`
+  operands of AND in the AST serializer (`toAst()`, `FilterInjector`). AND
+  binds tighter than OR, so an OR inside one escaped the conditions beside
+  it, including those filter and join-filter hooks add: `whereRaw('a = ? OR
+  b = ?')` with `Hook\Filter\Tenant` compiled to `tenant_id IN (?) AND a = ?
+  OR b = ?` and read, updated and deleted other tenants' rows. Generated SQL
+  now carries the parentheses; an empty `Query::raw()` still compiles to
+  `1 = 1`. A hook's own condition is used as returned, so a hook returning an
+  OR must enclose it.
+- `updateFromWhere()` and `deleteUsing()` bound their condition's values
+  ahead of the WHERE clause's, though the condition follows it in the SQL, so
+  with a filter or hook the values reached the wrong placeholders.
+- `toRawSql()` escapes backslashes as well as quotes, as the AST serializer and
+  the schema builder do, so under MySQL's or ClickHouse's backslash escaping a
+  value cannot close its literal. PostgreSQL and SQLite read a backslash
+  literally, so their builders double quotes only. Its output is still for
+  logs and debugging only.
+- The ClickHouse schema builder escapes backslashes in `ReplicatedMergeTree`'s
+  ZooKeeper path and replica name and in string skip-index arguments, as it
+  already did in its other literals.
+- The allowlists that validate names, JSON paths, types, hints and settings
+  no longer accept a trailing newline, which their `$` anchors matched
+  before. Among them: JSON paths in the MySQL, PostgreSQL and SQLite builders,
+  `JoinBuilder::on()` and `where()` columns, and the `Tenant` hook's column.
+
+## 0.7.2
+
+### Changed
+
+- A join given an empty alias is read under the name of the collection it
+  joins instead of throwing `ValidationException`, from the factories and from
+  `parse()`/`parseQuery()` (the `alias` property, the legacy alias-first and
+  column forms, the nested ON form, and cross and natural joins). Only a join
+  with neither a collection nor an alias still throws.
+- `Query::isAliasDefaulted()` (new) reports a join read under its collection's
+  name. It is derived when the query is constructed (the alias equals the
+  collection), so a `toArray()`/`parse()` round trip re-derives it and a later
+  `setAttribute()` on the built query keeps it. A join serialized after its
+  collection was renamed keeps its alias, which `parse()` reads as explicit.
+
+## 0.7.1
+
+### Added
+
+- `Method::Relationship` and `Query::relationship(string $attribute, array $queries)`:
+  queries written against the collection a relationship attribute points to.
+  It is nested, so its children parse and serialize as queries and contribute
+  to `shape()` and `fingerprint()`. `Query::validate()` skips it, since its
+  children name another collection's attributes. No bundled builder compiles
+  it; consumers that populate related documents read it themselves.
+
+## 0.7.0
+
+### Breaking
+
+- Joins have a single form with a required alias:
+  `join|leftJoin|rightJoin|fullOuterJoin(string $collection, string $alias, array $on)`
+  and `crossJoin|naturalJoin(string $collection, string $alias)`. The column
+  form (`join($table, $left, $right, $operator, $alias)`) and the alias-less
+  and alias-last overloads are gone. An empty alias throws
+  `ValidationException`.
+- The ON list is validated when the join is built, against the same set the
+  builders compile (`Method::isJoinCondition()`, new): `on()`, the
+  comparisons, `between`, null checks, `contains`/`containsAny`/`notContains`,
+  the `startsWith`/`endsWith` family, and `and`/`or` of those. Anything else
+  (`limit()`, `select()`, ordering, cursors, aggregates, joins, `search()`,
+  `regex()`, spatial, JSON, `raw()`, JSON strings) throws `ValidationException`
+  (`Unsupported join ON condition: <method>`), at any depth.
+- The alias is a property: `Query::getAlias()` replaces `getJoinAlias()`, and
+  aggregates (`count('*', 'total')`, …) keep it there instead of in
+  `values[0]`. `toArray()` writes it as `"alias"`, and `new Query()` takes it
+  as a fourth argument, so subclasses that override the constructor should
+  pass it on.
+- `cursorAfter()`/`cursorBefore()` take `array|object` (the row a page starts
+  after or ends before), on `Query` and on `Builder\Feature\Selects`. The
+  builders bind the row's `_cursor` value and throw `ValidationException`
+  when it has none; a scalar cursor parsed from JSON still binds as-is.
+- Protected builder hooks lose their abbreviation: `compileSearchExpr`,
+  `compileJsonContainsExpr`, `compileJsonOverlapsExpr`, `compileJsonPathExpr`
+  and `compileVectorOrderExpr` are now `compile*Expression`. Subclasses that
+  override them must rename their overrides; an un-renamed override of an
+  abstract method fails to load, and one of `compileVectorOrderExpression()`
+  is silently no longer called.
+
+### Fixed
+
+- `join($table, [$conditions], $alias)` dropped the alias, and an ON list
+  accepted members such as `limit()` that only failed, or were ignored, when
+  the query was compiled (BUG-05). Both are rejected or impossible now.
+- The MongoDB builder reads joins built by the `Query` factories: a single
+  `on()` equality becomes the `$lookup`, under the join's alias. Filtered ON
+  lists throw `UnsupportedException` instead of producing a broken stage.
+
+### Upgrading from 0.6
+
+| 0.6 | 0.7 |
+|---|---|
+| `Query::join('orders', 'users.id', 'orders.user_id')` | `Query::join('orders', 'orders', [Query::on('users.id', 'orders.user_id')])` |
+| `Query::leftJoin('orders', 'u.id', 'o.uid', '!=', 'o')` | `Query::leftJoin('orders', 'o', [Query::on('u.id', 'o.uid', '!=')])` |
+| `Query::join('orders', [$on], 'o')` / `Query::join('orders', 'o', [$on])` | `Query::join('orders', 'o', [$on])` |
+| `Query::crossJoin('colors')` | `Query::crossJoin('colors', 'colors')` |
+| `$join->getJoinAlias()` | `$join->getAlias()` |
+| `$aggregate->getValue('')` for the alias | `$aggregate->getAlias()` |
+| `Query::cursorAfter('id')` | `Query::cursorAfter(['_cursor' => 'id'])` for the bundled builders, or the row your own compiler pages on (a document, `['id' => …]`) |
+| `$builder->cursorAfter('value')` | `$builder->cursorAfter(['_cursor' => 'value'])` |
+| `protected function compileSearchExpr(...)` | `protected function compileSearchExpression(...)` (likewise for the other four) |
+
+Serialised 0.6 queries still parse: `parseQuery()` reads `"alias"` and falls
+back to `values[0]` for aggregates, cross/natural joins and alias-first joins,
+and to `values[3]` for column-form joins, which become a single `on()`
+condition. A join that ends up with no alias throws `ValidationException`.
+
+## 0.6.2
+
+### Fixed
+
+- PostgreSQL: the keys of a nested object path in a filter on an object
+  attribute (`Query::equal('meta.a.b', …)` with attribute type `object`) are
+  now written as escaped string literals. A key containing `'` used to end the
+  literal early, so the rest of the key was read as SQL; it now names a single
+  key, whatever it contains. Keys containing a backslash use the `E''` form, so
+  they read the same with `standard_conforming_strings` on or off. A key
+  containing a NUL byte throws `ValidationException`.
+- PostgreSQL: `setJsonPath()` quotes path segments that are not plain
+  identifiers in the `text[]` path it binds, so a segment containing `,`, `{`,
+  `}`, `"`, a backslash or whitespace addresses that one key instead of
+  splitting into several path elements.
+- MongoDB: filters (`equal`, comparisons, `contains`, `isNull`, `exists`, …,
+  including filters nested in `and`/`or`) reject an empty field name or one
+  starting with `$` with `ValidationException`, as `set()`/`push()` already
+  did, so a filter's field can no longer become a query operator such as
+  `$where` or `$expr`.
