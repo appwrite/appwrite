@@ -10,11 +10,15 @@ use image::{Rgba, RgbaImage};
 use crate::color::Color;
 use crate::error::{Error, Result};
 use crate::frame::{Format, Frame, Page};
-use crate::options::check_dimensions;
+use crate::options::{canvas_bytes, check_dimensions, check_pixels};
 
 /// Resamples `src` to `width` x `height` with `filter`.
 fn resample(src: &RgbaImage, width: u32, height: u32, filter: FilterType, alpha: bool) -> Result<RgbaImage> {
     check_dimensions(width.into(), height.into())?;
+    // The source stays alive until its replacement is complete.
+    check_pixels(
+        canvas_bytes(src.width().into(), src.height().into()).saturating_add(canvas_bytes(width.into(), height.into())),
+    )?;
     if width == 0 || height == 0 {
         return Err(Error::process("zero image size"));
     }

@@ -250,10 +250,12 @@ impl Image {
         let (x, y) = crop_coordinates(width, height, resize_width, resize_height, gravity, focal);
         let dims = |v: i64| u32::try_from(v.max(0)).unwrap_or(u32::MAX);
         let (w, h, rw, rh) = (dims(width), dims(height), dims(resize_width), dims(resize_height));
-        // Every frame is held at once, so the animation as a whole must fit the budget at
-        // the largest size a frame takes on the way.
+        // Every frame is held at once, and the one being resized alongside its replacement,
+        // so the animation as a whole must fit the budget at the largest size a frame takes.
         let largest = canvas_bytes(u64::from(rw.max(w)), u64::from(rh.max(h)));
-        check_pixels(largest.saturating_mul(self.frames.len() as u64))?;
+        if self.frames.len() > 1 {
+            check_pixels(largest.saturating_mul(self.frames.len() as u64 + 1))?;
+        }
         if self.frames.len() > 1 {
             for frame in &mut self.frames {
                 if center {
