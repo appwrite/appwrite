@@ -258,6 +258,18 @@ export function entireOwnerPath(owner: string): string {
  * entire.com. Compares the parsed host, so a URL that only mentions Entire in
  * its path or another host is not one.
  */
+/** Whether the URL's host is one of `hosts` or a subdomain of one. */
+export function isRepositoryHost(url: string, ...hosts: string[]): boolean {
+  try {
+    const { hostname } = new URL(url)
+    return hosts.some(
+      (host) => hostname === host || hostname.endsWith(`.${host}`),
+    )
+  } catch {
+    return false
+  }
+}
+
 export function isEntireRepositoryUrl(url: string): boolean {
   try {
     return ['entire.com', 'entire.io'].includes(new URL(url).hostname)

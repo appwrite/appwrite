@@ -1,4 +1,6 @@
 import type { ToolError } from '../src/lib/webmcp/register'
+import type { Page } from '@playwright/test'
+import { RUNTIME_CONFIG_WINDOW_KEY } from '../src/lib/runtime-config-shared'
 import { expect, test } from './fixtures'
 import { WEBMCP_CHANNEL, openAsAgent, type WebMcpAgent } from './helpers/webmcp'
 
@@ -24,10 +26,39 @@ const NAVIGATION_TOOLS = ['navigate_to_page', 'open_sign_up']
 
 type MarkdownPage = { url: string; markdown: string; truncated: boolean }
 
+/** Turns analytics on with a Plausible stub that records calls instead of sending them. */
+async function captureAnalytics(page: Page): Promise<void> {
+  await page.route('https://plausible.test/**', (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: '' }),
+  )
+  await page.addInitScript((key) => {
+    const events: Array<[string, Record<string, unknown> | undefined]> = []
+    let config: Record<string, unknown> | undefined
+    Object.defineProperty(window, key, {
+      configurable: true,
+      get: () => config,
+      set: (value: Record<string, unknown>) => {
+        config = {
+          ...value,
+          plausibleScriptSrc: 'https://plausible.test/js/script.js',
+        }
+      },
+    })
+    Object.assign(window, {
+      __analytics: events,
+      plausible: (
+        name: string,
+        options?: { props?: Record<string, unknown> },
+      ) => events.push([name, options?.props]),
+    })
+  }, RUNTIME_CONFIG_WINDOW_KEY)
+}
+
 test.describe('WebMCP tools', () => {
   let agent: WebMcpAgent
 
   test.beforeEach(async ({ page }) => {
+    await captureAnalytics(page)
     agent = await openAsAgent(
       page,
       '/home',
@@ -143,6 +174,41 @@ test.describe('WebMCP tools', () => {
     }
   })
 
+  test('records each call as an analytics event, without its input', async ({
+    page,
+  }) => {
+    const inputs = ['create a row', '/blog/post/appwrite-realtime']
+    await agent.call('search_docs', { query: inputs[0] })
+    await agent.call('get_doc_page', { path: inputs[1] })
+
+    const events = () =>
+      page.evaluate(() =>
+        (
+          window as unknown as {
+            __analytics: Array<[string, Record<string, unknown>]>
+          }
+        ).__analytics
+          .filter(([name]) => name === 'WebMCP Tool Called')
+          .map(([, props]) => props),
+      )
+    await expect
+      .poll(async () =>
+        (await events()).map(({ tool, status, code }) => ({
+          tool,
+          status,
+          code,
+        })),
+      )
+      .toEqual([
+        { tool: 'search_docs', status: 'success' },
+        { tool: 'get_doc_page', status: 'error', code: 'invalid_path' },
+      ])
+    const sent = JSON.stringify(await events())
+    for (const input of inputs) {
+      expect(sent, input).not.toContain(input)
+    }
+  })
+
   test('navigate_to_page and open_sign_up move the tab on this site only', async ({
     page,
   }) => {
@@ -161,17 +227,59 @@ test.describe('WebMCP tools', () => {
     expect(dotSegments.code).toBe('invalid_path')
     await expect(page).toHaveURL(/\/home$/)
 
-    const pricing = await agent.call<{ navigated: boolean }>(
+    const pricing = await agent.call<{ navigating: boolean }>(
       'navigate_to_page',
       {
         path: '/pricing',
       },
     )
-    expect(pricing.navigated).toBe(true)
+    expect(pricing.navigating).toBe(true)
     await expect(page).toHaveURL(/\/pricing$/)
     await expect(page).toHaveTitle(/Pricing/)
 
-    await agent.call('open_sign_up')
+    // Sign-up is outside the public-site layouts: the call still answers, then
+    // the tools unregister once the tab leaves.
+    const signUp = await agent.call<{ navigating: boolean; url: string }>(
+      'open_sign_up',
+    )
+    expect(signUp.url).toMatch(/\/sign-up$/)
     await expect(page).toHaveURL(/\/sign-up/)
+    await expect.poll(async () => (await agent.tools()).length).toBe(0)
   })
+})
+
+// This file launches Chromium with the flag that exposes navigator.modelContext,
+// so this test starts its own browser without it.
+test('a browser without WebMCP never downloads the tools', async ({
+  playwright,
+  baseURL,
+}) => {
+  const browser = await playwright.chromium.launch({ args: [] })
+  try {
+    const page = await browser.newPage({ baseURL })
+    const requested: string[] = []
+    page.on('request', (request) => {
+      const url = new URL(request.url())
+      if (
+        /\/assets\/tools-[^/]+\.js$/.test(url.pathname) ||
+        url.pathname.endsWith('/lib/webmcp/site/tools.ts')
+      ) {
+        requested.push(url.pathname)
+      }
+    })
+
+    await page.goto('/home')
+    await expect(page.locator('main')).toBeVisible()
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __WEBMCP__?: boolean }).__WEBMCP__,
+      ),
+    ).toBe(false)
+    await page
+      .waitForLoadState('networkidle', { timeout: 10_000 })
+      .catch(() => {})
+    expect(requested).toEqual([])
+  } finally {
+    await browser.close()
+  }
 })
