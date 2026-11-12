@@ -509,19 +509,19 @@ final class GitHubTest extends Base
         $this->assertSame('appwrite', $adapter->getOwnerName('1234'));
     }
 
-    public function testCreateAccessTokenLimitsItToTheRepositories(): void
+    public function testCreateAccessTokenLimitsItToTheRepositoriesAndPermissions(): void
     {
         $captured = new \stdClass();
         $adapter = $this->accessTokenResponse(201, ['token' => 'ghs_scoped', 'expires_at' => '2026-10-27T16:00:00Z'], $captured);
 
-        $token = $adapter->createAccessToken([42]);
+        $token = $adapter->createAccessToken([42], ['contents' => 'read', 'pull_requests' => 'write']);
 
         $this->assertSame(['token' => 'ghs_scoped', 'expiresAt' => '2026-10-27T16:00:00Z'], $token);
         $this->assertSame([
             'method' => 'POST',
             'path' => '/app/installations/1234/access_tokens',
             'headers' => ['Authorization' => 'Bearer app-token'],
-            'params' => ['repository_ids' => [42]],
+            'params' => ['repository_ids' => [42], 'permissions' => ['contents' => 'read', 'pull_requests' => 'write']],
         ], $captured->request);
     }
 
