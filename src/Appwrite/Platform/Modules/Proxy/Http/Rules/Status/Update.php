@@ -97,8 +97,11 @@ class Update extends Action
         // Maintenance stops after 5 failed attempts, so once DNS is fixed nothing else would renew it.
         // This request and the worker both update the certificate, so renewals are at most one per cooldown after the last queue, run or result.
         $renewal = $rule->getAttribute('status') === RULE_STATUS_VERIFIED
-            && (\in_array($certificate->getAttribute('status'), [Status::FAILED, Status::BLOCKED], true) || (!empty($expireDate) && \strtotime($expireDate) <= \time()))
-            && \strtotime($certificate->getUpdatedAt() ?? '@0') <= \time() - self::RENEWAL_COOLDOWN;
+            && (\in_array($certificate->getAttribute('status'), [Status::FAILED, Status::BLOCKED], true) || (!empty($expireDate) && \strtotime($expireDate) <= \time()));
+
+        if ($renewal && \strtotime($certificate->getUpdatedAt() ?? '@0') > \time() - self::RENEWAL_COOLDOWN) {
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'A certificate renewal for this rule was requested in the last 15 minutes. Try again later.');
+        }
 
         // If rule is already verified or in certificate generation state, don't queue for verification again
         if (!$renewal && ($rule->getAttribute('status') === RULE_STATUS_VERIFIED || $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING)) {
