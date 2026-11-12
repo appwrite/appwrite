@@ -647,6 +647,73 @@ final class AbuseTest extends Scope
     }
 
     #[Group('abuseEnabled')]
+    public function testAbuseRecoveryOtpGuesses(): void
+    {
+        // A recovery OTP is six digits and nothing records a failed attempt on the token, so this limit is the
+        // only cap on guessing it. A key is trusted with throughput, not with the inbox the code was sent to.
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => 'recovery.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $guess = [
+            'userId' => $user['body']['$id'],
+            'secret' => '000000',
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', $server, $guess);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', $server, $guess);
+        $this->assertSame(429, $response['headers']['status-code'], 'A key past the limit is throttled');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseTokenSessionGuesses(): void
+    {
+        // The same six digit code logs the account in through this route, and a wrong guess costs the caller
+        // nothing, so its per account failure limits must count the key too.
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => 'token.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password-' . \bin2hex(\random_bytes(4)),
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $guess = [
+            'userId' => $user['body']['$id'],
+            'secret' => '000000',
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $server, $guess);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $server, $guess);
+        $this->assertSame(429, $response['headers']['status-code'], 'A key past the limit is throttled');
+    }
+
+    #[Group('abuseEnabled')]
     public function testAbuseEmailSessionLimitPerProjectAccount(): void
     {
         $email = 'login.' . \bin2hex(\random_bytes(8)) . '@example.com';
