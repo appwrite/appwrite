@@ -102,7 +102,7 @@ final class GitAction
         self::deployment($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
 
         $commentId = $deployment->getAttribute('providerCommentId', '');
-        if (empty($commentId)) {
+        if (empty($commentId) || $resource->getAttribute('providerSummaries', true) === false) {
             return;
         }
 
@@ -151,7 +151,7 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
+        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
             return;
         }
 
@@ -228,7 +228,7 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
+        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
             return;
         }
 

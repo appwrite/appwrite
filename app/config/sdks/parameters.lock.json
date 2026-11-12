@@ -2043,7 +2043,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerSummaries",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2187,7 +2190,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerSummaries",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -3328,6 +3334,11 @@
             "enabled",
             "prompt"
         ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -3672,7 +3683,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerSummaries",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -3808,7 +3822,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerSummaries",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -6270,7 +6287,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerSummaries",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -6404,7 +6424,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description"
+            "description",
+            "providerSummaries",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -7503,6 +7526,11 @@
             "enabled",
             "prompt"
         ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -7817,7 +7845,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerSummaries",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -7943,7 +7974,10 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description"
+            "description",
+            "providerSummaries",
+            "providerDeployments",
+            "providerStatuses"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
