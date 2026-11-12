@@ -109,6 +109,10 @@ final class HookedTimeoutTest extends TestCase
     #[RunInSeparateProcess]
     public function testSettleWithAPartialLineReturnsWithinItsTimeout(): void
     {
+        if (\function_exists('xdebug_info') && xdebug_info('mode') !== []) {
+            $this->markTestSkipped('Xdebug 3.5 with Swoole 6.2 segfaults this process when the hooked read in settle() times out; run with XDEBUG_MODE=off');
+        }
+
         $outcome = $this->hooked(function (): array {
             [$connection, $transport, $send] = $this->connection();
             $send->push('PI');
