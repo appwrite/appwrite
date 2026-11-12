@@ -297,11 +297,6 @@ export function buildAppwriteLlmsTxt(
             'Connect the Appwrite MCP server as a ChatGPT connector or App.',
         },
         {
-          title: 'Remote MCP Server',
-          url: MCP_SERVER_URL,
-          description: 'Hosted streamable HTTP MCP endpoint.',
-        },
-        {
           title: 'Self-hosted MCP Server',
           url: `${origin}/docs/advanced/self-hosting/mcp.md`,
           description: 'Run the MCP server locally with uvx and a project API key.',
@@ -310,7 +305,7 @@ export function buildAppwriteLlmsTxt(
           title: 'MCP Server Card',
           url: `${origin}${APPWRITE_MCP_SERVER_CARD_PATH}`,
           description:
-            'SEP-1649 MCP Server Card for pre-connection discovery (/.well-known/mcp/server-card.json).',
+            'SEP-2127 MCP Server Card for pre-connection discovery (/.well-known/mcp/server-card.json).',
         },
         {
           title: 'Agentic Resource Discovery',
@@ -321,7 +316,7 @@ export function buildAppwriteLlmsTxt(
         {
           title: 'MCP documentation',
           url: `${origin}${APPWRITE_MCP_DOCS_PATH}.md`,
-          description: 'Setup guide for the Appwrite MCP server.',
+          description: `Setup guide for the hosted MCP server at ${MCP_SERVER_URL} (streamable HTTP, OAuth sign-in).`,
         },
       ],
     },
