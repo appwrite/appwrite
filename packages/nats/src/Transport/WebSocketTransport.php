@@ -271,6 +271,9 @@ final class WebSocketTransport implements Pollable, Transport
         if ($available < $start) {
             return null;
         }
+        if ($start === 10 && (\ord($this->frames[2]) & 0x80) !== 0) {
+            throw new ConnectionException('WebSocket frame length has its most significant bit set');
+        }
         if ($start > 2) {
             $length = 0;
             for ($index = 2; $index < $start; $index++) {

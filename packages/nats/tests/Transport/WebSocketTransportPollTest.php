@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\NATS\Tests\Transport;
 
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
@@ -100,6 +101,23 @@ final class WebSocketTransportPollTest extends TestCase
         $peer->send(substr($frame, 3));
         $this->assertTrue(Wait::until($transport->poll(...)));
         $this->assertSame("PING\r\n", $transport->read(64, 1.0));
+
+        $transport->close();
+    }
+
+    #[RunInSeparateProcess]
+    public function testLengthWithTheTopBitSetIsRejected(): void
+    {
+        set_time_limit(5);
+        [$transport, $peer] = $this->connect();
+        $peer->send("\x82\x7F\x80\x00\x00\x00\x00\x00\x00\x05hello");
+
+        try {
+            $transport->read(64, 1.0);
+            $this->fail('RFC 6455 forbids the top bit of a 64-bit length');
+        } catch (ConnectionException $error) {
+            $this->assertSame('WebSocket frame length has its most significant bit set', $error->getMessage());
+        }
 
         $transport->close();
     }
