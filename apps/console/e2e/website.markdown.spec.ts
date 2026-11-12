@@ -45,6 +45,19 @@ const MARKDOWN_PAGES: Array<{
     path: '/pricing.md',
     contains: [/^# Appwrite Cloud pricing/, /### Pro: From \$25\/month/],
   },
+  {
+    name: 'marketing page twin',
+    path: '/affiliates.md',
+    contains: [
+      /^# Earn credits by referring developers\n/,
+      /\]\(https:\/\/appwrite\.io\/sign-up/,
+    ],
+  },
+  {
+    name: 'product page twin',
+    path: '/products/auth.md',
+    contains: [/^# Authentication that ships with your product\n/],
+  },
 ]
 
 test.describe('markdown exports (read-only)', () => {

@@ -6,6 +6,7 @@ import {
   isReferenceVersion,
   type ReferenceService,
 } from '@/lib/docs/references/constants'
+import { markdownTwinPage } from '@/lib/seo/markdown-twins'
 
 /**
  * 301 targets for URLs that still 404 after the exact legacy map: TanStack
@@ -640,6 +641,7 @@ function exactAndPrefixRedirect(pathname: string): string | null {
   const extraProduct = pathname.match(/^\/products\/([^/]+)(?:\/(.+))?$/)
   if (extraProduct) {
     const id = extraProduct[1] ?? ''
+    if (!extraProduct[2] && markdownTwinPage(pathname)) return null
     if (!LIVE_PRODUCTS.has(id)) return '/'
     if (extraProduct[2]) return `/products/${id}`
   }
