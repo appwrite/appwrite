@@ -217,6 +217,28 @@ final class GitHubTest extends Base
         $this->assertSame('in_progress', $adapter->captured[1]['params']['status']);
     }
 
+    public function testUpdateCheckStartsANewRunOnRebuild(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<array{method: string, path: string}> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured[] = ['method' => $method, 'path' => $path];
+
+                return [
+                    'body' => $method === self::METHOD_GET ? ['check_runs' => [['id' => 7, 'status' => 'completed', 'external_id' => 'project/functions/billing']]] : [],
+                    'headers' => ['status-code' => 200],
+                ];
+            }
+        };
+
+        $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...', key: 'project/functions/billing');
+
+        $this->assertSame(['method' => 'POST', 'path' => '/repos/owner/repo/check-runs'], $adapter->captured[1]);
+    }
+
     public function testUpdateCheckFallsBackToAStatusWithoutChecks(): void
     {
         $adapter = new class (new Cache(new None())) extends GitHub {
