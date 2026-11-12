@@ -247,3 +247,39 @@ test.describe('WebMCP tools', () => {
     await expect.poll(async () => (await agent.tools()).length).toBe(0)
   })
 })
+
+// This file launches Chromium with the flag that exposes navigator.modelContext,
+// so this test starts its own browser without it.
+test('a browser without WebMCP never downloads the tools', async ({
+  playwright,
+  baseURL,
+}) => {
+  const browser = await playwright.chromium.launch({ args: [] })
+  try {
+    const page = await browser.newPage({ baseURL })
+    const requested: string[] = []
+    page.on('request', (request) => {
+      const url = new URL(request.url())
+      if (
+        /\/assets\/tools-[^/]+\.js$/.test(url.pathname) ||
+        url.pathname.endsWith('/lib/webmcp/site/tools.ts')
+      ) {
+        requested.push(url.pathname)
+      }
+    })
+
+    await page.goto('/home')
+    await expect(page.locator('main')).toBeVisible()
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __WEBMCP__?: boolean }).__WEBMCP__,
+      ),
+    ).toBe(false)
+    await page
+      .waitForLoadState('networkidle', { timeout: 10_000 })
+      .catch(() => {})
+    expect(requested).toEqual([])
+  } finally {
+    await browser.close()
+  }
+})
