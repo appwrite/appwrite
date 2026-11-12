@@ -109,7 +109,7 @@ import {
 } from '@/lib/root-guest-redirect'
 import { cn } from '@/lib/utils'
 import { isSelfHostedConsoleProfile } from '@/lib/runtime-config-shared'
-import { registerWebMcpTools } from '@/lib/webmcp/tools'
+import { registerSiteTools } from '@/lib/webmcp/site/tools'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -569,7 +569,7 @@ function RootWebMcp() {
   const router = useRouter()
   useEffect(() => {
     if (isSelfHostedConsoleProfile(getRuntimeConfig().consoleProfile)) return
-    return registerWebMcpTools((path) => router.navigate({ href: path }))
+    return registerSiteTools((path) => router.navigate({ href: path }))
   }, [router])
   return null
 }

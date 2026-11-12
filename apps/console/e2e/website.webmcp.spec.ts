@@ -1,11 +1,6 @@
+import type { ToolError } from '../src/lib/webmcp/register'
 import { expect, test } from './fixtures'
-import {
-  WEBMCP_CHANNEL,
-  callTool,
-  getTools,
-  installWebMcpRegistry,
-  waitForTools,
-} from './helpers/webmcp'
+import { WEBMCP_CHANNEL, openAsAgent, type WebMcpAgent } from './helpers/webmcp'
 
 /**
  * WebMCP tools on appwrite.io, called the way a browser agent calls them:
@@ -27,18 +22,21 @@ const READ_ONLY_TOOLS = [
 ]
 const NAVIGATION_TOOLS = ['navigate_to_page', 'open_sign_up']
 
-type ToolError = { error: string; code: string; retryable: boolean }
 type MarkdownPage = { url: string; markdown: string; truncated: boolean }
 
 test.describe('WebMCP tools', () => {
+  let agent: WebMcpAgent
+
   test.beforeEach(async ({ page }) => {
-    await installWebMcpRegistry(page)
-    await page.goto('/home')
-    await waitForTools(page, READ_ONLY_TOOLS.length + NAVIGATION_TOOLS.length)
+    agent = await openAsAgent(
+      page,
+      '/home',
+      READ_ONLY_TOOLS.length + NAVIGATION_TOOLS.length,
+    )
   })
 
-  test('registers described, annotated tools', async ({ page }) => {
-    const tools = await getTools(page)
+  test('registers described, annotated tools', async () => {
+    const tools = await agent.tools()
     const byName = new Map(tools.map((tool) => [tool.name, tool]))
 
     expect([...byName.keys()].sort()).toEqual(
@@ -71,10 +69,10 @@ test.describe('WebMCP tools', () => {
     ).toEqual(['search_community_threads'])
   })
 
-  test('search_docs returns matching docs pages', async ({ page }) => {
-    const result = await callTool<{
+  test('search_docs returns matching docs pages', async () => {
+    const result = await agent.call<{
       results: Array<{ title: string; url: string; markdownUrl: string }>
-    }>(page, 'search_docs', { query: 'create a row', limit: 3 })
+    }>('search_docs', { query: 'create a row', limit: 3 })
 
     expect(result.results.length).toBeGreaterThan(0)
     expect(result.results.length).toBeLessThanOrEqual(3)
@@ -84,16 +82,14 @@ test.describe('WebMCP tools', () => {
     }
   })
 
-  test('get_doc_page returns docs Markdown and rejects other paths', async ({
-    page,
-  }) => {
-    const doc = await callTool<MarkdownPage>(page, 'get_doc_page', {
+  test('get_doc_page returns docs Markdown and rejects other paths', async () => {
+    const doc = await agent.call<MarkdownPage>('get_doc_page', {
       path: '/docs/quick-starts/react',
     })
     expect(doc.url).toMatch(/\/docs\/quick-starts\/react\.md$/)
     expect(doc.markdown).toContain('title: Start with React')
 
-    const outside = await callTool<ToolError>(page, 'get_doc_page', {
+    const outside = await agent.call<ToolError>('get_doc_page', {
       path: '/blog/post/appwrite-realtime',
     })
     expect(outside).toEqual({
@@ -102,30 +98,28 @@ test.describe('WebMCP tools', () => {
       retryable: false,
     })
 
-    const missing = await callTool<ToolError>(page, 'get_doc_page', {
+    const missing = await agent.call<ToolError>('get_doc_page', {
       path: '/docs/this-page-does-not-exist',
     })
     expect(missing.code).toBe('not_found')
   })
 
-  test('get_pricing and get_product_overview return Markdown', async ({
-    page,
-  }) => {
-    const pricing = await callTool<MarkdownPage>(page, 'get_pricing')
+  test('get_pricing and get_product_overview return Markdown', async () => {
+    const pricing = await agent.call<MarkdownPage>('get_pricing')
     expect(pricing.markdown).toMatch(/^# Appwrite Cloud pricing/)
 
-    const auth = await callTool<
+    const auth = await agent.call<
       MarkdownPage & { name: string; docsUrl: string }
-    >(page, 'get_product_overview', { product: 'auth' })
+    >('get_product_overview', { product: 'auth' })
     expect(auth.name).toBe('Auth')
     expect(auth.docsUrl).toMatch(/\/docs\/products\/auth$/)
     expect(auth.markdown).toMatch(/^---\ntitle: "Auth"/)
   })
 
-  test('list_changelog returns the newest entries', async ({ page }) => {
-    const { entries } = await callTool<{
+  test('list_changelog returns the newest entries', async () => {
+    const { entries } = await agent.call<{
       entries: Array<{ title: string; url: string; markdownUrl: string }>
-    }>(page, 'list_changelog', { limit: 3 })
+    }>('list_changelog', { limit: 3 })
 
     expect(entries).toHaveLength(3)
     for (const entry of entries) {
@@ -134,12 +128,10 @@ test.describe('WebMCP tools', () => {
     }
   })
 
-  test('search_community_threads returns threads or a retryable error', async ({
-    page,
-  }) => {
-    const result = await callTool<
+  test('search_community_threads returns threads or a retryable error', async () => {
+    const result = await agent.call<
       { threads: Array<{ title: string; url: string }> } | ToolError
-    >(page, 'search_community_threads', { query: 'cors', limit: 2 })
+    >('search_community_threads', { query: 'cors', limit: 2 })
 
     if ('code' in result) {
       expect(result).toMatchObject({ code: 'search_failed', retryable: true })
@@ -154,22 +146,22 @@ test.describe('WebMCP tools', () => {
   test('navigate_to_page and open_sign_up move the tab on this site only', async ({
     page,
   }) => {
-    const offsite = await callTool<ToolError>(page, 'navigate_to_page', {
+    const offsite = await agent.call<ToolError>('navigate_to_page', {
       path: 'https://example.com',
     })
     expect(offsite.code).toBe('invalid_path')
-    const protocolRelative = await callTool<ToolError>(
-      page,
-      'navigate_to_page',
-      {
-        path: '//example.com/docs',
-      },
-    )
+    const protocolRelative = await agent.call<ToolError>('navigate_to_page', {
+      path: '//example.com/docs',
+    })
     expect(protocolRelative.code).toBe('invalid_path')
+    // Dot segments normalize /..//example.com to the protocol-relative //example.com.
+    const dotSegments = await agent.call<ToolError>('navigate_to_page', {
+      path: '/..//example.com',
+    })
+    expect(dotSegments.code).toBe('invalid_path')
     await expect(page).toHaveURL(/\/home$/)
 
-    const pricing = await callTool<{ navigated: boolean }>(
-      page,
+    const pricing = await agent.call<{ navigated: boolean }>(
       'navigate_to_page',
       {
         path: '/pricing',
@@ -179,7 +171,7 @@ test.describe('WebMCP tools', () => {
     await expect(page).toHaveURL(/\/pricing$/)
     await expect(page).toHaveTitle(/Pricing/)
 
-    await callTool(page, 'open_sign_up')
+    await agent.call('open_sign_up')
     await expect(page).toHaveURL(/\/sign-up/)
   })
 })

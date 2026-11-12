@@ -25,7 +25,7 @@ export type RegisteredToolSummary = {
  * follows the spec's registerTool / getTools / executeTool contract, so the
  * site's own registration code is what the test exercises either way.
  */
-export async function installWebMcpRegistry(page: Page): Promise<void> {
+async function installRegistry(page: Page): Promise<void> {
   await page.addInitScript(() => {
     if ('modelContext' in document) return
     const tools = new Map<string, Record<string, unknown>>()
@@ -86,7 +86,7 @@ export async function installWebMcpRegistry(page: Page): Promise<void> {
 }
 
 /** Tools register after hydration; the predicate is async, so poll rather than waitForFunction. */
-export async function waitForTools(page: Page, count: number): Promise<void> {
+async function waitForTools(page: Page, count: number): Promise<void> {
   await expect
     .poll(
       () =>
@@ -99,7 +99,7 @@ export async function waitForTools(page: Page, count: number): Promise<void> {
 }
 
 /** Native RegisteredTool objects carry a Window reference, so copy the fields an agent reads. */
-export async function getTools(page: Page): Promise<RegisteredToolSummary[]> {
+async function getTools(page: Page): Promise<RegisteredToolSummary[]> {
   return page.evaluate(async () =>
     (await document.modelContext!.getTools()).map((tool) => ({
       name: tool.name,
@@ -118,8 +118,7 @@ export async function getTools(page: Page): Promise<RegisteredToolSummary[]> {
   ) as Promise<RegisteredToolSummary[]>
 }
 
-/** Calls a tool the way an agent does and returns its parsed JSON result. */
-export async function callTool<T = Record<string, unknown>>(
+async function callTool<T = Record<string, unknown>>(
   page: Page,
   name: string,
   input: Record<string, unknown> = {},
@@ -135,4 +134,33 @@ export async function callTool<T = Record<string, unknown>>(
     [name, input] as const,
   )
   return JSON.parse(output) as T
+}
+
+/** A browser agent's view of the page: discover tools, then call them. */
+export type WebMcpAgent = {
+  tools(): Promise<RegisteredToolSummary[]>
+  /** Calls a tool through executeTool() and returns its parsed JSON result. */
+  call<T = Record<string, unknown>>(
+    name: string,
+    input?: Record<string, unknown>,
+  ): Promise<T>
+}
+
+/**
+ * Opens `path` as a browser agent would and waits until `tools` tools are
+ * registered. Uses Chrome's native WebMCP when the test runs on a channel
+ * that has it, otherwise a registry that follows the spec.
+ */
+export async function openAsAgent(
+  page: Page,
+  path: string,
+  tools: number,
+): Promise<WebMcpAgent> {
+  await installRegistry(page)
+  await page.goto(path)
+  await waitForTools(page, tools)
+  return {
+    tools: () => getTools(page),
+    call: (name, input) => callTool(page, name, input),
+  }
 }
