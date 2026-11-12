@@ -148,6 +148,11 @@ class Get extends Base
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
+        if (!empty($appSecret) && isset($appSecret['version'])) {
+            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
+        }
+
         $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
         $className = $oAuthProviders[$provider]['class'] ?? null;
         if ($className === null || !\class_exists($className)) {
@@ -272,11 +277,6 @@ class Get extends Base
 
         if (empty($code)) {
             $failureRedirect(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Missing OAuth2 code. Please contact the Appwrite team for additional support.');
-        }
-
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
         $accessToken = '';
