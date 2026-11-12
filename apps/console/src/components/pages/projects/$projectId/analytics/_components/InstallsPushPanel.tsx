@@ -18,6 +18,7 @@ import {
   BreakdownMessage,
   BreakdownSkeleton,
 } from './BreakdownPanel'
+import { BREAKDOWN_DIALOG_MAX_ROWS } from './BreakdownDialog'
 import { BreakdownRow } from './BreakdownRow'
 import { useAnalyticsFilters } from './analytics-filters-context'
 import { buildAnalyticsChartPoints } from './chart-series'
@@ -86,17 +87,21 @@ export function InstallsPushPanel({
     }
   })
 
-  const { breakdown, isLoading: messagesLoading } = useAnalyticsBreakdown(
+  const {
+    breakdown,
+    isLoading: messagesLoading,
+    error: messagesError,
+  } = useAnalyticsBreakdown(
     projectId,
     propertyId,
     AnalyticsDimension.Props,
     range,
-    undefined,
+    // The API ranks by visitors, so re-ranking by opens needs every row.
+    BREAKDOWN_DIALOG_MAX_ROWS,
     true,
     [...filters, PUSH_OPENED_FILTER],
     'messageId',
   )
-  // The API ranks by visitors; opens are events.
   const messages = useMemo(
     () =>
       breakdown
@@ -108,6 +113,7 @@ export function InstallsPushPanel({
   const totalOpens = messages.reduce((sum, entry) => sum + entry.events, 0)
 
   const loading = tiles.some((tile) => tile.loading)
+  const seriesError = series.find((query) => query.isError)?.error
   // A filter can match none of these events; only unfiltered zeros mean no SDK.
   const isEmpty =
     filters.length === 0 && !loading && tiles.every((tile) => tile.total === 0)
@@ -118,7 +124,15 @@ export function InstallsPushPanel({
         title="Installs and push"
         description="Installs, updates and push notifications from the tracking SDK"
       />
-      {isEmpty ? (
+      {seriesError ? (
+        <div className="h-40 p-4">
+          <BreakdownMessage>
+            {seriesError instanceof Error
+              ? seriesError.message
+              : t('Could not load analytics data')}
+          </BreakdownMessage>
+        </div>
+      ) : isEmpty ? (
         <div className="h-40 p-4">
           <BreakdownMessage>
             <span className="flex max-w-sm flex-col items-center gap-2">
@@ -161,7 +175,13 @@ export function InstallsPushPanel({
             <p className="mb-2 text-[12px] font-medium text-muted-foreground">
               {t('Push opened by message')}
             </p>
-            {messages.length === 0 ? (
+            {messagesError ? (
+              <p className="py-2 text-[12px] text-muted-foreground">
+                {messagesError instanceof Error
+                  ? messagesError.message
+                  : t('Could not load analytics data')}
+              </p>
+            ) : messages.length === 0 ? (
               messagesLoading ? (
                 <BreakdownSkeleton rows={MESSAGE_ROWS} />
               ) : (
