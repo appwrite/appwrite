@@ -68,6 +68,10 @@ final class ConnectionOptions
         // Transport: fn(string $scheme): Transport. Defaults to the stream-based
         // Tcp/Tls transports; inject to use a coroutine-native transport (e.g. Swoole).
         public readonly ?\Closure $transportFactory = null,
+        // Initial connect retries: passes over the server pool within connectTimeout.
+        public readonly int $connectAttempts = 3,
+        public readonly float $connectRetryWait = 0.1,
+        public readonly float $connectRetryJitter = 0.1,
     ) {
         $this->servers = \is_string($servers) ? [$servers] : $servers;
     }

@@ -3,18 +3,10 @@
 namespace Utopia\Abuse\Tests\E2E\SlidingWindow;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\SlidingWindow;
+use Utopia\Abuse\Adapter\SlidingWindow;
 
 abstract class Base extends TestCase
 {
-    /**
-     * @param  string  $key
-     * @param  int  $limit
-     * @param  int  $windowSize
-     * @param  int  $ttl
-     * @return SlidingWindow
-     */
     abstract public function getAdapter(string $key, int $limit, int $windowSize, int $ttl): SlidingWindow;
 
     /**
@@ -23,10 +15,9 @@ abstract class Base extends TestCase
     public function testStaticKey(): void
     {
         $adapter = $this->getAdapter('sw-static-key', 2, 1, 2);
-        $abuse = new Abuse($adapter);
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(true, $abuse->check());
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -34,12 +25,11 @@ abstract class Base extends TestCase
      */
     public function testDynamicKey(): void
     {
-        $adapter = $this->getAdapter('sw-dynamic-key-{{ip}}', 2, 1, 2);
-        $adapter->setParam('{{ip}}', '0.0.0.10');
-        $abuse = new Abuse($adapter);
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(true, $abuse->check());
+        $adapter = $this->getAdapter('sw-dynamic-key-{{ip}}', 2, 1, 2)
+            ->withParams(['{{ip}}' => '0.0.0.10']);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -47,13 +37,11 @@ abstract class Base extends TestCase
      */
     public function testDynamicKeyWith2Params(): void
     {
-        $adapter = $this->getAdapter('sw-two-params-{{ip}}-{{email}}', 2, 1, 2);
-        $adapter->setParam('{{ip}}', '0.0.0.10');
-        $adapter->setParam('{{email}}', 'test@test.com');
-        $abuse = new Abuse($adapter);
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(true, $abuse->check());
+        $adapter = $this->getAdapter('sw-two-params-{{ip}}-{{email}}', 2, 1, 2)
+            ->withParams(['{{ip}}' => '0.0.0.10', '{{email}}' => 'test@test.com']);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -61,13 +49,12 @@ abstract class Base extends TestCase
      */
     public function testFastRequests(): void
     {
-        $adapter = $this->getAdapter('sw-fast-requests-{{ip}}', 10, 1, 2);
-        $adapter->setParam('{{ip}}', '0.0.0.11');
-        $abuse = new Abuse($adapter);
+        $adapter = $this->getAdapter('sw-fast-requests-{{ip}}', 10, 1, 2)
+            ->withParams(['{{ip}}' => '0.0.0.11']);
         for ($i = 0; $i < 10; $i++) {
-            $this->assertSame(false, $abuse->check());
+            $this->assertSame(false, $adapter->check()->limited);
         }
-        $this->assertSame(true, $abuse->check());
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -75,50 +62,80 @@ abstract class Base extends TestCase
      */
     public function testRemaining(): void
     {
-        $adapter = $this->getAdapter('sw-remaining-{{ip}}', 3, 60, 120);
-        $adapter->setParam('{{ip}}', '0.0.0.12');
-        $abuse = new Abuse($adapter);
+        $adapter = $this->getAdapter('sw-remaining-{{ip}}', 3, 3600, 7200)
+            ->withParams(['{{ip}}' => '0.0.0.12']);
+        $adapter->reset();
 
-        $this->assertSame(2, $adapter->remaining()); // nothing counted yet: limit - (0 + 1)
-        $this->assertSame(false, $abuse->check());   // 1 used
-        $this->assertSame(1, $adapter->remaining());
-        $this->assertSame(false, $abuse->check());   // 2 used
-        $this->assertSame(0, $adapter->remaining());
+        $this->assertSame(2, $adapter->peek()->remaining);
+        $this->assertSame(2, $adapter->peek()->remaining);
+        $this->assertSame(2, $adapter->check()->remaining);
+        $this->assertSame(1, $adapter->check()->remaining);
+        $this->assertSame(0, $adapter->check()->remaining);
+
+        $result = $adapter->check();
+        $this->assertSame(true, $result->limited);
+        $this->assertSame(3, $result->limit);
+        $this->assertSame(0, $result->remaining);
     }
 
     /**
-     * Test that the window resets once both buckets expire
+     * Test that the same instance moves to a new window once the old buckets age out
      */
     public function testWindowExpiry(): void
     {
-        $adapter = $this->getAdapter('sw-window-expiry-{{ip}}', 3, 1, 2);
-        $adapter->setParam('{{ip}}', '127.0.0.1');
-        $abuse = new Abuse($adapter);
-        for ($i = 0; $i < 3; $i++) {
-            $this->assertSame(false, $abuse->check());
-        }
-        $this->assertSame(true, $abuse->check());
+        $adapter = $this->getAdapter('sw-window-expiry-{{ip}}', 1, 1, 2)
+            ->withParams(['{{ip}}' => '127.0.0.1']);
 
-        // Wait for both the current and previous buckets (ttl = 2) to expire
-        sleep(3);
+        $now = $this->freshSecond();
+        $first = $adapter->check();
+        $this->assertSame(false, $first->limited);
+        $this->assertSame($now + 1, $first->reset);
+        $this->assertSame(true, $adapter->check()->limited);
 
-        // A fresh adapter recomputes the window; the old buckets are gone
-        $adapter = $this->getAdapter('sw-window-expiry-{{ip}}', 3, 1, 2);
-        $adapter->setParam('{{ip}}', '127.0.0.1');
-        $abuse = new Abuse($adapter);
-        $this->assertSame(false, $abuse->check());
+        $this->waitUntil($now + 2);
+
+        $second = $adapter->check();
+        $this->assertSame(false, $second->limited);
+        $this->assertGreaterThan($first->reset, $second->reset);
     }
 
     /**
-     * Verify that time() returns the aligned window start as an int
+     * Test that reset reports the end of the current window
      */
-    public function testTimeFormat(): void
+    public function testResetTime(): void
     {
-        $windowSize = 1;
+        $windowSize = 3600;
+        $adapter = $this->getAdapter('sw-reset-time', 1, $windowSize, $windowSize * 2);
+
+        $this->freshSecond();
+        $peek = $adapter->peek();
+        $check = $adapter->check();
         $now = \time();
-        $adapter = $this->getAdapter('sw-time', 1, $windowSize, 2);
-        $this->assertSame((int)($now - ($now % $windowSize)), $adapter->time());
-        $this->assertSame(true, \is_int($adapter->time()));
+        $expected = $now - ($now % $windowSize) + $windowSize;
+
+        $this->assertSame($expected, $peek->reset);
+        $this->assertSame($expected, $check->reset);
+    }
+
+    /**
+     * Test that clones from withParams count independently and leave the original untouched
+     */
+    public function testParamReuse(): void
+    {
+        $base = $this->getAdapter('sw-reuse-{ip}', 1, 3600, 7200);
+        $a = $base->withParams(['{ip}' => 'a']);
+        $key = $a->key();
+        $b = $a->withParams(['{ip}' => 'b']);
+        $a->reset();
+        $b->reset();
+
+        $this->assertSame($key, $a->key());
+        $this->assertNotSame($a->key(), $b->key());
+
+        $this->assertSame(false, $a->check()->limited);
+        $this->assertSame(true, $a->check()->limited);
+        $this->assertSame(false, $b->check()->limited);
+        $this->assertSame(true, $b->check()->limited);
     }
 
     /**
@@ -126,24 +143,20 @@ abstract class Base extends TestCase
      */
     public function testReset(): void
     {
-        $adapter = $this->getAdapter('sw-reset-test-{{ip}}', 5, 600, 1200);
-        $adapter->setParam('{{ip}}', '192.168.1.1');
-        $abuse = new Abuse($adapter);
+        $adapter = $this->getAdapter('sw-reset-test-{{ip}}', 5, 600, 1200)
+            ->withParams(['{{ip}}' => '192.168.1.1']);
 
-        // 5 OK, 6th limited
         for ($i = 0; $i < 5; $i++) {
-            $this->assertSame(false, $abuse->check());
+            $this->assertSame(false, $adapter->check()->limited);
         }
-        $this->assertSame(true, $abuse->check());
+        $this->assertSame(true, $adapter->check()->limited);
 
-        // Reset clears the counters
-        $abuse->reset();
+        $adapter->reset();
 
-        // 5 more OK, then limited again
         for ($i = 0; $i < 5; $i++) {
-            $this->assertSame(false, $abuse->check());
+            $this->assertSame(false, $adapter->check()->limited);
         }
-        $this->assertSame(true, $abuse->check());
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -161,9 +174,25 @@ abstract class Base extends TestCase
     public function testUnlimited(): void
     {
         $adapter = $this->getAdapter('sw-unlimited', 0, 1, 2);
-        $abuse = new Abuse($adapter);
         for ($i = 0; $i < 20; $i++) {
-            $this->assertSame(false, $abuse->check());
+            $this->assertSame(false, $adapter->check()->limited);
+        }
+    }
+
+    private function freshSecond(): int
+    {
+        $start = \time();
+        while (($now = \time()) === $start) {
+            \usleep(1000);
+        }
+
+        return $now;
+    }
+
+    private function waitUntil(int $timestamp): void
+    {
+        while (\time() < $timestamp) {
+            \usleep(10000);
         }
     }
 }

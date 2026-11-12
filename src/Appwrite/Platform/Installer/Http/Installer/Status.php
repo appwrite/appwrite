@@ -56,9 +56,7 @@ class Status extends Action
         if (isset($data['payload']) && is_array($data['payload'])) {
             unset(
                 $data['payload']['opensslKey'],
-                $data['payload']['assistantOpenAIKey'],
                 $data['payload']['opensslKeyHash'],
-                $data['payload']['assistantOpenAIKeyHash'],
             );
         }
         // Strip sensitive data from step details

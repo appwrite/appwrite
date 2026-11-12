@@ -52,4 +52,11 @@ return [
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreatePhoneToken',
         'enabled' => true,
     ],
+    'passkey' => [
+        'name' => 'Passkey',
+        'key' => 'passkey',
+        'icon' => '/images/users/passkey.png',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreatePasskeyToken',
+        'enabled' => false,
+    ],
 ];

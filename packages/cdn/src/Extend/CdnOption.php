@@ -28,6 +28,8 @@ class CdnOption extends Option
 
     public const string PROVIDER_CLOUDFLARE = 'cloudflare';
 
+    public const string PROVIDER_CLOUDFRONT = 'cloudfront';
+
     /**
      * @param Adapter $adapter Purges cached content for this option.
      * @param string $provider Vendor the adapter talks to, one of the PROVIDER_* constants.

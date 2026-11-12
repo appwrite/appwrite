@@ -1,0 +1,415 @@
+---
+layout: post
+title: Build a fullstack Notes app with Cursor, Appwrite, and TanStack Start
+description: Learn how to build a modern fullstack notes application using Cursor AI, Appwrite for backend, and TanStack Start for the frontend.
+date: 2025-11-05
+lastUpdated: 2026-06-29
+cover: /images/blog/build-fullstack-notes-app-cursor-appwrite-tanstack-start/cover.avif
+timeToRead: 15
+author: tessa
+category: tutorials
+featured: false
+draft: false
+faqs:
+  - question: "What is MCP (Model Context Protocol)?"
+    answer: "MCP is a protocol that lets AI tools securely connect to APIs and data sources. With the Appwrite MCP server, Cursor (or any MCP-compatible agent) can read and modify your Appwrite project, including creating tables, querying data, and managing users."
+  - question: "How does Cursor connect to Appwrite?"
+    answer: "Install the Appwrite MCP server in Cursor under Tools, then provide your Appwrite endpoint, project ID, and API key. Once configured, Cursor can call Appwrite APIs from inside your editor session as if it were any other tool."
+  - question: "What is TanStack Start?"
+    answer: "TanStack Start is a full-stack React framework built on TanStack Router and Vinxi. It supports server functions, file-based routing, and SSR out of the box, making it a solid choice for building fullstack apps with type-safe data flow."
+  - question: "Can I build a full app without writing code by hand?"
+    answer: "With Cursor connected to Appwrite via MCP, you can generate most of the boilerplate (database schema, auth flows, CRUD endpoints) by prompting the agent. You'll still want to read and review what gets produced, especially for permissions and validation."
+  - question: "What scopes do I need on my Appwrite API key for Cursor?"
+    answer: "For the notes app, you need tables.read, tables.write, users.read, and users.write at minimum. Start with the narrowest set of scopes needed and add more if your prompts require them. Avoid granting all scopes in production."
+  - question: "How do I connect [Appwrite Auth](/docs/products/auth) to a TanStack Start app?"
+    answer: "Use the Appwrite Web SDK on the client and create sessions via the Account API. For SSR scenarios, pass the session cookie or JWT to the server function so Appwrite knows who's making the request. The tutorial walks through this end-to-end."
+---
+
+Developers are entering a new era where AI can *understand context and build with you*.  
+AI-powered editors like **Cursor** blur the line between development and automation, while **Appwrite** provides the unified backend that turns those AI-generated ideas into production-ready applications.
+
+Together, they represent the next leap forward, where AI helps you go from idea → API → local app in minutes.
+
+I chose to use Cursor as it's my *favorite* coding agent. We all have our favorite, and I'll definitely keep building with Cursor as it's just more user friendly.
+
+In this tutorial, you’ll:
+
+- Connect Cursor to Appwrite using **MCP**
+- Build a **TanStack Start** app with authentication and CRUD
+- Run it locally
+
+---
+
+# What is MCP and why it matters
+
+**MCP (Model Context Protocol)** lets AI tools like Cursor securely connect to APIs and databases.  
+The **Appwrite MCP server** gives Cursor access to your Appwrite project so it can create tables, write code, and query real data.
+
+👉 [**Add Appwrite MCP to Cursor**](https://appwrite.io/docs/tooling/ai/agents/cursor)
+
+---
+
+# Setting up the Appwrite MCP Server
+
+## 1. Create an API Key in Appwrite Cloud
+* Log in to [Appwrite Cloud](https://cloud.appwrite.io).
+* Create a **new API key** with the following scopes:
+  - `tables.read`, `tables.write`, `rows.read`, and `rows.write`
+  - `users.read` and `users.write`
+* Copy the key.
+
+You can find it at Overview -> Integrations -> API keys
+
+> **Note:** If you encounter permission errors, you can temporarily use "all scopes" for troubleshooting, but we recommend using specific scopes for better security.
+
+## 2. Copy your Project ID
+Go to **Project → Overview**, hover over **Project ID**, and copy it.
+
+## 3. Add the MCP Server in Cursor
+In Cursor → **Tools → Installed MCP Servers → Add Custom MCP**:
+
+![Cursor MCP Settings](/images/blog/build-fullstack-notes-app-cursor-appwrite-tanstack-start/cursor-mcp-settings.avif)
+
+You can specify specific routes instead of choosing --all, such as --tables, --users, --functions since having too many may degrade performance in Cursor.
+
+| Field | Example |
+|---|---|
+| Name | `appwrite` |
+| Command | `uvx mcp-server-appwrite --all` |
+| APPWRITE_ENDPOINT | `https://[REGION].cloud.appwrite.io/v1` |
+| APPWRITE_PROJECT_ID | `<YOUR_PROJECT_ID>` |
+| APPWRITE_API_KEY | `<YOUR_API_KEY>` |
+
+Make sure you update your region, project ID, and API key, which is all found in your Appwrite Console.
+
+Click **Install**, then verify it appears in your MCP list.
+
+---
+
+# Troubleshooting MCP
+
+| Issue | Fix |
+|---|---|
+| `uvx not recognized` | Install **uv**:<br>Windows → `irm https://astral.sh/uv/install.ps1 | iex`<br>macOS/Linux → `curl -LsSf https://astral.sh/uv/install.sh | sh` |
+| Only “users” endpoint visible | Use `--all` flag or add endpoints manually in config |
+| MCP not found | Open a **new Cursor conversation** or restart Cursor |
+
+---
+
+# Building the notes app
+
+> Fully local CRUD app with Appwrite.
+
+> **Preview:** Here's what we'll build by the end of this tutorial.
+
+![TanStack Notes App](/images/blog/build-fullstack-notes-app-cursor-appwrite-tanstack-start/tanstacknotesapp.avif)
+
+---
+
+# Create a project folder
+
+```bash
+mkdir ai-notes && cd ai-notes
+cursor .
+```
+
+---
+
+# Scaffold TanStack Start (SSR)
+
+**Prompt (Cursor):**
+```text
+Create a TanStack Start project named "ai-notes" with TypeScript and SSR. 
+Set up a clean src structure with routes, components, and lib folders.
+```
+
+**Commands:**
+```bash
+npm create tanstack@latest
+Choose: Start (SSR), TypeScript
+npm i
+```
+
+> 💡 Cursor may prompt: `npm install --save-dev tsx`; that's expected for SSR dev mode.
+
+---
+
+# Remove scaffolded docs + create routes
+
+> **Note:** TanStack Start scaffolds a demo/docs route. You'll replace it with real app routes.
+
+**Prompt (Cursor):**
+```text
+Remove any TanStack Start demo/docs routes. Replace them with:
+- / → Landing page (redirects to /notes if logged in, else /login)
+- /login → Login page
+- /signup → Signup page
+- /notes → Notes app (protected, requires login)
+Ensure "/" never shows the TanStack Start docs page.
+```
+
+---
+
+# Create `.env.local` from MCP
+
+**Prompt (Cursor):**
+```text
+Create a .env.local file and populate:
+VITE_APPWRITE_ENDPOINT and VITE_APPWRITE_PROJECT_ID
+Use values from my connected Appwrite MCP server (use regional endpoint with /v1).
+```
+
+**Example:**
+```env
+VITE_APPWRITE_ENDPOINT=https://nyc.cloud.appwrite.io/v1
+VITE_APPWRITE_PROJECT_ID=<YOUR_PROJECT_ID>
+```
+
+Restart `npm run dev` after editing `.env.local`.
+
+---
+
+# Configure the Appwrite SDK
+
+**Prompt (Cursor):**
+```text
+Install the Appwrite Web SDK as a normal dependency (not dev).
+Create a client helper that reads from VITE_APPWRITE_ENDPOINT and VITE_APPWRITE_PROJECT_ID.
+```
+
+**Commands:**
+```bash
+npm i appwrite
+```
+
+**Helper:**
+```ts
+// src/lib/appwrite.ts
+import { Client, Account, TablesDB, ID } from 'appwrite';
+
+const client = new Client()
+  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT!)
+  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID!);
+
+export const account = new Account(client);
+export const tablesDB = new TablesDB(client);
+export { ID };
+```
+
+---
+
+# Create Database & Table via MCP
+
+**Prompt (Cursor):**
+```text
+Using the Appwrite MCP server, create a database with ID "notes-db" (name it "Notes Database") and a table with ID "notes" (name it "Notes") with columns:
+title, content, userId, createdAt, updatedAt.
+Grant authenticated user read/write and save IDs to src/lib/config.ts.
+```
+
+---
+
+# Add Authentication (session-safe, no auto-login)
+
+**Prompt (Cursor):**
+```text
+Create an auth helper with session-safe login/logout. Import the account instance from ./lib/appwrite.ts (not creating a new one).
+
+Requirements:
+- login(email, password):
+  1. Check if a session exists; if yes, delete all sessions first.
+  2. Create a new email/password session.
+  3. If "session already active" error occurs, delete all sessions and retry once.
+  4. Return the current user via account.get().
+
+- logout(): delete all sessions.
+
+- getCurrentUser(): return account.get(); if unauthenticated, return null.
+
+Update the /login page:
+- NEVER auto-redirect away from /login. Always show the form so users can switch accounts.
+- On successful login, navigate to /notes.
+- Show clear errors if something fails.
+
+Update route guards:
+- /notes loader/server check: if no session, redirect to /login.
+- / index loader/server check: if session → /notes, else → /login.
+```
+
+**Helper (`src/lib/auth.ts`):**
+```ts
+import { ID } from 'appwrite';
+import { account } from './appwrite';
+
+export async function getCurrentUser() {
+  try {
+    return await account.get();
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteAllSessions() {
+  try {
+    await account.deleteSessions();
+  } catch {
+    // ignore; we might not have a session
+  }
+}
+
+export async function login(email: string, password: string) {
+  await deleteAllSessions();
+
+  try {
+    await account.createEmailPasswordSession({
+        email: email,
+        password: password
+    });
+  } catch (err: any) {
+    const msg = err?.message?.toLowerCase() ?? '';
+    if (msg.includes('session') && msg.includes('active')) {
+      await deleteAllSessions();
+      await account.createEmailPasswordSession({
+          email: email,
+          password: password
+      });
+    } else {
+      throw err;
+    }
+  }
+
+  return await account.get();
+}
+
+export async function signup(email: string, password: string, name?: string) {
+  await account.create({
+    userId: ID.unique(),
+    email,
+    password,
+    name
+  });
+  return await login(email, password);
+}
+
+export async function logout() {
+  await deleteAllSessions();
+}
+```
+
+---
+
+# Add CRUD for notes
+
+**Prompt (Cursor):**
+```text
+Create a /notes route that lists, creates, updates, and deletes notes using Appwrite TablesDB API.
+Include loading, error, and empty states.
+```
+
+---
+
+# Style and quality pass (Tailwind v4, accessibility)
+
+**Prompt (Cursor):**
+```text
+Add Tailwind CSS v4 and basic styling. 
+Fix any invalid utilities like focus-visible:ring-opacity-* or custom @apply utilities.
+Add accessible focus styles (focus-visible:outline-none focus-visible:ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500/100).
+```
+
+---
+
+Note: You can just add the first part "Add Tailwind CSS v4 and basic styling. I added the 2nd line in the prompt as I had issues with Tailwind utility errors I wasn't familiar with, so this prevents that issue from occurring.
+
+# Run locally
+
+**Prompt (Cursor):**
+```text
+Ensure npm scripts for dev, build, and preview exist.
+Run npm run dev first, then npm run build && npm run preview to verify before deployment.
+```
+
+**Commands:**
+```bash
+npm run dev
+npm run build
+npm run preview
+```
+
+✅ **Verify routes:**
+- `/` → redirects to `/notes` if logged in, `/login` if not  
+- `/login` + `/signup` → show correct forms  
+- `/notes` → works only when logged in  
+- No TanStack Start docs page appears
+
+---
+
+# Troubleshooting
+
+| Issue | Fix |
+|---|---|
+| `/` shows TanStack docs page | Delete demo/docs routes and create `/`, `/login`, `/signup`, `/notes` manually. |
+| `focus-visible-ring` or `ring-opacity-*` errors | Tailwind v4 removed those utilities; use color/alpha rings instead. |
+| Missing `.env` file | Create `.env.local` using values from Appwrite MCP. |
+| 401/403 errors | Verify API key scopes + table permissions. |
+| "Creation of a session is prohibited when a session is active." | Use session-safe login flow. Delete all sessions first, retry once if needed, and remove auto-login logic from `/login`. |
+
+---
+
+# Still having issues?
+
+Everyone has a different experience going through a tutorial. Luckily, with using Cursor, you can enter any errors or problems you are having, and it should fix it and adjust your code as needed.
+
+# Master prompt list
+
+1️⃣ **Scaffold app**
+```text
+Create a TanStack Start project named "ai-notes" with TypeScript and SSR.
+```
+
+2️⃣ **Fix routes**
+```text
+Remove scaffolded docs routes. Create "/", "/login", "/signup", "/notes" with redirects using Appwrite Account API.
+```
+
+3️⃣ **Appwrite SDK helper**
+```text
+Install appwrite SDK. Create client helper using VITE_APPWRITE_* envs.
+```
+
+4️⃣ **.env file**
+```text
+Create a .env.local file and populate VITE_APPWRITE_ENDPOINT and VITE_APPWRITE_PROJECT_ID using values from Appwrite MCP.
+```
+
+5️⃣ **Database + Table**
+```text
+Create database with ID "notes-db" (name it "Notes Database") and table with ID "notes" (name it "Notes") via MCP with appropriate columns and permissions.
+```
+
+6️⃣ **Authentication**
+```text
+Add /login and /signup pages; protect /notes for logged-in users.
+Ensure session-safe login logic to prevent duplicate sessions.
+```
+
+7️⃣ **CRUD**
+```text
+Create /notes route with list, create, update, delete using Appwrite TablesDB API.
+```
+
+8️⃣ **Polish**
+```text
+Add types, a11y checks, and Tailwind v4-safe styling.
+```
+
+9️⃣ **Local test**
+```text
+Run npm run dev, then npm run build && npm run preview.
+Verify all routes and auth logic.
+```
+
+---
+
+
+> *If AI can handle the setup, what will you build next?*

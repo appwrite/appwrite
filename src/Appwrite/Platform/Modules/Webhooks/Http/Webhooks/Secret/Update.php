@@ -53,7 +53,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID.', false, ['dbForPlatform'])
+            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Webhook ID.', false, ['dbForPlatform'])
             ->param('secret', null, new Nullable(new Text(256, 8)), 'Webhook secret key. If not provided, a new key will be generated automatically. Key must be at least 8 characters long, and at max 256 characters.', optional: true)
             ->inject('response')
             ->inject('project')

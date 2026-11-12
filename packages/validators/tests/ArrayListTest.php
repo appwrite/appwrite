@@ -32,7 +32,7 @@ final class ArrayListTest extends TestCase
         $this->assertFalse($arrayList->isValid(['string', 'string', 3]));
         $this->assertFalse($arrayList->isValid('string'));
         $this->assertFalse($arrayList->isValid('string'));
-        $this->assertSame(\Utopia\Validator::TYPE_STRING, $arrayList->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_STRING, $arrayList->getType());
         $this->assertInstanceOf(Text::class, $arrayList->getValidator());
     }
 
@@ -42,7 +42,7 @@ final class ArrayListTest extends TestCase
         $this->assertTrue($arrayList->isValid([1, 2, 3]));
         $this->assertFalse($arrayList->isValid(1));
         $this->assertFalse($arrayList->isValid('string'));
-        $this->assertSame(\Utopia\Validator::TYPE_MIXED, $arrayList->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_MIXED, $arrayList->getType());
         $this->assertInstanceOf(Numeric::class, $arrayList->getValidator());
     }
 
@@ -52,7 +52,7 @@ final class ArrayListTest extends TestCase
         $this->assertTrue($arrayList->isValid([1]));
         $this->assertTrue($arrayList->isValid([1, 2]));
         $this->assertFalse($arrayList->isValid([1, 2, 3]));
-        $this->assertSame(\Utopia\Validator::TYPE_MIXED, $arrayList->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_MIXED, $arrayList->getType());
         $this->assertInstanceOf(Numeric::class, $arrayList->getValidator());
     }
 }

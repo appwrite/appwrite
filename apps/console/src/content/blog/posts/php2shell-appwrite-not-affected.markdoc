@@ -1,0 +1,130 @@
+---
+layout: post
+title: "PHP2Shell RCE flaws: Why Appwrite is not affected"
+description: PHP2Shell, CVE-2026-109618 and CVE-2026-109619, doesn't affect Appwrite because it runs on Swoole. Here's why, and what PHP Functions users should check.
+date: 2026-10-22
+cover: /images/blog/php2shell-appwrite-not-affected/cover.avif
+timeToRead: 4
+author: luke-silver
+category: security
+featured: false
+faqs:
+  - question: "What is PHP2Shell?"
+    answer: "PHP2Shell is the name for two critical PHP vulnerabilities published on October 21, 2026, [CVE-2026-109618](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w) and [CVE-2026-109619](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp). Both score 9.2 on CVSS v4 and let an unauthenticated attacker run code on PHP served through web SAPIs such as Apache mod_php and PHP-FPM. PHP 8.5.12, 8.4.27, 8.3.36, and 8.2.35 fix them."
+  - question: "Is Appwrite affected by CVE-2026-109618 or CVE-2026-109619?"
+    answer: "No. Both vulnerabilities are in the code that PHP's web SAPIs run for each request. Appwrite serves every HTTP request through Swoole in a long-running PHP CLI process, so that code never runs for incoming requests. Appwrite moved to PHP 8.5.12 anyway as a precaution."
+  - question: "Do I need to do anything on Appwrite Cloud or self-hosted Appwrite?"
+    answer: "Appwrite Cloud already runs PHP 8.5.12, so you don't need to do anything. Self-hosted 2.x installations should upgrade to Appwrite 2.6.1, and 1.9 installations to Appwrite 1.9.9, using the [upgrade instructions](/docs/advanced/self-hosting/production/updates)."
+  - question: "Is the PHP 8.5.12 patch for PHP2Shell complete?"
+    answer: "No. Appwrite's internal testing found that a related use-after-free in PHP's native `unserialize()` still reproduces on patched PHP builds. No Appwrite code relies on `unserialize()`, so it only matters for PHP functions that developers write themselves. As of October 22, 2026, PHP has not published a fix."
+  - question: "Are PHP functions on Appwrite affected by PHP2Shell?"
+    answer: "The Appwrite Functions PHP runtimes serve executions through Swoole, so the two PHP2Shell CVEs don't apply to them. If your function passes untrusted data to `unserialize()`, switch it to `json_decode()` until PHP fixes the remaining `unserialize()` bug."
+---
+
+On October 21, 2026, PHP released 8.5.12, 8.4.27, 8.3.36, and 8.2.35. The releases fix [CVE-2026-109618](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w) and [CVE-2026-109619](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp), two critical remote code execution vulnerabilities known as **PHP2Shell**. Both score 9.2 on CVSS v4, and an attacker can exploit either one without authenticating. Security vendors are already [reporting exploit attempts](https://thehackernews.com/2026/10/php-issues-emergency-patches-for-two.html).
+
+Appwrite is not affected. We moved to PHP 8.5.12 anyway:
+
+- **Appwrite Cloud** already runs on PHP 8.5.12. No action is needed.
+- **Self-hosted Appwrite** moves to PHP 8.5.12 in [Appwrite 2.6.1 and 1.9.9](/changelog/entry/2026-10-21-2). Neither release changes the database schema.
+
+Our internal testing also found that the patch leaves a related `unserialize()` bug open, which only matters if you write PHP functions.
+
+# How the PHP2Shell vulnerabilities work
+
+Both bugs are in the code that runs around each request in PHP's web server APIs (SAPIs), such as Apache mod_php and PHP-FPM.
+
+- CVE-2026-109618 corrupts memory when PHP runs out of memory during request startup, for example while parsing a crafted multipart request.
+- CVE-2026-109619 lets a request read stale global state that an earlier request left in the same worker. Session upload progress handling is one confirmed path.
+
+The [advisories](https://github.com/php/php-src/security/advisories) confirm unauthenticated remote code execution against mod_php and PHP-FPM. They also say updating is the only complete mitigation.
+
+# Why Appwrite is not affected by PHP2Shell
+
+Appwrite doesn't use a web SAPI. Its HTTP container starts with `php app/http.php`, one long-running PHP process that runs a [Swoole](https://www.swoole.com/) HTTP server. Swoole parses every request in its own native code, multipart uploads included. PHP's request startup and shutdown run once when the process boots, not once per request.
+
+CVE-2026-109618 needs a request to go through PHP's request startup and multipart parser, and Appwrite requests go through neither. CVE-2026-109619 needs PHP's pre-request initialization or its native sessions. Swoole doesn't run that initialization between requests, and Appwrite doesn't use PHP sessions.
+
+Appwrite's workers, Realtime server, and CLI tasks also run as long-running CLI processes, so the same applies to them.
+
+We upgraded to PHP 8.5.12 anyway. If a future change ever sends input through one of these code paths, the runtime is already fixed. Vulnerability scanners also check the PHP version rather than the SAPI, so they no longer flag the two CVEs in Appwrite's images.
+
+# Checking custom Appwrite Functions for unserialize()
+
+While testing the PHP2Shell patches internally, we found that they leave a related use-after-free open in PHP's native `unserialize()`. During cleanup, an object destructor that calls back into `unserialize()` can touch memory that PHP has already freed.
+
+Our reproducer crashes under AddressSanitizer on both PHP 8.3.35, which is unpatched, and PHP 8.3.36, which has the PHP2Shell fixes. With PHP's default memory allocator, it exits without an error, so a normal build gives no sign of the corruption. As of October 22, 2026, PHP has not published a fix.
+
+An attacker can only exploit this bug by getting their own data into a call to `unserialize()`. **No Appwrite code relies on `unserialize()`**, so Appwrite Cloud and self-hosted Appwrite are not exposed. The [Appwrite Functions](/docs/products/functions) PHP runtimes also serve executions through Swoole, so the two PHP2Shell CVEs don't apply to them either.
+
+The bug only matters for PHP functions that developers write and deploy themselves. If your function passes untrusted data to `unserialize()`, switch it to JSON. Untrusted data includes request bodies, headers, and any database rows or storage files your users can write.
+
+Run this from your function's root directory to find every call, including calls in `vendor/`:
+
+```sh
+grep -rn "unserialize(" --include="*.php" .
+```
+
+Then decode with `json_decode()`. With the `true` flag, it returns only arrays and scalars, so it never creates objects or runs destructors:
+
+```php
+<?php
+return function ($context) {
+    try {
+        $cart = json_decode($context->req->body, true, 512, JSON_THROW_ON_ERROR);
+    } catch (\JsonException $e) {
+        return $context->res->json(['ok' => false, 'message' => 'Invalid JSON body.'], 400);
+    }
+
+    $items = is_array($cart['items'] ?? null) ? $cart['items'] : [];
+
+    return $context->res->json(['ok' => true, 'items' => count($items)]);
+};
+```
+
+The `allowed_classes` option doesn't make `unserialize()` safe either. The [PHP manual](https://www.php.net/manual/en/function.unserialize.php) says not to pass untrusted input to `unserialize()` whatever that option is set to.
+
+# Upgrading self-hosted Appwrite to PHP 8.5.12
+
+Self-hosted 2.x installations should upgrade to [Appwrite 2.6.1](/docs/advanced/self-hosting/production/updates#upgrading-to-latest), and 1.9 installations to [Appwrite 1.9.9](/docs/advanced/self-hosting/production/updates#upgrading-1-9). Neither release changes the database schema, and from 2.6.0 or 1.9.8 the upgrade only replaces the images. [Back up your instance](/docs/advanced/self-hosting/production/backups), then run the upgrade and the [migration](/docs/advanced/self-hosting/production/updates#running-the-migration) for your version from the parent directory of your installation:
+
+{% tabs %}
+{% tabsitem #upgrade-2-x title="Appwrite 2.x" %}
+
+```sh
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="upgrade" \
+    appwrite/appwrite:2.6.1
+cd appwrite/
+docker compose exec appwrite migrate
+```
+
+{% /tabsitem %}
+{% tabsitem #upgrade-1-9 title="Appwrite 1.9" %}
+
+```sh
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="upgrade" \
+    appwrite/appwrite:1.9.9
+cd appwrite/
+docker compose exec appwrite migrate
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+The [changelog](/changelog/entry/2026-10-21-2) has the full release details.
+
+# Tracking PHP security updates
+
+We are proactively watching the [php-src security advisories](https://github.com/php/php-src/security/advisories) and [php.net](https://www.php.net/) for further updates from the PHP team. We will keep patching Appwrite Cloud and self-hosted Appwrite wherever it makes sense. To report a security issue in Appwrite, email [security@appwrite.io](mailto:security@appwrite.io) or follow the [Appwrite security policy](https://github.com/appwrite/appwrite/security/policy).
+
+- [Upgrade self-hosted Appwrite](/docs/advanced/self-hosting/production/updates)
+- [Appwrite Functions runtimes](/docs/products/functions/runtimes)
+- [Sign up for Appwrite Cloud](/sign-in)

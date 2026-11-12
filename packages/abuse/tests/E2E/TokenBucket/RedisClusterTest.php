@@ -2,8 +2,8 @@
 
 namespace Utopia\Abuse\Tests\E2E\TokenBucket;
 
-use Utopia\Abuse\Adapters\TokenBucket;
-use Utopia\Abuse\Adapters\TokenBucket\RedisCluster as AdapterRedisCluster;
+use Utopia\Abuse\Adapter\TokenBucket;
+use Utopia\Abuse\Adapter\TokenBucket\RedisCluster as AdapterRedisCluster;
 use Utopia\Abuse\Tests\E2E\Services;
 
 class RedisClusterTest extends Base
@@ -13,6 +13,7 @@ class RedisClusterTest extends Base
     /**
      * @throws \Exception
      */
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         if (isset(self::$redis)) {
@@ -27,11 +28,13 @@ class RedisClusterTest extends Base
         return new \RedisCluster(null, Services::CLUSTER_SEEDS);
     }
 
+    #[\Override]
     public function getAdapter(string $key, int $tokens, float $refillRate): TokenBucket
     {
         return new AdapterRedisCluster($key, $tokens, $refillRate, self::$redis);
     }
 
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
         if (isset(self::$redis)) {

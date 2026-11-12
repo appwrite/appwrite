@@ -1,0 +1,17 @@
+---
+layout: changelog
+title: Security updates for self-hosted Appwrite
+date: 2026-10-21
+tags: security, infrastructure
+---
+
+Appwrite 2.6.0 and 1.9.8 include security updates for self-hosted deployments.
+
+Both releases update outbound HTTPS certificate trust to reject the compromised **eMudhra certificate** chains described in [Cloudflare's disclosure](https://blog.cloudflare.com/emudhra-certificate-compromise/). TLS verification remains enabled.
+
+- **2.x installations:** upgrade to [Appwrite 2.6.0](https://github.com/appwrite/appwrite/releases/tag/2.6.0) using the [latest upgrade instructions](/docs/advanced/self-hosting/production/updates#upgrading-to-latest).
+- **1.9 installations:** upgrade to [Appwrite 1.9.8](https://github.com/appwrite/appwrite/releases/tag/1.9.8) using the [1.9 upgrade instructions](/docs/advanced/self-hosting/production/updates#upgrading-1-9). This patch also updates the SVG sanitizer to 1.1.1 and refreshes cached avatar and preview responses.
+
+Back up your instance before upgrading and run the migration afterward. Appwrite 2.6.0 includes schema updates; 1.9.8 introduces no schema changes. Endpoints still presenting a compromised certificate chain must replace their certificates before Appwrite can connect to them.
+
+The linked GitHub release notes include the complete changes bundled with each version.

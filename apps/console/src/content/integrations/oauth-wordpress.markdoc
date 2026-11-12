@@ -1,0 +1,64 @@
+---
+layout: integration
+title: OAuth with WordPress
+description: Authenticate users with an existing WordPress.com account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-wordpress/cover.avif
+category: auth
+product:
+    vendor: WordPress.com
+    description: "WordPress.com is Automattic's hosted WordPress platform for building and publishing blogs, stores, and websites."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+WordPress.com is Automattic's hosted WordPress platform for building and publishing blogs, stores, and websites. A WordPress.com account also connects to Jetpack-powered sites, and WordPress.com offers OAuth 2.0 so other apps can sign people in with that account.
+
+# How does the integration work?
+
+You can use the WordPress OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account, and it suits tools for bloggers, publishers, and site owners on WordPress.com.
+
+Appwrite requests the `auth` scope, which only grants access to the user's own profile, and reads their user ID, display name, and email address. Appwrite only uses the email address when WordPress.com reports it as verified. WordPress.com also shares the user's avatar, which Appwrite uses for [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+Users sign in with their WordPress.com account. The integration doesn't sign users in with accounts that only exist on a self-hosted WordPress.org site.
+
+# How to implement
+
+To implement the WordPress OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create a WordPress.com application
+
+First, sign in to the [WordPress.com Applications Manager](https://developer.wordpress.com/apps/) and create a new application. Fill in its name, description, and website URL. The form asks for a redirect URL, so temporarily add `https://temporary-endpoint.com/`. You will replace it with the URI from Appwrite in the next step.
+
+After you create the application, save its **Client ID** and **Client Secret** for later use.
+
+## Step 2: Add the WordPress OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **WordPress** under the **OAuth2 Providers** section.
+
+Enter the **Client ID** and **Client Secret** you saved from WordPress.com, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/wordpress/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in the Applications Manager, edit your application and replace the temporary redirect URL with this URI. WordPress.com requires an exact match.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Wordpress` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about WordPress.com and Appwrite Auth
+
+If you would like to learn more about WordPress.com and Appwrite Auth, we have some resources that you should visit:
+
+- [WordPress.com OAuth2 authentication](https://developer.wordpress.com/docs/api/oauth2/)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

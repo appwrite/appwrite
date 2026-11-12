@@ -2,14 +2,14 @@
 
 namespace Tests\E2E\Scopes;
 
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 trait ProjectConsole
 {
     public function getProject(): array
     {
         return [
-            '$id' => ID::custom('console'),
+            '$id' => Id::custom('console'),
             'name' => 'Appwrite',
             'apiKey' => '',
         ];

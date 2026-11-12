@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -11,8 +12,9 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
@@ -33,6 +35,7 @@ class Create extends Action
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: 'transactions',
@@ -64,22 +67,23 @@ class Create extends Action
         $permissions = [];
         if (!empty($user->getId())) {
             $allowedPermissions = [
-                Database::PERMISSION_READ,
-                Database::PERMISSION_UPDATE,
-                Database::PERMISSION_DELETE,
+                PermissionType::Read,
+                PermissionType::Update,
+                PermissionType::Delete,
             ];
 
             foreach ($allowedPermissions as $permission) {
-                $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
             }
         }
 
         $transaction = $authorization->skip(fn () => $dbForProject->createDocument('transactions', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => $permissions,
             'status' => 'pending',
             'operations' => 0,
             'expiresAt' => DateTime::addSeconds(new \DateTime(), $ttl),
+            'type' => $this->getDatabaseType(),
         ])));
 
         $response

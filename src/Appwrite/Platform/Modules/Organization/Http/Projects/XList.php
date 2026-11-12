@@ -17,9 +17,9 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 class XList extends Action
 {
@@ -102,8 +102,8 @@ class XList extends Action
         }
 
         try {
-            $selectQueries = Query::groupByType($queries)['selections'];
-            $filterQueries = Query::groupByType($queries)['filters'];
+            $selectQueries = Query::groupByType($queries)->selections;
+            $filterQueries = Query::groupByType($queries)->filters;
 
             $projects = $dbForPlatform->find('projects', $queries);
             $total = $includeTotal ? $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT) : 0;

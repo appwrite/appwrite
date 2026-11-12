@@ -5,7 +5,7 @@ namespace Appwrite\Network\Validator;
 use InvalidArgumentException;
 use Utopia\Client\Destinations;
 use Utopia\DNS\Lookup;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 /**
  * A hostname or IP literal Appwrite may connect to on a user's behalf: it resolves, and
@@ -24,6 +24,15 @@ class PublicHostname extends Validator
         private readonly Destinations $destinations,
         private readonly Lookup $lookup,
     ) {
+    }
+
+    /**
+     * The policy hosts are checked against, for confining the connection to a checked host
+     * to the same addresses, so DNS cannot answer differently between the check and the connection.
+     */
+    public function getDestinations(): Destinations
+    {
+        return $this->destinations;
     }
 
     public function getDescription(): string
@@ -72,6 +81,24 @@ class PublicHostname extends Validator
      */
     public function address(string $host): string
     {
+        $addresses = $this->addresses($host);
+
+        if ($addresses === []) {
+            throw new InvalidArgumentException('Hostname ' . \strtolower(\trim($host, " \t\n\r\0\x0B[]")) . ' does not resolve.');
+        }
+
+        return $addresses[0];
+    }
+
+    /**
+     * Every address the host resolves to, none when it does not resolve yet. For a host
+     * stored now and connected to later, where only a refused address is reason to reject it.
+     *
+     * @return list<string>
+     * @throws InvalidArgumentException When the host is empty or resolves to an address the destination does not allow
+     */
+    public function addresses(string $host): array
+    {
         $host = \strtolower(\trim($host, " \t\n\r\0\x0B[]"));
 
         if ($host === '') {
@@ -79,10 +106,6 @@ class PublicHostname extends Validator
         }
 
         $addresses = \filter_var($host, FILTER_VALIDATE_IP) !== false ? [$host] : $this->lookup->addresses($host);
-
-        if ($addresses === []) {
-            throw new InvalidArgumentException("Hostname {$host} does not resolve.");
-        }
 
         foreach ($addresses as $address) {
             if (!$this->destinations->allows($address)) {
@@ -92,6 +115,6 @@ class PublicHostname extends Validator
             }
         }
 
-        return $addresses[0];
+        return $addresses;
     }
 }

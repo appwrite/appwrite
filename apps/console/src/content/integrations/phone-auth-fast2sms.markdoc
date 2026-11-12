@@ -1,0 +1,113 @@
+---
+layout: integration
+title: Phone auth with Fast2SMS
+description: Deliver one-time passwords for phone authentication to Indian numbers through Fast2SMS
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/phone-auth-fast2sms/cover.avif
+category: auth
+product:
+    vendor: Fast2SMS
+    description: "Fast2SMS is an SMS service for Indian mobile numbers with an API for sending DLT-registered and quick SMS messages."
+platform:
+    - 'Self-hosted'
+---
+
+[Fast2SMS](https://www.fast2sms.com) is an SMS service for Indian mobile numbers. Its API sends messages through the DLT route, which uses the sender IDs and templates you register under India's DLT regulations, or through its Quick SMS route.
+
+# How does the integration work?
+
+If you self-host Appwrite, you can use Fast2SMS to deliver the one-time passwords (OTPs) that Appwrite Auth sends by SMS. Appwrite uses the provider you configure for [phone (SMS) login](/docs/products/auth/phone-sms), phone number verification, SMS challenges for [multi-factor authentication](/docs/products/auth/mfa), and team invitations sent to a phone number.
+
+Fast2SMS only delivers to Indian numbers. Appwrite removes the country code before it sends, so your users still enter their phone numbers in international format, such as `+919876543210`.
+
+On the DLT route, Appwrite sends your sender ID and the message ID of your DLT template, and passes the message text as the value of the template's variable. The message text is the one-time code, or the invitation link when you invite a team member by phone.
+
+{% info title="Phone authentication on Appwrite Cloud" %}
+Appwrite Cloud delivers phone authentication SMS for you, so there is no SMS provider to configure. Messages are billed per message, with [rates](/docs/advanced/billing/phone-otp#rates) that vary by country.
+{% /info %}
+
+# How to implement
+
+To implement the Fast2SMS provider for phone authentication, there are several steps you must complete:
+
+## Step 1: Set up Fast2SMS
+
+First, sign up for a [Fast2SMS](https://www.fast2sms.com) account and register your sender ID and template under DLT. Then save the following information:
+
+| Value | Where to find it |
+| --- | --- |
+| API key | The **Dev API** section of the Fast2SMS dashboard. |
+| Sender ID | Your DLT-approved sender ID of 3 to 6 letters, added in **DLT Manager**. |
+| Message ID | The message ID of your DLT-approved template, listed in **DLT Manager**. Use a template with one `{#var#}` placeholder where the code should appear. |
+
+## Step 2: Add Fast2SMS to your Appwrite instance
+
+For this step, you must [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Open the `.env` file of your Appwrite installation and update the following environment variables:
+
+```bash
+_APP_SMS_PROVIDER=sms://<SENDER_ID>:<API_KEY>@fast2sms?useDLT=true&messageId=<MESSAGE_ID>
+_APP_SMS_FROM=<SENDER_ID>
+```
+
+`useDLT=true` sends each message through the DLT route with your sender ID and template. Fast2SMS doesn't use `_APP_SMS_FROM`, but Appwrite only turns on SMS delivery when both variables are set, so set it to your sender ID. URL-encode the values in `_APP_SMS_PROVIDER` if they contain characters other than letters and numbers.
+
+To send through the Quick SMS route instead, remove `useDLT` and `messageId` from the URL, and Appwrite sends the message text as is. Remove `useDLT` rather than setting it to `false`, because Appwrite treats `useDLT=false` as on.
+
+### Route only Indian numbers through Fast2SMS (optional)
+
+If some of your users have phone numbers outside India, keep a second provider for them. `_APP_SMS_PROVIDER` accepts several providers separated by commas. Mark one as the default with `local=default` and assign Fast2SMS to India's calling code with `local=91`:
+
+```bash
+_APP_SMS_PROVIDER=sms://<ACCOUNT_SID>:<AUTH_TOKEN>@twilio?local=default,sms://<SENDER_ID>:<API_KEY>@fast2sms?local=91&useDLT=true&messageId=<MESSAGE_ID>
+_APP_SMS_FROM=<TWILIO_PHONE_NUMBER>
+```
+
+Appwrite then sends to numbers starting with `+91` through Fast2SMS and to every other number through the default provider. All providers in the list share the same `_APP_SMS_FROM` value.
+
+After you save the `.env` file, recreate your Appwrite stack and confirm the variables were applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+## Step 3: Test the provider
+
+To test the provider, [implement phone (SMS) login](/docs/products/auth/phone-sms) in a web or mobile app. Request a code for an Indian phone number, then create a session with the code you receive:
+
+```js
+import { Client, Account, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<APPWRITE_DOMAIN>/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const token = await account.createPhoneToken({
+    userId: ID.unique(),
+    phone: '+919876543210'
+});
+
+const session = await account.createSession({
+    userId: token.userId,
+    secret: '<SECRET>'
+});
+```
+
+After you sign in, the user appears on the **Auth** page of your project with their phone number as the identifier.
+
+# Read more about Fast2SMS and Appwrite Auth
+
+If you would like to learn more about phone authentication with Fast2SMS and Appwrite Auth, we have some resources that you should visit:
+
+- [Fast2SMS API documentation](https://docs.fast2sms.com)
+- [Send DLT SMS with Fast2SMS](https://docs.fast2sms.com/reference/dlt-sms-single)
+- [SMS delivery for self-hosted Appwrite](/docs/advanced/self-hosting/configuration/sms)
+- [Phone (SMS) login with Appwrite Auth](/docs/products/auth/phone-sms)
+- [Appwrite Account API reference](/docs/references/cloud/client-web/account)

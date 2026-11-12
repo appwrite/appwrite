@@ -2,8 +2,8 @@
 
 namespace Utopia\Abuse\Tests\E2E;
 
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Abuse\Adapters\TimeLimit\RedisPool as AdapterRedisPool;
+use Utopia\Abuse\Adapter\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit\RedisPool as AdapterRedisPool;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
 
@@ -14,6 +14,7 @@ class RedisPoolTest extends Base
      */
     protected static ?Pool $pool = null;
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         if (isset(self::$pool)) {
@@ -28,6 +29,7 @@ class RedisPoolTest extends Base
         }, timeout: 0.0);
     }
 
+    #[\Override]
     public function getAdapter(string $key, int $limit, int $seconds): TimeLimit
     {
         $pool = self::$pool;
@@ -39,10 +41,9 @@ class RedisPoolTest extends Base
 
     public function testGetLogsSupportsNullableLimit(): void
     {
-        $adapter = $this->getAdapter('logs-null-limit', 1, 60);
-        $abuse = new \Utopia\Abuse\Abuse($adapter);
+        $adapter = $this->getAdapter('logs-null-limit-' . \uniqid(), 1, 60);
 
-        $this->assertSame(false, $abuse->check());
+        $this->assertFalse($adapter->check()->limited);
         $this->assertNotEmpty($adapter->getLogs(null, null));
     }
 
@@ -60,16 +61,15 @@ class RedisPoolTest extends Base
         $this->assertSame(['abuse__redis-pool-logs-offset-b__1' => '2'], $logs);
     }
 
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
         if (!isset(self::$pool)) {
             return;
         }
 
-        self::$pool->use(function (mixed $redis): void {
-            if ($redis instanceof \Redis) {
-                $redis->close();
-            }
+        self::$pool->use(function (\Redis $redis): void {
+            $redis->close();
         });
         self::$pool = null;
     }

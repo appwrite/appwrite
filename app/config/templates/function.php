@@ -133,6 +133,7 @@ return [
                 'placeholder' =>
                     'oe4wNTbwHVLcDNa6oceZfhBEABsCNYh43ii6Xdq4bKBH7mq7qJkUmc4cs3ABbYyuVKWZTxVQjiNjYgydn2dkhABNes4NAuDpj7qxUAmZYqGJT78',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -162,7 +163,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
+        'providerVersion' => '1.5.2',
         'variables' => [
             [
                 'name' => 'REDIS_HOST',
@@ -178,7 +179,16 @@ return [
                 'value' => '',
                 'placeholder' => 'efNNehiACfcZiwsTAjcK6xiwPyu6Dpdq',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
+            ],
+            [
+                'name' => 'REDIS_PORT',
+                'description' => 'The port of your Redis database. <a class="u-bold" target="_blank" href="https://redis.io/docs/latest/operate/rc/rc-quickstart/">Learn more</a>.',
+                'value' => '14714',
+                'placeholder' => '13258',
+                'required' => true,
+                'type' => 'text'
             ]
         ],
         'scopes' => []
@@ -231,6 +241,7 @@ return [
                 'value' => '',
                 'placeholder' => 'mCUc4PbVUQN-_NkTLJLisb6ccnwzQKKhrkF77YMctzx',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -270,6 +281,7 @@ return [
                 'placeholder' =>
                     'mongodb+srv://appwrite:Yx42hafg7Q4fgkxe@cluster0.7mslfog.mongodb.net/?retryWrites=true&w=majority&appName=Appwrite',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -332,6 +344,7 @@ return [
                 'value' => '',
                 'placeholder' => 'iQCfaUaaWB3B',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -341,6 +354,44 @@ return [
                 'placeholder' => 'ep-still-sea-a792sh84',
                 'required' => true,
                 'type' => 'text'
+            ]
+        ],
+        'scopes' => []
+    ],
+    [
+        'icon' => 'icon-database',
+        'id' => 'postgres-with-drizzle',
+        'name' => 'Postgres with Drizzle',
+        'score' => 6,
+        'tagline' => 'Serve a todo API from Appwrite Postgres using Drizzle ORM.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::DATABASES],
+        'runtimes' => [
+            ...getRuntimes(
+                $templateRuntimes['NODE'],
+                'npm install && npm run build',
+                'dist/main.js',
+                'node-typescript/postgres-with-drizzle',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node-typescript/postgres-with-drizzle">file</a>. The function doesn\'t create tables, so apply the migrations from your machine with <code>DATABASE_URL="postgresql://..." npm run db:migrate</code> before the first request.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.4.0',
+        'variables' => [
+            [
+                'name' => 'DATABASE_URL',
+                'description' => 'Connection string of your Appwrite Postgres database. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/postgresql/connections">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'postgresql://admin:d1efb...aec35@db-8f2c61a4d7e0.fra.appwrite.center:5432/db-8f2c61a4d7e0',
+                'required' => true,
+                'secret' => true,
+                'type' => 'password'
             ]
         ],
         'scopes' => []
@@ -398,6 +449,7 @@ return [
                 'value' => '',
                 'placeholder' => 'sk-wzG...vcy',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -424,18 +476,18 @@ return [
         'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
-                $templateRuntimes['PYTHON'],
+                ['python-3.14', 'python-3.13', 'python-3.12', 'python-3.11', 'python-3.10'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/mcp-server',
                 $allowList
             )
         ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server">file</a>.',
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server">file</a>. For per-user sign-in (MCP_AUTH_MODE=oauth), follow the <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server#per-user-sign-in-oauth">OAuth setup</a> to enable the project\'s OAuth2 server.',
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
+        'providerVersion' => '1.3.0',
         'variables' => [
             [
                 'name' => 'MCP_SERVER_NAME',
@@ -447,7 +499,7 @@ return [
             ],
             [
                 'name' => 'MCP_AUTH_MODE',
-                'description' => 'Auth gate for the endpoint. Set to "bearer" to require an Authorization header, or "none" to keep it open.',
+                'description' => 'Auth gate for the endpoint: "none" keeps it open, "bearer" requires the shared secret in MCP_AUTH_TOKEN, and "oauth" makes MCP clients sign users in through the project\'s OAuth2 server.',
                 'value' => 'none',
                 'placeholder' => 'none',
                 'required' => false,
@@ -459,7 +511,16 @@ return [
                 'value' => '',
                 'placeholder' => 'your-long-random-secret',
                 'required' => false,
+                'secret' => true,
                 'type' => 'password'
+            ],
+            [
+                'name' => 'MCP_AUTH_SCOPES',
+                'description' => 'OAuth mode only: space-separated scopes advertised to MCP clients, e.g. "openid tasks.read". Each tool checks its own scope.',
+                'value' => '',
+                'placeholder' => 'openid tasks.read',
+                'required' => false,
+                'type' => 'text'
             ],
             [
                 'name' => 'MCP_TOOL_TIMEOUT',
@@ -470,7 +531,7 @@ return [
                 'type' => 'number'
             ]
         ],
-        'scopes' => []
+        'scopes' => ['users.write']
     ],
     [
         'icon' => 'icon-discord',
@@ -510,7 +571,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
+        'providerVersion' => '1.5.2',
         'variables' => [
             [
                 'name' => 'DISCORD_PUBLIC_KEY',
@@ -518,6 +579,7 @@ return [
                 'value' => '',
                 'placeholder' => 'db9...980',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -526,6 +588,7 @@ return [
                 'value' => '',
                 'placeholder' => '427...169',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -534,6 +597,7 @@ return [
                 'value' => '',
                 'placeholder' => 'NDI...LUfg',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -571,6 +635,7 @@ return [
                 'value' => '',
                 'placeholder' => 'AIzaS...fk-fuM',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -623,6 +688,7 @@ return [
                 'value' => '',
                 'placeholder' => 'pts_7p4...5wl4',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -683,6 +749,7 @@ return [
                 'value' => '',
                 'placeholder' => 'ghp_1...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -691,6 +758,7 @@ return [
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -815,6 +883,7 @@ return [
                 'description' => 'The admin API Key for your Algolia service. <a class="u-bold" target="_blank" href="https://www.algolia.com/doc/guides/security/api-keys/">Learn more</a>.',
                 'placeholder' => 'fd0aa...136a8',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -822,6 +891,7 @@ return [
                 'description' => 'The ID of the index in Algolia where the documents are to be synced. <a class="u-bold" target="_blank" href="https://www.algolia.com/doc/api-client/methods/indexing/">Learn more</a>.',
                 'placeholder' => 'my_index',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -829,6 +899,7 @@ return [
                 'description' => 'The search API Key for your Algolia service. This key is used for searching the synced index. <a class="u-bold" target="_blank" href="https://www.algolia.com/doc/guides/security/api-keys/">Learn more</a>.',
                 'placeholder' => 'bf2f5...df733',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
         ],
@@ -914,6 +985,7 @@ return [
                 'description' => 'The admin API key for Meilisearch. <a class="u-bold" target="_blank" href="https://docs.meilisearch.com/reference/api/keys/">Learn more</a>.',
                 'placeholder' => 'masterKey1234',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -921,6 +993,7 @@ return [
                 'description' => 'API Key for Meilisearch search operations. <a class="u-bold" target="_blank" href="https://www.algolia.com/doc/guides/security/api-keys/">Learn more</a>.',
                 'placeholder' => 'searchKey1234',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1000,6 +1073,7 @@ return [
                 'value' => '',
                 'placeholder' => '62...97',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1007,6 +1081,7 @@ return [
                 'description' => 'Secret to use the Vonage API. <a class="u-bold" target="_blank" href="https://api.support.vonage.com/hc/en-us/articles/204014493-How-do-I-find-my-Voice-API-key-and-API-secret-">Learn more</a>.',
                 'placeholder' => 'Zjc...5PH',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1014,6 +1089,7 @@ return [
                 'description' => 'Secret to verify the JWT token sent by Vonage. <a class="u-bold" target="_blank" href="https://developer.vonage.com/en/getting-started/concepts/signing-messages">Learn more</a>.',
                 'placeholder' => 'NXOi3...IBHDa',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1072,6 +1148,7 @@ return [
                 'description' => 'A unique private key used to authenticate with FCM. <a class="u-bold" target="_blank" href="https://github.com/appwrite/templates/tree/main/node/push-notification-with-fcm#:~:text=Documentation-,FCM%3A%20SDK%20Setup,-FCM_DATABASE_URL">Learn more</a>.',
                 'placeholder' => '0b683...75675',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1151,6 +1228,7 @@ return [
                 'description' => 'The password for your SMTP server.',
                 'placeholder' => '5up3r5tr0ngP4ssw0rd',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1202,6 +1280,7 @@ return [
                 'description' => 'Secret for sending requests to the Stripe API. <a class="u-bold" target="_blank" href="https://stripe.com/docs/keys">Learn more</a>.',
                 'placeholder' => 'sk_test_51J...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1209,6 +1288,7 @@ return [
                 'description' => 'Secret used to validate the Stripe Webhook signature. <a class="u-bold" target="_blank" href="https://stripe.com/docs/webhooks">Learn more</a>.',
                 'placeholder' => 'whsec_...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1245,6 +1325,7 @@ return [
                 'description' => 'Secret for sending requests to the Stripe API. <a class="u-bold" target="_blank" href="https://stripe.com/docs/keys">Learn more</a>.',
                 'placeholder' => 'sk_test_51J...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1252,6 +1333,7 @@ return [
                 'description' => 'Secret used to validate the Stripe Webhook signature. <a class="u-bold" target="_blank" href="https://stripe.com/docs/webhooks">Learn more</a>.',
                 'placeholder' => 'whsec_...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1304,6 +1386,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1340,6 +1423,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1400,6 +1484,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1460,6 +1545,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1520,6 +1606,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1583,6 +1670,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1615,11 +1703,12 @@ return [
         'providerVersion' => '1.2.0',
         'variables' => [
             [
-                'name' => 'REPLICATE_API_KEY',
+                'name' => 'REPLICATE_API_TOKEN',
                 'description' => 'A unique key used to authenticate with the Replicate API. <a class="u-bold" target="_blank" href="https://replicate.com/docs/get-started/nodejs">Learn more</a>.',
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -1657,6 +1746,7 @@ return [
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1700,6 +1790,7 @@ return [
                 'description' => 'A unique key used to authenticate with the Perplexity API. <a class="u-bold" target="_blank" href="https://docs.perplexity.ai/docs/getting-started">Learn more</a>.',
                 'placeholder' => 'pplex-68...999',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1708,43 +1799,6 @@ return [
                 'placeholder' => '512',
                 'required' => false,
                 'type' => 'number'
-            ]
-        ],
-        'scopes' => []
-    ],
-    [
-        'icon' => 'icon-chip',
-        'id' => 'generate-with-replicate',
-        'name' => 'Generate with Replicate',
-        'score' => 5,
-        'tagline' => "Generate text, audio and images using Replicate's API.",
-        'permissions' => ['any'],
-        'events' => [],
-        'cron' => '',
-        'timeout' => 300,
-        'useCases' => [FunctionUseCases::AI],
-        'runtimes' => [
-            ...getRuntimes(
-                $templateRuntimes['NODE'],
-                'npm install',
-                'src/main.js',
-                'node/generate-with-replicate',
-                $allowList
-            )
-        ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-with-replicate">file</a>.',
-        'vcsProvider' => 'github',
-        'providerRepositoryId' => 'templates',
-        'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
-        'variables' => [
-            [
-                'name' => 'REPLICATE_API_KEY',
-                'description' => 'A unique key used to authenticate with the Replicate API. <a class="u-bold" target="_blank" href="https://replicate.com/docs/get-started/nodejs">Learn more</a>.',
-                'value' => '',
-                'placeholder' => 'd1efb...aec35',
-                'required' => true,
-                'type' => 'password'
             ]
         ],
         'scopes' => []
@@ -1781,6 +1835,7 @@ return [
                 'value' => '',
                 'placeholder' => 'sk-wzG...vcy',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1788,10 +1843,11 @@ return [
                 'description' => 'A unique key used to authenticate with the Pinecone API. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/authentication">Learn more</a>.',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
-                'name' => 'PINECONE_INDEX_NAME',
+                'name' => 'PINECONE_INDEX_ID',
                 'description' => 'The name of the index in Pinecone. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/create-index">Learn more</a>.',
                 'placeholder' => 'my-index',
                 'required' => true,
@@ -1846,6 +1902,7 @@ return [
                 'value' => '',
                 'placeholder' => 'sk-wzG...vcy',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1853,10 +1910,11 @@ return [
                 'description' => 'A unique key used to authenticate with the Pinecone API. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/authentication">Learn more</a>.',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
-                'name' => 'PINECONE_INDEX_NAME',
+                'name' => 'PINECONE_INDEX_ID',
                 'description' => 'The name of the index in Pinecone. <a class="u-bold" target="_blank" href="https://docs.pinecone.io/guides/getting-started/create-index">Learn more</a>.',
                 'placeholder' => 'my-index',
                 'required' => true,
@@ -1910,6 +1968,7 @@ return [
                 'description' => 'A unique key used to authenticate with the ElevenLabs API. <a class="u-bold" target="_blank" href="https://elevenlabs.io/docs/api-reference/getting-started">Learn more</a>.',
                 'placeholder' => 'd03xxxxxxxx26',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -1967,6 +2026,7 @@ return [
                 'description' => 'A unique key used to authenticate with the LMNT API. <a class="u-bold" target="_blank" href="https://app.lmnt.com/account">Learn more</a>.',
                 'placeholder' => 'd03xxxxxxxx26',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2010,6 +2070,7 @@ return [
                 'description' => 'A unique key used to authenticate with the AnyScale API. <a class="u-bold" target="_blank" href="https://app.endpoints.anyscale.com/credentials">Learn more</a>.',
                 'placeholder' => 'd03xxxxxxxx26',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2061,6 +2122,7 @@ return [
                 'description' => 'Secret for sending requests to the Hugging Face API. <a class="u-bold" target="_blank" href="https://huggingface.co/docs/api-inference/en/quicktour#get-your-api-token">Learn more</a>.',
                 'placeholder' => 'hf_MUvn...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -2098,6 +2160,7 @@ return [
                 'value' => '',
                 'placeholder' => 'd1efb...aec35',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],
@@ -2115,8 +2178,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Lemon Squeezy SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/subscriptions-with-lemon-squeezy',
@@ -2134,6 +2198,7 @@ return [
                 'description' => 'API key for sending requests to the Lemon Squeezy API. <a class="u-bold" target="_blank" href="https://docs.lemonsqueezy.com/api#authentication">Learn more</a>.',
                 'placeholder' => 'eyJ0eXAiOiJ...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2141,6 +2206,7 @@ return [
                 'description' => 'Secret used to validate the Lemon Squuezy Webhook signature. <a class="u-bold" target="_blank" href="https://docs.lemonsqueezy.com/guides/developer-guide/webhooks#from-the-dashboard">Learn more</a>.',
                 'placeholder' => 'abcd...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2172,8 +2238,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Lemon Squeezy SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/payments-with-lemon-squeezy',
@@ -2207,6 +2274,7 @@ return [
                 'description' => 'API key for sending requests to the Lemon Squeezy API. <a class="u-bold" target="_blank" href="https://docs.lemonsqueezy.com/api#authentication">Learn more</a>.',
                 'placeholder' => 'eyJ0eXAiOiJ...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2214,6 +2282,7 @@ return [
                 'description' => 'Secret used to validate the Lemon Squuezy Webhook signature. <a class="u-bold" target="_blank" href="https://docs.lemonsqueezy.com/guides/developer-guide/webhooks#from-the-dashboard">Learn more</a>.',
                 'placeholder' => 'abcd...',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ],
             [
@@ -2232,6 +2301,150 @@ return [
             ]
         ],
         'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
+    ],
+    [
+        'icon' => 'icon-currency-dollar',
+        'id' => 'subscriptions-with-dodo-payments',
+        'name' => 'Subscriptions with Dodo Payments',
+        'score' => 6,
+        'tagline' => 'Receive recurring payments and grant subscribers extra permissions.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::UTILITIES],
+        'runtimes' => [
+            // The Dodo Payments SDK needs Node 20+
+            ...getRuntimes(
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
+                'npm install',
+                'src/main.js',
+                'node/subscriptions-with-dodo-payments',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/subscriptions-with-dodo-payments">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.4.1',
+        'variables' => [
+            [
+                'name' => 'DODO_PAYMENTS_API_KEY',
+                'description' => 'API key for sending requests to the Dodo Payments API. The key needs write access to create checkout sessions. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/api-reference/introduction#authentication">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'abcd...',
+                'required' => true,
+                'secret' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_WEBHOOK_KEY',
+                'description' => 'Signing secret of the webhook endpoint, used to verify that webhooks come from Dodo Payments. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/developer-resources/webhooks">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'whsec_MfKQ...',
+                'required' => true,
+                'secret' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_PRODUCT_ID',
+                'description' => 'ID of the subscription product to sell. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/developer-resources/subscription-integration-guide">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'pdt_0NWa...',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_ENVIRONMENT',
+                'description' => 'Dodo Payments environment to use, either test_mode or live_mode. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/miscellaneous/test-mode-vs-live-mode">Learn more</a>.',
+                'value' => 'test_mode',
+                'placeholder' => 'test_mode',
+                'required' => false,
+                'type' => 'text'
+            ]
+        ],
+        'scopes' => ['users.read', 'users.write']
+    ],
+    [
+        'icon' => 'icon-currency-dollar',
+        'id' => 'payments-with-dodo-payments',
+        'name' => 'Payments with Dodo Payments',
+        'score' => 6,
+        'tagline' => 'Receive one-time payments and store paid orders.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::UTILITIES],
+        'runtimes' => [
+            // The Dodo Payments SDK needs Node 20+
+            ...getRuntimes(
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
+                'npm install',
+                'src/main.js',
+                'node/payments-with-dodo-payments',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/payments-with-dodo-payments">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.4.1',
+        'variables' => [
+            [
+                'name' => 'DODO_PAYMENTS_API_KEY',
+                'description' => 'API key for sending requests to the Dodo Payments API. The key needs write access to create checkout sessions. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/api-reference/introduction#authentication">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'abcd...',
+                'required' => true,
+                'secret' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_WEBHOOK_KEY',
+                'description' => 'Signing secret of the webhook endpoint, used to verify that webhooks come from Dodo Payments. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/developer-resources/webhooks">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'whsec_MfKQ...',
+                'required' => true,
+                'secret' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_PRODUCT_ID',
+                'description' => 'ID of the one-time product to sell. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/features/products">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'pdt_0NWa...',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_ENVIRONMENT',
+                'description' => 'Dodo Payments environment to use, either test_mode or live_mode. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/miscellaneous/test-mode-vs-live-mode">Learn more</a>.',
+                'value' => 'test_mode',
+                'placeholder' => 'test_mode',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_DATABASE_ID',
+                'description' => 'The ID of the database to store paid orders. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/tablesdb/databases">Learn more</a>.',
+                'value' => 'orders',
+                'placeholder' => 'orders',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_TABLE_ID',
+                'description' => 'The ID of the table to store paid orders. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/tablesdb/tables">Learn more</a>.',
+                'value' => 'orders',
+                'placeholder' => 'orders',
+                'required' => false,
+                'type' => 'text'
+            ]
+        ],
+        'scopes' => ['databases.write', 'tables.read', 'tables.write', 'rows.write']
     ],
     [
         'icon' => 'icon-apple',
@@ -2283,6 +2496,7 @@ return [
                 'value' => '',
                 'placeholder' => '7x8aA...Ab7c',
                 'required' => true,
+                'secret' => true,
                 'type' => 'password'
             ]
         ],

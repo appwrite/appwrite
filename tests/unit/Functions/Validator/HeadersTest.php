@@ -43,6 +43,24 @@ final class HeadersTest extends TestCase
         $this->assertFalse($this->object->isValid($headers));
 
         $headers = [
+            'headerKey' => 'headerValue',
+            'X-Appwrite-User-Id' => 'impersonated-user',
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'X-APPWRITE-TRIGGER' => 'event',
+            'X-APPWRITE-EVENT' => 'users.user.update',
+            'X-APPWRITE-KEY' => 'caller-supplied-key',
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'x-AppWrite-User-Jwt' => 'token',
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
             'header/////Key' => 'headerValue',
         ];
         $this->assertFalse($this->object->isValid($headers));
@@ -113,6 +131,26 @@ final class HeadersTest extends TestCase
         ];
         $this->assertTrue($this->object->isValid($headers));
 
+        $headers = [
+            'content-type' => "text/plain\r\nx-appwrite-user-id: victim",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'X-Header' => "value\nx-appwrite-key: forged",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'X-Header' => "value\x00",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'X-Header' => "value\twith tab",
+        ];
+        $this->assertTrue($this->object->isValid($headers));
+
         $headers = 123;
         $this->assertFalse($this->object->isValid($headers));
 
@@ -139,5 +177,36 @@ final class HeadersTest extends TestCase
 
         $headers['key-101'] = 'value_101';
         $this->assertFalse($this->object->isValid($headers));
+    }
+
+    public function testStripReserved(): void
+    {
+        $headers = [
+            'Content-Type' => 'application/json',
+            'X-Custom-Header' => 'ok',
+            'x-appwrite-user-id' => 'spoofed',
+            'X-Appwrite-Trigger' => 'event',
+            'X-APPWRITE-KEY' => 'caller-supplied-key',
+            'x-AppWrite-Event' => 'users.user.update',
+        ];
+
+        $this->assertSame([
+            'Content-Type' => 'application/json',
+            'X-Custom-Header' => 'ok',
+        ], Headers::stripReserved($headers));
+
+        $this->assertSame([], Headers::stripReserved([
+            'x-appwrite-user-id' => '',
+        ]));
+
+        $this->assertSame([
+            'Content-Type' => 'application/json',
+            'x-appwrite-client-ip' => '203.0.113.10',
+        ], Headers::stripReserved([
+            'Content-Type' => 'application/json',
+            'X-Appwrite-Client-Ip' => '198.51.100.1',
+            'x-appwrite-client-ip' => '203.0.113.10',
+            'x-appwrite-user-id' => 'caller',
+        ], ['x-appwrite-client-ip']));
     }
 }

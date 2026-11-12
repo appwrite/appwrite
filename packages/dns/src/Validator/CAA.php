@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\DNS\Validator;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class CAA extends Validator
 {

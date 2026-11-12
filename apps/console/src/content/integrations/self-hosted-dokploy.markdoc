@@ -1,0 +1,75 @@
+---
+layout: integration
+title: Self-host Appwrite with Dokploy
+description: Deploy self-hosted Appwrite on your own server from Dokploy's template catalog
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/self-hosted-dokploy/cover.avif
+category: self-hosting
+product:
+    vendor: Dokploy
+    description: "Dokploy is an open-source, self-hosted deployment platform for applications, databases, and Docker Compose services."
+platform:
+    - 'Self-hosted'
+---
+
+[Dokploy](https://dokploy.com) is an open-source, self-hosted deployment platform. It manages applications, databases, and Docker Compose services from a web dashboard, routes traffic through Traefik, and offers one-click templates for common services.
+
+# How does the integration work?
+
+Appwrite is available as a template in Dokploy's template catalog. The template deploys the complete Appwrite stack, including the database, workers, and the function executor, generates secure random secrets, and pre-fills the recommended settings. You manage Appwrite's environment variables and domains from the Dokploy dashboard.
+
+# Prerequisites
+
+- A server that meets Appwrite's [system requirements](/docs/advanced/self-hosting/installation#system-requirements): at least 2 CPU cores, 4 GB of RAM, and 2 GB of swap memory.
+- A domain whose DNS you control, for the Appwrite Console and for site and function URLs.
+
+# How to implement
+
+To self-host Appwrite with Dokploy, there are several steps you must complete:
+
+## Step 1: Install Dokploy
+
+Install Dokploy on your server:
+
+```bash
+curl -sSL https://dokploy.com/install.sh | sh
+```
+
+When the installation completes, open the Dokploy dashboard at `http://<SERVER_IP>:3000` and sign up for an account.
+
+## Step 2: Deploy the Appwrite template
+
+1. Click **Create Project** to start a new project.
+2. Inside the project, click **Create Service** and select **Template**.
+3. Search for and select **Appwrite** from the template catalog.
+4. Click **Create**, then open the new service and click **Deploy**.
+
+When the deployment finishes, the **Containers** tab lists every Appwrite service running on your server. Open the main domain from the **Domains** tab and go to `/console` to reach the Appwrite Console.
+
+## Step 3: Use your own domain
+
+The template configures three domains: the main domain for the API and Console, a `sites.` subdomain, and a `functions.` subdomain. To use your own domain:
+
+1. Point DNS `A` records for your domain and its `sites.` and `functions.` subdomains at your server.
+2. Add wildcard `A` records for `*.sites.<your-domain>` and `*.functions.<your-domain>`, which Appwrite uses for site previews and function URLs.
+3. Update the hosts in the service's **Domains** tab, and set `_APP_DOMAIN`, `_APP_CONSOLE_DOMAIN`, `_APP_DOMAIN_SITES`, and `_APP_DOMAIN_FUNCTIONS` in the **Environment** tab to match.
+4. Enable **HTTPS** with the **Let's Encrypt** certificate provider for the main domain entries, then redeploy.
+
+Dokploy's Let's Encrypt integration uses the HTTP-01 challenge, which can't issue wildcard certificates. For HTTPS on every generated site and function subdomain, issue a wildcard certificate with a DNS-01 client, add it under the Dokploy certificate settings, and set the certificate provider of the two wildcard domains to **None**. The [Dokploy deployment guide](/docs/advanced/self-hosting/platforms/dokploy#domains-https) walks through both this and a per-domain alternative.
+
+## Step 4: Configure additional features
+
+Edit the service's **Environment** tab and redeploy to enable more features, such as [email](/docs/advanced/self-hosting/configuration/email) with the `_APP_SMTP_*` variables, [SMS](/docs/advanced/self-hosting/configuration/sms) for phone authentication, and Git deployments from GitHub with the [`_APP_VCS_GITHUB_*` variables](/docs/advanced/self-hosting/configuration/version-control).
+
+Run only one Appwrite service per Dokploy server. The template runs its function executor and runtime containers on the shared Docker network, so a second Appwrite deployment on the same server can conflict with the first.
+
+# Read more about Dokploy and Appwrite
+
+If you would like to learn more about Dokploy and Appwrite, we have some resources that you should visit:
+
+- [Self-host Appwrite with Dokploy](/docs/advanced/self-hosting/platforms/dokploy)
+- [Self-hosting environment variables](/docs/advanced/self-hosting/configuration/environment-variables)
+- [Install Dokploy](https://docs.dokploy.com/docs/core/installation)

@@ -1,0 +1,62 @@
+---
+layout: article
+title: Manage organizations
+description: Read, rename, and delete the organization behind a Partners key with the Appwrite Organization API.
+---
+
+A Partners key acts on the organization it was created in. The read, update, and delete operations take no organization parameter, because the key already names the organization.
+
+Creating an organization is a Console action and a Partners key cannot do it. Create the organization in the Console first, then create a key inside it.
+
+# Read the organization {% #read-the-organization %}
+
+{% multicode %}
+```server-nodejs
+const org = await organization.get();
+
+console.log(org.$id, org.name);
+```
+```server-rust
+let org = organization.get().await?;
+
+println!("{} {}", org.id, org.name);
+```
+{% /multicode %}
+
+# Rename the organization {% #rename-the-organization %}
+
+The update operation takes the name and nothing else. Billing details stay in the Console.
+
+{% multicode %}
+```server-nodejs
+await organization.update({
+    name: 'Acme Platform',
+});
+```
+```server-rust
+organization.update("Acme Platform").await?;
+```
+{% /multicode %}
+
+# Delete the organization {% #delete-the-organization %}
+
+Deleting an organization also deletes every project inside it. Back up customer data before you call this operation.
+
+{% multicode %}
+```server-nodejs
+await organization.delete();
+```
+```server-rust
+organization.delete().await?;
+```
+{% /multicode %}
+
+# Store the organization ID {% #store-the-organization-id %}
+
+Store the Appwrite organization ID next to your platform's own identifier for it. Your audit logs need the mapping to tie an Appwrite change back to a customer.
+
+# Related {% #related %}
+
+{% arrow_link href="/docs/partners/project" %}
+Project
+{% /arrow_link %}

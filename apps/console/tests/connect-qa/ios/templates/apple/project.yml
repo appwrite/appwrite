@@ -1,0 +1,38 @@
+name: ConnectQA
+options:
+  bundleIdPrefix: io.appwrite
+  deploymentTarget:
+    iOS: "17.0"
+
+packages:
+  Appwrite:
+    url: https://github.com/appwrite/sdk-for-apple
+    from: "18.3.0"
+
+targets:
+  ConnectQA:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    dependencies:
+      - package: Appwrite
+        product: Appwrite
+    configFiles:
+      Debug: Appwrite.xcconfig
+      Release: Appwrite.xcconfig
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.appwrite.connectqa
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: Connect QA
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        APPWRITE_ENDPOINT: $(APPWRITE_ENDPOINT)
+        APPWRITE_PROJECT_ID: $(APPWRITE_PROJECT_ID)

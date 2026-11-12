@@ -54,8 +54,8 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
-            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForProject')

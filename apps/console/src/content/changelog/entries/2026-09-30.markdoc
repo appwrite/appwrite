@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Appwrite Education plan term limits are enforced starting November 1st"
+date: 2026-09-30
+tags: programs
+---
+
+Starting **November 1st, 2026**, we'll begin enforcing the standard six-month term for Appwrite Education organizations. The program is here to stay, and new verified [GitHub Student Developer Pack](https://education.github.com/pack) members can continue joining and getting Pro resources to learn and build on Appwrite Cloud.
+
+Six months gives students plenty of time to learn Appwrite and get their first projects running. After that, you can choose the [plan](/pricing) that fits what you're building next: Free for learning and side projects, Pro for apps that need more resources, or Start for students in India and Nepal.
+
+If your organization is already past six months, you'll have until November 1st to choose a plan. Otherwise, we'll remind you in the Console five weeks before your Education term ends. Choose a plan and everything continues exactly as it is: your projects, data, and settings stay in place.
+
+If you don't choose a plan by the end date, your organization will be disabled until you select one. Projects will only be deleted later according to our standard retention process.
+
+Thank you for learning and building with Appwrite. We're excited to see what you build next.

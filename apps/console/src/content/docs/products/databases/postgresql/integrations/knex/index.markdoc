@@ -1,0 +1,147 @@
+---
+layout: article
+title: Knex
+description: Use Knex.js with an Appwrite native PostgreSQL database. Configure the pg client, run migrations against the direct connection, and pool runtime traffic from serverless environments.
+---
+
+Appwrite's native PostgreSQL database is a standard PostgreSQL engine, so [Knex](https://knexjs.org/) works against it with no Appwrite-specific configuration. Point Knex's `pg` client at the connection string from the [Connections](/docs/products/databases/postgresql/connections) page and use the query builder and migration CLI as you would against any PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated per database.
+{% /info %}
+
+# Set the connection string {% #connection-string %}
+
+In the Console, open your database and click **Credentials**. Copy the connection string from the **DSN** or **.env** tab, or fetch it with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials). Put it in your environment, never commit it:
+
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+Use the pooled `DATABASE_URL` (port `6432`) for runtime traffic and `DIRECT_URL` (port `5432`) for migrations and CLI tools. The TLS parameter (`sslmode=require`) is part of the connection string Appwrite returns. Appwrite Cloud terminates TLS at the edge and forwards traffic to your database over the internal network, so no extra certificate configuration is needed. For full certificate verification (`verify-full`) or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+
+# Install and configure Knex {% #driver %}
+
+Install Knex and the PostgreSQL driver:
+
+```bash
+npm install knex pg
+npm install -D typescript ts-node @types/node
+```
+
+Create a Knex instance with `client: 'pg'` and the connection string:
+
+```ts
+import knex from 'knex';
+
+export const db = knex({
+  client: 'pg',
+  connection: process.env.DATABASE_URL,
+  pool: { min: 0, max: 10 }
+});
+```
+
+If you configure the connection with discrete fields instead of a URL, set `ssl: { rejectUnauthorized: true }` so `pg` verifies the server certificate against Node's built-in CA store. The connection string form above is enough when it already contains `sslmode=require`.
+
+A `knexfile.js` (or `.ts`) keeps runtime and CLI configuration in one place:
+
+```js
+require('dotenv').config();
+
+module.exports = {
+  client: 'pg',
+  connection: process.env.DIRECT_URL || process.env.DATABASE_URL,
+  migrations: {
+    directory: './migrations',
+    tableName: 'knex_migrations'
+  },
+  pool: { min: 0, max: 10 }
+};
+```
+
+# Run migrations {% #migrate %}
+
+Point the Knex CLI at `DIRECT_URL` on the **direct** engine port (`5432`), not the pooler, because migrations issue DDL that needs a session-level connection.
+
+Create and apply a migration:
+
+```bash
+npx knex migrate:make create_users --knexfile knexfile.js
+npx knex migrate:latest --knexfile knexfile.js
+```
+
+Example migration:
+
+```js
+exports.up = function (knex) {
+  return knex.schema.createTable('users', (table) => {
+    table.increments('id').primary();
+    table.text('email').notNullable().unique();
+    table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+  });
+};
+
+exports.down = function (knex) {
+  return knex.schema.dropTable('users');
+};
+```
+
+The primary `admin` user owns the generated database and can run schema changes. Use narrower [database roles](/docs/products/databases/postgresql/connections#roles) for application traffic that does not need DDL privileges.
+
+# Query with Knex {% #query %}
+
+Once the schema is migrated, use the query builder:
+
+```ts
+import { db } from './db';
+
+const [user] = await db('users')
+  .insert({ email: 'ada@example.com' })
+  .returning(['id', 'email', 'created_at']);
+
+const recent = await db('users')
+  .select('*')
+  .orderBy('created_at', 'desc')
+  .limit(10);
+```
+
+On long-running servers, create the Knex instance once at module scope and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse the pool, and rely on the Appwrite pooler for runtime traffic. Call `db.destroy()` on shutdown.
+
+Libraries built on Knex, such as Objection.js, use the same connection string and pooler guidance.
+
+# Pool connections from serverless {% #pooling %}
+
+Each running instance opens its own connections to the engine. On serverless and edge platforms (Vercel, Netlify, Cloudflare), short-lived instances can fan out into more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling). The primary `DATABASE_URL` already uses the pooler port (`6432`) on the same hostname.
+
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements. Keep `knexfile` migrations pointed at `DIRECT_URL` so DDL still runs over a session-level connection.
+
+Keep the runtime Knex pool small on serverless (`pool.max` of `1` or a few connections per isolate). Avoid session-scoped features such as advisory locks, `LISTEN`/`NOTIFY`, temporary tables, and `SET LOCAL` over transaction-mode pooling; switch the pooler to **session mode** or use the direct port when you need them. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` (and the pooled variant as `DATABASE_URL`).
+3. Run `knex migrate:latest` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network security" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

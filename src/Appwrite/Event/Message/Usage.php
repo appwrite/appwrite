@@ -21,6 +21,7 @@ class Usage extends Base
     /**
      * @return array
      */
+    #[\Override]
     public function toArray(): array
     {
         return [
@@ -38,6 +39,7 @@ class Usage extends Base
      * @param array $data
      * @return static
      */
+    #[\Override]
     public static function fromArray(array $data): static
     {
         /** @phpstan-ignore new.static (subclass constructors are backwards-compatible via optional params) */

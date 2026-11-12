@@ -1,3 +1,5 @@
 Use this endpoint to complete the user account password reset. Both the **userId** and **secret** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the [POST /account/recovery](https://appwrite.io/docs/references/cloud/client-web/account#createRecovery) endpoint.
 
 Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.
+
+The new password must satisfy the project's enabled password policies, including custom deny lists. Dictionary entries match the entire password case-sensitively; personal-data terms match substrings case-insensitively. Personal-data validation runs after token verification against the recovered user's ID, name, email, and phone, closing the previous recovery gap for profile-based checks. A rejected password leaves the existing credentials unchanged and the recovery token usable.

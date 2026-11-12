@@ -1,0 +1,197 @@
+---
+layout: article
+title: Node.js drivers
+description: Connect to an Appwrite native PostgreSQL database from Node.js with node-postgres or postgres.js. Configure pools, TLS verification, serverless connection management, and troubleshooting.
+---
+
+A native PostgreSQL database is a standard PostgreSQL engine, so any Node.js driver that speaks the PostgreSQL wire protocol can connect over TLS without an Appwrite-specific adapter. The [Connections](/docs/products/databases/postgresql/connections#drivers) page shows the minimal snippet to run your first query. This page covers production pool configuration, certificate verification, serverless connection management, and common connection errors.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. In the Console, open the database and click **Credentials**. Use the **Details** tab for individual values, or the **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tab for a ready-made snippet. The primary user is `admin`, and the database name is generated for each database. Keep the password in an environment variable and never commit it.
+{% /info %}
+
+# Raw driver, ORM, or SQL API? {% #choosing %}
+
+There are three common ways to reach a native PostgreSQL database from Node.js. Pick by workload:
+
+| Approach                     | Use it when                                                                                  |
+|------------------------------|----------------------------------------------------------------------------------------------|
+| **Raw driver** (this page)   | You want a connection pool you control, hot-path queries, or a thin data layer with little overhead. |
+| **ORM** ([Prisma](/docs/products/databases/postgresql/integrations/prisma), [Drizzle](/docs/products/databases/postgresql/integrations/drizzle)) | You want migrations, a typed schema, and query building. The ORM still uses a PostgreSQL driver underneath. |
+| **[SQL API](/docs/products/databases/postgresql/quick-start#first-queries)** | You're on an edge runtime that cannot hold a TCP socket, or scripting a one-off query over HTTPS. |
+
+The rest of this page is about raw drivers on a long-running or serverless Node.js server that can open TCP connections.
+
+# node-postgres (pg) {% #node-postgres %}
+
+For a long-running server, create one `Pool` at startup and reuse it for every request. The pool opens connections lazily up to `max` and hands them back to your handlers.
+
+```js
+import { Pool } from 'pg';
+import process from 'node:process';
+
+const pool = new Pool({
+  host: 'db-<hash>.<region>.appwrite.center',
+  port: 5432,
+  user: 'admin',
+  password: process.env.DB_PASSWORD,
+  database: '<database>',
+  ssl: { rejectUnauthorized: true },
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
+
+const { rows } = await pool.query('SELECT id, email FROM users WHERE id = $1', [userId]);
+```
+
+Pool sizing is a budget. Each connection in `max`, across every running instance, counts against your specification's connection cap. A single app server with `max: 10` is fine; ten replicas with `max: 50` each is 500 connections and can exhaust many specifications. Size `max` to the connection cap divided by replica count, then put the [connection pooler](/docs/products/databases/postgresql/connection-pooling) in front if you need more client concurrency than that allows.
+
+`ssl: { rejectUnauthorized: true }` validates the server certificate against Node's built-in CA store. The edge proxy presents a certificate signed by a well-known public CA, so this works without supplying your own bundle. See [TLS and CA verification](#tls) for custom CA bundles and mTLS.
+
+## Pooled port vs direct port {% #pg-ports %}
+
+The pooler defaults to **transaction mode**, which does not hold a backend connection across statements, so server-side prepared statements are unavailable. In node-postgres, a query becomes a server-side prepared statement only when you pass a `name` field on the query config:
+
+```js
+// Safe on the pooler (port 6432, transaction mode): no `name`, no server-side prepared statement.
+await pool.query('SELECT * FROM events WHERE user_id = $1', [userId]);
+
+// Use the direct port or session-mode pooler for named prepared statements.
+await pool.query({ name: 'fetch-events', text: 'SELECT * FROM events WHERE user_id = $1', values: [userId] });
+```
+
+Parameterized queries without a `name` are sent fresh each time and work on the pooled port. If you rely on named prepared statements, advisory locks, `LISTEN`/`NOTIFY`, temporary tables, or `SET LOCAL`, connect on the direct port (`5432`) or switch the pooler to **session mode**. See the [pooler modes](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs. Run migrations on the direct port.
+
+# postgres.js {% #postgres-js %}
+
+`postgres.js` (the `postgres` package) takes its own option names. Create the client once at module scope:
+
+```js
+import postgres from 'postgres';
+import process from 'node:process';
+
+const sql = postgres({
+  host: 'db-<hash>.<region>.appwrite.center',
+  port: 5432,
+  username: 'admin',
+  password: process.env.DB_PASSWORD,
+  database: '<database>',
+  ssl: 'verify-full',
+  max: 10,
+  idle_timeout: 30,
+  connect_timeout: 10,
+});
+
+const users = await sql`SELECT id, email FROM users WHERE id = ${userId}`;
+```
+
+`ssl: 'verify-full'` enables TLS and verifies the server certificate against the system CA store. If your runtime image ships without one, pass an object with a public CA bundle instead: `ssl: { rejectUnauthorized: true, ca: fs.readFileSync('./ca-bundle.crt') }`.
+
+When you point `postgres.js` at the **pooler port** (`6432`) in transaction mode, disable prepared statements. The library uses prepared statements by default, and documents `prepare: false` for PgBouncer transaction mode:
+
+```js
+const sql = postgres({
+  host: 'db-<hash>.<region>.appwrite.center',
+  port: 6432,
+  username: 'admin',
+  password: process.env.DB_PASSWORD,
+  database: '<database>',
+  ssl: 'verify-full',
+  prepare: false,
+  max: 5,
+});
+```
+
+Leave `prepare` at its default when you connect on the direct port or use the pooler in session mode.
+
+# TLS and CA verification {% #tls %}
+
+Connections on Appwrite Cloud are encrypted with TLS, terminated at the edge and forwarded to your database over the internal network. The connection string from the credentials dialog carries the right SSL settings for your environment, and the examples above use strict certificate verification.
+
+| Level                                        | node-postgres                                   | postgres.js                                      |
+|----------------------------------------------|-------------------------------------------------|--------------------------------------------------|
+| **Encrypt and verify CA**                    | `ssl: { rejectUnauthorized: true }`             | `ssl: 'verify-full'`                             |
+| **Custom CA bundle** (no system trust store) | `ssl: { rejectUnauthorized: true, ca: fs.readFileSync('./ca-bundle.crt') }` | `ssl: { rejectUnauthorized: true, ca: fs.readFileSync('./ca-bundle.crt') }` |
+
+The certificate behind every database hostname is signed by a well-known public CA, so Appwrite does not require a custom CA download. The `ca` option is useful for runtimes without a system trust store, such as distroless or scratch images. Point it at a standard public CA bundle from your base image's `ca-certificates` package or [Mozilla's bundle](https://curl.se/docs/caextract.html):
+
+```js
+import fs from 'node:fs';
+
+const ssl = {
+  rejectUnauthorized: true,
+  ca: fs.readFileSync('./ca-bundle.crt'),
+};
+```
+
+When the CA comes from an environment variable, restore the newlines the variable strips:
+
+```js
+const ssl = {
+  rejectUnauthorized: true,
+  ca: process.env.DB_SSL_CA?.replace(/\\n/g, '\n'),
+};
+```
+
+Do not ship `rejectUnauthorized: false` to production. It disables certificate validation and exposes the connection to interception. To require **mTLS**, where the client also presents a certificate, see the [Network security](/docs/products/databases/postgresql/network-security) page. Then add `key` and `cert` alongside `ca` in the same `ssl` object.
+
+# Serverless connection management {% #serverless %}
+
+On Lambda, Cloud Run, Vercel, and similar platforms, every cold start is a fresh instance with its own pool. A `max: 10` pool times 200 concurrent instances is 2,000 backend connections, which is more than most specifications allow. Let Appwrite's pooler absorb the fan-out:
+
+- **Connect on the pooler port** (`6432`) in transaction mode.
+- **Keep the per-instance pool tiny**, usually `max: 1` or `2`. One invocation rarely needs more than one connection at a time.
+- **Create the client once per module scope** so warm invocations reuse it.
+- **Disable per-connection prepared statements** on the pooled port: `prepare: false` for postgres.js, and avoid `name` on node-postgres query configs.
+
+```js
+import postgres from 'postgres';
+import process from 'node:process';
+
+// Module scope: reused across warm invocations.
+const sql = postgres({
+  host: 'db-<hash>.<region>.appwrite.center',
+  port: 6432,
+  username: 'admin',
+  password: process.env.DB_PASSWORD,
+  database: '<database>',
+  ssl: 'verify-full',
+  prepare: false,
+  max: 1,
+});
+
+export async function handler(event) {
+  const rows = await sql`SELECT id FROM users WHERE email = ${event.email}`;
+  return rows[0] ?? null;
+}
+```
+
+On **edge runtimes** (Cloudflare Workers, Vercel Edge, Deno Deploy), raw TCP sockets are usually unavailable. Use the [SQL API](/docs/products/databases/postgresql/quick-start#first-queries) for these workloads.
+
+# Troubleshooting {% #troubleshooting %}
+
+| Symptom                                                                 | Cause and fix                                                                                                   |
+|-------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| `self-signed certificate` / `unable to verify the first certificate`    | TLS is reaching the wrong host, or the runtime has a stale or incomplete `ca` bundle. The proxy's certificate is signed by a public CA. Use driver certificate verification with the system trust store, and supply a current public CA bundle only when the runtime has no system trust store. |
+| `sorry, too many clients already` / connection attempts rejected at the proxy | Aggregate pool size across all instances exceeds the database specification's connection cap. Lower `max`, or move to the [pooler](/docs/products/databases/postgresql/connection-pooling) port and shrink the per-instance pool to 1 or 2. |
+| `prepared statement "S_1" does not exist` / `unnamed prepared statement does not exist` | Server-side prepared statements on the pooler in transaction mode. Set `prepare: false` for postgres.js, drop the `name` field for node-postgres, or use the direct port or [session mode](/docs/products/databases/postgresql/connection-pooling#modes). |
+| `ETIMEDOUT` / `connection timed out` on connect                          | The database may be cold-starting on smaller specifications or blocked by an [IP allowlist](/docs/products/databases/postgresql/network-security#ip-allowlist). Confirm your egress IP is allowed and raise `connectionTimeoutMillis` or `connect_timeout` to absorb cold starts. |
+| Connections drop after a period of inactivity                            | The proxy closes idle connections after `networkIdleTimeoutSeconds`. Keep `idleTimeoutMillis` and `idle_timeout` below that window so the driver recycles before the proxy does, or enable keep-alive. |
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create scoped connection users.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/quick-start#first-queries" title="SQL API" %}
+Run SQL over HTTPS with no TCP connection for edge runtimes and scripts.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network security" %}
+TLS, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

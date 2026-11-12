@@ -1,0 +1,42 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="lekkiGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="lekkiBack">
+<path d="M110 218H126V252H110Z"/>
+<path d="M128 194H148V252H128Z"/>
+<path d="M150 226H164V252H150Z"/>
+<path d="M318 222H332V252H318Z"/>
+<path d="M334 184H354V252H334Z"/>
+<path d="M356 212H372V252H356Z"/>
+<path d="M137.25 194V182H138.75V194Z"/>
+<path d="M343.25 184V170H344.75V184Z"/>
+</g>
+<g id="lekki">
+<path d="M233 252L236.5 72L241 46L245.5 72L249 252Z"/>
+<path d="M233 268H249V296H233Z"/>
+<path d="M96 258H386V268H96Z"/>
+<path d="M96 252H386V258H96Z"/>
+<path d="M127 268H133V296H127Z"/>
+<path d="M183 268H189V296H183Z"/>
+<path d="M293 268H299V296H293Z"/>
+<path d="M349 268H355V296H349Z"/>
+<path d="M241 46V36"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#lekkiBack" fill="#19191C"/>
+<use href="#lekkiBack" fill="url(#lekkiGrad)"/>
+<use href="#lekkiBack" stroke="#FD366E" stroke-width="1.36239"/>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M241 140L211 252"/><path d="M241 140L271 252"/><path d="M241 130L195.5 252"/><path d="M241 130L286.5 252"/><path d="M241 120L180 252"/><path d="M241 120L302 252"/><path d="M241 110L164.5 252"/><path d="M241 110L317.5 252"/><path d="M241 100L149 252"/><path d="M241 100L333 252"/><path d="M241 90L133.5 252"/><path d="M241 90L348.5 252"/><path d="M241 80L118 252"/><path d="M241 80L364 252"/><path d="M241 70L102.5 252"/><path d="M241 70L379.5 252"/><path d="M112 280H170"/><path d="M190 280H226"/><path d="M256 280H292"/><path d="M312 280H370"/><path d="M140 288H200"/><path d="M282 288H342"/></g>
+<use href="#lekki" fill="#19191C"/>
+<use href="#lekki" fill="url(#lekkiGrad)"/>
+<use href="#lekki" stroke="#FD366E" stroke-width="1.36239"/>
+</svg>

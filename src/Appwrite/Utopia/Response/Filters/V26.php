@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Response\Filters;
 
 use Appwrite\Network\Platform;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 use Utopia\Config\Config;
@@ -11,6 +12,10 @@ use Utopia\Database\Document;
 // Convert 1.9.5 Data format to 1.9.4 format
 class V26 extends Filter
 {
+    public function __construct(private readonly Request $request)
+    {
+    }
+
     public function parse(array $content, string $model): array
     {
         return match ($model) {
@@ -139,8 +144,9 @@ class V26 extends Filter
             'events' => $webhook->getAttribute('events', []),
             'tls' => $webhook->getAttribute('security', true),
             'authUsername' => $webhook->getAttribute('httpUser', ''),
-            'authPassword' => $webhook->getAttribute('httpPass', ''),
-            'secret' => $webhook->getAttribute('signatureKey', ''),
+            // Write-only, matching the current webhook model
+            'authPassword' => '',
+            'secret' => '',
             'enabled' => $webhook->getAttribute('enabled', true),
             'logs' => $webhook->getAttribute('logs', ''),
             'attempts' => $webhook->getAttribute('attempts', 0),
@@ -156,7 +162,7 @@ class V26 extends Filter
             'name' => $key->getAttribute('name', ''),
             'expire' => $key->getAttribute('expire', ''),
             'scopes' => $key->getAttribute('scopes', []),
-            'secret' => $key->getAttribute('secret', ''),
+            'secret' => \array_intersect(['organization.projects.keys.write', 'keys.write'], $this->request->getScopes()) === [] ? '' : $key->getAttribute('secret', ''),
             'accessedAt' => $key->getAttribute('accessedAt', ''),
             'sdks' => $key->getAttribute('sdks', []),
         ];
@@ -170,8 +176,11 @@ class V26 extends Filter
         }
 
         foreach (Config::getParam('auth', []) as $id => $method) {
+            if (!\array_key_exists($id, $authMethods)) {
+                continue; // Hidden from this format by a newer filter
+            }
             $key = $method['key'] ?? '';
-            $content['auth' . ucfirst($key)] = $authMethods[$id] ?? true;
+            $content['auth' . ucfirst($key)] = $authMethods[$id];
         }
     }
 
