@@ -1,11 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-
-import {
-  VideoOutput,
-  type Video,
-  type VideoProfile,
-} from '@/lib/appwrite/videos'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -31,6 +25,8 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
 import { VideoOutputBadge } from './VideoOutputBadge'
 import { VideoTermHint } from './VideoTermHint'
+import { VideoOutput } from '@/lib/appwrite/videos'
+import type { Video, VideoProfile } from '@/lib/appwrite/videos'
 
 const OUTPUT_DESCRIPTIONS: Record<VideoOutput, string> = {
   [VideoOutput.Hls]: 'MPEG-TS segments. Plays natively on Safari and iOS.',

@@ -1,11 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import type {
-  VideoOutput,
-  VideoRendition,
-  VideoRenditionList,
-} from '@/lib/appwrite/videos'
 import { Button } from '@/components/ui/button'
 import { Layers } from 'lucide-react'
 import { toast } from 'sonner'
@@ -41,6 +36,7 @@ import {
   RENDITIONS_DEFAULT_SORT_ORDER,
   type RenditionSortColumn,
 } from '@/lib/videos/rendition-list-filters'
+import type { VideoOutput, VideoRendition, VideoRenditionList } from '@/lib/appwrite/videos'
 
 type ViewProps = {
   initialData?: { renditions: VideoRenditionList }

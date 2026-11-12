@@ -15,17 +15,11 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
-import {
-  VideoOutput,
-  type Video,
-  type VideoCaptionList,
-  type VideoProfileList,
-  type VideoRendition,
-  type VideoRenditionList,
-} from '@/lib/appwrite/videos'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, GRID_DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
+import { VideoOutput } from '@/lib/appwrite/videos'
+import type { Video, VideoProfileList, VideoRendition, VideoRenditionList, VideoSubtitleList } from '@/lib/appwrite/videos'
 
 export const VIDEOS_DEFAULT_SORT_BY = '$createdAt'
 export const VIDEOS_DEFAULT_SORT_ORDER: 'asc' | 'desc' = 'desc'
@@ -43,6 +37,7 @@ export const VIDEO_RENDITION_ACTIVE_STATUSES = [
   'pending',
   'started',
   'ended',
+  'uploading',
 ] as const
 
 export function isVideoRenditionActive(status: string | undefined): boolean {
@@ -140,15 +135,14 @@ export async function fetchProjectVideos(
   if (!projectId) return { videos: [], total: 0 }
   const orderQuery =
     sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
-  const trimmedSearch = search?.trim()
   const response = await sdk.forProject(projectId).videos.list({
     queries: [
       ...(filterQueries ?? []),
-      ...(trimmedSearch ? [Query.search('search', trimmedSearch)] : []),
       orderQuery,
       Query.limit(limit),
       Query.offset(page * limit),
     ],
+    search: search?.trim() || undefined,
   })
   return { videos: response.videos ?? [], total: response.total ?? 0 }
 }
@@ -170,15 +164,14 @@ export async function fetchVideoRenditions(
 export async function fetchVideoSubtitles(
   projectId: string,
   videoId: string,
-): Promise<VideoCaptionList> {
-  return await sdk.forProject(projectId).videos.listCaptions({ videoId })
+): Promise<VideoSubtitleList> {
+  return await sdk.forProject(projectId).videos.listSubtitles({ videoId })
 }
 
 export async function fetchVideoProfiles(
   projectId: string,
 ): Promise<VideoProfileList> {
-  const res = await sdk.forProject(projectId).videos.listProfiles()
-  return { ...res, profiles: res.profiles ?? [] }
+  return await sdk.forProject(projectId).videos.listProfiles()
 }
 
 export type VideoCodecOption = {
@@ -219,7 +212,7 @@ function parseVttTimestamp(value: string): number {
   return parts.reduce((total, part) => total * 60 + part, 0)
 }
 
-/** Parse a thumbnail-sheet WebVTT (`thumbnails/{id}#xywh=x,y,w,h` cues). */
+/** Parse a sprite-sheet WebVTT (`previews/{id}#xywh=x,y,w,h` cues). */
 export function parseVideoTimelineVtt(
   vtt: string,
   timelineUrl: string,
@@ -256,7 +249,7 @@ export function getVideoTimelineUrl(
 ): string {
   const endpoint = sdk.forProject(projectId).client.config.endpoint
   const url = new URL(
-    `${endpoint}/videos/${encodeURIComponent(videoId)}/timelines`,
+    `${endpoint}/videos/${encodeURIComponent(videoId)}/timeline`,
   )
   url.searchParams.set('project', projectId)
   url.searchParams.set('mode', 'admin')
@@ -373,7 +366,9 @@ export function videoProfilesQueryOptions(
   })
 }
 
-export function videoCodecsQueryOptions(projectId: string | null | undefined) {
+export function videoCodecsQueryOptions(
+  projectId: string | null | undefined,
+) {
   return queryOptions({
     queryKey: videoKeys.codecs(projectId),
     queryFn: () => fetchVideoCodecs(projectId!),
@@ -528,6 +523,22 @@ export function useDeleteVideo(projectId: string | null | undefined) {
   })
 }
 
+export function useCreateVideoTimeline(
+  projectId: string | null | undefined,
+  videoId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      sdk.forProject(projectId!).videos.createTimeline({ videoId: videoId! }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: videoKeys.timeline(projectId, videoId),
+      })
+    },
+  })
+}
+
 export function useCreateVideoRenditions(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
@@ -598,7 +609,7 @@ export function useCreateVideoSubtitle(
       code: string
       isDefault: boolean
     }) =>
-      sdk.forProject(projectId!).videos.createCaption({
+      sdk.forProject(projectId!).videos.createSubtitle({
         videoId: videoId!,
         bucketId: input.bucketId,
         fileId: input.fileId,
@@ -628,9 +639,9 @@ export function useUpdateVideoSubtitle(
       code?: string
       isDefault?: boolean
     }) =>
-      sdk.forProject(projectId!).videos.updateCaption({
+      sdk.forProject(projectId!).videos.updateSubtitle({
         videoId: videoId!,
-        captionId: input.subtitleId,
+        subtitleId: input.subtitleId,
         bucketId: input.bucketId,
         fileId: input.fileId,
         name: input.name,
@@ -654,7 +665,7 @@ export function useDeleteVideoSubtitle(
     mutationFn: (subtitleId: string) =>
       sdk
         .forProject(projectId!)
-        .videos.deleteCaption({ videoId: videoId!, captionId: subtitleId }),
+        .videos.deleteSubtitle({ videoId: videoId!, subtitleId }),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: videoKeys.subtitles(projectId, videoId),
@@ -673,7 +684,7 @@ export type VideoProfileInput = {
 
 /** True when probe metadata includes an audio stream (after prepare / encode probe). */
 export function videoSourceHasAudio(
-  video: Pick<Video, 'audioCodec' | 'duration'> | null | undefined,
+  video: Pick<Video, 'audioCodec' | 'duration' | 'status'> | null | undefined,
 ): boolean {
   if (!video) return false
   if (video.audioCodec?.trim()) return true
@@ -684,8 +695,8 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: VideoProfileInput & { profileId?: string }) => {
-      const { profileId, ...payload } = input
       const videos = sdk.forProject(projectId!).videos
+      const { profileId, ...payload } = input
       return profileId
         ? videos.updateProfile({ profileId, ...payload })
         : videos.createProfile(payload)

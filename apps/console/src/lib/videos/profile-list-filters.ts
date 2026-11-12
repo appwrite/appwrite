@@ -1,4 +1,5 @@
 import type { VideoProfile } from '@/lib/appwrite/videos'
+
 /** Flat record for client-side FiltersPopover matching. */
 export function profileToFilterRecord(
   profile: VideoProfile,

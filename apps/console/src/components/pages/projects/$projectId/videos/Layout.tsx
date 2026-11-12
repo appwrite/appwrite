@@ -6,7 +6,6 @@ import {
   useNavigate,
   useParams,
 } from '@tanstack/react-router'
-import type { Video, VideoCaption, VideoRendition } from '@/lib/appwrite/videos'
 import { Check, Loader2, Minus, SquareArrowOutUpRight } from 'lucide-react'
 import { CreateRenditions } from './_components/CreateRenditions'
 import { VideoRenditionsProgressHeaderAlert } from './_components/VideoRenditionsProgressHeaderAlert'
@@ -59,6 +58,7 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import type { Video, VideoRendition, VideoSubtitle } from '@/lib/appwrite/videos'
 
 const TAB_GROUPS: VideoTabGroup[] = ['video', 'encoding', 'delivery', 'manage']
 
@@ -181,7 +181,7 @@ export function Layout() {
   }
 
   const renditions = renditionsData?.renditions ?? []
-  const subtitles = subtitlesData?.captions ?? []
+  const subtitles = subtitlesData?.subtitles ?? []
   const encodingStatus = getVideoEncodingStatus(renditions)
 
   return (
@@ -369,7 +369,7 @@ function SubnavLink({
   projectId: string
   video: Video
   renditions: VideoRendition[]
-  subtitles: VideoCaption[]
+  subtitles: VideoSubtitle[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
@@ -485,7 +485,7 @@ function SubnavTrailing({
   tab: VideoTab
   video: Video
   renditions: VideoRendition[]
-  subtitles: VideoCaption[]
+  subtitles: VideoSubtitle[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null

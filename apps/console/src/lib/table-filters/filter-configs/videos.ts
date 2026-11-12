@@ -1,7 +1,6 @@
 /**
  * Predefined filter columns for the Videos list.
- * Columns match the user-facing attributes on `Queries\Videos`. The list
- * search box sends `Query.search('search', term)` and is not a column here.
+ * Attributes match the server's `Queries\Videos::ALLOWED_ATTRIBUTES`.
  */
 
 import type { FilterColumn } from '../types'

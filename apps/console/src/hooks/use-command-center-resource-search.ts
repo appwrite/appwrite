@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
-import type { Video } from '@/lib/appwrite/videos'
 import type { User } from '@/lib/utils/mock-data'
 import {
   consoleDatabasesQueryOptions,
@@ -31,6 +30,7 @@ import {
   type ProjectResourceHit,
   type ProjectResourceKind,
 } from '@/lib/command-center/resource-search'
+import type { Video } from '@/lib/appwrite/videos'
 
 export interface CommandCenterResourceSearchOptions {
   projectId: string | null | undefined
@@ -144,9 +144,8 @@ export function useCommandCenterResourceSearch({
 
       switch (kind) {
         case 'database': {
-          const databases = (
-            data as { databases?: Array<{ $id: string; name: string }> }
-          ).databases
+          const databases = (data as { databases?: Array<{ $id: string; name: string }> })
+            .databases
           if (databases?.length) {
             groups.push(buildDatabaseHits(trimmedQuery, databases))
           }
@@ -160,18 +159,14 @@ export function useCommandCenterResourceSearch({
           break
         }
         case 'team': {
-          const teams = (
-            data as { teams?: Array<{ id: string; name: string }> }
-          ).teams
+          const teams = (data as { teams?: Array<{ id: string; name: string }> }).teams
           if (teams?.length) {
             groups.push(buildTeamHits(trimmedQuery, teams))
           }
           break
         }
         case 'bucket': {
-          const buckets = (
-            data as { buckets?: Array<{ $id: string; name: string }> }
-          ).buckets
+          const buckets = (data as { buckets?: Array<{ $id: string; name: string }> }).buckets
           if (buckets?.length) {
             groups.push(buildBucketHits(trimmedQuery, buckets))
           }
@@ -179,9 +174,7 @@ export function useCommandCenterResourceSearch({
         }
         case 'function': {
           const functions = (
-            data as {
-              functions?: Array<{ $id: string; name: string; runtime?: string }>
-            }
+            data as { functions?: Array<{ $id: string; name: string; runtime?: string }> }
           ).functions
           if (functions?.length) {
             groups.push(buildFunctionHits(trimmedQuery, functions))
@@ -189,9 +182,7 @@ export function useCommandCenterResourceSearch({
           break
         }
         case 'site': {
-          const sites = (
-            data as { sites?: Array<{ $id: string; name: string }> }
-          ).sites
+          const sites = (data as { sites?: Array<{ $id: string; name: string }> }).sites
           if (sites?.length) {
             groups.push(buildSiteHits(trimmedQuery, sites))
           }
@@ -212,8 +203,7 @@ export function useCommandCenterResourceSearch({
           break
         }
         case 'provider': {
-          const providers = (data as { providers?: Models.Provider[] })
-            .providers
+          const providers = (data as { providers?: Models.Provider[] }).providers
           if (providers?.length) {
             groups.push(buildProviderHits(trimmedQuery, providers))
           }

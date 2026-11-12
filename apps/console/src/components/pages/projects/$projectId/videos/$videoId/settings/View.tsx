@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
-import type { Video } from '@/lib/appwrite/videos'
 import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
@@ -14,6 +13,7 @@ import {
 import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import type { Video } from '@/lib/appwrite/videos'
 
 type ViewProps = {
   initialData?: { video: Video }
@@ -39,7 +39,13 @@ export function View({ initialData }: ViewProps = {}) {
   )
 }
 
-function NameCard({ projectId, video }: { projectId: string; video: Video }) {
+function NameCard({
+  projectId,
+  video,
+}: {
+  projectId: string
+  video: Video
+}) {
   const t = useT()
   const [name, setName] = useState(video.name)
   const updateMutation = useUpdateVideo(projectId, video.$id)
@@ -98,7 +104,13 @@ function NameCard({ projectId, video }: { projectId: string; video: Video }) {
   )
 }
 
-function SourceCard({ projectId, video }: { projectId: string; video: Video }) {
+function SourceCard({
+  projectId,
+  video,
+}: {
+  projectId: string
+  video: Video
+}) {
   const t = useT()
   return (
     <VideoSectionCard
@@ -135,7 +147,13 @@ function SourceCard({ projectId, video }: { projectId: string; video: Video }) {
   )
 }
 
-function DeleteCard({ projectId, video }: { projectId: string; video: Video }) {
+function DeleteCard({
+  projectId,
+  video,
+}: {
+  projectId: string
+  video: Video
+}) {
   const t = useT()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)

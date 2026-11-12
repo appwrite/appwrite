@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import type { VideoProfile } from '@/lib/appwrite/videos'
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +28,7 @@ import {
   PROFILE_PRESETS,
   type ProfilePreset,
 } from '@/lib/videos/profile-presets'
+import type { VideoProfile } from '@/lib/appwrite/videos'
 
 const LIMITS = {
   width: { min: 16, max: 4320 },

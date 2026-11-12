@@ -1,10 +1,5 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import type {
-  VideoOutput,
-  VideoCaption,
-  VideoRendition,
-} from '@/lib/appwrite/videos'
 import { CodeXml, Info } from 'lucide-react'
 import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { VideoTermHint } from '../../_components/VideoTermHint'
@@ -36,6 +31,7 @@ import {
   VIDEO_MASTER_MANIFESTS,
 } from '@/lib/videos/urls'
 import { useT } from '@/lib/i18n/translate'
+import type { VideoOutput, VideoRendition, VideoSubtitle } from '@/lib/appwrite/videos'
 
 const MANIFEST_TERMS: Record<string, VideoGlossaryTerm> = {
   hls: 'hls',
@@ -59,7 +55,7 @@ export function View() {
     () => renditionsData?.renditions ?? [],
     [renditionsData],
   )
-  const subtitles = subtitlesData?.captions ?? []
+  const subtitles = subtitlesData?.subtitles ?? []
 
   const readyByOutput = useMemo(() => {
     const counts: Record<string, number> = { hls: 0, dash: 0, cmaf: 0 }
@@ -170,7 +166,7 @@ function SubtitleUrlsCard({
 }: {
   projectId: string
   videoId: string
-  subtitles: VideoCaption[]
+  subtitles: VideoSubtitle[]
 }) {
   const t = useT()
   const [output, setOutput] = useState<SubtitleOutput>('hls')
@@ -247,7 +243,7 @@ function AdvancedUrlsCard({
   projectId: string
   videoId: string
   renditions: VideoRendition[]
-  subtitles: VideoCaption[]
+  subtitles: VideoSubtitle[]
 }) {
   const t = useT()
   const [renditionId, setRenditionId] = useState('')
@@ -285,10 +281,10 @@ function AdvancedUrlsCard({
   const subtitleSegmentUrl =
     subtitle && subtitleSegmentId.trim()
       ? String(
-          videos.getCaptionSegment({
+          videos.getSubtitleSegment({
             videoId,
             output: 'hls' as VideoOutput,
-            captionId: subtitle.$id,
+            subtitleId: subtitle.$id,
             segmentId: subtitleSegmentId.trim(),
           }),
         )

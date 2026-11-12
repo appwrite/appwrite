@@ -82,9 +82,9 @@ export function getVideoSubtitleManifestUrl(
   output: string,
 ): string {
   return withoutEmptyParams(
-    sdk.forProject(projectId).videos.getCaptionManifest({
+    sdk.forProject(projectId).videos.getSubtitleManifest({
       videoId,
-      captionId: subtitleId,
+      subtitleId,
       output: output as VideoOutput,
     }),
   )

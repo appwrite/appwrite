@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import type { VideoProfile } from '@/lib/appwrite/videos'
 import { AlertCircle, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProfilesEmptyState } from './_components/ProfilesEmptyState'
@@ -41,6 +40,7 @@ import {
   PROFILES_DEFAULT_SORT_ORDER,
   type ProfileSortColumn,
 } from '@/lib/videos/profile-list-filters'
+import type { VideoProfile } from '@/lib/appwrite/videos'
 
 export function View() {
   const t = useT()
@@ -63,12 +63,10 @@ export function View() {
   const [searchInput, setSearchInput] = useState('')
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingProfile, setEditingProfile] = useState<VideoProfile | null>(
-    null,
-  )
-  const [deletingProfile, setDeletingProfile] = useState<VideoProfile | null>(
-    null,
-  )
+  const [editingProfile, setEditingProfile] =
+    useState<VideoProfile | null>(null)
+  const [deletingProfile, setDeletingProfile] =
+    useState<VideoProfile | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   const { data, isLoading, isFetching, error, refetch } =
@@ -260,7 +258,7 @@ export function View() {
           </p>
           <p className="mx-auto mt-3 text-[12px] leading-relaxed text-muted-foreground">
             {t(
-              'The console calls GET /project/videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.',
+              'The console calls GET /videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.',
             )}
           </p>
           {apiError?.type || apiError?.code ? (

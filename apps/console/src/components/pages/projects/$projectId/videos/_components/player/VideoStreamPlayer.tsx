@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { Video, VideoRendition } from '@/lib/appwrite/videos'
 import { Info, Loader2, Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
@@ -32,6 +31,7 @@ import {
   useVideoInspector,
 } from './VideoInspectorContext'
 import { useQoeTracker } from './useQoeTracker'
+import type { Video, VideoRendition } from '@/lib/appwrite/videos'
 
 const FULLSCREEN_CONTROLS_IDLE_MS = 2500
 
@@ -130,6 +130,20 @@ export function VideoStreamPlayer({
         }),
       ),
     [projectId, video.bucketId, video.fileId],
+  )
+
+  const posterUrl = useMemo(
+    () =>
+      video.previewId
+        ? withAdminMode(
+            sdk.forProject(projectId).videos.getPreview({
+              videoId: video.$id,
+              previewId: video.previewId,
+              width: 1280,
+            }),
+          )
+        : undefined,
+    [projectId, video.$id, video.previewId],
   )
 
   const activeManifestUrl = useMemo(() => {
@@ -471,7 +485,7 @@ export function VideoStreamPlayer({
     readyIds.hls.length + readyIds.cmaf.length + readyIds.dash.length > 0
 
   const sourceMissingAudio =
-    (video.timelineStatus === 'ready' || video.timelineStatus === 'skipped') &&
+    video.status === 'ready' &&
     (video.duration ?? 0) > 0 &&
     !videoSourceHasAudio(video)
 
@@ -624,6 +638,7 @@ export function VideoStreamPlayer({
                   : 'cursor-pointer',
               )}
               playsInline
+              poster={posterUrl}
               aria-label={video.name}
               onClick={() => {
                 const el = videoRef.current

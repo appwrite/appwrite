@@ -4,7 +4,7 @@
  * The worker publishes raw documents (not response models) on:
  * - `videos.{videoId}.update` (probe metadata and document updates)
  * - `videos.{videoId}.renditions.{renditionId}.update` (encode status/progress)
- * - `videos.{videoId}.captions.{captionId}.update` (caption processing)
+ * - `videos.{videoId}.subtitles.{subtitleId}.update` (subtitle processing)
  *
  * Progress ticks arrive often, so payloads are merged by `$id` rather than
  * refetching. Unknown ids (e.g. a rendition created from another tab) fall back
@@ -16,7 +16,7 @@ import { videoKeys } from '@/lib/react-query/hooks/videos'
 
 const VIDEO_EVENT = /^videos\.([^.*]+)\.update$/
 const RENDITION_EVENT = /^videos\.([^.*]+)\.renditions\.([^.*]+)\.[a-z]+$/
-const CAPTION_EVENT = /^videos\.([^.*]+)\.captions\.([^.*]+)\.[a-z]+$/
+const SUBTITLE_EVENT = /^videos\.([^.*]+)\.subtitles\.([^.*]+)\.[a-z]+$/
 
 export function isVideoRealtimeSignal(events: string[]): boolean {
   return events.some((e) => e.startsWith('videos.'))
@@ -71,12 +71,12 @@ export function handleVideoRealtimeEvents(
     return
   }
 
-  const caption = findMatch(events, CAPTION_EVENT)
-  if (caption) {
-    const [, videoId] = caption
+  const subtitle = findMatch(events, SUBTITLE_EVENT)
+  if (subtitle) {
+    const [, videoId] = subtitle
     const key = videoKeys.subtitles(projectId, videoId)
     const merged = payload?.$id
-      ? mergeIntoList(queryClient, key, 'captions', payload)
+      ? mergeIntoList(queryClient, key, 'subtitles', payload)
       : false
     if (!merged) void queryClient.refetchQueries({ queryKey: key })
     return

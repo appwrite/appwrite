@@ -10,7 +10,7 @@ Source of truth: `node_modules/@appwrite.io/console/types/services/videos.d.ts` 
 | --- | --- | --- | --- |
 | Video | Project (references a Storage file) | `Models.Video` | No status. Metadata is filled in by the first rendition or timeline job |
 | Profile | Project | `Models.VideoProfile` | Static config, no status |
-| Rendition | Video + Profile | `Models.VideoRendition` | `pending` > `started` > `ended` > `ready` |
+| Rendition | Video + Profile | `Models.VideoRendition` | `pending` > `started` > `ended` > `uploading` > `ready` |
 | Subtitle | Video (references a Storage file, or embedded) | `Models.VideoSubtitle` | `pending` > `started` > `ready` |
 | Timeline / Preview | Video | WebVTT text / image | Generated on request |
 | Output (stream) | Video + Renditions + Subtitles | Manifests and segments | Read-only, derived |
@@ -23,14 +23,14 @@ erDiagram
   VIDEO ||--o{ SUBTITLE : "has"
   BUCKET_FILE ||--o{ SUBTITLE : "source (uploaded)"
   VIDEO ||--o| TIMELINE : "has"
-  TIMELINE ||--o{ PREVIEW : "thumbnail sheets"
+  TIMELINE ||--o{ PREVIEW : "sprite sheets"
 ```
 
 ## Typical flow
 
 1. Upload a video or audio file to a Storage bucket.
 2. `create` a Video from `bucketId` + `fileId`. Only the document is stored; nothing is downloaded or probed yet.
-3. `createVideoProfile` for each encoding target. New projects start with no profiles.
+3. Use the default profiles seeded into every new project, or `createProfile` per encoding target.
 4. `createRendition` per profile and output. Follow `status` and `progress`. Each job downloads its own copy of the source, probes metadata and extracts embedded subtitles if that has not happened yet, and deletes the copy when it ends.
 5. Optionally `createTimeline` for scrubbing thumbnails (same per-job download) and `createSubtitle` for authored tracks.
 6. Hand the master manifest URL (`getHlsManifest`, `getDashManifest`, `getCmaf*Manifest`) to a player.
@@ -49,7 +49,8 @@ The root resource. Points at a source file in Storage and holds probed media met
 | `$createdAt` / `$updatedAt` | string | ISO 8601 |
 | `bucketId` | string | Bucket holding the source file |
 | `fileId` | string | Source file ID |
-| `name` | string | Defaults to the source file name. Max 2048 chars |
+| `name` | string | Defaults to the source file name. Max 128 chars |
+| `previewId` | string | Preview image ID, from the sprite timeline |
 | `size` | number | Source size in bytes |
 | `format` | string | Container format |
 | `duration` | number | Milliseconds |
@@ -71,7 +72,7 @@ Videos have no status. The Console derives one from the renditions (`getVideoEnc
 
 | Method | SDK | HTTP | Notes |
 | --- | --- | --- | --- |
-| List | `list({ queries?, total? })` | `GET /videos` | Filterable: `bucketId`, `fileId`, `name`, `size`, `format`, `duration`, `width`, `height`, `videoCodec`, `videoBitRate`, `audioCodec`, `audioBitRate`, `search`. Full-text search is `Query.search('search', term)` inside `queries` |
+| List | `list({ queries?, search?, total? })` | `GET /videos` | Filterable: `bucketId`, `fileId`, `name`, `size`, `format`, `duration`, `width`, `height`, `videoCodec`, `videoBitRate`, `audioCodec`, `audioBitRate` |
 | Create | `create({ bucketId, fileId, name? })` | `POST /videos` | Source must be video or audio. Does not download or probe |
 | Get | `get({ videoId })` | `GET /videos/{videoId}` | |
 | Update | `update({ videoId, name })` | `PUT /videos/{videoId}` | Name only. The source file cannot be replaced |
@@ -81,7 +82,7 @@ Videos have no status. The Console derives one from the renditions (`getVideoEnc
 
 ## 2. Profile
 
-A reusable encoding target. Renditions are encoded against a profile. New projects start with no profiles; create them with `createVideoProfile`.
+A reusable encoding target. Renditions are encoded against a profile. New projects are seeded with a default ladder (`app/config/videos-profiles.php` on the server).
 
 ### Model: `Models.VideoProfile`
 
@@ -90,7 +91,7 @@ A reusable encoding target. Renditions are encoded against a profile. New projec
 | `$id` | string | Profile ID |
 | `$createdAt` / `$updatedAt` | string | ISO 8601 |
 | `name` | string | Profile name |
-| `codec` | string | Encode codec (`h264`, `hevc`, `vp9`). Default `h264` |
+| `codec` | string | Encode codec (`h264`, `hevc`, `vp9`). Default `h264`. Seeded presets set this explicitly |
 | `videoBitRate` | number | Target video bitrate, **kbps** |
 | `audioBitRate` | number | Target audio bitrate, **kbps** |
 | `width` / `height` | number | Target dimensions, pixels |
@@ -103,11 +104,11 @@ Note the unit mismatch: profile and rendition bitrates are in kilobits per secon
 
 | Method | SDK | HTTP | Notes |
 | --- | --- | --- | --- |
-| List | `listVideoProfiles({ queries?, codec? })` | `GET /project/videos/profiles` | Optional `codec` filter (default `h264`). Full-text search is `Query.search('search', term)` inside `queries` |
-| Create | `createVideoProfile({ name, videoBitRate, audioBitRate, width, height, codec? })` | `POST /project/videos/profiles` | `codec` defaults to `h264` |
-| Get | `getVideoProfile({ profileId })` | `GET /project/videos/profiles/{profileId}` | |
-| Update | `updateVideoProfile({ profileId, name, videoBitRate, audioBitRate, width, height })` | `PATCH /project/videos/profiles/{profileId}` | All fields required. Existing renditions are not re-encoded |
-| Delete | `deleteVideoProfile({ profileId })` | `DELETE /project/videos/profiles/{profileId}` | Existing renditions are kept |
+| List | `listProfiles({ search?, codec? })` | `GET /videos/profiles` | Optional `codec` filter (default `h264`). Search only, no query API |
+| Create | `createProfile({ name, videoBitRate, audioBitRate, width, height, codec? })` | `POST /videos/profiles` | `codec` defaults to `h264` |
+| Get | `getProfile({ profileId })` | `GET /videos/profiles/{profileId}` | |
+| Update | `updateProfile({ profileId, name, videoBitRate, audioBitRate, width, height })` | `PATCH /videos/profiles/{profileId}` | All fields required. Existing renditions are not re-encoded |
+| Delete | `deleteProfile({ profileId })` | `DELETE /videos/profiles/{profileId}` | Existing renditions are kept |
 
 ---
 
@@ -137,7 +138,7 @@ List model: `Models.VideoRenditionList` (`{ total, renditions }`).
 ### Enums
 
 - `VideoOutput`: `hls`, `dash`, `cmaf`
-- `VideoRenditionStatus`: `pending`, `started`, `ended`, `ready`, `error`, `aborted`
+- `VideoRenditionStatus`: `pending`, `started`, `ended`, `uploading`, `ready`, `error`, `aborted`
 
 ### Rules
 
@@ -204,29 +205,29 @@ List model: `Models.VideoSubtitleList` (`{ total, subtitles }`).
 
 ---
 
-## 5. Timelines and Thumbnails
+## 5. Timeline and Preview
 
-Thumbnail sheets plus a WebVTT index used for scrubbing.
+Sprite sheets plus a WebVTT index used for scrubbing thumbnails. The video's `previewId` points at one of these sprites.
 
 ### Rules
 
 - No precondition: the job downloads the source itself and probes it if needed.
-- Audio-only sources are accepted but produce no WebVTT, so `getTimelines` keeps returning `video_timelines_not_found`. The Console disables the action once probe metadata shows no video track.
-- `createTimeline` returns immediately. Poll `getTimelines` until it returns WebVTT instead of `video_timelines_not_found`.
+- Audio-only sources are accepted but produce no WebVTT, so `getTimeline` keeps returning `video_timeline_not_found`. The Console disables the action once probe metadata shows no video track.
+- `createTimeline` returns immediately. Poll `getTimeline` until it returns WebVTT instead of `video_timeline_not_found`.
 
 ### Endpoints
 
 | Method | SDK | HTTP | Returns |
 | --- | --- | --- | --- |
 | Create timeline | `createTimeline({ videoId })` | `POST /videos/{videoId}/timeline` | `Models.Video` |
-| Get timelines | `getTimelines({ videoId })` | `GET /videos/{videoId}/timelines` | WebVTT text |
-| Get thumbnail | `getThumbnail({ videoId, thumbnailId, width?, height?, output? })` | `GET /videos/{videoId}/thumbnails/{thumbnailId}` | Image URL. `output` is `ImageFormat` (jpeg, jpg, png, gif, webp) |
+| Get timeline | `getTimeline({ videoId })` | `GET /videos/{videoId}/timeline` | WebVTT text |
+| Get preview | `getPreview({ videoId, previewId, width?, height?, output? })` | `GET /videos/{videoId}/previews/{previewId}` | Image URL. `output` is `ImageFormat` (jpeg, jpg, png, gif, webp) |
 
 ### Errors
 
 | Code | When |
 | --- | --- |
-| `video_timelines_not_found` | Timeline not generated yet |
+| `video_timeline_not_found` | Timeline not generated yet |
 
 ---
 
@@ -409,7 +410,7 @@ A grid of videos by profiles, with one chip per output in each cell. Empty chips
 
 ### 5. Media library grid
 
-A thumbnail grid. Hovering a card scrubs through the timeline thumbnails. Clicking opens an inspector drawer.
+A thumbnail grid using `previewId`. Hovering a card scrubs through the timeline sprites. Clicking opens an inspector drawer.
 
 ```text
 +--------------------------------------------------------------------+
@@ -481,7 +482,7 @@ A full-screen, step-by-step flow that follows the typical flow in this spec.
 
 ### 8. Track timeline editor
 
-A video editor style layout: player on top, horizontal lanes underneath for the timeline thumbnails and each subtitle track.
+A video editor style layout: player on top, horizontal lanes underneath for the timeline sprites and each subtitle track.
 
 ```text
 +--------------------------------------------------------------------+
@@ -499,7 +500,7 @@ A video editor style layout: player on top, horizontal lanes underneath for the 
 +--------------------------------------------------------------------+
 ```
 
-- **Entities:** Timeline (WebVTT thumbnails), Subtitle (one lane per track, `default` marked with `*`, `embedded` labeled).
+- **Entities:** Timeline (WebVTT sprites), Subtitle (one lane per track, `default` marked with `*`, `embedded` labeled).
 - **Strengths:** Built for retagging embedded tracks (`und` to `heb`) and checking subtitle sync against the picture.
 - **Tradeoffs:** Requires fetching and parsing WebVTT for every track. Overkill if subtitles are rare.
 

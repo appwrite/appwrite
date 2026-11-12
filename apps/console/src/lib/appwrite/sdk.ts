@@ -5,50 +5,7 @@
  * All Appwrite operations are handled client-side.
  */
 
-import {
-  Account,
-  Activities,
-  Affiliates,
-  Analytics,
-  Apps,
-  Avatars,
-  Backups,
-  Client,
-  Console,
-  Functions,
-  Growth,
-  ImageFormat,
-  Locale,
-  Manager,
-  Messaging,
-  Migrations,
-  Oauth2,
-  Project,
-  Project as ProjectApi,
-  Projects,
-  Proxy,
-  Realtime,
-  Storage,
-  Teams,
-  Users,
-  Vcs,
-  Sites,
-  Tokens,
-  TablesDB,
-  DocumentsDB,
-  VectorsDB,
-  Postgresql,
-  Mysql,
-  Mongo,
-  Domains,
-  Organization,
-  Organizations,
-  Presences,
-  Usage,
-  Webhooks,
-  Notifications,
-  Waf,
-} from '@appwrite.io/console'
+import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
 import { Reviews } from '@/lib/appwrite/reviews'
 import { Zero } from '@/lib/appwrite/zero'

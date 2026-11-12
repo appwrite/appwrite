@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import type { VideoCaption, VideoCaptionList } from '@/lib/appwrite/videos'
 import {
   Captions,
   Copy,
@@ -62,6 +61,7 @@ import {
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { getVideoSubtitleLanguage } from '@/lib/videos/subtitle-languages'
 import { getVideoSubtitleManifestUrl } from '@/lib/videos/urls'
+import type { VideoSubtitle, VideoSubtitleList } from '@/lib/appwrite/videos'
 
 const HEAD_CLASSNAME =
   'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
@@ -73,7 +73,7 @@ const SUBTITLE_OUTPUTS = [
 ] as const
 
 type ViewProps = {
-  initialData?: { subtitles: VideoCaptionList }
+  initialData?: { subtitles: VideoSubtitleList }
 }
 
 export function View({ initialData }: ViewProps = {}) {
@@ -87,12 +87,12 @@ export function View({ initialData }: ViewProps = {}) {
   const { data } = useVideoSubtitles(projectId, videoId)
   const updateMutation = useUpdateVideoSubtitle(projectId, videoId)
   const deleteMutation = useDeleteVideoSubtitle(projectId, videoId)
-  const [editing, setEditing] = useState<VideoCaption | null>(null)
-  const [deleting, setDeleting] = useState<VideoCaption | null>(null)
+  const [editing, setEditing] = useState<VideoSubtitle | null>(null)
+  const [deleting, setDeleting] = useState<VideoSubtitle | null>(null)
 
-  const subtitles = data?.captions ?? initialData?.subtitles.captions ?? []
+  const subtitles = data?.subtitles ?? initialData?.subtitles.subtitles ?? []
 
-  const setDefault = (subtitle: VideoCaption, isDefault: boolean) => {
+  const setDefault = (subtitle: VideoSubtitle, isDefault: boolean) => {
     updateMutation.mutate(
       { subtitleId: subtitle.$id, isDefault },
       {

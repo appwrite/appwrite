@@ -7,7 +7,6 @@ import {
   useSearch,
 } from '@tanstack/react-router'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import type { Video } from '@/lib/appwrite/videos'
 import { ChevronLeft, ChevronRight, Layers, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -56,6 +55,7 @@ import { CreateVideo } from './CreateVideo'
 import { VideoContextMenu } from './VideoContextMenu'
 import { VideoTermHint } from './VideoTermHint'
 import { VideoThumb } from './VideoThumb'
+import type { Video } from '@/lib/appwrite/videos'
 
 type SortOrder = 'asc' | 'desc'
 type SortField =
@@ -149,7 +149,10 @@ export function VideosSidebar() {
     ),
     placeholderData: keepPreviousData,
   })
-  const videos = useMemo(() => (data?.videos ?? []) as Video[], [data?.videos])
+  const videos = useMemo(
+    () => (data?.videos ?? []) as Video[],
+    [data?.videos],
+  )
   const total = data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / VIDEOS_SIDEBAR_PAGE_SIZE))
   const hasSearch = debouncedSearch.length > 0

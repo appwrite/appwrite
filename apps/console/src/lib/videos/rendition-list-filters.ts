@@ -1,9 +1,5 @@
-import type {
-  VideoOutput,
-  VideoRenditionStatus,
-  VideoRendition,
-} from '@/lib/appwrite/videos'
 import type { CompactFilterKey } from '@/lib/table-filters'
+import type { VideoOutput, VideoRendition, VideoRenditionStatus } from '@/lib/appwrite/videos'
 
 /** Flat record for client-side FiltersPopover matching. */
 export function renditionToFilterRecord(
@@ -97,7 +93,9 @@ export function compareVideoRenditions(
       cmp = a.width * a.height - b.width * b.height
       break
     case 'bitrate':
-      cmp = a.videoBitRate - b.videoBitRate || a.audioBitRate - b.audioBitRate
+      cmp =
+        a.videoBitRate - b.videoBitRate ||
+        a.audioBitRate - b.audioBitRate
       break
     case 'segmentLength':
       cmp = Number(a.targetDuration) - Number(b.targetDuration)
@@ -117,6 +115,7 @@ export function compareVideoRenditions(
 
   if (cmp !== 0) return direction * cmp
   return (
-    a.output.localeCompare(b.output) || b.width * b.height - a.width * a.height
+    a.output.localeCompare(b.output) ||
+    b.width * b.height - a.width * a.height
   )
 }

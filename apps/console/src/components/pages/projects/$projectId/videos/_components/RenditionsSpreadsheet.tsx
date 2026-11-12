@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router'
-import type { VideoRendition } from '@/lib/appwrite/videos'
 import {
   Copy,
   ExternalLink,
@@ -57,6 +56,7 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import type { RenditionSortColumn } from '@/lib/videos/rendition-list-filters'
 import type { VideoGlossaryTerm } from '@/lib/videos/glossary'
+import type { VideoRendition } from '@/lib/appwrite/videos'
 
 const RETRYABLE_STATUSES = new Set(['error', 'aborted'])
 

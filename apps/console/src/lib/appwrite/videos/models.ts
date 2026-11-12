@@ -1,76 +1,6 @@
 /** Video models, as the Console SDK generates them. */
 
 /**
- * Videos List
- */
-export type VideoList = {
-  /**
-   * Total number of videos that matched your query.
-   */
-  total: number
-  /**
-   * List of videos.
-   */
-  videos: Video[]
-}
-
-/**
- * Video Codecs List
- */
-export type VideoCodecList = {
-  /**
-   * Total number of codecs that matched your query.
-   */
-  total: number
-  /**
-   * List of codecs.
-   */
-  codecs: VideoCodec[]
-}
-
-/**
- * Video Profiles List
- */
-export type VideoProfileList = {
-  /**
-   * Total number of profiles that matched your query.
-   */
-  total: number
-  /**
-   * List of profiles.
-   */
-  profiles: VideoProfile[]
-}
-
-/**
- * Video Renditions List
- */
-export type VideoRenditionList = {
-  /**
-   * Total number of renditions that matched your query.
-   */
-  total: number
-  /**
-   * List of renditions.
-   */
-  renditions: VideoRendition[]
-}
-
-/**
- * Video Captions List
- */
-export type VideoCaptionList = {
-  /**
-   * Total number of captions that matched your query.
-   */
-  total: number
-  /**
-   * List of captions.
-   */
-  captions: VideoCaption[]
-}
-
-/**
  * Video
  */
 export type Video = {
@@ -87,10 +17,6 @@ export type Video = {
    */
   $updatedAt: string
   /**
-   * Video permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).
-   */
-  $permissions: string[]
-  /**
    * Storage bucket ID holding the source file.
    */
   bucketId: string
@@ -103,9 +29,25 @@ export type Video = {
    */
   name: string
   /**
+   * Preview image ID, taken from the sprite timeline.
+   */
+  previewId: string
+  /**
    * Source file size in bytes.
    */
   size: number
+  /**
+   * Source status: one of `pending`, `downloading`, `ready`, `removed`, `error` or `aborted`.
+   */
+  status: string
+  /**
+   * Total number of chunks in the source download.
+   */
+  chunksTotal: number
+  /**
+   * Number of source chunks downloaded so far.
+   */
+  chunksUploaded: number
   /**
    * Container format.
    */
@@ -166,32 +108,20 @@ export type Video = {
    * Audio sample rate.
    */
   audioSampleRate: string
-  /**
-   * Thumbnail timeline job status: one of `pending`, `started`, `ready`, `skipped` (source has no video track) or `error`.
-   */
-  timelineStatus: string
-  /**
-   * Why the timeline job failed. Empty unless `timelineStatus` is `error`.
-   */
-  timelineError: string
 }
 
 /**
- * Video codec
+ * Videos List
  */
-export type VideoCodec = {
+export type VideoList = {
   /**
-   * Codec ID.
+   * Total number of videos that matched your query.
    */
-  $id: string
+  total: number
   /**
-   * Codec display name.
+   * List of videos.
    */
-  name: string
-  /**
-   * Streaming output formats this codec may be packaged into.
-   */
-  outputs: string[]
+  videos: Video[]
 }
 
 /**
@@ -215,10 +145,6 @@ export type VideoProfile = {
    */
   name: string
   /**
-   * Video encode codec: one of `h264`, `hevc`, or `vp9`.
-   */
-  codec: string
-  /**
    * Target video bitrate in kilobits per second.
    */
   videoBitRate: number
@@ -234,6 +160,20 @@ export type VideoProfile = {
    * Target video height in pixels.
    */
   height: number
+}
+
+/**
+ * Video Profiles List
+ */
+export type VideoProfileList = {
+  /**
+   * Total number of profiles that matched your query.
+   */
+  total: number
+  /**
+   * List of profiles.
+   */
+  profiles: VideoProfile[]
 }
 
 /**
@@ -293,13 +233,9 @@ export type VideoRendition = {
    */
   targetDuration: string
   /**
-   * Transcoding status: one of `pending`, `started`, `ended`, `ready`, `error` or `aborted`.
+   * Transcoding status: one of `pending`, `started`, `ended`, `uploading`, `ready`, `error` or `aborted`.
    */
   status: string
-  /**
-   * Why the rendition failed or was aborted. Empty unless `status` is `error` or `aborted`.
-   */
-  error: string
   /**
    * Transcoding progress as a percentage.
    */
@@ -308,26 +244,36 @@ export type VideoRendition = {
    * Streaming output format: `hls`, `dash`, or `cmaf`.
    */
   output: string
-  /**
-   * Video encode codec snapshotted from the profile at create time: one of `h264`, `hevc`, or `vp9`.
-   */
-  codec: string
 }
 
 /**
- * Video caption
+ * Video Renditions List
  */
-export type VideoCaption = {
+export type VideoRenditionList = {
   /**
-   * Caption ID.
+   * Total number of renditions that matched your query.
+   */
+  total: number
+  /**
+   * List of renditions.
+   */
+  renditions: VideoRendition[]
+}
+
+/**
+ * Video subtitle
+ */
+export type VideoSubtitle = {
+  /**
+   * Subtitle ID.
    */
   $id: string
   /**
-   * Caption creation time in ISO 8601 format.
+   * Subtitle creation time in ISO 8601 format.
    */
   $createdAt: string
   /**
-   * Caption update date in ISO 8601 format.
+   * Subtitle update date in ISO 8601 format.
    */
   $updatedAt: string
   /**
@@ -335,23 +281,23 @@ export type VideoCaption = {
    */
   videoId: string
   /**
-   * Storage bucket ID holding the caption file.
+   * Storage bucket ID holding the subtitle file.
    */
   bucketId: string
   /**
-   * Caption file ID.
+   * Subtitle file ID.
    */
   fileId: string
   /**
-   * Caption display name.
+   * Subtitle display name.
    */
   name: string
   /**
-   * Caption ISO 639-2 language code.
+   * Subtitle ISO 639-2 language code.
    */
   code: string
   /**
-   * Is this the default caption track?
+   * Is this the default subtitle track?
    */
   default: boolean
   /**
@@ -363,11 +309,21 @@ export type VideoCaption = {
    */
   targetDuration: string
   /**
-   * Packaging status: one of `pending`, `started`, `ready`, `error` or `aborted`.
+   * Packaging status: one of `pending`, `started`, `ready` or `error`.
    */
   status: string
+}
+
+/**
+ * Video Subtitles List
+ */
+export type VideoSubtitleList = {
   /**
-   * Why the caption failed or was aborted. Empty unless `status` is `error` or `aborted`.
+   * Total number of subtitles that matched your query.
    */
-  error: string
+  total: number
+  /**
+   * List of subtitles.
+   */
+  subtitles: VideoSubtitle[]
 }
