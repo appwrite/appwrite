@@ -16,6 +16,7 @@ use Utopia\Cdn\Certificates\Status;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -23,6 +24,8 @@ use Utopia\Platform\Scope\HTTP;
 class Update extends Action
 {
     use HTTP;
+
+    private const int RENEWAL_COOLDOWN = 15 * 60;
 
     public static function getName()
     {
@@ -92,8 +95,13 @@ class Update extends Action
 
         // A verified rule whose renewal failed or is blocked, or whose certificate expired, is checked again.
         // Maintenance stops after 5 failed attempts, so once DNS is fixed nothing else would renew it.
+        // This request and the worker both update the certificate, so renewals are at most one per cooldown after the last queue, run or result.
         $renewal = $rule->getAttribute('status') === RULE_STATUS_VERIFIED
             && (\in_array($certificate->getAttribute('status'), [Status::FAILED, Status::BLOCKED], true) || (!empty($expireDate) && \strtotime($expireDate) <= \time()));
+
+        if ($renewal && \strtotime($certificate->getUpdatedAt() ?? '@0') > \time() - self::RENEWAL_COOLDOWN) {
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'A certificate renewal for this rule was requested in the last 15 minutes. Try again later.');
+        }
 
         // If rule is already verified or in certificate generation state, don't queue for verification again
         if (!$renewal && ($rule->getAttribute('status') === RULE_STATUS_VERIFIED || $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING)) {
@@ -104,6 +112,8 @@ class Update extends Action
             $response->dynamic($rule, Response::MODEL_PROXY_RULE);
             return;
         }
+
+        $claimed = true;
 
         try {
             // Appwrite-owned subdomains ride a wildcard record, so the worker never checks their DNS either
@@ -128,7 +138,13 @@ class Update extends Action
                 if (!$renewal) {
                     $reset->setAttribute('status', '');
                 }
-                $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, $reset));
+                // A renewal claims the certificate as read, so a concurrent request that read it too conflicts and queues nothing
+                $readAt = $renewal ? new \DateTime($certificate->getUpdatedAt()) : null;
+                try {
+                    $certificate = $authorization->skip(fn () => $dbForPlatform->withRequestTimestamp($readAt, fn () => $dbForPlatform->updateDocument('certificates', $certificateId, $reset)));
+                } catch (Conflict) {
+                    $claimed = false;
+                }
             }
         } catch (Exception $err) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
@@ -140,14 +156,16 @@ class Update extends Action
 
         // Issue a TLS certificate when DNS verification is successful. The worker
         // does not verify DNS again: verifyRule() above just did.
-        $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
-            project: $project,
-            domain: new Document([
-                'domain' => $rule->getAttribute('domain'),
-                'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-            ]),
-            skipDomainValidation: true,
-        ));
+        if ($claimed) {
+            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
+                project: $project,
+                domain: new Document([
+                    'domain' => $rule->getAttribute('domain'),
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                ]),
+                skipDomainValidation: true,
+            ));
+        }
 
         $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
         $rule->setAttribute('expireAt', $certificate->getAttribute('expireDate', ''));

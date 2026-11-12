@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Databases;
+namespace Tests\Unit\Utopia\Cache;
 
 use Utopia\Cache\Adapter;
 use Utopia\Cache\Adapter\Redis;
