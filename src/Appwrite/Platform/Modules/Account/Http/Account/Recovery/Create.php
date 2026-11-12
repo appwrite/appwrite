@@ -324,6 +324,11 @@ class Create extends Action
             $recovery->setAttribute('secret', '');
         }
 
+        // A known address would get the same user ID on every request and an unknown one a fresh ID; the emailed link already carries it.
+        if ($apiKey === null || !\in_array('users.write', $apiKey->getScopes())) {
+            $recovery->setAttribute('userId', '');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN);
