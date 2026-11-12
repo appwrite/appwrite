@@ -83,6 +83,20 @@ class V25 extends Migration
                             Console::warning("Failed to create attribute \"prefs\" in collection {$id}: {$th->getMessage()}");
                         }
 
+                        // Indexes no earlier migration created
+                        foreach ([
+                            '_key_pingCount',
+                            '_key_pingedAt',
+                            '_key_database',
+                            '_key_region_accessed_at',
+                        ] as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
+                        }
+
                         try {
                             $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
                         } catch (Throwable $th) {
@@ -119,6 +133,8 @@ class V25 extends Migration
                         $indexes = [
                             '_key_region_resourceType_projectInternalId_resourceId',
                             '_key_project_internal_id_region',
+                            '_key_project_id_region',
+                            '_key_region_rt_active',
                         ];
                         foreach ($indexes as $index) {
                             try {
@@ -386,6 +402,17 @@ class V25 extends Migration
                             Console::warning("Failed to create index \"_key_commitHash_branch\" from {$id}: {$th->getMessage()}");
                         }
 
+                        foreach ([
+                            '_key_resourceId_resourceType',
+                            '_key_resource_internal_id',
+                        ] as $index) {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                            }
+                        }
+
                         $this->dbForProject->purgeCachedCollection($id);
                     }
                     break;
@@ -425,6 +452,14 @@ class V25 extends Migration
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Throwable $th) {
                             Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'keys');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"keys\" in collection {$id}: {$th->getMessage()}");
                         }
                     }
 
@@ -509,6 +544,14 @@ class V25 extends Migration
                             $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        if ($id === 'variables') {
+                            try {
+                                $this->createIndexFromCollection($this->dbForProject, $id, '_key_resource_internal_id_resource_type');
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create index \"_key_resource_internal_id_resource_type\" from {$id}: {$th->getMessage()}");
+                            }
                         }
                         $this->dbForProject->purgeCachedCollection($id);
                     }
@@ -625,6 +668,45 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'teams':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'keys');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"keys\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
+                case 'targets':
+                    foreach ([
+                        '_key_expired',
+                        '_key_session_internal_id',
+                    ] as $index) {
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                        }
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'repositories':
+                case 'vcsComments':
+                    if ($collectionType === 'console') {
+                        $index = $id === 'repositories' ? '_key_piid_riid_rt' : '_key_piid_prid_rt';
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, $index);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
                 case 'buckets':
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
@@ -701,15 +783,17 @@ class V25 extends Migration
             $this->dbForProject->purgeCachedCollection($id);
 
             try {
-                $this->createAttributesFromCollection($this->dbForProject, $id, ['folder'], 'files');
+                $this->createAttributesFromCollection($this->dbForProject, $id, ['folder', 'transformedAt'], 'files');
             } catch (Throwable $th) {
-                Console::warning("Failed to create attribute \"folder\" in collection {$id}: {$th->getMessage()}");
+                Console::warning("Failed to create attributes \"folder, transformedAt\" in collection {$id}: {$th->getMessage()}");
             }
 
-            try {
-                $this->createIndexFromCollection($this->dbForProject, $id, '_key_folder', 'files');
-            } catch (Throwable $th) {
-                Console::warning("Failed to create index \"_key_folder\" from {$id}: {$th->getMessage()}");
+            foreach (['_key_folder', '_key_transformedAt'] as $index) {
+                try {
+                    $this->createIndexFromCollection($this->dbForProject, $id, $index, 'files');
+                } catch (Throwable $th) {
+                    Console::warning("Failed to create index \"{$index}\" from {$id}: {$th->getMessage()}");
+                }
             }
 
             $this->dbForProject->purgeCachedCollection($id);
