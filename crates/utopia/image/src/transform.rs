@@ -12,13 +12,16 @@ use crate::error::{Error, Result};
 use crate::frame::{Format, Frame, Page};
 use crate::options::{canvas_bytes, check_dimensions, check_pixels};
 
+/// Fails unless a `width` x `height` replacement fits the limits alongside `src`, which
+/// stays alive until its replacement is complete.
+fn check_replacement(src: &RgbaImage, width: u64, height: u64) -> Result<()> {
+    check_dimensions(width, height)?;
+    check_pixels(canvas_bytes(src.width().into(), src.height().into()).saturating_add(canvas_bytes(width, height)))
+}
+
 /// Resamples `src` to `width` x `height` with `filter`.
 fn resample(src: &RgbaImage, width: u32, height: u32, filter: FilterType, alpha: bool) -> Result<RgbaImage> {
-    check_dimensions(width.into(), height.into())?;
-    // The source stays alive until its replacement is complete.
-    check_pixels(
-        canvas_bytes(src.width().into(), src.height().into()).saturating_add(canvas_bytes(width.into(), height.into())),
-    )?;
+    check_replacement(src, width.into(), height.into())?;
     if width == 0 || height == 0 {
         return Err(Error::process("zero image size"));
     }
@@ -115,7 +118,7 @@ pub(crate) fn crop_thumbnail(frame: &mut Frame, width: u32, height: u32) -> Resu
 /// `Imagick::borderImage($color, $width, $width)`.
 pub(crate) fn border(frame: &mut Frame, width: u32, color: Color) -> Result<()> {
     let (w, h) = (u64::from(frame.width()) + 2 * u64::from(width), u64::from(frame.height()) + 2 * u64::from(width));
-    check_dimensions(w, h)?;
+    check_replacement(&frame.pixels, w, h)?;
     let mut canvas = RgbaImage::from_pixel(w as u32, h as u32, Rgba(color.0));
     for (x, y, px) in frame.pixels.enumerate_pixels() {
         let dst = canvas.get_pixel_mut(x + width, y + width);
@@ -296,7 +299,7 @@ pub(crate) fn rotate(frame: &mut Frame, degrees: f64) -> Result<()> {
     if shear_x.abs() < 1e-12 && shear_y.abs() < 1e-12 {
         // A quarter turn swaps the sides, and the two limits may differ.
         if rotations % 2 == 1 {
-            check_dimensions(frame.height().into(), frame.width().into())?;
+            check_replacement(&frame.pixels, frame.height().into(), frame.width().into())?;
         }
         frame.pixels = match rotations {
             1 => image::imageops::rotate90(&frame.pixels),
@@ -330,7 +333,7 @@ pub(crate) fn rotate(frame: &mut Frame, degrees: f64) -> Result<()> {
     let gy = (min_y - 0.5).floor();
     let out_w = (max_x - gx + 0.5).ceil();
     let out_h = (max_y - gy + 0.5).ceil();
-    check_dimensions(out_w as u64, out_h as u64)?;
+    check_replacement(&frame.pixels, out_w as u64, out_h as u64)?;
     let (out_w, out_h) = (out_w as u32, out_h as u32);
     let src = &frame.pixels;
     let mut out = RgbaImage::new(out_w, out_h);
