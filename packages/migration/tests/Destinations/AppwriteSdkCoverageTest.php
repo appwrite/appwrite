@@ -67,6 +67,7 @@ class AppwriteSdkCoverageTest extends TestCase
     private const array PROJECT_METHODS = [
         'updateAuthMethod' => 'migrated: AuthMethods',
         'updateLabels' => 'migrated: Labels',
+        'updatePrefs' => 'migrated: Preferences',
         'updateProtocol' => 'migrated: Protocols',
         'updateService' => 'migrated: Services',
         'updateSMTP' => 'migrated: SMTP',
@@ -97,6 +98,7 @@ class AppwriteSdkCoverageTest extends TestCase
      * Policy update methods whose policy Policies carries.
      */
     private const array POLICIES = [
+        'updateAccountDevicesPolicy',
         'updateDenyAliasedEmailPolicy',
         'updateDenyCorporateEmailPolicy',
         'updateDenyDisposableEmailPolicy',

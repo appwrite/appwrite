@@ -19,6 +19,7 @@ final class Dispatcher
         private readonly MaintenancePublisher $publisher,
         private readonly Cycle $cycle,
         private readonly string $region,
+        private readonly Cohort $cohort,
     ) {
     }
 
@@ -41,6 +42,7 @@ final class Dispatcher
                 due: $due,
                 period: $this->cycle->seconds(),
                 region: $this->region,
+                cohort: $this->cohort,
             ));
 
             if ($published === false) {

@@ -43,11 +43,20 @@ readonly class State
     }
 
     /**
-     * The state signed with the key, or null when it is malformed or the signature does not match.
+     * The signed state as an opaque token, for a provider that takes the state
+     * as one instead of echoing JSON. `verify()` reads either form.
      */
-    public static function verify(string $state, string $key): ?self
+    public function encode(string $key): string
     {
-        $decoded = \json_decode($state, true);
+        return \rtrim(\strtr(\base64_encode((string) \json_encode($this->sign($key), JSON_UNESCAPED_SLASHES)), '+/', '-_'), '=');
+    }
+
+    /**
+     * The state signed with any of the keys, or null when it is malformed or no signature matches.
+     */
+    public static function verify(string $state, string ...$keys): ?self
+    {
+        $decoded = \json_decode(self::decode($state), true);
 
         if (!\is_array($decoded)) {
             return null;
@@ -72,7 +81,7 @@ readonly class State
             $decoded['nonce'],
         );
 
-        if (!\hash_equals($verified->signature($key), $decoded['signature'])) {
+        if (!\array_any($keys, fn (string $key) => $key !== '' && \hash_equals($verified->signature($key), $decoded['signature']))) {
             return null;
         }
 
@@ -82,6 +91,17 @@ readonly class State
     public function isExpired(): bool
     {
         return $this->expire < \time();
+    }
+
+    /**
+     * The signed JSON, from either the plain or the base64url-encoded form
+     * `encode()` produces. JSON is not valid base64url, so it falls through.
+     */
+    private static function decode(string $state): string
+    {
+        $decoded = \base64_decode(\strtr($state, '-_', '+/'), true);
+
+        return $decoded !== false && \str_starts_with($decoded, '{') ? $decoded : $state;
     }
 
     private function signature(string $key): string

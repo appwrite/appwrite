@@ -23,24 +23,24 @@ export const HTML_THEME_CLASSES = [
   'legacy',
 ] as const
 
-/** Active theme class on `<html>`, or light/dark from system preference when unset. */
+/** Active theme class on `<html>`, or dark when unset. */
 export function getHtmlThemeKey(): string {
-  if (typeof document === 'undefined') return 'light'
+  if (typeof document === 'undefined') return 'dark'
 
   const root = document.documentElement
   for (const theme of HTML_THEME_CLASSES) {
     if (root.classList.contains(theme)) return theme
   }
 
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light'
+  return 'dark'
 }
 
 export function isHtmlDarkChrome(): boolean {
-  if (typeof document === 'undefined') return false
+  if (typeof document === 'undefined') return true
   const list = document.documentElement.classList
-  return DARK_CHROME_CLASSES.some((c) => list.contains(c))
+  if (DARK_CHROME_CLASSES.some((c) => list.contains(c))) return true
+  if (HTML_THEME_CLASSES.some((c) => list.contains(c))) return false
+  return true
 }
 
 /** next-themes `resolvedTheme` after system resolution (custom themes keep their name). */
@@ -58,19 +58,18 @@ export function isResolvedThemeDarkChrome(
 }
 
 /**
- * Standard light/dark only (including when theme is "system" and resolves to light or dark).
- * Custom console themes (crazy, stealth, etc.) return false.
+ * Standard light/dark only. Custom console themes (crazy, stealth, etc.) return false.
  */
 export function isStandardLightOrDarkTheme(
   theme: string | undefined,
   resolvedTheme: string | undefined,
 ): boolean {
-  const effective = theme === 'system' ? resolvedTheme : theme
+  const effective = theme === 'system' ? (resolvedTheme ?? 'dark') : theme
   return effective === 'light' || effective === 'dark'
 }
 
 /**
- * Tailwind classes for the header Appwrite mark: brand pink on light/dark (and system→light/dark);
+ * Tailwind classes for the header Appwrite mark: brand pink on light/dark;
  * theme primary on crazy, stealth, premium, etc. so the logo matches each palette.
  */
 export function getConsoleHeaderLogoClass(
@@ -81,7 +80,7 @@ export function getConsoleHeaderLogoClass(
   if (!mounted) {
     return 'text-[var(--brand-cta)]'
   }
-  const effective = theme === 'system' ? resolvedTheme : theme
+  const effective = theme === 'system' ? (resolvedTheme ?? 'dark') : theme
   if (effective === 'light' || effective === 'dark') {
     return 'text-[var(--brand-cta)]'
   }

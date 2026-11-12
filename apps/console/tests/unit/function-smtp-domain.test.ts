@@ -1,12 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 import {
   getSmtpDnsRecords,
-  getSmtpRecordName,
   needsSmtpDnsVerification,
   isSmtpRule,
   type SmtpProxyRule,
 } from '@/lib/function-smtp-domain'
-import { ProxyRuleStatus, type Models } from '@appwrite.io/console'
+import { ProxyRuleProtocol, ProxyRuleStatus, type Models } from '@appwrite.io/console'
 
 function ruleStub(overrides: Partial<SmtpProxyRule> = {}): SmtpProxyRule {
   return {
@@ -24,18 +23,12 @@ function ruleStub(overrides: Partial<SmtpProxyRule> = {}): SmtpProxyRule {
     deploymentResourceId: 'fn1',
     deploymentVcsProviderBranch: '',
     logs: '',
-    protocol: 'smtp',
+    protocol: ProxyRuleProtocol.Smtp,
     ...overrides,
   } as Models.ProxyRule & SmtpProxyRule
 }
 
 describe('smtp domain DNS helpers', () => {
-  test('names records relative to the registrable domain', () => {
-    expect(getSmtpRecordName('example.com')).toBe('@')
-    expect(getSmtpRecordName('mail.example.com')).toBe('mail')
-    expect(getSmtpRecordName('in.mail.example.co.uk')).toBe('in.mail')
-  })
-
   test('names the TXT record for an apex domain', () => {
     expect(
       getSmtpDnsRecords({
@@ -111,7 +104,7 @@ describe('smtp domain DNS helpers', () => {
 describe('smtp rule detection', () => {
   test('tells SMTP rules apart from HTTP rules', () => {
     expect(isSmtpRule(ruleStub())).toBe(true)
-    expect(isSmtpRule(ruleStub({ protocol: 'http' }))).toBe(false)
+    expect(isSmtpRule(ruleStub({ protocol: ProxyRuleProtocol.Http }))).toBe(false)
     expect(isSmtpRule(ruleStub({ protocol: undefined }))).toBe(false)
   })
 })

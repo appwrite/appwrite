@@ -134,20 +134,11 @@ export function PostgresSchemaVisualizer({ databaseId }: SchemaVisualizerProps) 
   const [showMinimap, setShowMinimap] = useState(true)
   const [copiedLink, setCopiedLink] = useState(false)
 
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return (
-      isHtmlDarkChrome() ||
-      window.matchMedia('(prefers-color-scheme: dark)').matches
-    )
-  })
+  const [isDarkMode, setIsDarkMode] = useState(() => isHtmlDarkChrome())
 
   useEffect(() => {
     const checkDarkMode = () => {
-      setIsDarkMode(
-        isHtmlDarkChrome() ||
-          window.matchMedia('(prefers-color-scheme: dark)').matches,
-      )
+      setIsDarkMode(isHtmlDarkChrome())
     }
 
     checkDarkMode()
@@ -158,12 +149,8 @@ export function PostgresSchemaVisualizer({ databaseId }: SchemaVisualizerProps) 
       attributeFilter: ['class'],
     })
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    mediaQuery.addEventListener('change', checkDarkMode)
-
     return () => {
       observer.disconnect()
-      mediaQuery.removeEventListener('change', checkDarkMode)
     }
   }, [])
 

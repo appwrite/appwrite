@@ -2656,6 +2656,7 @@ trait TransactionPermissionsBase
             ]);
 
             $this->assertEquals(401, $staged['headers']['status-code'], "Staging {$action} as a user should fail");
+            $this->assertSame('general_unauthorized_scope', $staged['body']['type'], "Staging {$action} as a user is refused like the bulk route itself");
         }
 
         $read = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);

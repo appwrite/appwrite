@@ -6,14 +6,14 @@ use Exception;
 use Redis as Client;
 use Throwable;
 use Utopia\Cache\Adapter;
-use Utopia\Cache\Adapter\Redis\Leasable;
 use Utopia\Cache\Adapter\Redis\NoScript;
+use Utopia\Cache\Adapter\Redis\Versioned;
 use Utopia\Cache\Codec;
 use Utopia\Cache\Codec\Json;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Retryable;
 
-class Redis extends Leasable implements Adapter, Batchable, Retryable
+class Redis extends Versioned implements Adapter, Batchable, Retryable
 {
     protected Client $redis;
 
@@ -178,7 +178,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
 
         try {
             $value = $this->envelope->encode($data, time());
-            $this->execute(fn (): \Redis|int|false => $this->redis->hSet($key, $hash, $value));
+            $this->execute(fn (): \Redis|bool => $this->redis->hMSet($key, [$hash => $value, self::VERSION_FIELD => \bin2hex(\random_bytes(16))]));
 
             if ($ttl > 0) {
                 $this->execute(fn (): \Redis|bool => $this->redis->expire($key, $ttl));
@@ -213,6 +213,8 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
         if ($map === []) {
             return false;
         }
+
+        $map[self::VERSION_FIELD] = \bin2hex(\random_bytes(16));
 
         try {
             $this->execute(fn (): \Redis|bool => $this->redis->hMSet($key, $map));
@@ -253,7 +255,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             return false;
         }
 
-        return $this->execute(fn (): \Redis|int|false => $this->redis->hSet($key, $hash, $value)) !== false;
+        return $this->execute(fn (): \Redis|bool => $this->redis->hMSet($key, [$hash => $value, self::VERSION_FIELD => \bin2hex(\random_bytes(16))])) !== false;
     }
 
     /**
@@ -268,7 +270,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             return [];
         }
 
-        // Don't expose reserved internal fields (generation, tombstone) as listable cache fields.
+        // Don't expose reserved internal fields (version, tombstone) as listable cache fields.
         return array_values(array_filter($keys, fn (string $field): bool => ! $this->isReserved($field)));
     }
 
@@ -324,11 +326,6 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
         }
 
         return $result;
-    }
-
-    protected function leaseHget(string $key, string $field): mixed
-    {
-        return $this->execute(fn (): \Redis|string|false => $this->redis->hGet($key, $field));
     }
 
     public function flush(): bool

@@ -11,7 +11,7 @@ class TestServiceCLI extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_TASK;
-        $this->addAction('build', new TestActionCLI());
-        $this->addAction('build2', new TestActionCLI());
+        $this->addAction('build', TestActionCLI::class);
+        $this->addAction('build2', TestActionCLI::class);
     }
 }

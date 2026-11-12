@@ -122,9 +122,9 @@ class Telemetry extends Device
      * @param  int<0, max>  $offset
      * @param  int<0, max>|null  $length
      */
-    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface
+    public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null, ?\DateTimeInterface $modifiedSince = null): StreamInterface
     {
-        return $this->measure(__FUNCTION__, fn (): StreamInterface => $this->device->read($path, $offset, $length, $etag));
+        return $this->measure(__FUNCTION__, fn (): StreamInterface => $this->device->read($path, $offset, $length, $etag, $modifiedSince));
     }
 
     public function stream(string $path, callable $sink, int $offset = 0, ?int $length = null, ?string $etag = null): void

@@ -30,8 +30,6 @@ import {
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 
-const START_PROMO_BANNER = getConsoleBannerById(START_PROMO_BANNER_ID)!
-
 const START_PROMO_IMAGE_MASK_STYLE = {
   WebkitMaskImage:
     'linear-gradient(to right, #000 30%, transparent 72%), linear-gradient(to bottom, #000 62%, transparent 86%)',
@@ -60,9 +58,13 @@ export function StartPromoBanner() {
   const audience = useStartPromoBannerAudience()
   const countryCode = useVisitorCountryCode()
   const promoContent = resolveStartPromoBannerContent(countryCode)
+  // Launch and expansion countries run on separate schedules and dismissals.
+  const bannerId = promoContent?.bannerId ?? START_PROMO_BANNER_ID
+  const banner = getConsoleBannerById(bannerId)!
   const [optimisticDismissed, setOptimisticDismissed] = useState(false)
-  const [guestDismissed, setGuestDismissed] = useState(() =>
-    isGuestConsoleBannerDismissed(START_PROMO_BANNER_ID),
+  const guestDismissed = useMemo(
+    () => isGuestConsoleBannerDismissed(bannerId),
+    [bannerId],
   )
   const [mountExpanded, setMountExpanded] = useState(
     () => startPromoBannerSkipEntrance,
@@ -72,15 +74,15 @@ export function StartPromoBanner() {
   )
   const showBannerRef = useRef(false)
 
-  const preview = isPreviewEnabled(START_PROMO_BANNER_ID)
+  const preview = isPreviewEnabled(bannerId)
 
   const dismissedFromPrefs = useMemo(
     () =>
       isConsoleBannerDismissed(
         account?.prefs as UserPrefs | undefined,
-        START_PROMO_BANNER_ID,
+        bannerId,
       ),
-    [account?.prefs],
+    [account?.prefs, bannerId],
   )
 
   const dismissed =
@@ -88,7 +90,7 @@ export function StartPromoBanner() {
     dismissedFromPrefs ||
     (!isAuthenticated && guestDismissed)
 
-  const scheduledVisible = isConsoleBannerVisible(START_PROMO_BANNER, {
+  const scheduledVisible = isConsoleBannerVisible(banner, {
     preview,
     dismissed,
   })
@@ -162,11 +164,10 @@ export function StartPromoBanner() {
     event.stopPropagation()
     setOptimisticDismissed(true)
     if (isAuthenticated) {
-      dismissBanner.mutate(START_PROMO_BANNER_ID)
+      dismissBanner.mutate(bannerId)
       return
     }
-    persistGuestConsoleBannerDismiss(START_PROMO_BANNER_ID)
-    setGuestDismissed(true)
+    persistGuestConsoleBannerDismiss(bannerId)
   }
 
   const headline = t(promoContent.headline)
@@ -194,28 +195,28 @@ export function StartPromoBanner() {
         >
           <Link
             to={BLOG_POST_PATH}
-            {...analyticsAttrs(START_PROMO_BANNER.event)}
+            {...analyticsAttrs(banner.event)}
             aria-label={`${headline}. ${subline} ${ctaLabel}`}
-            className="group relative z-0 flex min-h-28 w-full cursor-pointer items-center justify-center px-3 pe-10 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-7 sm:px-9 sm:pe-12"
+            className="group relative z-0 flex w-full cursor-pointer items-center justify-between gap-3 py-3 ps-4 pe-12 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-28 sm:justify-center sm:gap-7 sm:px-9 sm:pe-12"
           >
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-y-0 start-0 hidden w-[min(42%,360px)] overflow-hidden sm:block"
+              className="pointer-events-none absolute inset-y-0 start-0 w-[min(60%,360px)] overflow-hidden sm:w-[min(42%,360px)]"
             >
               <img
                 src={promoContent.imageSrc}
                 alt=""
-                className="absolute start-[-40px] top-[-92px] h-[360px] w-auto max-w-none opacity-90"
+                className="absolute start-[-28px] top-[-60px] h-[240px] w-auto max-w-none opacity-40 sm:start-[-40px] sm:top-[-92px] sm:h-[360px] sm:opacity-90"
                 style={START_PROMO_IMAGE_MASK_STYLE}
               />
             </div>
 
-            <div className="relative z-10 flex min-w-0 flex-col items-center gap-1 text-center sm:items-start sm:text-start">
-              <p className="truncate text-[18px] font-medium leading-tight tracking-[-0.02em] text-[#fafafa] sm:text-[22px] md:text-[26px]">
+            <div className="relative z-10 flex min-w-0 flex-col items-start gap-0.5 text-start sm:gap-1">
+              <p className="truncate text-[16px] font-medium leading-tight tracking-[-0.02em] text-[#fafafa] sm:text-[22px] md:text-[26px]">
                 {headline}
                 <span className="text-[#fd366e]">_</span>
               </p>
-              <p className="hidden max-w-[min(100%,520px)] truncate text-[13px] text-[#c9c9d1] sm:block sm:text-[15px]">
+              <p className="line-clamp-2 max-w-[min(100%,520px)] text-[12px] leading-snug text-[#c9c9d1] sm:line-clamp-none sm:truncate sm:text-[15px]">
                 {subline}
               </p>
             </div>
@@ -248,7 +249,7 @@ export function StartPromoBanner() {
             onPointerDown={(event) => event.stopPropagation()}
             disabled={dismissBanner.isPending}
             aria-label={t('Dismiss banner')}
-            className="absolute end-1 top-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-[#a8a8b3] transition-colors hover:bg-white/5 hover:text-[#fafafa] disabled:opacity-50 sm:end-3"
+            className="absolute end-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-[#a8a8b3] transition-colors hover:bg-white/5 hover:text-[#fafafa] disabled:opacity-50 sm:end-3 sm:top-2 sm:translate-y-0"
           >
             <X className="h-4 w-4" aria-hidden />
           </button>

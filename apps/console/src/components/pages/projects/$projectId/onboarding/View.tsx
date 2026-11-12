@@ -51,6 +51,8 @@ import {
   pickEncouragementForBand,
 } from '@/lib/onboarding/progress-encouragement'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
+import { EnvironmentConnect } from '@/components/pages/projects/$projectId/onboarding/_components/EnvironmentConnect'
+import { useActiveEnvironmentId } from '@/lib/active-environment'
 import type { ConnectProjectTab } from '@/components/pages/projects/$projectId/shared/ConnectProject'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
@@ -675,6 +677,9 @@ export function View({ initialData }: ViewProps = {}) {
   const { catalog } = useI18n()
   const getStartedTitle = catalog.app.sidebar.onboarding.getStarted
   const { projectId } = useParams({ strict: false })
+  // Inside an environment the page is about reaching it: the checklist's
+  // platforms, keys, CLI and products are the project's, set up from production
+  const activeEnvironmentId = useActiveEnvironmentId(projectId)
   const { data: snapshotFromHook, isLoading } =
     useProjectOnboardingSnapshot(projectId)
   const snapshot = snapshotFromHook ?? initialData?.snapshot
@@ -707,6 +712,20 @@ export function View({ initialData }: ViewProps = {}) {
 
   if (!projectId) {
     return null
+  }
+
+  if (activeEnvironmentId) {
+    return (
+      <div className="flex flex-col">
+        <ServiceHeader title={getStartedTitle} fullWidthBorder />
+        <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-1 flex-col gap-6 px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+          <EnvironmentConnect
+            projectId={projectId}
+            environmentId={activeEnvironmentId}
+          />
+        </div>
+      </div>
+    )
   }
 
   return (

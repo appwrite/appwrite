@@ -9,17 +9,22 @@
 import { MCP_SERVER_NAME, MCP_SERVER_URL } from '../config/mcp.ts'
 
 /** SEP-1649 well-known Server Card location. */
-export const APPWRITE_MCP_SERVER_CARD_PATH =
-  '/.well-known/mcp/server-card.json'
+export const APPWRITE_MCP_SERVER_CARD_PATH = '/.well-known/mcp/server-card.json'
 
 /**
- * Domain-level AI Catalog (current discovery flow). Points clients at the
+ * Agentic Resource Discovery (ARD v0.91) manifest. Points clients at the
  * Server Card URL rather than inlining the card.
  */
+export const APPWRITE_ARD_PATH = '/.well-known/ard.json'
+/** Pre-ARD path, still probed by scanners. */
 export const APPWRITE_AI_CATALOG_PATH = '/.well-known/ai-catalog.json'
 
 /** @deprecated Prefer {@link APPWRITE_MCP_SERVER_CARD_PATH}. */
 export const APPWRITE_MCP_DISCOVERY_PATH = APPWRITE_MCP_SERVER_CARD_PATH
+
+/** RFC 9727 API catalog. */
+export const APPWRITE_API_CATALOG_PATH = '/.well-known/api-catalog'
+export const APPWRITE_OPENAPI_PATH = '/openapi.json'
 
 export const APPWRITE_AGENT_SKILLS_DISCOVERY_PATH =
   '/.well-known/agent-skills/index.json'
@@ -41,8 +46,9 @@ export const APPWRITE_MCP_SERVER_CARD_NAME = 'io.appwrite/mcp'
 
 export const MCP_SERVER_CARD_CONTENT_TYPE =
   'application/mcp-server-card+json; charset=utf-8'
-export const AI_CATALOG_CONTENT_TYPE =
-  'application/ai-catalog+json; charset=utf-8'
+export const API_CATALOG_CONTENT_TYPE =
+  'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"'
+export const ARD_CONTENT_TYPE = 'application/json; charset=utf-8'
 
 /** CORS headers required by MCP Server Card / AI Catalog discovery. */
 export const DISCOVERY_CORS_HEADERS = {
@@ -57,6 +63,7 @@ export type AgentSkillDiscoveryEntry = {
   type: 'skill-md'
   description: string
   url: string
+  digest?: string
 }
 
 /**
@@ -153,6 +160,13 @@ export function buildMcpServerCard(origin: string = 'https://appwrite.io') {
     $schema: MCP_SERVER_CARD_SCHEMA,
     name: APPWRITE_MCP_SERVER_CARD_NAME,
     title: 'Appwrite',
+    icons: [
+      {
+        src: `${origin}/apple-touch-icon.png`,
+        mimeType: 'image/png',
+        sizes: ['180x180'],
+      },
+    ],
     description:
       'Backend API for auth, databases, storage, functions, messaging, and hosting.',
     version: '1.0.0',
@@ -195,7 +209,9 @@ export function buildMcpServerCard(origin: string = 'https://appwrite.io') {
 }
 
 /** @deprecated Use {@link buildMcpServerCard}. */
-export function buildMcpDiscoveryDocument(origin: string = 'https://appwrite.io') {
+export function buildMcpDiscoveryDocument(
+  origin: string = 'https://appwrite.io',
+) {
   return buildMcpServerCard(origin)
 }
 
@@ -203,11 +219,47 @@ export function buildMcpDiscoveryDocument(origin: string = 'https://appwrite.io'
 export function buildAiCatalogDocument(origin: string = 'https://appwrite.io') {
   return {
     specVersion: '1.0',
+    host: {
+      displayName: 'Appwrite',
+      identifier: 'did:web:appwrite.io',
+    },
     entries: [
       {
         identifier: 'urn:air:appwrite.io:mcp:appwrite',
+        displayName: 'Appwrite MCP Server',
         type: 'application/mcp-server-card+json',
         url: `${origin}${APPWRITE_MCP_SERVER_CARD_PATH}`,
+        description:
+          'Manage Appwrite projects, auth, databases, storage, functions, sites, and messaging from an AI agent.',
+        representativeQueries: [
+          'create a database table for my app',
+          'add email and OAuth sign-in to my app',
+          'deploy a serverless function',
+          'upload files to a storage bucket',
+        ],
+      },
+    ],
+  }
+}
+
+/** RFC 9727 Linkset pointing at the REST API, its OpenAPI spec and docs. */
+export function buildApiCatalogDocument(
+  origin: string = 'https://appwrite.io',
+) {
+  return {
+    linkset: [
+      {
+        anchor: 'https://cloud.appwrite.io/v1',
+        'service-desc': [
+          {
+            href: `${origin}${APPWRITE_OPENAPI_PATH}`,
+            type: 'application/json',
+          },
+        ],
+        'service-doc': [
+          { href: `${origin}/docs/apis/rest`, type: 'text/html' },
+        ],
+        item: [{ href: 'https://cloud.appwrite.io/v1' }],
       },
     ],
   }

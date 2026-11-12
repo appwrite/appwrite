@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
@@ -81,13 +82,7 @@ class Get extends Action
         // This endpoint is public -- without verifying the signature the
         // Authorize action put in state, anyone could pass an arbitrary
         // projectId here and attach an installation to another project.
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
-
-        if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
-        }
-
-        $state = State::verify($state, $signingKey);
+        $state = State::verify($state, ...EncryptionKey::accepted());
 
         if ($state === null) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');

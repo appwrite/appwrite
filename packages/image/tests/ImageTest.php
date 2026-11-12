@@ -6,6 +6,9 @@ namespace Utopia\Image\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Image\Exception\CorruptImageException;
+use Utopia\Image\Exception\ImageException;
+use Utopia\Image\Exception\LimitExceededException;
 use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Image;
 
@@ -1232,5 +1235,127 @@ final class ImageTest extends TestCase
             $this->assertSame(20, $frame->getImageWidth());
             $this->assertSame(20, $frame->getImageHeight());
         }
+    }
+
+    public function testCorruptImageThrows(): void
+    {
+        $png = file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '';
+
+        $this->expectException(CorruptImageException::class);
+        $this->expectExceptionMessage('Corrupt or truncated image');
+
+        new Image(substr($png, 0, 200));
+    }
+
+    public function testUnknownOutputTypeThrows(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+
+        $this->expectException(UnsupportedFormatException::class);
+        $this->expectExceptionMessage('Unsupported output format: bmp');
+
+        $image->output('bmp');
+    }
+
+    public function testDimensionsOverTheLimitThrow(): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+
+        $this->expectException(LimitExceededException::class);
+        $this->expectExceptionMessage('Image exceeds the size or memory limits');
+
+        $image->crop(60000, 10);
+    }
+
+    public function testEveryImageFailureIsAnImageException(): void
+    {
+        try {
+            new Image('not an image');
+            $this->fail('Expected an ImageException');
+        } catch (ImageException $exception) {
+            $this->assertInstanceOf(UnsupportedFormatException::class, $exception);
+        }
+    }
+
+    /**
+     * @return array<string, array{\Closure(Image): mixed, string}>
+     */
+    public static function invalidArguments(): array
+    {
+        return [
+            'negative width' => [fn (Image $image) => $image->crop(-1, 10), 'Width and height must not be negative'],
+            'negative height at a gravity' => [fn (Image $image) => $image->crop(10, -1, Image::GRAVITY_TOP), 'Width and height must not be negative'],
+            'negative border' => [fn (Image $image) => $image->setBorder(-1, '#ff0000'), 'Border width must not be negative'],
+            'negative radius' => [fn (Image $image) => $image->setBorderRadius(-1), 'Corner radius must not be negative'],
+            'unknown border colour' => [fn (Image $image) => $image->setBorder(2, 'no-such-colour'), 'Invalid color: no-such-colour'],
+            'unknown background colour' => [fn (Image $image) => $image->setBackground('no-such-colour'), 'Invalid color: no-such-colour'],
+        ];
+    }
+
+    #[DataProvider('invalidArguments')]
+    public function testInvalidArgumentsThrow(\Closure $call, string $message): void
+    {
+        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+
+        $call($image);
+    }
+
+    public function testRoundedCornersAfterABackgroundAreTransparent(): void
+    {
+        // ImageMagick 6 flattens to an image with no alpha channel, so the corners it cuts are black.
+        if (! (new \ReflectionClass(Image::class))->isInternal() && \Imagick::getVersion()['versionNumber'] < 0x700) {
+            self::markTestSkipped('ImageMagick 7 keeps the alpha channel when flattening; this is ImageMagick 6.');
+        }
+
+        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image->crop(256, 256)->setBackground('#336699')->setBorder(6, '#ff0000')->setBorderRadius(40);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output('png') ?? '');
+
+        // Flattening leaves an alpha channel, so the corner is cut away, and the border is stroked.
+        $this->assertEqualsWithDelta(0, $output->getImagePixelColor(1, 1)->getColorValue(\Imagick::COLOR_ALPHA), 0.01);
+        $edge = $output->getImagePixelColor(128, 3)->getColor();
+        $this->assertGreaterThan(200, $edge['r']);
+        $this->assertLessThan(60, $edge['g']);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function rotatedOutputs(): array
+    {
+        return [
+            'jpg, centre' => ['jpg', Image::GRAVITY_CENTER],
+            'jpg, gravity' => ['jpg', Image::GRAVITY_TOP_LEFT],
+            'webp, gravity' => ['webp', Image::GRAVITY_TOP_LEFT],
+            'png, gravity' => ['png', Image::GRAVITY_TOP_LEFT],
+            'avif, centre' => ['avif', Image::GRAVITY_CENTER],
+            'avif, gravity' => ['avif', Image::GRAVITY_TOP_LEFT],
+        ];
+    }
+
+    /**
+     * The EXIF rotation is applied to the pixels, so the output must not ask a viewer for it again.
+     */
+    #[DataProvider('rotatedOutputs')]
+    public function testARotatedSourceIsTurnedOnce(string $type, string $gravity): void
+    {
+        if ($type === 'avif') {
+            $this->requireEncoder('AVIF');
+        }
+
+        // 20x10, tagged as needing a quarter turn: upright it is 10x20.
+        $image = new Image($this->jpegWithExifOrientation(6));
+        $image->crop(20, 10, $gravity);
+
+        $output = new \Imagick();
+        $output->readImageBlob($image->output($type, 90) ?? '');
+
+        $this->assertSame([10, 20], [$output->getImageWidth(), $output->getImageHeight()]);
+        $this->assertContains($output->getImageOrientation(), [\Imagick::ORIENTATION_UNDEFINED, \Imagick::ORIENTATION_TOPLEFT]);
     }
 }

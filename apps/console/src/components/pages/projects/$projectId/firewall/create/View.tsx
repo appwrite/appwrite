@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { WafRuleAction } from '@appwrite.io/console'
-import { Globe, Server, Zap } from 'lucide-react'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,8 +9,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { IdInput } from '@/components/ui/id-input'
-import { FunctionSelector } from '@/components/global/shared/FunctionSelector'
-import { SiteSelector } from '@/components/global/shared/SiteSelector'
 import {
   Select,
   SelectContent,
@@ -22,6 +19,7 @@ import {
 import { ConditionsBuilder } from '../_components/ConditionsBuilder'
 import { PriorityHint } from '../_components/PriorityHint'
 import { RuleImpactPreview } from '../_components/RuleImpactPreview'
+import { RuleSchedule } from '../_components/RuleSchedule'
 import { useCreateFirewallRule } from '@/lib/react-query/hooks'
 import {
   type FirewallCreatableAction,
@@ -41,20 +39,24 @@ import {
   CHALLENGE_TTL_DEFAULT,
 } from '@/lib/firewall/actions'
 import {
-  FIREWALL_RESOURCE_TYPES,
   areFirewallConditionsComplete,
   createEmptyConditionDraft,
-  firewallListSearch,
+  firewallTabPath,
   parseFirewallListSearch,
   serializeFirewallConditions,
   type FirewallConditionDraft,
   type FirewallResourceSelection,
-  type FirewallResourceType,
 } from '@/lib/firewall/conditions'
+import {
+  defaultScheduleDraft,
+  isScheduleDraftComplete,
+  schedulePayload,
+  todayIn,
+} from '@/lib/firewall/schedule'
 import { draftsFromUsageFilterMap } from '@/lib/firewall/usage'
+import { getUserTimeZone } from '@/lib/timezones'
 import { queryParamToMap } from '@/lib/table-filters'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
 import { Route } from '@/routes/_public/projects.$projectId.firewall.create'
@@ -70,30 +72,10 @@ function initialConditionsFromSearch(
   )
 }
 
-const RESOURCE_TYPE_META: Record<
-  FirewallResourceType,
-  { description: string; icon: typeof Globe }
-> = {
-  api: {
-    description: 'All API requests for this project',
-    icon: Server,
-  },
-  functions: {
-    description: 'Requests to a specific function',
-    icon: Zap,
-  },
-  sites: {
-    description: 'Requests to a specific site',
-    icon: Globe,
-  },
-}
-
 const DEFAULT_FORM = {
   name: '',
   description: '',
   action: WafRuleAction.Deny as FirewallCreatableAction,
-  resourceType: 'api' as FirewallResourceType,
-  resourceId: '',
   priority: 100,
   enabled: true,
   limit: 100,
@@ -116,29 +98,26 @@ export function View() {
     resourceId: initialResourceId,
     query: initialQuery,
   } = Route.useSearch()
-  const initialSelection: FirewallResourceSelection = parseFirewallListSearch({
+  // The Firewall tab that opened the wizard sets the scope; it cannot change.
+  const scope: FirewallResourceSelection = parseFirewallListSearch({
     resourceType: initialResourceType,
     resourceId: initialResourceId,
   }) ?? { resourceType: 'api' }
+  const resourceId = scope.resourceType === 'api' ? undefined : scope.resourceId
   const createMutation = useCreateFirewallRule(projectId)
   const [ruleId, setRuleId] = useState<string | undefined>()
-  const [form, setForm] = useState({
-    ...DEFAULT_FORM,
-    resourceType: initialSelection.resourceType,
-    resourceId:
-      initialSelection.resourceType !== 'api' && initialSelection.resourceId
-        ? initialSelection.resourceId
-        : '',
-  })
+  const [form, setForm] = useState(DEFAULT_FORM)
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>(() =>
     initialConditionsFromSearch(initialQuery),
   )
+  const [schedule, setSchedule] = useState(() => {
+    const timeZone = getUserTimeZone()
+    return defaultScheduleDraft(timeZone, todayIn(timeZone))
+  })
 
-  const needsResourceId = form.resourceType !== 'api'
   const canSubmit =
     form.name.trim().length > 0 &&
-    (!needsResourceId || form.resourceId.trim().length > 0) &&
-    areFirewallConditionsComplete(conditions, form.resourceType) &&
+    areFirewallConditionsComplete(conditions, scope.resourceType) &&
     (form.action !== WafRuleAction.RateLimit ||
       (form.limit > 0 &&
         form.interval > 0 &&
@@ -151,29 +130,11 @@ export function View() {
         form.ttl >= CHALLENGE_TTL_MIN &&
         form.ttl <= CHALLENGE_TTL_MAX)) &&
     (form.action !== WafRuleAction.Redirect ||
-      (form.location.trim().length > 0 && form.statusCode > 0))
-
-  const navigateToRules = (
-    resourceType: FirewallResourceType = 'api',
-    resourceId?: string,
-  ) => {
-    navigate({
-      to: '/projects/$projectId/firewall',
-      params: { projectId: projectId! },
-      search: firewallListSearch({
-        resourceType,
-        resourceId,
-      }),
-    })
-  }
+      (form.location.trim().length > 0 && form.statusCode > 0)) &&
+    isScheduleDraftComplete(schedule)
 
   const handleClose = () => {
-    navigateToRules(
-      initialSelection.resourceType,
-      initialSelection.resourceType === 'api'
-        ? undefined
-        : initialSelection.resourceId,
-    )
+    navigate({ to: firewallTabPath(projectId!, scope) })
   }
 
   const handleSubmit = async () => {
@@ -182,8 +143,8 @@ export function View() {
       await createMutation.mutateAsync({
         ruleId,
         action: form.action,
-        resourceType: form.resourceType,
-        resourceId: needsResourceId ? form.resourceId.trim() : undefined,
+        resourceType: scope.resourceType,
+        resourceId,
         name: form.name.trim(),
         description: form.description.trim() || undefined,
         priority: form.priority,
@@ -198,12 +159,10 @@ export function View() {
         ttl: form.ttl,
         location: form.location.trim(),
         statusCode: form.statusCode,
+        schedule: schedulePayload(schedule),
       })
       toast.success(t('Firewall rule created'))
-      navigateToRules(
-        form.resourceType,
-        needsResourceId ? form.resourceId.trim() : undefined,
-      )
+      handleClose()
     } catch (error) {
       toast.error(
         getErrorMessage(error as Error, t('Failed to create firewall rule')),
@@ -376,8 +335,8 @@ export function View() {
         <RuleImpactPreview
           conditions={conditions}
           action={form.action}
-          resourceType={form.resourceType}
-          resourceId={form.resourceId}
+          resourceType={scope.resourceType}
+          resourceId={resourceId}
           rateLimit={{
             strategy: form.strategy,
             limit: form.limit,
@@ -432,76 +391,10 @@ export function View() {
           </div>
         </div>
 
-        <div className="space-y-3">
-          <Label>{t('Resource type')}</Label>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {FIREWALL_RESOURCE_TYPES.map((resource) => {
-              const meta = RESOURCE_TYPE_META[resource.value]
-              const Icon = meta.icon
-              const selected = form.resourceType === resource.value
-              return (
-                <button
-                  key={resource.value}
-                  type="button"
-                  onClick={() => {
-                    setForm({
-                      ...form,
-                      resourceType: resource.value,
-                      resourceId: '',
-                    })
-                  }}
-                  className={cn(
-                    'flex w-full cursor-pointer items-start gap-3 rounded-xl border border-border bg-card/50 p-3.5 text-start transition-all hover:border-border/80 hover:bg-card/60',
-                    selected &&
-                      'border-primary ring-1 ring-primary/20 hover:border-primary',
-                  )}
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground">
-                      {t(resource.label)}
-                    </p>
-                    <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
-                      {t(meta.description)}
-                    </p>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-
-          {needsResourceId ? (
-            <div className="space-y-2 pt-1">
-              <Label>{t('Resource ID')}</Label>
-              {form.resourceType === 'functions' ? (
-                <FunctionSelector
-                  projectId={projectId}
-                  value={form.resourceId}
-                  onValueChange={(resourceId) =>
-                    setForm({ ...form, resourceId })
-                  }
-                  triggerClassName="w-full justify-between font-normal"
-                />
-              ) : (
-                <SiteSelector
-                  projectId={projectId}
-                  value={form.resourceId}
-                  onValueChange={(resourceId) =>
-                    setForm({ ...form, resourceId })
-                  }
-                  triggerClassName="w-full justify-between font-normal"
-                />
-              )}
-            </div>
-          ) : null}
-        </div>
-
         <ConditionsBuilder
           conditions={conditions}
           onChange={setConditions}
-          resourceType={form.resourceType}
+          resourceType={scope.resourceType}
           action={form.action}
           onActionChange={(next) => setForm({ ...form, action: next })}
           actionExtras={actionExtras}
@@ -523,6 +416,8 @@ export function View() {
           <Label>{t('Rule ID')}</Label>
           <IdInput value={ruleId} onChange={setRuleId} />
         </div>
+
+        <RuleSchedule value={schedule} onChange={setSchedule} />
 
         <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
           <div>

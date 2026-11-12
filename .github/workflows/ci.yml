@@ -38,6 +38,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       server: ${{ steps.changes.outputs.server }}
+      extension: ${{ steps.changes.outputs.extension }}
       services: ${{ steps.changes.outputs.services }}
       groups: ${{ steps.changes.outputs.groups }}
       databases: ${{ steps.changes.outputs.databases }}
@@ -443,6 +444,48 @@ jobs:
       - name: Test package${{ matrix.linked && ' (linked)' || '' }}
         run: bin/monorepo test "$PACKAGE" $LINKED
 
+  # The utopia PHP extension (crates/extension): the crates' own checks, then
+  # the PHP packages it replaces classes of, tested with it loaded.
+  extension:
+    name: Extension
+    needs: changes
+    if: needs.changes.outputs.extension == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Build the toolchain image
+        run: docker build --target extension-build --tag utopia-extension-build .
+
+      - name: Check crates
+        run: |
+          # rustdoc does not read .cargo/config.toml's rustflags, and a static
+          # musl doctest cannot link the shared libheif.
+          docker run --rm --volume "$PWD:/usr/local/src" --env CARGO_TARGET_DIR=/tmp/target \
+            --env RUSTDOCFLAGS="-C target-feature=-crt-static" utopia-extension-build sh -c '
+            . "$HOME/.cargo/env" &&
+            rustup component add clippy rustfmt &&
+            cargo fmt --all --check &&
+            cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
+            cargo test --locked -p php-std -p utopia-image --all-features'
+
+      - name: Build the image with the extension
+        run: >-
+          docker build --target development --tag appwrite-utopia
+          --build-arg UTOPIA_EXTENSION=true --build-arg TESTING=true .
+
+      - name: Test packages with the extension loaded
+        run: |
+          docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
+            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
+            php --ri utopia &&
+            php crates/extension/tests/image.php &&
+            vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests'
+
   build:
     name: Build
     needs: changes
@@ -776,7 +819,8 @@ jobs:
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
           _APP_DOCUMENTSDB: enabled
           _APP_VECTORSDB: enabled
-          # Only the Projects suite waits for the scheduler to reach an inactive project; empty keeps the default.
+          # Only the Projects suite waits for the scheduler to reach a project of each cohort; empty keeps the default.
+          _APP_MAINTENANCE_INTERVAL: ${{ matrix.service.name == 'Projects' && '30' || '' }}
           _APP_MAINTENANCE_INACTIVE_INTERVAL: ${{ matrix.service.name == 'Projects' && '30' || '' }}
         run: docker compose up -d --quiet-pull --wait
 
@@ -823,7 +867,7 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="$API_RESPONSE_FORMAT" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --exclude-group usageOutage --log-junit "tests/e2e/Services/$SERVICE/junit.xml"
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --exclude-group usageOutage --exclude-group responseCache --exclude-group responseCacheOutage --log-junit "tests/e2e/Services/$SERVICE/junit.xml"
 
       - name: Check for native crashes
         if: ${{ !cancelled() }}
@@ -891,6 +935,10 @@ jobs:
           _APP_STORAGE_S3_REGION: us-east-1
           _APP_STORAGE_S3_ENDPOINT: http://minio:9000
           _APP_EXECUTOR_CONNECTION_STORAGE: ${{ matrix.config.storage_device == 's3' && 's3://minio:minio12345@localhost?region=us-east-1&url=http%3A%2F%2Fminio%3A9000' || 'local://localhost' }}
+          _APP_CONNECTIONS_STORAGE_CACHE: ${{ matrix.config.storage_cache_percent && 's3://minio:minio12345@minio/appwrite?region=us-east-1' || '' }}
+          _APP_STORAGE_CACHE_PERCENT: ${{ matrix.config.storage_cache_percent || '0' }}
+          # Few enough workers for the outage test to run each one out of device connections.
+          _APP_WORKER_PER_CORE: ${{ matrix.config.worker_per_core || '6' }}
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
@@ -954,6 +1002,27 @@ jobs:
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="$API_RESPONSE_FORMAT"
           appwrite test "$TESTS" --group="$GROUP"
+
+      - name: Run tests with the cache device down
+        if: matrix.config.group == 'responseCache'
+        timeout-minutes: 15
+        run: |
+          # Later steps need the device running, or stopped, not paused.
+          trap 'docker compose unpause minio || true' EXIT
+
+          # Fails on a skip, which is how the test reports finding the device still up.
+          outage() {
+            docker compose exec -T \
+              -e _APP_E2E_RESPONSE_FORMAT="$API_RESPONSE_FORMAT" \
+              appwrite test "$TESTS" --group=responseCacheOutage --fail-on-skipped
+          }
+
+          docker compose pause minio
+          outage
+          docker compose unpause minio
+
+          docker compose stop minio
+          outage
 
       - name: Check for native crashes
         if: ${{ !cancelled() }}
@@ -1189,6 +1258,7 @@ jobs:
       - static-rules
       - packages
       - package
+      - extension
       - build
       - unit
       - e2e_general

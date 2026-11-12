@@ -117,21 +117,34 @@ final class APNSTest extends TestCase
             to: ['token'],
             title: 'Title',
             body: 'Body',
+            tag: 'alert:1',
             priority: Priority::HIGH,
         ));
 
         $this->assertSame('Title', $stub->capturedBodies[0]['aps']['alert']['title']);
         $this->assertContains('apns-push-type: alert', $stub->capturedHeaders);
         $this->assertContains('apns-priority: 10', $stub->capturedHeaders);
+        // The tag collapses a later push onto this one on the device.
+        $this->assertContains('apns-collapse-id: alert:1', $stub->capturedHeaders);
+
+        // APNs refuses a collapse ID over 64 bytes, so a longer tag is left out.
+        $long = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
+        $long->send(new Push(
+            to: ['token'],
+            title: 'Title',
+            tag: \str_repeat('a', 65),
+        ));
+        $this->assertContains('apns-push-type: alert', $long->capturedHeaders);
+        $this->assertNotContains('apns-collapse-id: ' . \str_repeat('a', 65), $long->capturedHeaders);
     }
 
     public function testResultsMapToTheTokenSent(): void
     {
         $stub = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
-        $stub->failures = [0 => 'BadDeviceToken'];
+        $stub->failures = [0 => 'BadDeviceToken', 2 => 'Unregistered'];
 
         $result = $stub->send(new Push(
-            to: ['abc#/victim-token', 'valid-token'],
+            to: ['abc#/victim-token', 'valid-token', 'uninstalled-token'],
             title: 'Title',
         ));
 
@@ -140,9 +153,12 @@ final class APNSTest extends TestCase
         $this->assertSame(1, $result['deliveredTo']);
 
         $failed = \array_values(\array_filter($result['results'], fn (array $entry): bool => $entry['status'] === 'failure'));
-        $this->assertCount(1, $failed);
+        $this->assertCount(2, $failed);
         $this->assertSame('abc#/victim-token', $failed[0]['recipient']);
         $this->assertSame('Expired device token', $failed[0]['error']);
+        // An app removed from the device leaves its token unregistered, which is as dead as an expired one.
+        $this->assertSame('uninstalled-token', $failed[1]['recipient']);
+        $this->assertSame('Expired device token', $failed[1]['error']);
     }
 
     /**

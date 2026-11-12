@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
-import type { Models, VideoOutput } from '@appwrite.io/console'
 import { CodeXml, Info } from 'lucide-react'
 import { VideoPage, VideoSectionCard } from '../../_components/VideoPage'
 import { VideoTermHint } from '../../_components/VideoTermHint'
@@ -32,6 +31,7 @@ import {
   VIDEO_MASTER_MANIFESTS,
 } from '@/lib/videos/urls'
 import { useT } from '@/lib/i18n/translate'
+import type { VideoOutput, VideoRendition, VideoSubtitle } from '@/lib/appwrite/videos'
 
 const MANIFEST_TERMS: Record<string, VideoGlossaryTerm> = {
   hls: 'hls',
@@ -166,7 +166,7 @@ function SubtitleUrlsCard({
 }: {
   projectId: string
   videoId: string
-  subtitles: Models.VideoSubtitle[]
+  subtitles: VideoSubtitle[]
 }) {
   const t = useT()
   const [output, setOutput] = useState<SubtitleOutput>('hls')
@@ -242,8 +242,8 @@ function AdvancedUrlsCard({
 }: {
   projectId: string
   videoId: string
-  renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  renditions: VideoRendition[]
+  subtitles: VideoSubtitle[]
 }) {
   const t = useT()
   const [renditionId, setRenditionId] = useState('')

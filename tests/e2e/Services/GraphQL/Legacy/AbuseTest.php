@@ -98,6 +98,28 @@ final class AbuseTest extends Scope
         $this->assertEquals('Max query complexity should be ' . $max . ' but got 259.', $response['body']['errors'][0]['message']);
     }
 
+    public function testZeroSelectionListComplexityBlocked()
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Every selected field is removed by @skip, so the per-row selection cost is 0. The list
+        // resolver still runs (a find() + count()), so aliasing the field must not be free: each
+        // alias is charged for its rows regardless, and enough of them exceed the complexity cap.
+        $aliases = [];
+        for ($i = 0; $i < 40; $i++) {
+            $aliases[] = "a{$i}: databasesListDocuments(databaseId: \"database\", collectionId: \"collection\") { total @skip(if: true) documents @skip(if: true) { _id } }";
+        }
+        $query = 'query { ' . \implode("\n", $aliases) . ' }';
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), ['query' => $query]);
+
+        $this->assertArrayHasKey('errors', $response['body']);
+        $this->assertStringContainsString('Max query complexity should be', (string) $response['body']['errors'][0]['message']);
+    }
+
     public function testTooManyQueriesBlocked()
     {
         $projectId = $this->getProject()['$id'];

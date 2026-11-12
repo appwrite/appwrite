@@ -6,11 +6,12 @@ use Appwrite\AppwriteException;
 use Appwrite\Enums\ProjectAuthMethodId;
 use Appwrite\Enums\ProjectPolicyId;
 use Appwrite\Enums\ProjectProtocolId;
+use Appwrite\Models\EnvironmentList;
+use Appwrite\Models\PolicyAccountDevices;
 use Appwrite\Models\PolicyDenyRealtimeGuests;
 use Appwrite\Models\PolicyPasskey;
 use Appwrite\Models\PolicyPasswordPwned;
 use Appwrite\Models\PolicyPasswordRotation;
-use Appwrite\Models\ProjectList;
 use Appwrite\Query;
 use Appwrite\Services\Functions;
 use Appwrite\Services\Messaging;
@@ -79,6 +80,7 @@ use Utopia\Migration\Resources\Messaging\Subscriber;
 use Utopia\Migration\Resources\Messaging\Topic;
 use Utopia\Migration\Resources\Settings\Environment;
 use Utopia\Migration\Resources\Settings\Labels;
+use Utopia\Migration\Resources\Settings\Preferences;
 use Utopia\Migration\Resources\Settings\ProjectVariable;
 use Utopia\Migration\Resources\Settings\Protocols;
 use Utopia\Migration\Resources\Settings\Services as ServicesResource;
@@ -343,6 +345,7 @@ class Appwrite extends Source
             Resource::TYPE_PROJECT_VARIABLE,
             Resource::TYPE_PROJECT_PROTOCOLS,
             Resource::TYPE_PROJECT_LABELS,
+            Resource::TYPE_PROJECT_PREFERENCES,
             Resource::TYPE_PROJECT_SERVICES,
             Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
             Resource::TYPE_PROJECT_ENVIRONMENT,
@@ -831,6 +834,7 @@ class Appwrite extends Source
         $passwordRotation = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDROTATION());
         $passkey = $this->getPolicyIfSupported(ProjectPolicyId::PASSKEY());
         $denyRealtimeGuests = $this->getPolicyIfSupported(ProjectPolicyId::DENYREALTIMEGUESTS());
+        $accountDevices = $this->getPolicyIfSupported(ProjectPolicyId::ACCOUNTDEVICES());
 
         $policies = new Policies(
             $this->projectId,
@@ -876,6 +880,7 @@ class Appwrite extends Source
             ],
             passkeyRpId: $passkey instanceof PolicyPasskey ? $passkey->rpId : null,
             denyRealtimeGuests: $denyRealtimeGuests instanceof PolicyDenyRealtimeGuests ? $denyRealtimeGuests->enabled : null,
+            accountDevices: $accountDevices instanceof PolicyAccountDevices ? $accountDevices->enabled : null,
         );
 
         $this->callback([$policies]);
@@ -1878,6 +1883,11 @@ class Appwrite extends Source
             $report[Resource::TYPE_PROJECT_LABELS] = 1;
         }
 
+        if (\in_array(Resource::TYPE_PROJECT_PREFERENCES, $resources)) {
+            // Singleton; a source older than 2.7.0 has no project preferences.
+            $report[Resource::TYPE_PROJECT_PREFERENCES] = $this->project->get()->prefs === null ? 0 : 1;
+        }
+
         if (\in_array(Resource::TYPE_PROJECT_SERVICES, $resources)) {
             // Singleton — one services config per project.
             $report[Resource::TYPE_PROJECT_SERVICES] = 1;
@@ -1947,6 +1957,20 @@ class Appwrite extends Source
         }
 
         try {
+            if (\in_array(Resource::TYPE_PROJECT_PREFERENCES, $resources)) {
+                $this->exportPreferences();
+            }
+        } catch (\Throwable $e) {
+            $this->addError(new Exception(
+                Resource::TYPE_PROJECT_PREFERENCES,
+                Transfer::GROUP_PROJECTS,
+                message: $e->getMessage(),
+                code: (int) $e->getCode() ?: Exception::CODE_INTERNAL,
+                previous: $e
+            ));
+        }
+
+        try {
             if (\in_array(Resource::TYPE_PROJECT_SERVICES, $resources)) {
                 $this->exportServices();
             }
@@ -2001,13 +2025,13 @@ class Appwrite extends Source
             }
 
             $response = $this->listEnvironmentsIfSupported($queries);
-            if ($response === null || $response->projects === []) {
+            if ($response === null || $response->environments === []) {
                 break;
             }
 
             $environments = [];
 
-            foreach ($response->projects as $environment) {
+            foreach ($response->environments as $environment) {
                 $environments[] = new Environment(
                     $environment->id,
                     $environment->name,
@@ -2020,7 +2044,7 @@ class Appwrite extends Source
 
             $this->callback($environments);
 
-            if (\count($response->projects) < $batchSize) {
+            if (\count($response->environments) < $batchSize) {
                 break;
             }
         }
@@ -2032,7 +2056,7 @@ class Appwrite extends Source
      * @param array<string> $queries
      * @throws AppwriteException
      */
-    private function listEnvironmentsIfSupported(array $queries): ?ProjectList
+    private function listEnvironmentsIfSupported(array $queries): ?EnvironmentList
     {
         try {
             return $this->project->listEnvironments($queries);
@@ -2076,6 +2100,24 @@ class Appwrite extends Source
         );
 
         $this->callback([$labels]);
+    }
+
+    private function exportPreferences(): void
+    {
+        $project = $this->project->get();
+
+        if ($project->prefs === null) {
+            return;
+        }
+
+        $preferences = new Preferences(
+            $this->projectId,
+            $project->prefs->data,
+            createdAt: $project->createdAt,
+            updatedAt: $project->updatedAt,
+        );
+
+        $this->callback([$preferences]);
     }
 
     private function exportProtocols(): void

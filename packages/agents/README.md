@@ -6,448 +6,283 @@
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/agents.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
-Utopia Agents is a simple and lite library for building and managing AI agents in PHP applications. This library provides a collection of tools and utilities for creating, managing, and orchestrating AI agents with support for multiple AI providers. This library is maintained by the [Appwrite team](https://appwrite.io).
-
-Although this library is part of the [Utopia Framework](https://github.com/utopia-php/framework) project it is dependency free and can be used as standalone with any other PHP project or framework.
+Utopia Agents is a provider-neutral PHP library for building with language models: text generation, streaming, tool-calling agents, structured output and embeddings, behind one API for OpenAI, Anthropic, Gemini and OpenAI-compatible providers. This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ## Getting Started
 
-Install using composer:
 ```bash
 composer require utopia-php/agents
 ```
 
-## System Requirements
-
-This library requires PHP 8.5 or later. We recommend using the latest PHP version whenever possible.
+Requires PHP 8.5 or later. Requests use a keep-alive cURL client, or a pooled Swoole client inside a coroutine.
 
 ## Features
 
-- **Multiple AI Providers** - Support for OpenAI, Anthropic, Deepseek, Perplexity, XAI, Gemini, and OpenRouter APIs
-- **Flexible Message Types** - Support for text and structured content in messages
-- **Message Attachments** - Attach files (for example images) directly to conversation turns
-- **Conversation Management** - Easy-to-use conversation handling between agents and users
-- **Model Selection** - Choose from various AI models (GPT-4, Claude 3, Deepseek Chat, Sonar, Grok, etc.)
-- **Parameter Control** - Fine-tune model behavior with temperature and token controls
-- **Streaming Output** - Consume incremental model output through callback-driven Server-Sent Events (SSE) streams
+- **One API, many providers**: OpenAI, Anthropic, Gemini, DeepSeek, xAI, OpenRouter and Perplexity, plus any OpenAI-compatible endpoint
+- **Agents with tools**: a step loop that runs tool calls, feeds results back and stops on an answer, a step limit or your own condition
+- **Structured output**: describe a JSON Schema, get a validated, decoded array back
+- **Streaming**: typed events for text, reasoning, tool input, tool calls, tool results, steps and completion
+- **Typed messages**: text, images, files (PDF), reasoning, tool calls and tool results
+- **Reasoning**: one effort setting mapped to each provider's reasoning or thinking budget
+- **Usage**: normalized input, output, cache and reasoning token counts per step and per run
+- **Resilience**: typed exceptions, retries with exponential backoff and `Retry-After` on 408, 409, 429 and 5xx
+- **Embeddings**: OpenAI, Ollama and Appwrite embedding services
 
 ## Usage
 
-### Basic Example
+### Generate text
 
 ```php
-<?php
-
+use Utopia\Agents\Adapters\OpenAI;
 use Utopia\Agents\Agent;
-use Utopia\Agents\Message;
-use Utopia\Agents\Roles\User;
-use Utopia\Agents\Conversation;
-use Utopia\Agents\Adapters\OpenAI;
 
-// Create an agent with OpenAI
-$adapter = new OpenAI('your-api-key', OpenAI::MODEL_GPT_4_TURBO);
-$agent = new Agent($adapter);
+$agent = new Agent(new OpenAI(getenv('OPENAI_API_KEY'), 'gpt-5-mini'), 'You are a helpful assistant.');
 
-// Create a user
-$user = new User('user-1', 'John');
+$result = $agent->generate('What is the capital of France?');
 
-// Start a conversation
-$conversation = new Conversation($agent);
-$conversation
-    ->message($user, new Message('What is artificial intelligence?'))
-    ->send();
+echo $result->text;               // "Paris."
+echo $result->finish->value;      // "stop"
+echo $result->usage->total();     // input + output tokens
 ```
 
-### Using Different AI Providers
-
-#### OpenAI
+`generate()` accepts a string, a `Message` or a list of messages:
 
 ```php
-use Utopia\Agents\Adapters\OpenAI;
+use Utopia\Agents\Message;
+use Utopia\Agents\Parts\Image;
+use Utopia\Agents\Parts\Text;
 
-$openai = new OpenAI(
-    apiKey: 'your-api-key',
-    model: OpenAI::MODEL_GPT_4_TURBO,
-    maxTokens: 2048,
-    temperature: 0.7
-);
+$agent->generate([
+    Message::user('My name is Ada.'),
+    Message::assistant('Nice to meet you, Ada.'),
+    Message::user([new Text('What is in this picture?'), new Image(file_get_contents('photo.png'), 'image/png')]),
+]);
 ```
 
-Available OpenAI Models:
-- `MODEL_GPT_5_NANO`: GPT-5 Nano - Small GPT-5 variant optimized for low latency and cost-sensitive workloads
-- `MODEL_GPT_4_5_PREVIEW`: GPT-4.5 Preview - OpenAI's most advanced model with enhanced reasoning, broader knowledge, and improved instruction following
-- `MODEL_GPT_4_1`: GPT-4.1 - Advanced large language model with strong reasoning capabilities and improved context handling
-- `MODEL_GPT_4O`: GPT-4o - Multimodal model optimized for both text and image processing with faster response times
-- `MODEL_O4_MINI`: o4-mini - Compact version of GPT-4o offering good performance with higher throughput and lower latency
-- `MODEL_O3`: o3 - Balanced model offering good performance for general language tasks with efficient resource usage
-- `MODEL_O3_MINI`: o3-mini - Streamlined model optimized for speed and efficiency while maintaining good capabilities for routine tasks
+### Providers
 
-#### Anthropic
+Every adapter takes an API key and a model ID. The model ID is passed to the provider as is.
 
 ```php
 use Utopia\Agents\Adapters\Anthropic;
-
-$anthropic = new Anthropic(
-    apiKey: 'your-api-key',
-    model: Anthropic::MODEL_CLAUDE_3_HAIKU,
-    maxTokens: 2048,
-    temperature: 0.7
-);
-```
-
-Available Anthropic Models:
-- `MODEL_CLAUDE_4_OPUS`: Flagship model with exceptional reasoning for the most demanding tasks
-- `MODEL_CLAUDE_3_OPUS`: Premium model with superior performance on complex analysis and creative work
-- `MODEL_CLAUDE_4_SONNET`: Intelligent and responsive model optimized for productivity workflows
-- `MODEL_CLAUDE_3_7_SONNET`: Enhanced model with improved reasoning and coding capabilities
-- `MODEL_CLAUDE_3_5_SONNET`: Versatile model balancing capability and speed for general use
-- `MODEL_CLAUDE_3_5_HAIKU`: Ultra-fast model for quick responses and lightweight processing
-- `MODEL_CLAUDE_3_HAIKU`: Rapid model designed for speed and efficiency on straightforward tasks
-
-#### Deepseek
-
-```php
 use Utopia\Agents\Adapters\Deepseek;
-
-$deepseek = new Deepseek(
-    apiKey: 'your-api-key',
-    model: Deepseek::MODEL_DEEPSEEK_CHAT,
-    maxTokens: 2048,
-    temperature: 0.7
-);
-```
-
-Available Deepseek Models:
-- `MODEL_DEEPSEEK_CHAT`: General-purpose chat model
-- `MODEL_DEEPSEEK_CODER`: Specialized for code-related tasks
-
-#### Perplexity
-
-```php
+use Utopia\Agents\Adapters\Gemini;
+use Utopia\Agents\Adapters\OpenAI;
+use Utopia\Agents\Adapters\OpenRouter;
 use Utopia\Agents\Adapters\Perplexity;
-
-$perplexity = new Perplexity(
-    apiKey: 'your-api-key',
-    model: Perplexity::MODEL_SONAR,
-    maxTokens: 2048,
-    temperature: 0.7
-);
-```
-
-Available Perplexity Models:
-- `MODEL_SONAR`: General-purpose search model
-- `MODEL_SONAR_PRO`: Enhanced search model
-- `MODEL_SONAR_DEEP_RESEARCH`: Advanced search model
-- `MODEL_SONAR_REASONING`: Reasoning model
-- `MODEL_SONAR_REASONING_PRO`: Enhanced reasoning model
-
-#### XAI
-
-```php
 use Utopia\Agents\Adapters\XAI;
 
-$xai = new XAI(
-    apiKey: 'your-api-key',
-    model: XAI::MODEL_GROK_3_MINI,
-    maxTokens: 2048,
-    temperature: 0.7
-);
+new OpenAI($key, 'gpt-5-mini');
+new Anthropic($key, 'claude-sonnet-5-5');
+new Gemini($key, 'gemini-2.5-flash');
+new Deepseek($key, 'deepseek-chat');
+new XAI($key, 'grok-4');
+new OpenRouter($key, 'anthropic/claude-sonnet-5.5', referer: 'https://example.com', title: 'My App');
+new Perplexity($key, 'sonar');
+
+// Any OpenAI-compatible server
+new OpenAI($key, 'llama3.1', 'http://localhost:11434/v1/chat/completions');
 ```
 
-Available XAI Models:
-- `MODEL_GROK_3`: Latest Grok model
-- `MODEL_GROK_3_MINI`: Mini version of Grok model
-- `MODEL_GROK_2_IMAGE`: Latest Grok model with image support
+### Tools
 
-#### OpenRouter
+A tool has a name, a description, a JSON Schema for its input and a handler. The agent runs the handler with the validated arguments and sends the result back to the model, until the model answers.
 
 ```php
-use Utopia\Agents\Adapters\OpenRouter;
-use Utopia\Agents\Adapters\OpenRouter\Models as OpenRouterModels;
+use Utopia\Agents\Parts\ToolCall;
+use Utopia\Agents\Schema;
+use Utopia\Agents\Tool;
 
-$openrouter = new OpenRouter(
-    apiKey: 'your-api-key',
-    model: OpenRouterModels::MODEL_OPENAI_GPT_4O,
-    maxTokens: 2048,
-    temperature: 0.7,
-    httpReferer: 'https://your-app.example',
-    xTitle: 'Your App Name'
-);
-```
-
-- Named constants are provided for popular models from major providers (OpenAI, Anthropic, Google, Meta, DeepSeek, Mistral, xAI)
-- `Models::MODELS` contains the full model catalog; the adapter defaults to `openai/gpt-4o`
-- Arbitrary model IDs like `'openai/gpt-5-nano'` or `'anthropic/claude-sonnet-4'` are also accepted directly
-- `httpReferer` and `xTitle` are optional and enable OpenRouter app attribution headers
-- To re-sync constants from the live OpenRouter API, run `php scripts/sync-openrouter-models.php`
-
-### HTTP Client
-
-Every adapter sends its requests through a [`utopia-php/client`](https://github.com/utopia-php/client) instance that it builds once and reuses, so connections stay alive across calls. Inside a Swoole coroutine that default is a pool of keep-alive coroutine clients; elsewhere it is a single keep-alive cURL client. The adapter's timeout (`setTimeout`, milliseconds) applies to the client it builds.
-
-Long-running processes that already own a pooled client can hand it to the adapter's constructor, in which case the adapter uses it as is and leaves its timeouts alone:
-
-```php
-use Utopia\Agents\Adapters\OpenAI;
-use Utopia\Client\Client as HttpClient;
-use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
-use Utopia\Client\Pool as HttpClientPool;
-use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
-use Utopia\Pools\Pool as Connections;
-
-$client = new HttpClientPool(new Connections(
-    new SwoolePoolAdapter(),
-    'agents',
-    16,
-    fn () => new HttpClient((new SwooleClientAdapter())->withConnectionReuse()->withTimeout(30)),
-    timeout: 3.0,
-));
-
-$adapter = new OpenAI('your-api-key', client: $client);
-```
-
-### Managing Conversations
-
-```php
-use Utopia\Agents\Roles\User;
-use Utopia\Agents\Roles\Assistant;
-use Utopia\Agents\Message;
-
-// Create a conversation with system instructions
-$agent = new Agent($adapter);
-$agent->setInstructions([
-    'description' => 'You are a helpful assistant that can answer questions and help with tasks.',
-    'tone' => 'friendly and helpful',
-]);
-
-// Initialize roles
-$user = new User('user-1'); 
-$assistant = new Assistant('assistant-1');
-
-$conversation = new Conversation($agent);
-$conversation
-    ->message($user, new Message('Hello!'))
-    ->message($assistant, new Message('Hi! How can I help you today?'))
-    ->message($user, new Message('What is the capital of France?'));
-
-// Add a user message with attachments
-$conversation->message(
-    $user,
-    new Message('Please summarize this screenshot'),
-    [new Message($imageBinaryContent)]
+$weather = new Tool(
+    name: 'weather',
+    description: 'Current temperature in Celsius for a city',
+    input: Schema::object(['city' => Schema::string('City name')]),
+    handler: fn (array $input, ToolCall $call) => ['temperature' => 23],
 );
 
-// Send and get response
-$response = $conversation->send();
+$result = $agent
+    ->addTool($weather)
+    ->setSteps(5)              // at most 5 model calls (default 10)
+    ->generate('How warm is it in Lisbon?');
+
+$result->steps;                // one Step per model call
+$result->toolCalls();          // every call the model made
+$result->toolResults();        // every result the agent sent back
 ```
 
-### Streaming Responses (SSE)
+Tool failures do not abort the run. An unknown tool, invalid arguments or an exception from the handler becomes an error result, so the model can recover.
 
-The conversation layer supports incremental output streaming through `Conversation::listen(callable $listener)`.  
-The callback receives each text delta as it arrives from the provider's SSE stream, while `send()` still returns the final aggregated `Message`.
+Control the loop further with `setToolChoice(ToolChoice::required())` (also `auto()`, `none()`, `tool('weather')`) and `setUntil(fn (array $steps) => ...)`.
 
-#### Streaming in CLI / Worker Contexts
+#### Client-side tools and approval
 
-```php
-use Utopia\Agents\Agent;
-use Utopia\Agents\Conversation;
-use Utopia\Agents\Adapters\OpenAI;
-use Utopia\Agents\Message;
-use Utopia\Agents\Roles\User;
-
-$agent = new Agent(new OpenAI('your-api-key', OpenAI::MODEL_GPT_4O));
-$conversation = new Conversation($agent);
-$user = new User('user-1', 'John');
-
-$conversation
-    ->listen(function (string $chunk): void {
-        echo $chunk; // render partial output as soon as it is received
-    })
-    ->message($user, new Message('Explain vector databases in one paragraph.'));
-
-$final = $conversation->send(); // final, complete assistant message
-```
-
-#### Exposing Model Output as HTTP SSE
-
-```php
-use Utopia\Agents\Agent;
-use Utopia\Agents\Conversation;
-use Utopia\Agents\Adapters\OpenAI;
-use Utopia\Agents\Message;
-use Utopia\Agents\Roles\User;
-
-header('Content-Type: text/event-stream');
-header('Cache-Control: no-cache');
-header('Connection: keep-alive');
-
-$agent = new Agent(new OpenAI('your-api-key', OpenAI::MODEL_GPT_4O));
-$conversation = new Conversation($agent);
-$user = new User('user-1', 'John');
-
-$conversation
-    ->listen(function (string $chunk): void {
-        // Send each token delta as an SSE frame
-        echo 'data: '.json_encode(['delta' => $chunk], JSON_UNESCAPED_UNICODE)."\n\n";
-
-        if (function_exists('ob_flush')) {
-            @ob_flush();
-        }
-        flush();
-    })
-    ->message($user, new Message("Write a short release note for today's deployment."));
-
-$final = $conversation->send();
-
-// Optional terminal event with complete text
-echo 'event: done'."\n";
-echo 'data: '.json_encode(['message' => $final->getContent()], JSON_UNESCAPED_UNICODE)."\n\n";
-echo 'data: [DONE]'."\n\n";
-flush();
-```
-
-#### Operational Notes
-
-- Streaming is adapter-dependent and available for chat-capable providers that expose incremental output.
-- The listener is optional; if omitted, responses are still collected and returned as a single final message.
-- Keep callbacks non-blocking and lightweight to avoid slowing downstream token delivery.
-- When serving SSE over HTTP, send `Content-Type: text/event-stream`, flush frequently, and disable intermediary buffering where applicable.
-- Usage metrics (input/output tokens and cache counters, where supported) remain available after `send()` completes.
-
-### Working with Messages
-
-```php
-use Utopia\Agents\Message;
-
-// Message content is always text
-$textMessage = new Message('Hello, how are you?');
-
-// Attachments are binary payloads (for example images)
-$imageMessage = new Message($imageBinaryContent);
-$mimeType = $imageMessage->getMimeType(); // Get the MIME type of the image
-
-// Attach image to a text prompt
-$message = (new Message('Describe this image'))->addAttachment($imageMessage);
-```
-
-### Attachment Examples
+A tool without a handler is not run. The agent stops and returns the call, and you answer it yourself, for example after asking the user:
 
 ```php
 use Utopia\Agents\Conversation;
 use Utopia\Agents\Message;
-use Utopia\Agents\Roles\User;
+use Utopia\Agents\Parts\ToolResult;
 
+$agent->addTool(new Tool('confirm', 'Ask the user to confirm the booking', Schema::object([])));
 $conversation = new Conversation($agent);
-$user = new User('user-1', 'John');
 
-// 1) Attach a single image in the same turn
-$conversation->message(
-    $user,
-    new Message('What is shown here?'),
-    [new Message(file_get_contents(__DIR__.'/images/screenshot.png'))]
-);
-
-// 2) Attach multiple images in one turn
-$conversation->message(
-    $user,
-    new Message('Compare these two images and list differences.'),
-    [
-        new Message(file_get_contents(__DIR__.'/images/before.png')),
-        new Message(file_get_contents(__DIR__.'/images/after.png')),
-    ]
-);
-
-// 3) Build and reuse a message object with attachments
-$prompt = (new Message('Extract visible text from this receipt'))
-    ->addAttachment(new Message(file_get_contents(__DIR__.'/images/receipt.jpg')));
-
-$conversation->message($user, $prompt);
-```
-
-### Attachment Limits and Validation
-
-Attachment validation is enforced by default in `Conversation::message(...)`.
-Guardrail values come from the selected adapter (not from conversation-level user configuration).
-
-Default adapter guardrails:
-
-- Max attachments per message: `10`
-- Max binary size per attachment: `5_000_000` bytes (~5 MB)
-- Max total attachment payload per turn: `20_000_000` bytes (~20 MB)
-- MIME allowlist: `image/png`, `image/jpeg`, `image/webp`, `image/gif`
-- Reject empty or unreadable payloads
-- Adapter compatibility checks (attachment type must be supported by the selected adapter)
-
-To customize limits, create an adapter subclass and override limit methods:
-
-```php
-<?php
-
-use Utopia\Agents\Adapters\OpenAI;
-
-class StrictOpenAI extends OpenAI
-{
-    public function getMaxAttachmentsPerMessage(): ?int
-    {
-        return 3;
-    }
-
-    public function getMaxAttachmentBytes(): ?int
-    {
-        return 2_000_000;
-    }
-
-    public function getMaxTotalAttachmentBytes(): ?int
-    {
-        return 6_000_000;
-    }
-
-    /**
-     * @return list<string>|null
-     */
-    public function getAllowedAttachmentMimeTypes(): ?array
-    {
-        return ['image/png', 'image/jpeg'];
-    }
+$result = $conversation->send('Book the 9am flight.');
+foreach ($result->pending() as $call) {
+    $conversation->add(Message::tool([new ToolResult($call->id, $call->name, 'confirmed')]));
 }
+$result = $conversation->send(); // continues with the answers
 ```
 
-## Schema and Schema Objects
-
-You can use the `Schema` class to define a schema for a structured output. The `Schema` class utilizes `SchemaObject`s to define each property of the schema, following the [JSON Schema](https://json-schema.org/) format.
+### Structured output
 
 ```php
-use Utopia\Agents\Schema\Schema;
-use Utopia\Agents\Schema\SchemaObject;
+$agent->setSchema(Schema::object([
+    'name' => Schema::string(),
+    'year' => Schema::integer(),
+    'tags' => Schema::array(Schema::string()),
+    'license' => Schema::nullable(Schema::enum(['MIT', 'BSD', 'GPL'])),
+]));
 
-$object = new SchemaObject();
-$object->addProperty('location', [
-    'type' => SchemaObject::TYPE_STRING,
-    'description' => 'The city and state, e.g. San Francisco, CA',
-]);
-
-$schema = new Schema(
-    name: 'get_weather',
-    description: 'Get the current weather in a given location in well structured JSON',
-    object: $object,
-    required: $object->getNames()
-);
-
-$agent->setSchema($schema);
+$result = $agent->generate('Describe the PHP language.');
+$result->output; // ['name' => 'PHP', 'year' => 1995, 'tags' => [...], 'license' => null]
 ```
+
+`Schema::object()` marks every property required and forbids extra properties, which strict modes expect; use `Schema::nullable()` for optional values. `Schema::fromArray()` wraps any JSON Schema. Output that is not valid JSON or does not match the schema throws `Exception\Output`, which carries the raw text, the list of violations and the run's `usage`.
+
+OpenAI and compatible providers use native JSON Schema output, Gemini `responseJsonSchema`, and Anthropic its JSON schema output format (Claude 4.5 and later; older models get a forced `json` tool whose input is returned as the text).
+
+### Streaming
+
+```php
+use Utopia\Agents\Event;
+use Utopia\Agents\Events;
+
+$result = $agent->stream('Write a haiku about PHP.', function (Event $event): void {
+    match (true) {
+        $event instanceof Events\TextDelta => print $event->delta,
+        $event instanceof Events\ReasoningDelta => null,  // thinking, when enabled
+        $event instanceof Events\ToolInputDelta => null,  // tool arguments as they are generated
+        $event instanceof Events\ToolCall => null,        // a complete tool call
+        $event instanceof Events\ToolResult => null,      // a tool the agent ran
+        $event instanceof Events\StepFinish => null,      // one model call done
+        $event instanceof Events\Finish => null,          // the run is done; $event->result
+        default => null,
+    };
+});
+```
+
+`stream()` returns the same `Result` as `generate()`.
+
+### Conversations
+
+`Conversation` keeps the history and sums the usage of every run:
+
+```php
+$conversation = new Conversation($agent);
+$conversation->send('My favorite color is teal.');
+$conversation->send('What is my favorite color?')->text; // "Teal."
+
+$conversation->getMessages();
+$conversation->getUsage()->total();
+```
+
+### Settings
+
+```php
+use Utopia\Agents\Effort;
+
+$agent
+    ->setMaxTokens(2048)
+    ->setTemperature(0.2)        // sampling is left out for models that reject it, such as Claude 4.7 and later
+    ->setTopP(0.9)
+    ->setTopK(40)
+    ->setStop(['END'])
+    ->setSeed(42)
+    ->setEffort(Effort::High)    // reasoning effort, or a thinking budget on Gemini and Claude before 4.6
+    ->setOptions([               // raw provider parameters, keyed by adapter name
+        'anthropic' => ['metadata' => ['user_id' => 'user-1']],
+        'openai' => ['service_tier' => 'flex'],
+    ]);
+```
+
+Settings left unset use the provider's default.
+
+### Models without an agent
+
+Adapters implement `Model`, so you can call them directly with a `Request`:
+
+```php
+use Utopia\Agents\Adapters\Anthropic;
+use Utopia\Agents\Message;
+use Utopia\Agents\Request;
+
+$model = new Anthropic(getenv('ANTHROPIC_API_KEY'), 'claude-haiku-5-5');
+$response = $model->generate(new Request([Message::user('Hi')], maxTokens: 100));
+$response->parts;   // list of Part
+$response->finish;  // FinishReason
+$response->usage;   // Usage
+```
+
+### Errors and retries
+
+Every exception extends `Utopia\Agents\Exception`:
+
+| Exception | When |
+|---|---|
+| `Exception\Api` | The provider returned an error; has `status`, `type`, `retryable`, `retryAfter`, `body` |
+| `Exception\RateLimit` | HTTP 429 |
+| `Exception\Authentication` | HTTP 401 or 403 |
+| `Exception\Output` | Structured output is not valid JSON or does not match the schema |
+| `Exception\Unsupported` | The adapter cannot send a content type |
+
+Failed requests are retried twice with exponential backoff by default. Streams are only retried before their first event.
+
+```php
+$model->setRetries(5, delay: 1000)->setTimeout(120000);
+```
+
+### Embeddings
+
+```php
+use Utopia\Agents\Adapters\Appwrite;
+use Utopia\Agents\Adapters\Ollama;
+use Utopia\Agents\Adapters\OpenAI\Embedder;
+
+$embedder = new Embedder($key, 'text-embedding-3-small');
+// new Ollama('embeddinggemma');
+// new Appwrite(Appwrite::MODEL_NOMIC_EMBED_TEXT);
+
+$embeddings = $embedder->embed(['first text', 'second text']);
+$embeddings->vectors;        // one list<float> per text
+$embeddings->tokens;         // when the provider reports it
+$embedder->getDimension();   // vector length
+```
+
+## Upgrading from 0.x
+
+The API was redesigned around messages with typed parts, a tool loop and a structured result:
+
+- `Conversation::message($role, new Message('...'))->send()` becomes `$agent->generate('...')`, or `$conversation->send('...')` to keep history. `Roles\User` and `Roles\Assistant` are replaced by `Message::user()` and `Message::assistant()`.
+- `Agent::setDescription()` and `setInstructions(array)` become a single instructions string: `new Agent($model, 'instructions')`.
+- Adapters take the model ID as their second argument and no longer carry `MODEL_*` constants. `maxTokens` and `temperature` moved from the adapter constructors to the agent.
+- The streaming callback receives `Event` objects instead of strings: use `Events\TextDelta::$delta`.
+- `send()` returns a `Result` with `text`, `output`, `finish`, `usage` and `steps` instead of a `Message`.
+- `Schema` with `SchemaObject` becomes `Schema::object([...])`; the decoded value is in `Result::$output`.
+- Token counters on adapters and conversations become `Usage` objects on `Response`, `Result` and `Conversation::getUsage()`.
+- Embeddings moved from `Agent::embed()` and `bulkEmbed()` to `Embedder::embed(array $texts)`, which returns `Embeddings`. `getEmbeddingDimension()` is `getDimension()`.
 
 ## Tests
 
-To run all unit tests, use the following Docker command:
+Unit tests need no network or keys:
 
 ```bash
-docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml tests
+composer test
 ```
 
-To run static code analysis, use the following Psalm command:
+The E2E suite in `tests/E2E` calls real providers. Each test is skipped unless its key is set (`LLM_KEY_OPENAI`, `LLM_KEY_ANTHROPIC`, `LLM_KEY_GEMINI`, `LLM_KEY_DEEPSEEK`, `LLM_KEY_XAI`, `LLM_KEY_OPENROUTER`, `LLM_KEY_PERPLEXITY`); `LLM_MODEL_<PROVIDER>` overrides the model.
 
 ```bash
-docker compose exec tests vendor/bin/psalm --show-info=true
+vendor/bin/phpunit --testsuite e2e
 ```
 
 ## Security
@@ -462,4 +297,4 @@ We truly ❤️ pull requests! If you wish to help, you can learn more about how
 
 ## Copyright and license
 
-The MIT License (MIT) [http://www.opensource.org/licenses/mit-license.php](http://www.opensource.org/licenses/mit-license.php) 
+The MIT License (MIT) [http://www.opensource.org/licenses/mit-license.php](http://www.opensource.org/licenses/mit-license.php)

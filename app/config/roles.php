@@ -95,6 +95,10 @@ $admins = [
     'organization.projects.keys.write',
     'webhooks.read',
     'webhooks.write',
+    'monitors.read',
+    'monitors.write',
+    'alerts.read',
+    'alerts.write',
     'project.read',
     'project.write',
     'usage.read',
@@ -136,6 +140,8 @@ $admins = [
     'insights.write',
     'reports.read',
     'reports.write',
+    'reviews.read',
+    'reviews.write',
 ];
 
 return [

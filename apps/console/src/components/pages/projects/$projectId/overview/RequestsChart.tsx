@@ -42,7 +42,10 @@ import {
   resolveUsageChartIntervalForRange,
   type UsageChartInterval,
 } from '@/lib/usage/chart-interval'
-import { UsageChartXAxis, UsageChartYAxis } from '@/components/global/shared/ChartXAxis'
+import {
+  UsageChartXAxis,
+  UsageChartYAxis,
+} from '@/components/global/shared/ChartXAxis'
 import { USAGE_CHART_RESPONSIVE_CONTAINER_PROPS } from '@/lib/usage/chart-layout'
 import {
   USAGE_CHART_FADE_IN_CLASS_NAME,
@@ -117,7 +120,14 @@ function buildSkeletonChartData(
   metric: MetricType = 'requests',
 ): ChartPoint[] {
   const { from, to } = resolveUsageDateBounds(dateRange)
-  const resolvedInterval = resolveUsageChartIntervalForRange(interval, dateRange)
+  const resolvedInterval = resolveUsageChartIntervalForRange(
+    interval,
+    dateRange,
+    undefined,
+    {
+      refine: false,
+    },
+  )
   const shell = fillChartPointsGaps(new Map(), from, to, resolvedInterval)
   const points =
     shell.length > 0
@@ -231,7 +241,9 @@ const CustomTooltip = ({
               </span>
             </div>
             <div className="flex items-center justify-between gap-6 border-t border-border pt-1.5">
-              <span className="text-[11px] text-muted-foreground">{t('Total')}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {t('Total')}
+              </span>
               <span className="text-[12px] font-medium text-foreground">
                 <FormattedMetricValue value={format(data.total)} />
               </span>
@@ -308,7 +320,10 @@ export const RequestsChart = memo(function RequestsChart({
         : (value: number) => formatCompactBytes(value, { compact: true }))
   const activeChartData = showChartSkeleton ? skeletonChartData : chartData
   const resolvedChartInterval = useMemo(
-    () => resolveUsageChartIntervalForRange(chartInterval, dateRange),
+    () =>
+      resolveUsageChartIntervalForRange(chartInterval, dateRange, undefined, {
+        refine: false,
+      }),
     [chartInterval, dateRange],
   )
   const bandwidthAxisMax = useMemo(() => {
@@ -316,10 +331,7 @@ export const RequestsChart = memo(function RequestsChart({
     if (metric === 'bandwidth') {
       return resolveBandwidthDualChartDisplay(activeChartData).axisMax
     }
-    return activeChartData.reduce(
-      (max, point) => Math.max(max, point.total),
-      0,
-    )
+    return activeChartData.reduce((max, point) => Math.max(max, point.total), 0)
   }, [activeChartData, metric])
   const bandwidthYAxisDomain = useMemo(() => {
     if (metric !== 'bandwidth' || !showBandwidthDualSeries) return undefined
@@ -333,8 +345,7 @@ export const RequestsChart = memo(function RequestsChart({
     <CustomTooltip formatValue={valueFormatter} metric={metric} />
   )
   const isSkeleton = showChartSkeleton
-  const renderChart =
-    isPanelVisible && activeChartData.length > 0
+  const renderChart = isPanelVisible && activeChartData.length > 0
 
   return (
     <div className={cn('flex h-full w-full min-w-0 flex-col', className)}>
@@ -386,7 +397,9 @@ export const RequestsChart = memo(function RequestsChart({
             <OverviewChartPanelError
               title={t(errorTitle)}
               message={
-                typeof errorMessage === 'string' ? t(errorMessage) : errorMessage
+                typeof errorMessage === 'string'
+                  ? t(errorMessage)
+                  : errorMessage
               }
               onRetry={onRetry}
               upgradeOrgId={upgradeOrgId}
@@ -420,34 +433,11 @@ export const RequestsChart = memo(function RequestsChart({
                   {...USAGE_CHART_RESPONSIVE_CONTAINER_PROPS}
                   minHeight={OVERVIEW_CHART_HEIGHT}
                 >
-                <AreaChart
-                  data={activeChartData}
-                  margin={USAGE_CHART_MARGIN}
-                >
-                  <defs>
-                    {isSkeleton ? (
-                      <linearGradient
-                        id={skeletonGradientId}
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor={SKELETON_CHART_FILL}
-                          stopOpacity={SKELETON_CHART_FILL_TOP_OPACITY}
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor={SKELETON_CHART_FILL}
-                          stopOpacity={SKELETON_CHART_FILL_BOTTOM_OPACITY}
-                        />
-                      </linearGradient>
-                    ) : showBandwidthDualSeries ? (
-                      <>
+                  <AreaChart data={activeChartData} margin={USAGE_CHART_MARGIN}>
+                    <defs>
+                      {isSkeleton ? (
                         <linearGradient
-                          id={inboundGradientId}
+                          id={skeletonGradientId}
                           x1="0"
                           y1="0"
                           x2="0"
@@ -455,17 +445,57 @@ export const RequestsChart = memo(function RequestsChart({
                         >
                           <stop
                             offset="0%"
-                            stopColor="var(--chart-2)"
-                            stopOpacity={0.15}
+                            stopColor={SKELETON_CHART_FILL}
+                            stopOpacity={SKELETON_CHART_FILL_TOP_OPACITY}
                           />
                           <stop
                             offset="100%"
-                            stopColor="var(--chart-2)"
-                            stopOpacity={0}
+                            stopColor={SKELETON_CHART_FILL}
+                            stopOpacity={SKELETON_CHART_FILL_BOTTOM_OPACITY}
                           />
                         </linearGradient>
+                      ) : showBandwidthDualSeries ? (
+                        <>
+                          <linearGradient
+                            id={inboundGradientId}
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="var(--chart-2)"
+                              stopOpacity={0.15}
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="var(--chart-2)"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                          <linearGradient
+                            id={outboundGradientId}
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="var(--chart-brand)"
+                              stopOpacity={0.15}
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="var(--chart-brand)"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </>
+                      ) : (
                         <linearGradient
-                          id={outboundGradientId}
+                          id={areaGradientId}
                           x1="0"
                           y1="0"
                           x2="0"
@@ -474,7 +504,7 @@ export const RequestsChart = memo(function RequestsChart({
                           <stop
                             offset="0%"
                             stopColor="var(--chart-brand)"
-                            stopOpacity={0.15}
+                            stopOpacity={0.2}
                           />
                           <stop
                             offset="100%"
@@ -482,79 +512,76 @@ export const RequestsChart = memo(function RequestsChart({
                             stopOpacity={0}
                           />
                         </linearGradient>
-                      </>
-                    ) : (
-                      <linearGradient
-                        id={areaGradientId}
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="var(--chart-brand)"
-                          stopOpacity={0.2}
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="var(--chart-brand)"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    )}
-                  </defs>
-                  <UsageChartXAxis
-                    points={activeChartData}
-                    dateRange={dateRange}
-                    chartInterval={resolvedChartInterval}
-                    variant="overview"
-                  />
-                  <UsageChartYAxis
-                    tickFormatter={yAxisTickFormatter}
-                    domain={bandwidthYAxisDomain}
-                  />
-                  {!isSkeleton ? (
-                    <Tooltip content={tooltipContent} cursor={false} />
-                  ) : null}
-                  {isSkeleton ? (
-                    <Area
-                      type="monotone"
-                      dataKey="total"
-                      stroke={SKELETON_CHART_STROKE}
-                      strokeWidth={2}
-                      fill={`url(#${skeletonGradientId})`}
-                      dot={false}
-                      activeDot={false}
-                      {...CHART_ANIMATION_DISABLED}
+                      )}
+                    </defs>
+                    <UsageChartXAxis
+                      points={activeChartData}
+                      dateRange={dateRange}
+                      chartInterval={resolvedChartInterval}
+                      variant="overview"
                     />
-                  ) : showBandwidthDualSeries ? (
-                    <>
+                    <UsageChartYAxis
+                      tickFormatter={yAxisTickFormatter}
+                      domain={bandwidthYAxisDomain}
+                    />
+                    {!isSkeleton ? (
+                      <Tooltip content={tooltipContent} cursor={false} />
+                    ) : null}
+                    {isSkeleton ? (
                       <Area
                         type="monotone"
-                        dataKey="inbound"
-                        name="Inbound"
-                        stackId="bandwidth"
-                        stroke="var(--chart-2)"
+                        dataKey="total"
+                        stroke={SKELETON_CHART_STROKE}
                         strokeWidth={2}
-                        fill={`url(#${inboundGradientId})`}
+                        fill={`url(#${skeletonGradientId})`}
                         dot={false}
-                        activeDot={{
-                          r: 4,
-                          fill: 'var(--chart-2)',
-                          stroke: '#fff',
-                          strokeWidth: 2,
-                        }}
+                        activeDot={false}
                         {...CHART_ANIMATION_DISABLED}
                       />
+                    ) : showBandwidthDualSeries ? (
+                      <>
+                        <Area
+                          type="monotone"
+                          dataKey="inbound"
+                          name="Inbound"
+                          stackId="bandwidth"
+                          stroke="var(--chart-2)"
+                          strokeWidth={2}
+                          fill={`url(#${inboundGradientId})`}
+                          dot={false}
+                          activeDot={{
+                            r: 4,
+                            fill: 'var(--chart-2)',
+                            stroke: '#fff',
+                            strokeWidth: 2,
+                          }}
+                          {...CHART_ANIMATION_DISABLED}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="outbound"
+                          name="Outbound"
+                          stackId="bandwidth"
+                          stroke="var(--chart-brand)"
+                          strokeWidth={2}
+                          fill={`url(#${outboundGradientId})`}
+                          dot={false}
+                          activeDot={{
+                            r: 4,
+                            fill: 'var(--chart-brand)',
+                            stroke: '#fff',
+                            strokeWidth: 2,
+                          }}
+                          {...CHART_ANIMATION_DISABLED}
+                        />
+                      </>
+                    ) : (
                       <Area
                         type="monotone"
-                        dataKey="outbound"
-                        name="Outbound"
-                        stackId="bandwidth"
+                        dataKey="total"
                         stroke="var(--chart-brand)"
                         strokeWidth={2}
-                        fill={`url(#${outboundGradientId})`}
+                        fill={`url(#${areaGradientId})`}
                         dot={false}
                         activeDot={{
                           r: 4,
@@ -564,26 +591,9 @@ export const RequestsChart = memo(function RequestsChart({
                         }}
                         {...CHART_ANIMATION_DISABLED}
                       />
-                    </>
-                  ) : (
-                    <Area
-                      type="monotone"
-                      dataKey="total"
-                      stroke="var(--chart-brand)"
-                      strokeWidth={2}
-                      fill={`url(#${areaGradientId})`}
-                      dot={false}
-                      activeDot={{
-                        r: 4,
-                        fill: 'var(--chart-brand)',
-                        stroke: '#fff',
-                        strokeWidth: 2,
-                      }}
-                      {...CHART_ANIMATION_DISABLED}
-                    />
-                  )}
-                </AreaChart>
-              </ResponsiveContainer>
+                    )}
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             ) : null}
           </div>

@@ -1,3 +1,7 @@
+# true builds the utopia PHP extension (crates/extension) and loads it, so the
+# Utopia classes it registers run in Rust. See crates/extension/README.md.
+ARG UTOPIA_EXTENSION=false
+
 FROM composer:2 AS composer
 
 # Distrust the compromised eMudhra chains before downloading dependencies.
@@ -16,7 +20,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.2.7 AS base
+FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -75,6 +79,7 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/encryption && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
@@ -83,6 +88,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/mqtt && \
     chmod +x /usr/local/bin/schedule && \
+    chmod +x /usr/local/bin/schedule-alerts && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-executions && \
     chmod +x /usr/local/bin/schedule-messages && \
@@ -101,6 +107,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/queue-count-processing && \
     chmod +x /usr/local/bin/queue-count-success && \
     chmod +x /usr/local/bin/worker && \
+    chmod +x /usr/local/bin/worker-alerts && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-jobs && \
     chmod +x /usr/local/bin/worker-screenshots && \
@@ -120,7 +127,38 @@ RUN chmod +x /usr/local/bin/doctor && \
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
-FROM base AS production
+# The utopia extension, built against the base image's own PHP headers and
+# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
+FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS extension-build
+
+RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
+    rustup-init -y --profile minimal --default-toolchain 1.97.1
+
+WORKDIR /usr/local/src
+
+COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY .cargo ./.cargo
+COPY crates ./crates
+
+RUN . "$HOME/.cargo/env" && \
+    cargo build --release --locked -p utopia-extension && \
+    strip target/release/libutopia.so
+
+# One of the two stages below becomes `runtime`; BuildKit builds only the one
+# UTOPIA_EXTENSION names, so the default build never compiles Rust.
+FROM base AS extension-false
+
+FROM base AS extension-true
+
+COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
+# libheif-x265 is libheif's HEVC encoder plugin: with it HEIC output works, for
+# the extension and for Imagick alike. x265 is GPL-2.0-or-later.
+RUN apk add --no-cache libheif-x265 && \
+    echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
+
+FROM extension-${UTOPIA_EXTENSION} AS runtime
+
+FROM runtime AS production
 
 RUN rm -rf /usr/src/code/app/config/specs && \
     find /usr -name '*.a' -delete 2>/dev/null || true && \
@@ -131,9 +169,9 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.2.7-xdebug AS xdebug
+FROM appwrite/base:2.2.11-xdebug@sha256:aea31a119dae19d5d3ac41765e8bc5e9d1298c8bc495a89b2f41592f886665bb AS xdebug
 
-FROM base AS development
+FROM runtime AS development
 
 # Revalidate bind-mounted source files when development workers reload.
 RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/local/etc/php/conf.d/zzz-opcache-dev.ini
@@ -141,7 +179,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.2.7 ships without XDebug, so it cannot reach production or
+# appwrite/base:2.2.11 ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.

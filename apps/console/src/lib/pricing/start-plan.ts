@@ -10,7 +10,27 @@ import type {
 } from './types'
 
 /** ISO 3166-1 alpha-2 countries that can buy the Start plan. */
-export const START_PLAN_ELIGIBLE_COUNTRIES = ['IN', 'NP', 'NG', 'PK'] as const
+export const START_PLAN_ELIGIBLE_COUNTRIES = [
+  'IN',
+  'NP',
+  'NG',
+  'PK',
+  'BD',
+  'PH',
+  'EG',
+  'KE',
+  'VN',
+  'DZ',
+  'MA',
+  'LK',
+  'TN',
+  'UZ',
+  'UG',
+  'GH',
+  'KH',
+  'ET',
+  'TZ',
+] as const
 
 export type StartPlanEligibleCountry =
   (typeof START_PLAN_ELIGIBLE_COUNTRIES)[number]

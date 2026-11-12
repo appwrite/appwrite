@@ -20,6 +20,7 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'assistant',
   'agent',
   'upgrade',
+  'transfer',
 ])
 
 const CONSOLE_AUTH_EXACT_PATHS = new Set([
