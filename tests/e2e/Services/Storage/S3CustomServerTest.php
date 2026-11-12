@@ -391,6 +391,9 @@ final class S3CustomServerTest extends Scope
         $object = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/document.png', body: $pdf, headers: ['content-type' => 'image/png']);
         $this->assertSame(400, $object['headers']['status-code'], $object['body']);
 
+        $object = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/binary.png', body: \random_bytes(1024), headers: ['content-type' => 'image/png']);
+        $this->assertSame(400, $object['headers']['status-code'], $object['body']);
+
         // Part 1 decides the type, even when it arrives after another part.
         $uploadId = $this->createMultipartUpload($bucketId, 'multipart.png', ['content-type' => 'image/png']);
         $this->uploadPart($bucketId, 'multipart.png', $uploadId, 2, $png);

@@ -471,7 +471,7 @@ abstract class Base extends Action
 
         $mimeType = (new \finfo(FILEINFO_MIME_TYPE))->buffer($body);
         $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower(\ltrim($extension, '.'))] ?? [], $allowed));
-        if (!\in_array($mimeType, $formats['ambiguous'], true) && !\in_array($mimeType, $types, true)) {
+        if (!\in_array($mimeType, $types, true)) {
             throw new AppwriteException(AppwriteException::STORAGE_FILE_TYPE_UNSUPPORTED, 'File content type not allowed');
         }
     }
