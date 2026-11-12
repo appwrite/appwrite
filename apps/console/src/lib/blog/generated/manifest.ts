@@ -3,6 +3,48 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-activity-reasons",
+    "href": "/blog/post/announcing-activity-reasons",
+    "title": "Announcing reasons in Activity: see why every change was made",
+    "description": "Appwrite Activity now shows why each change was made. The MCP server records a reason for every write an AI agent makes, and the CLI and your own code can send one too.",
+    "date": "2026-11-12",
+    "lastUpdated": "2026-11-12",
+    "timeToRead": 5,
+    "author": "matej-baco",
+    "category": "announcements, ai, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-activity-reasons/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-project-transfer-links",
+    "href": "/blog/post/announcing-project-transfer-links",
+    "title": "Announcing project transfer links: hand off an Appwrite project to any organization",
+    "description": "Hand an Appwrite Cloud project to another organization with a single-use transfer link, even one you're not a member of. The project keeps its data, keys, and endpoints.",
+    "date": "2026-11-12",
+    "lastUpdated": "2026-11-12",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-project-transfer-links/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-otp-token-email-header",
+    "href": "/blog/post/announcing-otp-token-email-header",
+    "title": "Announcing origin-bound OTP-Token headers in Appwrite Auth",
+    "description": "Appwrite Auth now adds an OTP-Token header to every email code, so mail clients and password managers can autofill the code on your app's origin only.",
+    "date": "2026-11-11",
+    "lastUpdated": "2026-11-11",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-otp-token-email-header/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-vipps-mobilepay-login",
     "href": "/blog/post/announcing-vipps-mobilepay-login",
     "title": "Announcing Vipps MobilePay login for Appwrite Auth",
@@ -14,6 +56,34 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-vipps-mobilepay-login/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-monorepo-support-for-sites",
+    "href": "/blog/post/announcing-monorepo-support-for-sites",
+    "title": "Announcing monorepo support in Appwrite Sites",
+    "description": "Appwrite Sites now deploys server-rendered apps straight from npm, pnpm, and Bun workspaces, with the shared packages they import and without the rest of the repo.",
+    "date": "2026-11-10",
+    "lastUpdated": "2026-11-10",
+    "timeToRead": 4,
+    "author": "harsh-mahajan",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-monorepo-support-for-sites/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-streaming-responses",
+    "href": "/blog/post/announcing-streaming-responses",
+    "title": "Announcing streamed responses for Appwrite Sites and Functions",
+    "description": "Appwrite Sites and Functions now stream their responses, so server-rendered pages show up in parts as they render and AI output reaches your users while the model is still writing.",
+    "date": "2026-11-10",
+    "lastUpdated": "2026-11-10",
+    "timeToRead": 3,
+    "author": "harsh-mahajan",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-streaming-responses/cover.avif",
     "hasCover": true
   },
   {

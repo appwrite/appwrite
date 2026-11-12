@@ -19,13 +19,15 @@ import {
 import {
   getPlatformDisplayName,
   getPlatformIdentifier,
+  isWildcardHostname,
   type ProjectPlatform,
 } from '@/lib/utils/platform'
 import { HOSTNAME_PRESETS } from '@/lib/add-app-wizard/platform-map'
 import { isFingerprint } from '@/lib/passkey-policy'
 import { PlatformIcon } from '@/components/global/shared/Icon'
+import { WILDCARD_WARNING } from './WildcardWarning'
 import { toast } from 'sonner'
-import { Trash2, ExternalLink } from 'lucide-react'
+import { Trash2, ExternalLink, TriangleAlert } from 'lucide-react'
 import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -274,6 +276,12 @@ export function PlatformDrawer({
                             )
                           })}
                         </div>
+                        {isWildcardHostname(hostname) && (
+                          <p className="flex items-start gap-1.5 text-[12px] text-amber-600 dark:text-amber-400">
+                            <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                            {t(WILDCARD_WARNING)}
+                          </p>
+                        )}
                         <p className="text-[12px] text-muted-foreground">
                           {t('The domain your app makes requests from. Use')}{' '}
                           <code className="rounded bg-muted px-1 py-0.5 text-[11px]">

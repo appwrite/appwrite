@@ -125,7 +125,7 @@ export function View() {
       }}
       deployments={[]}
       deploymentDetailRoute="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
-      listRoute="/projects/$projectId/sites/$siteId/"
+      listRoute="/projects/$projectId/sites/$siteId/deployments"
       onDelete={handleDelete}
       onCancelBuild={handleCancelBuild}
       onDownloadSource={handleDownloadSource}

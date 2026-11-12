@@ -46,6 +46,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as Upd
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
@@ -71,6 +72,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Yahoo\Update as Update
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Yandex\Update as UpdateOAuth2Yandex;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Zoho\Update as UpdateOAuth2Zoho;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Zoom\Update as UpdateOAuth2Zoom;
+use Appwrite\Platform\Modules\Project\Http\Project\Passwords\Delete as DeletePasswords;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Create as CreateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Update as UpdateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Apple\Create as CreateApplePlatform;
@@ -170,6 +172,9 @@ class Http extends Service
         $this->addAction('getProjectKey', GetKey::class);
         $this->addAction('deleteProjectKey', DeleteKey::class);
         $this->addAction('updateProjectKey', UpdateKey::class);
+
+        // Passwords
+        $this->addAction('deleteProjectPasswords', DeletePasswords::class);
 
         // Platforms
         $this->addAction('listProjectPlatforms', ListPlatforms::class);
@@ -271,6 +276,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
+        $this->addAction('updateProjectOAuth2Naver', UpdateOAuth2Naver::class);
         $this->addAction('updateProjectOAuth2Cloudflare', UpdateOAuth2Cloudflare::class);
         $this->addAction('updateProjectOAuth2Vipps MobilePay', UpdateOAuth2Vipps::class);
         $this->addAction('updateProjectOAuth2Vipps MobilePay Sandbox', UpdateOAuth2VippsSandbox::class);

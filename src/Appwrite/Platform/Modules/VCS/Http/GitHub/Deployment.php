@@ -54,6 +54,7 @@ trait Deployment
         callable $deploymentsFactory,
     ) {
         $errors = [];
+        $heads = [];
         $provider = $vcs->getName();
         foreach ($repositories as $repository) {
             $logBase = "vcs.{$provider}.event.repo.unknown";
@@ -165,6 +166,40 @@ trait Deployment
                     $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
                 } catch (RepositoryNotFound $e) {
                     throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
+
+                // A provider without an installation-scoped webhook authenticates every delivery
+                // with the one instance-wide secret Appwrite registers on each connected
+                // repository, so the body speaks for no particular repository: anyone holding it
+                // could name this repository, its production branch and any commit in it. The
+                // branch and the commit are only trusted once the provider itself reports the
+                // commit as that branch's head, which a forged delivery cannot choose.
+                if (empty($providerPullRequestId) && !\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $vcs->getSupportedWebhookScopes(), true)) {
+                    $key = "{$owner}/{$repositoryName}/{$providerBranch}";
+
+                    if (!\array_key_exists($key, $heads)) {
+                        try {
+                            $heads[$key] = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch)['commitHash'] ?? '';
+                        } catch (RepositoryNotFound) {
+                            $heads[$key] = null;
+                        }
+                    }
+
+                    $head = $heads[$key];
+
+                    if ($head === null) {
+                        Span::add("{$logBase}.build.skipped.reason", 'branch not found');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        Console::warning("Skipping repository '{$repositoryId}': branch '{$providerBranch}' was not found");
+                        continue;
+                    }
+
+                    if (empty($providerCommitHash) || $providerCommitHash !== $head) {
+                        Span::add("{$logBase}.build.skipped.reason", 'commit is not the branch head');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        Console::warning("Skipping repository '{$repositoryId}': pushed commit '{$providerCommitHash}' is not the head of branch '{$providerBranch}'");
+                        continue;
+                    }
                 }
 
                 $isAuthorized = !$external;
@@ -339,9 +374,6 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
                     $message = 'Authorization required for external contributor.';
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
@@ -351,7 +383,20 @@ trait Deployment
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
                     $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
-                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                    // Keyed like the build's check, so the build takes it over once authorized
+                    $vcs->updateCheck(
+                        $owner,
+                        $repositoryName,
+                        $providerCommitHash,
+                        'queued',
+                        $resource->getAttribute('name'),
+                        $message,
+                        "Authorize the build: {$authorizeUrl}",
+                        $authorizeUrl,
+                        suite: $project->getAttribute('name'),
+                        key: "{$project->getId()}/{$resource->getCollection()}/{$resource->getId()}",
+                        suiteKey: $project->getId(),
+                    );
                     continue;
                 }
 

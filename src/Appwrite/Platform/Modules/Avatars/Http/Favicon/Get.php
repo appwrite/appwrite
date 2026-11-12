@@ -19,7 +19,7 @@ use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Client;
-use Utopia\Image\Exception\UnsupportedFormatException;
+use Utopia\Image\Exception\ImageException;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -197,7 +197,7 @@ class Get extends Action
 
         try {
             $image = new Image($data);
-        } catch (UnsupportedFormatException | \ImagickException) {
+        } catch (ImageException) {
             throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
         }
 

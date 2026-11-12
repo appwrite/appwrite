@@ -61,7 +61,7 @@ async function mockBilling(
   page: Page,
   currentInvoice: unknown,
   historyInvoice?: object,
-  usage: object | null = aggregation,
+  usage: object | null | number = aggregation,
 ) {
   await page.context().addCookies([
     {
@@ -142,6 +142,17 @@ async function mockBilling(
       path === `/organizations/${orgId}/aggregations/mutable-aggregation` &&
       usage
     ) {
+      if (typeof usage === 'number') {
+        return route.fulfill({
+          status: usage,
+          headers,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Usage temporarily unavailable',
+            code: usage,
+          }),
+        })
+      }
       const query = new URL(request.url()).searchParams
       const limit = Number(query.get('limit') ?? 10)
       if (limit > 10) {
@@ -300,6 +311,63 @@ test('keeps saved project charges and usage quantities when aggregation is unava
   await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
   await expect(summary.getByText('1.5 GB / 1 GB')).toBeVisible()
   await expect(summary.getByText('$10.01', { exact: true })).toHaveCount(2)
+})
+
+test('keeps saved charges visible through a usage outage and retries only usage', async ({
+  page,
+}) => {
+  let invoiceRequests = 0
+  page.on('request', (request) => {
+    if (
+      appwriteApiPath(request.url()) ===
+      `/organizations/${orgId}/invoices/${invoiceId}`
+    )
+      invoiceRequests++
+  })
+  const summary = await mockBilling(page, invoice, undefined, 503)
+  await expect(
+    summary.getByText('Usage unavailable', { exact: true }),
+  ).toBeVisible()
+  await expect(summary.getByText('Historical plan price')).toBeVisible()
+  await expect(summary.getByText('Usage budget cap')).toBeVisible()
+  await expect(
+    summary.getByText('Total', { exact: true }).locator('..'),
+  ).toContainText('$0.00')
+  const project = summary.getByRole('button', { name: /project-a/ })
+  await expect(project).toContainText('$10.01')
+  await project.click()
+  await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
+  const initialInvoiceRequests = invoiceRequests
+  await page.route(
+    `${env.VITE_APPWRITE_ENDPOINT}/organizations/${orgId}/aggregations/mutable-aggregation**`,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        headers: {
+          'access-control-allow-origin': 'http://localhost:4173',
+          'access-control-allow-credentials': 'true',
+          'access-control-allow-methods': 'GET,OPTIONS',
+          'access-control-allow-headers':
+            route.request().headers()['access-control-request-headers'] ?? '*',
+        },
+        contentType: 'application/json',
+        body: JSON.stringify(aggregation),
+      })
+    },
+  )
+  await summary.getByRole('button', { name: 'Try again', exact: true }).click()
+  await expect(
+    summary.getByText('Usage unavailable', { exact: true }),
+  ).toBeHidden()
+  await expect(
+    summary.getByRole('button', { name: /Production API/ }),
+  ).toHaveAttribute('aria-expanded', 'true')
+  await expect(summary.getByRole('progressbar').first()).toBeVisible()
+  await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
+  await expect(
+    summary.getByText('Total', { exact: true }).locator('..'),
+  ).toContainText('$0.00')
+  expect(invoiceRequests).toBe(initialInvoiceRequests)
 })
 
 test('keeps unmapped project line items in the project subtotal and details', async ({

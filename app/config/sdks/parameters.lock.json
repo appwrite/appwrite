@@ -1158,6 +1158,10 @@
             "queries",
             "total"
         ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -3038,6 +3042,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -3323,6 +3328,11 @@
             "tenant",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
@@ -5395,6 +5405,10 @@
             "queries",
             "total"
         ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -7209,6 +7223,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -7494,6 +7509,11 @@
             "tenant",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Notion": [
             "oauthClientId",

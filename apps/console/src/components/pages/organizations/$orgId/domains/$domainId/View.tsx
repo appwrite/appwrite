@@ -19,6 +19,7 @@ import {
   Eye,
   EyeOff,
   ArrowLeftRight,
+  Info,
 } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -1716,6 +1717,25 @@ export function View({ initialData }: ViewProps = {}) {
                     </p>
                   </div>
                   <div className="border-t border-border" />
+                  {!canManageAutoRenewal && (
+                    <div className="border-b border-border bg-blue-500/5 px-6 py-3">
+                      <Alert
+                        variant="default"
+                        className="border-blue-500/30 bg-transparent"
+                      >
+                        <Info className="h-4 w-4 shrink-0 text-blue-500" />
+                        <AlertTitle className="text-[13px] font-medium text-blue-600 dark:text-blue-400">
+                          {t('Registered with another registrar')}
+                        </AlertTitle>
+                        <AlertDescription className="text-[12px] leading-snug text-blue-600/80 dark:text-blue-400/80">
+                          {t(
+                            'Auto renewal is available for domains registered with Appwrite.', // pragma: allowlist secret
+                          )}{' '}
+                          {t('Renew this domain with its current registrar.')}
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
                   <div className="px-6 py-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-1">
@@ -1756,13 +1776,6 @@ export function View({ initialData }: ViewProps = {}) {
                           : '-'}
                       </p>
                     </div>
-                    {!canManageAutoRenewal && (
-                      <p className="mt-3 text-[12px] text-muted-foreground">
-                        {t(
-                          'Auto renewal is available for domains registered with Appwrite.', // pragma: allowlist secret
-                        )}
-                      </p>
-                    )}
                   </div>
                   <div className="px-6 py-4 border-t border-border bg-muted/30">
                     <Button

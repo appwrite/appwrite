@@ -12,8 +12,20 @@ or data, encrypted files and data cannot be deciphered, adding a further layer o
 
 For storage, buckets can have their files encrypted. If enabled, every file uploaded to the bucket is encrypted before it reaches the storage provider, whatever its size.
 You can enable encryption by going to your bucket's **Settings** > **Security settings** > toggle **Encryption**.
-Each file gets its own random key, which is itself encrypted with the server's encryption key. Files are encrypted with AES-256 in Galois/Counter Mode (GCM) in 64 KB segments, so large files are streamed and range requests decrypt only the segments they read.
-Files encrypted before this change keep AES-128-GCM and remain readable.
+Each file gets its own random 256-bit key, which is itself encrypted with the server's encryption key and is never returned by the API. Files are encrypted with AES-256 in Galois/Counter Mode (GCM) in 64 KB segments, so large files are streamed. Each segment is stored with its own nonce and authentication tag, which also covers the segment's position in the file, so segments can't be swapped, reordered, or cut off without the read failing.
+
+In a bucket without compression, a range request decrypts only the segments it reads. Files in a bucket with compression enabled are decrypted and decompressed as a whole.
+
+An encrypted file is stored 28 bytes larger per 64 KB segment, about 0.04 percent more than the original.
+
+### Files uploaded before segment encryption {% #existing-files %}
+
+Earlier versions encrypted only files up to 20 MB, with AES-128-GCM, and stored larger files unencrypted even in a bucket with encryption enabled. Those files are not re-encrypted:
+
+- Files up to 20 MB keep AES-128-GCM and remain readable.
+- Files larger than 20 MB stay unencrypted until you upload them again.
+
+Self-hosted Appwrite 2.7.1 and earlier still encrypts only files up to 20 MB.
 
 ## Databases {% #databases %}
 Database columns support encryption for text columns (varchar, text, mediumtext, and longtext). This feature is available on Pro plans and higher. When creating a text column in the UI, encryption can be enabled using a toggle option.

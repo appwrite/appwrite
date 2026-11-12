@@ -1,0 +1,116 @@
+---
+layout: integration
+title: Grafana with managed PostgreSQL and MySQL
+description: Build Grafana dashboards and alerts on an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-grafana/cover.avif
+category: databases
+product:
+    vendor: Grafana Labs
+    description: 'Grafana is an open-source observability and dashboarding platform from Grafana Labs that queries data sources such as PostgreSQL and MySQL.'
+platform:
+    - 'Cloud'
+---
+
+[Grafana](https://grafana.com/) is an open-source platform for dashboards, visualizations, and alerts. It queries your data in place through data sources, including built-in PostgreSQL and MySQL data sources, and is available self-managed or as Grafana Cloud.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard managed engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Grafana connects to them through its built-in **PostgreSQL** or **MySQL** data source with no Appwrite-specific configuration, so you can chart application data and alert on it next to your other metrics.
+
+Grafana holds its data source connections open for the life of the process, so it connects to the direct engine port or a session-mode pooler, never the default transaction-mode pooler.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect Grafana to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the host and database name from the **Details** tab. For MySQL, read them from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Limit what dashboards can do
+
+Grafana can run any SQL its data source user is allowed to run. On PostgreSQL, don't connect as `admin`, which owns the database. Create a role for Grafana, such as `grafana_ro`, from the database's **Roles** tab in the Console, then grant it only the `SELECT` privileges your dashboards need from the SQL editor or `psql`.
+
+On MySQL, keep panel queries read-only and don't save write statements in dashboards. On either engine, restrict network access to your Grafana hosts with an IP allowlist. For Grafana Cloud, add your stack's outbound IP ranges to the allowlist.
+
+## Step 3: Add the data source
+
+In Grafana, open **Connections** > **Data sources** > **Add data source** and select **PostgreSQL** or **MySQL**:
+
+{% tabs %}
+{% tabsitem #fields-postgresql title="PostgreSQL" %}
+| Field | Value |
+| --- | --- |
+| **Host URL** | `db-<hash>.<region>.appwrite.center:5432` |
+| **Database name** | `<database>` |
+| **Username** | `grafana_ro` |
+| **Password** | The reporting role's password |
+| **TLS/SSL Mode** | `require` |
+
+Appwrite terminates TLS at the edge, so `require` works without uploading a certificate.
+{% /tabsitem %}
+
+{% tabsitem #fields-mysql title="MySQL" %}
+| Field | Value |
+| --- | --- |
+| **Host URL** | `db-<hash>.<region>.appwrite.center:3306` |
+| **Database** | `default` |
+| **Username** | `admin.<hash>` |
+| **Password** | `<password>` |
+{% /tabsitem %}
+{% /tabs %}
+
+Under **Connection limits**, keep **Max open** and **Max idle** modest so Grafana doesn't exhaust the database's connection budget, then select **Save & test**. To manage the data source as code, [provision it from YAML](https://grafana.com/docs/grafana/latest/administration/provisioning/) with `type: postgres` or `type: mysql` and read the password from an environment variable through `secureJsonData`.
+
+## Step 4: Build a panel
+
+Create a dashboard, add a panel backed by the new data source, and switch the query editor to code mode. For example, plot daily sign-ups from a `users` table:
+
+{% tabs %}
+{% tabsitem #panel-postgresql title="PostgreSQL" %}
+```sql
+SELECT
+  date_trunc('day', created_at) AS time,
+  count(*) AS signups
+FROM users
+GROUP BY 1
+ORDER BY 1
+```
+{% /tabsitem %}
+
+{% tabsitem #panel-mysql title="MySQL" %}
+```sql
+SELECT
+  CAST(DATE(created_at) AS DATETIME) AS time,
+  COUNT(*) AS signups
+FROM users
+GROUP BY CAST(DATE(created_at) AS DATETIME)
+ORDER BY time;
+```
+
+MySQL 8.4 enables `ONLY_FULL_GROUP_BY`, so the selected time expression must match the grouped one.
+{% /tabsitem %}
+{% /tabs %}
+
+Grafana maps the `time` column to the panel's time axis and `signups` to the value.
+
+# Read more about Grafana and Appwrite Databases
+
+If you would like to learn more about Grafana and Appwrite Databases, we have some resources that you should visit:
+
+- [Connect Grafana to a native PostgreSQL database](/docs/products/databases/postgresql/integrations/grafana)
+- [Connect Grafana to a native MySQL database](/docs/products/databases/mysql/integrations/grafana)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Grafana PostgreSQL data source](https://grafana.com/docs/grafana/latest/datasources/postgres/configure/)
+- [Grafana MySQL data source](https://grafana.com/docs/grafana/latest/datasources/mysql/configure/)

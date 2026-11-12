@@ -96,6 +96,18 @@ export type Alert = {
    */
   resolvedAt?: string | null
   /**
+   * Date a member acknowledged the alert, in ISO 8601 format. Empty while nobody has. Absent on servers without acknowledgements.
+   */
+  acknowledgedAt?: string | null
+  /**
+   * ID of the user who acknowledged the alert. Empty while nobody has, or when it was acknowledged with an API key.
+   */
+  acknowledgedBy?: string
+  /**
+   * Name of the user who acknowledged the alert, when they did.
+   */
+  acknowledgedByName?: string
+  /**
    * The monitor's rules when the alert fired, as query strings.
    */
   rules: string[]

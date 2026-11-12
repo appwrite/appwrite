@@ -715,7 +715,28 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Settings · Migrations': '設定 · マイグレーション',
   'Import data from other backends': '他のバックエンドからデータをインポート',
   'Settings · SMTP': '設定 · SMTP',
-  'Security · Firewall rules': 'セキュリティ · ファイアウォールルール',
+  'Settings · Firewall': '設定 · ファイアウォール',
+  'Firewall has moved': 'ファイアウォールの場所が変わりました',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'ファイアウォールのルールは、保護する対象のそばに移りました。各関数とサイトの「ファイアウォール」タブと、API 用のプロジェクト設定のタブです。',
+  'Got it': '了解',
+  'Open API firewall': 'API のファイアウォールを開く',
+  // Function and site overview cards, filter chips
+  '1 rule': '1 件のルール',
+  '{count} rules': '{count} 件のルール',
+  'vs previous 24 hours': '前の 24 時間と比較',
+  'No blocked traffic yet': 'ブロックされたトラフィックはまだありません',
+  'Denied requests will show up here.':
+    '拒否されたリクエストはここに表示されます。',
+  '24 hours ago': '24 時間前',
+  'No requests yet': 'リクエストはまだありません',
+  'No bandwidth yet': '帯域幅の使用はまだありません',
+  Humans: '人間',
+  Bots: 'ボット',
+  only: 'のみ',
+  On: 'オン',
+  SSR: 'SSR',
+  Static: '静的',
   // Command center: project settings card entries
   'Settings · Project name': '設定 · プロジェクト名',
   'Rename your project': 'プロジェクト名を変更',
@@ -1163,6 +1184,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   File: 'ファイル',
   Filters: 'フィルター',
   'Filtered by': '絞り込み',
+  'Change operator': '演算子を変更',
+  'Change value': '値を変更',
   Function: '関数',
   Functions: '関数',
   Impersonate: 'なりすまし',
@@ -1364,9 +1387,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Project environments': 'プロジェクト環境',
   'Switch or clone staging and production.':
     'ステージングと本番を切り替え、複製します。',
-  'Project transfers': 'プロジェクトの転送',
-  'Move a project to another organization.':
-    'プロジェクトを別の組織へ移します。',
   'Repository not available': 'リポジトリを利用できません',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',

@@ -95,7 +95,12 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     ...organizationInvoiceQueryOptions(orgId, organization?.billingInvoiceId),
     enabled: canReadInvoice && !!orgId && !!organization?.billingInvoiceId,
   })
-  const { data: aggregation, error: usageError } = useQuery({
+  const {
+    data: aggregation,
+    error: usageError,
+    refetch: retryUsage,
+    isFetching: fetchingUsage,
+  } = useQuery({
     ...organizationBillingAggregationQueryOptions(
       orgId,
       organization?.billingAggregationId,
@@ -117,7 +122,8 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   )
   const lines = useMemo(() => invoice?.items ?? [], [invoice?.items])
   const {
-    projectBreakdowns,
+    displayedBreakdowns,
+    totalProjects,
     organizationLines,
     organizationUsageCategories,
     organizationItems,
@@ -128,24 +134,26 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         ...lines.flatMap((item) => (item.projectId ? [item.projectId] : [])),
       ]),
     ]
-    const projectBreakdowns = projectIds.map((projectId) => {
-      const project = aggregation?.breakdown.find(
-        (project) => project.$id === projectId,
-      )
-      const items = lines.filter((item) => item.projectId === projectId)
-      return {
-        projectId,
-        projectName: project?.name || projectId,
-        items,
-        categories: usageCategories(
-          project?.resources,
+    const displayedBreakdowns = projectIds
+      .slice((displayedPage - 1) * pageLimit, displayedPage * pageLimit)
+      .map((projectId) => {
+        const project = aggregation?.breakdown.find(
+          (project) => project.$id === projectId,
+        )
+        const items = lines.filter((item) => item.projectId === projectId)
+        return {
+          projectId,
+          projectName: project?.name || projectId,
           items,
-          plan,
-          dedicatedDbBillingSpecLookup,
-        ),
-        total: items.reduce((sum, item) => sum + item.amount, 0) / 100,
-      }
-    })
+          categories: usageCategories(
+            project?.resources,
+            items,
+            plan,
+            dedicatedDbBillingSpecLookup,
+          ),
+          total: items.reduce((sum, item) => sum + item.amount, 0) / 100,
+        }
+      })
     const organizationLines = lines.filter((item) => !item.projectId)
     const organizationUsageCategories =
       plan?.usagePerProject || (!aggregation && organizationLines.length === 0)
@@ -165,17 +173,13 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         ),
     )
     return {
-      projectBreakdowns,
+      displayedBreakdowns,
+      totalProjects: projectIds.length,
       organizationLines,
       organizationUsageCategories,
       organizationItems,
     }
-  }, [aggregation, lines, plan, dedicatedDbBillingSpecLookup])
-  const totalProjects = projectBreakdowns.length
-  const displayedBreakdowns = projectBreakdowns.slice(
-    (displayedPage - 1) * pageLimit,
-    displayedPage * pageLimit,
-  )
+  }, [aggregation, lines, plan, dedicatedDbBillingSpecLookup, displayedPage])
   const toggleProject = (id: string) =>
     setExpandedProjects((previous) => {
       const next = new Set(previous)
@@ -221,7 +225,6 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const billingCycleLabel = t('Monthly')
 
   if (error) throw error
-  if (usageError) throw usageError
   if (!canReadInvoice) return null
 
   return (
@@ -331,6 +334,22 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           )}
         >
           <div className="border-t border-border px-6 py-4 space-y-4">
+            {usageError && (
+              <div
+                role="status"
+                className="flex items-center justify-between gap-4 text-[12px] text-muted-foreground"
+              >
+                <span>{t('Usage unavailable')}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={fetchingUsage}
+                  onClick={() => void retryUsage()}
+                >
+                  {t('Try again')}
+                </Button>
+              </div>
+            )}
             {invoice?.items?.length ? (
               organizationItems.map((item, index) => (
                 <RecordedLine key={index} item={item} currency={currency} />
@@ -376,7 +395,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </div>
             )}
             {/* Project Breakdown Section */}
-            {projectBreakdowns.length > 0 && (
+            {totalProjects > 0 && (
               <div className="space-y-3 border-t border-border pt-6 mt-4">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                   {t('Project breakdown')}

@@ -1420,6 +1420,68 @@ trait AvatarsBase
         return [];
     }
 
+    public function testGetScreenshotAutoOutput(): void
+    {
+        $url = self::SCREENSHOT_URL . '?x=' . time() . rand(1000, 9999);
+        $screenshot = fn (string $accept, string $output = 'auto') => $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => $accept,
+        ], [
+            'url' => $url,
+            'width' => 400,
+            'height' => 300,
+            'output' => $output,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $avif = $screenshot('image/avif,image/webp,image/apng,image/*,*/*;q=0.8');
+        $this->assertEquals(200, $avif['headers']['status-code']);
+        $this->assertEquals('image/avif', $avif['headers']['content-type']);
+        $this->assertEquals('Accept', $avif['headers']['vary']);
+        $image = new \Imagick();
+        $image->readImageBlob($avif['body']);
+        $this->assertSame(400, $image->getImageWidth());
+        $this->assertSame(300, $image->getImageHeight());
+
+        $webp = $screenshot('image/webp,*/*');
+        $this->assertEquals(200, $webp['headers']['status-code']);
+        $this->assertEquals('image/webp', $webp['headers']['content-type']);
+        $this->assertEquals('Accept', $webp['headers']['vary']);
+
+        // AVIF refused with q=0 and only wildcards otherwise: screenshots fall back to png
+        $png = $screenshot('image/avif;q=0,image/*,*/*');
+        $this->assertEquals(200, $png['headers']['status-code']);
+        $this->assertEquals('image/png', $png['headers']['content-type']);
+        $this->assertEquals('Accept', $png['headers']['vary']);
+
+        // An explicit output ignores Accept, so the response does not vary by it
+        $explicit = $screenshot('image/avif', 'webp');
+        $this->assertEquals(200, $explicit['headers']['status-code']);
+        $this->assertEquals('image/webp', $explicit['headers']['content-type']);
+        $this->assertArrayNotHasKey('vary', $explicit['headers']);
+
+        // Cached entries are keyed by the negotiated format, never served across Accept headers
+        $this->assertEventually(function () use ($screenshot) {
+            $cached = $screenshot('image/avif,image/webp');
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/avif', $cached['headers']['content-type']);
+            $this->assertEquals('Accept', $cached['headers']['vary']);
+
+            $cached = $screenshot('*/*');
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/png', $cached['headers']['content-type']);
+            $this->assertEquals('Accept', $cached['headers']['vary']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = $screenshot('image/avif', 'automatic');
+        $this->assertEquals(400, $invalid['headers']['status-code']);
+    }
+
     public function testGetScreenshotComparison(): array
     {
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [

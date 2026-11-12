@@ -131,6 +131,50 @@ final class FastlyTlsTest extends TestCase
         yield 'retried after expiry' => ['pending', -8, Status::EXPIRING];
     }
 
+    public function testLapsedCertificateIsReportedAsFailed(): void
+    {
+        // Fastly gave up renewing: no order left, and the subscription still says issued
+        $warning = 'Found conflicting CAA record(s). Expected certainly.com.';
+        $subscription = $this->subscription(
+            state: 'issued',
+            authorizationState: 'failed',
+            warnings: [['type' => 'caa', 'instructions' => $warning]],
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']],
+            expiries: ['cert_1' => -3],
+            attributes: ['has_active_order' => false],
+        );
+        $provider = new FastlyTls('token', '', 'certainly', new TestClient([$this->json($subscription), $this->json($subscription)]));
+
+        try {
+            $provider->getCertificateStatus('example.com', null);
+            $this->fail('An expired certificate nothing renews has to be reported, not called issued.');
+        } catch (Certificate $exception) {
+            $this->assertSame(Status::FAILED, $exception->getStatus());
+            $this->assertStringContainsString($warning, $exception->getMessage());
+        }
+
+        $this->assertTrue($provider->isRenewRequired('example.com', null));
+    }
+
+    public function testLapsedCertificateIsRetried(): void
+    {
+        $lapsed = $this->subscription(
+            state: 'issued',
+            authorizationState: 'passing',
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']],
+            expiries: ['cert_1' => -3],
+            attributes: ['has_active_order' => false],
+        );
+        $client = new TestClient([
+            $this->json($lapsed),
+            $this->json('{"data":{"id":"sub_123","attributes":{"state":"pending"}}}'),
+        ]);
+
+        $this->assertNull(new FastlyTls('token', 'config', 'certainly', $client)->issueCertificate('cert', 'example.com', null));
+        $this->assertSame(['GET', 'PATCH'], array_column($client->calls, 'method'));
+        $this->assertSame('https://api.fastly.com/tls/subscriptions/sub_123?force=true', $client->calls[1]['url']);
+    }
+
     public function testRenewedCertificateIsNotExpiring(): void
     {
         // The subscription keeps the certificate it replaced until that one expires

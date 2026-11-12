@@ -153,6 +153,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '攻撃モードがオンです。すべての訪問者がチャレンジされます。',
   'Apply as firewall rule': 'ファイアウォールルールとして適用',
   'No firewall rules': 'ファイアウォールルールがありません',
+  'Configure rules': 'ルールを設定',
+  'Rules that apply to this site appear here.':
+    'このサイトに適用されるルールがここに表示されます。',
+  'Rules that apply to this function appear here.':
+    'この Function に適用されるルールがここに表示されます。',
   'No API firewall rules': 'API のファイアウォールルールがありません',
   'No function firewall rules':
     'Functions のファイアウォールルールがありません',
@@ -708,6 +713,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Models and tools': 'モデルとツール',
   'Calls by model and by tool': 'モデル別・ツール別の呼び出し数',
   'No calls in this range': 'この期間の呼び出しはありません',
+  'Installs and push': 'インストールとプッシュ',
+  'Installs, updates and push notifications from the tracking SDK':
+    '計測 SDK によるインストール、アップデート、プッシュ通知',
+  'No installs tracked yet': 'まだインストールは計測されていません',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    '最新の計測 SDK をアプリに追加すると、インストール、アップデート、プッシュ通知を計測できます。',
+  'Add the tracking SDK': '計測 SDK を追加',
+  Installs: 'インストール',
+  Updates: 'アップデート',
+  'Push received': 'プッシュ受信',
+  'Push opened': 'プッシュ開封',
+  'Push opened by message': 'メッセージ別のプッシュ開封',
+  'No opened pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きで開封されたプッシュはありません',
   'Values of the props sent with your events':
     'イベントと一緒に送信された props の値',
   'No event props in this range': 'この期間にイベントの props はありません',
@@ -809,6 +828,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
   'What visitors are browsing with': '訪問者の利用環境',
+  'What visitors are using': '訪問者の利用デバイス',
   'Human visitors versus bots': '人間の訪問者とボットの比較',
   'AI agents and crawlers': 'AI エージェントとクローラー',
   Agents: 'エージェント',
@@ -947,6 +967,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'The domain your app makes requests from. Use':
     'アプリがリクエストを送信するドメイン。使用:',
   'Troubleshoot CORS errors': 'CORS エラーのトラブルシューティング',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'どのウェブサイトからでもこのプロジェクトにリクエストを送信できます。本番公開の前に、* をアプリのドメイン（例: app.example.com）に置き換えてください。',
   'Bundle ID': 'バンドル ID',
   'Application ID': 'アプリケーション ID',
   'Package identifier': 'パッケージ識別子',
@@ -1412,6 +1434,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Use a date range longer than this interval.':
     'この間隔より長い日付範囲を使用してください。',
   'days or less for this interval.': '日以下 (この間隔の場合)。',
+  'This interval is larger than the selected date range.':
+    'この間隔は選択した期間より大きいです。',
   Compute: 'コンピュート',
   'Compute over time': '経時的なコンピュート',
   'Copy API endpoint': 'API エンドポイントをコピー',
@@ -1992,7 +2016,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to rotate secret': 'シークレットのローテーションに失敗しました',
   'Failed to send test email': 'テストメールの送信に失敗しました',
   'Failed to start migration': '移行の開始に失敗しました',
-  'Failed to transfer project': 'プロジェクトの転送に失敗しました',
   'Failed to update SMTP settings': 'SMTP 設定の更新に失敗しました',
   'Failed to update project name': 'プロジェクト名の更新に失敗しました',
   'Failed to update protocol': 'プロトコルの更新に失敗しました',
@@ -2134,8 +2157,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search migrations...': 'マイグレーションを検索...',
   'Search webhooks...': 'Webhook を検索...',
   'Secure protocol': 'セキュアプロトコル',
-  'Select a different organization to transfer to.':
-    '転送先の別の組織を選択してください。',
   'Select at least one event': '少なくとも 1 つのイベントを選択',
   'Select at least one resource': '少なくとも 1 つのリソースを選択',
   'Select destination': '転送先を選択',
@@ -2194,12 +2215,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。',
   'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。今すぐコピーしてください。',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
-    'このプロジェクトを転送するには、現在の組織と転送先組織の両方のメンバーである必要があります。以下で転送先を選択してください。',
   'Transfer between organizations': '組織間の転送',
   'Transfer project': 'プロジェクトの転送',
-  'Transfer this project to the selected organization':
-    'このプロジェクトを選択した組織に転送',
   'URL is required': 'URL は必須です',
   'Update webhook': 'Webhook の更新',
   'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
@@ -2228,10 +2245,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'インポート中に既存の ID を持つ行に遭遇した場合。',
   'When enabled, all emails will be sent through your configured SMTP server.':
     '有効にすると、すべてのメールは設定した SMTP サーバー経由で送信されます。',
-  'You do not have any organizations you can transfer this project to.':
-    'このプロジェクトを転送できる組織がありません。',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
-    'このプロジェクトを転送できる組織がありません。転送するには、別の組織を作成または参加してください。',
   'an A or AAAA record': 'A または AAAA レコード',
   'and all its databases, functions, and files? This action cannot be undone.':
     'とそのすべてのデータベース、Functions、ファイル? この操作は元に戻せません。',
@@ -3103,6 +3116,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Clear: 'クリア',
   Apply: '適用',
   Compare: '比較',
+  vs: 'vs',
   Realtime: 'Realtime',
   Connected: '接続済み',
   Connecting: '接続中',
@@ -3690,8 +3704,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'まだ受け取られていないリンクです。期限切れのリンクでは受け取れません。期限より前に無効にするには、リンクを削除してください。',
   'The project already belongs to this organization.':
     'プロジェクトはすでにこの組織に属しています。',
-  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
-    'このプロジェクトを転送できるのは、プロジェクトを管理できるロールを持つ組織メンバーだけです。組織のオーナーに転送を依頼するか、ロールの変更を依頼してください。',
+  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'このプロジェクトを転送できるのは組織のオーナーだけです。組織のオーナーに転送を依頼するか、ロールの変更を依頼してください。',
   'No permission': '権限なし',
   "You don't have permission to transfer projects in this organization.":
     'この組織でプロジェクトを転送する権限がありません。',
@@ -3904,6 +3918,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'View monitors': 'モニターを表示',
   'Waiting for recovery': '回復待ち',
   Watches: '監視対象',
+  Acknowledge: '確認済みにする',
+  'Acknowledged by {name}': '{name} が確認済み',
+  'Acknowledged by a member': 'メンバーが確認済み',
+  'Acknowledged with an API key': 'API キーで確認済み',
+  'Failed to acknowledge the alert': 'アラートを確認済みにできませんでした',
+  'Failed to undo the acknowledgement': '確認済みを取り消せませんでした',
+  'Let your team know someone is on it. It keeps firing until usage recovers.':
+    '誰かが対応中であることをチームに知らせます。使用量が回復するまでアラートは発生し続けます。',
+  'Nobody has acknowledged this alert':
+    'このアラートはまだ誰も確認していません',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':
