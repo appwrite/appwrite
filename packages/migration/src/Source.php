@@ -16,6 +16,28 @@ abstract class Source extends Target
      */
     public array $previousReport = [];
 
+    /**
+     * Resources the export is held to, keyed by type. For a root type (user, team,
+     * database, bucket, function, ...) the IDs of the resources to export; for a
+     * child type the IDs of the parents whose children to export: a bucket for
+     * files, a function for deployments, a team for memberships, a topic for
+     * subscribers, and a database or `databaseId:tableId` for tables and rows. A
+     * type without an entry is unrestricted within what its parents allow.
+     *
+     * @var array<string, array<string>>
+     */
+    protected array $resourceIds = [];
+
+    /**
+     * @param array<string, array<string>> $resourceIds
+     */
+    public function setResourceIds(array $resourceIds): static
+    {
+        $this->resourceIds = $resourceIds;
+
+        return $this;
+    }
+
     public function supportsDatabaseStatus(): bool
     {
         return false;
