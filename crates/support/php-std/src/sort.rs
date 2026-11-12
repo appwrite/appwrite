@@ -710,6 +710,10 @@ pub fn array_diff<X: Extension>(a: &Array<X>, others: &[&Array<X>]) -> Result<Ar
 /// is in every one of `others`, keys kept (`php_array_intersect`: sorted
 /// copies walked together).
 pub fn array_intersect<X: Extension>(a: &Array<X>, others: &[&Array<X>]) -> Result<Array<X>, EngineError> {
+    // PHP returns a lone array as it is, converting none of its values.
+    if others.is_empty() {
+        return Ok(a.clone());
+    }
     let arrays: Vec<&Array<X>> = std::iter::once(a).chain(others.iter().copied()).collect();
     let mut error: Option<EngineError> = None;
     // Each list: (position in its array, string form), sorted by string. A
@@ -873,6 +877,7 @@ mod tests {
         let b = arr(json!(["1", "x"]));
         assert_eq!(Value::Array(array_diff(&a, &[&b]).unwrap()).to_json(), json!({"0": "a", "4": "b", "5": "a"}));
         assert_eq!(Value::Array(array_intersect(&a, &[&b]).unwrap()).to_json(), json!({"1": "1", "2": 1, "3": 1.0}));
+        assert_eq!(Value::Array(array_intersect(&a, &[]).unwrap()).to_json(), Value::Array(a.clone()).to_json());
         assert!(in_array(&Value::from("1e0"), &a, false));
         assert!(!in_array(&Value::from("1e0"), &a, true));
         assert_eq!(array_search(&Value::Int(1), &a, true), Some(KeyRef::Int(2)));
