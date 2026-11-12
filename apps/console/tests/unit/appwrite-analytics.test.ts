@@ -43,18 +43,28 @@ mock.module('@appwrite.io/console', () => ({
     start() {
       calls.push('start')
     }
+    enableAutoDownloadTracking() {
+      calls.push('downloads')
+    }
+    track(name: string, options: { url?: string; props?: object }) {
+      calls.push(
+        `track:${name}:${options.url}:${JSON.stringify(options.props)}`,
+      )
+    }
     disableAutoPageviews() {
       calls.push('stop')
     }
     disableAutoOutboundTracking() {}
     disableAutoScrollDepth() {}
     disableAutoEngagementTime() {}
+    disableAutoDownloadTracking() {}
   },
 }))
 
 const { startAppwriteAnalytics, stopAppwriteAnalytics } = await import(
   '@/lib/appwrite-analytics'
 )
+const { trackEvent } = await import('@/lib/analytics')
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
@@ -85,6 +95,25 @@ describe('appwrite analytics', () => {
     expect(calls).toEqual([])
   })
 
+  test('custom events reach the started tracker with the Plausible name and props', async () => {
+    config = {
+      appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
+      appwriteAnalyticsProjectId: 'site',
+      appwriteAnalyticsPropertyId: '',
+    }
+    trackEvent('Form Submitted', { form: 'enterprise' })
+    await flush()
+    expect(calls).toEqual([])
+
+    config.appwriteAnalyticsPropertyId = 'web'
+    startAppwriteAnalytics()
+    trackEvent('Form Submitted', { form: 'enterprise', skipped: undefined })
+    await flush()
+    expect(calls.at(-1)).toBe(
+      'track:Form Submitted:undefined:{"form":"enterprise","auth":"guest","plan":"none","lang":"en"}',
+    )
+  })
+
   test('starts once on its own client without credentials, then stops', async () => {
     config = {
       appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
@@ -100,6 +129,7 @@ describe('appwrite analytics', () => {
       'credentials:omit',
       'property:web',
       'start',
+      'downloads',
     ])
 
     stopAppwriteAnalytics()

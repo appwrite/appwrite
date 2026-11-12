@@ -1,4 +1,4 @@
-import type { Tracking } from '@appwrite.io/console'
+import type { Tracking, TrackingEventOptions } from '@appwrite.io/console'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 
 let tracking: Promise<Tracking> | null = null
@@ -24,6 +24,8 @@ export function startAppwriteAnalytics() {
         .setCredentials('omit')
       const tracker = new Tracking(new Analytics(client), propertyId)
       tracker.start()
+      // The Plausible site tracks file downloads too.
+      tracker.enableAutoDownloadTracking()
       return tracker
     },
   )
@@ -37,5 +39,14 @@ export function stopAppwriteAnalytics() {
     tracker.disableAutoOutboundTracking()
     tracker.disableAutoScrollDepth()
     tracker.disableAutoEngagementTime()
+    tracker.disableAutoDownloadTracking()
   })
+}
+
+/** Custom event; a no-op unless tracking was started under consent. */
+export function trackAppwriteEvent(
+  name: string,
+  options: TrackingEventOptions,
+) {
+  void tracking?.then((tracker) => tracker.track(name, options))
 }
