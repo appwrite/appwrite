@@ -223,10 +223,12 @@ class CSV extends Source
         $columnTypes = [];
         $requiredColumns = [];
         $manyToManyKeys = [];
+        $formatKeys = [];
 
         foreach ($columns as $column) {
             $key = $column['key'];
             $type = $column['type'];
+            $format = \is_array($column) && \is_string($column['format'] ?? null) ? $column['format'] : '';
             $isArray = $column['array'] ?? false;
             $isRequired = $column['required'] ?? false;
             $relationSide = $column['side'] ?? '';
@@ -240,6 +242,9 @@ class CSV extends Source
             }
 
             $columnTypes[$key] = $type;
+            if ($format !== '') {
+                $formatKeys[] = $key;
+            }
             if ($isRequired) {
                 $requiredColumns[$key] = true;
             }
@@ -257,20 +262,34 @@ class CSV extends Source
             }
         }
 
-        $this->withCsvStream(function ($stream, $delimiter) use ($columnTypes, $databaseType, $requiredColumns, $manyToManyKeys, $arrayKeys, $tablePayload, $batchSize) {
+        $this->withCsvStream(function ($stream, $delimiter) use ($columnTypes, $formatKeys, $databaseType, $requiredColumns, $manyToManyKeys, $arrayKeys, $tablePayload, $batchSize) {
             $headers = \fgetcsv($stream, 0, $delimiter, '"', '"');
 
             if (!\is_array($headers) || \count($headers) === 0) {
                 return;
             }
 
+            // Excel's "CSV UTF-8" starts with a byte order mark
+            if (\is_string($headers[0]) && \str_starts_with($headers[0], "\xEF\xBB\xBF")) {
+                $headers[0] = \substr($headers[0], 3);
+            }
+
             $this->validateCSVHeaders($headers, $columnTypes, $requiredColumns);
 
             $buffer = [];
+            $line = 1;
 
             while (($row = \fgetcsv($stream, 0, $delimiter, '"', '"')) !== false) {
+                $line++;
+
                 if (\count($row) !== \count($headers)) {
-                    throw new \Exception('CSV row does not match the number of header columns.', Exception::CODE_VALIDATION);
+                    throw new \Exception("CSV row $line does not match the number of header columns.", Exception::CODE_VALIDATION);
+                }
+
+                foreach ($row as $cell) {
+                    if (\is_string($cell) && !\mb_check_encoding($cell, 'UTF-8')) {
+                        throw new \Exception("CSV row $line is not valid UTF-8.", Exception::CODE_VALIDATION);
+                    }
                 }
 
                 $data = \array_combine($headers, $row);
@@ -322,14 +341,10 @@ class CSV extends Source
                                 throw new \Exception("Invalid array format for column '$key': $parsedValue", Exception::CODE_VALIDATION);
                             }
 
-                            $parsedData[$key] = array_map(function ($item) use ($type) {
-                                return match ($type) {
-                                    Column::TYPE_INTEGER,Column::TYPE_BIG_INT => is_numeric($item) ? (int)$item : null,
-                                    Column::TYPE_FLOAT => is_numeric($item) ? (float)$item : null,
-                                    Column::TYPE_BOOLEAN => filter_var($item, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
-                                    default => $item,
-                                };
-                            }, $arrayValues);
+                            $parsedData[$key] = \array_map(
+                                fn ($item) => $this->parseValue(\is_string($item) ? \trim($item) : $item, \is_string($type) ? $type : '', $key, $line),
+                                $arrayValues
+                            );
                         }
                         continue;
                     }
@@ -357,23 +372,10 @@ class CSV extends Source
                             Column::TYPE_BOOLEAN,
                             Column::TYPE_DATETIME,
                             Column::TYPE_RELATIONSHIP => null, // primitive types default to null
-                            default => '', // but empty string stays empty string for compatibility
+                            // enum, email, url and ip cannot hold an empty string
+                            default => \in_array($key, $formatKeys, true) ? null : '', // but empty string stays empty string for compatibility
                         },
-                        default => match ($type) {
-                            Column::TYPE_INTEGER, Column::TYPE_BIG_INT => \is_numeric($parsedValue) ? (int)$parsedValue : null,
-                            Column::TYPE_FLOAT => \is_numeric($parsedValue) ? (float)$parsedValue : null,
-                            Column::TYPE_BOOLEAN => \filter_var(
-                                $parsedValue,
-                                filter: FILTER_VALIDATE_BOOLEAN,
-                                options: FILTER_NULL_ON_FAILURE
-                            ),
-                            Column::TYPE_POINT,
-                            Column::TYPE_LINE,
-                            Column::TYPE_POLYGON,
-                            Column::TYPE_VECTOR,
-                            Column::TYPE_OBJECT => \is_string($parsedValue) ? json_decode($parsedValue, true) : null,
-                            default => $parsedValue,
-                        },
+                        default => $this->parseValue($parsedValue, \is_string($type) ? $type : '', $key, $line),
                     };
                 }
 
@@ -401,6 +403,59 @@ class CSV extends Source
                 $this->callback($buffer);
             }
         });
+    }
+
+    /**
+     * Parse a non-empty cell for its column type, rejecting values the type cannot hold
+     * instead of storing null or a truncated cast.
+     *
+     * @throws \Exception
+     */
+    private function parseValue(mixed $value, string $type, string $key, int $line): mixed
+    {
+        if (!\is_string($value)) {
+            $value = \is_scalar($value) ? (string)$value : null;
+        }
+
+        $parsed = match ($type) {
+            Column::TYPE_INTEGER, Column::TYPE_BIG_INT => \filter_var($value, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE),
+            Column::TYPE_FLOAT => \is_numeric($value) ? (float)$value : null,
+            Column::TYPE_BOOLEAN => \filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+            Column::TYPE_DATETIME => $this->parseDatetime($value),
+            Column::TYPE_POINT,
+            Column::TYPE_LINE,
+            Column::TYPE_POLYGON,
+            Column::TYPE_VECTOR,
+            Column::TYPE_OBJECT => \is_string($value) ? \json_decode($value, true) : null,
+            default => $value,
+        };
+
+        if ($parsed === null) {
+            throw new \Exception("CSV row $line: invalid $type value for column '$key': $value", Exception::CODE_VALIDATION);
+        }
+
+        return $parsed;
+    }
+
+    private function parseDatetime(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        try {
+            new \DateTime($value);
+        } catch (\Exception) {
+            return null;
+        }
+
+        // Out-of-range dates such as 31.02 parse with a warning and roll over to the next month
+        $errors = \DateTime::getLastErrors();
+        if ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) {
+            return null;
+        }
+
+        return $value;
     }
 
     /**
