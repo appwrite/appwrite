@@ -753,6 +753,8 @@ Http::init()
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
             $key = $request->cacheIdentifier();
+            // `auto` params resolved from the Accept header: the response varies by Accept
+            $negotiated = ! empty($request->getNegotiatedParams());
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             [$cache, $fallback] = $responseCache($key);
@@ -836,6 +838,7 @@ Http::init()
                             fileSecurity: $fileSecurity,
                             cacheLog: $cacheLog,
                             route: $route,
+                            negotiated: $negotiated,
                         ));
                     }
                 }
@@ -856,6 +859,9 @@ Http::init()
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+                if ($negotiated) {
+                    $response->addHeader('Vary', 'Accept');
+                }
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
                     Span::add('storage.cache.hit', true);
