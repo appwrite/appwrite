@@ -75,6 +75,7 @@ class OAuth2Apple extends OAuth2Base
             ])
             ->addRule('p8File', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Apple OAuth2 .p8 private key file contents. The secret key wrapped by the PEM markers is 200 characters long.',
                 'default' => '',
                 'example' => '-----BEGIN PRIVATE KEY-----MIGTAg...jy2Xbna-----END PRIVATE KEY-----',

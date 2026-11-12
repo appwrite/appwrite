@@ -10766,14 +10766,12 @@ final class AccountCustomClientTest extends Scope
             return false;
         }
 
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image);
 
-        $color = $image
-            ->getImagePixelColor(\intdiv($image->getImageWidth(), 2), \intdiv($image->getImageHeight(), 2))
-            ->getColor();
+        $color = \imagecolorsforindex($image, (int) \imagecolorat($image, \intdiv(\imagesx($image), 2), \intdiv(\imagesy($image), 2)));
 
-        return $color['r'] === 0 && $color['g'] === 255 && $color['b'] === 0;
+        return $color['red'] === 0 && $color['green'] === 255 && $color['blue'] === 0;
     }
 
     /**

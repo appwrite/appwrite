@@ -473,10 +473,8 @@ jobs:
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
             cargo test --locked -p php-std -p utopia-image --all-features'
 
-      - name: Build the image with the extension
-        run: >-
-          docker build --target development --tag appwrite-utopia
-          --build-arg UTOPIA_EXTENSION=true --build-arg TESTING=true .
+      - name: Build the image
+        run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
 
       - name: Test packages with the extension loaded
         run: |

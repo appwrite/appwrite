@@ -8,6 +8,8 @@
 
 Utopia Image is a lightweight PHP library for common image manipulations. It is maintained by the [Appwrite team](https://appwrite.io).
 
+`Utopia\Image\Image` is implemented in Rust and registered by the `utopia` PHP extension, built from [`crates/extension`](https://github.com/appwrite/appwrite/tree/main/crates/extension). This package holds what stays in PHP: `Format`, the exceptions, a stub of the class for static analysis (`stubs/Image.php`) and the tests. The last release with a PHP implementation, on ImageMagick, is 0.8.9.
+
 ## Getting started
 
 Install using Composer:
@@ -45,7 +47,7 @@ $image->save($target, 'png', 100);
 
 ## System requirements
 
-Utopia Image requires PHP 8.1 or later. We recommend using the latest PHP version whenever possible.
+Utopia Image requires PHP 8.1 or later and the `utopia` extension. The tests also need Imagick, which they use to build and inspect images.
 
 ## Testing
 

@@ -115,12 +115,6 @@ trait Deployment
                 }
                 $resourceInternalId = $resource->getSequence();
 
-                if ($resource->getAttribute('providerDeployments', true) === false) {
-                    Span::add("{$logBase}.build.skipped.reason", 'auto deploy off');
-                    Span::add("{$logBase}.build.skipped", 'true');
-                    continue;
-                }
-
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
@@ -257,9 +251,8 @@ trait Deployment
                 }
 
                 $latestCommentId = '';
-                $comments = $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerSummaries', true) !== false;
 
-                if ($comments && !empty($providerPullRequestId)) {
+                if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
                     $latestComment = $authorization->skip(fn () => $dbForPlatform->findOne('vcsComments', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::equal('providerPullRequestId', [$providerPullRequestId]),
@@ -332,7 +325,7 @@ trait Deployment
                             ])));
                         }
                     }
-                } elseif ($comments && !empty($providerBranch)) {
+                } elseif (!empty($providerBranch)) {
                     $latestComments = $authorization->skip(fn () => $dbForPlatform->find('vcsComments', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::equal('providerBranch', [$providerBranch]),
@@ -381,9 +374,6 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
                     $message = 'Authorization required for external contributor.';
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
@@ -393,7 +383,24 @@ trait Deployment
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
                     $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
-                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                    // Keyed like the build's check, so the build takes it over once authorized
+                    try {
+                        $vcs->updateCheck(
+                            $owner,
+                            $repositoryName,
+                            $providerCommitHash,
+                            'queued',
+                            $resource->getAttribute('name'),
+                            $message,
+                            "Authorize the build: {$authorizeUrl}",
+                            $authorizeUrl,
+                            suite: $project->getAttribute('name'),
+                            key: "{$project->getId()}/{$resource->getCollection()}/{$resource->getId()}",
+                            suiteKey: $project->getId(),
+                        );
+                    } catch (\Throwable $e) {
+                        Console::warning("Failed to report authorization required for '{$resource->getId()}': " . $e->getMessage());
+                    }
                     continue;
                 }
 
@@ -648,7 +655,7 @@ trait Deployment
                     }
                 }
 
-                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerStatuses', true) !== false) {
+                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
                     // The deployment exists by now, so a refused report is logged like
                     // every later one: failing the push here would make a provider that
                     // retries deliveries deploy the commit again.
