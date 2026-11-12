@@ -194,7 +194,52 @@ final class GitHubTest extends Base
         return (string) json_encode($payload);
     }
 
-    public function testUpdateCheckNamesTheStatusAfterItsSuite(): void
+    public function testUpdateCheckReportsACheckRun(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<array{method: string, path: string, params: array<mixed>}> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured[] = ['method' => $method, 'path' => $path, 'params' => $params];
+
+                return [
+                    'body' => $method === self::METHOD_GET ? ['check_runs' => [['id' => 7, 'external_id' => 'project/functions/billing']]] : [],
+                    'headers' => ['status-code' => 200],
+                ];
+            }
+        };
+
+        $adapter->updateCheck('owner', 'repo', 'abc123', 'pending', 'Billing', 'Building...', '- Function Billing', 'https://cloud.appwrite.io', 'Atlas Production', 'project/functions/billing');
+
+        $this->assertSame('/repos/owner/repo/check-runs/7', $adapter->captured[1]['path']);
+        $this->assertSame('in_progress', $adapter->captured[1]['params']['status']);
+    }
+
+    public function testUpdateCheckStartsANewRunOnRebuild(): void
+    {
+        $adapter = new class (new Cache(new None())) extends GitHub {
+            /** @var list<array{method: string, path: string}> */
+            public array $captured = [];
+
+            protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+            {
+                $this->captured[] = ['method' => $method, 'path' => $path];
+
+                return [
+                    'body' => $method === self::METHOD_GET ? ['check_runs' => [['id' => 7, 'status' => 'completed', 'external_id' => 'project/functions/billing']]] : [],
+                    'headers' => ['status-code' => 200],
+                ];
+            }
+        };
+
+        $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...', key: 'project/functions/billing');
+
+        $this->assertSame(['method' => 'POST', 'path' => '/repos/owner/repo/check-runs'], $adapter->captured[1]);
+    }
+
+    public function testUpdateCheckFallsBackToAStatusWithoutChecks(): void
     {
         $adapter = new class (new Cache(new None())) extends GitHub {
             /** @var list<array{path: string, params: array<mixed>}> */
@@ -206,18 +251,14 @@ final class GitHubTest extends Base
 
                 return [
                     'body' => [],
-                    'headers' => ['status-code' => 201],
+                    'headers' => ['status-code' => $method === self::METHOD_GET ? 403 : 201],
                 ];
             }
         };
 
         $adapter->updateCheck('owner', 'repo', 'abc123', 'queued', 'Billing', 'Starting...', '- Function Billing', 'https://cloud.appwrite.io', 'Atlas Production');
-        $adapter->updateCheck('owner', 'repo', 'abc123', 'success', 'Billing', 'Build succeeded.');
 
-        // A commit status has no suite, so the project stays in its context
-        $this->assertSame('/repos/owner/repo/statuses/abc123', $adapter->captured[0]['path']);
-        $this->assertSame(['state' => 'pending', 'target_url' => 'https://cloud.appwrite.io', 'description' => 'Starting...', 'context' => 'Billing (Atlas Production)'], $adapter->captured[0]['params']);
-        $this->assertSame('Billing', $adapter->captured[1]['params']['context']);
+        $this->assertSame(['state' => 'pending', 'target_url' => 'https://cloud.appwrite.io', 'description' => 'Starting...', 'context' => 'Billing (Atlas Production)'], $adapter->captured[1]['params']);
     }
 
     public function testInitializeVariablesSignsJwtWithPemString(): void
