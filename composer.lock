@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "93266b558d957904aae2cde2e59c0017",
+    "content-hash": "6090cdd492cd8112b88b478ee197b7ef",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5680,7 +5680,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-03T12:14:22+00:00"
+            "time": "2026-11-03T12:14:22+00:00",
+            "published-time": "2026-11-03T12:14:36+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -7689,7 +7690,6 @@
     "platform": {
         "php": ">=8.5.0",
         "ext-curl": "*",
-        "ext-imagick": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
         "ext-yaml": "*",
@@ -7706,5 +7706,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
