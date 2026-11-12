@@ -36,7 +36,7 @@ class Autodesk extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://developer.api.autodesk.com/authentication/v1/authorize?' . \http_build_query([
+        return 'https://developer.api.autodesk.com/authentication/v2/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state),
@@ -53,15 +53,16 @@ class Autodesk extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            $headers = ['Content-Type: application/x-www-form-urlencoded'];
+            $headers = [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+            ];
             $response = $this->request(
                 'POST',
-                'https://developer.api.autodesk.com/authentication/v1/gettoken',
+                'https://developer.api.autodesk.com/authentication/v2/token',
                 $headers,
                 \http_build_query([
-                    'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
-                    'client_secret' => $this->appSecret,
                     'code' => $code,
                     'grant_type' => 'authorization_code'
                 ])
@@ -80,22 +81,21 @@ class Autodesk extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
+        $headers = [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+        ];
         $response = $this->request(
             'POST',
-            'https://developer.api.autodesk.com/authentication/v1/refreshtoken',
-            [],
+            'https://developer.api.autodesk.com/authentication/v2/token',
+            $headers,
             \http_build_query([
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
-                'code' => $refreshToken,
-                'redirect_uri' => $this->callback,
+                'refresh_token' => $refreshToken,
             ])
         );
 
-        $output = [];
-        \parse_str($response, $output);
-        $this->tokens = $output;
+        $this->tokens = \json_decode($response, true);
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;

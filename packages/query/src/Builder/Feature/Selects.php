@@ -42,14 +42,29 @@ interface Selects
 
     public function page(int $page, int $perPage = 25): static;
 
-    public function cursorAfter(mixed $value): static;
+    /**
+     * Page after a row, read from its cursor column.
+     *
+     * @param  array<mixed>|object  $value
+     */
+    public function cursorAfter(array|object $value): static;
 
-    public function cursorBefore(mixed $value): static;
+    /**
+     * Page before a row, read from its cursor column.
+     *
+     * @param  array<mixed>|object  $value
+     */
+    public function cursorBefore(array|object $value): static;
 
     public function when(bool $condition, Closure $callback): static;
 
     public function build(): Statement;
 
+    /**
+     * The built query with its bindings inlined, for logs and debugging only.
+     * Never execute it: values are escaped without knowing the connection's
+     * charset or SQL mode, which only bound parameters are safe against.
+     */
     public function toRawSql(): string;
 
     /**

@@ -1,0 +1,133 @@
+---
+layout: post
+title: "Gemini 3.7 Flash: Benchmarks, pricing, and API details"
+description: Gemini 3.7 Flash targets coding and production agents with stronger benchmarks, a 1M context window, and introductory API pricing through 2026.
+date: 2026-08-17
+cover: /images/blog/gemini-37-flash/cover.avif
+timeToRead: 8
+author: atharva
+category: ai
+featured: false
+unlisted: true
+faqs:
+  - question: What is Gemini 3.7 Flash?
+    answer: "Gemini 3.7 Flash is Google's workhorse model for coding, agentic workflows, web development, and knowledge work. It accepts text, image, audio, and video input, has a 1 million token context window, and can produce up to 64,000 text output tokens."
+  - question: How much does Gemini 3.7 Flash cost?
+    answer: Through December 31, 2026, Gemini 3.7 Flash costs $0.75 per million input tokens and $3.75 per million output tokens. On January 1, 2027, pricing rises to $1.50 per million input tokens and $7.50 per million output tokens.
+  - question: Is Gemini 3.7 Flash better than Gemini 3.6 Flash for coding?
+    answer: "Google's published evaluations show substantial gains. Gemini 3.7 Flash scored 43.6% versus 34.4% on FrontierCode 1.1 Main, 65.3% versus 48.6% on DeepSWE v1.1, and 85.8% versus 78.0% on Terminal-bench 2.1."
+  - question: What is the Gemini 3.7 Flash context window?
+    answer: Gemini 3.7 Flash supports up to 1 million input tokens and up to 64,000 text output tokens. Its supported inputs include text, images, audio, and video.
+  - question: Where is Gemini 3.7 Flash available?
+    answer: Developers can access Gemini 3.7 Flash through the Gemini API, Google AI Studio, Google Antigravity, and Android Studio. Google also offers it through Gemini Enterprise products and uses it in Gemini Spark for eligible Google AI Pro and Ultra subscribers.
+  - question: Can I use Gemini 3.7 Flash with Appwrite?
+    answer: Yes. An Appwrite Function can call the Gemini API server-side while keeping the API key out of client code. Developers using Google Antigravity can also connect the [Appwrite MCP server](/docs/tooling/ai/agents/antigravity) to work with Appwrite APIs and documentation.
+---
+Production AI agents live or die on the quality of their first pass. A model that needs repeated prompting to repair code, recover from a failed tool call, or match a reference design can look inexpensive per token while becoming expensive per completed task.
+
+[Gemini 3.7 Flash](https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-3-7-flash/), released on August 13, 2026, is Google's answer to that problem. It follows Gemini 3.6 Flash with higher coding and agent scores, a 1 million token context window, and introductory pricing that lasts through the end of 2026.
+
+For developers, the more interesting story is less about a new headline capability and more about improving first-pass code accuracy, UI design adherence, instruction following, and multi-step agent workflows. Google says 3.7 Flash is designed to reduce manual oversight and retries across engineering workflows.
+
+# What is Gemini 3.7 Flash?
+
+**Gemini 3.7 Flash is Google's latest workhorse model for coding, agents, web development, and knowledge work.** According to the [official model card](https://deepmind.google/models/model-cards/gemini-3-7-flash), it builds on Gemini 3.6 Flash with algorithmic improvements to the model's reasoning foundation and supports configurable thinking to trade off quality, latency, and cost.
+
+The API-level specifications are:
+
+| Property         | Gemini 3.7 Flash                                            |
+| ---------------- | ----------------------------------------------------------- |
+| Model ID         | `gemini-3.7-flash`                                          |
+| Input modalities | Text, image, audio, and video                               |
+| Output modality  | Text                                                        |
+| Context window   | Up to 1M tokens                                             |
+| Maximum output   | 64K tokens                                                  |
+| Knowledge cutoff | March 2026; some domains may remain limited to January 2025 |
+| Thinking         | Configurable                                                |
+
+That knowledge-cutoff qualification matters. Google says the model's knowledge cutoff is March 2026, but users may encounter knowledge limited to January 2025 in some domains, in line with the wider Gemini 3 model family. Retrieval and tool use still matter when an agent needs current or domain-specific facts.
+
+The model is available in the Gemini API, Google AI Studio, Google Antigravity, Android Studio, Gemini Enterprise Agent Platform, and the Gemini Enterprise app. Google is also moving Gemini Spark, its always-on personal agent for eligible Google AI Pro and Ultra subscribers, to 3.7 Flash.
+
+# Gemini 3.7 Flash benchmarks show broad agent gains
+
+Google published a larger evaluation set than the announcement highlights. The most useful comparison is against Gemini 3.6 Flash because both models occupy the same product tier and have the same introductory token price.
+
+| Benchmark             | Measures                          | Gemini 3.7 Flash | Gemini 3.6 Flash |   Change |
+| --------------------- | --------------------------------- | ---------------: | ---------------: | -------: |
+| FrontierCode 1.1 Main | Production code quality           |            43.6% |            34.4% |  +9.2 pp |
+| DeepSWE v1.1          | Long-horizon software engineering |            65.3% |            48.6% | +16.7 pp |
+| WebDev Arena          | Web development preference        |         1588 Elo |         1538 Elo |      +50 |
+| Terminal-bench 2.1    | Agentic terminal coding           |            85.8% |            78.0% |  +7.8 pp |
+| Terminal-bench 3.0    | General agent capabilities        |            14.9% |             5.4% |  +9.5 pp |
+| AutomationBench       | Enterprise workflow automation    |            30.4% |            17.0% | +13.4 pp |
+| GDP.pdf               | Expert PDF comprehension          |            34.0% |            22.0% | +12.0 pp |
+| OSWorld 2.0           | Agentic computer use              |            47.9% |            33.8% | +14.1 pp |
+
+These are [Google-reported results](https://deepmind.google/models/model-cards/gemini-3-7-flash) from the Gemini 3.7 Flash model card; some evaluations use private datasets or specific evaluation setups. Google's announcement reports a slightly different Gemini 3.6 Flash DeepSWE v1.1 result of 49.0%, so benchmark figures should be interpreted according to the specific source and evaluation setup.
+
+The model does not improve everywhere. On CharXiv Reasoning without tools, 3.7 Flash scored 84.5% compared with 85.2% for 3.6 Flash. With tools, it scored 88.7% compared with 89.4%. The release is a broad upgrade for agentic work, not a universal win on every evaluation.
+
+## Artificial Analysis gives Gemini 3.7 Flash a 56 Intelligence Index
+
+[Artificial Analysis](https://artificialanalysis.ai/models/gemini-3-7-flash) gives Gemini 3.7 Flash an **Intelligence Index score of 56** at high reasoning effort. Its index combines nine evaluations spanning knowledge work, banking agents, terminal use, science coding, expert reasoning, and long-context retrieval. Google also includes the Intelligence Index in its [Gemini 3.7 Flash model card](https://deepmind.google/models/model-cards/gemini-3-7-flash/) alongside other frontier model comparisons.
+
+The score provides an additional evaluation signal, rather than serving as a standalone measure of the model's ov
+
+WebDev Arena's 1588 Elo is another independent signal, but it measures pairwise human preference for generated web experiences rather than correctness in an existing repository. A visually compelling one-shot page and a safe multi-file patch are different workloads. Teams building coding agents should keep both UI preference tests and repository-level regression tests in their evaluation suite.
+
+# Is Gemini 3.7 Flash good for coding and AI agents?
+
+Google's announcement repeatedly emphasizes first-pass code accuracy, design adherence, instruction following, and recovery from roadblocks. Those improvements target the expensive part of agent deployment: retries and supervision.
+
+A production coding agent rarely makes one model call. It plans, searches, edits, runs tests, reads errors, and decides whether to continue. A small improvement at each step can compound across a long trajectory, while one instruction-following failure can invalidate all the tokens spent after it.
+
+The benchmark pattern supports three practical use cases:
+
+* **Repository work:** The DeepSWE and Terminal-bench gains suggest better performance on tasks that require multiple edits, shell use, and verification rather than isolated code completion.
+* **Design-to-code workflows:** The WebDev Arena improvement and Google's reference-adherence claims make 3.7 Flash worth testing when a model must translate screenshots, images, or a design system into a functional interface.
+* **Business agents:** The gains on AutomationBench, GDP.pdf, and OSWorld point to stronger workflows that read dense documents, use desktop tools, and complete several connected steps.
+
+None of those scores establishes production reliability on its own. Google's model card lists hallucinations, occasional slowness, and timeout issues among the model's known limitations. Google's frontier safety assessment also notes that Gemini 3.7 Flash can complete individual coding tasks but does not yet have enough independence to chain them into an end-to-end research workflow without human intervention. Teams should therefore validate structured outputs, keep tool permissions narrow, make write operations reversible, and require appropriate human approval for consequential actions.
+
+Google's frontier safety assessment also says Gemini 3.7 Flash reaches the alert threshold for its cybersecurity CCL, although it does not reach the CCL itself. For applications that give models access to development environments, credentials, or production systems, model capability should therefore be evaluated alongside strict permission boundaries and application-level safeguards.
+
+# How much does Gemini 3.7 Flash cost?
+
+Through December 31, 2026, Gemini 3.7 Flash uses the following introductory API prices:
+
+| Token type | Introductory price through 2026 | Price from January 1, 2027 |
+| ---------- | ------------------------------: | -------------------------: |
+| Input      |             $0.75 per 1M tokens |        $1.50 per 1M tokens |
+| Output     |             $3.75 per 1M tokens |        $7.50 per 1M tokens |
+
+Both rates double on January 1, 2027. A team projecting annual agent costs should model the permanent price now, not extrapolate the launch rate into next year.
+
+For a request with 100,000 input tokens and 10,000 output tokens, the token charge is about **$0.1125 during the introductory period** and **$0.225 from 2027**, before accounting for caching, tools, storage, or retries. At scale, reducing a retry can be worth more than choosing a model with a slightly lower input rate.
+
+Configurable thinking adds another cost variable. Higher reasoning effort may improve hard tasks but can increase latency and output-token consumption. Route simple transformations and classifications to a lower effort setting, then reserve higher effort for ambiguous code changes, long-horizon planning, and recovery from failed tools.
+
+# How does Gemini 3.7 Flash power Gemini Spark?
+
+Gemini 3.7 Flash also powers Gemini Spark starting with this release. Spark is available to Google AI Pro and Ultra subscribers in supported countries and runs persistent, multi-step tasks across products including Gmail, Google Calendar, and Google Docs.
+
+Google says the model update improves Spark's accuracy, output quality, and tool use for knowledge work such as consolidating files, drafting email, and updating status documents. This is a useful demonstration of the model's intended role: 3.7 Flash is designed to sit inside an agent loop, not only answer chat prompts.
+
+The security boundary remains important. An always-on agent that can read documents and write email needs narrower permissions, explicit confirmation for high-impact actions, and logs that explain which tools ran. Better benchmark scores reduce execution errors, but they do not replace application-level authorization.
+
+# Build a Gemini 3.7 Flash agent with Appwrite
+
+A useful Gemini agent needs more than a model endpoint. It needs authentication, durable state, secure API keys, files, tool permissions, and an execution layer that can call the model without exposing credentials to the browser.
+
+[Appwrite Functions](/docs/products/functions) can run Gemini API calls server-side and keep provider keys in function variables. The local [AI in Functions guide](/docs/tooling/ai/ai-in-functions) documents the provider-agnostic Vercel AI SDK workflow and shows how to swap in Google's provider package. Functions currently return complete responses rather than streaming them, so account for that constraint when designing interactive experiences.
+
+If you build in Google Antigravity, Appwrite's [Antigravity integration guide](/docs/tooling/ai/agents/antigravity) shows how to connect the remote Appwrite MCP server through `mcp_config.json`. The server uses OAuth and gives the agent controlled access to Appwrite APIs and documentation, which is a cleaner path than pasting credentials or guessed SDK calls into prompts.
+
+Start with a small evaluation set drawn from your real work: one multi-file code change, one failed-tool recovery, one reference-driven UI, and one document-heavy workflow. Run each case at multiple thinking settings, log total tokens and retries, and compare cost per accepted result. That will tell you more than a single leaderboard rank.
+
+# Resources
+
+* [Create a free Appwrite Cloud project](https://cloud.appwrite.io/)
+* [Run AI workloads in Appwrite Functions](/docs/tooling/ai/ai-in-functions)
+* [Connect Appwrite to Google Antigravity](/docs/tooling/ai/agents/antigravity)
+* [Read the Appwrite Functions documentation](/docs/products/functions)

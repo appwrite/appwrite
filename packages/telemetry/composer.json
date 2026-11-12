@@ -24,11 +24,12 @@
         "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e"
     },
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.3",
         "nyholm/psr7": "1.*",
         "open-telemetry/exporter-otlp": "1.*",
         "open-telemetry/sdk": "1.*",
-        "symfony/http-client": "7.*"
+        "symfony/http-client": "7.*",
+        "utopia-php/lock": "^0.3"
     },
     "require-dev": {
         "swoole/ide-helper": "6.*"

@@ -621,6 +621,7 @@ class CircuitBreaker
         };
     }
 
+    /** @phpstan-impure */
     public function getState(): CircuitState
     {
         $this->updateState();

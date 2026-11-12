@@ -1,0 +1,76 @@
+---
+layout: post
+title: "Introducing Type generation: Automate your type definitions with Appwrite"
+description: "Automatically generate types from your tables with support for multiple languages."
+date: 2025-06-24
+lastUpdated: 2026-06-29
+cover: /images/blog/type-generation-feature/cover.avif
+timeToRead: 4
+author: chirag-aggarwal
+category: announcements
+faqs:
+  - question: "What is Appwrite type generation?"
+    answer: "Type generation is a CLI command that produces type definitions in your project's language directly from your Appwrite tables. It keeps client code in sync with your database schema, reducing the chance of typos and stale types when the schema changes."
+  - question: "Which languages does Appwrite type generation support?"
+    answer: "The Appwrite CLI generates types for TypeScript, JavaScript, PHP, Swift, Dart, Java, and Kotlin. The CLI detects your project's language automatically, or you can pass options to specify it explicitly. More languages are added over time."
+  - question: "How do I generate types from my Appwrite tables?"
+    answer: "Install the [Appwrite CLI](/docs/tooling/command-line/installation), initialize your project, run `appwrite pull tables`, then run `appwrite types <output-directory>`. The CLI writes the generated type definitions into the specified folder, ready to import in your application code."
+  - question: "Do I need to regenerate types every time my schema changes?"
+    answer: "Yes. After updating columns, indexes, or relationships in your [Appwrite Databases](/docs/products/databases), run `appwrite pull tables` followed by `appwrite types` to refresh the generated definitions. You can wire this into a CI step or pre-commit hook to keep types current."
+  - question: "Why use generated types instead of writing them manually?"
+    answer: "Manual types drift from the schema over time as columns are added, renamed, or removed, leading to subtle runtime bugs. Generation guarantees the types always reflect the current schema, which catches mismatches at compile time and removes a tedious manual sync step from your workflow."
+  - question: "Does Appwrite type generation work with self-hosted Appwrite?"
+    answer: "Yes. Type generation works against any Appwrite project the CLI can authenticate to, whether on Appwrite Cloud or self-hosted. The same commands and output formats apply, so your local workflow stays consistent regardless of deployment target."
+---
+
+We're excited to announce Appwrite’s newest CLI feature, **Type generation**. Designed specifically to enhance your developer experience. Type generation automates the creation of type definitions directly from your database tables, seamlessly integrating with your preferred programming language.
+
+# Say goodbye to manual mapping
+
+Manually creating and maintaining complex type definitions can be tedious, error-prone, and time-consuming. With Type generation, Appwrite does the heavy lifting for you. Automatically generate accurate and up-to-date type definitions, ensuring your code always syncs with your database schema.
+
+# Effortless multi-language support
+
+Whether you work with PHP, Swift, Dart, TypeScript, JavaScript, Java, or Kotlin, Type generation has you covered. The Appwrite CLI automatically detects your project's language and generates the appropriate type definitions, handling complex scenarios including [Enums](/docs/sdks#enums), class relationships, and language-specific semantics. We will continue to add support for more languages over time.
+
+# Simplified workflow, immediate benefits
+
+Using Type generation is straightforward. 
+
+First, ensure you have the [Appwrite CLI](/docs/tooling/command-line/installation#getting-started) installed and your project is [initialised](/docs/tooling/command-line/installation#initialization). Then, run the following command in your terminal to pull tables from your Appwrite project:
+
+```bash
+appwrite pull tables
+```
+
+To generate types, you can use the Appwrite CLI command:
+```bash
+appwrite types [options] <output-directory>
+```
+
+To automatically detect the language used in your project, you can skip the `[options]` parameter.
+
+```bash
+appwrite types <output-directory>
+```
+
+![Workflow](/images/blog/type-generation-feature/workflow.avif)
+
+# Better experience
+
+- **Time savings**: Eliminate hours of manual work and dedicate your time to building impactful features.
+- **Reduced errors**: Keep your types consistently aligned with your database schema, drastically reducing outdated and mismatched types.
+- **Faster iterations**: Automatically propagate schema changes, allowing for rapid development and seamless collaboration.
+
+# Built with you in mind
+
+Type generation was built explicitly for developers, addressing key pain points and enhancing your productivity. Whether using Appwrite in a cloud environment or self-hosted, Type generation fits seamlessly into your workflow.
+
+Many other solutions offer type generation limited to TypeScript, Appwrite expands your capabilities with robust multi-language support, ensuring you have flexibility and comprehensive integration, regardless of your preferred technology stack.
+
+By simplifying integration and reducing friction, type generation helps accelerate onboarding and ensures long-term satisfaction, significantly benefiting developer teams and their organizations.
+
+# More resources
+
+- [Visit the documentation to get started](/docs/products/databases/type-generation)
+- [Learn about using the Appwrite CLI](/blog/post/how-to-execute-database-migration-with-appwrite-cli)

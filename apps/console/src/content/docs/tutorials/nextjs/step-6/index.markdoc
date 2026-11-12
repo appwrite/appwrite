@@ -1,0 +1,141 @@
+---
+layout: tutorial
+title: Add database
+description: Add databases and queries for ideas in your Next.js project.
+step: 6
+---
+
+In Appwrite, data is stored as a table of rows. 
+Create a new database and table in the [Appwrite Console](https://cloud.appwrite.io/) to store the ideas.
+
+{% only_dark %}
+![Create table screen](/images/docs/tutorials/dark/idea-tracker-table.avif)
+{% /only_dark %}
+{% only_light %}
+![Create table screen](/images/docs/tutorials/idea-tracker-table.avif)
+{% /only_light %}
+
+Create a new table with the following columns:
+| Field       | Type   | Required | Size     |
+|-------------|--------|----------|----------|
+| userId      | Varchar | Yes      | 200      |
+| title       | Varchar | Yes      | 200      |
+| description | Text    | No       | -        |
+
+Change the table's permissions in the settings to give access.
+
+{% only_dark %}
+![Table permissions screen](/images/docs/tutorials/dark/idea-tracker-permissions.avif)
+{% /only_dark %}
+{% only_light %}
+![Table permissions screen](/images/docs/tutorials/idea-tracker-permissions.avif)
+{% /only_light %}
+
+Navigate to the **Settings** tab of your table, add the role **Any** and check the **Read** box.
+Next, add a **Users** role and give them access to **Create** by checking that box.
+
+For security, we won't grant table-level **Update** and **Delete** permissions to all users. Instead, we'll implement row-level permissions so that only the creator of each idea can update or delete their own ideas.
+
+## Environment variables {% #environment-variables %}
+
+Just like when we set up the connection to Appwrite in [step 3](/docs/tutorials/nextjs/step-3), we need to keep the variables with the table id secret.
+Open the `.env.local` file and add your database id and your table id to it.
+
+```
+NEXT_PUBLIC_DATABASE_ID="YOUR_DATABASE_ID"
+NEXT_PUBLIC_TABLE_ID="YOUR_TABLE_ID"
+```
+
+## Query methods {% #query-methods %}
+
+Now that we have a table in the database to hold ideas, we can connect to it from our app.
+Our users should be able to read, add and remove ideas.
+We will add a new hook, `useIdeas`, to handle this functionality.
+
+Create a new file `hooks/useIdeas.ts` and add the following code.
+
+```ts
+// hooks/useIdeas.ts
+
+import { useState, useEffect } from 'react';
+import { ID, Query, Permission, type Models } from 'appwrite';
+import { tablesDB } from '../lib/appwrite';
+
+const databaseId = process.env.NEXT_PUBLIC_DATABASE_ID!;
+const tableId = process.env.NEXT_PUBLIC_TABLE_ID!;
+const queryLimit = 10;
+
+interface Idea extends Models.Row {
+    title: string;
+    description: string;
+    userId: string;
+}
+
+export function useIdeas() {
+    const [current, setCurrent] = useState<Idea[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch the 10 most recent ideas from the database
+    const fetch = async (): Promise<void> => {
+        try {
+            const response = await tablesDB.listRows({
+                databaseId,
+                tableId,
+                queries: [Query.orderDesc('$createdAt'), Query.limit(queryLimit)]
+            });
+            setCurrent(response.rows as Idea[]);
+        } catch (error) {
+            console.error('Error fetching ideas:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Add new idea to the database
+    const add = async (idea: Omit<Idea, '$id' | '$createdAt' | '$updatedAt' | '$permissions'>): Promise<void> => {
+        try {
+            const response = await tablesDB.createRow({
+                databaseId,
+                tableId,
+                rowId: ID.unique(),
+                data: idea,
+                permissions: [
+                    Permission.read('any'),
+                    Permission.update(`user:${idea.userId}`),
+                    Permission.delete(`user:${idea.userId}`)
+                ]
+            });
+            setCurrent(prev => [response as Idea, ...prev].slice(0, queryLimit));
+        } catch (error) {
+            console.error('Error adding idea:', error);
+        }
+    };
+
+    const remove = async (id: string): Promise<void> => {
+        try {
+            await tablesDB.deleteRow({
+                databaseId,
+                tableId,
+                rowId: id
+            });
+            await fetch(); // Refetch ideas to ensure we have 10 items
+        } catch (error) {
+            console.error('Error removing idea:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetch();
+    }, []);
+
+    return {
+        current,
+        loading,
+        add,
+        fetch,
+        remove,
+    };
+}
+```
+
+Now we can call the `useIdeas()` hook from the home page.

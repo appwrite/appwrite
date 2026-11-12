@@ -1,0 +1,83 @@
+---
+layout: article
+title: Filter and compare traffic
+description: Narrow the Appwrite Analytics dashboard to the traffic you care about with filters, save filters for later, and compare a date range with an earlier period.
+---
+
+Filters narrow the whole dashboard to traffic that matches, such as visitors from search engines or visits to one page. Comparisons show how a date range differs from an earlier one. You can use both together, for example to see whether search traffic grew compared with last month.
+
+# Filter from a card {% #from-a-card %}
+
+{% only_dark %}
+![Dashboard filtered to the search channel, with a Channel equal search filter below the toolbar](/images/docs/analytics/dark/filtered.avif)
+{% /only_dark %}
+{% only_light %}
+![Dashboard filtered to the search channel, with a Channel equal search filter below the toolbar](/images/docs/analytics/filtered.avif)
+{% /only_light %}
+
+The quickest way to filter is from a card. Click a row, such as `search` on the **Channels** tab of **Traffic sources**, and every metric, the chart, and the other cards update to that traffic. The filter appears below the toolbar.
+
+Click the same row again to remove the filter. Clicking another value of the same kind, such as a second country, switches the filter to it. Rows on the **Entry pages** and **Exit pages** tabs can't be used as filters.
+
+To exclude a value instead, right-click the row and select **Exclude this value**. For example, exclude a staging hostname on the **Hostnames** tab of **Pages** to leave its traffic out.
+
+# Add a filter {% #add %}
+
+{% only_dark %}
+![Filters popover with Channel, equal, and search selected](/images/docs/analytics/dark/filters.avif)
+{% /only_dark %}
+{% only_light %}
+![Filters popover with Channel, equal, and search selected](/images/docs/analytics/filters.avif)
+{% /only_light %}
+
+For values that aren't in a card, or for partial matches, add a filter yourself.
+
+1. Click **Filters** in the toolbar.
+2. Choose a **Column**, such as **Country**, **Page**, **Channel**, or **Campaign**.
+3. Choose an **Operator**: **equal**, **not equal**, **contains**, **starts with**, or **ends with**.
+4. Enter a **Value** and click **Add filter**.
+
+Add more filters the same way. Traffic must match every filter to be counted. For example, **Page** starts with `/blog` and **Country** equal `DE` shows German visitors reading your blog.
+
+Columns cover locations, technology, sources and campaigns, pages and hostnames, bots, and event names. Values are case-sensitive, and they're the values listed in [Breakdowns](/docs/products/analytics/metrics#breakdowns), which aren't always the labels on the cards. For example, a **Country** filter takes the two-letter code `DE`, not the country name the **Countries** tab shows.
+
+To remove a filter, click the **x** next to it in the **Filters** popover. **Clear all** removes every filter.
+
+## Page and event filters {% #page-and-event-filters %}
+
+A **Page** or **Event** filter matches single events rather than whole visits. With one of them active, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time** show `-`, because they describe whole visits. **Unique visitors** and **Visits** add up the chart's points, so a visitor who returns on several days counts once for each day. The **Entry pages** and **Exit pages** tabs aren't available either. See [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
+
+# Save a filter {% #save %}
+
+Save filters you use often, so you can apply them again with one click.
+
+1. Add the filters you want to save.
+2. Click **Filters** and go to **Save for later** at the bottom of the popover.
+3. Choose **For me** to keep the filter to yourself, or **For team** to share it with your organization.
+4. Enter a name and click **+**.
+
+To apply a saved filter, open **Filters**, select the **Saved** tab, and click **Apply** next to it. You can also edit and delete saved filters there.
+
+# Share a filtered view {% #share %}
+
+The dashboard keeps its filters in the page URL. Bookmark the page, or send the link to someone with access to the project, to open the dashboard with the same filters.
+
+# Compare periods {% #compare %}
+
+{% only_dark %}
+![Compare menu with No comparison, Previous period, Same period last year, and Custom range](/images/docs/analytics/dark/compare.avif)
+{% /only_dark %}
+{% only_light %}
+![Compare menu with No comparison, Previous period, Same period last year, and Custom range](/images/docs/analytics/compare.avif)
+{% /only_light %}
+
+The dashboard compares the date range with the period immediately before it, so **Last 30 days** is compared with the 30 days before. Each metric shows its change, and the chart draws the earlier period as a dashed line.
+
+To compare with a different period, open the compare menu next to the date picker and select an option under **Compare with**.
+
+- **Previous period**: the same length of time, immediately before the date range.
+- **Same period last year**: the same dates, one year earlier, which suits seasonal traffic.
+- **Custom range**: any dates you pick.
+- **No comparison**: hides the change and the dashed line.
+
+Comparisons use the same filters as the date range, so a filtered dashboard compares like with like.

@@ -1,0 +1,64 @@
+---
+layout: article
+title: Organization API
+description: Use the Appwrite Console Organization API to manage organizations, members, and org-level settings from your partner platform.
+---
+
+The Organization API manages one organization and everything inside it: projects, members, app installations, and the organization's own API keys. Partner platforms call it from a backend to provision customer workspaces.
+
+# Authentication {% #authentication %}
+
+Authenticate with a Partners key or a user's OAuth access token. A Partners key is bound to the organization that issued it, so every call applies to that organization and no other. Pass the organization ID with the key.
+
+{% multicode %}
+```server-nodejs
+import { Client, Organization } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setOrganization('<ORGANIZATION_ID>')
+    .setKey(process.env.APPWRITE_PARTNERS_KEY);
+
+const organization = new Organization(client);
+```
+```server-rust
+use appwrite::client::Client;
+use appwrite::services::Organization;
+
+let client = Client::new()
+    .set_endpoint("https://cloud.appwrite.io/v1")
+    .set_organization("<ORGANIZATION_ID>")
+    .set_key(std::env::var("APPWRITE_PARTNERS_KEY")?);
+
+let organization = Organization::new(&client);
+```
+{% /multicode %}
+
+# Operations {% #operations %}
+
+| Group | Operations | Scopes |
+| ----- | ---------- | ------ |
+| Organization | `get`, `update`, `delete` | `organization.read`, `organization.write` |
+| Projects | `listProjects`, `createProject`, `getProject`, `updateProject`, `deleteProject` | `projects.read`, `projects.write` |
+| Members | `listMemberships`, `createMembership`, `getMembership`, `updateMembership`, `deleteMembership` | `organization.memberships.read`, `organization.memberships.write` |
+| Keys | `listKeys`, `createKey`, `getKey`, `updateKey`, `deleteKey` | `organization.keys.read`, `organization.keys.write` |
+| Installations | `listInstallations`, `createInstallation`, `getInstallation`, `updateInstallation`, `deleteInstallation` | `organization.installations.read`, `organization.installations.write` |
+
+Billing, plans, and invoices are not part of this API and a Partners key cannot reach them.
+
+# Where each credential applies {% #where-each-credential-applies %}
+
+A Partners key covers the organization and each project's existence, name, and region. It cannot read or write databases, storage, users, or functions. For work inside a project, create a project API key and see [Project](/docs/partners/project).
+
+With OAuth connect, the access token carries the scopes the user granted, and the calls apply to the organization the user chose.
+
+# Next steps {% #next-steps %}
+
+{% cards %}
+{% cards_item href="/docs/partners/organizations/manage" title="Manage organizations" %}
+Read, rename, and delete the organization your key belongs to.
+{% /cards_item %}
+{% cards_item href="/docs/partners/organizations/members" title="Members and roles" %}
+Invite members and assign organization roles from your platform.
+{% /cards_item %}
+{% /cards %}

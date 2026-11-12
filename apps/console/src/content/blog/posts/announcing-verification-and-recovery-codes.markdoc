@@ -1,0 +1,219 @@
+---
+layout: post
+title: "Announcing 6-digit codes for email verification and password recovery"
+description: Appwrite Auth can email a 6-digit code for email verification and password recovery, so mobile and desktop apps can handle both without a redirect page or a deep link.
+date: 2026-10-22
+cover: /images/blog/announcing-verification-and-recovery-codes/cover.avif
+timeToRead: 4
+author: atharva
+category: announcements
+featured: false
+callToAction: true
+faqs:
+  - question: "How do I verify a user's email with a code in Appwrite?"
+    answer: "Call `account.createEmailVerificationOTP()` while the user is signed in, and Appwrite emails them a 6-digit code that lasts 15 minutes. Pass the user ID from the returned token and the code to `account.updateEmailVerificationOTP()` to mark the email as verified. See [Verify with a code](/docs/products/auth/verify-user#verify-with-code)."
+  - question: "How does password recovery with a code work in Appwrite?"
+    answer: "`account.createRecoveryOTP()` emails a 6-digit code to the address you pass and returns a token with the user's ID. `account.updateRecoveryOTP()` takes that ID, the code, and the new password. Appwrite rejects a new password that fails your project's password strength, password dictionary, or password history policy, and rejects breached passwords when that option is on. The reset doesn't create a session. See [Recover with a code](/docs/products/auth/email-password#recover-with-code)."
+  - question: "Should I verify emails and reset passwords with a link or a code?"
+    answer: "Links suit web apps, where the redirect lands on a page in your app. Codes suit mobile apps, desktop apps, and anything without a hosted page, because there's no redirect URL, reset page, or deep link to set up."
+  - question: "What happens when someone requests a recovery code for an email address that has no account?"
+    answer: "Appwrite doesn't send an email, but it still returns a token with a random user ID. A message like \"If an account exists for this email, a code is on its way\" works in both cases. Confirming with that random ID fails with `user_not_found` rather than `user_invalid_token`, so show the same \"invalid code\" message for both."
+  - question: "How long does a verification or recovery code stay valid?"
+    answer: "15 minutes, and each code works once. Sending a new code doesn't cancel earlier ones, so any code that hasn't expired still works. A wrong, expired, or used code fails with `user_invalid_token`."
+  - question: "What is the security phrase on verification and recovery emails?"
+    answer: "It's an optional random phrase, such as \"Polite raccoon\", that Appwrite adds to the email and to the returned token when you set `phrase` to `true`. Show it in your app next to the code input. When the two match, your user knows the email belongs to the request they made."
+---
+
+Email verification and password recovery in Appwrite Auth have worked with links. You pass a redirect URL, Appwrite emails a link to it, and a page at that URL reads `userId` and `secret` from the query string. On the web, that page is another route in your app. In a mobile or desktop app, you have to set up a deep link or host a page to catch the redirect.
+
+Appwrite Auth can also email a 6-digit code for both flows. Your app asks for the code instead of waiting for a redirect, so verification and recovery happen without leaving your app.
+
+# Codes for email verification and password recovery
+
+- **Four Account methods.** `createEmailVerificationOTP` and `updateEmailVerificationOTP` verify a signed-in user's email. `createRecoveryOTP` and `updateRecoveryOTP` reset a forgotten password.
+- **6-digit codes that last 15 minutes.** Each code works once. A wrong, expired, or used code fails with `user_invalid_token`.
+- **No redirect URL.** There's no verification page, reset page, or deep link to build.
+- **An optional security phrase.** Appwrite can add a random phrase to the email and the response, so your users can tell the email came from their own request.
+
+Codes work on Appwrite Cloud and in self-hosted Appwrite 2.3 and later, in the Web, Flutter, Apple, Android, and React Native SDKs.
+
+# Verify an email with a code
+
+You can send a verification code once the user is signed in, and it goes to the email address on their account. `createEmailVerificationOTP` returns a token that holds the user's ID. Pass that ID and the code from the email to `updateEmailVerificationOTP`.
+
+{% multicode %}
+```client-web
+import { Client, Account } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+// Email a 6-digit code to the signed-in user
+const token = await account.createEmailVerificationOTP();
+
+// Confirm the code from the email
+await account.updateEmailVerificationOTP({
+    userId: token.userId,
+    secret: '<CODE>'
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final account = Account(client);
+
+// Email a 6-digit code to the signed-in user
+final token = await account.createEmailVerificationOTP();
+
+// Confirm the code from the email
+await account.updateEmailVerificationOTP(
+    userId: token.userId,
+    secret: '<CODE>',
+);
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let account = Account(client)
+
+// Email a 6-digit code to the signed-in user
+let token = try await account.createEmailVerificationOTP()
+
+// Confirm the code from the email
+_ = try await account.updateEmailVerificationOTP(
+    userId: token.userId,
+    secret: "<CODE>"
+)
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val account = Account(client)
+
+// Email a 6-digit code to the signed-in user
+val token = account.createEmailVerificationOTP()
+
+// Confirm the code from the email
+account.updateEmailVerificationOTP(
+    userId = token.userId,
+    secret = "<CODE>"
+)
+```
+```client-react-native
+import { Client, Account } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+// Email a 6-digit code to the signed-in user
+const token = await account.createEmailVerificationOTP();
+
+// Confirm the code from the email
+await account.updateEmailVerificationOTP({
+    userId: token.userId,
+    secret: '<CODE>'
+});
+```
+{% /multicode %}
+
+Once the code matches, Appwrite marks the email as verified.
+
+# Reset a password with a code
+
+Recovery doesn't need a session. Call `createRecoveryOTP` with the email address your user enters. Then pass the user ID from the returned token, the code, and the new password to `updateRecoveryOTP`.
+
+{% multicode %}
+```client-web
+const token = await account.createRecoveryOTP({
+    email: 'email@example.com'
+});
+
+await account.updateRecoveryOTP({
+    userId: token.userId,
+    secret: '<CODE>',
+    password: '<NEW_PASSWORD>'
+});
+```
+```client-flutter
+final token = await account.createRecoveryOTP(
+    email: 'email@example.com',
+);
+
+await account.updateRecoveryOTP(
+    userId: token.userId,
+    secret: '<CODE>',
+    password: '<NEW_PASSWORD>',
+);
+```
+```client-apple
+let token = try await account.createRecoveryOTP(
+    email: "email@example.com"
+)
+
+_ = try await account.updateRecoveryOTP(
+    userId: token.userId,
+    secret: "<CODE>",
+    password: "<NEW_PASSWORD>"
+)
+```
+```client-android-kotlin
+val token = account.createRecoveryOTP(
+    email = "email@example.com"
+)
+
+account.updateRecoveryOTP(
+    userId = token.userId,
+    secret = "<CODE>",
+    password = "<NEW_PASSWORD>"
+)
+```
+```client-react-native
+const token = await account.createRecoveryOTP({
+    email: 'email@example.com'
+});
+
+await account.updateRecoveryOTP({
+    userId: token.userId,
+    secret: '<CODE>',
+    password: '<NEW_PASSWORD>'
+});
+```
+{% /multicode %}
+
+When no active account has that email address, Appwrite doesn't send an email, but it still returns a token with a random user ID. A message like "If an account exists for this email, a code is on its way" works in both cases.
+
+Appwrite rejects a new password that fails your project's [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), or [password history](/docs/products/auth/security#password-history) policy. With [breached password](/docs/products/auth/security#breached-passwords) rejection on, it also rejects passwords found in known data breaches. A rejected password doesn't use up the code, so your user can try a different one. The reset doesn't sign anyone in, so create a session with the new password afterwards.
+
+# Show a security phrase
+
+Set `phrase` to `true` in either send call, and Appwrite adds a random phrase like "Polite raccoon" to the email and to the `phrase` field of the returned token. Show it next to the code input. If the phrase in your app matches the one in the email, your user knows the email belongs to the request they made.
+
+# Get started with verification and recovery codes
+
+Update to the latest Appwrite client SDK, then add a code input to your email verification and password reset screens.
+
+# Resources
+
+- [Verify with a code](/docs/products/auth/verify-user#verify-with-code)
+- [Recover a password with a code](/docs/products/auth/email-password#recover-with-code)
+- [Email OTP login](/docs/products/auth/email-otp)
+- [Join the Appwrite Discord](https://appwrite.io/discord)

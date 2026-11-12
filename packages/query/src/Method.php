@@ -66,6 +66,9 @@ enum Method: string
     case ContainsAll = 'containsAll';
     case ElemMatch = 'elemMatch';
 
+    // Relationship methods
+    case Relationship = 'relationship';
+
     // Aggregation methods
     case Count = 'count';
     case CountDistinct = 'countDistinct';
@@ -199,6 +202,7 @@ enum Method: string
             self::And,
             self::Or,
             self::ElemMatch,
+            self::Relationship,
             self::Having,
             self::Union,
             self::UnionAll => true,
@@ -224,6 +228,37 @@ enum Method: string
             self::BitAnd,
             self::BitOr,
             self::BitXor => true,
+            default => false,
+        };
+    }
+
+    /**
+     * Whether a join's ON list may hold this method: on() column comparisons,
+     * the filters every builder compiles inside ON, and and/or of those.
+     */
+    public function isJoinCondition(): bool
+    {
+        return match ($this) {
+            self::On,
+            self::Equal,
+            self::NotEqual,
+            self::GreaterThan,
+            self::GreaterThanEqual,
+            self::LessThan,
+            self::LessThanEqual,
+            self::Between,
+            self::NotBetween,
+            self::IsNull,
+            self::IsNotNull,
+            self::Contains,
+            self::ContainsAny,
+            self::NotContains,
+            self::StartsWith,
+            self::NotStartsWith,
+            self::EndsWith,
+            self::NotEndsWith,
+            self::And,
+            self::Or => true,
             default => false,
         };
     }

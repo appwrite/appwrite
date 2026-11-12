@@ -1,0 +1,88 @@
+---
+layout: article
+title: Backups
+description: Learn how to back up and restore your DocumentsDB databases, ensuring data security and seamless recovery.
+---
+
+Backups protect your DocumentsDB data by capturing a full copy of a database that you can restore later. Every backup is **encrypted** and taken as a **hot** backup, so your database keeps serving traffic with zero downtime and recovery stays fast.
+
+{% info title="Backups are available for all Pro and Enterprise customers." %}
+{% /info %}
+
+You manage backups from a database's **Backups** tab, where you can automate backups with policies or create manual backups on demand.
+
+{% only_dark %}
+![Backups tab](/images/docs/databases/documentsdb/dark/backups-tab.avif)
+{% /only_dark %}
+{% only_light %}
+![Backups tab](/images/docs/databases/documentsdb/backups-tab.avif)
+{% /only_light %}
+
+# Backup policies {% #backup-policies %}
+
+Backup policies automate your backups on a schedule. To create one, open your database's **Backups** tab and click **Create policy**, then choose a preset policy or add a custom one.
+
+{% only_dark %}
+![Create backup policy](/images/docs/databases/documentsdb/dark/backup-policy.avif)
+{% /only_dark %}
+{% only_light %}
+![Create backup policy](/images/docs/databases/documentsdb/backup-policy.avif)
+{% /only_light %}
+
+The available options depend on your plan:
+
+- On the **Pro** plan, you get a **Daily** backup policy retained for 7 days.
+- On the **Enterprise** plan, you get access to additional preset policies and custom policies, where you control how often backups run and how long they are retained.
+
+Click **Create** to save the policy. Your database is now set up for automated backups.
+
+# Manual backups {% #manual-backups %}
+
+You can create an on-demand backup whenever necessary. In your database's **Backups** tab, click **Manual backup**, then click **Create**.
+
+{% only_dark %}
+![Manual backup](/images/docs/databases/documentsdb/dark/manual-backup.avif)
+{% /only_dark %}
+{% only_light %}
+![Manual backup](/images/docs/databases/documentsdb/manual-backup.avif)
+{% /only_light %}
+
+Manual backups are retained until you delete them. Depending on the size of your database, the backup may take some time to complete. You can monitor its progress in the backups list.
+
+# Restoring backups {% #restoring-backups %}
+
+To restore a database, you need an existing backup.
+
+1. Open your database's **Backups** tab.
+2. In the backups list, open the **Actions** menu for the backup you want to restore.
+3. Click **Restore**.
+4. Enter a name for the new database and an optional database ID.
+5. Click **Restore**.
+
+Depending on the size of your database, the restoration may take some time. The restore creates a new database from the backup, leaving the original untouched.
+
+# Backup security & performance {% #backup-security-and-performance %}
+
+All backups created with Appwrite are:
+
+1. **Encrypted**:
+    All backups are securely encrypted to ensure your data remains protected at all times.
+
+2. **Remotely stored**:
+    Backups are stored in a remote location, providing an additional layer of security and ensuring your data is always recoverable.
+
+3. **Hot backups**:
+    Backups are hot, meaning they occur with zero downtime, allowing you to recover data quickly without interrupting your projects and services.
+
+# Best practices {% #best-practices %}
+
+To ensure your backups are robust and effective, consider the following best practices:
+
+1. **Schedule regular backups**:
+   Add backup policies based on the frequency of database changes. Daily backups are often sufficient for most use cases.
+
+2. **Retain critical backups longer**:
+   Use custom policies with longer retention to keep backups of critical data for extended periods, ensuring historical records are available when needed.
+
+3. **Optimize backup policies based on data sensitivity**:
+   Tailor your backup frequency and retention settings according to the sensitivity and importance of the data.

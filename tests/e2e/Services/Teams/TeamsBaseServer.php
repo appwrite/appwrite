@@ -3,6 +3,8 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\Id;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBaseServer
@@ -246,6 +248,83 @@ trait TeamsBaseServer
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateTeamMembershipTargets(): void
+    {
+        $teamUid = $this->createTeamHelper()['teamUid'];
+        $email = uniqid() . 'target@localhost.test';
+
+        /**
+         * Test for SUCCESS
+         */
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['admin'],
+            'url' => 'http://localhost:5000/join-us',
+        ]);
+
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $targets = $this->client->call(Client::METHOD_GET, '/users/' . $membership['body']['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $targets['headers']['status-code']);
+        $this->assertEquals($email, $targets['body']['targets'][0]['identifier']);
+    }
+
+    public function testCreateTeamMembershipCustomId(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $customId = 'member-' . uniqid();
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'membershipId' => Id::custom($customId),
+            'email' => uniqid() . 'friend@localhost.test',
+            'roles' => ['developer'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($customId, $response['body']['$id']);
+
+        /**
+         * Test for FAILURE
+         * A duplicate custom membership ID must not leave the invitee behind
+         */
+        $email = uniqid() . 'friend@localhost.test';
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'membershipId' => Id::custom($customId),
+            'email' => $email,
+            'roles' => ['developer'],
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('membership_already_exists', $response['body']['type']);
+
+        $users = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::equal('email', [$email])->toString()],
+        ]);
+
+        $this->assertEquals(200, $users['headers']['status-code']);
+        $this->assertEquals(0, $users['body']['total']);
     }
 
     public function testUpdateMembershipRoles(): void

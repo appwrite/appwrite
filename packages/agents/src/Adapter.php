@@ -2,9 +2,13 @@
 
 namespace Utopia\Agents;
 
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 use Swoole\Coroutine;
+use Utopia\Agents\Exception\Api;
+use Utopia\Agents\Exception\Authentication;
+use Utopia\Agents\Exception\RateLimit;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
 use Utopia\Client\Client as HttpClient;
@@ -15,52 +19,51 @@ use Utopia\Pools\Pool as Connections;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory;
 
+/**
+ * HTTP transport shared by every provider adapter: a pooled keep-alive
+ * client, JSON and server-sent-event requests, error mapping and retries
+ * with exponential backoff.
+ *
+ * A request is retried on network errors and on 408, 409, 429 and 5xx
+ * responses, honoring Retry-After. A stream is only retried before its first
+ * event, so listeners never see a delta twice.
+ */
 abstract class Adapter
 {
-    /**
-     * Upper bound for retained incomplete SSE fragments.
-     */
-    protected const STREAM_BUFFER_MAX_BYTES = 1048576;
-
     /**
      * Connections the default pooled client keeps per adapter.
      */
     protected const int POOL_SIZE = 8;
 
     /**
-     * The agent instance
+     * Bytes of a response body kept to describe an error.
      */
-    protected ?Agent $agent = null;
+    protected const int ERROR_BYTES = 65536;
 
     /**
-     * Input tokens count
+     * Upper bound for one buffered server-sent event.
      */
-    protected int $inputTokens = 0;
+    protected const int EVENT_BYTES = 8388608;
 
     /**
-     * Output tokens count
+     * Longest wait between retries, in milliseconds.
      */
-    protected int $outputTokens = 0;
+    protected const int MAX_DELAY = 60000;
 
     /**
-     * Cache creation input tokens count
-     */
-    protected int $cacheCreationInputTokens = 0;
-
-    /**
-     * Cache read input tokens count
-     */
-    protected int $cacheReadInputTokens = 0;
-
-    /**
-     * Request timeout in milliseconds
+     * Request timeout in milliseconds.
      */
     protected int $timeout = 90000;
 
     /**
-     * Carries incomplete SSE line fragments between chunks.
+     * Retries after the first attempt.
      */
-    protected string $streamBuffer = '';
+    protected int $retries = 2;
+
+    /**
+     * First backoff delay in milliseconds; doubles on every retry.
+     */
+    protected int $delay = 500;
 
     /**
      * HTTP client every request goes through: injected by the constructor or
@@ -76,253 +79,17 @@ abstract class Adapter
     protected ?Factory $requests = null;
 
     /**
-     * Get the adapter name
+     * Provider name.
      */
     abstract public function getName(): string;
 
     /**
-     * Send a message to the AI model
-     *
-     * @param  array<Message>  $messages  The messages to send to the AI model
-     * @param  callable|null  $listener  The listener to call when the message is sent
-     * @return Message Response from the AI model
-     *
-     * @throws \Exception
-     */
-    abstract public function send(array $messages, ?callable $listener = null): Message;
-
-    /**
-     * Get available models for this adapter
-     *
-     * @return array<string>
-     */
-    abstract public function getModels(): array;
-
-    /**
-     * Get the currently selected model
-     */
-    abstract public function getModel(): string;
-
-    /**
-     * Set the model to use
-     */
-    abstract public function setModel(string $model): self;
-
-    /**
-     * Check if the model supports JSON schema
-     */
-    abstract public function isSchemaSupported(): bool;
-
-    /**
-     * Does this adapter support embeddings?
-     */
-    abstract public function getSupportForEmbeddings(): bool;
-
-    /**
-     * Generate embedding for input text (must be implemented if getSupportForEmbeddings is true)
-     *
-     * @return array{
-     *     embedding: array<int, float>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null ,
-     *     modelLoadingDuration?: int|null
-     * }
-     */
-    abstract public function embed(string $text): array;
-
-    /**
-     * Generate embeddings for a batch of texts (must be implemented if getSupportForEmbeddings is true).
-     *
-     * @param  array<int, string>  $texts
-     * @return array{
-     *     embeddings: array<int, array<int, float>>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null
-     * }
-     *
-     * @throws \Exception
-     */
-    abstract public function bulkEmbed(array $texts): array;
-
-    /**
-     * get embedding dimenion of the current model
-     */
-    abstract public function getEmbeddingDimension(): int;
-
-    /**
-     * Format error message
-     *
-     * @param  mixed  $json
-     */
-    abstract protected function formatErrorMessage($json): string;
-
-    /**
-     * Whether this adapter can accept message attachments.
-     */
-    public function supportsAttachments(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Whether a specific attachment message type is supported.
-     */
-    public function supportsAttachment(Message $attachment): bool
-    {
-        return $this->supportsAttachments();
-    }
-
-    protected function isImageAttachment(Message $attachment): bool
-    {
-        if ($attachment->getContent() === '') {
-            return false;
-        }
-
-        $mimeType = $attachment->getMimeType();
-
-        return $mimeType !== null && str_starts_with($mimeType, 'image/');
-    }
-
-    /**
-     * Maximum attachments allowed per single conversation message.
-     * Null means adapter does not set this limit.
-     */
-    public function getMaxAttachmentsPerMessage(): ?int
-    {
-        return null;
-    }
-
-    /**
-     * Maximum bytes allowed for a single attachment.
-     * Null means adapter does not set this limit.
-     */
-    public function getMaxAttachmentBytes(): ?int
-    {
-        return null;
-    }
-
-    /**
-     * Maximum total attachment bytes allowed per message turn.
-     * Null means adapter does not set this limit.
-     */
-    public function getMaxTotalAttachmentBytes(): ?int
-    {
-        return null;
-    }
-
-    /**
-     * @return list<string>|null
-     */
-    public function getAllowedAttachmentMimeTypes(): ?array
-    {
-        return null;
-    }
-
-    /**
-     * Get the current agent
-     */
-    public function getAgent(): ?Agent
-    {
-        return $this->agent;
-    }
-
-    /**
-     * Set the agent
-     */
-    public function setAgent(Agent $agent): self
-    {
-        $this->agent = $agent;
-
-        return $this;
-    }
-
-    /**
-     * Get input tokens count
-     */
-    public function getInputTokens(): int
-    {
-        return $this->inputTokens;
-    }
-
-    /**
-     * Get output tokens count
-     */
-    public function getOutputTokens(): int
-    {
-        return $this->outputTokens;
-    }
-
-    /**
-     * Get cache creation input tokens count
-     */
-    public function getCacheCreationInputTokens(): int
-    {
-        return $this->cacheCreationInputTokens;
-    }
-
-    /**
-     * Get cache read input tokens count
-     */
-    public function getCacheReadInputTokens(): int
-    {
-        return $this->cacheReadInputTokens;
-    }
-
-    /**
-     * Add to input tokens count
-     */
-    public function countInputTokens(int $tokens): self
-    {
-        $this->inputTokens += $tokens;
-
-        return $this;
-    }
-
-    /**
-     * Add to output tokens count
-     */
-    public function countOutputTokens(int $tokens): self
-    {
-        $this->outputTokens += $tokens;
-
-        return $this;
-    }
-
-    /**
-     * Add to cache creation input tokens count
-     */
-    public function countCacheCreationInputTokens(int $tokens): self
-    {
-        $this->cacheCreationInputTokens += $tokens;
-
-        return $this;
-    }
-
-    /**
-     * Add to cache read input tokens count
-     */
-    public function countCacheReadInputTokens(int $tokens): self
-    {
-        $this->cacheReadInputTokens += $tokens;
-
-        return $this;
-    }
-
-    /**
-     * Get total tokens count
-     */
-    public function getTotalTokens(): int
-    {
-        return $this->inputTokens + $this->outputTokens + $this->cacheCreationInputTokens + $this->cacheReadInputTokens;
-    }
-
-    /**
-     * Set timeout in milliseconds
+     * Set the request timeout in milliseconds.
      *
      * A client the adapter built is rebuilt on next use so it carries the new
      * timeout; a client handed to the constructor keeps its own.
      */
-    public function setTimeout(int $timeout): self
+    public function setTimeout(int $timeout): static
     {
         $this->timeout = $timeout;
 
@@ -332,6 +99,264 @@ abstract class Adapter
         }
 
         return $this;
+    }
+
+    public function getTimeout(): int
+    {
+        return $this->timeout;
+    }
+
+    /**
+     * Set how often a failed request is retried and the first backoff delay
+     * in milliseconds.
+     */
+    public function setRetries(int $retries, ?int $delay = null): static
+    {
+        $this->retries = max(0, $retries);
+        $this->delay = max(0, $delay ?? $this->delay);
+
+        return $this;
+    }
+
+    public function getRetries(): int
+    {
+        return $this->retries;
+    }
+
+    /**
+     * Headers every request carries, such as credentials.
+     *
+     * @return array<string, string>
+     */
+    protected function headers(): array
+    {
+        return [];
+    }
+
+    /**
+     * POST a JSON payload and decode the JSON response.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     *
+     * @throws Api
+     * @throws ClientExceptionInterface
+     */
+    protected function post(string $url, array $payload): array
+    {
+        $request = $this->requests()->json(Method::POST, $url, $payload, $this->headers());
+
+        for ($attempt = 0; ; $attempt++) {
+            try {
+                $response = $this->client()->sendRequest($request);
+                $body = (string) $response->getBody();
+
+                if ($response->getStatusCode() >= 400) {
+                    throw $this->error($response, $body);
+                }
+
+                $json = json_decode($body, true);
+                if (! \is_array($json) || array_is_list($json)) {
+                    throw new Api('Invalid JSON response', $this->getName(), $response->getStatusCode(), body: substr($body, 0, static::ERROR_BYTES));
+                }
+
+                /** @var array<string, mixed> $json */
+                return $json;
+            } catch (Api|ClientExceptionInterface $error) {
+                if (! $this->retry($error, $attempt)) {
+                    throw $error;
+                }
+            }
+        }
+    }
+
+    /**
+     * POST a JSON payload and pass each server-sent event to $listener as its
+     * event name and decoded JSON data. Events whose data is not a JSON
+     * object, such as "[DONE]", are skipped.
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  callable(string, array<string, mixed>): void  $listener
+     *
+     * @throws Api
+     * @throws ClientExceptionInterface
+     */
+    protected function events(string $url, array $payload, callable $listener): void
+    {
+        $request = $this->requests()->json(Method::POST, $url, $payload, $this->headers() + ['accept' => 'text/event-stream']);
+
+        for ($attempt = 0; ; $attempt++) {
+            $started = false;
+            $buffer = '';
+            $raw = '';
+
+            $dispatch = function (string $block) use ($listener, &$started): void {
+                $name = '';
+                $data = [];
+                foreach (explode("\n", $block) as $line) {
+                    if (str_starts_with($line, 'data:')) {
+                        $data[] = ltrim(substr($line, 5), ' ');
+                    } elseif (str_starts_with($line, 'event:')) {
+                        $name = trim(substr($line, 6));
+                    }
+                }
+
+                if ($data === []) {
+                    return;
+                }
+
+                $json = json_decode(implode("\n", $data), true);
+                if (! \is_array($json) || array_is_list($json)) {
+                    return;
+                }
+
+                $started = true;
+                /** @var array<string, mixed> $json */
+                $listener($name, $json);
+            };
+
+            $sink = function (string $chunk) use (&$buffer, &$raw, $dispatch): void {
+                if (\strlen($raw) < static::ERROR_BYTES) {
+                    $raw .= substr($chunk, 0, static::ERROR_BYTES - \strlen($raw));
+                }
+
+                $buffer = str_replace("\r\n", "\n", $buffer.$chunk);
+                while (($end = strpos($buffer, "\n\n")) !== false) {
+                    if ($end > static::EVENT_BYTES) {
+                        throw new Api('Server-sent event exceeds '.static::EVENT_BYTES.' bytes', $this->getName());
+                    }
+                    $block = substr($buffer, 0, $end);
+                    $buffer = substr($buffer, $end + 2);
+                    $dispatch($block);
+                }
+
+                if (\strlen($buffer) > static::EVENT_BYTES) {
+                    throw new Api('Server-sent event exceeds '.static::EVENT_BYTES.' bytes', $this->getName());
+                }
+            };
+
+            try {
+                $response = $this->client()->stream($request, $sink);
+
+                if ($response->getStatusCode() >= 400) {
+                    throw $this->error($response, $raw);
+                }
+
+                if (trim($buffer) !== '') {
+                    $dispatch(str_replace("\r\n", "\n", $buffer));
+                }
+
+                return;
+            } catch (Api|ClientExceptionInterface $error) {
+                if ($started || ! $this->retry($error, $attempt)) {
+                    throw $error;
+                }
+            }
+        }
+    }
+
+    /**
+     * Map an error response to an exception.
+     */
+    protected function error(ResponseInterface $response, string $body): Api
+    {
+        $status = $response->getStatusCode();
+        [$type, $message] = $this->describe($body);
+        $message = ucfirst($this->getName())." API error ({$status}".($type !== '' ? ", {$type}" : '')."): {$message}";
+
+        $retryAfter = null;
+        $header = $response->getHeaderLine('retry-after');
+        if ($header !== '' && is_numeric($header)) {
+            $retryAfter = (float) $header;
+        } elseif ($header !== '' && ($time = strtotime($header)) !== false) {
+            $retryAfter = (float) max(0, $time - time());
+        }
+
+        $retryable = \in_array($status, [408, 409, 429], true) || $status >= 500;
+        $class = match (true) {
+            $status === 429 => RateLimit::class,
+            $status === 401, $status === 403 => Authentication::class,
+            default => Api::class,
+        };
+
+        return new $class($message, $this->getName(), $status, $type, $retryable, $retryAfter, $body);
+    }
+
+    /**
+     * Error type and message from a provider error body. Handles the common
+     * {"error": {"type"|"code"|"status", "message"}} and {"error": "message"}
+     * shapes; adapters override it for others.
+     *
+     * @return array{0: string, 1: string}
+     */
+    protected function describe(string $body): array
+    {
+        $json = json_decode($body, true);
+        if (! \is_array($json)) {
+            return ['', trim($body) !== '' ? trim($body) : 'Unknown error'];
+        }
+
+        $error = $json['error'] ?? $json;
+        if (\is_string($error)) {
+            return ['', $error];
+        }
+        if (! \is_array($error)) {
+            return ['', 'Unknown error'];
+        }
+
+        $type = '';
+        foreach (['type', 'code', 'status'] as $key) {
+            if (isset($error[$key]) && \is_scalar($error[$key]) && (string) $error[$key] !== '') {
+                $type = (string) $error[$key];
+                break;
+            }
+        }
+        $message = isset($error['message']) && \is_string($error['message']) ? $error['message'] : 'Unknown error';
+
+        return [$type, $message];
+    }
+
+    /**
+     * Whether to retry after $error on attempt $attempt (zero based); waits
+     * the backoff delay before returning true.
+     */
+    protected function retry(Api|ClientExceptionInterface $error, int $attempt): bool
+    {
+        if ($attempt >= $this->retries) {
+            return false;
+        }
+
+        if ($error instanceof Api && ! $error->retryable) {
+            return false;
+        }
+
+        $delay = $this->delay * (1 << min($attempt, 16));
+        $delay += random_int(0, intdiv($delay, 4));
+        if ($error instanceof Api && $error->retryAfter !== null) {
+            $delay = max($delay, (int) ($error->retryAfter * 1000));
+        }
+
+        $this->wait(min($delay, static::MAX_DELAY));
+
+        return true;
+    }
+
+    /**
+     * Sleep for $milliseconds; yields the coroutine inside Swoole.
+     */
+    protected function wait(int $milliseconds): void
+    {
+        if ($milliseconds <= 0) {
+            return;
+        }
+
+        if (\extension_loaded('swoole') && Coroutine::getCid() > 0) {
+            Coroutine::sleep($milliseconds / 1000);
+
+            return;
+        }
+
+        usleep($milliseconds * 1000);
     }
 
     /**
@@ -371,175 +396,73 @@ abstract class Adapter
         return new HttpClient((new CurlAdapter())->withConnectionReuse()->withTimeout($timeout));
     }
 
-    /**
-     * POST a JSON payload. With a sink the body is streamed to it chunk by
-     * chunk and the returned response carries only the status and headers.
-     *
-     * @param  array<string, string>  $headers
-     * @param  (callable(string): void)|null  $sink
-     *
-     * @throws \Psr\Http\Client\ClientExceptionInterface
-     */
-    protected function post(string $url, mixed $payload, array $headers = [], ?callable $sink = null): ResponseInterface
-    {
-        $request = $this->requests()->json(Method::POST, $url, $payload, $headers);
-        $client = $this->client();
-
-        return $sink === null
-            ? $client->sendRequest($request)
-            : $client->stream($request, $sink);
-    }
-
     protected function requests(): Factory
     {
         return $this->requests ??= new Factory();
     }
 
     /**
-     * Get timeout in milliseconds
+     * Decode a tool call's JSON arguments; anything but an object becomes [].
+     *
+     * @return array<string, mixed>
      */
-    public function getTimeout(): int
+    protected function arguments(string $json): array
     {
-        return $this->timeout;
+        return $this->map(json_decode($json === '' ? '{}' : $json, true));
     }
 
     /**
-     * Prepare stream state before processing a new stream.
+     * A decoded JSON object as a string-keyed map; anything else becomes [].
+     *
+     * @return array<string, mixed>
      */
-    protected function beginStreamProcessing(): void
+    protected function map(mixed $value): array
     {
-        $this->resetStreamBuffer();
-    }
-
-    /**
-     * Finalize stream state after stream processing ends.
-     */
-    protected function endStreamProcessing(): void
-    {
-        $this->resetStreamBuffer();
-    }
-
-    /**
-     * Clear retained partial stream fragments.
-     */
-    protected function resetStreamBuffer(): void
-    {
-        $this->streamBuffer = '';
-    }
-
-    /**
-     * Consume any remaining buffered stream fragment as a complete line.
-     */
-    protected function consumeStreamBufferLine(): ?string
-    {
-        if ($this->streamBuffer === '') {
-            return null;
+        if (! \is_array($value)) {
+            return [];
         }
 
-        $line = $this->streamBuffer;
-        $this->streamBuffer = '';
-
-        return $line;
-    }
-
-    /**
-     * @return array{0: string, 1: array<int, string>}
-     */
-    protected function prepareStreamLines(string $chunk): array
-    {
-        $combined = $this->streamBuffer.$chunk;
-        $lines = explode("\n", $combined);
-
-        if ($combined !== '' && ! str_ends_with($combined, "\n")) {
-            $this->streamBuffer = (string) array_pop($lines);
-            if (strlen($this->streamBuffer) > self::STREAM_BUFFER_MAX_BYTES) {
-                $this->streamBuffer = substr($this->streamBuffer, -self::STREAM_BUFFER_MAX_BYTES);
+        $map = [];
+        foreach ($value as $key => $item) {
+            if (! \is_string($key)) {
+                return [];
             }
-        } else {
-            $this->streamBuffer = '';
+            $map[$key] = $item;
         }
 
-        // Return only complete lines data (excluding buffered trailing fragment).
-        return [implode("\n", $lines), $lines];
+        return $map;
     }
 
     /**
-     * Decode a standard SSE "data: {json}" line.
+     * An embedding row as floats; a component that is not a number fails the
+     * whole response rather than turning into a silent zero.
      *
-     * @return array<string, mixed>|null
-     */
-    protected function decodeSseJsonLine(string $line): ?array
-    {
-        if (trim($line) === '') {
-            return null;
-        }
-
-        if (! str_starts_with($line, 'data: ')) {
-            return null;
-        }
-
-        $payload = substr($line, 6);
-        if (trim($payload) === '[DONE]') {
-            return null;
-        }
-
-        $json = $this->decodeJsonObject($payload);
-
-        return $json;
-    }
-
-    /**
-     * Decode either raw JSON lines or SSE "data: {json}" lines.
+     * @param  array<mixed>  $row
+     * @return list<float>
      *
-     * @return array<string, mixed>|null
+     * @throws Api
      */
-    protected function decodeJsonOrSseLine(string $line): ?array
+    protected function vector(array $row): array
     {
-        if (trim($line) === '') {
-            return null;
-        }
-
-        $payload = str_starts_with($line, 'data: ') ? substr($line, 6) : $line;
-        if (trim($payload) === '[DONE]') {
-            return null;
-        }
-
-        $json = $this->decodeJsonObject($payload);
-
-        return $json;
-    }
-
-    protected function appendStreamToken(string &$block, string $token, ?callable $listener): void
-    {
-        if ($token === '') {
-            return;
-        }
-
-        $block .= $token;
-        if ($listener !== null) {
-            $listener($token);
-        }
-    }
-
-    /**
-     * Decode only JSON objects (associative arrays with string keys).
-     *
-     * @return array<string, mixed>|null
-     */
-    protected function decodeJsonObject(string $jsonString): ?array
-    {
-        $decoded = json_decode($jsonString, true);
-        if (! is_array($decoded) || array_is_list($decoded)) {
-            return null;
-        }
-
-        foreach (array_keys($decoded) as $key) {
-            if (! is_string($key)) {
-                return null;
+        $vector = [];
+        foreach ($row as $value) {
+            if (! \is_int($value) && ! \is_float($value)) {
+                throw new Api('Embedding response has a non-numeric component', $this->getName());
             }
+            $vector[] = (float) $value;
         }
 
-        /** @var array<string, mixed> $decoded */
-        return $decoded;
+        return $vector;
+    }
+
+    /**
+     * Tool arguments as a JSON object, keeping {} for an empty map.
+     *
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>|\stdClass
+     */
+    protected function object(array $arguments): array|\stdClass
+    {
+        return $arguments === [] ? new \stdClass() : $arguments;
     }
 }

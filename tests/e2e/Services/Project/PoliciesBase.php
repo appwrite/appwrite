@@ -13,11 +13,12 @@ trait PoliciesBase
     protected function getExpectedPolicies(): array
     {
         return [
-            'password-dictionary' => ['enabled'],
+            'password-dictionary' => ['enabled', 'denyList'],
             'password-history' => ['total'],
             'password-strength' => ['min', 'uppercase', 'lowercase', 'number', 'symbols'],
-            'password-personal-data' => ['enabled'],
+            'password-personal-data' => ['enabled', 'denyList'],
             'password-pwned' => ['enabled', 'sessions', 'users'],
+            'password-rotation' => ['enabled', 'maxAge'],
             'session-alert' => ['enabled'],
             'session-duration' => ['duration'],
             'session-invalidation' => ['enabled'],
@@ -25,6 +26,8 @@ trait PoliciesBase
             'user-limit' => ['total'],
             'membership-privacy' => ['userId', 'userEmail', 'userPhone', 'userName', 'userMFA', 'userAccessedAt'],
             'mfa-factors' => ['totp', 'email', 'phone', 'custom'],
+            'passkey' => ['rpId', 'origins'],
+            'deny-realtime-guests' => ['enabled'],
         ];
     }
 
@@ -313,6 +316,121 @@ trait PoliciesBase
     // Password Dictionary Policy
     // =========================================================================
 
+    public function testPasswordDictionaryDenyList(): void
+    {
+        $this->assertPasswordDenyListPolicy('password-dictionary', 'password-dictionary');
+    }
+
+    public function testPasswordPersonalDataDenyList(): void
+    {
+        $this->assertPasswordDenyListPolicy('password-personal-data', 'personal-data');
+    }
+
+    private function assertPasswordDenyListPolicy(string $policy, string $alias): void
+    {
+        $original = $this->getPolicy($policy)['body'];
+        $path = '/project/policies/' . $policy;
+        $headers = $this->buildHeaders();
+
+        try {
+            // Test for SUCCESS
+            foreach ([['first', ' first ', 'first', '0'], ['replacement'], [str_repeat('a', 256)], array_fill(0, 100, 'x')] as $denyList) {
+                $response = $this->client->call(Client::METHOD_PATCH, $path, $headers, [
+                    'enabled' => true,
+                    'denyList' => $denyList,
+                ]);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame($denyList, $this->getPolicy($policy)['body']['denyList']);
+            }
+
+            foreach ([['enabled' => false], ['enabled' => true, 'denyList' => null]] as $params) {
+                $response = $this->client->call(Client::METHOD_PATCH, $path, $headers, $params);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $current = $this->getPolicy($policy)['body'];
+                $this->assertSame($params['enabled'], $current['enabled']);
+                $this->assertSame($denyList, $current['denyList']);
+            }
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/' . $alias, $headers, [
+                'enabled' => true,
+                'denyList' => ['legacy'],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $current = $this->getPolicy($policy)['body'];
+            $this->assertSame(['legacy'], $current['denyList']);
+            $list = $this->listPolicies();
+            $this->assertSame(200, $list['headers']['status-code']);
+            $this->assertSame($current, array_column($list['body']['policies'], null, '$id')[$policy]);
+
+            // Test for FAILURE
+            foreach (['invalid', 1, true, [1], [null], [[]], [''], [str_repeat('a', 257)], array_fill(0, 101, 'x')] as $invalid) {
+                $response = $this->client->call(Client::METHOD_PATCH, $path, $headers, [
+                    'enabled' => false,
+                    'denyList' => $invalid,
+                ]);
+                $this->assertSame(400, $response['headers']['status-code']);
+                $this->assertSame('general_argument_invalid', $response['body']['type']);
+                $this->assertSame($current, $this->getPolicy($policy)['body']);
+            }
+
+            $response = $this->client->call(Client::METHOD_PATCH, $path, $this->buildHeaders(false), [
+                'enabled' => true,
+                'denyList' => ['unauthorized'],
+            ]);
+            $this->assertSame(401, $response['headers']['status-code']);
+            $this->assertSame($current, $this->getPolicy($policy)['body']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, $path, $headers, ['denyList' => []]);
+            $this->assertSame(400, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, $path, $headers, ['enabled' => false, 'denyList' => []]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame([], $this->getPolicy($policy)['body']['denyList']);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, $path, $headers, [
+                'enabled' => $original['enabled'],
+                'denyList' => $original['denyList'],
+            ]);
+        }
+    }
+
+    public function testPasswordDictionaryAndPersonalDataStorageLimit(): void
+    {
+        $headers = $this->buildHeaders();
+        $original = [];
+        foreach (['password-dictionary', 'password-personal-data'] as $policy) {
+            $original[$policy] = $this->getPolicy($policy)['body'];
+        }
+
+        try {
+            foreach (array_keys($original) as $policy) {
+                $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/' . $policy, $headers, ['enabled' => false, 'denyList' => []]);
+                $this->assertSame(200, $response['headers']['status-code']);
+            }
+
+            $large = array_fill(0, 35, str_repeat('a', 256));
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-dictionary', $headers, ['enabled' => true, 'denyList' => $large]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $before = $this->listPolicies()['body'];
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-personal-data', $headers, ['enabled' => true, 'denyList' => $large]);
+            $this->assertSame(400, $response['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertSame($before, $this->listPolicies()['body']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-dictionary', $headers, ['enabled' => false, 'denyList' => array_fill(0, 100, str_repeat('b', 256))]);
+            $this->assertSame(400, $response['headers']['status-code']);
+            $this->assertSame($before, $this->listPolicies()['body']);
+        } finally {
+            foreach (array_keys($original) as $policy) {
+                $this->client->call(Client::METHOD_PATCH, '/project/policies/' . $policy, $headers, ['enabled' => false, 'denyList' => []]);
+            }
+            foreach ($original as $policy => $settings) {
+                $this->client->call(Client::METHOD_PATCH, '/project/policies/' . $policy, $headers, ['enabled' => $settings['enabled'], 'denyList' => $settings['denyList']]);
+            }
+        }
+    }
+
     public function testUpdatePasswordDictionaryPolicyEnable(): void
     {
         $response = $this->updatePasswordDictionaryPolicy(true);
@@ -378,6 +496,127 @@ trait PoliciesBase
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-dictionary', $this->buildHeaders(), []);
 
         $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdatePasswordRotationPolicy(): void
+    {
+        try {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'enabled' => true,
+                'maxAge' => 2592000,
+            ]);
+
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame($this->getProject()['$id'], $response['body']['$id']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertSame(200, $policy['headers']['status-code']);
+            $this->assertTrue($policy['body']['enabled']);
+            $this->assertSame(2592000, $policy['body']['maxAge']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 5184000,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertTrue($policy['body']['enabled']);
+            $this->assertSame(5184000, $policy['body']['maxAge']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'enabled' => false,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertFalse($policy['body']['enabled']);
+            $this->assertSame(5184000, $policy['body']['maxAge']);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'enabled' => false,
+                'maxAge' => 31536000,
+            ]);
+        }
+    }
+
+    public function testUpdatePasswordRotationPolicyInvalidParameters(): void
+    {
+        foreach ([
+            ['enabled' => 'invalid'],
+            ['maxAge' => 0],
+            ['maxAge' => -1],
+            ['maxAge' => 1.5],
+            ['maxAge' => 'invalid'],
+        ] as $params) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), $params);
+
+            $this->assertSame(400, $response['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+        }
+    }
+
+    public function testUpdatePasswordRotationPolicyMin(): void
+    {
+        try {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 86400,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertSame(86400, $policy['body']['maxAge']);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 31536000,
+            ]);
+        }
+    }
+
+    public function testUpdatePasswordRotationPolicyMax(): void
+    {
+        try {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 315360000,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertSame(315360000, $policy['body']['maxAge']);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 31536000,
+            ]);
+        }
+    }
+
+    public function testUpdatePasswordRotationPolicyBelowMin(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+            'maxAge' => 86399,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    public function testUpdatePasswordRotationPolicyAboveMax(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+            'maxAge' => 315360001,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    public function testUpdatePasswordRotationPolicyWithoutAuth(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(false), [
+            'enabled' => true,
+            'maxAge' => 2592000,
+        ]);
+
+        $this->assertSame(401, $response['headers']['status-code']);
     }
 
     // =========================================================================
@@ -807,6 +1046,41 @@ trait PoliciesBase
         $response = $this->updateSessionAlertPolicy(true, false);
 
         $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    // =========================================================================
+    // Deny Realtime Guests Policy
+    // =========================================================================
+
+    public function testUpdateDenyRealtimeGuestsPolicy(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->updateDenyRealtimeGuestsPolicy(true);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $policy = $this->client->call(Client::METHOD_GET, '/project/policies/deny-realtime-guests', $this->buildHeaders());
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame('deny-realtime-guests', $policy['body']['$id']);
+        $this->assertTrue($policy['body']['enabled']);
+
+        $response = $this->updateDenyRealtimeGuestsPolicy(false);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $policy = $this->client->call(Client::METHOD_GET, '/project/policies/deny-realtime-guests', $this->buildHeaders());
+        $this->assertFalse($policy['body']['enabled']);
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-realtime-guests', $this->buildHeaders(), [
+            'enabled' => 'not-a-boolean',
+        ]);
+        $this->assertSame(400, $invalid['headers']['status-code']);
+
+        $this->assertSame(401, $this->updateDenyRealtimeGuestsPolicy(true, false)['headers']['status-code']);
     }
 
     // =========================================================================
@@ -1466,6 +1740,13 @@ trait PoliciesBase
     protected function updateSessionAlertPolicy(bool $enabled, bool $authenticated = true): mixed
     {
         return $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $this->buildHeaders($authenticated), [
+            'enabled' => $enabled,
+        ]);
+    }
+
+    protected function updateDenyRealtimeGuestsPolicy(bool $enabled, bool $authenticated = true): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-realtime-guests', $this->buildHeaders($authenticated), [
             'enabled' => $enabled,
         ]);
     }

@@ -2,8 +2,8 @@
 
 namespace Utopia\Abuse\Tests\E2E;
 
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Abuse\Adapters\TimeLimit\RedisPool as AdapterRedisPool;
+use Utopia\Abuse\Adapter\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit\RedisPool as AdapterRedisPool;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
 
@@ -14,6 +14,7 @@ class RedisPoolClusterTest extends Base
      */
     protected static ?Pool $pool = null;
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         if (isset(self::$pool)) {
@@ -23,6 +24,7 @@ class RedisPoolClusterTest extends Base
         self::$pool = new Pool(new Stack(), 'abuse-redis-cluster', 2, fn (): \RedisCluster => new \RedisCluster(null, Services::CLUSTER_SEEDS), timeout: 0.0);
     }
 
+    #[\Override]
     public function getAdapter(string $key, int $limit, int $seconds): TimeLimit
     {
         $pool = self::$pool;
@@ -34,10 +36,9 @@ class RedisPoolClusterTest extends Base
 
     public function testGetLogsSupportsNullableLimit(): void
     {
-        $adapter = $this->getAdapter('logs-null-limit', 1, 60);
-        $abuse = new \Utopia\Abuse\Abuse($adapter);
+        $adapter = $this->getAdapter('logs-null-limit-' . \uniqid(), 1, 60);
 
-        $this->assertSame(false, $abuse->check());
+        $this->assertFalse($adapter->check()->limited);
         $this->assertNotEmpty($adapter->getLogs(null, null));
     }
 
@@ -55,16 +56,15 @@ class RedisPoolClusterTest extends Base
         $this->assertSame(['abuse__redis-cluster-pool-logs-offset-b__1' => '2'], $logs);
     }
 
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
         if (!isset(self::$pool)) {
             return;
         }
 
-        self::$pool->use(function (mixed $redis): void {
-            if ($redis instanceof \RedisCluster) {
-                $redis->close();
-            }
+        self::$pool->use(function (\RedisCluster $redis): void {
+            $redis->close();
         });
         self::$pool = null;
     }
@@ -76,16 +76,21 @@ class RedisPoolClusterTest extends Base
 
         $pool->use(function (\RedisCluster $redis): void {
             foreach ($redis->_masters() as $master) {
+                if (!\is_array($master)) {
+                    continue;
+                }
+
                 $cursor = null;
                 do {
-                    /** @phpstan-ignore-next-line */
                     $keys = $redis->scan($cursor, $master, 'abuse__*', 100);
-                    if ($keys === false) {
+                    if (!\is_array($keys)) {
                         continue;
                     }
 
                     foreach ($keys as $key) {
-                        $redis->del($key);
+                        if (\is_string($key)) {
+                            $redis->del($key);
+                        }
                     }
                 } while ($cursor > 0);
             }

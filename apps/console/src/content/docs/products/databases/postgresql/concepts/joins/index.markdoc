@@ -1,0 +1,228 @@
+---
+layout: article
+title: Joins and relationships
+description: Model relationships with foreign keys and combine PostgreSQL tables with INNER, LEFT, FULL, and CROSS joins.
+---
+
+Relational databases keep each entity in its own table and connect them through **keys**. A join combines rows from two tables by matching values, usually a **foreign key** on one side against a **primary key** on the other. This page covers how to model the two relationship shapes you'll meet constantly, and the join types you'll use in practice.
+
+# Setup {% #setup %}
+
+The examples below use two tables, customers and orders, where every order records which customer placed it. Create and seed them first:
+
+```sql
+CREATE TABLE customers (
+    id   bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name text NOT NULL
+);
+
+CREATE TABLE orders (
+    id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    customer_id bigint NOT NULL REFERENCES customers (id),
+    total       numeric(10, 2) NOT NULL
+);
+
+INSERT INTO customers (name) VALUES ('Ada'), ('Grace'), ('Linus');
+INSERT INTO orders (customer_id, total) VALUES
+    (1, 120.00), (1, 80.00), (2, 45.50);
+```
+
+Ada has two orders, Grace has one, and Linus has none.
+
+# What a join actually does {% #what-a-join-does %}
+
+A join takes two tables and produces a new, temporary table built from them in three steps:
+
+1. Pair rows from one side with rows from the other.
+2. Evaluate the **join condition** on each pair, here `o.customer_id = c.id`.
+3. Keep the pairs where it's true; each one becomes a result row carrying the columns of both sides.
+
+```text
+customers               orders                        result of the join
+id | name               id | customer_id | total     name  | total
+ 1 | Ada        ←──┬──   1 |           1 | 120.00    Ada   | 120.00
+                   └──   2 |           1 |  80.00    Ada   |  80.00
+ 2 | Grace      ←─────   3 |           2 |  45.50    Grace |  45.50
+ 3 | Linus      (no order matches)
+```
+
+Two things fall out of this model:
+
+- A row that matches several rows on the other side appears several times in the result: Ada shows up twice because two orders point at her.
+- A row that matches nothing, like Linus, produces no pair at all, and what happens to such unmatched rows is exactly what distinguishes the join types below.
+
+The database doesn't literally build every combination; indexes let it jump straight to matching rows, but the result is always as if it had.
+
+# One-to-many relationships {% #one-to-many %}
+
+One customer has many orders, so `orders` carries a `customer_id` column referencing `customers`. The `REFERENCES` clause creates a foreign key: the database rejects any `customer_id` that doesn't exist in `customers`:
+
+```sql
+INSERT INTO orders (customer_id, total) VALUES (99, 10.00);
+```
+
+```text
+ERROR:  insert or update on table "orders" violates foreign key constraint "orders_customer_id_fkey"
+DETAIL:  Key (customer_id)=(99) is not present in table "customers".
+```
+
+A foreign key also decides what happens when the parent row is deleted. Declare it with the behavior you want:
+
+- `ON DELETE NO ACTION` (the default) blocks deleting a customer who still has orders.
+- `ON DELETE CASCADE` deletes the customer's orders along with the customer.
+- `ON DELETE SET NULL` keeps the orders but clears their `customer_id` (the column must be nullable).
+
+# Inner joins {% #inner %}
+
+An inner join returns only rows that match on both sides:
+
+```sql
+SELECT c.name, o.total
+FROM customers c
+JOIN orders o ON o.customer_id = c.id
+ORDER BY c.name, o.total;
+```
+
+```text
+ name  | total
+-------+--------
+ Ada   |  80.00
+ Ada   | 120.00
+ Grace |  45.50
+```
+
+Linus disappears from the result because he has no matching order. `JOIN` and `INNER JOIN` are the same thing.
+
+# Left joins {% #left %}
+
+A left join keeps every row from the left table and fills the right side with `NULL` where nothing matches:
+
+```sql
+SELECT c.name, o.total
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.id
+ORDER BY c.name, o.total;
+```
+
+```text
+ name  | total
+-------+--------
+ Ada   |  80.00
+ Ada   | 120.00
+ Grace |  45.50
+ Linus |
+```
+
+This is the join for "all X, with their Y if any". Combined with aggregation it answers questions like order counts per customer, including zero:
+
+```sql
+SELECT c.name, count(o.id) AS orders
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.id
+GROUP BY c.name
+ORDER BY orders DESC;
+```
+
+Note `count(o.id)`, not `count(*)`: counting a column from the right table skips the `NULL` produced for Linus, yielding 0 instead of 1.
+
+`RIGHT JOIN` mirrors `LEFT JOIN` in the other direction. In practice, most people reorder the tables and use `LEFT JOIN` for consistency.
+
+# Full joins {% #full %}
+
+A full join keeps unmatched rows from both sides. It's useful for reconciliation, such as comparing two datasets that should agree:
+
+```sql
+CREATE TABLE imported_customers (id bigint, name text);
+INSERT INTO imported_customers VALUES (1, 'Ada'), (4, 'Margaret');
+
+SELECT c.name AS in_database, i.name AS in_import
+FROM customers c
+FULL JOIN imported_customers i ON i.id = c.id
+ORDER BY c.name;
+```
+
+```text
+ in_database | in_import
+-------------+-----------
+ Ada         | Ada
+ Grace       |
+ Linus       |
+             | Margaret
+```
+
+# Cross joins {% #cross %}
+
+A cross join produces every combination of rows from both tables, with no matching condition. Use it to generate combinations, such as every product in every size:
+
+```sql
+SELECT c.name, s.size
+FROM customers c
+CROSS JOIN (VALUES ('S'), ('M'), ('L')) AS s (size)
+ORDER BY c.name, s.size;
+```
+
+Three customers times three sizes returns nine rows. Be careful with large tables: the result size is the product of both row counts.
+
+# Anti-joins: rows without a match {% #anti-join %}
+
+"Customers with no orders" is an anti-join. Two equivalent spellings:
+
+```sql
+SELECT name FROM customers c
+WHERE NOT EXISTS (
+    SELECT 1 FROM orders o WHERE o.customer_id = c.id
+);
+
+SELECT c.name
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.id
+WHERE o.id IS NULL;
+```
+
+Both return only Linus. Prefer `NOT EXISTS` over `NOT IN (SELECT ...)`: if the subquery ever returns a `NULL`, `NOT IN` returns no rows at all, and nothing reports an error.
+
+# Many-to-many relationships {% #many-to-many %}
+
+When both sides can have many of the other, such as orders and products, neither table can hold the foreign key. A junction table holds one row per connection:
+
+```sql
+CREATE TABLE products (
+    id   bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name text NOT NULL
+);
+
+CREATE TABLE order_items (
+    order_id   bigint NOT NULL REFERENCES orders (id),
+    product_id bigint NOT NULL REFERENCES products (id),
+    quantity   integer NOT NULL DEFAULT 1,
+    PRIMARY KEY (order_id, product_id)
+);
+
+INSERT INTO products (name) VALUES ('Keyboard'), ('Mouse');
+INSERT INTO order_items (order_id, product_id, quantity) VALUES
+    (1, 1, 1), (1, 2, 2), (2, 2, 1);
+```
+
+The composite primary key `(order_id, product_id)` prevents duplicate connections, and the junction table is the natural home for relationship attributes like `quantity`. Traversing the relationship is two joins:
+
+```sql
+SELECT o.id AS order_id, p.name, oi.quantity
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.id
+JOIN products p ON p.id = oi.product_id
+ORDER BY o.id, p.name;
+```
+
+```text
+ order_id |   name   | quantity
+----------+----------+----------
+        1 | Keyboard |        1
+        1 | Mouse    |        2
+        2 | Mouse    |        1
+```
+
+Each result row is one line item: the first join finds the connections belonging to each order, and the second swaps each `product_id` for the product's actual name. The Mouse appears under both orders because two junction rows point at it, one connection per row.
+
+# Join or separate queries? {% #vs-n-plus-1 %}
+
+Fetching a list and then querying once per row (the N+1 pattern) multiplies round trips and usually loses badly to a single join, even a large one. Let the database combine the data; that is what it is optimized for. If a join's result set explodes because one row matches thousands, paginate or aggregate on the many side instead of splitting into per-row queries.

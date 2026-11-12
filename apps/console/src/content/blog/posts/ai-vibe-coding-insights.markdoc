@@ -1,0 +1,128 @@
+---
+layout: post
+title: "Exploring AI and vibe coding: Insights from the Appwrite developer community"
+description: Survey insights on how developers are using AI, vibe coding tools, and the Appwrite MCP server.
+date: 2025-08-25
+lastUpdated: 2026-06-29
+cover: /images/blog/ai-vibe-coding-insights/cover.avif
+timeToRead: 10
+author: laura-du-ry
+category: tutorials
+removed: true
+faqs:
+  - question: "What is vibe coding?"
+    answer: "Vibe coding is a term coined by Andrej Karpathy for building apps by describing intent to AI tools and letting them write most of the code, rather than writing it line by line yourself. It is fast for prototyping but pairs best with a backend like Appwrite that handles the bits you would not want an LLM to reinvent (auth, data, storage)."
+  - question: "Which AI coding tools do developers use most?"
+    answer: "Survey responses from the Appwrite community show ChatGPT, GitHub Copilot, Claude, and Cursor as the most-used tools, with Warp AI CLI gaining traction in the terminal. Most developers combine two or three of these depending on the task: in-editor completions, longer reasoning, and quick one-off questions."
+  - question: "How can I use AI to build with Appwrite?"
+    answer: "Use the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) to give AI assistants direct access to your project. They can create tables, manage users, deploy functions, and run queries through natural language. The [Appwrite plugin for Claude Code](/blog/post/announcing-appwrite-claude-code-plugin) bundles this together for Claude users."
+  - question: "Should I worry about security when vibe coding?"
+    answer: "Yes. Vibe-coded apps often skip auth, permissions, and rate limiting because the AI does not bring them up by default. Read the [backend checklist for vibe-coded apps](/blog/post/backend-checklist-vibe-coded-apps) before you ship, and keep API keys server-side in an [Appwrite Function](/docs/products/functions) rather than the browser."
+  - question: "Is vibe coding suitable for production apps?"
+    answer: "It is fine for prototypes and internal tools. For production, treat the AI-generated code like any other: review it, add tests, lock down permissions, and own the architecture decisions yourself. The leverage comes from speeding up the build, not skipping the engineering discipline."
+  - question: "Who is most likely to use vibe coding tools?"
+    answer: "Survey data shows early-career developers (1 to 3 years of experience) are the most active users of both AI assistants and vibe coding tools. Senior developers are more selective but still curious; the gap usually closes as tool reliability improves and trust builds up."
+---
+
+The way developers write code is changing fast. What used to be a carefully structured process is now often about describing what you want and letting AI handle the details. 
+
+[A viral tweet](https://x.com/karpathy/status/1886192184808149383?lang=en) from Andrej Karpathy summed this up perfectly, coining the term **“vibe coding”:** building apps by trusting AI tools to do most of the work, skipping over error messages, and rarely touching the keyboard.
+
+![Tweet screenshot](/images/blog/ai-vibe-coding-insights/tweet.avif)
+
+This idea resonated because it reflects what many developers are already doing. Tools like GitHub Copilot, Cursor, and even newer “vibe-first” platforms make it possible to go from an idea to a working prototype in minutes, not by obsessing over every line of code, but by iterating quickly and leaning on AI for the heavy lifting.
+
+We wanted to see how this shift is playing out in the Appwrite community. So we ran a survey to understand two things: how developers are using AI coding assistants, and how they’re experimenting with vibe coding tools, and what that means for building with Appwrite today.
+
+# Understanding vibe coding tools
+
+Vibe coding tools have quickly become a core part of modern development. **GitHub Copilot, Cursor, ChatGPT, Lovable, Base44, v0.dev**, while each works a little differently, they all help developers move faster and get the job done with less friction. They can generate code, catch bugs, explain APIs, experiment with layouts, and even handle full prototypes, all while letting you stay focused on the bigger picture.
+
+They allow developers to begin building right away, producing functional code in minutes and refining details as needed. These tools are fully capable of creating clean, well-structured code, and many developers rely on them for that purpose. At the same time, they are ideal for exploring new ideas and delivering usable results without getting caught up in lengthy setup or perfection.
+
+By supporting both rapid experimentation and careful refinement, they fit naturally into different development styles and project needs.
+
+# Survey Insights: AI, Vibe Coding, and Appwrite
+
+The survey provided a rich set of insights from the Appwrite developer community. Here are some key findings that stood out:
+
+# Most developers now code with AI by their side
+
+AI coding assistants have quickly become part of everyday coding. About **75%** of developers use them daily, and another **10%** use them a few times a week. Only a few haven’t tried them yet, and even fewer say they’re not interested at all.
+
+Developers aren’t just using these tools because they’re new, they’re using them because they make work **faster and easier**. 
+
+The biggest reasons devs mentioned were:
+
+- Getting more done in less time
+- Prototyping ideas quickly (helpful for MVPs or hack projects)
+- Learning new coding patterns and APIs as they go
+- Catching bugs and improving code quality
+- Finding creative solutions when they’re stuck
+
+As one developer put it:
+
+> “*AI coding tools have huge potential to save time and help people focus on creative parts of building.”*
+> 
+
+What’s even more interesting? **Four out of five developers say they’re excited to try new AI tools**. Even among those who don’t use vibe coding tools or are cautious about new workflows, there’s clear curiosity about what’s next. Developers aren’t just adopting AI tools, they’re actively looking for tools to add to their workflow.
+
+# The AI tools devs reach for most
+
+Among all the AI coding assistants, a few clearly lead the pack:
+
+- **ChatGPT / OpenAI Assistants:** Used by most developers for quick answers, code generation, and debugging help.
+    
+- **GitHub Copilot:** Popular for in‑editor suggestions, speeding up everyday coding tasks.
+    
+- **Claude:** Favored for longer explanations, handling documentation, and brainstorming.
+    
+- **Cursor:** An AI‑driven editor gaining traction for its smooth coding experience.
+    
+- **Warp AI CLI:** Still niche, but appreciated by developers working heavily in the terminal.
+    
+
+One developer summed it up: 
+
+> *“I use GitHub Copilot and Cursor daily in VS Code, especially to boost productivity and inspiration when prototyping or solving logic issues.”*
+> 
+
+# Who’s using them most?
+
+AI tool adoption is strong, but **younger developers are leading the charge**. Developers with **1–3 years of experience are the most active daily users**, followed closely by those with 4–6 years. Even among developers with more than 10 years of experience, daily usage is high, just a bit more cautious compared to juniors.
+
+Vibe coding tools show a clearer split. **Early‑career developers are more willing to experiment** and use them daily, while **senior developers lean more traditional,** many have either never tried vibe tools or only use them occasionally.
+
+This gap doesn’t necessarily mean senior developers aren’t interested, it may reflect comfort with established workflows or higher expectations for tool reliability. As AI and vibe tools mature, this gap could close fast.
+
+# Where Appwrite fits in
+
+Many developers are already pairing AI tools with Appwrite for backend tasks like databases, authentication, and hosting. In fact, **Appwrite was the most‑mentioned backend in the survey**, ahead of other options like Supabase.
+
+The **Appwrite MCP server** builds on this by letting AI assistants interact directly with Appwrite, creating tables, managing functions, and running queries through natural language.
+
+> As one developer noted, *“Appwrite MCP connecting with AI tools could be a game‑changer for building full‑stack apps faster.”*
+> 
+
+While not everyone is using it yet, there’s clear curiosity from those who’ve heard about it. It shows how **AI‑first workflows and Appwrite can work hand in hand**, making full‑stack building faster and more intuitive
+
+# What stood out the most?
+
+Looking across the survey, a few clear themes came through:
+
+- **AI tools have crossed the line from “nice to have” to “essential.”** Most developers now use them daily, mainly for speed, prototyping, and catching bugs.
+- **Vibe coding tools are polarizing.** While some developers are using them daily to speed up frontend and UI work, just as many haven’t tried them at all, showing there’s still room to grow awareness and trust.
+- **Younger developers are driving adoption.** They’re experimenting with both AI and vibe tools more freely, while senior developers are selective but still curious.
+- **There’s huge curiosity for what’s next.** Four out of five developers want to try new AI tools, a sign that this space is still moving fast and developers are eager to explore new possibilities.
+
+# Conclusion
+
+The survey makes one thing clear: AI tools are no longer just sidekicks, they’re part of how developers code every day. They speed things up, help with prototyping, and make learning new frameworks less intimidating. Vibe coding tools are still finding their place, but the curiosity is there, especially among newer developers who are eager to experiment.
+
+The future looks exciting, full of chances to bring AI‑driven speed together with developer‑friendly, creative tools. At Appwrite, we’re eager to keep exploring these possibilities and help developers get the most out of AI and vibe coding in their everyday workflows.
+
+# More resources
+- [Best vibe coding tools in 2026: comparison and tradeoffs](/blog/post/comparing-vibe-coding-tools)
+- [Appwrite MCP Documentation](/docs/tooling/ai/mcp-servers)
+- [Appwrite MCP server practical examples](https://youtu.be/83rNS6W2Nu8?si=6UNFpXUsvfb1yXYi)
+- [What exactly is MCP, and why is it trending?](/blog/post/what-is-mcp)

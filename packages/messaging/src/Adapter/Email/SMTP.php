@@ -3,16 +3,23 @@
 namespace Utopia\Messaging\Adapter\Email;
 
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\SMTP\NoHostAnswered;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Response;
 use Utopia\SMTP\Auth\Login;
 use Utopia\SMTP\Auth\Plain;
 use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
+use Utopia\SMTP\Exception\AuthenticationException;
+use Utopia\SMTP\Exception\CapabilityException;
+use Utopia\SMTP\Exception\ConnectionException;
+use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message as SmtpMessage;
+use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Timeouts;
+use Utopia\SMTP\Tls;
 use Utopia\SMTP\Transport\Native;
 
 class SMTP extends EmailAdapter
@@ -32,8 +39,9 @@ class SMTP extends EmailAdapter
      * @param int $timeout SMTP timeout in seconds.
      * @param bool $keepAlive Whether to reuse the SMTP connection across process() calls.
      * @param int $timelimit SMTP command timelimit in seconds.
-     * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. Keep it under the server's idle timeout: a session the server closed inside the threshold fails its send without a retry. 0 probes before every reuse.
+     * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. 0 probes before every reuse. A session the server already closed still fails that command; the message is sent again once, on a new connection.
      * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
+     * @param array<string, string> $addresses Host => address to dial it on, as each host appears in $host (e.g. "smtp1.example.com" => "203.0.113.10", "[2001:db8::1]" for IPv6), so the connection lands on an address the caller checked. The certificate is still verified against the host. When any address is given, a host not listed is refused; with none, every host is dialled by name.
      */
     public function __construct(
         private readonly string $host,
@@ -48,6 +56,7 @@ class SMTP extends EmailAdapter
         private readonly int $timelimit = 30,
         private readonly int $pingThreshold = 30,
         private readonly int $restartThreshold = 100,
+        private readonly array $addresses = [],
     ) {
         parent::__construct();
         if (!\in_array($this->smtpSecure, ['', 'ssl', 'tls'])) {
@@ -70,20 +79,30 @@ class SMTP extends EmailAdapter
      */
     protected function process(EmailMessage $message): array
     {
+        return $this->deliver($message, true);
+    }
+
+    /**
+     * @param bool $retry Whether a kept session that dies under this send may be replaced once.
+     * @return array{deliveredTo: int, type: string, results: array<array<string, mixed>>}
+     */
+    private function deliver(EmailMessage $message, bool $retry): array
+    {
         $response = new Response($this->getType());
         $recipients = $this->recipients($message);
 
         try {
-            $client = $this->keepAlive ? $this->client() : $this->dial();
+            [$client, $reused] = $this->open();
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage());
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
             }
 
             return $response->toArray();
         }
 
         $keep = $this->keepAlive;
+        $stale = false;
 
         try {
             $result = $client->send($this->build($message));
@@ -98,25 +117,40 @@ class SMTP extends EmailAdapter
             }
 
             foreach ($result->rejected as $email => $reply) {
-                $response->addResult($email, (string) $reply);
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent, $reply->code);
             }
         } catch (TransactionException $exception) {
+            // Every recipient refused: each answers for itself. Otherwise the
+            // refusal was the message's own (MAIL FROM, DATA) and holds for all.
             foreach ($recipients as $email) {
-                $response->addResult($email, (string) $exception->reply);
+                $reply = $exception->rejected[$email] ?? $exception->reply;
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent, $reply->code);
             }
 
             // A 421 during RCPT ends the session with the transaction.
+            // It is also how a kept socket answers the first command after the
+            // server has closed it, which is before the message is submitted.
             $keep = $keep && is_finite($client->idle());
+            $stale = $retry && $reused && $exception->reply->code === 421;
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage());
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
             }
 
             $keep = false;
+            // A kept socket that died before the dot. An UnconfirmedException
+            // means the dot was written and the server may have the message.
+            $stale = $retry && $reused && ($exception instanceof ConnectionException || $exception instanceof ProtocolException);
         } finally {
             if (!$keep) {
                 $this->drop($client);
             }
+        }
+
+        // The kept socket failed before this message was submitted. The dot
+        // was not written, so this dials once more. A second failure stands.
+        if ($stale) {
+            return $this->deliver($message, false);
         }
 
         return $response->toArray();
@@ -132,18 +166,29 @@ class SMTP extends EmailAdapter
     }
 
     /**
-     * The kept session, or a fresh one when it is spent or the server closed it.
+     * A session for this message, and whether it was kept from an earlier one.
+     *
+     * A fresh dial is not a reuse: a failure there is the server we just
+     * reached, and sending the message again would not be the stale socket.
+     *
+     * @return array{Client, bool}
      */
-    private function client(): Client
+    private function open(): array
     {
-        if ($this->client instanceof Client && $this->reusable($this->client)) {
-            return $this->client;
+        if ($this->keepAlive && $this->client instanceof Client && $this->reusable($this->client)) {
+            return [$this->client, true];
         }
 
         $this->client?->close();
         $this->client = null;
 
-        return $this->client = $this->dial();
+        $client = $this->dial();
+
+        if ($this->keepAlive) {
+            $this->client = $client;
+        }
+
+        return [$client, false];
     }
 
     private function drop(Client $client): void
@@ -167,10 +212,19 @@ class SMTP extends EmailAdapter
         );
 
         $failures = [];
+        $permanent = true;
+        $code = 0;
 
         foreach ($this->hosts() as [$host, $port, $encryption]) {
+            // A host the caller did not check is refused rather than dialled by name.
+            if ($this->addresses !== [] && !isset($this->addresses[$host])) {
+                $failures[] = "{$host}:{$port} (no checked address)";
+
+                continue;
+            }
+
             $client = new Client(
-                new Native($host, $port),
+                isset($this->addresses[$host]) ? new Native($this->addresses[$host], $port, new Tls(peerName: \trim($host, '[]'))) : new Native($host, $port),
                 gethostname() ?: 'localhost',
                 $this->authenticators(),
                 $encryption,
@@ -183,6 +237,10 @@ class SMTP extends EmailAdapter
                 $client->capabilities();
             } catch (SmtpException $exception) {
                 $failures[] = "{$host}:{$port} ({$exception->getMessage()})";
+                // One host that may answer differently later is reason enough
+                // to try the whole list again.
+                $permanent = $permanent && $this->permanent($exception);
+                $code = $code ?: $this->code($exception);
 
                 continue;
             }
@@ -190,9 +248,47 @@ class SMTP extends EmailAdapter
             return $client;
         }
 
-        throw new \Utopia\SMTP\Exception\ConnectionException(
-            'No SMTP host answered: ' . implode('; ', $failures),
-        );
+        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $failures !== [] && $permanent, $code);
+    }
+
+    /**
+     * Whether the server said, with a 5xx reply, that sending the same message
+     * again cannot change its answer. Anything short of that reply is worth
+     * repeating: a connection that dropped or timed out, a 4xx, a reply out of
+     * protocol, and a login failure no reply code stands behind.
+     *
+     * A capability the server lacks is final too: no STARTTLS when encryption is
+     * required, no SMTPUTF8 for a non-ASCII address, a message over the advertised
+     * SIZE. The client falls back to HELO only when EHLO is refused with a 5xx, by a
+     * server that does not speak ESMTP at all, so the extensions a session offers
+     * are the server's, not an artefact of a busy moment.
+     */
+    private function permanent(SmtpException $exception): bool
+    {
+        $previous = $exception->getPrevious();
+
+        return match (true) {
+            $exception instanceof TransactionException => $exception->isPermanent(),
+            $exception instanceof NoHostAnswered => $exception->permanent,
+            $exception instanceof CapabilityException => true,
+            $exception instanceof AuthenticationException => $previous instanceof TransactionException && $previous->isPermanent(),
+            default => false,
+        };
+    }
+
+    /**
+     * The reply code the server refused with, or 0 when no reply stands behind the failure.
+     */
+    private function code(SmtpException $exception): int
+    {
+        $previous = $exception->getPrevious();
+
+        return match (true) {
+            $exception instanceof TransactionException => $exception->reply->code,
+            $exception instanceof NoHostAnswered => $exception->getCode(),
+            $previous instanceof TransactionException => $previous->reply->code,
+            default => 0,
+        };
     }
 
     private function reusable(Client $client): bool

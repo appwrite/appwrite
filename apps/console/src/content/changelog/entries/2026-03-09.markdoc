@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Introducing Appwrite Skills"
+date: 2026-03-09
+cover: /images/blog/introducing-appwrite-skills/cover.avif
+tags: cli, sdk
+---
+
+Appwrite Skills are open-source Markdown files that give AI coding agents deep, language-specific knowledge of Appwrite SDKs. Install skills into your project, and your AI tools generate correct Appwrite code automatically, no more pasting docs into prompts.
+
+Skills are available for the Appwrite CLI and all major SDKs, including TypeScript, Dart, .NET, Go, Kotlin, PHP, Python, Ruby, and Swift. They work with Claude Code, Cursor, Windsurf, and other compatible agents.
+
+Get started with one command:
+
+```bash
+npx skills add appwrite/skills
+```
+
+{% arrow_link href="/blog/post/announcing-appwrite-skills" %}
+Read the announcement to learn more
+{% /arrow_link %}

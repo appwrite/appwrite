@@ -9,9 +9,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\GraphQL\Base;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class AbuseTest extends Scope
@@ -44,7 +44,7 @@ final class AbuseTest extends Scope
                 'variables' => [
                     'databaseId' => $databaseId,
                     'tableId' => $tableId,
-                    'rowId' => ID::unique(),
+                    'rowId' => Id::unique(),
                     'data' => [
                         'name' => 'John Doe',
                     ],

@@ -1,6 +1,6 @@
 <?php
 
-namespace Utopia;
+namespace Utopia\Console;
 
 class Console
 {

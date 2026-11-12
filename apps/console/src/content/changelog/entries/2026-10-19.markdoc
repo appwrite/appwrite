@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Introducing MCP Events"
+date: 2026-10-19
+cover: /images/blog/announcing-mcp-events/cover.avif
+tags: mcp
+---
+
+Agents connected to the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) can now subscribe to events in your project and react when they happen, without polling. MCP Events is the newest extension to the Model Context Protocol, proposed as [SEP-3415](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415), and Appwrite is among its earliest adopters, so you can build event-driven agents today.
+
+Six events are available at launch: new users, failed function executions, finished function and site deployments, new rows, and uploaded files. Agents on your machine receive events over an open stream, and agents with a public HTTPS endpoint receive them as signed webhook calls. Each subscription is an Appwrite webhook in your project.
+
+{% arrow_link href="/blog/post/announcing-mcp-events" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/tooling/ai/mcp-servers#events" %}
+Learn more about MCP Events
+{% /arrow_link %}

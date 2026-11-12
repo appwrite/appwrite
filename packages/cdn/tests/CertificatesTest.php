@@ -33,6 +33,11 @@ final class CertificatesTest extends TestCase
                 return Status::UNKNOWN;
             }
 
+            public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+            {
+                return $domainType === 'pending' ? null : '2027-01-31 00:00:00.000';
+            }
+
             public function isRenewRequired(string $domain, ?string $domainType): bool
             {
                 return false;
@@ -47,5 +52,6 @@ final class CertificatesTest extends TestCase
             '2027-01-01 00:00:00.000',
             $certificates->issueCertificate('cert-name', 'cdn.example.com', null),
         );
+        $this->assertSame('2027-01-31 00:00:00.000', $certificates->getCertificateExpiry('cdn.example.com', null));
     }
 }

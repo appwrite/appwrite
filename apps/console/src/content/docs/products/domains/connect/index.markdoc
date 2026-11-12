@@ -1,0 +1,204 @@
+---
+layout: article
+title: Connect to products
+description: Connect apex domains and subdomains to Appwrite Sites, Functions, and custom API endpoints. Covers DNS methods, verification, and multi-product layouts.
+---
+
+Custom domains on Appwrite work in two layers:
+
+1. **Organization domain** (apex zone, for example `example.com`) proves your organization controls the name and can host its DNS zone.
+2. **Product domain** (any hostname, for example `www.example.com` or `api.example.com`) is a proxy rule that routes HTTPS traffic to a Site, Function, or project API.
+
+This guide walks through apex vs subdomain setup, what to configure in each product, and how organization **Domains** fits together with project-level **Add domain** flows.
+
+# Before you connect {% #before-you-connect %}
+
+## Organization ownership
+
+On Appwrite Cloud, the project's organization must own the **apex** domain before a hostname can be verified on Sites, Functions, or **Custom domains** in project settings.
+
+When you add a hostname in a project, Appwrite automatically registers the apex in organization **Domains** if it is not there already. You still need to complete DNS verification for that apex (nameservers, CNAME, or A/AAAA depending on your setup).
+
+If the apex is registered under a **different** organization, verification fails. Move the domain with [Change organization](/docs/products/domains/change-organization) or use a domain owned by the same org as the project.
+
+## Apex vs subdomain
+
+| Hostname type | Example | Typical DNS method |
+| ------------- | ------- | ------------------ |
+| Apex (root) | `example.com` | NS delegation to Appwrite, or [CNAME flattening](/docs/products/network/dns#using-cname-flattening) (ALIAS/ANAME) at your DNS host |
+| Subdomain | `www.example.com`, `api.example.com` | CNAME to Appwrite |
+
+Apex domains cannot use a standard CNAME at the zone root (DNS RFC limits). Subdomains always use CNAME unless the full zone is delegated to Appwrite nameservers.
+
+## Two ways to manage DNS
+
+**Full zone on Appwrite (recommended for apex + many subdomains)**
+
+- Register, transfer, or [add an external domain](/docs/products/domains/external) under **Organization** > **Domains**.
+- Point nameservers to `ns1.appwrite.zone` and `ns2.appwrite.zone`.
+- Manage records on the domain **Records** tab. See [Manage DNS records](/docs/products/domains/manage-dns).
+- Add product hostnames in Sites, Functions, or project settings. Verification can complete faster when Appwrite already hosts the zone.
+
+**DNS stays at your current provider**
+
+- Keep nameservers at your registrar or DNS host.
+- Add the CNAME (and [CAA](/docs/products/network/caa-records) when shown) that the Console provides for each product hostname.
+- For apex without changing nameservers, use CNAME flattening if your provider supports it. See [Sites domains](/docs/products/sites/domains#add-an-apex-domain-without-changing-nameservers).
+
+{% info title="CNAME targets differ by product" %}
+- **Sites and Functions** (edge routing): CNAME to `appwrite.network`.
+- **Project API** (custom endpoint): CNAME to the project endpoint host shown in the Console (not `appwrite.network`).
+
+The Console always shows the exact records for your hostname. Copy them from the verification step rather than guessing.
+{% /info %}
+
+# Connect a subdomain {% #connect-a-subdomain %}
+
+Subdomains such as `www`, `api`, `app`, or `staging` follow the same pattern for every product:
+
+1. Open the target resource (Site, Function, or project **Settings** > **Custom domains**).
+2. Click **Add domain** (or **Create domain**) and enter the full subdomain (for example `api.example.com`).
+3. Complete any product-specific options (Sites: [domain rule type](#sites); Functions and API: route to the active deployment or API).
+4. Copy the **CNAME** record (and **CAA** if listed) from the verification screen.
+5. Add those records at your DNS provider, or on the organization domain **Records** tab if the zone is on Appwrite.
+6. Return to the Console and click **Verify**. Wait until **Verification status** and **Certificate status** are both successful.
+
+DNS propagation can take up to 48 hours. Retry verification after records are live.
+
+# Connect an apex domain {% #connect-an-apex-domain %}
+
+For `example.com` (no subdomain prefix), choose one approach:
+
+### Nameserver delegation
+
+1. Verify the apex in **Organization** > **Domains** (register, transfer, or [external](/docs/products/domains/external)).
+2. Add the product hostname `example.com` on the Site, Function, or API as in the subdomain flow.
+3. If the zone is not already on Appwrite nameservers, set NS records at your registrar to `ns1.appwrite.zone` and `ns2.appwrite.zone`.
+4. Recreate non-Appwrite records (MX for email, TXT for verification, and so on) on the organization **Records** tab before cutting over production traffic.
+
+See [Sites domains](/docs/products/sites/domains#add-an-apex-domain-with-ns-records) for why Appwrite uses NS delegation instead of fixed A records on apex.
+
+### CNAME flattening (keep your nameservers)
+
+1. Add `example.com` on the product.
+2. Create an ALIAS, ANAME, or apex CNAME (provider-dependent) pointing to the Appwrite hostname from the Console.
+3. Add the [CAA record](/docs/products/network/caa-records) at the apex if prompted. Keep existing CAA records and add Appwrite's alongside them.
+4. Verify in the Console.
+
+Supported on many providers (for example Cloudflare, DNSimple, Route 53). If your provider does not support flattening, use nameserver delegation instead.
+
+# Sites {% #sites %}
+
+Serve your web app on a branded hostname.
+
+## Steps
+
+1. Open **Sites** and select your site.
+2. Open the **Domains** tab and click **Add domain**.
+3. Enter the hostname (`www.example.com`, `example.com`, or `staging.example.com`).
+4. Choose a [domain rule type](/docs/products/sites/domains#domain-rule-types):
+   - **Active deployment**: production; always serves the latest successful deployment.
+   - **Git branch**: staging or preview; pins to a branch from your connected repository.
+   - **Redirect**: HTTP redirect to another URL (301, 302, and other status codes).
+5. Follow the verification screen (CNAME, nameservers, or flattening for apex).
+6. Click **Verify** and wait for the TLS certificate to issue.
+
+## Common hostnames
+
+| Hostname | Typical use |
+| -------- | ----------- |
+| `www.example.com` | Public marketing site or app (subdomain + CNAME) |
+| `example.com` | Apex site (NS or CNAME flattening) |
+| `staging.example.com` | Branch-pinned preview (Git branch rule) |
+
+Appwrite also provides generated `*.appwrite.network` URLs and branch/commit URLs without custom DNS. See [Sites domains](/docs/products/sites/domains).
+
+# Functions {% #functions %}
+
+Expose a function over HTTPS with standard HTTP methods (GET, POST, and others).
+
+## Steps
+
+1. Open **Functions** and select your function.
+2. Open the **Domains** tab and click **Add domain** (or **Create domain**).
+3. Enter the hostname (for example `api.example.com` or `hooks.example.com`).
+4. Add the CNAME (and CAA if shown) at your DNS provider or on the organization **Records** tab.
+5. Verify in the Console.
+
+## Generated and edge domains
+
+Every function gets a region-specific `*.appwrite.run` URL after deployment. You can also attach an `*.appwrite.network` edge domain from the **Domains** tab for routing to the nearest region. Custom domains use the same verification flow as Sites (CNAME to `appwrite.network` on Cloud).
+
+See [Functions domains](/docs/products/functions/domains) for generated domains and edge setup.
+
+# Project API {% #project-api %}
+
+Use your own hostname as the Appwrite API endpoint for a project (for example `appwrite.example.com` or `api.example.com`).
+
+## Why use a custom API domain
+
+Browsers treat cookies from a different hostname than your app as third-party cookies and may block them. Pointing the API to a subdomain of your app (for example app on `www.example.com`, API on `api.example.com`) keeps sessions on first-party cookies. See [Custom domains](/docs/advanced/platform/custom-domains#third-party-cookies).
+
+## Steps
+
+1. Open the project **Settings** sidebar.
+2. Open **Custom domains** and click **Create domain**.
+3. Enter the subdomain (for example `api.example.com`). Apex API domains follow the same [apex](#connect-an-apex-domain) options as Sites.
+4. Copy the **CNAME** and any **CAA** records to your DNS provider.
+5. Verify and wait for the certificate.
+6. Update your SDK client to use the new endpoint URL.
+7. Add the hostname under **Allowed domains** in project settings if API calls from that origin are blocked.
+
+See [Custom domains](/docs/advanced/platform/custom-domains) for provider-specific DNS links and allowed-domain configuration.
+
+# Example: one domain, multiple products {% #example-layout %}
+
+A typical production layout on `example.com`:
+
+| Hostname | Product | Purpose |
+| -------- | ------- | ------- |
+| `example.com` or `www.example.com` | Site (active deployment) | User-facing web app |
+| `api.example.com` | Project custom domain | Appwrite API / auth cookies |
+| `hooks.example.com` | Function | Webhooks or serverless API |
+| `staging.example.com` | Site (Git branch) | Staging environment |
+
+With the full zone on Appwrite nameservers, add CNAME records on the organization **Records** tab for each subdomain pointing to `appwrite.network` (Sites/Functions) or the API CNAME target from project settings. Then add each hostname on the corresponding product and verify.
+
+# Verification and TLS {% #verification-and-tls %}
+
+After DNS is correct:
+
+1. **Verification status** must show verified. Click **Verify** or **Retry** in the Console if it stays pending.
+2. **Certificate status** must show issued. Appwrite provisions and renews TLS automatically.
+3. A **Verifying** state while the certificate issues is normal and usually completes in minutes.
+
+Locked records on organization **Domains** (created when you attach hostnames) must not be deleted. They are required for routing and certificate renewal.
+
+All connected hostnames use Appwrite [Network](/docs/products/network) features (routing, DDoS mitigation, [TLS](/docs/products/network/tls)). Protect API, Functions, and Sites traffic with [Firewall](/docs/products/firewall).
+
+# Troubleshooting {% #troubleshooting %}
+
+**Verification fails after adding CNAME**
+
+- Confirm the record name matches the Console (`www` vs `@` for apex flattening).
+- Use the CNAME target shown for that product (API vs `appwrite.network`).
+- Wait for propagation and use an external DNS checker before retrying.
+
+**Apex works at registrar but not on Appwrite**
+
+- Switch to the **Nameservers** tab on the verification screen if CNAME flattening is not supported.
+- Ensure NS records point only to Appwrite when delegating the full zone.
+
+**Domain owned by another organization**
+
+- The apex must belong to the same organization as the project. Use [Change organization](/docs/products/domains/change-organization) or a different domain.
+
+**Site shows old content after verification**
+
+- DNS and browser caches can lag. Test in a private window or from another network.
+
+**Email stopped working after NS cutover**
+
+- Recreate MX and related records on the organization **Records** tab. Use [DNS presets](/docs/products/domains/presets) for common providers or see [Manage DNS records](/docs/products/domains/manage-dns#configure-email).
+
+For product-specific options (branch URLs, redirect rules, function HTTP behavior), see [Sites domains](/docs/products/sites/domains), [Functions domains](/docs/products/functions/domains), and [Custom domains](/docs/advanced/platform/custom-domains).

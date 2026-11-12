@@ -1,0 +1,412 @@
+---
+layout: post
+title: Building the giveaway app for Init Discord sessions
+description: How we used Appwrite and SvelteKit to develop a custom roulette-style giveaway web application.
+date: 2024-03-06
+lastUpdated: 2026-06-29
+cover: /images/blog/building-init-giveaway-app/cover.avif
+timeToRead: 7
+author: aditya-oberai
+category: open-source
+removed: true
+faqs:
+  - question: "What does the Init giveaway app actually do?"
+    answer: "It lets users log in with Discord, registers them for a daily giveaway, and then randomly picks a winner using a roulette-style spinning wheel. Registrations are stored in Appwrite Databases and the wheel updates in realtime as new entries come in. It was built to make Init week giveaways feel like a live event, not a spreadsheet drawing."
+  - question: "How does Appwrite handle Discord OAuth?"
+    answer: "Appwrite Auth ships with a Discord OAuth adapter, so you configure the client ID and secret from the Discord Developer Portal, add the redirect URI, and call the SDK to start the login flow. The user is redirected back with a valid session that you can use across [Appwrite Auth](/docs/products/auth) and [Appwrite Databases](/docs/products/databases)."
+  - question: "How do I prevent duplicate giveaway entries in Appwrite?"
+    answer: "Create a unique index on the field that should not repeat, for example a Discord username or email. Once the index is in place, a second insert with the same value will fail with a 409, which you can catch in the UI and show as a friendly message. This is how the Init app stops one user from entering twice in a day."
+  - question: "How does the realtime wheel update work?"
+    answer: "The frontend subscribes to the Appwrite Databases realtime channel for the giveaway table. When a new row is created, the SDK fires an event and the wheel re-renders with the new entry. There is no polling involved, the connection is held open by Appwrite. See [Appwrite Databases](/docs/products/databases) for details on realtime."
+  - question: "Can I build my own giveaway or raffle app on Appwrite?"
+    answer: "Yes. You only need a table for entries, an OAuth provider for sign-in, and a frontend to pick winners. The whole thing fits inside a small SvelteKit, Next.js, or React app and can run on Appwrite Cloud's free tier for small events."
+  - question: "Is the source code for the Init giveaway app available?"
+    answer: "Appwrite has shared similar community apps as open source in the past. Check the Appwrite GitHub organization and the Init recap posts for repository links. Treat the article as a blueprint you can recreate in any stack that has an Appwrite SDK."
+---
+
+Last week, we saw the culmination of a whole new initiative, the celebration of everything new with Appwrite and the community, called [Init](https://appwrite.io/init). From February 26th to March 1st, we celebrated a new product and/or feature every day and shared educational content around the same. Alongside, we hosted online events each day in the Appwrite Discord server with creators and friends of Appwrite to learn about the new releases, ask questions, and, most of all, geek out together.
+
+One popular aspect of these events was a random giveaway that we ran every single day, giving out Init swag to a number of our community members. When planning out these giveaways, however, we wanted to create a high-quality experience for our community members, to make it as special and exciting as every other aspect of Init.
+
+Therefore, using Discord OAuth and Databases in Appwrite, we built our very own “Spin The Wheel” giveaway roulette application!
+
+## What the app does
+
+The giveaway app has two major features:
+
+- **Giveaway registration**
+
+The giveaway registration requires users to log in to the app with their Discord account. As soon as a user logs in with Discord, the app adds their Discord username and email address to an Appwrite table.
+
+![Sign In With Discord](/images/blog/building-init-giveaway-app/signin.avif)
+
+- **Winner selection**
+
+The data added to the Appwrite table is loaded in a wheel that is also updated in real time in case new registrations are added. The wheel can then be spun like a roulette wheel to find a randomly selected winner.
+
+![Spin The Wheel](/images/blog/building-init-giveaway-app/winner.avif)
+
+# How we built it
+
+To discuss how the app was built, we’ll discuss the part of setting up Appwrite and implementing the code as two separate parts.
+
+## Setting up Appwrite
+
+To build this application, we used the Discord OAuth adapter in Appwrite Auth and Appwrite Databases. The only prerequisite here was creating an [Appwrite Cloud account](https://cloud.appwrite.io), followed by creating a new project and adding your hostname as a web app to the project.
+
+### Discord OAuth
+
+Implementing Discord OAuth required us to first set up an application on the [Discord Developer Portal](https://discord.com/developers/applications). After creating an application, we visited the OAuth2 tab within the application to get the **client ID** and **secret** to set up the Discord **OAuth adapter** in our Appwrite project. We also copied to **redirect URI** to add it to our Discord Developer App.
+
+![Discord OAuth Adapter](/images/blog/building-init-giveaway-app/discord.avif)
+
+### Appwrite Database
+
+We created a **database** and a **table** for each day of the giveaway in our Appwrite project. Each table had the same steps to set up.
+
+Each table contained two **columns**:
+
+| Key         | Type        | Size        | Required    |
+| ----------- | ----------- | ----------- | ----------- |
+| discordName | Varchar   | 255         | Yes         |
+| email       | Email       | -           | Yes         |
+
+To ensure that one user could only be added once for a day’s giveaway, we created an **index** of the `unique` type.
+
+| Key         | Type        | Column   | Order       |
+| ----------- | ----------- | ----------- | ----------- |
+| names       | unique      | discordName | ASC         |
+
+Lastly, we added **table-level permissions** to allow anyone to read data (since the giveaway page was meant to be publicly accessible) and only authenticated users to add data (their Discord username and email address) to the table.
+
+| Role   | Create | Read   | Update | Delete |
+| ------ | ------ | ------ | ------ | ------ |
+| Any    |        | Yes    |        |        |
+| Users  | Yes    |        |        |        |
+
+## Setting up the app
+
+Looking at the two primary features, there were three primary challenges we needed to solve to develop this app. To build this app, we used SvelteKit, a framework to build web applications using JavaScript. There are some prerequisites, however, that must be completed before building out the features themselves.
+
+> Note: The code snippets will focus only on the application logic. All CSS and styling-related information will be accessible in the final project repository at the end of the blog.
+
+### Prerequisites
+
+We first set up a skeleton SvelteKit project.
+
+```bash
+npm create svelte@latest init-giveaway-roulette
+```
+
+We then entered the application directory, installed the Appwrite Web SDK and Pink Design using `npm install appwrite "@appwrite.io/pink"`, and set up our constants.
+
+```js
+// ./src/lib/constants.js
+
+export const APPWRITE_ENDPOINT = 'https://<REGION>.cloud.appwrite.io/v1';
+
+export const APPWRITE_PROJECT = '<PROJECT_ID>';
+
+export const DATABASE_NAME = '<DATABASE_ID>';
+
+export const TABLE_NAME = '<TABLE_ID>';
+```
+
+After the constants were added, we could now set up the Appwrite SDK.
+
+```js
+// ./src/lib/appwrite.js
+
+import { Account, Client, TablesDB, OAuthProvider } from 'appwrite';
+import { APPWRITE_ENDPOINT, APPWRITE_PROJECT } from './constants';
+
+export const client = new Client();
+
+client.setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT);
+
+export const account = new Account(client);
+
+export const tablesDB = new TablesDB(client);
+
+export { OAuthProvider };
+```
+
+Once this is done, we could move forward to create the main application.
+
+### Login using Discord
+
+First, we used the Appwrite Web SDK to set up our Auth library in the application. We used `account.createOAuth2Session` in the `add` function to leverage our Discord OAuth adapter. The `get` function returns the current logged-in user’s details.
+
+```js
+// ./src/lib/user.js
+
+import { account, OAuthProvider } from './appwrite';
+
+export const user = {
+	login: async () => {
+		account.createOAuth2Session({
+			provider: OAuthProvider.Discord,
+			success: `https://${window.location.hostname}/success`,
+			failure: `https://${window.location.hostname}/failure`
+		});
+	},
+
+	get: async () => {
+		return await account.get();
+	}
+};
+```
+
+The `login` function was called through a button click on the index page of our application to start the authentication process.
+
+```svelte
+// .src/routes/+page.svelte
+
+<script>
+	import { user } from '$lib/user';
+	import InitHeading from '../components/InitHeading.svelte';
+	import NavBar from '../components/NavBar.svelte';
+
+	function login() {
+		user.login();
+	}
+</script>
+
+<NavBar />
+<section class="u-flex-vertical">
+	<div class="container u-flex-vertical">
+		<InitHeading heading="Giveaway" />
+
+		<img src="/giveaway.png" alt="Plain black T-shirt with the text Init and a keyboard branded with the Appwrite logo on the Escape key" />
+
+		<p class="heading-level-6 u-margin-32">
+			Login with Discord and get a chance to win some amazing gifts!
+		</p>
+
+		<button class="button is-big u-margin-32" on:click={login}>
+			<span class="icon-discord"></span>
+			Sign in with Discord
+		</button>
+	</div>
+</section>
+```
+
+### Adding data to Appwrite Database
+
+To add or get information from the database, we created a database library in the project. The `add` function adds the Discord username and email to our table. The `list` function gets the list of all rows in our table and returns it after reformatting for our roulette wheel for the giveaway.
+
+```js
+// ./src/lib/database.js
+
+import { Query, ID } from 'appwrite';
+import { tablesDB } from './appwrite';
+import { TABLE_NAME, DATABASE_NAME } from './constants';
+
+export const db = {
+	list: async () => {
+		let entries = await tablesDB.listRows({
+			databaseId: DATABASE_NAME,
+			tableId: TABLE_NAME,
+			queries: [
+				Query.limit(500),
+				Query.select(['discordName'])
+			]
+		});
+
+		var options = [];
+
+		entries.rows.forEach((entry) => {
+			options.push({ label: entry.discordName });
+		});
+
+		return { options: options, total: entries.total };
+	},
+
+	add: async (discordName, email) => {
+		try {
+			await tablesDB.createRow({
+				databaseId: DATABASE_NAME,
+				tableId: TABLE_NAME,
+				rowId: ID.unique(),
+				data: {
+					discordName: discordName,
+					email: email
+				}
+			});
+			console.log('Added to the raffle');
+		} catch (error) {
+			console.log(error.message);
+		}
+	}
+};
+```
+
+We integrated the `add` function directly into the `success` endpoint for our OAuth process so that the user’s information could be added to the database as soon as we had a successful login. We use Svelte’s `onMount` function to achieve this as soon as our page is rendered in the DOM.
+
+```svelte
+// .src/routes/success/+page.svelte
+
+<script>
+	import { user } from '$lib/user';
+	import { db } from '$lib/database';
+	import { onMount } from 'svelte';
+	import NavBar from '../../components/NavBar.svelte';
+
+	let userId = '';
+
+	async function getUserId() {
+		var currentUser = await user.get();
+		await db.add(currentUser.name, currentUser.email);
+		userId = currentUser.name;
+	}
+
+	onMount(() => {
+		getUserId();
+	});
+</script>
+
+<NavBar />
+
+<div class="container flex flex-col">
+	<h1 class="heading-level-1 u-margin-32 u-normal">Success!</h1>
+	<p class="body-text-1 u-margin-32 u-normal">Thanks for participating in the giveaway, {userId}</p>
+</div>
+```
+
+### Creating our giveaway roulette
+
+To create our giveaway roulette, we used an NPM package [`spin-wheel`](https://www.npmjs.com/package/spin-wheel). To set this up, we first used a `load` function to get the list of Discord usernames that were already available in the table before the giveaway page was rendered.
+
+```js
+// .src/routes/giveaway/+page.js
+
+import { db } from '$lib/database';
+
+export async function load() {
+	var dbResponse = await db.list();
+
+	return {
+		entries: dbResponse.options,
+		total: dbResponse.total
+	};
+}
+```
+
+Using the load function would ensure that this list would be available on our page as soon as it gets rendered. We used this list with the `spin-wheel` package to generate a roulette wheel. As a bonus, we also integrated Appwrite Realtime to add new Discord usernames to our list and regenerate the wheel with the updated data. We let the winner selection remain mathematically random and used the `spin-wheel` package to spin the roulette wheel and show us the winner. The wheel spinning function also required us to install an additional NPM package `easing-utils` to select the easing function defining the rate of change in the rotation speed of the wheel.
+
+```svelte
+// .src/routes/giveaway/+page.svelte
+
+<script>
+	// @ts-nocheck
+
+	import { Wheel } from 'spin-wheel';
+	import { onMount } from 'svelte';
+	import InitHeading from '../../components/InitHeading.svelte';
+	import * as easing from 'easing-utils';
+	import { client } from '$lib/appwrite';
+	import { DATABASE_NAME, TABLE_NAME } from '$lib/constants';
+
+	export let data;
+
+	let wheel = null;
+
+	var wheelContainer = null;
+
+	var props = {
+		items: data.entries,
+		itemLabelRadiusMax: 0.5
+	};
+
+	let heading = `${props.items.length} people are registered!`;
+
+	var unsubscribe = null;
+
+	// Spins the wheel
+	async function spin() {
+		unsubscribe();
+		var winningIndex = Math.floor(Math.random() * props.items.length);
+		var duration = 5000;
+		var spinToCenter = false;
+		var numberOfRevolutions = 5;
+		var direction = 1;
+		var easingFunction = easing.easeOutCubic;
+
+		wheel.spinToItem(
+			winningIndex,
+			duration,
+			spinToCenter,
+			numberOfRevolutions,
+			direction,
+			easingFunction
+		);
+
+		wheel.onRest = (e) => {
+			var winner = props.items[wheel.getCurrentIndex()].label;
+			heading = `Congratulations to the winner: ${winner}!`;
+		};
+	}
+
+	// Removes the wheel before recreating
+	function removeWheel() {
+		while (wheelContainer.hasChildNodes()) {
+			wheelContainer.removeChild(wheelContainer.firstChild);
+		}
+	}
+
+	// Creates the wheel
+	function createWheel() {
+		wheel = new Wheel(wheelContainer, props);
+		wheel.radius = 0.95;
+		wheel.isInteractive = false;
+		wheel.overlayImage = '/picker.png';
+		wheel.itemBackgroundColors = ['#27272A'];
+		wheel.itemLabelColors = ['#FFFFFF'];
+		wheel.itemLabelFont = 'sans-serif';
+		wheel.itemLabelFontSize = 20;
+		wheel.borderColor = '#3d3d3f';
+		wheel.lineColor = '#3d3d3f';
+	}
+
+	// Uses Appwrite Realtime to get newly created rows and regenerate the wheel
+	function subscribe() {
+		return client.subscribe(
+				`tablesdb.${DATABASE_NAME}.tables.${TABLE_NAME}.rows`,
+			(response) => {
+				console.log(response);
+				props.items.push({ label: response.payload.discordName });
+				heading = `${props.items.length} people are registered!`;
+				removeWheel();
+				createWheel();
+			}
+		);
+	}
+
+	onMount(() => {
+		if(unsubscribe === null) {
+			unsubscribe = subscribe();
+		}
+		wheelContainer = document.querySelector('.wheel-container');
+		createWheel();
+	});
+</script>
+
+<section class="flex flex-col gap-4">
+	<InitHeading {heading} />
+	<div class="wheel flex flex-col">
+		<div class="wheel-container flex flex-col"></div>
+	</div>
+	<button class="button is-big" on:click={spin}>Spin The Wheel</button>
+</section>
+```
+
+# Outcome
+
+The giveaway roulette app was used over 450 times by 230+ different users across the different Init events we hosted. The application is still live and can be tried through the following links:
+
+- Participate in the giveaway roulette: [giveaway.appwrite.io](https://giveaway.appwrite.io)
+- Giveaway roulette: [giveaway.appwrite.io/giveaway](https://giveaway.appwrite.io/giveaway)
+
+You can find the application’s complete source code at this [GitHub Repo](https://github.com/adityaoberai/InitGiveawayRoulette).
+
+[Join us on Discord](https://appwrite.io/discord)&nbsp;to be the first to get updates and to be part of a vibrant community!

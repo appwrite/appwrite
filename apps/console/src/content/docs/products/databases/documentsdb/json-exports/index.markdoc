@@ -1,0 +1,96 @@
+---
+layout: article
+title: JSON exports
+description: Export documents from a DocumentsDB collection to a JSON file. Share datasets, create custom backups, or move data to another system without writing custom scripts.
+---
+
+Appwrite's JSON Export feature allows you to export documents from a collection to a JSON file. This is especially useful for creating custom backups, sharing data with other teams, or moving datasets to another system.
+
+# Export configuration {% #export-configuration %}
+
+Before exporting, you can configure a few options to control the contents of the output. These settings let you export exactly the data you need.
+
+## Select fields {% #select-fields %}
+
+You can choose which fields to include in your export. By default, every field is exported, but selecting specific fields creates cleaner, more focused datasets that are easier to work with.
+
+{% info title="Good to know" %}
+System fields like `$id`, `$permissions`, `$createdAt`, and `$updatedAt` are always included in the export.
+{% /info %}
+
+## Filter documents {% #filter-documents %}
+
+You can apply queries to export only the documents you need. This is especially useful when you want to export a subset of a collection for a specific use case.
+
+# Export format {% #export-format %}
+
+Each document is exported as a JSON object that includes its system fields and data fields. The output file is an array of these objects.
+
+An example of exported data:
+
+```json
+[
+  {
+    "$id": "book-1",
+    "$permissions": ["read(\"any\")"],
+    "$createdAt": "2025-08-10T12:34:56.000Z",
+    "$updatedAt": "2025-08-10T12:34:56.000Z",
+    "title": "Harry Potter and the Sorcerer's Stone",
+    "author": "J.K. Rowling",
+    "year": 1997,
+    "available": true
+  }
+]
+```
+
+# Timestamps {% #timestamps %}
+
+The `$createdAt` and `$updatedAt` fields are exported in ISO 8601 format, making them compatible with most tools that consume JSON.
+
+# Permissions {% #permissions %}
+
+If document level security is enabled for your collection, the `$permissions` field contains the permission strings for each document. Permission strings are formatted as an array of role definitions.
+
+The roles used are API strings that can be found in the [permissions documentation](/docs/apis/rest#roles).
+
+# Background processing {% #background-processing %}
+
+Large exports run as background tasks to avoid blocking your workflow. When an export completes, you'll receive an email with a short-lived download link to retrieve your JSON file.
+
+This means you can start an export, close the Console, and return later to download your file. The Console displays a floating progress bar while the export is active.
+
+# Export documents from the Console {% #export-console %}
+
+{% only_dark %}
+![JSON export from the collection toolbar](/images/docs/databases/dark/documentsdb-import-export.avif)
+{% /only_dark %}
+{% only_light %}
+![JSON export from the collection toolbar](/images/docs/databases/documentsdb-import-export.avif)
+{% /only_light %}
+
+To export documents using the Appwrite Console:
+
+1. Go to your project and navigate to **Databases**
+2. Select your database and open the target collection
+3. Click the export (download) icon in the collection toolbar
+4. Configure your export options:
+   - Choose which fields to include (optional)
+   - Apply queries to filter documents (optional)
+5. Start the export
+
+The export begins processing in the background. You'll see a progress indicator and receive an email when the export is ready to download.
+
+# Use cases {% #use-cases %}
+
+JSON exports are useful for many common workflows:
+
+- **Custom backups**: Archive specific data subsets for record-keeping
+- **Data sharing**: Hand off datasets to other teams
+- **Migration preparation**: Extract data for migration to other systems
+- **Reporting**: Feed data into tools that consume JSON
+
+# Additional resources {% #additional-resources %}
+
+- [JSON imports](/docs/products/databases/documentsdb/json-imports)
+- [Documents](/docs/products/databases/documentsdb/documents)
+- [Database permissions](/docs/products/databases/documentsdb/permissions)

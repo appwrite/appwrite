@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
@@ -13,17 +14,22 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Unique as UniqueException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
@@ -52,9 +58,7 @@ class Upsert extends Action
             ->label('audits.event', 'document.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', [
                 new Method(
                     namespace: $this->getSDKNamespace(),
@@ -75,10 +79,10 @@ class Upsert extends Action
                     ),
                 )
             ])
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'], example: '[{"$id":"example1","username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}]')
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -89,11 +93,20 @@ class Upsert extends Action
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('eventProcessor')
+            ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $collectionId, array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor, User $user, Authorization $authorization): void
     {
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+
+        if (!$isAPIKey && !$isPrivilegedUser) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
@@ -106,7 +119,7 @@ class Upsert extends Action
 
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
         );
 
         if ($hasRelationships) {
@@ -125,6 +138,9 @@ class Upsert extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if (!$transaction->isEmpty() && $this->isTransactionTypeMismatch($transaction)) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
+            }
             if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
@@ -141,7 +157,7 @@ class Upsert extends Action
 
             // Stage the operations in transaction logs
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -149,15 +165,7 @@ class Upsert extends Action
                 'data' => $documents,
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 
@@ -171,31 +179,50 @@ class Upsert extends Action
         }
 
         $dbForDatabases = $getDatabasesDB($database);
+        foreach ($documents as $document) {
+            $this->validateTimestamps($document->getArrayCopy(), $dbForDatabases);
+        }
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $upserted = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
-                return $dbForDatabases->upsertDocuments(
-                    $collectionTableId,
-                    $documents,
-                    onNext: function (Document $document) use ($plan, &$upserted) {
-                        if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                            $upserted[] = $document;
-                        }
-                    },
-                );
-            });
+            $modified = $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                \array_any($documents, fn (Document $document): bool => $document->offsetExists('$permissions')),
+                function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                    return $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
+                        return $dbForDatabases->upsertDocuments(
+                            $collectionTableId,
+                            $documents,
+                            onNext: function (Document $document) use ($plan, &$upserted) {
+                                if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                                    $upserted[] = $document;
+                                }
+                            },
+                        );
+                    });
+                },
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (UniqueException $e) {
             throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (DuplicateException $e) {
-            throw new Exception($this->getDuplicateException(), previous: $e, params: ['multiple']);
+            throw $this->getBatchDuplicateException($dbForDatabases, $collectionTableId, $documents, $e);
+        } catch (NotFoundException $e) {
+            if ($dbForProject->getDocument('database_' . $database->getSequence(), $collectionId)->isEmpty()) {
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            }
+            // The table exists, so a column the write's schema listed was deleted or renamed before the write ran
+            throw new Exception($this->getStructureNotFoundException(), 'The schema changed while this request was running. Please try again.', previous: $e);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
+        } catch (LimitException $e) {
+            throw new Exception($this->getLimitException(), $e->getMessage());
         }
 
         foreach ($upserted as $document) {

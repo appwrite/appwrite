@@ -3,7 +3,6 @@
 > [!IMPORTANT]
 > This repository is a read-only mirror of [`packages/lock`](https://github.com/appwrite/appwrite/tree/main/packages/lock) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
-[![Build Status](https://github.com/utopia-php/lock/actions/workflows/tests.yml/badge.svg)](https://github.com/utopia-php/lock/actions/workflows/tests.yml)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/lock.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 

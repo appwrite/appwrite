@@ -143,4 +143,48 @@ class LocaleTest extends TestCase
         $this->assertEquals(null, $locale->getText('missing', default: null));
         $this->assertEquals('Sorry Matej, missing text', $locale->getText('missing', placeholders: ['name' => 'Matej'], default: 'Sorry {{name}}, missing text'));
     }
+
+    public function testEmptyDefaultLocaleValueUsesFallback(): void
+    {
+        Locale::setLanguageFromArray('bg', [
+            'emails.recovery.subject' => '',
+        ]);
+
+        Locale::setLanguageFromArray('en', [
+            'emails.recovery.subject' => 'Password Reset for {{project}}',
+        ]);
+
+        $locale = (new Locale('bg'))->setFallback('en');
+
+        $this->assertSame(
+            'Password Reset for {{project}}',
+            $locale->getText('emails.recovery.subject')
+        );
+    }
+
+    public function testRecoverySubjectFromTranslationFilesWithEmptyLocale(): void
+    {
+        $translationsRoot = realpath(__DIR__.'/../../../app/config/locale/translations');
+
+        if ($translationsRoot === false) {
+            $this->markTestSkipped('Appwrite translation files are not available.');
+        }
+
+        $enPath = $translationsRoot.'/en.json';
+        $bgPath = $translationsRoot.'/bg.json';
+
+        if (! file_exists($enPath) || ! file_exists($bgPath)) {
+            $this->markTestSkipped('Required translation files are not available.');
+        }
+
+        Locale::setLanguageFromJSON('en-app', $enPath);
+        Locale::setLanguageFromJSON('bg-app', $bgPath);
+
+        $locale = (new Locale('bg-app'))->setFallback('en-app');
+        $subject = $locale->getText('emails.recovery.subject');
+
+        $this->assertIsString($subject);
+        $this->assertNotSame('', $subject);
+        $this->assertStringContainsString('Password Reset', $subject);
+    }
 }

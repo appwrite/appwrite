@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -18,6 +18,66 @@ final class VariablesCustomServerTest extends Scope
     use VariablesBase;
     use ProjectCustom;
     use SideServer;
+
+    public function testUpdateVariableDescriptionKeepsResourcesLive(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $variable = $this->createVariable(ID::unique(), 'STRIPE_KEY', 'sk_test', false);
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        // Created after the variable, so both start live
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => ID::unique(),
+            'name' => 'Description Live Function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+        $this->assertSame(201, $function['headers']['status-code']);
+        $this->assertTrue($function['body']['live']);
+        $functionId = $function['body']['$id'];
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => ID::unique(),
+            'name' => 'Description Live Site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+        $this->assertSame(201, $site['headers']['status-code']);
+        $this->assertTrue($site['body']['live']);
+        $siteId = $site['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->updateVariable($variableId, description: 'Rotated quarterly');
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $headers);
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $headers);
+        $this->assertTrue($function['body']['live']);
+        $this->assertTrue($site['body']['live']);
+
+        $updated = $this->updateVariable($variableId, value: 'sk_live');
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $headers);
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $headers);
+        $this->assertFalse($function['body']['live']);
+        $this->assertFalse($site['body']['live']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, $headers);
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, $headers);
+        $this->deleteVariable($variableId);
+    }
 
     /**
      * Test that project variables are available in function build and runtime.
@@ -29,7 +89,7 @@ final class VariablesCustomServerTest extends Scope
 
         // 1. Create a project variable
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'GLOBAL_VARIABLE',
             'Project Variable Value',
             false
@@ -44,7 +104,7 @@ final class VariablesCustomServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Project Variable Test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -143,7 +203,7 @@ final class VariablesCustomServerTest extends Scope
 
         // 1. Create a project variable
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'name',
             'ProjectVarTest',
         );
@@ -157,7 +217,7 @@ final class VariablesCustomServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], [
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Project Variable Astro Site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -177,7 +237,7 @@ final class VariablesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'domain' => ID::unique() . '.' . $sitesDomain,
+            'domain' => Id::unique() . '.' . $sitesDomain,
             'siteId' => $siteId,
         ]);
 

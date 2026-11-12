@@ -1,0 +1,63 @@
+---
+layout: article
+title: DNS records
+description: Learn how DNS zones work for organization domains in Appwrite, including record types and locked entries.
+---
+
+When a domain is verified with Appwrite nameservers, Appwrite hosts the authoritative DNS zone for that domain. The zone contains all records for that domain and is managed under **Organization** > **Domains**.
+
+This applies to [Appwrite-registered](/docs/products/domains/registration) domains and [external domains](/docs/products/domains/external) alike.
+
+For platform-wide DNS behavior (apex domains, CNAME flattening, TLS), see [Appwrite DNS service](/docs/products/network/dns).
+
+# Zones and verification {% #zones-and-verification %}
+
+A verified domain uses Appwrite nameservers (`ns1.appwrite.zone` and `ns2.appwrite.zone`). The **Records** tab on the domain shows the full zone Appwrite serves.
+
+Until verification completes, treat DNS changes in Appwrite as preparatory only. Product connections that require a verified zone should wait until status shows **Verified**.
+
+# Record types {% #record-types %}
+
+Appwrite supports the following record types on organization domains:
+
+| Type | Purpose |
+|------|---------|
+| A | IPv4 address |
+| AAAA | IPv6 address |
+| CNAME | Alias to another hostname |
+| MX | Mail servers |
+| TXT | Text verification, SPF, DKIM, and similar |
+| NS | Nameserver delegation within the zone |
+| SRV | Service location |
+| CAA | Certificate authority authorization |
+| HTTPS | HTTPS service binding (SVCB/HTTPS) |
+| ALIAS | Apex-friendly alias (similar to CNAME at root) |
+
+# Locked records {% #locked-records %}
+
+When you add a domain, Appwrite creates records required for network integration (routing, TLS, and nameserver glue). Locked records:
+
+- Cannot be edited or deleted from the Console.
+- Ensure [Sites](/docs/products/sites/domains), [Functions](/docs/products/functions/domains), and [API custom domains](/docs/advanced/platform/custom-domains) can attach safely.
+
+Add your own records alongside locked entries. Appwrite prevents conflicts with locked names when you save.
+
+# TTL and propagation {% #ttl-and-propagation %}
+
+Each record has a TTL (time to live) that controls how long resolvers cache the answer. Lower TTL values speed up changes during migrations but increase query volume. After stable configuration, many teams use 3600 seconds (1 hour) or higher for static records.
+
+Record changes on Appwrite DNS typically propagate faster than registrar nameserver changes, but resolvers worldwide may cache old values until TTL expires.
+
+# Product connections {% #product-connections %}
+
+Organization DNS is authoritative for the zone. When you attach a hostname on a Site, Function, or project API, Appwrite may add locked CNAME (or related) records in this zone automatically.
+
+Product settings still control routing behavior (for example Sites [domain rule types](/docs/products/sites/domains#domain-rule-types)). Subdomains usually need a CNAME to `appwrite.network` (Sites/Functions) or the API target from project settings; apex domains use nameserver delegation or [CNAME flattening](/docs/products/network/dns#using-cname-flattening).
+
+See [Connect to products](/docs/products/domains/connect) for step-by-step apex and subdomain setup across all products.
+
+For inbound email, use [DNS presets](/docs/products/domains/presets) to add provider MX records without entering each value manually.
+
+{% arrow_link href="/docs/products/domains/manage-dns" %}
+Manage DNS records
+{% /arrow_link %}
