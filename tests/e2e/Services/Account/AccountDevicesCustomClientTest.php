@@ -914,11 +914,17 @@ final class AccountDevicesCustomClientTest extends Scope
     public function testAccountDevicesPolicy(): void
     {
         $projectId = $this->getProject()['$id'];
+        $existing = $this->createDevice();
 
         /**
          * Test for FAILURE - devices cannot be created while the policy is off
          */
         $this->setAccountDevicesPolicy(false);
+
+        // A device created before the policy went off stops resolving with it
+        $response = $this->getDevice($existing['cookie']);
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('user_device_not_found', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_GET, '/project/policies/account-devices', [
             'content-type' => 'application/json',
