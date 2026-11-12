@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Reviews\Http\Repositories\Pulls\Findings\Status;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -43,9 +44,7 @@ class Update extends Base
             // Keyed on the caller's address: the limit runs before the secret is checked, so any
             // request param would let an unauthenticated caller pick a fresh bucket. {url} is the
             // route pattern, so the review service gets one bucket per route for every project.
-            ->label('abuse-key', 'url:{url},ip:{ip}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 10)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], APP_LIMIT_WRITE_RATE_DEFAULT * 10, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->param('repositoryId', '', new UID(), 'Repository ID.')
             ->param('pullNumber', 0, new Range(1, PHP_INT_MAX), 'Pull request number.')
             ->param('projectId', '', new UID(), 'Project ID.')

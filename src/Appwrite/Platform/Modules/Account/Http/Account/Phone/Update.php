@@ -17,6 +17,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Database\Database;
@@ -159,7 +160,7 @@ class Update extends Action
         }
 
         try {
-            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone) {
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone, $passwordUpdate) {
                 $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
                 if ($current->isEmpty()) {
                     throw new Exception(Exception::USER_NOT_FOUND);
@@ -191,6 +192,10 @@ class Update extends Action
                             Query::equal('confirm', [false]),
                         ]);
                     });
+                }
+
+                if (empty($passwordUpdate)) {
+                    $authorization->skip(fn () => User::deleteRecoveryTokens($dbForProject, $user));
                 }
 
                 return $user;

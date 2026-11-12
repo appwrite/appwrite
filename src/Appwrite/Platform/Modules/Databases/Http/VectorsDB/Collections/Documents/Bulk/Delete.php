@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bulk;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Delete as DocumentsDelete;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -37,9 +38,7 @@ class Delete extends DocumentsDelete
             ->label('audits.event', 'documents.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: $this->getSdkGroup(),

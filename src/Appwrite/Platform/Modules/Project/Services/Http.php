@@ -46,6 +46,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Keycloak\Update as Upd
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Kick\Update as UpdateOAuth2Kick;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Linkedin\Update as UpdateOAuth2Linkedin;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Microsoft\Update as UpdateOAuth2Microsoft;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Naver\Update as UpdateOAuth2Naver;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Notion\Update as UpdateOAuth2Notion;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Oidc\Update as UpdateOAuth2Oidc;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Okta\Update as UpdateOAuth2Okta;
@@ -61,6 +62,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vipps\Update as UpdateOAuth2Vipps;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\VippsSandbox\Update as UpdateOAuth2VippsSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
@@ -82,6 +85,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Create as CreateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Update as UpdateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\XList as ListPlatforms;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\AccountDevices\Update as UpdateAccountDevicesPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyAliasedEmail\Update as UpdateDenyAliasedEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyCorporateEmail\Update as UpdateDenyCorporateEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyDisposableEmail\Update as UpdateDenyDisposableEmailPolicy;
@@ -212,6 +216,7 @@ class Http extends Service
         $this->addAction('updateProjectDenyFreeEmailPolicy', UpdateDenyFreeEmailPolicy::class);
         $this->addAction('updateProjectDenyCorporateEmailPolicy', UpdateDenyCorporateEmailPolicy::class);
         $this->addAction('updateProjectDenyRealtimeGuestsPolicy', UpdateDenyRealtimeGuestsPolicy::class);
+        $this->addAction('updateProjectAccountDevicesPolicy', UpdateAccountDevicesPolicy::class);
 
         // Auth Methods
         $this->addAction('updateProjectAuthMethod', UpdateAuthMethod::class);
@@ -267,6 +272,9 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
+        $this->addAction('updateProjectOAuth2Naver', UpdateOAuth2Naver::class);
         $this->addAction('updateProjectOAuth2Cloudflare', UpdateOAuth2Cloudflare::class);
+        $this->addAction('updateProjectOAuth2Vipps MobilePay', UpdateOAuth2Vipps::class);
+        $this->addAction('updateProjectOAuth2Vipps MobilePay Sandbox', UpdateOAuth2VippsSandbox::class);
     }
 }

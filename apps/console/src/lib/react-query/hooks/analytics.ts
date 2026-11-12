@@ -23,6 +23,7 @@ import { resolveUsageChartIntervalWithin } from '@/lib/usage/chart-interval'
 import {
   AnalyticsDimension,
   AnalyticsInterval,
+  type AnalyticsPropertyType,
   ID,
   Query,
   type Models,
@@ -119,8 +120,8 @@ export const ANALYTICS_PAGEVIEW_EVENT = 'pageview'
 
 /**
  * Events the trackers send on their own (see the setup wizard's snippet
- * notes): the web tracker's automatic events plus Flutter's screen and
- * lifecycle events. Everything else is a custom event the app tracks
+ * notes): the web tracker's automatic events plus the mobile SDKs' screen,
+ * lifecycle, install and push events. Everything else is a custom event the app tracks
  * explicitly.
  */
 export const ANALYTICS_AUTOMATIC_EVENTS: ReadonlySet<string> = new Set([
@@ -132,6 +133,10 @@ export const ANALYTICS_AUTOMATIC_EVENTS: ReadonlySet<string> = new Set([
   'screen_view',
   'app_backgrounded',
   'app_foregrounded',
+  'first_open',
+  'app_updated',
+  'push_received',
+  'push_opened',
 ])
 
 export function isCustomAnalyticsEvent(
@@ -1017,6 +1022,7 @@ export async function fetchAnalyticsBreakdown(
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const response = await withReadTimeout(
     'breakdown',
@@ -1027,6 +1033,7 @@ export async function fetchAnalyticsBreakdown(
       startAt: range.startAt,
       endAt: range.endAt,
       limit,
+      propKey,
     }),
   )
 
@@ -1044,6 +1051,7 @@ export function analyticsBreakdownQueryOptions(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const queryKey = [
     'analytics',
@@ -1054,6 +1062,7 @@ export function analyticsBreakdownQueryOptions(
     analyticsRangeKey(range),
     limit,
     ...analyticsFiltersKey(filters),
+    ...(propKey ? ['propKey', propKey] : []),
   ]
   return queryOptions({
     queryKey,
@@ -1069,6 +1078,7 @@ export function analyticsBreakdownQueryOptions(
         range,
         limit,
         filters,
+        propKey,
       ),
     // Panels only request the dimension of their visible tab, so 21 dimensions
     // never fan out into 21 requests on mount.
@@ -1098,6 +1108,7 @@ export function useAnalyticsBreakdown(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     analyticsBreakdownQueryOptions(
@@ -1108,6 +1119,7 @@ export function useAnalyticsBreakdown(
       limit,
       enabled,
       filters,
+      propKey,
     ),
   )
 
@@ -1132,6 +1144,7 @@ export type CreateAnalyticsPropertyInput = {
   propertyId?: string
   name: string
   domain?: string
+  type?: AnalyticsPropertyType
 }
 
 export function useCreateAnalyticsProperty(
@@ -1147,6 +1160,7 @@ export function useCreateAnalyticsProperty(
         propertyId: input.propertyId?.trim() || ID.unique(),
         name: input.name.trim(),
         domain: input.domain?.trim() || undefined,
+        type: input.type,
       })
     },
     onSuccess: async () => {
@@ -1169,6 +1183,8 @@ export type UpdateAnalyticsPropertyInput = {
   domain?: string
   enabled?: boolean
   allowedOrigins?: string[]
+  identifyUsers?: boolean
+  type?: AnalyticsPropertyType
 }
 
 export function useUpdateAnalyticsProperty(
@@ -1188,6 +1204,10 @@ export function useUpdateAnalyticsProperty(
         ...(input.allowedOrigins !== undefined && {
           allowedOrigins: input.allowedOrigins,
         }),
+        ...(input.identifyUsers !== undefined && {
+          identifyUsers: input.identifyUsers,
+        }),
+        ...(input.type !== undefined && { type: input.type }),
       })
     },
     onSuccess: async (property) => {

@@ -3,6 +3,11 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const jaOrganizationsDictionary: Record<string, string> = {
+  'Invoice breakdown unavailable.': '請求書の内訳は利用できません。',
+  'Recorded charges; detailed pricing unavailable.':
+    '記録済みの請求額です。料金の詳細は利用できません。',
+  'No invoice yet.': '請求書はまだありません。',
+
   'A valid transfer price is required to continue.':
     '続行するには有効な移管料金が必要です。',
   "We couldn't load a transfer price. Try again to continue.":
@@ -171,6 +176,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Create a project first': '先にプロジェクトを作成してください',
   'Create organization': '組織を作成',
   'Create project': 'プロジェクトを作成',
+  'My first project': '最初のプロジェクト',
   'Advanced security': '高度なセキュリティ',
   'Security add-on': 'セキュリティアドオン',
   '+ more': '+ その他',
@@ -241,7 +247,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Domain name': 'ドメイン名',
   'Domain name does not match': 'ドメイン名が一致しません',
   'Domain not found': 'ドメインが見つかりません',
-  'Domain not verified': 'ドメインが未検証です',
   'Domain not verified yet': 'ドメインはまだ検証されていません',
   'Domain transfer in progress': 'ドメイン移管を実施中',
   'Domain transfer started': 'ドメイン移管を開始しました',
@@ -831,6 +836,9 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     '次から請求先住所を削除してもよろしいですか',
   'Auto renewal is available for domains registered with Appwrite.':
     '自動更新は Appwrite で登録したドメインで利用できます。',
+  'Registered with another registrar': '別のレジストラで登録されています',
+  'Renew this domain with its current registrar.':
+    'このドメインは現在のレジストラで更新してください。',
   'Billing address has been created and set for your organization':
     '請求先住所を作成し、組織に設定しました',
   'Billing, team, cross-project. One key for the whole org.':
@@ -1325,6 +1333,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Name: '名前',
   Nameserver: 'ネームサーバー',
   Nameservers: 'ネームサーバー',
+  'Nameservers not pointed to Appwrite':
+    'ネームサーバーが Appwrite を指していません',
+  'Appwrite nameservers': 'Appwrite のネームサーバー',
+  'External nameservers': '外部のネームサーバー',
   Network: 'ネットワーク',
   Next: '次へ',
   No: 'いいえ',
@@ -1634,4 +1646,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'このカードでは、自動支払いのたびに銀行が OTP を求めます。自動支払いを設定すると、$150 までの支払いは OTP なしで処理されます。',
   'Only the card owner can set up auto-pay': 'カードの所有者のみが自動支払いを設定できます',
+  'Check nameservers': 'ネームサーバーを確認',
+  'Nameservers changed': 'ネームサーバーが変更されました',
+  'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
+    'このドメインのネームサーバーは Appwrite を指していません。ドメインのステータスを更新しました。',
 }

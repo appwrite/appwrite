@@ -132,21 +132,12 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   }
 
   // Detect if dark mode is active (with state to trigger re-renders)
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return (
-      isHtmlDarkChrome() ||
-      window.matchMedia('(prefers-color-scheme: dark)').matches
-    )
-  })
+  const [isDarkMode, setIsDarkMode] = useState(() => isHtmlDarkChrome())
 
   // Watch for theme changes
   useEffect(() => {
     const checkDarkMode = () => {
-      setIsDarkMode(
-        isHtmlDarkChrome() ||
-          window.matchMedia('(prefers-color-scheme: dark)').matches,
-      )
+      setIsDarkMode(isHtmlDarkChrome())
     }
 
     // Check on mount
@@ -159,13 +150,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       attributeFilter: ['class'],
     })
 
-    // Watch for system preference changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    mediaQuery.addEventListener('change', checkDarkMode)
-
     return () => {
       observer.disconnect()
-      mediaQuery.removeEventListener('change', checkDarkMode)
     }
   }, [])
 
@@ -564,9 +550,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
     try {
       // Detect if dark mode for proper color selection
-      const isDark =
-        isHtmlDarkChrome() ||
-        window.matchMedia('(prefers-color-scheme: dark)').matches
+      const isDark = isHtmlDarkChrome()
 
       // Get computed color values with fallbacks for better contrast
       const cardColor =

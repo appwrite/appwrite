@@ -25,4 +25,22 @@ return [
         'war' => 'application/java-archive',
         'xpi' => 'application/x-xpinstall',
     ],
+    // Text and container formats sniff unreliably, so they are not listed.
+    'signatures' => [
+        'avif' => ['image/avif'],
+        'bmp' => ['image/bmp', 'image/x-ms-bmp'],
+        'gif' => ['image/gif'],
+        'heic' => ['image/heic', 'image/heic-sequence', 'image/heif', 'image/heif-sequence'],
+        'heif' => ['image/heic', 'image/heic-sequence', 'image/heif', 'image/heif-sequence'],
+        'ico' => ['image/vnd.microsoft.icon', 'image/x-icon'],
+        'jfif' => ['image/jpeg'],
+        'jpe' => ['image/jpeg'],
+        'jpeg' => ['image/jpeg'],
+        'jpg' => ['image/jpeg'],
+        'pdf' => ['application/pdf'],
+        'png' => ['image/png', 'image/apng'],
+        'tif' => ['image/tiff'],
+        'tiff' => ['image/tiff'],
+        'webp' => ['image/webp'],
+    ],
 ];

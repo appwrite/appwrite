@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Favicon;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
@@ -18,7 +19,7 @@ use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Client;
-use Utopia\Image\Exception\UnsupportedFormatException;
+use Utopia\Image\Exception\ImageException;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -46,9 +47,7 @@ class Get extends Action
             ->desc('Get favicon')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
-            ->label('abuse-key', 'url:{url},ip:{ip}')
-            ->label('abuse-limit', 60)
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 60, seconds: 60)])
             ->label('cache', true)
             ->label('cache.resource', 'avatar/favicon')
             ->label('sdk', new Method(
@@ -58,7 +57,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-favicon.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -198,7 +197,7 @@ class Get extends Action
 
         try {
             $image = new Image($data);
-        } catch (UnsupportedFormatException | \ImagickException) {
+        } catch (ImageException) {
             throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
         }
 

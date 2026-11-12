@@ -59,8 +59,8 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@bb606dddb8ca7edc1d9f0e1fdfd6b03fb26dc1db",
-    "@appwrite.io/specs": "github:appwrite/specs#83b9f17549a0735f29ec89600160ee9cdc9ededd",
+    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@7355b630f1a8b974dab5a5aca105e35e9649962f",
+    "@appwrite.io/specs": "github:appwrite/specs#9a50097dd538fd7663748aceed37fa05692bc5e4",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -135,6 +135,7 @@
     "motion": "^12.23.22",
     "next-themes": "^0.4.6",
     "node-appwrite": "^20.2.1",
+    "node-html-markdown": "^2.0.0",
     "prism-react-renderer": "^2.4.1",
     "prismjs": "^1.30.0",
     "react": "19.1.1",
@@ -167,7 +168,11 @@
     "@tanstack/react-store": "^0.11.2",
     "@tanstack/store": "^0.11.2",
     "dompurify": "^3.4.17",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "glob": "^14.0.2",
+    "ip-address": "^10.7.4",
+    "seroval": "^1.6.11",
+    "seroval-plugins": "^1.6.11"
   },
   "pnpm": {
     "overrides": {
@@ -176,7 +181,11 @@
       "@tanstack/react-store": "^0.11.2",
       "@tanstack/store": "^0.11.2",
       "dompurify": "^3.4.17",
-      "sharp": "^0.35.5"
+      "sharp": "^0.35.5",
+      "glob": "^14.0.2",
+      "ip-address": "^10.7.4",
+      "seroval": "^1.6.11",
+      "seroval-plugins": "^1.6.11"
     }
   },
   "devDependencies": {

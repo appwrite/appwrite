@@ -1,7 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'motion/react'
-import { Cookie } from 'lucide-react'
+import { ChevronUp, Cookie } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
@@ -136,45 +142,61 @@ export function CookieConsentBanner({
             aria-labelledby="cookie-consent-title"
             aria-describedby="cookie-consent-description"
           >
-            <div className="mx-auto flex max-w-7xl flex-nowrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-3.5">
-              <Cookie
-                className="size-4 shrink-0 text-muted-foreground"
-                aria-hidden
-              />
-              <p
-                id="cookie-consent-description"
-                className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-[13px] text-muted-foreground"
-              >
-                <span id="cookie-consent-title" className="truncate">
-                  {t('We use cookies to improve Appwrite.')}
-                </span>
-                <a
-                  href={cookiesPolicyHref}
-                  className="link-unstyled shrink-0 font-medium text-foreground underline-offset-4 hover:underline"
+            <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:px-6">
+              <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:items-center sm:gap-3">
+                <Cookie
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground sm:mt-0"
+                  aria-hidden
+                />
+                <p
+                  id="cookie-consent-description"
+                  className="min-w-0 flex-1 text-[13px] leading-snug text-muted-foreground sm:flex sm:items-center sm:gap-1.5 sm:overflow-hidden"
                 >
-                  {t('Cookies Policy')}
-                </a>
-              </p>
-              <div className="flex shrink-0 items-center gap-1.5">
+                  <span id="cookie-consent-title" className="sm:truncate">
+                    {t('We use cookies to improve Appwrite.')}
+                  </span>{' '}
+                  <a
+                    href={cookiesPolicyHref}
+                    className="link-unstyled font-medium whitespace-nowrap text-foreground underline-offset-4 hover:underline sm:shrink-0"
+                  >
+                    {t('Cookies Policy')}
+                  </a>
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2 sm:gap-1.5">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 flex-1 gap-1 px-2.5 text-[13px] sm:h-8 sm:flex-none sm:text-[12px]"
+                    >
+                      {t('More options')}
+                      <ChevronUp className="size-3.5 text-muted-foreground" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    side="top"
+                    align="end"
+                    className="min-w-(--radix-dropdown-menu-trigger-width)"
+                  >
+                    <DropdownMenuItem
+                      className="text-[13px]"
+                      onClick={onRejectNonEssential}
+                    >
+                      {t('Reject non-essential')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-[13px]"
+                      onClick={() => onCustomizeOpenChange(true)}
+                    >
+                      {t('Customize')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="h-8 px-2 text-[11px] sm:px-2.5 sm:text-[12px]"
-                  onClick={onRejectNonEssential}
-                >
-                  {t('Reject non-essential')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-2.5 text-[12px]"
-                  onClick={() => onCustomizeOpenChange(true)}
-                >
-                  {t('Customize')}
-                </Button>
-                <Button
-                  size="sm"
-                  className="h-8 px-2.5 text-[12px]"
+                  className="h-9 flex-1 px-2.5 text-[13px] sm:h-8 sm:flex-none sm:text-[12px]"
                   onClick={onAcceptAll}
                 >
                   {t('Accept all')}

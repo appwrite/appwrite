@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Reviews\Http\Reviews\Status;
 
+use Appwrite\Abuse\Limit;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
@@ -46,9 +48,7 @@ class Update extends Base
             // Keyed on the caller's address: the limit runs before the secret is checked, so any
             // request param would let an unauthenticated caller pick a fresh bucket. {url} is the
             // route pattern, so the review service gets one bucket per route for every project.
-            ->label('abuse-key', 'url:{url},ip:{ip}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 10)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], APP_LIMIT_WRITE_RATE_DEFAULT * 10, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->param('reviewId', '', new UID(), 'Review ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('status', '', new WhiteList(['processing', 'completed', 'skipped', 'failed'], true), 'Review status.')
@@ -67,6 +67,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('authorization')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -89,6 +90,7 @@ class Update extends Base
         Database $dbForPlatform,
         callable $getProjectDB,
         Authorization $authorization,
+        UsagePublisher $publisherForUsage,
     ): void {
         $this->authenticate($request);
 
@@ -118,13 +120,31 @@ class Update extends Base
         $documents = $status === 'completed' ? $this->prepareFindings($review, $findings) : [];
 
         // One transaction, so a failed status write leaves no findings behind for a retry to duplicate.
+        // The row lock makes the move to an end state happen once: of two overlapping reports, the
+        // second finds the review ended, so a completed review is counted once.
         $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $review, $update, $documents) {
+            $current = $dbForProject->getDocument('reviews', $review->getId(), forUpdate: true);
+            if (!\in_array($current->getAttribute('status'), ['queued', 'processing'], true)) {
+                throw new Exception(Exception::REVIEW_STATUS_INVALID, "Review is already {$current->getAttribute('status')}.");
+            }
+
             if (!empty($documents)) {
                 $dbForProject->createDocuments('reviewFindings', $documents);
             }
 
             $dbForProject->updateDocument('reviews', $review->getId(), $update);
         }));
+
+        // Completed reviews are what a project is billed for; skipped ones are not counted. The model
+        // tokens any review spent are metered separately, as the service reports them.
+        $metric = match ($status) {
+            'completed' => METRIC_REVIEWS,
+            'failed' => METRIC_REVIEWS_FAILED,
+            default => null,
+        };
+        if ($metric !== null) {
+            $this->publishUsage($project, $this->getRepositoryUsage($review)->addMetric($metric, 1), $publisherForUsage);
+        }
 
         $response->noContent();
     }

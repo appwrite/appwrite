@@ -139,6 +139,8 @@ services:
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_NOTIFICATIONS_PUSH_APNS
       - _APP_NOTIFICATIONS_PUSH_APNS_KEY
+      - _APP_NOTIFICATIONS_PUSH_FCM
+      - _APP_NOTIFICATIONS_PUSH_FCM_KEY
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
       - _APP_CONSOLE_URL
@@ -209,10 +211,13 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
+      - _APP_CONNECTIONS_STORAGE_CACHE
+      - _APP_STORAGE_CACHE_PERCENT
       - _APP_COMPUTE_SIZE_LIMIT
       - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_STREAMING
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
@@ -292,7 +297,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.2.108-self-hosted
+    image: appwrite/new:1.2.138-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -349,6 +354,7 @@ services:
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
+      - _APP_REALTIME_BOOT_TIMEOUT
       - _APP_LIMIT_REALTIME_SUBSCRIPTIONS
       - _APP_LIMIT_REALTIME_CHANNELS
       - _APP_LIMIT_REALTIME_QUERIES
@@ -582,6 +588,7 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
+      - _APP_CONNECTIONS_STORAGE_CACHE
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_DOCKER_HUB_USERNAME
@@ -625,6 +632,8 @@ services:
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_NOTIFICATIONS_PUSH_APNS
       - _APP_NOTIFICATIONS_PUSH_APNS_KEY
+      - _APP_NOTIFICATIONS_PUSH_FCM
+      - _APP_NOTIFICATIONS_PUSH_FCM_KEY
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SMTP_HOST
@@ -944,6 +953,7 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
+      - _APP_CONNECTIONS_STORAGE_CACHE
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_EXECUTOR_SECRET
@@ -1500,6 +1510,8 @@ services:
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_NOTIFICATIONS_PUSH_APNS
       - _APP_NOTIFICATIONS_PUSH_APNS_KEY
+      - _APP_NOTIFICATIONS_PUSH_FCM
+      - _APP_NOTIFICATIONS_PUSH_FCM_KEY
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -2003,7 +2015,7 @@ services:
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:1.1.2
+    image: openruntimes/executor:1.3.1
     restart: unless-stopped
     networks:
       - appwrite
@@ -2049,7 +2061,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:4.0.0
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:5.0.0
     restart: unless-stopped
     user: root
     networks:
@@ -2062,6 +2074,8 @@ services:
       # names; both name the network the workload containers join.
       - ORCHESTRATOR_NETWORK=appwrite
       - DOCKER_NETWORK=appwrite
+      # The key appwrite authenticates with; v5 refuses to start without one.
+      - API_KEY=${_APP_JOBS_SECRET}
       - ARTIFACT_ENDPOINT=http://orchestrator:8080
       - S3_ENDPOINT=${_APP_STORAGE_S3_ENDPOINT:-}
       - S3_REGION=${_APP_STORAGE_S3_REGION:-us-east-1}

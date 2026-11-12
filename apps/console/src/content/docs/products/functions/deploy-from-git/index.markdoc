@@ -69,6 +69,14 @@ Use these formats to write glob patterns.
 
 {% partial file="git-glob-patterns.md" /%}
 
+## Skip a deployment {% #skip-deployment %}
+
+To push a commit without creating a deployment, add `[skip appwrite]` or `[skip ci]` to the commit message. `[skip appwrite]` skips only the Appwrite deployment. `[skip ci]` is also recognized by GitHub Actions and most other CI tools, so it skips those workflows too.
+
+```txt
+docs: update readme [skip appwrite]
+```
+
 ## Entry point {% #entry-point %}
 The entry point is the code file contains the exported function that will be executed when the function is called.
 This entry point has a specific format that must be followed. You can find examples using a [starter template](/docs/products/functions/templates)

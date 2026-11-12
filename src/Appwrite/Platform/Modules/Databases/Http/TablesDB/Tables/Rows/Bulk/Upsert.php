@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Bulk;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Upsert as DocumentsUpsert;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -39,9 +40,7 @@ class Upsert extends DocumentsUpsert
             ->label('audits.event', 'row.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', [
                 new Method(
                     namespace: $this->getSDKNamespace(),

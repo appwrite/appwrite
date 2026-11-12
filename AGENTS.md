@@ -164,7 +164,7 @@ HTTP actions `use Utopia\Platform\Scope\HTTP`. Constructor methods (chain on `$t
 | `inject()` | Object dependency from the container — see [Reuse](#reuse) |
 | `callback()` | Handler. Use `$this->action(...)` |
 
-Common `label()` keys: `scope` (`teams.write`), `event` (`teams.[teamId].create`), `audits.event` / `audits.resource`, `sdk` (`new Method(...)`), `resourceType`, `usage.resource` / `usage.metric` / `usage.params`, `abuse-key` / `abuse-limit` / `abuse-time`, `docs` (`false` for non-public routes). Example: [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php); aliases: [`Webhooks/Http/Webhooks/XList.php`](src/Appwrite/Platform/Modules/Webhooks/Http/Webhooks/XList.php); abuse/usage: [`Tokens/Http/Tokens/Buckets/Files/Create.php`](src/Appwrite/Platform/Modules/Tokens/Http/Tokens/Buckets/Files/Create.php).
+Common `label()` keys: `scope` (`teams.write`), `event` (`teams.[teamId].create`), `audits.event` / `audits.resource`, `sdk` (`new Method(...)`), `resourceType`, `usage.resource` / `usage.metric` / `usage.params`, `abuse` (a list of `Limit::attempts([...parts], ...)` / `Limit::failures(...)`, see [`Abuse/Limit.php`](src/Appwrite/Abuse/Limit.php)), `docs` (`false` for non-public routes). Example: [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php); aliases: [`Webhooks/Http/Webhooks/XList.php`](src/Appwrite/Platform/Modules/Webhooks/Http/Webhooks/XList.php); abuse/usage: [`Tokens/Http/Tokens/Buckets/Files/Create.php`](src/Appwrite/Platform/Modules/Tokens/Http/Tokens/Buckets/Files/Create.php).
 
 On list endpoints, do not add a separate `search` parameter; callers pass search queries via `Query.search()` within the `queries` param. On `new Method(...)`, write the `description:` inline as a heredoc (`<<<EOT ... EOT`); do not reference external markdown files.
 
@@ -238,6 +238,7 @@ Actions should read like a story. The `action()` method is the plot: [`Teams/Htt
 
 - PSR-12 (Pint), PSR-4 autoloading. Avoid dependencies outside the `utopia-php` ecosystem. Never hardcode credentials — use env vars. Code changes may require a container restart; logs live on the relevant container.
 - Do not add regular expressions (`preg_*`, regex patterns passed to validators). Use string functions (`str_starts_with`, `str_ends_with`, `str_contains`, `strlen`, `substr`, `explode`, `ctype_*`) or an existing validator instead; regex is hard to review and easy to get subtly wrong. If nothing else works, explain why in the PR.
+- Build every command with `Utopia\Console\Command` and run it with `Console::execute()`, never as a string. PHPStan rejects `exec()`, `shell_exec()`, `system()`, `passthru()`, `popen()`, `escapeshellarg()` and `escapeshellcmd()`, and `proc_open()` or `Console::execute()` given a string. A script that needs shell logic is a constant passed to `sh -c`, with its values as positional parameters (`"$1"`): see `Git::cloneCommand()`. `proc_open()` with an argv array is allowed for a child that needs the terminal.
 - When updating documents, pass only changed attributes as a sparse Document:
 
 ```php

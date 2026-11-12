@@ -54,6 +54,7 @@ trait Deployment
         callable $deploymentsFactory,
     ) {
         $errors = [];
+        $heads = [];
         $provider = $vcs->getName();
         foreach ($repositories as $repository) {
             $logBase = "vcs.{$provider}.event.repo.unknown";
@@ -114,6 +115,12 @@ trait Deployment
                 }
                 $resourceInternalId = $resource->getSequence();
 
+                if ($resource->getAttribute('providerDeployments', true) === false) {
+                    Span::add("{$logBase}.build.skipped.reason", 'auto deploy off');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
+
                 $validator = new Contains(VCS_DEPLOYMENT_SKIP_PATTERNS);
                 if ($validator->isValid($providerCommitMessage)) {
                     Span::add("{$logBase}.build.skipped.reason", $validator->getDescription());
@@ -167,6 +174,40 @@ trait Deployment
                     throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                 }
 
+                // A provider without an installation-scoped webhook authenticates every delivery
+                // with the one instance-wide secret Appwrite registers on each connected
+                // repository, so the body speaks for no particular repository: anyone holding it
+                // could name this repository, its production branch and any commit in it. The
+                // branch and the commit are only trusted once the provider itself reports the
+                // commit as that branch's head, which a forged delivery cannot choose.
+                if (empty($providerPullRequestId) && !\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $vcs->getSupportedWebhookScopes(), true)) {
+                    $key = "{$owner}/{$repositoryName}/{$providerBranch}";
+
+                    if (!\array_key_exists($key, $heads)) {
+                        try {
+                            $heads[$key] = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch)['commitHash'] ?? '';
+                        } catch (RepositoryNotFound) {
+                            $heads[$key] = null;
+                        }
+                    }
+
+                    $head = $heads[$key];
+
+                    if ($head === null) {
+                        Span::add("{$logBase}.build.skipped.reason", 'branch not found');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        Console::warning("Skipping repository '{$repositoryId}': branch '{$providerBranch}' was not found");
+                        continue;
+                    }
+
+                    if (empty($providerCommitHash) || $providerCommitHash !== $head) {
+                        Span::add("{$logBase}.build.skipped.reason", 'commit is not the branch head');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        Console::warning("Skipping repository '{$repositoryId}': pushed commit '{$providerCommitHash}' is not the head of branch '{$providerBranch}'");
+                        continue;
+                    }
+                }
+
                 $isAuthorized = !$external;
 
                 if (!$isAuthorized && !empty($providerPullRequestId)) {
@@ -216,8 +257,9 @@ trait Deployment
                 }
 
                 $latestCommentId = '';
+                $comments = $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerSummaries', true) !== false;
 
-                if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
+                if ($comments && !empty($providerPullRequestId)) {
                     $latestComment = $authorization->skip(fn () => $dbForPlatform->findOne('vcsComments', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::equal('providerPullRequestId', [$providerPullRequestId]),
@@ -290,7 +332,7 @@ trait Deployment
                             ])));
                         }
                     }
-                } elseif (!empty($providerBranch)) {
+                } elseif ($comments && !empty($providerBranch)) {
                     $latestComments = $authorization->skip(fn () => $dbForPlatform->find('vcsComments', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::equal('providerBranch', [$providerBranch]),
@@ -411,8 +453,11 @@ trait Deployment
                     'repositoryId' => $repositoryId,
                     'repositoryInternalId' => $repositoryInternalId,
                     'providerBranchUrl' => $providerBranchUrl,
-                    'providerRepositoryName' => $providerRepositoryName,
-                    'providerRepositoryOwner' => $providerRepositoryOwner,
+                    // Owner and name are resolved from the installation and the stored repository, not the
+                    // delivery body: on providers with an instance-wide webhook secret a forged push must not
+                    // redirect a tenant's build to a repository the sender controls.
+                    'providerRepositoryName' => $repositoryName,
+                    'providerRepositoryOwner' => $owner,
                     'providerRepositoryUrl' => $providerRepositoryUrl,
                     'providerCommitHash' => $providerCommitHash,
                     'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
@@ -433,8 +478,8 @@ trait Deployment
                             $deployment,
                             $timeout,
                             $vcs,
-                            $providerRepositoryOwner,
-                            $providerRepositoryName,
+                            $owner,
+                            $repositoryName,
                             $providerCommitHash,
                             $resource->getAttribute('providerRootDirectory', ''),
                         ));
@@ -529,7 +574,7 @@ trait Deployment
 
                     // VCS commit preview
                     if (!empty($providerCommitHash)) {
-                        $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
+                        $domain = ComputeBase::commitDomain($project, $resource, $providerCommitHash, $sitesDomain);
                         $ruleId = md5($domain);
                         try {
                             $rule = $authorization->skip(
@@ -603,7 +648,7 @@ trait Deployment
                     }
                 }
 
-                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
+                if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerStatuses', true) !== false) {
                     // The deployment exists by now, so a refused report is logged like
                     // every later one: failing the push here would make a provider that
                     // retries deliveries deploy the commit again.

@@ -122,6 +122,7 @@ class Response extends SwooleResponse
     public const MODEL_USER_LIST = 'userList';
     public const MODEL_SESSION = 'session';
     public const MODEL_SESSION_LIST = 'sessionList';
+    public const MODEL_DEVICE = 'device';
     public const MODEL_IDENTITY = 'identity';
     public const MODEL_IDENTITY_LIST = 'identityList';
     public const MODEL_TOKEN = 'token';
@@ -292,6 +293,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
     public const MODEL_POLICY_DENY_REALTIME_GUESTS = 'policyDenyRealtimeGuests';
     public const MODEL_POLICY_PASSKEY = 'policyPasskey';
+    public const MODEL_POLICY_ACCOUNT_DEVICES = 'policyAccountDevices';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
@@ -351,6 +353,8 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
     public const MODEL_OAUTH2_TIKTOK = 'oAuth2TikTok';
     public const MODEL_OAUTH2_KAKAO = 'oAuth2Kakao';
+    public const MODEL_OAUTH2_NAVER = 'oAuth2Naver';
+    public const MODEL_OAUTH2_VIPPS = 'oAuth2Vipps';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
@@ -373,6 +377,8 @@ class Response extends SwooleResponse
     public const MODEL_REVIEW = 'review';
     public const MODEL_REVIEW_LIST = 'reviewList';
     public const MODEL_REVIEW_FINDING = 'reviewFinding';
+    public const MODEL_REVIEW_EVENT = 'reviewEvent';
+    public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
     public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
     public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
 

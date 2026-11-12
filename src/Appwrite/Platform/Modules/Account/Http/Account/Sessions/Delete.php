@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -60,7 +61,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->label('abuse-limit', 100)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 100)])
             ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Session ID. Use the string \'current\' to delete the current device session.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('request')
@@ -113,9 +114,25 @@ class Delete extends Action
 
             $dbForProject->deleteDocument('sessions', $session->getId());
 
+            // If the session was the active one on an account switching device, the device is
+            // left with no active session. The caller picks one again with updateDeviceSession.
+            $deviceId = $session->getAttribute('deviceId', '');
+            if (!empty($deviceId)) {
+                $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $deviceId, $session) {
+                    $device = $dbForProject->getDocument('devices', $deviceId);
+                    if (!$device->isEmpty() && $device->getAttribute('activeSessionId') === $session->getId()) {
+                        $dbForProject->updateDocument('devices', $deviceId, new Document([
+                            'activeSessionId' => '',
+                            'activeSessionInternalId' => '',
+                        ]));
+                    }
+                });
+            }
+
             unset($sessions[$key]);
 
             $session->setAttribute('current', $session->getId() === $current?->getId());
+            $session->setAttribute('userName', $user->getAttribute('name', ''));
 
             if ($session->getAttribute('current')) {
                 $session->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));

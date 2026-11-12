@@ -13,6 +13,7 @@ use Appwrite\Platform\Modules\Reviews\Http\Repositories\Tokens\Create as CreateR
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\Usage\Create as CreateRepositoryUsage;
 use Appwrite\Platform\Modules\Reviews\Http\Repositories\XList as ListRepositories;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Events\Create as CreateReviewEvents;
+use Appwrite\Platform\Modules\Reviews\Http\Reviews\Events\XList as ListReviewEvents;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Get as GetReview;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Status\Update as UpdateReviewStatus;
 use Appwrite\Platform\Modules\Reviews\Http\Reviews\Tier\Update as UpdateReviewTier;
@@ -32,6 +33,7 @@ class Http extends Service
 
         $this->addAction(ListReviews::getName(), new ListReviews());
         $this->addAction(GetReview::getName(), new GetReview());
+        $this->addAction(ListReviewEvents::getName(), new ListReviewEvents());
 
         // Called by the review service, not by projects
         $this->addAction(CreateRepositoryToken::getName(), new CreateRepositoryToken());

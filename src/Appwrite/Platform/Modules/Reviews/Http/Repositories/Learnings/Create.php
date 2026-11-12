@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Reviews\Http\Repositories\Learnings;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
@@ -38,9 +39,7 @@ class Create extends Base
             // Keyed on the caller's address: the limit runs before the secret is checked, so any
             // request param would let an unauthenticated caller pick a fresh bucket. {url} is the
             // route pattern, so the review service gets one bucket per route for every project.
-            ->label('abuse-key', 'url:{url},ip:{ip}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 10)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], APP_LIMIT_WRITE_RATE_DEFAULT * 10, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->param('repositoryId', '', new UID(), 'Repository ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('body', '', new Text(65535), 'What to remember, in one imperative sentence.')

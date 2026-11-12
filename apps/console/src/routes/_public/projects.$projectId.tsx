@@ -38,6 +38,7 @@ import {
   isBudgetLimitReached,
   isPlanUsageLimitReached,
   isProjectLockedByPlanUsage,
+  isProjectLockedByProjectUsage,
   resolveProjectTeamIdFromConsole,
   useOrganizationById,
 } from '@/lib/react-query/hooks'
@@ -356,7 +357,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       // leave the project open so customers can delete resources.
       const planUsageLimitReached =
         !budgetLimitReached &&
-        (isProjectLockedByPlanUsage(projectData) ||
+        (isProjectLockedByProjectUsage(projectData) ||
           isProjectLockedByPlanUsage(organization))
 
       if (budgetLimitReached || planUsageLimitReached) {
@@ -638,7 +639,7 @@ function ProjectLayout() {
       (routeContext.planUsageLimitReached === true ||
         loaderData?.planUsageLimitReached === true ||
         isProjectLockedByPlanUsage(billingOrganization) ||
-        isProjectLockedByPlanUsage(project)),
+        isProjectLockedByProjectUsage(project)),
   )
 
   const projectBlocked = Boolean(
@@ -648,17 +649,21 @@ function ProjectLayout() {
         loaderData?.projectBlocked === true ||
         hasActiveProjectBlock(projectData, projectId)),
   )
-  const planUsageBillingLimits =
-    billingOrganization?.billingLimits &&
-    isPlanUsageLimitReached(billingOrganization)
-      ? billingOrganization.billingLimits
-      : project?.billingLimits
+  // The curtain names whichever limit locked the project: the organization's,
+  // or the project's own bandwidth on plans that bill other overage.
+  const planUsageCurtainLimits = isProjectLockedByPlanUsage(
+    billingOrganization,
+  )
+    ? billingOrganization?.billingLimits
+    : project?.billingLimits
+  // A project's own limits come from plans that bill overage, so only the
+  // organization's limits mean API access is suspended.
+  const planUsageBillingLimits = billingOrganization?.billingLimits
   const showPlanUsageLimitBanner =
     !budgetLimitReached &&
     !planUsageLimitReached &&
     features.billing &&
-    (isPlanUsageLimitReached(billingOrganization) ||
-      isPlanUsageLimitReached(project))
+    isPlanUsageLimitReached(billingOrganization)
 
   const skipInvoiceBanners =
     budgetLimitReached || planUsageLimitReached || projectBlocked
@@ -883,7 +888,7 @@ function ProjectLayout() {
       ) : planUsageLimitReached ? (
         <PlanUsageLimitProjectCurtain
           teamId={budgetCurtainTeamId}
-          billingLimits={planUsageBillingLimits}
+          billingLimits={planUsageCurtainLimits}
         />
       ) : projectBlocked && projectForPaused?.teamId ? (
         <BlockedProjectCurtain teamId={projectForPaused.teamId} />

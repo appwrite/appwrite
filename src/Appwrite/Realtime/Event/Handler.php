@@ -584,24 +584,35 @@ class Handler
     }
 
     /**
-     * Deleting an organization names no user, so its admin-mode connections end here.
+     * Ends the sockets a team deletion revokes. Deleting a console organization names no user,
+     * so its admin-mode connections end here; deleting a team inside a project ends the member
+     * sockets still holding its role, so a reconnect rebuilds their roles without the gone team
+     * instead of keeping its access until the client happens to reconnect.
      *
      * @return array<int, true> connections to close
      */
     private function endDeletedTeams(array $event): array
     {
         $closing = [];
-        if (($event['project'] ?? '') !== 'console') {
+        $projectId = $event['project'] ?? '';
+        if ($projectId === '') {
             return $closing;
         }
 
-        foreach (($event['data']['events'] ?? []) as $name) {
-            $parts = \explode('.', $name);
-            if (\count($parts) === 3 && $parts[0] === 'teams' && $parts[1] !== '*' && $parts[2] === 'delete') {
-                foreach ($this->realtime->getTeamAdminConnections($parts[1]) as $connection) {
-                    $closing[$connection] = true;
-                }
-            }
+        // A team id may contain periods, so splitting the event name positionally would miss
+        // teams.my.team.delete. Take the id from the deleted document and confirm this message
+        // is that team's delete; a membership delete carries the membership id, so its event
+        // name is not teams.{thatId}.delete and will not match.
+        $teamId = (string) ($event['data']['payload']['$id'] ?? '');
+        if ($teamId === '' || !\in_array('teams.' . $teamId . '.delete', $event['data']['events'] ?? [], true)) {
+            return $closing;
+        }
+
+        $connections = $projectId === 'console'
+            ? $this->realtime->getTeamAdminConnections($teamId)
+            : $this->realtime->getTeamConnections($projectId, $teamId);
+        foreach ($connections as $connection) {
+            $closing[$connection] = true;
         }
 
         return $closing;

@@ -291,6 +291,16 @@ return [
         'description' => 'The current user session could not be found.',
         'code' => 404,
     ],
+    Exception::USER_DEVICE_NOT_FOUND => [
+        'name' => Exception::USER_DEVICE_NOT_FOUND,
+        'description' => 'The requested account switching device could not be found. Create one with the create device endpoint first.',
+        'code' => 404,
+    ],
+    Exception::USER_DEVICE_SESSION_NOT_FOUND => [
+        'name' => Exception::USER_DEVICE_SESSION_NOT_FOUND,
+        'description' => 'The requested session is not held by this account switching device.',
+        'code' => 404,
+    ],
     Exception::USER_IDENTITY_NOT_FOUND => [
         'name' => Exception::USER_IDENTITY_NOT_FOUND,
         'description' => 'The identity could not be found. Please sign in with OAuth provider to create identity first.',
@@ -1356,6 +1366,11 @@ return [
         'name' => Exception::ALERT_NOT_FOUND,
         'description' => 'Alert with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::ALERT_RESOLVED => [
+        'name' => Exception::ALERT_RESOLVED,
+        'description' => 'The alert has resolved. Only a firing alert can be acknowledged.',
+        'code' => 400,
     ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,

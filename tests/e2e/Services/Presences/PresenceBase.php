@@ -349,6 +349,161 @@ trait PresenceBase
         $this->assertGreaterThanOrEqual(1, $list['body']['total']);
     }
 
+    public function testListCacheInvalidatedOnPermissionChange(): void
+    {
+        // The list cache (opt-in via ttl) keys only on roles and the exact query and returns rows
+        // verbatim, so a presence whose read permission was narrowed keeps being served until the
+        // cache is dropped. A permission change must purge it even without the client's purge flag.
+        if ($this->getSide() !== 'server') {
+            $this->markTestSkipped('Presence list cache invalidation is exercised on the server side.');
+        }
+
+        // A presence must reference a real user, so create two.
+        $userOne = $this->createPresenceUser();
+        $userTwo = $this->createPresenceUser();
+        $presenceOne = $this->setupPresence(['userId' => $userOne, 'status' => 'online']);
+        $query = [Query::equal('userId', [$userOne, $userTwo])->toString()];
+
+        // Cache the list while only the first presence exists.
+        $first = $this->listPresencesCached($query);
+        $this->assertContains($presenceOne['$id'], \array_column($first['body']['presences'], '$id'));
+
+        // A second presence created without touching permissions does not purge, so the cached
+        // page is stale and still omits it — this anchors that the ttl cache is actually serving.
+        $presenceTwo = $this->setupPresence(['userId' => $userTwo, 'status' => 'online']);
+        $stale = $this->listPresencesCached($query);
+        $this->assertNotContains($presenceTwo['$id'], \array_column($stale['body']['presences'], '$id'));
+
+        // Changing the first presence's permissions must purge the list cache.
+        $update = $this->client->call(
+            Client::METHOD_PATCH,
+            '/presences/' . $presenceOne['$id'],
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders()),
+            ['permissions' => [Permission::read(Role::any())]]
+        );
+        $this->assertEquals(200, $update['headers']['status-code'], \json_encode($update['body']));
+
+        // The cache is gone, so the fresh list now reflects the second presence too.
+        $fresh = $this->listPresencesCached($query);
+        $this->assertContains($presenceTwo['$id'], \array_column($fresh['body']['presences'], '$id'));
+    }
+
+    public function testListCacheInvalidatedOnUpsertPermissionChange(): void
+    {
+        // The upsert path (PUT) narrows permissions through the same State::setPermissions, so it
+        // must drop the list cache too — not just the PATCH update path. The server key always sees
+        // the row, so staleness is anchored on the cached status: an upsert that only changes status
+        // keeps the same permissionsHash and must not purge, a permission change must.
+        if ($this->getSide() !== 'server') {
+            $this->markTestSkipped('Presence list cache invalidation is exercised on the server side.');
+        }
+
+        $userOne = $this->createPresenceUser();
+        $presenceOne = $this->setupPresence(['userId' => $userOne, 'status' => 'online']);
+        $query = [Query::equal('userId', [$userOne])->toString()];
+
+        $cached = $this->listPresencesCached($query);
+        $this->assertSame('online', $this->presenceStatusFor($cached, $presenceOne['$id']));
+
+        // Re-upsert the same user with no explicit permissions: the server key re-applies the owner
+        // default, so the permissionsHash is unchanged and the cache is not purged — the cached page
+        // still reads 'online', anchoring that the ttl cache is serving.
+        $this->upsertPresenceForUser($userOne, 'away', null);
+        $stale = $this->listPresencesCached($query);
+        $this->assertSame('online', $this->presenceStatusFor($stale, $presenceOne['$id']));
+
+        // Upserting with a narrowed read role changes the permissionsHash, which must purge the
+        // cache; the fresh list then reflects the latest status.
+        $this->upsertPresenceForUser($userOne, 'busy', [Permission::read(Role::user($userOne))]);
+        $fresh = $this->listPresencesCached($query);
+        $this->assertSame('busy', $this->presenceStatusFor($fresh, $presenceOne['$id']));
+    }
+
+    /**
+     * @param array<string>|null $permissions
+     */
+    private function upsertPresenceForUser(string $userId, string $status, ?array $permissions): void
+    {
+        $payload = [
+            'userId' => $userId,
+            'status' => $status,
+        ];
+        if ($permissions !== null) {
+            $payload['permissions'] = $permissions;
+        }
+
+        $upsert = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . Id::unique(),
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders()),
+            $payload
+        );
+        $this->assertSame(200, $upsert['headers']['status-code'], \json_encode($upsert['body']));
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     */
+    private function presenceStatusFor(array $response, string $presenceId): ?string
+    {
+        foreach ($response['body']['presences'] ?? [] as $presence) {
+            if (($presence['$id'] ?? null) === $presenceId) {
+                return $presence['status'] ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    private function createPresenceUser(): string
+    {
+        $user = $this->client->call(
+            Client::METHOD_POST,
+            '/users',
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'userId' => Id::unique(),
+                'email' => \uniqid() . '@example.com',
+                'password' => 'password',
+            ]
+        );
+        $this->assertSame(201, $user['headers']['status-code'], \json_encode($user['body']));
+
+        return $user['body']['$id'];
+    }
+
+    /**
+     * @param array<string> $query
+     * @return array<string, mixed>
+     */
+    private function listPresencesCached(array $query): array
+    {
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/presences',
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders()),
+            [
+                'queries' => $query,
+                'ttl' => 3600,
+            ]
+        );
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        return $response;
+    }
+
     public function testClientPresenceCustomPermissionsForOtherUser(): void
     {
         // Requires API key to create two concurrent presences for the same user with

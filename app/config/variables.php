@@ -171,6 +171,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_NOTIFICATIONS_PUSH_FCM',
+                'description' => "Push service that delivers alerts to the Android devices console users sign in on. Use the following format: 'fcm://[FIREBASE_PROJECT_ID]', with the service account JSON in _APP_NOTIFICATIONS_PUSH_FCM_KEY. Leave empty to disable alert pushes to Android.",
+                'introduction' => '2.7.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_NOTIFICATIONS_PUSH_FCM_KEY',
+                'description' => 'Firebase service account JSON that _APP_NOTIFICATIONS_PUSH_FCM signs with; it has to belong to the project _APP_NOTIFICATIONS_PUSH_FCM names.',
+                'introduction' => '2.7.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN',
                 'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
@@ -193,6 +211,15 @@ return [
                 'description' => 'A domain to use for function preview URLs. Setting to empty turns off function preview URLs.',
                 'introduction' => '',
                 'default' => 'functions.localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOMAIN_FUNCTIONS_FALLBACK',
+                'description' => 'Comma-separated list of additional domains that serve function preview URLs, for example a previous value of _APP_DOMAIN_FUNCTIONS. Rules cannot claim these domains.',
+                'introduction' => '2.7.0',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -479,7 +506,7 @@ return [
             [
                 'name' => '_APP_LOGGING_FORMAT',
                 'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
-                'introduction' => '2.7.0',
+                'introduction' => '1.9.6',
                 'default' => 'pretty',
                 'required' => false,
                 'question' => '',
@@ -615,6 +642,15 @@ return [
                 'default' => 'postgresql',
                 'required' => true,
                 'question' => 'Choose your database (postgresql|mariadb|mongodb)',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REALTIME_BOOT_TIMEOUT',
+                'description' => 'Seconds a realtime server waits at boot for the cleanup of presences left by stopped realtime servers. Presence updates wait for the cleanup until this passes, then go ahead, and the cleanup carries on in the background. Set it to 0 to never wait; a user who reconnects during the cleanup may then keep showing as online until the next cleanup. Applies to self-hosted only. Default value is: 30.',
+                'introduction' => '2.7.0',
+                'default' => '30',
+                'required' => false,
+                'question' => '',
                 'filter' => ''
             ],
             [
@@ -1304,6 +1340,22 @@ return [
                 'required' => false,
                 'question' => '',
             ],
+            [
+                'name' => '_APP_CONNECTIONS_STORAGE_CACHE',
+                'description' => 'DSN of the storage device for cached API responses, such as s3://key:secret@host/bucket?region=us-east-1. Empty keeps them on the local filesystem. Takes effect with _APP_STORAGE_CACHE_PERCENT.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_CACHE_PERCENT',
+                'description' => 'Percentage of cached API responses, from 0 to 100, stored on the _APP_CONNECTIONS_STORAGE_CACHE device. The rest stay on the local filesystem.',
+                'introduction' => '2.8.0',
+                'default' => '0',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [
@@ -1650,6 +1702,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_COMPUTE_STREAMING',
+                'description' => 'Allows a function or site served on its domain to send its response in chunks as the runtime produces it, so a progressively rendered page or an event stream reaches the client before it has finished. By default, set to \'enabled\'. Set to \'disabled\' to send each response only once it is complete. Requires an executor that supports response format 0.12.0.',
+                'introduction' => '2.7.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_SCHEDULE_SPREAD',
                 'description' => 'Number of seconds over which scheduled executions sharing the same cron slot are spread, using a stable per-function offset, so they don\'t all start in the same second. Each function keeps a consistent slot within the window, preserving exact run intervals. The default value is 0 (disabled): every execution is enqueued at the exact cron time.',
                 'introduction' => '2.0.0',
@@ -1930,7 +1991,7 @@ return [
             ],
             [
                 'name' => '_APP_REVIEWS_MODEL',
-                'description' => 'The model that reviews pull requests, as an AI Gateway model ID such as `anthropic/claude-sonnet-4.5`. Required when reviews are enabled.',
+                'description' => 'The model that reviews pull requests, as an AI Gateway model ID such as `anthropic/claude-sonnet-5.5`. Required when reviews are enabled.',
                 'introduction' => '2.7.0',
                 'default' => '',
                 'required' => false,

@@ -103,11 +103,17 @@ class Update extends Action
                 ->setAttribute('password', '')
                 ->setAttribute('passwordUpdate', DateTime::now());
 
-            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'password' => $user->getAttribute('password'),
-                'passwordPwned' => null,
-                'passwordUpdate' => $user->getAttribute('passwordUpdate'),
-            ]));
+            // Under the user lock that recovery requests take, so none lands between the delete and the cleared password
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user) {
+                $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                User::deleteRecoveryTokens($dbForProject, $user);
+
+                return $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'password' => $user->getAttribute('password'),
+                    'passwordPwned' => null,
+                    'passwordUpdate' => $user->getAttribute('passwordUpdate'),
+                ]));
+            });
 
             if ($project->getAttribute('auths', default: [])['invalidateSessions'] ?? true) {
                 User::invalidateAuthentication($dbForProject, $user);
@@ -148,14 +154,20 @@ class Update extends Action
             ->setAttribute('hash', $hasher->getName())
             ->setAttribute('hashOptions', $hasher->getOptions());
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-            'password' => $user->getAttribute('password'),
-            'passwordHistory' => $user->getAttribute('passwordHistory'),
-            'passwordPwned' => $user->getAttribute('passwordPwned'),
-            'passwordUpdate' => $user->getAttribute('passwordUpdate'),
-            'hash' => $user->getAttribute('hash'),
-            'hashOptions' => $user->getAttribute('hashOptions'),
-        ]));
+        // Under the user lock that recovery requests take, so none lands between the delete and the new password
+        $user = $dbForProject->withTransaction(function () use ($dbForProject, $user) {
+            $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            User::deleteRecoveryTokens($dbForProject, $user);
+
+            return $dbForProject->updateDocument('users', $user->getId(), new Document([
+                'password' => $user->getAttribute('password'),
+                'passwordHistory' => $user->getAttribute('passwordHistory'),
+                'passwordPwned' => $user->getAttribute('passwordPwned'),
+                'passwordUpdate' => $user->getAttribute('passwordUpdate'),
+                'hash' => $user->getAttribute('hash'),
+                'hashOptions' => $user->getAttribute('hashOptions'),
+            ]));
+        });
 
         $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
         if ($invalidate) {

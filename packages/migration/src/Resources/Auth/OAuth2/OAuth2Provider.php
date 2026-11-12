@@ -60,6 +60,7 @@ final class OAuth2Provider extends Resource
         'kick' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'linkedin' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'microsoft' => ['clientId' => ['target' => self::TARGET_APP_ID], 'tenant' => ['target' => self::TARGET_SECRET]],
+        'naver' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'notion' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'oidc' => [
             'clientId' => ['target' => self::TARGET_APP_ID],
@@ -85,6 +86,8 @@ final class OAuth2Provider extends Resource
         'tradeshift' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'tradeshiftBox' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'twitch' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'vipps' => ['clientId' => ['target' => self::TARGET_APP_ID]],
+        'vippsSandbox' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'webflow' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'wordpress' => ['clientId' => ['target' => self::TARGET_APP_ID]],
         'x' => ['clientId' => ['target' => self::TARGET_APP_ID]],

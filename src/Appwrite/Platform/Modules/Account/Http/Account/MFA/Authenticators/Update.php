@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
@@ -79,6 +80,7 @@ class Update extends Action
                     contentType: ContentType::JSON
                 )
             ])
+            ->label('abuse', [Limit::attempts(['projectId', 'url', 'userId'], 10, everyone: true)])
             ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.', enum: new Enum(name: 'AuthenticatorType'))
             ->param('otp', '', new Text(256), 'Valid verification token.')
             ->inject('response')
