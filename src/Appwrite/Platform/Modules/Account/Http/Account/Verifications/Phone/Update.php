@@ -56,7 +56,8 @@ class Update extends Action
                 contentType: ContentType::JSON
             ))
             ->label('abuse-limit', 10)
-            ->label('abuse-key', 'userId:{param-userId}')
+            ->label('abuse-everyone', true)
+            ->label('abuse-key', 'url:{url},userId:{param-userId}')
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('secret', '', new Text(256), 'Valid verification token.')
             ->inject('response')

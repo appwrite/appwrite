@@ -603,9 +603,9 @@ Http::init()
         $request->setUser($user);
 
         $roles = $authorization->getRoles();
+        // A limit that is the only cap on guesses at a secret counts keys and privileged callers too.
         $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
-            && ! $user->isKey($roles)
-            && ! $user->isPrivileged($roles);
+            && ($route->getLabel('abuse-everyone', false) || (! $user->isKey($roles) && ! $user->isPrivileged($roles)));
 
         $abuseLimit = $route->getLabel('abuse-limit', 0);
         $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
@@ -615,6 +615,10 @@ Http::init()
 
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        // The abuse store is instance-wide, so a count kept per account or per address is also kept per project.
+        $abuseKeyLabel = \array_map(fn (string $key): string => \str_contains($key, '{projectId}') || \str_contains($key, '{ip}') || (! \str_contains($key, '{userId}') && ! \str_contains($key, '{param-'))
+            ? $key
+            : 'projectId:{projectId},' . $key, $abuseKeyLabel);
         $closestLimit = null;
 
         foreach ($abuseKeyLabel as $abuseKey) {
@@ -1028,6 +1032,10 @@ Http::shutdown()
 
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        // The abuse store is instance-wide, so a count kept per account or per address is also kept per project.
+        $abuseKeyLabel = \array_map(fn (string $key): string => \str_contains($key, '{projectId}') || \str_contains($key, '{ip}') || (! \str_contains($key, '{userId}') && ! \str_contains($key, '{param-'))
+            ? $key
+            : 'projectId:{projectId},' . $key, $abuseKeyLabel);
 
         foreach ($abuseKeyLabel as $abuseKey) {
             $params = [
