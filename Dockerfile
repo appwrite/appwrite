@@ -18,7 +18,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
 
 # The utopia extension, built against the base image's own PHP headers and
 # libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
-FROM appwrite/base:2.2.10 AS extension-build
+FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS extension-build
 
 RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
     rustup-init -y --profile minimal --default-toolchain 1.97.1
@@ -33,7 +33,7 @@ RUN . "$HOME/.cargo/env" && \
     cargo build --release --locked -p utopia-extension && \
     strip target/release/libutopia.so
 
-FROM appwrite/base:2.2.10 AS base
+FROM appwrite/base:2.2.11@sha256:d4a5d23eef42690bae5d6d00aa0555d22042f1dbfff1bdcc835fd6d144aa147a AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -155,7 +155,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.2.10-xdebug AS xdebug
+FROM appwrite/base:2.2.11-xdebug@sha256:aea31a119dae19d5d3ac41765e8bc5e9d1298c8bc495a89b2f41592f886665bb AS xdebug
 
 FROM base AS development
 

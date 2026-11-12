@@ -2043,10 +2043,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description",
-            "providerSummaries",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2190,10 +2187,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description",
-            "providerSummaries",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -3048,6 +3042,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -3683,10 +3678,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description",
-            "providerSummaries",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -3822,10 +3814,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description",
-            "providerSummaries",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -6287,10 +6276,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description",
-            "providerSummaries",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -6424,10 +6410,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description",
-            "providerSummaries",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -7240,6 +7223,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -7845,10 +7829,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description",
-            "providerSummaries",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -7974,10 +7955,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description",
-            "providerSummaries",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",

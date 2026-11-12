@@ -72,6 +72,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Yahoo\Update as Update
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Yandex\Update as UpdateOAuth2Yandex;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Zoho\Update as UpdateOAuth2Zoho;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Zoom\Update as UpdateOAuth2Zoom;
+use Appwrite\Platform\Modules\Project\Http\Project\Passwords\Delete as DeletePasswords;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Create as CreateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android\Update as UpdateAndroidPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Apple\Create as CreateApplePlatform;
@@ -171,6 +172,9 @@ class Http extends Service
         $this->addAction('getProjectKey', GetKey::class);
         $this->addAction('deleteProjectKey', DeleteKey::class);
         $this->addAction('updateProjectKey', UpdateKey::class);
+
+        // Passwords
+        $this->addAction('deleteProjectPasswords', DeletePasswords::class);
 
         // Platforms
         $this->addAction('listProjectPlatforms', ListPlatforms::class);
