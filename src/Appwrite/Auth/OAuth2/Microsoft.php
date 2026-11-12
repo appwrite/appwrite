@@ -229,7 +229,8 @@ class Microsoft extends OAuth2
     {
         $secret = $this->getAppSecret();
 
-        return $secret['tenantID'] ?? '';
+        // Providers configured before 1.9 have no tenant and relied on this default.
+        return !empty($secret['tenantID']) ? $secret['tenantID'] : 'common';
     }
 
     /**

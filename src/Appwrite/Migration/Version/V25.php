@@ -4,6 +4,7 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Migration\Migration;
+use Appwrite\OpenSSL\OpenSSL;
 use Exception;
 use Throwable;
 use Utopia\Console\Console;
@@ -719,6 +720,26 @@ class V25 extends Migration
 
     protected function migrateDocument(Document $document): Document
     {
+        if ($document->getCollection() === 'projects') {
+            // Before 1.9 each provider secret was encrypted on its own; 1.9 stores it as a plain string.
+            $providers = $document->getAttribute('oAuthProviders', []);
+            foreach ($providers as $key => $secret) {
+                if (!\str_ends_with($key, 'Secret') || !\is_array($secret) || !isset($secret['version'])) {
+                    continue;
+                }
+
+                $decrypted = OpenSSL::decrypt($secret['data'], $secret['method'], System::getEnv('_APP_OPENSSL_KEY_V' . $secret['version']), 0, \hex2bin($secret['iv']), \hex2bin($secret['tag']));
+                if ($decrypted === false) {
+                    Console::warning("Failed to decrypt \"{$key}\" of project {$document->getId()}");
+                    continue;
+                }
+                $providers[$key] = $decrypted;
+            }
+            $document->setAttribute('oAuthProviders', $providers);
+
+            return $document;
+        }
+
         if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
             $retired = ['devKeys.read', 'devKeys.write', 'assistant.read'];
             $scopes = $document->getAttribute('scopes', []);

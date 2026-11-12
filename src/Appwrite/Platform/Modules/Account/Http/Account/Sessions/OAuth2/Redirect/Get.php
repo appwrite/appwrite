@@ -148,6 +148,13 @@ class Get extends Base
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
+        // Secrets stored before 1.9 are encrypted on their own; decrypt them only once the failure redirect is available
+        $legacySecret = null;
+        if (\is_array($appSecret) && isset($appSecret['version'])) {
+            $legacySecret = $appSecret;
+            $appSecret = '';
+        }
+
         $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
         $className = $oAuthProviders[$provider]['class'] ?? null;
         if ($className === null || !\class_exists($className)) {
@@ -274,9 +281,15 @@ class Get extends Base
             $failureRedirect(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Missing OAuth2 code. Please contact the Appwrite team for additional support.');
         }
 
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
+        if ($legacySecret !== null) {
+            $key = System::getEnv('_APP_OPENSSL_KEY_V' . $legacySecret['version']);
+            $iv = \hex2bin($legacySecret['iv']);
+            $tag = \hex2bin($legacySecret['tag']);
+            $appSecret = empty($key) || $iv === false || $tag === false ? false : OpenSSL::decrypt($legacySecret['data'], $legacySecret['method'], $key, 0, $iv, $tag);
+            if ($appSecret === false) {
+                $failureRedirect(Exception::GENERAL_SERVER_ERROR, 'Failed to decrypt the OAuth2 provider secret.');
+            }
+            $oauth2 = new $className($clientForOAuth2, $appId, $appSecret, $callback);
         }
 
         $accessToken = '';
