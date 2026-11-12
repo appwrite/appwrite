@@ -63,6 +63,7 @@ export type AgentSkillDiscoveryEntry = {
   type: 'skill-md'
   description: string
   url: string
+  digest?: string
 }
 
 /**

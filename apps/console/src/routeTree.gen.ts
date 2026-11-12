@@ -71,6 +71,7 @@ import { Route as PublicInitRouteImport } from './routes/_public/init'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicSalesRouteImport } from './routes/_public/sales'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
+import { Route as BlogLlmsDottxtRouteImport } from './routes/blog.llms[.]txt'
 import { Route as CliInstallDotps1RouteImport } from './routes/cli.install[.]ps1'
 import { Route as CliInstallDotshRouteImport } from './routes/cli.install[.]sh'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
@@ -805,6 +806,11 @@ const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
   id: '/upgrade',
   path: '/upgrade',
   getParentRoute: () => PublicRoute,
+} as any)
+const BlogLlmsDottxtRoute = BlogLlmsDottxtRouteImport.update({
+  id: '/blog/llms.txt',
+  path: '/blog/llms.txt',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CliInstallDotps1Route = CliInstallDotps1RouteImport.update({
   id: '/cli/install.ps1',
@@ -3591,6 +3597,7 @@ export interface FileRoutesByFullPath {
   '/reset': typeof PublicResetRoute
   '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/blog/llms.txt': typeof BlogLlmsDottxtRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
   '/docs/$': typeof DocsSplatRoute
@@ -4073,6 +4080,7 @@ export interface FileRoutesByTo {
   '/reset': typeof PublicResetRoute
   '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/blog/llms.txt': typeof BlogLlmsDottxtRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
   '/docs/$': typeof DocsSplatRoute
@@ -4512,6 +4520,7 @@ export interface FileRoutesById {
   '/_public/reset': typeof PublicResetRoute
   '/_public/sales': typeof PublicSalesRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
+  '/blog/llms.txt': typeof BlogLlmsDottxtRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
   '/docs/$': typeof DocsSplatRoute
@@ -5001,6 +5010,7 @@ export interface FileRouteTypes {
     | '/reset'
     | '/sales'
     | '/upgrade'
+    | '/blog/llms.txt'
     | '/cli/install.ps1'
     | '/cli/install.sh'
     | '/docs/$'
@@ -5483,6 +5493,7 @@ export interface FileRouteTypes {
     | '/reset'
     | '/sales'
     | '/upgrade'
+    | '/blog/llms.txt'
     | '/cli/install.ps1'
     | '/cli/install.sh'
     | '/docs/$'
@@ -5921,6 +5932,7 @@ export interface FileRouteTypes {
     | '/_public/reset'
     | '/_public/sales'
     | '/_public/upgrade'
+    | '/blog/llms.txt'
     | '/cli/install.ps1'
     | '/cli/install.sh'
     | '/docs/$'
@@ -6375,6 +6387,7 @@ export interface RootRouteChildren {
   ApiChangelogDotjsonRoute: typeof ApiChangelogDotjsonRoute
   ApiHelloRoute: typeof ApiHelloRoute
   ApiOpenapiDotjsonRoute: typeof ApiOpenapiDotjsonRoute
+  BlogLlmsDottxtRoute: typeof BlogLlmsDottxtRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
   CliInstallDotshRoute: typeof CliInstallDotshRoute
   DomainsContinueRoute: typeof DomainsContinueRoute
@@ -6836,6 +6849,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/upgrade'
       preLoaderRoute: typeof PublicUpgradeRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/blog/llms.txt': {
+      id: '/blog/llms.txt'
+      path: '/blog/llms.txt'
+      fullPath: '/blog/llms.txt'
+      preLoaderRoute: typeof BlogLlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/cli/install.ps1': {
       id: '/cli/install.ps1'
@@ -11917,6 +11937,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChangelogDotjsonRoute: ApiChangelogDotjsonRoute,
   ApiHelloRoute: ApiHelloRoute,
   ApiOpenapiDotjsonRoute: ApiOpenapiDotjsonRoute,
+  BlogLlmsDottxtRoute: BlogLlmsDottxtRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,
   CliInstallDotshRoute: CliInstallDotshRoute,
   DomainsContinueRoute: DomainsContinueRoute,

@@ -7,7 +7,6 @@
  */
 
 import {
-  MCP_SELF_HOSTED_DOCS_URL,
   MCP_SERVER_URL,
 } from '@/lib/config/mcp'
 import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
@@ -28,7 +27,7 @@ export const LLMS_TXT_PATH = '/llms.txt'
 export const LLMS_FULL_TXT_PATH = '/llms-full.txt'
 export const DOCS_LLMS_TXT_PATH = '/docs/llms.txt'
 export const DOCS_MD_PATH = '/docs.md'
-export const BLOG_MD_PATH = '/blog.md'
+export const BLOG_LLMS_TXT_PATH = '/blog/llms.txt'
 export const CHANGELOG_MD_PATH = '/changelog.md'
 export const INTEGRATIONS_MD_PATH = '/integrations.md'
 export const ALTERNATIVES_MD_PATH = '/alternative-to.md'
@@ -304,7 +303,7 @@ export function buildAppwriteLlmsTxt(
         },
         {
           title: 'Self-hosted MCP Server',
-          url: MCP_SELF_HOSTED_DOCS_URL,
+          url: `${origin}/docs/advanced/self-hosting/mcp.md`,
           description: 'Run the MCP server locally with uvx and a project API key.',
         },
         {
@@ -417,8 +416,8 @@ export function buildAppwriteLlmsTxt(
         'Articles on product updates and developer guides. The index enumerates every post. Append `.md` to any post URL for the raw Markdown source.',
       links: [
         {
-          title: 'Blog index (Markdown)',
-          url: `${origin}${BLOG_MD_PATH}`,
+          title: 'Blog llms.txt',
+          url: `${origin}${BLOG_LLMS_TXT_PATH}`,
           description: 'Flat list of every public blog post.',
         },
         ...(blogExample
