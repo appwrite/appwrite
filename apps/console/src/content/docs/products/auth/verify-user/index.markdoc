@@ -273,6 +273,8 @@ When the code matches, Appwrite marks the user's email as verified and deletes t
 To add a random security phrase to the email, set `phrase` to `true` in the call that sends the code. The returned token holds the same phrase in its `phrase` field. Show the phrase in your app, so the user can compare it with the phrase in the email before they enter the code.
 {% /info %}
 
+When your web app sends the code from the browser, the email also carries an `OTP-Token` header that binds the code to your app's origin, so supporting mail clients and password managers can autofill it there. See [Code autofill](/docs/products/auth/email-otp#code-autofill) for when Appwrite adds the header.
+
 Your app needs to handle these errors in this flow:
 
 - `user_email_already_verified`: the user's email is already verified, so Appwrite doesn't send a code.

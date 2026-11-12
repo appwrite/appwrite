@@ -252,7 +252,6 @@ export const heCatalog: EnCatalog = {
         usage: 'שימוש',
         analytics: 'אנליטיקס',
         errors: 'שגיאות',
-        firewall: 'חומת אש',
         advisor: 'יועץ',
         settings: 'הגדרות',
       },

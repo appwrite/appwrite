@@ -16,46 +16,62 @@ You can access audit logs for different products under the **Activity** tab wher
 Logs are available for tables, rows, and individual users.
 
 {% only_dark %}
-![Project settings screen](/images/docs/advanced/security/dark/activity.avif)
+![Project Activity tab with reasons](/images/docs/advanced/security/dark/activity.avif)
 {% /only_dark %}
 
 {% only_light %}
-![Project settings screen](/images/docs/advanced/security/activity.avif)
+![Project Activity tab with reasons](/images/docs/advanced/security/activity.avif)
 {% /only_light %}
 
 # Format {% #format %}
 
-Audit log entries under the **Activity** tab has the following structure.
+Audit log entries under the **Activity** tab have the following structure.
 Each entry describes an event.
 
 {% table %}
 - Column
 - Description
 ---
-- User
-- Name of the user that performed the event.
----
 - Event
 - The name of the [event](/docs/apis/events).
 ---
-- Location
-- The physical of the user when they performed the action.
+- Actor
+- The user, API key, or other actor that performed the event.
 ---
-- IP
-- The IP of the user when they performed an action.
+- Type
+- The kind of actor, such as a user or an API key. Events sent through the [MCP server](/docs/tooling/ai/mcp-servers) or the [CLI](/docs/tooling/command-line/installation) are also marked **Via MCP** or **Via CLI**.
 ---
-- Date
-- The date and time of the event.
+- Resource
+- The resource the event changed, such as a table, row, or function.
 ---
 - Reason
 - Why the request was made, when the client sent one. See [Record a reason](#reason).
+---
+- IP address
+- The IP address the request came from.
+---
+- Country
+- The country the request came from, based on its IP address.
+---
+- Time
+- The date and time of the event.
 {% /table %}
+
+Select an event to open its details, including the full reason, the actor, and the device and location the request came from.
 
 # Record a reason {% #reason %}
 
+{% only_dark %}
+![Activity event details with a reason](/images/docs/advanced/security/dark/activity-reason.avif)
+{% /only_dark %}
+
+{% only_light %}
+![Activity event details with a reason](/images/docs/advanced/security/activity-reason.avif)
+{% /only_light %}
+
 Send the `X-Appwrite-Reason` header with an API request to record why it was made.
 The reason appears in the **Reason** column of the **Activity** tab, next to the event it explains,
-so you can review changes made by AI agents, scripts, and teammates later.
+and in the event's details, so you can review changes made by AI agents, scripts, and teammates later.
 
 ```http
 DELETE /v1/functions/checkout-legacy HTTP/1.1
@@ -79,6 +95,62 @@ environment variable for a whole shell session or CI job. The CLI encodes the re
 ```sh
 appwrite push functions --reason "Release 2.4: move checkout to the storefront site"
 ```
+
+## From a server SDK {% #reason-sdk %}
+
+Server SDKs don't have a dedicated method for reasons. Add the header to the client with `addHeader`, and every request the client makes carries it.
+Use a separate client for each reason, so a reason doesn't stick to unrelated requests.
+
+{% multicode %}
+
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>')
+    .addHeader('X-Appwrite-Reason', encodeURIComponent('Remove test users created during the sign-up load test'));
+
+const users = new sdk.Users(client);
+
+await users.delete({ userId: '<USER_ID>' });
+```
+
+```server-python
+from urllib.parse import quote
+from appwrite.client import Client
+from appwrite.services.users import Users
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
+client.add_header('X-Appwrite-Reason', quote('Remove test users created during the sign-up load test', safe=''))
+
+users = Users(client)
+
+users.delete(user_id = '<USER_ID>')
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Users;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<API_KEY>')
+    ->addHeader('X-Appwrite-Reason', rawurlencode('Remove test users created during the sign-up load test'));
+
+$users = new Users($client);
+
+$users->delete(userId: '<USER_ID>');
+```
+
+{% /multicode %}
 
 ## From the MCP server {% #reason-mcp %}
 

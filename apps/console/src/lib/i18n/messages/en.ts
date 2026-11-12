@@ -229,7 +229,6 @@ export const enCatalog = {
         usage: 'Usage',
         analytics: 'Analytics',
         errors: 'Errors',
-        firewall: 'Firewall',
         advisor: 'Advisor',
         settings: 'Settings',
       },

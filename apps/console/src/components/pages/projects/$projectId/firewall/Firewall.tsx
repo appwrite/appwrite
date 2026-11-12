@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Shield } from 'lucide-react'
 import {
@@ -20,26 +20,28 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { TrafficOverview } from './TrafficOverview'
 import { RulesList } from './Rules'
 import { AttackModeBanner } from './_components/AttackMode'
-import { Route } from '@/routes/_public/projects.$projectId.firewall.index'
 import {
   firewallListSearch,
-  parseFirewallListSearch,
   type FirewallResourceSelection,
 } from '@/lib/firewall/conditions'
 
-export function View() {
+interface FirewallProps {
+  projectId: string
+  /** The scope this tab manages: a function, a site, or the project API. */
+  resourceSelection: FirewallResourceSelection
+}
+
+/**
+ * Firewall tab of a function, a site, or project settings (API): traffic for
+ * the scope, then its rules.
+ */
+export function Firewall({ projectId, resourceSelection }: FirewallProps) {
   const t = useT()
   const navigate = useNavigate()
-  const params = useParams({ strict: false })
-  const projectId = params.projectId as string
-  const search = Route.useSearch()
-  const resourceSelection: FirewallResourceSelection =
-    parseFirewallListSearch(search) ?? { resourceType: 'api' }
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
@@ -47,7 +49,7 @@ export function View() {
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canWriteRules(access, features)
 
-  // Unfiltered total for plan limit checks (independent of the rules list search).
+  // Unfiltered total for plan limit checks (the limit counts every scope).
   const { data: totalRulesData } = useQuery(
     firewallRulesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
   )
@@ -96,12 +98,10 @@ export function View() {
           </TooltipTrigger>
           <TooltipContent
             side="bottom"
-            align="end"
+            align="start"
             className="max-w-sm text-[12px] leading-snug text-balance"
           >
-            <p className="font-medium text-background">
-              {t('Firewall rules')}
-            </p>
+            <p className="font-medium text-background">{t('Firewall rules')}</p>
             <p className="mt-1.5 text-background/85">
               {t('Your plan')} ({planName}) {t('includes up to')}{' '}
               <span className="font-medium text-background">
@@ -115,28 +115,19 @@ export function View() {
     ) : null
 
   return (
-    <div className="flex h-full flex-col">
-      <ServiceHeader
-        title={t('Firewall')}
-        showFilters={false}
-        fullWidthBorder
-        fullWidth
-        titleRightContent={rulesLimitIndicator}
-        contentAfterBorder={
-          project &&
-          organizationPlan !== undefined &&
-          totalRulesData !== undefined ? (
-            <PlanLimitWarning
-              currentCount={totalRulesCount}
-              limit={wafRulesLimit}
-              planName={planName}
-              resourceName="firewall rules"
-              orgId={project?.teamId}
-              fullWidth={false}
-            />
-          ) : undefined
-        }
-      />
+    <div className="flex-1">
+      {project &&
+      organizationPlan !== undefined &&
+      totalRulesData !== undefined ? (
+        <PlanLimitWarning
+          currentCount={totalRulesCount}
+          limit={wafRulesLimit}
+          planName={planName}
+          resourceName="firewall rules"
+          orgId={project?.teamId}
+          fullWidth={false}
+        />
+      ) : null}
 
       <AttackModeBanner
         projectId={projectId}
@@ -144,33 +135,24 @@ export function View() {
         canWrite={canWrite}
       />
 
-      <div className="flex-1 overflow-y-auto">
-        <TrafficOverview resourceSelection={resourceSelection} />
+      <TrafficOverview resourceSelection={resourceSelection} />
 
-        <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6">
-          <RulesList
-            projectId={projectId}
-            canWrite={canWrite}
-            resourceSelection={resourceSelection}
-            onResourceSelectionChange={(next) => {
-              void navigate({
-                to: '/projects/$projectId/firewall',
-                params: { projectId },
-                search: firewallListSearch(next),
-                replace: true,
-              })
-            }}
-            createDisabled={isCreateDisabled}
-            createDisabledTooltip={createDisabledTooltip}
-            onCreate={() =>
-              navigate({
-                to: '/projects/$projectId/firewall/create',
-                params: { projectId },
-                search: firewallListSearch(resourceSelection),
-              })
-            }
-          />
-        </div>
+      <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6">
+        <RulesList
+          projectId={projectId}
+          canWrite={canWrite}
+          resourceSelection={resourceSelection}
+          createDisabled={isCreateDisabled}
+          createDisabledTooltip={createDisabledTooltip}
+          limitIndicator={rulesLimitIndicator}
+          onCreate={() =>
+            navigate({
+              to: '/projects/$projectId/firewall/create',
+              params: { projectId },
+              search: firewallListSearch(resourceSelection),
+            })
+          }
+        />
       </div>
     </div>
   )

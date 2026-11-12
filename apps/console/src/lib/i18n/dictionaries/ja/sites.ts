@@ -88,6 +88,15 @@ export const jaSitesDictionary: Record<string, string> = {
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
+  'Waiting for DNS': 'DNS を待機中',
+  'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
+    'Appwrite はドメインの追加後 3 日間、数分ごとに DNS レコードを確認します。すぐに確認するには「今すぐ確認」を使用してください。',
+  'Appwrite stopped checking 3 days after the domain was added. Fix the DNS records, then Retry.':
+    'Appwrite はドメインの追加から 3 日後に確認を停止しました。DNS レコードを修正してから、再試行してください。',
+  'Last check:': '最終確認:',
+  'Check now': '今すぐ確認',
+  'Not verified yet. Appwrite keeps checking.':
+    'まだ検証されていません。Appwrite は確認を続けます。',
   'Certificate expired': '証明書の期限切れ',
   'Renewal failed': '証明書の更新に失敗しました',
   'Certificate blocked': '証明書の発行が保留中',

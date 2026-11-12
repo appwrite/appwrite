@@ -23,6 +23,10 @@ import {
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { fetchFirewallRule } from '@/lib/react-query/hooks'
 import {
+  firewallTabPath,
+  resolveFirewallListSearch,
+} from '@/lib/firewall/conditions'
+import {
   buildConsoleUrl,
   copyResourceAsJson,
   copyToClipboard,
@@ -54,7 +58,9 @@ export function RuleContextMenu({
   children,
 }: RuleContextMenuProps) {
   const t = useT()
-  const ruleHref = buildConsoleUrl(`/projects/${projectId}/firewall`)
+  const ruleHref = buildConsoleUrl(
+    firewallTabPath(projectId, resolveFirewallListSearch(rule)),
+  )
 
   return (
     <ContextMenu>

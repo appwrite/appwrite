@@ -153,6 +153,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '攻撃モードがオンです。すべての訪問者がチャレンジされます。',
   'Apply as firewall rule': 'ファイアウォールルールとして適用',
   'No firewall rules': 'ファイアウォールルールがありません',
+  'Configure rules': 'ルールを設定',
+  'Rules that apply to this site appear here.':
+    'このサイトに適用されるルールがここに表示されます。',
+  'Rules that apply to this function appear here.':
+    'この Function に適用されるルールがここに表示されます。',
   'No API firewall rules': 'API のファイアウォールルールがありません',
   'No function firewall rules':
     'Functions のファイアウォールルールがありません',
@@ -708,6 +713,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Models and tools': 'モデルとツール',
   'Calls by model and by tool': 'モデル別・ツール別の呼び出し数',
   'No calls in this range': 'この期間の呼び出しはありません',
+  'Installs and push': 'インストールとプッシュ',
+  'Installs, updates and push notifications from the tracking SDK':
+    '計測 SDK によるインストール、アップデート、プッシュ通知',
+  'No installs tracked yet': 'まだインストールは計測されていません',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    '最新の計測 SDK をアプリに追加すると、インストール、アップデート、プッシュ通知を計測できます。',
+  'Add the tracking SDK': '計測 SDK を追加',
+  Installs: 'インストール',
+  Updates: 'アップデート',
+  'Push received': 'プッシュ受信',
+  'Push opened': 'プッシュ開封',
+  'Push opened by message': 'メッセージ別のプッシュ開封',
+  'No opened pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きで開封されたプッシュはありません',
   'Values of the props sent with your events':
     'イベントと一緒に送信された props の値',
   'No event props in this range': 'この期間にイベントの props はありません',
@@ -948,6 +967,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'The domain your app makes requests from. Use':
     'アプリがリクエストを送信するドメイン。使用:',
   'Troubleshoot CORS errors': 'CORS エラーのトラブルシューティング',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'どのウェブサイトからでもこのプロジェクトにリクエストを送信できます。本番公開の前に、* をアプリのドメイン（例: app.example.com）に置き換えてください。',
   'Bundle ID': 'バンドル ID',
   'Application ID': 'アプリケーション ID',
   'Package identifier': 'パッケージ識別子',
@@ -1413,6 +1434,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Use a date range longer than this interval.':
     'この間隔より長い日付範囲を使用してください。',
   'days or less for this interval.': '日以下 (この間隔の場合)。',
+  'This interval is larger than the selected date range.':
+    'この間隔は選択した期間より大きいです。',
   Compute: 'コンピュート',
   'Compute over time': '経時的なコンピュート',
   'Copy API endpoint': 'API エンドポイントをコピー',
@@ -3104,6 +3127,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Clear: 'クリア',
   Apply: '適用',
   Compare: '比較',
+  vs: 'vs',
   Realtime: 'Realtime',
   Connected: '接続済み',
   Connecting: '接続中',
@@ -3905,6 +3929,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'View monitors': 'モニターを表示',
   'Waiting for recovery': '回復待ち',
   Watches: '監視対象',
+  Acknowledge: '確認済みにする',
+  'Acknowledged by {name}': '{name} が確認済み',
+  'Acknowledged by a member': 'メンバーが確認済み',
+  'Acknowledged with an API key': 'API キーで確認済み',
+  'Failed to acknowledge the alert': 'アラートを確認済みにできませんでした',
+  'Failed to undo the acknowledgement': '確認済みを取り消せませんでした',
+  'Let your team know someone is on it. It keeps firing until usage recovers.':
+    '誰かが対応中であることをチームに知らせます。使用量が回復するまでアラートは発生し続けます。',
+  'Nobody has acknowledged this alert':
+    'このアラートはまだ誰も確認していません',
   "You don't have permission to manage monitors.":
     'モニターを管理する権限がありません。',
   'between two alerts from this monitor.':

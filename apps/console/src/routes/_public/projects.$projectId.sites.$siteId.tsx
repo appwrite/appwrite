@@ -50,13 +50,16 @@ export const Route = createFileRoute(
 
       // Fetch critical data before rendering to prevent layout shifts
       await Promise.all([
-        // Fetch recent deployments (first 4)
+        // Fetch recent deployments for the overview tab
         queryClient.ensureQueryData(
-          siteDeploymentsQueryOptions(projectId, siteId, 0, 4, [
+          siteDeploymentsQueryOptions(projectId, siteId, 0, 5, [
             Query.select([
               'status',
               'type',
               'resourceId',
+              'buildSize',
+              'sourceSize',
+              'buildDuration',
               'providerRepositoryUrl',
               'providerRepositoryOwner',
               'providerRepositoryName',

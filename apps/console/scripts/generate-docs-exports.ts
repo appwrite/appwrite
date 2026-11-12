@@ -36,6 +36,9 @@ import {
 } from '../src/lib/seo/llms'
 import type { LlmsContentMeta } from '../src/lib/seo/llms'
 import { buildForAgentsMarkdown } from '../src/lib/for-agents/content'
+import { buildPricingMarkdown } from '../src/lib/pricing/markdown'
+import { MARKDOWN_TWIN_PAGES } from '../src/lib/seo/markdown-twins'
+import { pageHtmlToMarkdown } from '../src/lib/seo/page-markdown'
 import { getProductionRobotsTxt } from '../src/lib/seo/robots'
 import { markdocToMarkdown } from '../src/lib/seo/markdoc-to-markdown'
 import { generateAgentSetupMarkdown } from '../src/lib/seo/agent-setup'
@@ -304,6 +307,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: serializeDiscoveryJson(buildMcpServerCard(SITE_ORIGIN)),
     },
     {
+      relativePath: '.well-known/ard.json',
+      contents: serializeDiscoveryJson(buildAiCatalogDocument(SITE_ORIGIN)),
+    },
+    {
       relativePath: '.well-known/ai-catalog.json',
       contents: serializeDiscoveryJson(buildAiCatalogDocument(SITE_ORIGIN)),
     },
@@ -316,10 +323,28 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: buildForAgentsMarkdown(SITE_ORIGIN),
     },
     {
+      relativePath: 'pricing.md',
+      contents: buildPricingMarkdown(SITE_ORIGIN),
+    },
+    {
       relativePath: 'robots.txt',
       contents: getProductionRobotsTxt(),
     },
   ]
+}
+
+async function buildMarkdownTwins(clientDir: string): Promise<ExportFile[]> {
+  const twins: ExportFile[] = []
+  for (const page of MARKDOWN_TWIN_PAGES) {
+    const segment = page.slice(1)
+    const html = join(clientDir, `${segment}.html`)
+    if (!existsSync(html)) continue
+    twins.push({
+      relativePath: `${segment}.md`,
+      contents: pageHtmlToMarkdown(await readFile(html, 'utf-8'), SITE_ORIGIN),
+    })
+  }
+  return twins
 }
 
 async function writeExports(outputDir: string, files: ExportFile[]) {
@@ -345,6 +370,11 @@ async function main() {
   if (existsSync(clientDir)) outputDirs.push(clientDir)
 
   await Promise.all(outputDirs.map((dir) => writeExports(dir, files)))
+
+  // Twins of prerendered marketing pages exist only once vite has built the HTML.
+  const twins = await buildMarkdownTwins(clientDir)
+  await writeExports(clientDir, twins)
+  files.push(...twins)
 
   console.log(
     `Generated ${files.map((file) => file.relativePath).join(', ')}`,

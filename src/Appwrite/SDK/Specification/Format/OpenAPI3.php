@@ -1328,6 +1328,9 @@ class OpenAPI3 extends Format
                     if (\is_array($rule['default'] ?? null) || ($rule['default'] ?? null) instanceof \stdClass) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'] === [] ? new \stdClass() : $rule['default'];
                     }
+                    if (!in_array($name, $required) && ($rule['default'] ?? null) === null) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
+                    }
                     continue;
                 }
 
