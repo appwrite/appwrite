@@ -195,19 +195,19 @@ class Func extends Model
                 'default' => false,
                 'example' => false,
             ])
-            ->addRule('providerComments', [
+            ->addRule('providerSummaries', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether a build comment is posted on pull requests. Commit statuses are still reported when disabled.',
+                'description' => 'Whether a build summary is posted on pull requests. Commit statuses are still reported when disabled.',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('providerAutoDeploy', [
+            ->addRule('providerDeployments', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether pushes that match the branch and path rules are deployed automatically.',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('providerCommitStatus', [
+            ->addRule('providerStatuses', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether the build status is reported on each commit.',
                 'default' => true,
