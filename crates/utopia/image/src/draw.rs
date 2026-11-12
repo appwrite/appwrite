@@ -1,7 +1,9 @@
 //! Filled paths and text, drawn onto an image's current frame.
 
 use image::RgbaImage;
-use ttf_parser::{Face, OutlineBuilder};
+use skrifa::instance::{LocationRef, Size};
+use skrifa::outline::{DrawSettings, OutlinePen};
+use skrifa::{FontRef, GlyphId, MetadataProvider};
 use zeno::{Command, Fill, Mask, PathData, Transform, Vector};
 
 use crate::color::Color;
@@ -35,15 +37,15 @@ pub(crate) fn validate(path: &str) -> Result<()> {
     zeno::validate_svg(path).map_err(|at| Error::InvalidArgument(format!("Invalid path at offset {at}")))
 }
 
-fn face(font: &[u8]) -> Result<Face<'_>> {
-    Face::parse(font, 0).map_err(|error| Error::InvalidArgument(format!("Invalid font: {error}")))
+fn face(font: &[u8]) -> Result<FontRef<'_>> {
+    FontRef::new(font).map_err(|error| Error::InvalidArgument(format!("Invalid font: {error}")))
 }
 
-/// A glyph's outline as path commands, in font units with y up.
+/// A glyph's outline as path commands, with y up.
 #[derive(Default)]
 struct Outline(Vec<Command>);
 
-impl OutlineBuilder for Outline {
+impl OutlinePen for Outline {
     fn move_to(&mut self, x: f32, y: f32) {
         self.0.push(Command::MoveTo(Vector::new(x, y)));
     }
@@ -65,11 +67,21 @@ impl OutlineBuilder for Outline {
     }
 }
 
+/// The outline of `glyph` at `size` pixels an em; empty for a glyph that draws nothing.
+fn outline(face: &FontRef<'_>, glyph: GlyphId, size: Size) -> Vec<Command> {
+    let mut outline = Outline::default();
+    if let Some(glyph) = face.outline_glyphs().get(glyph) {
+        // A glyph that fails to draw is one that draws nothing.
+        let _ = glyph.draw(DrawSettings::unhinted(size, LocationRef::default()), &mut outline);
+    }
+    outline.0
+}
+
 /// Whether `font` (TrueType or OpenType data) draws something for `character`:
 /// a missing glyph, or one with no outline, draws nothing.
 pub fn has_glyph(font: &[u8], character: char) -> Result<bool> {
     let face = face(font)?;
-    Ok(face.glyph_index(character).is_some_and(|glyph| face.outline_glyph(glyph, &mut Outline::default()).is_some()))
+    Ok(face.charmap().map(character).is_some_and(|glyph| !outline(&face, glyph, Size::unscaled()).is_empty()))
 }
 
 /// Draws `text` in `font` at `size` pixels an em, centred on `x` with its
@@ -85,15 +97,13 @@ pub(crate) fn text(
     y: f32,
 ) -> Result<()> {
     let face = face(font)?;
-    let scale = size / f32::from(face.units_per_em());
-    let glyphs: Vec<_> = text.chars().filter_map(|character| face.glyph_index(character)).collect();
-    let advance = |glyph| f32::from(face.glyph_hor_advance(glyph).unwrap_or(0)) * scale;
+    let size = Size::new(size);
+    let metrics = face.glyph_metrics(size, LocationRef::default());
+    let glyphs: Vec<_> = text.chars().filter_map(|character| face.charmap().map(character)).collect();
+    let advance = |glyph| metrics.advance_width(glyph).unwrap_or(0.0);
     let mut pen = x - glyphs.iter().map(|glyph| advance(*glyph)).sum::<f32>() / 2.0;
     for glyph in glyphs {
-        let mut outline = Outline::default();
-        if face.outline_glyph(glyph, &mut outline).is_some() {
-            fill(pixels, &outline.0, Transform::scale(scale, -scale).then_translate(pen, y), color);
-        }
+        fill(pixels, &outline(&face, glyph, size), Transform::scale(1.0, -1.0).then_translate(pen, y), color);
         pen += advance(glyph);
     }
     Ok(())
