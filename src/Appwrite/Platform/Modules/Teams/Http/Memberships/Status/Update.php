@@ -193,7 +193,7 @@ class Update extends Action
             // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in.
             // MFA in force is left alone: the address alone must not discard a second factor, nor join the account it guards
             $guarded = !$hasSession && $user->getMinimumFactors() > 1;
-            if ($guarded && $verification !== null && !$user->getAttribute($verification, false)) {
+            if ($guarded && ($verification === null || !$user->getAttribute($verification, false))) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
 
