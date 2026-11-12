@@ -84,7 +84,7 @@ class Get extends Action
                         model: Response::MODEL_NONE,
                     )
                 ],
-                contentType: ContentType::IMAGE_PNG
+                contentType: ContentType::IMAGE
             ))
             ->param('url', '', fn (PublicURL $publicURL) => $publicURL, 'Website URL which you want to capture.', false, ['publicURL'], example: 'https://example.com')
             ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Only Accept and Accept-Language are allowed. Defaults to empty.', true, example: '{"Accept-Language":"en-US,en;q=0.9"}')
