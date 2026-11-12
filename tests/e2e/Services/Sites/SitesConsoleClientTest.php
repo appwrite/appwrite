@@ -204,10 +204,18 @@ final class SitesConsoleClientTest extends Scope
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame($teamId, $response['body']['teamId']);
 
+        // Readable as the project is, so a role on another project of the team grants nothing
+        $projectId = $this->getProject()['$id'];
+        $permissions = [
+            Permission::read(Role::team($teamId, 'owner')),
+            Permission::read(Role::team($teamId, 'developer')),
+            Permission::read(Role::team($teamId, "project-{$projectId}-owner")),
+            Permission::read(Role::team($teamId, "project-{$projectId}-developer")),
+        ];
         foreach ($files as $fileId) {
             $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
             $this->assertSame(200, $file['headers']['status-code']);
-            $this->assertSame([Permission::read(Role::team($teamId))], $file['body']['$permissions']);
+            $this->assertSame($permissions, $file['body']['$permissions']);
         }
 
         /**
@@ -238,7 +246,12 @@ final class SitesConsoleClientTest extends Scope
         foreach ($files as $fileId) {
             $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
             $this->assertSame(200, $file['headers']['status-code']);
-            $this->assertSame([Permission::read(Role::team($claimerId))], $file['body']['$permissions']);
+            $this->assertEqualsCanonicalizing([
+                Permission::read(Role::team($claimerId, 'owner')),
+                Permission::read(Role::team($claimerId, 'developer')),
+                Permission::read(Role::team($claimerId, "project-{$projectId}-owner")),
+                Permission::read(Role::team($claimerId, "project-{$projectId}-developer")),
+            ], $file['body']['$permissions']);
         }
 
         $this->cleanupSite($siteId);
