@@ -4591,11 +4591,11 @@ final class FunctionsCustomServerTest extends Scope
             'name' => 'Test retention function',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
 
         $response = $this->getFunction($functionIdForUpdate);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
 
         // Failed update flow
         $response = $this->updateFunction($functionIdForUpdate, [

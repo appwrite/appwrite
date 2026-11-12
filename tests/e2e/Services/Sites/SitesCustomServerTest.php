@@ -4901,11 +4901,11 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
 
         $response = $this->getSite($siteIdToUpdate);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
 
         // Failed update flow
         $response = $this->updateSite([
