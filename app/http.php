@@ -407,6 +407,35 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         }
 
         Span::current()?->finish();
+
+        /** @var \Appwrite\Logs\Logs $logs */
+        $logs = $container->get('logs');
+
+        Span::init('logs.setup');
+
+        $max = 15;
+        $sleep = 2;
+        $attempts = 0;
+
+        while (true) {
+            try {
+                $attempts++;
+                $logs->getAdapter()->setup();
+                Console::success('[Setup] - Log schema is ready');
+                break;
+            } catch (\Throwable $e) {
+                if ($attempts >= $max) {
+                    Span::add('logs.ready', false);
+                    Console::warning('[Setup] - Skip: log schema is not ready: ' . $e->getMessage());
+                    break;
+                }
+
+                Console::warning("  └── Log schema setup failed. Retrying ({$attempts})...");
+                sleep($sleep);
+            }
+        }
+
+        Span::current()?->finish();
     });
 
     Span::init('http.server.start');
