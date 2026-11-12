@@ -49,7 +49,7 @@ class Etsy extends OAuth2
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
             'state' => \json_encode($this->withPKCEState($this->state)),
-            'scope' => $this->scopes,
+            'scope' => \implode(' ', $this->getScopes()),
             'code_challenge' => $this->getPKCEChallenge(),
             'code_challenge_method' => 'S256',
         ]);
