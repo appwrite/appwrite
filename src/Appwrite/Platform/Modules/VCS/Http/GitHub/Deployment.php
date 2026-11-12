@@ -381,9 +381,6 @@ trait Deployment
                 }
 
                 if (!$isAuthorized) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
                     $message = 'Authorization required for external contributor.';
 
                     $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
@@ -393,7 +390,19 @@ trait Deployment
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
                     $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
-                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                    // Keyed like the build's check, so the build takes it over once authorized
+                    $vcs->updateCheck(
+                        $owner,
+                        $repositoryName,
+                        $providerCommitHash,
+                        'queued',
+                        $resource->getAttribute('name'),
+                        $message,
+                        detailsUrl: $authorizeUrl,
+                        suite: $project->getAttribute('name'),
+                        key: "{$project->getId()}/{$resource->getCollection()}/{$resource->getId()}",
+                        suiteKey: $project->getId(),
+                    );
                     continue;
                 }
 
