@@ -5394,11 +5394,6 @@ parameters:
 			count: 1
 			path: src/Sources/Appwrite/Reader/Database.php
 
-		-
-			message: '#^Call to function is_string\(\) with non\-empty\-string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: src/Sources/CSV.php
 
 		-
 			message: '#^Cannot access offset ''array'' on mixed\.$#'
