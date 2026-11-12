@@ -3,6 +3,34 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-activity-reasons",
+    "href": "/blog/post/announcing-activity-reasons",
+    "title": "Announcing reasons in Activity: see why every change was made",
+    "description": "Appwrite Activity now shows why each change was made. The MCP server records a reason for every write an AI agent makes, and the CLI and your own code can send one too.",
+    "date": "2026-11-12",
+    "lastUpdated": "2026-11-12",
+    "timeToRead": 5,
+    "author": "matej-baco",
+    "category": "announcements, ai, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-activity-reasons/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-project-transfer-links",
+    "href": "/blog/post/announcing-project-transfer-links",
+    "title": "Announcing project transfer links: hand off an Appwrite project to any organization",
+    "description": "Hand an Appwrite Cloud project to another organization with a single-use transfer link, even one you're not a member of. The project keeps its data, keys, and endpoints.",
+    "date": "2026-11-12",
+    "lastUpdated": "2026-11-12",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-project-transfer-links/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-otp-token-email-header",
     "href": "/blog/post/announcing-otp-token-email-header",
     "title": "Announcing origin-bound OTP-Token headers in Appwrite Auth",

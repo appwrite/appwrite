@@ -3042,6 +3042,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -3327,6 +3328,11 @@
             "tenant",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
@@ -7217,6 +7223,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -7502,6 +7509,11 @@
             "tenant",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Notion": [
             "oauthClientId",

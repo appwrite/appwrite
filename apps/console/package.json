@@ -59,7 +59,7 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "21.1.0",
+    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@315f1a7866411da63c9e6e6a1db71bfaeb78689e",
     "@appwrite.io/specs": "github:appwrite/specs#9a50097dd538fd7663748aceed37fa05692bc5e4",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -135,6 +135,7 @@
     "motion": "^12.23.22",
     "next-themes": "^0.4.6",
     "node-appwrite": "^20.2.1",
+    "node-html-markdown": "^2.0.0",
     "prism-react-renderer": "^2.4.1",
     "prismjs": "^1.30.0",
     "react": "19.1.1",

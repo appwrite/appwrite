@@ -166,6 +166,15 @@ class Create extends Action
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
+        // A project-wide password reset refuses every password set before it
+        $passwordsInvalidatedAt = $project->getAttribute('auths', [])['passwordsInvalidatedAt'] ?? null;
+        if (
+            $passwordsInvalidatedAt !== null
+            && new \DateTime($profile->getAttribute('passwordUpdate')) <= new \DateTime($passwordsInvalidatedAt)
+        ) {
+            throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
+        }
+
         $user->setAttributes($profile->getArrayCopy());
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);

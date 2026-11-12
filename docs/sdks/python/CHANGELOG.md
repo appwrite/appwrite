@@ -1,5 +1,36 @@
 # Change Log
 
+## 27.2.0
+
+* Updated: `project.list_environments`, `project.create_environment`, `project.get_environment`, `project.update_environment` return `Environment` models instead of `Project`
+* Added: `account.create_device`, `account.get_device`, `account.delete_device` and `account.update_device_session`, and the `Device` model
+* Added: `project.update_account_devices_policy`, `ProjectPolicyId.ACCOUNT_DEVICES` and the `PolicyAccountDevices` model
+* Added: `project.update_o_auth2_vipps`, `project.update_o_auth2_vipps_sandbox` and the `OAuth2Vipps` model
+* Added: `OAuthProvider.VIPPS` and `OAuthProvider.VIPPSSANDBOX`
+* Added: `proxy.update_function_rule`, `proxy.update_redirect_rule` and `proxy.update_site_rule`
+* Added: optional `schedule` on `waf` rule create and update methods and on `WafRule*` models
+* Added: `project.get_prefs` and `project.update_prefs` for project preferences
+* Added: `Client.set_environment` to act in a project environment
+* Added: `AppwriteMigrationResource.PROJECT_PREFERENCES` to migrate project preferences
+* Added: `monitors.read`, `monitors.write`, `alerts.read`, `alerts.write`, `reviews.read` and `reviews.write` to `ProjectKeyScopes`
+* Added: `Organization.budgetnotify`, `budgetcritical` and `educationexpiresat`
+* Added: `Project.environmentid`, `Session.username` and `ActivityEvent.reason`
+* Added: `ProxyRule.expireat` and `certificatestatus`
+* Updated: requests send response format `2.7.1`; README targets Appwrite 2.7.x
+
+## 27.1.0
+
+* Added: `migrations` service to run Appwrite, Firebase, NHost, Supabase, CSV and JSON migrations, plus retries and listing
+* Added: `Migration`, `MigrationList` and `MigrationReport` models and the `AppwriteMigrationResource`, `FirebaseMigrationResource`, `NHostMigrationResource`, `SupabaseMigrationResource` and `OnDuplicate` enums
+* Added: `project.update_deny_realtime_guests_policy`, the `PolicyDenyRealtimeGuests` model and `ProjectPolicyId.DENY_REALTIME_GUESTS`
+* Added: `project.delete_sessions` to sign out every user in the project
+* Added: `BillingPlan.deploymentretention`, `deploymentretentionmax` and `deploymentsretentioncount`
+* Added: `python-3.15`, `deno-2.9`, `go-1.27` and `rust-1.99` to `Runtime` and `BuildRuntime`
+* Updated: requests send `X-Appwrite-Response-Format: 2.6.2`; README targets Appwrite 2.6.x
+* Updated: redirects are no longer followed; a 3xx raises `AppwriteException` naming the `Location`
+* Fixed: path parameters are percent-encoded as one segment; `.` and `..` raise `AppwriteException`
+* Fixed: the chunked-upload resume lookup encodes the file ID
+
 ## 27.0.0
 
 This release updates the HTTP dependency requirements and raises the minimum supported Python version.

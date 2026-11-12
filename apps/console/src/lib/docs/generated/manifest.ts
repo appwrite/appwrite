@@ -101,6 +101,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "advanced/billing/project-transfers",
+    "title": "Project transfers",
+    "description": "Move an Appwrite Cloud project to another organization, directly or with a single-use transfer link that an owner of the other organization claims.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
     "slug": "advanced/billing/refund-policy",
     "title": "Refund policy",
     "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",

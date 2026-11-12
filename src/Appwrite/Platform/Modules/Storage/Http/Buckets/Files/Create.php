@@ -497,8 +497,8 @@ class Create extends Action
                     }
                 }
 
-                // The stored bytes of an encrypted file say nothing about its type, so use the first chunk's.
-                $mimeType = $cipher === null ? ($info->mimeType ?? $deviceForFiles->getFileMimeType($path)) : ($metadata['content_type'] ?? '');
+                // Use chunk 1's type: encrypted bytes say nothing, and S3 keeps the type of whichever chunk arrived first.
+                $mimeType = $cipher === null ? (($metadata['content_type'] ?? '') ?: ($info->mimeType ?? $deviceForFiles->getFileMimeType($path))) : ($metadata['content_type'] ?? '');
                 $formats = Config::getParam('storage-formats');
 
                 $allowed = $bucket->getAttribute('allowedFileExtensions', []);

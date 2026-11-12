@@ -78,6 +78,7 @@ import {
   getMarketingPrerenderHtmlFile,
 } from './src/lib/marketing/marketing-build-paths.ts'
 import { getInitPrerenderHtmlFile } from './src/lib/init/init-prerender-paths.ts'
+import { markdownTwinPage } from './src/lib/seo/markdown-twins.ts'
 import { isThreadsRoutePath } from './src/lib/threads/prerender-paths.ts'
 import {
   isLegacyConsolePath,
@@ -302,6 +303,7 @@ function isServerTrackedExportFile(relativePath: string): boolean {
     normalized === 'docs.md' ||
     normalized === 'setup.md' ||
     normalized === 'blog.md' ||
+    normalized === 'blog/llms.txt' ||
     normalized === 'changelog.md' ||
     normalized === 'integrations.md' ||
     normalized === 'robots.txt' ||
@@ -309,7 +311,8 @@ function isServerTrackedExportFile(relativePath: string): boolean {
     normalized === '.well-known/mcp/server-card.json' ||
     normalized === '.well-known/ard.json' ||
     normalized === '.well-known/ai-catalog.json' ||
-    normalized === '.well-known/agent-skills/index.json'
+    normalized === '.well-known/agent-skills/index.json' ||
+    markdownTwinPage(`/${normalized}`) !== null
   )
 }
 

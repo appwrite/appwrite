@@ -713,6 +713,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Models and tools': 'モデルとツール',
   'Calls by model and by tool': 'モデル別・ツール別の呼び出し数',
   'No calls in this range': 'この期間の呼び出しはありません',
+  'Installs and push': 'インストールとプッシュ',
+  'Installs, updates and push notifications from the tracking SDK':
+    '計測 SDK によるインストール、アップデート、プッシュ通知',
+  'No installs tracked yet': 'まだインストールは計測されていません',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    '最新の計測 SDK をアプリに追加すると、インストール、アップデート、プッシュ通知を計測できます。',
+  'Add the tracking SDK': '計測 SDK を追加',
+  Installs: 'インストール',
+  Updates: 'アップデート',
+  'Push received': 'プッシュ受信',
+  'Push opened': 'プッシュ開封',
+  'Push opened by message': 'メッセージ別のプッシュ開封',
+  'No opened pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きで開封されたプッシュはありません',
   'Values of the props sent with your events':
     'イベントと一緒に送信された props の値',
   'No event props in this range': 'この期間にイベントの props はありません',
@@ -2002,7 +2016,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to rotate secret': 'シークレットのローテーションに失敗しました',
   'Failed to send test email': 'テストメールの送信に失敗しました',
   'Failed to start migration': '移行の開始に失敗しました',
-  'Failed to transfer project': 'プロジェクトの転送に失敗しました',
   'Failed to update SMTP settings': 'SMTP 設定の更新に失敗しました',
   'Failed to update project name': 'プロジェクト名の更新に失敗しました',
   'Failed to update protocol': 'プロトコルの更新に失敗しました',
@@ -2144,8 +2157,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search migrations...': 'マイグレーションを検索...',
   'Search webhooks...': 'Webhook を検索...',
   'Secure protocol': 'セキュアプロトコル',
-  'Select a different organization to transfer to.':
-    '転送先の別の組織を選択してください。',
   'Select at least one event': '少なくとも 1 つのイベントを選択',
   'Select at least one resource': '少なくとも 1 つのリソースを選択',
   'Select destination': '転送先を選択',
@@ -2204,12 +2215,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。',
   'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。今すぐコピーしてください。',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
-    'このプロジェクトを転送するには、現在の組織と転送先組織の両方のメンバーである必要があります。以下で転送先を選択してください。',
   'Transfer between organizations': '組織間の転送',
   'Transfer project': 'プロジェクトの転送',
-  'Transfer this project to the selected organization':
-    'このプロジェクトを選択した組織に転送',
   'URL is required': 'URL は必須です',
   'Update webhook': 'Webhook の更新',
   'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
@@ -2238,10 +2245,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'インポート中に既存の ID を持つ行に遭遇した場合。',
   'When enabled, all emails will be sent through your configured SMTP server.':
     '有効にすると、すべてのメールは設定した SMTP サーバー経由で送信されます。',
-  'You do not have any organizations you can transfer this project to.':
-    'このプロジェクトを転送できる組織がありません。',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
-    'このプロジェクトを転送できる組織がありません。転送するには、別の組織を作成または参加してください。',
   'an A or AAAA record': 'A または AAAA レコード',
   'and all its databases, functions, and files? This action cannot be undone.':
     'とそのすべてのデータベース、Functions、ファイル? この操作は元に戻せません。',

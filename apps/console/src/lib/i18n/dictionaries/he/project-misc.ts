@@ -1073,6 +1073,20 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Models and tools': 'מודלים וכלים',
   'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
   'No calls in this range': 'אין קריאות בטווח הזה',
+  'Installs and push': 'התקנות והתראות פוש',
+  'Installs, updates and push notifications from the tracking SDK':
+    'התקנות, עדכונים והתראות פוש מ-SDK המעקב',
+  'No installs tracked yet': 'עדיין לא נמדדו התקנות',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    'הוסיפו לאפליקציה את גרסת SDK המעקב העדכנית כדי לספור התקנות, עדכונים והתראות פוש.',
+  'Add the tracking SDK': 'הוספת SDK המעקב',
+  Installs: 'התקנות',
+  Updates: 'עדכונים',
+  'Push received': 'התראות פוש שהתקבלו',
+  'Push opened': 'התראות פוש שנפתחו',
+  'Push opened by message': 'התראות פוש שנפתחו לפי הודעה',
+  'No opened pushes with a message ID in this range':
+    'אין בטווח הזה התראות פוש שנפתחו עם מזהה הודעה',
   'Values of the props sent with your events':
     'ערכי ה-props שנשלחו עם האירועים',
   'No event props in this range': 'אין props של אירועים בטווח הזה',
@@ -2506,7 +2520,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to rotate secret': 'החלפת הסוד נכשלה',
   'Failed to send test email': 'שליחת אימייל הבדיקה נכשלה',
   'Failed to start migration': 'התחלת המיגרציה נכשלה',
-  'Failed to transfer project': 'העברת הפרויקט נכשלה',
   'Failed to update SMTP settings': 'עדכון הגדרות ה-SMTP נכשל',
   'Failed to update project name': 'עדכון שם הפרויקט נכשל',
   'Failed to update protocol': 'עדכון הפרוטוקול נכשל',
@@ -2642,7 +2655,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Search migrations...': 'חיפוש מיגרציות...',
   'Search webhooks...': 'חיפוש webhooks...',
   'Secure protocol': 'פרוטוקול מאובטח',
-  'Select a different organization to transfer to.': 'בחרו ארגון אחר להעברה.',
   'Select at least one event': 'בחרו לפחות אירוע אחד',
   'Select at least one resource': 'בחרו לפחות משאב אחד',
   'Select destination': 'בחירת יעד',
@@ -2700,12 +2712,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד.',
   'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
     'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד. העתיקו אותו עכשיו.',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
-    'כדי להעביר את הפרויקט, עליכם להיות חברים גם בארגון הנוכחי וגם בארגון היעד. בחרו יעד למטה.',
   'Transfer between organizations': 'העברה בין ארגונים',
   'Transfer project': 'העברת פרויקט',
-  'Transfer this project to the selected organization':
-    'העברת הפרויקט לארגון שנבחר',
   'URL is required': 'נדרשת כתובת URL',
   'Update webhook': 'עדכון webhook',
   'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
@@ -2733,10 +2741,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כאשר במהלך הייבוא נמצאת שורה עם מזהה קיים.',
   'When enabled, all emails will be sent through your configured SMTP server.':
     'כאשר האפשרות מופעלת, כל האימיילים יישלחו דרך שרת ה-SMTP שהגדרתם.',
-  'You do not have any organizations you can transfer this project to.':
-    'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה.',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
-    'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה. צרו ארגון אחר או הצטרפו אליו כדי להעביר.',
   'an A or AAAA record': 'רשומת A או AAAA',
   'and all its databases, functions, and files? This action cannot be undone.':
     'ואת כל מסדי הנתונים, הפונקציות והקבצים שלו? לא ניתן לבטל פעולה זו.',
