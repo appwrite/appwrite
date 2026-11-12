@@ -39,10 +39,8 @@ final readonly class Access
         }
 
         do {
+            // A project nobody may read leaves its screenshots readable by nobody
             $permissions = self::permissions($this->project($project));
-            if ($permissions === []) {
-                return 0;
-            }
 
             // A generator reads lazily, so the whole walk runs inside the skip
             $count = $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $bucket, $permissions, $commit): int {
