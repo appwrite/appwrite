@@ -303,6 +303,7 @@ function isServerTrackedExportFile(relativePath: string): boolean {
     normalized === 'docs.md' ||
     normalized === 'setup.md' ||
     normalized === 'blog.md' ||
+    normalized === 'blog/llms.txt' ||
     normalized === 'changelog.md' ||
     normalized === 'integrations.md' ||
     normalized === 'robots.txt' ||
