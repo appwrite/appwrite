@@ -33,7 +33,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "customer-story-dentalrx",
     "href": "/blog/post/customer-story-dentalrx",
-    "title": "How DentalRx replaced Firebase and Algolia with Appwrite",
+    "title": "How DentalRx replaced Firebase and Algolia with Appwrite for 6,000+ users",
     "description": "Learn how pharmacist Nickolas Steel moved DentalRx from Firebase and Algolia to Postgres on Appwrite to run a free drug reference for 6,000+ dental users.",
     "date": "2026-11-12",
     "lastUpdated": "2026-11-12",
