@@ -305,18 +305,17 @@ final class TeamsCustomClientTest extends Scope
 
         $params = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html']);
 
+        // The invite proves the inbox only: signed out, it neither joins the account a second factor guards nor discards that factor
         $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
             'userId' => $params['userId'],
             'secret' => $params['secret'],
         ]);
-        $this->assertSame(200, $confirmation['headers']['status-code']);
+        $this->assertSame(401, $confirmation['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $confirmation['body']['type']);
 
-        // The invite proves the inbox only, the session must still pass the TOTP challenge
-        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
-            'cookie' => 'a_session_' . $projectId . '=' . $confirmation['cookies']['a_session_' . $projectId],
-        ]));
-        $this->assertSame(401, $account['headers']['status-code']);
-        $this->assertSame('user_more_factors_required', $account['body']['type']);
+        $pending = $this->client->call(Client::METHOD_GET, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'], $serverHeaders);
+        $this->assertSame(200, $pending['headers']['status-code']);
+        $this->assertFalse($pending['body']['confirm']);
 
         $user = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $serverHeaders);
         $this->assertTrue($user['body']['mfa']);
@@ -326,6 +325,14 @@ final class TeamsCustomClientTest extends Scope
 
         $account = $this->client->call(Client::METHOD_GET, '/account', $ownerHeaders);
         $this->assertSame(200, $account['headers']['status-code']);
+
+        // Signed in with every factor, the invite is accepted
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $ownerHeaders, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertSame(200, $confirmation['headers']['status-code']);
+        $this->assertTrue($confirmation['body']['confirm']);
     }
 
     public function testUpdateMembershipStatusByPhoneRevokesUnverifiedAccountCredentials(): void

@@ -181,10 +181,6 @@ class Update extends Action
                 throw new Exception(Exception::TEAM_INVALID_SECRET);
             }
 
-            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
-
-            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
-
             // The invite proves the address it was sent to, and only one address on file tells which that was
             $hasEmail = !empty($user->getAttribute('email'));
             $hasPhone = !empty($user->getAttribute('phone'));
@@ -195,8 +191,15 @@ class Update extends Action
             };
 
             // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in.
-            // MFA in force is left alone: the address alone must not discard a second factor
+            // MFA in force is left alone: the address alone must not discard a second factor, nor join the account it guards
             $guarded = !$hasSession && $user->getMinimumFactors() > 1;
+            if ($guarded && $verification !== null && !$user->getAttribute($verification, false)) {
+                throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
+            }
+
+            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
+
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
             if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false) && !$guarded) {
                 $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven, $mqtt));
