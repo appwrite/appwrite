@@ -246,7 +246,12 @@ final class SitesConsoleClientTest extends Scope
         foreach ($files as $fileId) {
             $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
             $this->assertSame(200, $file['headers']['status-code']);
-            $this->assertSame([Permission::read(Role::team($claimerId))], $file['body']['$permissions']);
+            $this->assertEqualsCanonicalizing([
+                Permission::read(Role::team($claimerId, 'owner')),
+                Permission::read(Role::team($claimerId, 'developer')),
+                Permission::read(Role::team($claimerId, "project-{$projectId}-owner")),
+                Permission::read(Role::team($claimerId, "project-{$projectId}-developer")),
+            ], $file['body']['$permissions']);
         }
 
         $this->cleanupSite($siteId);
