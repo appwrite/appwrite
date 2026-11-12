@@ -71,11 +71,6 @@ class Domains extends Listener
         $projectInternalId = $project->getSequence();
         $domain = $rule->getAttribute('domain', '');
 
-        // Email domains get no certificate; they receive mail once verified
-        $details = $rule->getAttribute('protocol', '') === 'smtp'
-            ? 'It is ready to receive email.'
-            : 'Its SSL certificate is issued, and it now serves HTTPS traffic.';
-
         // A site or function lists its own domains; API domains are in project settings
         $resourceId = $rule->getAttribute('deploymentResourceId', '');
         $path = match ($resourceId === '' ? '' : $rule->getAttribute('deploymentResourceType', '')) {
@@ -119,7 +114,6 @@ class Domains extends Listener
             $template->setParam('{{user}}', (string) ($user->getAttribute('name', 'there') ?: 'there'));
             $template->setParam('{{domain}}', $domain);
             $template->setParam('{{project}}', $project->getAttribute('name'));
-            $template->setParam('{{details}}', $details);
             $template->setParam('{{host}}', $platform['consoleUrl'] ?? '');
             $template->setParam('{{path}}', $path);
 

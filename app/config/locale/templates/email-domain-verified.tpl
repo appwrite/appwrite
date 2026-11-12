@@ -1,6 +1,5 @@
 <p>Hi <strong>{{user}}</strong>,</p>
 <p>Your domain <strong>{{domain}}</strong> on project <strong>{{project}}</strong> is verified and live.</p>
-<p>{{details}}</p>
 <p>No further action is needed.</p>
 
 <table border="0" cellspacing="0" cellpadding="0" style="padding-top: 10px; padding-bottom: 10px; margin-top: 32px">
