@@ -41,6 +41,7 @@
         "DELETE /v1/project",
         "DELETE /v1/project/keys/:keyId",
         "DELETE /v1/project/mock-phones/:number",
+        "DELETE /v1/project/passwords",
         "DELETE /v1/project/platforms/:platformId",
         "DELETE /v1/project/sessions",
         "DELETE /v1/project/variables/:variableId",
