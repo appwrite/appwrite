@@ -51,6 +51,7 @@ import {
   usePropertyTabs,
 } from '../_components/PropertyHeader'
 import { ExportMenu } from '../_components/ExportMenu'
+import { InstallsPushPanel } from '../_components/InstallsPushPanel'
 import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
   BotsPanel,
@@ -120,6 +121,7 @@ type DimensionPanel =
   | 'users'
   | 'eventProps'
   | 'models'
+  | 'installs'
 
 // Overview, custom events, users and event properties apply to every type. Mobile
 // apps have no referrers or crawlers; agents only send their own events.
@@ -138,6 +140,7 @@ const PANELS_BY_TYPE: Record<
     'eventProps',
   ]),
   [AnalyticsPropertyType.Mobile]: new Set([
+    'installs',
     'pages',
     'locations',
     'technology',
@@ -497,7 +500,10 @@ export function View({
 
   const breakdownCount = [...panels].filter(
     (panel) =>
-      panel !== 'users' && panel !== 'eventProps' && panel !== 'models',
+      panel !== 'users' &&
+      panel !== 'eventProps' &&
+      panel !== 'models' &&
+      panel !== 'installs',
   ).length
 
   if (!property && !propertyLoading) {
@@ -665,6 +671,17 @@ export function View({
                 of its visible tab, and every card has a fixed body height
                 so switching tabs never shifts the grid. */}
               <div className="grid gap-4 lg:grid-cols-2">
+                {panels.has('installs') ? (
+                  <div className="lg:col-span-2">
+                    <InstallsPushPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      interval={resolvedInterval}
+                      onOpenSetup={() => setInstallOpen(true)}
+                    />
+                  </div>
+                ) : null}
                 {/* Channels, referrers and UTM campaigns in one card. */}
                 {panels.has('sources') ? (
                   <TrafficSourcesPanel
