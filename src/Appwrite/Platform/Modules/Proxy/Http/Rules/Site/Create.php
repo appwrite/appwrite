@@ -163,7 +163,7 @@ class Create extends Action
             }
         }
 
-        $rule = $this->createRule($rule, $dbForPlatform, $authorization, $bus);
+        $rule = $this->createRule($rule, $dbForPlatform, $authorization, $bus, $dbForProject);
 
         $needsCertificate = $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING
             || $certificateIssuer->isAutoIssueEnabled($rule);
