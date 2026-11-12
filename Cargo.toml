@@ -25,6 +25,29 @@ php-std = { path = "crates/support/php-std" }
 utopia-image = { path = "crates/utopia/image", default-features = false }
 
 ext-php-rs = "0.16"
+argon2 = { version = "0.5", features = ["std"] }
+blowfish = { version = "0.9", features = ["bcrypt"] }
+bytes = "1"
+cc = "1"
+foldhash = "0.2"
+getrandom = "0.3"
+gost94 = "0.10"
+hashbrown = { version = "0.17", default-features = false }
+icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
+icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
+indexmap = "2"
+md-5 = "0.10"
+md2 = "0.10"
+ripemd = "0.1"
+rustix = { version = "1", default-features = false, features = ["std", "fs", "system"] }
+ryu = "1"
+serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
+sha1 = "0.10"
+sha2 = "0.10"
+sha3 = "0.10"
+unsafe-libyaml = "0.2"
+whirlpool = "0.10"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
 fast_image_resize = { version = "6", default-features = false, features = ["std"] }
 gif = "0.14"
 # No `rayon`: it gives the AVIF encoder a process-wide thread pool, and a
