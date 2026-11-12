@@ -90,7 +90,7 @@ class Update extends Base
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
-            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
+            ->param('providerSilentMode', null, new Nullable(new Boolean()), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Directory(), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
@@ -147,7 +147,7 @@ class Update extends Base
         string $installationId,
         ?string $providerRepositoryId,
         string $providerBranch,
-        bool $providerSilentMode,
+        ?bool $providerSilentMode,
         string $providerRootDirectory,
         ?array $providerBranches,
         ?array $providerPaths,
@@ -207,6 +207,7 @@ class Update extends Base
         $adapter ??= $site->getAttribute('adapter', '');
         $fallbackFile ??= $site->getAttribute('fallbackFile', '');
         $deploymentRetention ??= $site->getAttribute('deploymentRetention', 0);
+        $providerSilentMode ??= $site->getAttribute('providerSilentMode', false);
 
         // Scopes the site already has stay; only new ones need the key to hold them
         if ($apiKey !== null && !$apiKey->mayGrant(\array_diff($scopes ?? [], $site->getAttribute('scopes', [])))) {
