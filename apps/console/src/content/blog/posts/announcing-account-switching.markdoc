@@ -91,7 +91,9 @@ The [Account switching docs](/docs/products/auth/account-switching) cover the sa
 
 # Control account switching per project
 
-Account switching is on for every project by default. To turn it off, open **Auth** > **Policies** > **Sessions** in the Appwrite Console and turn off **Allow account switching** in the **Account switching** card. You can also call `updateAccountDevicesPolicy` from the Project service with an API key.
+Account switching is on for every project by default. To turn it off, open **Auth** > **Policies** > **Sessions** in the Appwrite Console, turn off **Allow account switching** in the **Account switching** card, and click **Update**. You can also call `updateAccountDevicesPolicy` from the Project service with an API key.
+
+![The Account switching card under Auth policies in the Appwrite Console](/images/blog/announcing-account-switching/account-switching-policy.avif)
 
 With the policy off, browsers and apps can't create new devices, and each one goes back to a single active session.
 
