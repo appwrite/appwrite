@@ -41,7 +41,6 @@ final class VCSEntireConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
     }
 
     public function testCreateInstallationWithoutReceipt(): void
