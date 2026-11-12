@@ -391,19 +391,23 @@ trait Deployment
                     }
                     $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
                     // Keyed like the build's check, so the build takes it over once authorized
-                    $vcs->updateCheck(
-                        $owner,
-                        $repositoryName,
-                        $providerCommitHash,
-                        'queued',
-                        $resource->getAttribute('name'),
-                        $message,
-                        "Authorize the build: {$authorizeUrl}",
-                        $authorizeUrl,
-                        suite: $project->getAttribute('name'),
-                        key: "{$project->getId()}/{$resource->getCollection()}/{$resource->getId()}",
-                        suiteKey: $project->getId(),
-                    );
+                    try {
+                        $vcs->updateCheck(
+                            $owner,
+                            $repositoryName,
+                            $providerCommitHash,
+                            'queued',
+                            $resource->getAttribute('name'),
+                            $message,
+                            "Authorize the build: {$authorizeUrl}",
+                            $authorizeUrl,
+                            suite: $project->getAttribute('name'),
+                            key: "{$project->getId()}/{$resource->getCollection()}/{$resource->getId()}",
+                            suiteKey: $project->getId(),
+                        );
+                    } catch (\Throwable $e) {
+                        Console::warning("Failed to report authorization required for '{$resource->getId()}': " . $e->getMessage());
+                    }
                     continue;
                 }
 
