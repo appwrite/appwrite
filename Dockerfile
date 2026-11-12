@@ -144,6 +144,10 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
 RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
 
+# Nothing uses ImageMagick any more. Removed here until appwrite/base stops shipping it.
+RUN apk del --no-cache imagemagick imagemagick-heic && \
+    rm /usr/local/etc/php/conf.d/docker-php-ext-imagick.ini "$(php-config --extension-dir)/imagick.so"
+
 FROM base AS production
 
 RUN rm -rf /usr/src/code/app/config/specs && \

@@ -41,6 +41,62 @@ class Image
     }
 
     /**
+     * An image of one colour, written as PNG unless another format is asked for.
+     *
+     * @throws \InvalidArgumentException
+     * @throws LimitExceededException
+     */
+    public static function create(int $width, int $height, string $background = ''): static
+    {
+    }
+
+    /**
+     * Whether the TrueType or OpenType font file at $font draws something for $character.
+     *
+     * @throws \InvalidArgumentException
+     */
+    public static function hasGlyph(string $font, string $character): bool
+    {
+    }
+
+    /**
+     * The decoded width, then the last crop's.
+     */
+    public function getWidth(): int
+    {
+    }
+
+    public function getHeight(): int
+    {
+    }
+
+    /**
+     * The EXIF orientation of the source, 1 to 8 (1 when it has none).
+     */
+    public function getOrientation(): int
+    {
+    }
+
+    /**
+     * Fills SVG path data, scaled by $scale and then moved by $x and $y.
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function path(string $path, string $color, float $x = 0, float $y = 0, float $scale = 1): static
+    {
+    }
+
+    /**
+     * Draws $text in the TrueType or OpenType font file at $font, $size pixels an em, centred on $x with its
+     * baseline at $y. There is no kerning or shaping, and a character without a glyph takes no space.
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function text(string $text, string $font, float $size, string $color, float $x, float $y): static
+    {
+    }
+
+    /**
      * @return array<string>
      */
     public static function getGravityTypes(): array

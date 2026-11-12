@@ -80,10 +80,6 @@ class Get extends Action
         $quality = 80;
         $output = 'png';
 
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
         $userAgent = \sprintf(
             APP_USERAGENT,
             System::getEnv('_APP_VERSION', 'UNKNOWN'),
@@ -166,7 +162,7 @@ class Get extends Action
 
         $data = (string) $iconResponse->getBody();
 
-        if ('ico' === $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
+        if ('ico' === $outputExt) { // Skip crop, icon files are not decoded
             if (
                 empty($data) ||
                 stripos($data, '<html') === 0 ||
@@ -181,7 +177,7 @@ class Get extends Action
             return;
         }
 
-        if ('svg' === $outputExt) { // Skip crop, Imagick isn\'t supporting svg files
+        if ('svg' === $outputExt) { // Skip crop, SVG files are not decoded
             $sanitizer = new SvgSanitizer();
             $sanitizer->minify(true);
             $cleanSvg = $sanitizer->sanitize($data);

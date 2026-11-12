@@ -29,10 +29,6 @@ class Action extends PlatformAction
             throw new Exception(Exception::AVATAR_NOT_FOUND);
         }
 
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
         $output = 'png';
         $path = $set[$code]['path'];
         $type = 'png';

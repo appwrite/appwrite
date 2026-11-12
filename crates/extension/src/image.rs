@@ -9,7 +9,7 @@ use ext_php_rs::exception::PhpException;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::ZendClassObject;
 use ext_php_rs::zend::{ClassEntry, ce};
-use utopia_image::{Error, FocalPoint, Gravity, OutputFormat, Resource, set_resource_limit};
+use utopia_image::{Error, FocalPoint, Gravity, OutputFormat, Resource, has_glyph, set_resource_limit};
 
 /// `Utopia\Image\Image`.
 #[php_class]
@@ -29,6 +29,11 @@ fn thrown(error: Error) -> PhpException {
 /// argument, with the PHP library's message for it.
 fn size(value: i64, negative: &str) -> Result<u32, Error> {
     u32::try_from(value).map_err(|_| Error::InvalidArgument(negative.into()))
+}
+
+/// The font file at `path`.
+fn font(path: &str) -> Result<Vec<u8>, Error> {
+    std::fs::read(path).map_err(|error| Error::InvalidArgument(format!("Can't read font {path}: {error}")))
 }
 
 /// The `$type` of `output()` and `save()`.
@@ -51,6 +56,63 @@ impl Image {
     /// `__construct(string $data)`.
     pub fn __construct(data: BinarySlice<u8>) -> PhpResult<Self> {
         utopia_image::Image::new(&data).map(Self).map_err(thrown)
+    }
+
+    /// `create(int $width, int $height, string $background = ''): static`: one colour, PNG by default.
+    #[php(defaults(background = "\"\""))]
+    pub fn create(width: i64, height: i64, background: String) -> PhpResult<Self> {
+        let negative = "Width and height must not be negative";
+        let blank = size(width, negative)
+            .and_then(|width| Ok((width, size(height, negative)?)))
+            .and_then(|(width, height)| utopia_image::Image::blank(width, height, &background));
+        blank.map(Self).map_err(thrown)
+    }
+
+    /// `hasGlyph(string $font, string $character): bool`: whether the font file draws the character.
+    pub fn has_glyph(font: String, character: String) -> PhpResult<bool> {
+        let mut characters = character.chars();
+        let (Some(character), None) = (characters.next(), characters.next()) else {
+            return Err(thrown(Error::InvalidArgument("Expected one character".into())));
+        };
+        self::font(&font).and_then(|font| has_glyph(&font, character)).map_err(thrown)
+    }
+
+    /// `getWidth(): int`: the decoded width, then the last crop's.
+    pub fn get_width(&self) -> i64 {
+        self.0.width()
+    }
+
+    /// `getHeight(): int`.
+    pub fn get_height(&self) -> i64 {
+        self.0.height()
+    }
+
+    /// `getOrientation(): int`: the EXIF orientation of the source, 1 to 8.
+    pub fn get_orientation(&self) -> i64 {
+        i64::from(self.0.orientation())
+    }
+
+    /// `path(string $path, string $color, float $x = 0, float $y = 0, float $scale = 1): static`:
+    /// fills SVG path data.
+    #[php(defaults(x = 0.0, y = 0.0, scale = 1.0))]
+    pub fn path<'a>(self_: This<'a>, path: String, color: String, x: f64, y: f64, scale: f64) -> PhpResult<This<'a>> {
+        let drawn = self_.0.fill_path(&path, &color, x, y, scale).map(|_| ());
+        drawn.map(|()| self_).map_err(thrown)
+    }
+
+    /// `text(string $text, string $font, float $size, string $color, float $x, float $y): static`:
+    /// centred on `$x`, baseline at `$y`.
+    pub fn text<'a>(
+        self_: This<'a>,
+        text: String,
+        font: String,
+        size: f64,
+        color: String,
+        x: f64,
+        y: f64,
+    ) -> PhpResult<This<'a>> {
+        let drawn = self::font(&font).and_then(|font| self_.0.draw_text(&text, &font, size, &color, x, y).map(|_| ()));
+        drawn.map(|()| self_).map_err(thrown)
     }
 
     /// `getGravityTypes(): array`.

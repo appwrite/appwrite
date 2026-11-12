@@ -7,6 +7,7 @@ use php_std::value::Number;
 
 use crate::color::Color;
 use crate::decode;
+use crate::draw;
 use crate::encode;
 use crate::error::{Error, Result};
 use crate::frame::{Format, Frame};
@@ -55,6 +56,7 @@ pub struct Image {
     border_width: u32,
     border_color: String,
     rotation: i32,
+    orientation: u32,
     wand_quality: Option<i64>,
 }
 
@@ -84,10 +86,12 @@ impl Image {
         let frames = decode::decode(data, format)?;
         // An AVIF or HEIC decodes already rotated as the file says.
         let oriented = matches!(format, Format::Avif | Format::Heic);
-        let rotation = match decode::orientation(data).filter(|_| !oriented) {
-            Some(3) => 180,
-            Some(6) => 90,
-            Some(8) => -90,
+        let orientation = decode::orientation(data).unwrap_or(1);
+        let rotation = match orientation {
+            _ if oriented => 0,
+            3 => 180,
+            6 => 90,
+            8 => -90,
             _ => 0,
         };
         let (width, height) = (i64::from(frames[0].width()), i64::from(frames[0].height()));
@@ -99,8 +103,70 @@ impl Image {
             border_width: 0,
             border_color: String::new(),
             rotation,
+            orientation,
             wand_quality: None,
         })
+    }
+
+    /// A `width` x `height` image of one colour, written as PNG unless another
+    /// format is asked for.
+    ///
+    /// PHP: `Image::create($width, $height, $background)`.
+    ///
+    /// ```
+    /// use utopia_image::{Image, OutputFormat};
+    ///
+    /// let mut image = Image::blank(64, 64, "#e5e5e5")?;
+    /// image.fill_path("M0 0h10v10h-10Z", "#333333", 27.0, 27.0, 1.0)?;
+    /// assert_eq!(&image.output(OutputFormat::Png, 75)?[1..4], b"PNG");
+    /// # Ok::<(), utopia_image::Error>(())
+    /// ```
+    pub fn blank(width: u32, height: u32, background: &str) -> Result<Image> {
+        if width == 0 || height == 0 {
+            return Err(Error::InvalidArgument("Width and height must be positive".into()));
+        }
+        crate::options::check_dimensions(u64::from(width), u64::from(height))?;
+        let color = Color::parse(background)?;
+        let pixels = image::RgbaImage::from_pixel(width, height, image::Rgba(color.0));
+        Ok(Image {
+            frames: vec![Frame::new(pixels, color.has_alpha(), 0, Format::Png)],
+            current: 0,
+            width: i64::from(width),
+            height: i64::from(height),
+            border_width: 0,
+            border_color: String::new(),
+            rotation: 0,
+            orientation: 1,
+            wand_quality: None,
+        })
+    }
+
+    /// The EXIF orientation the image was read with (1 to 8; 1 when it had none).
+    ///
+    /// PHP: `getOrientation()`.
+    pub fn orientation(&self) -> u32 {
+        self.orientation
+    }
+
+    /// Fills SVG path data with `color` on the current frame, scaled by `scale`
+    /// and then moved by `x` and `y`.
+    ///
+    /// PHP: `path($path, $color, $x, $y, $scale)`.
+    pub fn fill_path(&mut self, path: &str, color: &str, x: f64, y: f64, scale: f64) -> Result<&mut Self> {
+        draw::validate(path)?;
+        let transform = zeno::Transform::scale(scale as f32, scale as f32).then_translate(x as f32, y as f32);
+        draw::fill(&mut self.frames[self.current].pixels, path, transform, Color::parse(color)?);
+        Ok(self)
+    }
+
+    /// Draws `text` on the current frame in `font` (TrueType or OpenType data)
+    /// at `size` pixels an em, centred on `x` with its baseline at `y`.
+    ///
+    /// PHP: `text($text, $font, $size, $color, $x, $y)`, where `$font` is a path.
+    pub fn draw_text(&mut self, text: &str, font: &[u8], size: f64, color: &str, x: f64, y: f64) -> Result<&mut Self> {
+        let color = Color::parse(color)?;
+        draw::text(&mut self.frames[self.current].pixels, text, font, size as f32, color, x as f32, y as f32)?;
+        Ok(self)
     }
 
     /// The width the operations work from: the decoded width, then the last

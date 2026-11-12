@@ -27,39 +27,176 @@ final class ImageTest extends TestCase
 
     private function requireEncoder(string $format): void
     {
-        if (\Imagick::queryFormats($format) === []) {
-            self::markTestSkipped("The {$format} encoder is not available.");
-        }
-
-        $probe = new \Imagick();
         try {
-            $probe->newImage(1, 1, 'white');
-            $probe->setImageFormat($format);
-            $blob = $probe->getImageBlob();
-        } catch (\ImagickException $exception) {
+            Image::create(2, 2, '#ffffff')->output(strtolower($format));
+        } catch (UnsupportedFormatException $exception) {
             self::markTestSkipped("The {$format} encoder is not usable: {$exception->getMessage()}");
-        }
-
-        if ($blob === '') {
-            self::markTestSkipped("The {$format} encoder produced no output.");
         }
     }
 
     private function requireDecoder(string $format, string $data): void
     {
         try {
-            $probe = new \Imagick();
-            $probe->readImageBlob($data);
-        } catch (\ImagickException $exception) {
+            new Image($data);
+        } catch (UnsupportedFormatException $exception) {
             self::markTestSkipped("The {$format} decoder is not usable: {$exception->getMessage()}");
         }
     }
 
+    /**
+     * A red picture with rectangles painted over it.
+     *
+     * @param  array<int, array{int, int, int, int}>  $rectangles  Left, top, right and bottom, keyed by colour
+     */
+    private function picture(int $width, int $height, array $rectangles = []): \GdImage
+    {
+        $picture = imagecreatetruecolor(max(1, $width), max(1, $height));
+        $this->assertInstanceOf(\GdImage::class, $picture);
+        foreach ([0xFF0000 => [0, 0, $width, $height]] + $rectangles as $color => [$left, $top, $right, $bottom]) {
+            imagefilledrectangle($picture, $left, $top, $right, $bottom, $color);
+        }
+
+        return $picture;
+    }
+
+    private function encode(\GdImage $picture, string $type = 'png'): string
+    {
+        ob_start();
+        match ($type) {
+            'jpg' => imagejpeg($picture),
+            'gif' => imagegif($picture),
+            'avif' => imageavif($picture),
+            default => imagepng($picture),
+        };
+
+        return ob_get_clean() ?: '';
+    }
+
+    /**
+     * @param  non-empty-list<\GdImage>  $frames
+     * @param  int  $delay  Of every frame, in hundredths of a second
+     */
+    private function animatedGif(array $frames, int $delay): string
+    {
+        $gif = 'GIF89a' . pack('vv', imagesx($frames[0]), imagesy($frames[0])) . "\0\0\0";
+        foreach ($frames as $frame) {
+            // GD writes one picture after a global palette, which becomes the frame's own here.
+            $single = $this->encode($frame, 'gif');
+            $bits = \ord($single[10]) & 7;
+            $descriptor = 13 + (6 << $bits);
+            $this->assertSame(',', $single[$descriptor]);
+            $gif .= "!\xf9\x04\x04" . pack('v', $delay) . "\0\0"
+                . substr($single, $descriptor, 9) . \chr(0x80 | $bits)
+                . substr($single, 13, 6 << $bits)
+                . substr($single, $descriptor + 10, -1);
+        }
+
+        return $gif . ';';
+    }
+
+    private function decode(string $data): \GdImage
+    {
+        // GD does not read HEIC, so that is looked at through the PNG the class makes of it.
+        if ($this->format($data) === 'image/heic') {
+            $data = (new Image($data))->output('png') ?? '';
+        }
+        $picture = imagecreatefromstring($data);
+        $this->assertInstanceOf(\GdImage::class, $picture);
+
+        return $picture;
+    }
+
+    private function format(string $data): string
+    {
+        if (substr($data, 4, 8) === 'ftypheic') {
+            return 'image/heic';
+        }
+        $size = getimagesizefromstring($data);
+
+        return $size === false ? '' : $size['mime'];
+    }
+
+    /**
+     * @return array{r: int, g: int, b: int, a: int} The alpha is GD's: 0 is opaque and 127 transparent
+     */
+    private function color(\GdImage $picture, int $x, int $y): array
+    {
+        $color = imagecolorsforindex($picture, (int) imagecolorat($picture, $x, $y));
+
+        return ['r' => $color['red'], 'g' => $color['green'], 'b' => $color['blue'], 'a' => $color['alpha']];
+    }
+
+    private function littleEndian(string $bytes): int
+    {
+        return (int) hexdec(bin2hex(strrev($bytes)));
+    }
+
+    /**
+     * @return list<array{int, \GdImage}> Each frame's delay in hundredths of a second, and its picture
+     */
+    private function frames(string $data): array
+    {
+        return $this->format($data) === 'image/gif' ? $this->gifFrames($data) : $this->webpFrames($data);
+    }
+
+    /**
+     * @return list<array{int, \GdImage}>
+     */
+    private function gifFrames(string $gif): array
+    {
+        $flags = \ord($gif[10]);
+        $head = substr($gif, 0, 13 + (($flags & 0x80) !== 0 ? 6 << ($flags & 7) : 0));
+        $frames = [];
+        $delay = 0;
+        for ($at = \strlen($head); $gif[$at] !== ';';) {
+            $block = $at;
+            if ($gif[$at] === '!') {
+                if ($gif[$at + 1] === "\xf9") {
+                    $delay = $this->littleEndian(substr($gif, $at + 4, 2));
+                }
+                $at += 2;
+            } else {
+                $flags = \ord($gif[$at + 9]);
+                $at += 11 + (($flags & 0x80) !== 0 ? 6 << ($flags & 7) : 0);
+            }
+            while (($length = \ord($gif[$at++])) !== 0) {
+                $at += $length;
+            }
+            if ($gif[$block] === ',') {
+                $frames[] = [$delay, $this->decode($head . substr($gif, $block, $at - $block) . ';')];
+            }
+        }
+
+        return $frames;
+    }
+
+    /**
+     * @return list<array{int, \GdImage}>
+     */
+    private function webpFrames(string $webp): array
+    {
+        $frames = [];
+        for ($at = 12; $at < \strlen($webp); $at += 8 + $size + ($size & 1)) {
+            $size = $this->littleEndian(substr($webp, $at + 4, 4));
+            if (substr($webp, $at, 4) !== 'ANMF') {
+                continue;
+            }
+            // A frame is its offset, size, delay and flags, then the chunks of a still picture.
+            $frame = substr($webp, $at + 8, $size);
+            $this->assertSame(0, $this->littleEndian(substr($frame, 0, 6)), 'The frame covers the canvas');
+            $still = "VP8X\x0a\0\0\0" . (substr($frame, 16, 4) === 'ALPH' ? "\x10" : "\0") . "\0\0\0" . substr($frame, 6, 6) . substr($frame, 16);
+            $frames[] = [
+                intdiv($this->littleEndian(substr($frame, 12, 3)), 10),
+                $this->decode('RIFF' . pack('V', \strlen($still) + 4) . 'WEBP' . $still),
+            ];
+        }
+
+        return $frames;
+    }
+
     private function jpegWithExifOrientation(int $orientation): string
     {
-        $source = new \Imagick();
-        $source->newImage(20, 10, 'red', 'jpg');
-        $jpeg = $source->getImageBlob();
+        $jpeg = $this->encode($this->picture(20, 10), 'jpg');
 
         $exif = "Exif\0\0II*\0\x08\0\0\0\x01\0\x12\x01\x03\0\x01\0\0\0"
             . pack('v', $orientation)
@@ -95,17 +232,12 @@ final class ImageTest extends TestCase
     {
         $this->requireEncoder('AVIF');
 
-        $source = new \Imagick();
-        $source->newImage(20, 10, 'red');
-        $source->setImageFormat('avif');
-
-        $image = new Image($source->getImageBlob());
+        $image = new Image($this->encode($this->picture(20, 10), 'avif'));
         $image->crop(10, 10);
 
-        $output = new \Imagick();
-        $output->readImageBlob($image->output('png') ?? '');
-        $this->assertSame(10, $output->getImageWidth());
-        $this->assertSame(10, $output->getImageHeight());
+        $output = $this->decode($image->output('png') ?? '');
+        $this->assertSame(10, imagesx($output));
+        $this->assertSame(10, imagesy($output));
     }
 
     public function testHeicInput(): void
@@ -116,10 +248,9 @@ final class ImageTest extends TestCase
         $image = new Image($heic);
         $image->crop(50, 50);
 
-        $output = new \Imagick();
-        $output->readImageBlob($image->output('png') ?? '');
-        $this->assertSame(50, $output->getImageWidth());
-        $this->assertSame(50, $output->getImageHeight());
+        $output = $this->decode($image->output('png') ?? '');
+        $this->assertSame(50, imagesx($output));
+        $this->assertSame(50, imagesy($output));
     }
 
     public function testJpeg(): void
@@ -135,10 +266,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -156,10 +287,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/png', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -177,10 +308,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -203,36 +334,24 @@ final class ImageTest extends TestCase
     #[DataProvider('skewedCrops')]
     public function testCropKeepsADerivedSideOfAtLeastOnePixel(int $sourceWidth, int $sourceHeight, int $width, int $height, string $gravity, int $expectedWidth, int $expectedHeight): void
     {
-        $source = new \Imagick();
-        $source->newImage($sourceWidth, $sourceHeight, 'red', 'png');
-
-        $image = new Image($source->getImageBlob());
+        $image = new Image($this->encode($this->picture($sourceWidth, $sourceHeight)));
         $image->crop($width, $height, $gravity);
 
-        $result = new \Imagick();
-        $result->readImageBlob($image->output('png', 100) ?: '');
+        $result = $this->decode($image->output('png', 100) ?: '');
 
-        $this->assertSame($expectedWidth, $result->getImageWidth());
-        $this->assertSame($expectedHeight, $result->getImageHeight());
+        $this->assertSame($expectedWidth, imagesx($result));
+        $this->assertSame($expectedHeight, imagesy($result));
     }
 
     public function testCropFocalUsesNormalizedCoordinates(): void
     {
-        $source = new \Imagick();
-        $source->newImage(6, 2, 'red', 'png');
-        $draw = new \ImagickDraw();
-        $draw->setFillColor('green');
-        $draw->rectangle(2, 0, 3, 1);
-        $draw->setFillColor('blue');
-        $draw->rectangle(4, 0, 5, 1);
-        $source->drawImage($draw);
+        $source = $this->picture(6, 2, [0x008000 => [2, 0, 3, 1], 0x0000FF => [4, 0, 5, 1]]);
 
-        $image = new Image($source->getImageBlob());
+        $image = new Image($this->encode($source));
         $image->crop(2, 2, x: 0.75, y: 0.5);
 
-        $result = new \Imagick();
-        $result->readImageBlob($image->output('png', 100) ?: '');
-        $color = $result->getImagePixelColor(1, 1)->getColor();
+        $result = $this->decode($image->output('png', 100) ?: '');
+        $color = $this->color($result, 1, 1);
 
         $this->assertGreaterThan($color['r'], $color['b']);
         $this->assertGreaterThan($color['g'], $color['b']);
@@ -264,37 +383,29 @@ final class ImageTest extends TestCase
 
     public function testCropFocalPreservesAnimatedFramesAndDelay(): void
     {
-        $sequence = new \Imagick();
-        foreach (['blue', 'green'] as $color) {
-            $frame = new \Imagick();
-            $frame->newImage(6, 2, 'red', 'gif');
-            $draw = new \ImagickDraw();
-            $draw->setFillColor($color);
-            $draw->rectangle(4, 0, 5, 1);
-            $frame->drawImage($draw);
-            $frame->setImageDelay(30);
-            $sequence->addImage($frame);
+        $frames = [];
+        foreach ([0x0000FF, 0x008000] as $color) {
+            $frames[] = $this->picture(6, 2, [$color => [4, 0, 5, 1]]);
         }
 
-        $image = new Image($sequence->getImagesBlob());
+        $image = new Image($this->animatedGif($frames, 30));
         $image->crop(2, 2, x: 0.75, y: 0.5);
 
         $outputBlob = $image->output('gif', 100);
         $this->assertNotFalse($outputBlob);
         $this->assertNotNull($outputBlob);
 
-        $output = new \Imagick();
-        $output->readImageBlob($outputBlob);
-        $this->assertSame(2, $output->getNumberImages());
+        $frames = $this->frames($outputBlob);
+        $this->assertCount(2, $frames);
 
         $totalDelay = 0;
         $expectedChannels = ['b', 'g'];
-        foreach ($output->coalesceImages() as $index => $frame) {
-            $this->assertSame(2, $frame->getImageWidth());
-            $this->assertSame(2, $frame->getImageHeight());
-            $color = $frame->getImagePixelColor(1, 1)->getColor();
+        foreach ($frames as $index => [$delay, $frame]) {
+            $this->assertSame(2, imagesx($frame));
+            $this->assertSame(2, imagesy($frame));
+            $color = $this->color($frame, 1, 1);
             $this->assertGreaterThan(100, $color[$expectedChannels[$index]]);
-            $totalDelay += $frame->getImageDelay();
+            $totalDelay += $delay;
         }
         $this->assertSame(60, $totalDelay);
     }
@@ -313,15 +424,15 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
         // Verify the image was properly cropped with the expected gravity
-        $generatedImage = new \Imagick($target);
-        $originalImage = new \Imagick($original);
-        $this->assertSame($originalImage->getImageWidth(), $generatedImage->getImageWidth());
-        $this->assertSame($originalImage->getImageHeight(), $generatedImage->getImageHeight());
+        $generatedImage = $this->decode(file_get_contents($target) ?: '');
+        $originalImage = $this->decode(file_get_contents($original) ?: '');
+        $this->assertSame(imagesx($originalImage), imagesx($generatedImage));
+        $this->assertSame(imagesy($originalImage), imagesy($generatedImage));
 
-        $image = new \Imagick($target);
-        $this->assertSame(50, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(50, imagesx($image));
+        $this->assertSame(200, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -340,15 +451,15 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
         // Verify the image was properly cropped with the expected gravity
-        $generatedImage = new \Imagick($target);
-        $originalImage = new \Imagick($original);
-        $this->assertSame($originalImage->getImageWidth(), $generatedImage->getImageWidth());
-        $this->assertSame($originalImage->getImageHeight(), $generatedImage->getImageHeight());
+        $generatedImage = $this->decode(file_get_contents($target) ?: '');
+        $originalImage = $this->decode(file_get_contents($original) ?: '');
+        $this->assertSame(imagesx($originalImage), imagesx($generatedImage));
+        $this->assertSame(imagesy($originalImage), imagesy($generatedImage));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(50, $image->getImageHeight());
-        $this->assertSame('GIF', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(50, imagesy($image));
+        $this->assertSame('image/gif', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -367,15 +478,15 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
         // Verify the image was properly cropped with the expected gravity
-        $generatedImage = new \Imagick($target);
-        $originalImage = new \Imagick($original);
-        $this->assertSame($originalImage->getImageWidth(), $generatedImage->getImageWidth());
-        $this->assertSame($originalImage->getImageHeight(), $generatedImage->getImageHeight());
+        $generatedImage = $this->decode(file_get_contents($target) ?: '');
+        $originalImage = $this->decode(file_get_contents($original) ?: '');
+        $this->assertSame(imagesx($originalImage), imagesx($generatedImage));
+        $this->assertSame(imagesy($originalImage), imagesy($generatedImage));
 
-        $image = new \Imagick($target);
-        $this->assertSame(50, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(50, imagesx($image));
+        $this->assertSame(200, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -394,15 +505,15 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
         // Verify the image was properly cropped with the expected gravity
-        $generatedImage = new \Imagick($target);
-        $originalImage = new \Imagick($original);
-        $this->assertSame($originalImage->getImageWidth(), $generatedImage->getImageWidth());
-        $this->assertSame($originalImage->getImageHeight(), $generatedImage->getImageHeight());
+        $generatedImage = $this->decode(file_get_contents($target) ?: '');
+        $originalImage = $this->decode(file_get_contents($original) ?: '');
+        $this->assertSame(imagesx($originalImage), imagesx($generatedImage));
+        $this->assertSame(imagesy($originalImage), imagesy($generatedImage));
 
-        $image = new \Imagick($target);
-        $this->assertSame(50, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(50, imagesx($image));
+        $this->assertSame(200, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -421,15 +532,15 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
         // Verify the image was properly cropped with the expected gravity
-        $generatedImage = new \Imagick($target);
-        $originalImage = new \Imagick($original);
-        $this->assertSame($originalImage->getImageWidth(), $generatedImage->getImageWidth());
-        $this->assertSame($originalImage->getImageHeight(), $generatedImage->getImageHeight());
+        $generatedImage = $this->decode(file_get_contents($target) ?: '');
+        $originalImage = $this->decode(file_get_contents($original) ?: '');
+        $this->assertSame(imagesx($originalImage), imagesx($generatedImage));
+        $this->assertSame(imagesy($originalImage), imagesy($generatedImage));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(50, $image->getImageHeight());
-        $this->assertSame('GIF', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(50, imagesy($image));
+        $this->assertSame('image/gif', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -448,15 +559,15 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
         // Verify the image was properly cropped with the expected gravity
-        $generatedImage = new \Imagick($target);
-        $originalImage = new \Imagick($original);
-        $this->assertSame($originalImage->getImageWidth(), $generatedImage->getImageWidth());
-        $this->assertSame($originalImage->getImageHeight(), $generatedImage->getImageHeight());
+        $generatedImage = $this->decode(file_get_contents($target) ?: '');
+        $originalImage = $this->decode(file_get_contents($original) ?: '');
+        $this->assertSame(imagesx($originalImage), imagesx($generatedImage));
+        $this->assertSame(imagesy($originalImage), imagesy($generatedImage));
 
-        $image = new \Imagick($target);
-        $this->assertSame(50, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(50, imagesx($image));
+        $this->assertSame(200, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -475,15 +586,15 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
         // Verify the image was properly cropped with the expected gravity
-        $generatedImage = new \Imagick($target);
-        $originalImage = new \Imagick($original);
-        $this->assertSame($originalImage->getImageWidth(), $generatedImage->getImageWidth());
-        $this->assertSame($originalImage->getImageHeight(), $generatedImage->getImageHeight());
+        $generatedImage = $this->decode(file_get_contents($target) ?: '');
+        $originalImage = $this->decode(file_get_contents($original) ?: '');
+        $this->assertSame(imagesx($originalImage), imagesx($generatedImage));
+        $this->assertSame(imagesy($originalImage), imagesy($generatedImage));
 
-        $image = new \Imagick($target);
-        $this->assertSame(150, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(150, imagesx($image));
+        $this->assertSame(200, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -502,15 +613,15 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
         // Verify the image was properly cropped with the expected gravity
-        $generatedImage = new \Imagick($target);
-        $originalImage = new \Imagick($original);
-        $this->assertSame($originalImage->getImageWidth(), $generatedImage->getImageWidth());
-        $this->assertSame($originalImage->getImageHeight(), $generatedImage->getImageHeight());
+        $generatedImage = $this->decode(file_get_contents($target) ?: '');
+        $originalImage = $this->decode(file_get_contents($original) ?: '');
+        $this->assertSame(imagesx($originalImage), imagesx($generatedImage));
+        $this->assertSame(imagesy($originalImage), imagesy($generatedImage));
 
-        $image = new \Imagick($target);
-        $this->assertSame(50, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('GIF', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(50, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/gif', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -529,35 +640,28 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
         // Verify the image was properly cropped with the expected gravity
-        $generatedImage = new \Imagick($target);
-        $originalImage = new \Imagick($original);
-        $this->assertSame($originalImage->getImageWidth(), $generatedImage->getImageWidth());
-        $this->assertSame($originalImage->getImageHeight(), $generatedImage->getImageHeight());
+        $generatedImage = $this->decode(file_get_contents($target) ?: '');
+        $originalImage = $this->decode(file_get_contents($original) ?: '');
+        $this->assertSame(imagesx($originalImage), imagesx($generatedImage));
+        $this->assertSame(imagesy($originalImage), imagesy($generatedImage));
 
-        $image = new \Imagick($target);
-        $this->assertSame(50, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(50, imagesx($image));
+        $this->assertSame(200, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
 
     public function testCropGravityPreservesAspectRatio(): void
     {
-        $source = new \Imagick();
-        $source->newImage(2, 4, 'red', 'png');
+        $source = $this->picture(2, 4, [0x0000FF => [0, 2, 1, 3]]);
 
-        $draw = new \ImagickDraw();
-        $draw->setFillColor('blue');
-        $draw->rectangle(0, 2, 1, 3);
-        $source->drawImage($draw);
-
-        $image = new Image($source->getImageBlob());
+        $image = new Image($this->encode($source));
         $image->crop(4, 2, Image::GRAVITY_TOP);
 
-        $result = new \Imagick();
-        $result->readImageBlob($image->output('png', 100) ?: '');
-        $color = $result->getImagePixelColor(2, 1)->getColor();
+        $result = $this->decode($image->output('png', 100) ?: '');
+        $color = $this->color($result, 2, 1);
 
         $this->assertGreaterThan($color['b'], $color['r']);
     }
@@ -590,25 +694,19 @@ final class ImageTest extends TestCase
     #[DataProvider('gravityProvider')]
     public function testCropGravityPositions(string $gravity, bool $horizontal, string $expectedChannel): void
     {
-        $source = new \Imagick();
-        $source->newImage($horizontal ? 6 : 2, $horizontal ? 2 : 6, 'red', 'png');
+        $source = $this->picture($horizontal ? 6 : 2, $horizontal ? 2 : 6, [
+            0x008000 => [$horizontal ? 2 : 0, $horizontal ? 0 : 2, $horizontal ? 3 : 1, $horizontal ? 1 : 3],
+            0x0000FF => [$horizontal ? 4 : 0, $horizontal ? 0 : 4, $horizontal ? 5 : 1, $horizontal ? 1 : 5],
+        ]);
 
-        $draw = new \ImagickDraw();
-        $draw->setFillColor('green');
-        $draw->rectangle($horizontal ? 2 : 0, $horizontal ? 0 : 2, $horizontal ? 3 : 1, $horizontal ? 1 : 3);
-        $draw->setFillColor('blue');
-        $draw->rectangle($horizontal ? 4 : 0, $horizontal ? 0 : 4, $horizontal ? 5 : 1, $horizontal ? 1 : 5);
-        $source->drawImage($draw);
-
-        $image = new Image($source->getImageBlob());
+        $image = new Image($this->encode($source));
         $image->crop(2, 2, $gravity);
 
-        $result = new \Imagick();
-        $result->readImageBlob($image->output('png', 100) ?: '');
-        $color = $result->getImagePixelColor(1, 1)->getColor();
+        $result = $this->decode($image->output('png', 100) ?: '');
+        $color = $this->color($result, 1, 1);
 
-        $this->assertSame(2, $result->getImageWidth());
-        $this->assertSame(2, $result->getImageHeight());
+        $this->assertSame(2, imagesx($result));
+        $this->assertSame(2, imagesy($result));
         $this->assertGreaterThan($color[match ($expectedChannel) {
             'r' => 'g',
             default => 'r',
@@ -632,10 +730,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(400, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(400, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -653,10 +751,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(400, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(400, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -674,11 +772,11 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
+        $image = $this->decode(file_get_contents($target) ?: '');
 
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertContains($image->getImageFormat(), ['PAM', 'WEBP']);
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/webp', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -704,11 +802,11 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
+        $image = $this->decode(file_get_contents($target) ?: '');
 
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertContains($image->getImageFormat(), ['PAM', 'WEBP']);
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/webp', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -726,11 +824,10 @@ final class ImageTest extends TestCase
         $this->assertSame('RIFF', substr($blob, 0, 4));
         $this->assertSame('WEBP', substr($blob, 8, 4));
 
-        $probe = new \Imagick();
-        $probe->readImageBlob($blob);
-        $this->assertSame(100, $probe->getImageWidth());
-        $this->assertSame(100, $probe->getImageHeight());
-        $this->assertContains($probe->getImageFormat(), ['PAM', 'WEBP']);
+        $probe = $this->decode($blob);
+        $this->assertSame(100, imagesx($probe));
+        $this->assertSame(100, imagesy($probe));
+        $this->assertSame('image/webp', $this->format($blob));
     }
 
     public function testRepeatedOutputAppliesExifRotationOnce(): void
@@ -742,15 +839,13 @@ final class ImageTest extends TestCase
         $this->assertIsString($firstBlob);
         $this->assertIsString($secondBlob);
 
-        $first = new \Imagick();
-        $first->readImageBlob($firstBlob);
-        $second = new \Imagick();
-        $second->readImageBlob($secondBlob);
+        $first = $this->decode($firstBlob);
+        $second = $this->decode($secondBlob);
 
-        $this->assertSame(10, $first->getImageWidth());
-        $this->assertSame(20, $first->getImageHeight());
-        $this->assertSame($first->getImageWidth(), $second->getImageWidth());
-        $this->assertSame($first->getImageHeight(), $second->getImageHeight());
+        $this->assertSame(10, imagesx($first));
+        $this->assertSame(20, imagesy($first));
+        $this->assertSame(imagesx($first), imagesx($second));
+        $this->assertSame(imagesy($first), imagesy($second));
     }
 
     public function testSavePreservesImageForSubsequentExports(): void
@@ -765,9 +860,8 @@ final class ImageTest extends TestCase
             $this->assertIsString($blob);
             $this->assertNotEmpty($blob);
 
-            $probe = new \Imagick();
-            $probe->readImageBlob($blob);
-            $this->assertSame('PNG', $probe->getImageFormat());
+            $probe = $this->decode($blob);
+            $this->assertSame('image/png', $this->format($blob));
         } finally {
             if (is_file($target)) {
                 unlink($target);
@@ -810,10 +904,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $probe = new \Imagick($target);
-        $this->assertSame(50, $probe->getImageWidth());
-        $this->assertSame(50, $probe->getImageHeight());
-        $this->assertContains($probe->getImageFormat(), ['PAM', 'WEBP']);
+        $probe = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(50, imagesx($probe));
+        $this->assertSame(50, imagesy($probe));
+        $this->assertSame('image/webp', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -837,10 +931,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('AVIF', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/avif', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -861,10 +955,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('AVIF', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/avif', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -892,11 +986,11 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
+        $image = $this->decode(file_get_contents($target) ?: '');
 
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('HEIC', $image->getImageFormat());
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/heic', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -924,11 +1018,11 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
+        $image = $this->decode(file_get_contents($target) ?: '');
 
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('HEIC', $image->getImageFormat());
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/heic', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -950,10 +1044,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/png', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -975,10 +1069,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -1000,10 +1094,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('GIF', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/gif', $this->format(file_get_contents($target) ?: ''));
         unlink($target);
     }
 
@@ -1022,8 +1116,8 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
         unlink($target);
     }
 
@@ -1042,10 +1136,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame('JPEG', $image->getImageFormat());
-        $this->assertSame(2658, $image->getImageHeight());
-        $this->assertSame(2659, $image->getImageWidth());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame('image/jpeg', $this->format(file_get_contents($target) ?: ''));
+        $this->assertSame(2658, imagesy($image));
+        $this->assertSame(2659, imagesx($image));
         unlink($target);
     }
 
@@ -1064,8 +1158,8 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame('image/png', $this->format(file_get_contents($target) ?: ''));
         unlink($target);
     }
 
@@ -1084,8 +1178,8 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame('image/png', $this->format(file_get_contents($target) ?: ''));
         unlink($target);
     }
 
@@ -1105,10 +1199,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(100, $image->getImageWidth());
-        $this->assertSame(100, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(100, imagesx($image));
+        $this->assertSame(100, imagesy($image));
+        $this->assertSame('image/png', $this->format(file_get_contents($target) ?: ''));
         unlink($target);
     }
 
@@ -1128,8 +1222,8 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame('image/png', $this->format(file_get_contents($target) ?: ''));
         unlink($target);
     }
 
@@ -1146,10 +1240,10 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $image = new \Imagick($target);
-        $this->assertSame(329, $image->getImageWidth());
-        $this->assertSame(274, $image->getImageHeight());
-        $this->assertSame('GIF', $image->getImageFormat());
+        $image = $this->decode(file_get_contents($target) ?: '');
+        $this->assertSame(329, imagesx($image));
+        $this->assertSame(274, imagesy($image));
+        $this->assertSame('image/gif', $this->format(file_get_contents($target) ?: ''));
 
         unlink($target);
     }
@@ -1170,27 +1264,25 @@ final class ImageTest extends TestCase
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
 
-        $output = new \Imagick($target);
-        $this->assertGreaterThan(1, $output->getNumberImages());
-        $this->assertContains($output->getImageFormat(), ['PAM', 'WEBP']);
+        $blob = file_get_contents($target) ?: '';
+        $frames = $this->frames($blob);
+        $this->assertGreaterThan(1, \count($frames));
+        $this->assertSame('image/webp', $this->format($blob));
 
-        $coalesced = $output->coalesceImages();
-        foreach ($coalesced as $frame) {
-            $this->assertSame(32, $frame->getImageWidth());
-            $this->assertSame(32, $frame->getImageHeight());
+        foreach ($frames as [, $frame]) {
+            $this->assertSame(32, imagesx($frame));
+            $this->assertSame(32, imagesy($frame));
         }
 
         // Frame 0 has a red square near the top-left; after a correct resize
         // that region must stay red — not blended with later frames.
-        $coalesced->setFirstIterator();
-        $pixel = $coalesced->getImagePixelColor(8, 8)->getColor();
+        $pixel = $this->color($frames[0][1], 8, 8);
         $this->assertGreaterThan(200, $pixel['r']);
         $this->assertLessThan(100, $pixel['g']);
         $this->assertLessThan(100, $pixel['b']);
 
         // Frame 1 replaces that region with green on a correct crop.
-        $coalesced->nextImage();
-        $pixel = $coalesced->getImagePixelColor(8, 8)->getColor();
+        $pixel = $this->color($frames[1][1], 8, 8);
         $this->assertLessThan(100, $pixel['r']);
         $this->assertGreaterThan(180, $pixel['g']);
         $this->assertLessThan(150, $pixel['b']);
@@ -1204,39 +1296,23 @@ final class ImageTest extends TestCase
      */
     public function testCropAnimatedWebpPreservesHoldFrames(): void
     {
-        $sequence = new \Imagick();
-        foreach (['#ff0000', '#ff0000', '#0000ff'] as $color) {
-            $frame = new \Imagick();
-            $frame->newImage(40, 40, new \ImagickPixel($color));
-            $frame->setImageDelay(40);
-            $frame->setImageDispose(\Imagick::DISPOSE_NONE);
-            $frame->setImageFormat('gif');
-            $sequence->addImage($frame);
-        }
+        $red = $this->picture(40, 40);
+        $blue = $this->picture(40, 40, [0x0000FF => [0, 0, 39, 39]]);
 
-        $blob = $sequence->getImagesBlob();
-        $this->assertNotFalse($blob);
-
-        $image = new Image($blob);
+        $image = new Image($this->animatedGif([$red, $red, $blue], 40));
         $image->crop(20, 20);
         $outputBlob = $image->output('webp', 100);
         $this->assertNotFalse($outputBlob);
         $this->assertNotNull($outputBlob);
 
-        $output = new \Imagick();
-        $output->readImageBlob($outputBlob);
+        $frames = $this->frames($outputBlob);
 
-        $totalDelay = 0;
-        foreach ($output as $frame) {
-            $totalDelay += $frame->getImageDelay();
-        }
-        $this->assertSame(120, $totalDelay);
-        $this->assertGreaterThanOrEqual(2, $output->getNumberImages());
+        $this->assertSame(120, array_sum(array_column($frames, 0)));
+        $this->assertGreaterThanOrEqual(2, \count($frames));
 
-        $coalesced = $output->coalesceImages();
-        foreach ($coalesced as $frame) {
-            $this->assertSame(20, $frame->getImageWidth());
-            $this->assertSame(20, $frame->getImageHeight());
+        foreach ($frames as [, $frame]) {
+            $this->assertSame(20, imagesx($frame));
+            $this->assertSame(20, imagesy($frame));
         }
     }
 
@@ -1311,12 +1387,11 @@ final class ImageTest extends TestCase
         $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $image->crop(256, 256)->setBackground('#336699')->setBorder(6, '#ff0000')->setBorderRadius(40);
 
-        $output = new \Imagick();
-        $output->readImageBlob($image->output('png') ?? '');
+        $output = $this->decode($image->output('png') ?? '');
 
         // Flattening leaves an alpha channel, so the corner is cut away, and the border is stroked.
-        $this->assertEqualsWithDelta(0, $output->getImagePixelColor(1, 1)->getColorValue(\Imagick::COLOR_ALPHA), 0.01);
-        $edge = $output->getImagePixelColor(128, 3)->getColor();
+        $this->assertGreaterThanOrEqual(126, $this->color($output, 1, 1)['a']);
+        $edge = $this->color($output, 128, 3);
         $this->assertGreaterThan(200, $edge['r']);
         $this->assertLessThan(60, $edge['g']);
     }
@@ -1350,10 +1425,10 @@ final class ImageTest extends TestCase
         $image = new Image($this->jpegWithExifOrientation(6));
         $image->crop(20, 10, $gravity);
 
-        $output = new \Imagick();
-        $output->readImageBlob($image->output($type, 90) ?? '');
+        $blob = $image->output($type, 90) ?? '';
+        $output = $this->decode($blob);
 
-        $this->assertSame([10, 20], [$output->getImageWidth(), $output->getImageHeight()]);
-        $this->assertContains($output->getImageOrientation(), [\Imagick::ORIENTATION_UNDEFINED, \Imagick::ORIENTATION_TOPLEFT]);
+        $this->assertSame([10, 20], [imagesx($output), imagesy($output)]);
+        $this->assertSame(1, (new Image($blob))->getOrientation());
     }
 }

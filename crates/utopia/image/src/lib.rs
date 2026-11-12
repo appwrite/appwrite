@@ -62,6 +62,7 @@
 
 mod color;
 mod decode;
+mod draw;
 mod encode;
 mod error;
 mod format;
@@ -74,6 +75,7 @@ mod options;
 mod transform;
 
 pub use crate::color::Color;
+pub use crate::draw::has_glyph;
 pub use crate::error::{Error, Result};
 pub use crate::format::Format;
 pub use crate::image::Image;

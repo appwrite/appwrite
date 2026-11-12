@@ -28,6 +28,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Image\Exception\LimitExceededException;
+use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Image;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -153,10 +155,6 @@ class Get extends Action
         AutogravityDetector $autogravity
     ) {
 
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = $user->isKey($authorization->getRoles());
@@ -257,26 +255,15 @@ class Get extends Action
 
         $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
 
-        $maxWidth = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_WIDTH);
-        $maxHeight = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_HEIGHT);
-        $maxArea = \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_AREA);
-        $dimensions = \getimagesizefromstring($source);
-        if ($dimensions !== false) {
-            [$sourceWidth, $sourceHeight] = $dimensions;
-            if (
-                ($maxWidth > 0 && $sourceWidth > $maxWidth) ||
-                ($maxHeight > 0 && $sourceHeight > $maxHeight) ||
-                ($maxArea > 0 && $sourceWidth * $sourceHeight > $maxArea)
-            ) {
-                throw new Exception(
-                    Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
-                    \sprintf('Image resolution %dx%d exceeds the maximum allowed %dx%d or %d total pixels', $sourceWidth, $sourceHeight, $maxWidth, $maxHeight, $maxArea)
-                );
-            }
-        }
-
         try {
             $image = new Image($source);
+        } catch (LimitExceededException $e) {
+            [$sourceWidth, $sourceHeight] = \getimagesizefromstring($source) ?: [0, 0];
+            throw new Exception(
+                Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED,
+                \sprintf('Image resolution %dx%d exceeds the maximum allowed for processing', $sourceWidth, $sourceHeight),
+                previous: $e
+            );
         } catch (\Exception $e) {
             throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
         }
@@ -293,12 +280,16 @@ class Get extends Action
             $gravity === self::GRAVITY_AUTO
             && $width > 0
             && $height > 0
-            && isset($sourceWidth, $sourceHeight)
-            && \abs($width / $height - $sourceWidth / $sourceHeight) > 0.000001
+            && \abs($width / $height - $image->getWidth() / $image->getHeight()) > 0.000001
         ) {
             $focalPoint = $autogravity
                 ->get($source)
-                ->unrotate($this->getAutogravityRotation($source));
+                ->unrotate(match ($image->getOrientation()) {
+                    3 => 180,
+                    6 => 90,
+                    8 => -90,
+                    default => 0,
+                });
             $gravity = Image::GRAVITY_CENTER;
         } elseif ($gravity === self::GRAVITY_AUTO) {
             $gravity = Image::GRAVITY_CENTER;
@@ -341,7 +332,12 @@ class Get extends Action
             Span::add('storage.transform.quality', $quality);
         }
 
-        $data = $image->output($output, $quality);
+        try {
+            $data = $image->output($output, $quality);
+        } catch (UnsupportedFormatException $e) {
+            // The format is one the API accepts, but this build has no encoder for it (HEIC).
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
+        }
 
         $renderingTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime - $decompressionTime;
 
@@ -390,19 +386,5 @@ class Get extends Action
             ->file($data);
 
         unset($image);
-    }
-
-    private function getAutogravityRotation(string $source): int
-    {
-        $metadata = new \Imagick();
-        $metadata->pingImageBlob($source);
-        $orientation = $metadata->getImageProperties()['exif:Orientation'] ?? null;
-
-        return match ($orientation) {
-            '3' => 180,
-            '6' => 90,
-            '8' => -90,
-            default => 0,
-        };
     }
 }

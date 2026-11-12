@@ -111,10 +111,6 @@ class Get extends Action
 
     public function action(string $url, array $headers, int $viewportWidth, int $viewportHeight, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response, Context $usage)
     {
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
         foreach ($headers as $key => $value) {
             if (!\in_array(\strtolower((string) $key), self::ALLOWED_HEADERS, true)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Header '{$key}' is not allowed. Allowed headers: Accept, Accept-Language.");

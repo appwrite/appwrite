@@ -409,11 +409,10 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(400, $image->getImageWidth());
-        $this->assertSame(400, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(400, $image[0]);
+        $this->assertSame(400, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-default.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -427,11 +426,10 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(200, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(200, $image[0]);
+        $this->assertSame(200, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -446,11 +444,10 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(200, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(200, $image[0]);
+        $this->assertSame(200, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -462,11 +459,10 @@ trait AvatarsBase
             'download' => 1,
         ]);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(200, $image->getImageWidth());
-        $this->assertSame(200, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(200, $image[0]);
+        $this->assertSame(200, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
         $this->assertSamePixels(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png', $response['body']);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -591,12 +587,10 @@ trait AvatarsBase
                 'height' => 100,
             ]);
 
-            $image = new \Imagick();
-            $image->readImageBlob($response['body']);
-            $signatures[] = $image->getImageSignature();
+            $signatures[] = $this->getImagePixels($response['body']);
         }
 
-        $this->assertSame($signatures[1], $signatures[0], 'A handle rendered differently from its name.');
+        $this->assertTrue($signatures[1] === $signatures[0], 'A handle rendered differently from its name.');
     }
 
     public function testInitialImage()
@@ -613,13 +607,12 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/initials.png');
+        $image = \getimagesizefromstring($response['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/initials.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
     }
 
     public function testSpecialCharsInitalImage()
@@ -636,13 +629,12 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/initials.png');
+        $image = \getimagesizefromstring($response['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/initials.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
     }
 
     public function testGetScreenshot(): array
@@ -662,11 +654,10 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($response['body']);
-        $this->assertSame(800, $image->getImageWidth());
-        $this->assertSame(600, $image->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $image = \getimagesizefromstring($response['body']);
+        $this->assertSame(800, $image[0]);
+        $this->assertSame(600, $image[1]);
+        $this->assertSame('image/png', $image['mime']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1768,9 +1759,8 @@ trait AvatarsBase
     }
 
     /**
-     * Assert the avatar is the built-in static fallback. When Imagick is
-     * missing entirely the endpoint serves the fallback as raw SVG source
-     * instead of a drawn PNG, so both encodings are accepted.
+     * Assert the avatar is the built-in static fallback, as a drawn PNG or
+     * as raw SVG source.
      */
     private function assertPhotoFallback(string $blob): void
     {
@@ -1798,16 +1788,16 @@ trait AvatarsBase
      */
     private function photoHasPersonMark(string $blob): bool
     {
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image);
 
-        $x = (int) \round($image->getImageWidth() * 0.34);
-        $to = (int) \round($image->getImageHeight() * 0.73);
+        $x = (int) \round(\imagesx($image) * 0.34);
+        $to = (int) \round(\imagesy($image) * 0.73);
 
-        for ($y = (int) \round($image->getImageHeight() * 0.68); $y <= $to; $y++) {
-            $color = $image->getImagePixelColor($x, $y)->getColor();
+        for ($y = (int) \round(\imagesy($image) * 0.68); $y <= $to; $y++) {
+            $color = \imagecolorsforindex($image, (int) \imagecolorat($image, $x, $y));
 
-            if ($color['r'] > 200 && $color['g'] > 200 && $color['b'] > 200) {
+            if ($color['red'] > 200 && $color['green'] > 200 && $color['blue'] > 200) {
                 return true;
             }
         }
@@ -1824,9 +1814,8 @@ trait AvatarsBase
     {
         $this->assertNotEmpty($blob);
 
-        // The static fallback is SVG, which ImageMagick may refuse to open at
-        // all under its security policy. Name it here rather than letting
-        // readImageBlob() raise an opaque ImagickException — reaching the
+        // GD cannot decode SVG. Name a raw SVG fallback here rather than
+        // letting the decode below fail without saying why — reaching the
         // fallback when initials were expected is the failure worth reporting.
         $this->assertStringNotContainsString(
             '<svg',
@@ -1834,15 +1823,15 @@ trait AvatarsBase
             'Expected a rendered avatar but got the static SVG fallback — the provider chain fell through.'
         );
 
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image);
 
-        foreach ([[2, 2], [$image->getImageWidth() - 3, 2]] as [$x, $y]) {
-            $color = $image->getImagePixelColor($x, $y)->getColor();
+        foreach ([[2, 2], [\imagesx($image) - 3, 2]] as [$x, $y]) {
+            $color = \imagecolorsforindex($image, (int) \imagecolorat($image, $x, $y));
 
             $this->assertSame(
                 $rgb,
-                ['r' => $color['r'], 'g' => $color['g'], 'b' => $color['b']],
+                ['r' => $color['red'], 'g' => $color['green'], 'b' => $color['blue']],
                 "Pixel at {$x},{$y} does not match the expected avatar background."
             );
         }
@@ -1894,27 +1883,39 @@ trait AvatarsBase
      */
     private function createNoiseImage(int $width, int $height): string
     {
-        $image = new \Imagick();
-        $image->newImage($width, $height, '#808080');
-        $image->addNoiseImage(\Imagick::NOISE_RANDOM);
-        $image->setImageDepth(8);
-        $image->setImageFormat('png24');
+        $image = \imagecreatetruecolor($width, $height);
+        $this->assertNotFalse($image);
 
-        return $image->getImageBlob();
-    }
-
-    private function createImage(string $color, string $format): string
-    {
-        $image = new \Imagick();
-        $image->newImage(64, 64, $color);
-        $image->setImageFormat($format);
-        $image->setImageCompressionQuality(100);
-
-        if ($format === 'webp') {
-            $image->setOption('webp:lossless', 'true');
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                \imagesetpixel($image, $x, $y, \mt_rand(0, 0xFFFFFF));
+            }
         }
 
-        return $image->getImageBlob();
+        \ob_start();
+        \imagepng($image);
+
+        return (string) \ob_get_clean();
+    }
+
+    /**
+     * @param 'png'|'jpeg'|'webp'|'gif' $format
+     */
+    private function createImage(string $color, string $format): string
+    {
+        $image = \imagecreatetruecolor(64, 64);
+        $this->assertNotFalse($image);
+        \imagefill($image, 0, 0, (int) \hexdec(\ltrim($color, '#')));
+
+        \ob_start();
+        match ($format) {
+            'png' => \imagepng($image),
+            'jpeg' => \imagejpeg($image, null, 100),
+            'webp' => \imagewebp($image, null, IMG_WEBP_LOSSLESS),
+            'gif' => \imagegif($image),
+        };
+
+        return (string) \ob_get_clean();
     }
 
     /**
@@ -1951,21 +1952,21 @@ trait AvatarsBase
      */
     private function assertSamePhoto(string $expected, string $actual, int $tolerance = 0): void
     {
-        $expectedImage = new \Imagick();
-        $expectedImage->readImageBlob($expected);
-        $actualImage = new \Imagick();
-        $actualImage->readImageBlob($actual);
+        $expectedImage = \imagecreatefromstring($expected);
+        $this->assertNotFalse($expectedImage);
+        $actualImage = \imagecreatefromstring($actual);
+        $this->assertNotFalse($actualImage);
 
-        $width = $expectedImage->getImageWidth();
-        $height = $expectedImage->getImageHeight();
+        $width = \imagesx($expectedImage);
+        $height = \imagesy($expectedImage);
 
-        $this->assertSame([$width, $height], [$actualImage->getImageWidth(), $actualImage->getImageHeight()]);
+        $this->assertSame([$width, $height], [\imagesx($actualImage), \imagesy($actualImage)]);
 
         foreach ([[0, 0], [$width - 1, $height - 1], [\intdiv($width, 2), \intdiv($height, 2)], [\intdiv($width, 3), \intdiv($height, 5)]] as [$x, $y]) {
-            $expectedColor = $expectedImage->getImagePixelColor($x, $y)->getColor();
-            $actualColor = $actualImage->getImagePixelColor($x, $y)->getColor();
+            $expectedColor = \imagecolorsforindex($expectedImage, (int) \imagecolorat($expectedImage, $x, $y));
+            $actualColor = \imagecolorsforindex($actualImage, (int) \imagecolorat($actualImage, $x, $y));
 
-            foreach (['r', 'g', 'b'] as $channel) {
+            foreach (['red', 'green', 'blue'] as $channel) {
                 $this->assertLessThanOrEqual(
                     $tolerance,
                     \abs($expectedColor[$channel] - $actualColor[$channel]),

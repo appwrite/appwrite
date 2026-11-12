@@ -3,17 +3,15 @@
 namespace Appwrite\AvatarPhotos\Providers;
 
 use Appwrite\AvatarPhotos\Photo;
-use Imagick;
-use ImagickDraw;
-use ImagickPixel;
 use Utopia\Database\Document;
+use Utopia\Image\Image;
 
 /**
  * Generates a grey square with the initials of the user's name.
  */
 class Initials extends Photo
 {
-    private const FONT_PATH = '/app/assets/fonts/inter-v8-latin-regular.woff2';
+    private const FONT_PATH = '/app/assets/fonts/inter-v8-latin-regular.ttf';
     private const DEFAULT_SIZE = 500;
 
     public function __construct(
@@ -33,10 +31,6 @@ class Initials extends Photo
 
     public function get(Document $profile, int $width, int $height, string $rating): ?string
     {
-        if (!\extension_loaded('imagick')) {
-            return null;
-        }
-
         $name = $profile->getAttribute('name', '');
 
         if ($this->getInitials($name) === '') {
@@ -65,22 +59,12 @@ class Initials extends Photo
             ? '#' . \ltrim($this->background, '#')
             : self::SURFACE;
 
-        $image = new Imagick();
-        $image->newImage($width, $height, $background);
-        $image->setImageFormat('png');
-
         // Longer initials shrink to keep fitting the square
         $fontSize = \min($width, $height) * 1.6 / (2 + \mb_strlen($initials, 'UTF-8'));
 
-        $draw = new ImagickDraw();
-        $draw->setFont($this->getFont());
-        $draw->setFillColor(new ImagickPixel(self::FIGURE));
-        $draw->setFontSize($fontSize);
-        $draw->setTextAlignment(Imagick::ALIGN_CENTER);
-
-        $image->annotateImage($draw, $width / 1.97, ($height / 2) + ($fontSize / 3), 0, $initials);
-
-        return $image->getImageBlob();
+        return Image::create($width, $height, $background)
+            ->text($initials, $this->getFont(), $fontSize, self::FIGURE, $width / 1.97, ($height / 2) + ($fontSize / 3))
+            ->output('png') ?? '';
     }
 
     /**
@@ -119,7 +103,8 @@ class Initials extends Photo
     }
 
     /**
-     * Map letters onto characters the bundled font can draw. Characters
+     * Map letters onto characters the bundled font can draw (a missing glyph
+     * draws as blank space, not as a replacement box). Characters
      * without a glyph are transliterated to Latin (Ł → L, А → A) and dropped
      * when no Latin form is available, so letters never render as a blank
      * square.
@@ -129,37 +114,17 @@ class Initials extends Photo
         $drawable = '';
 
         foreach (\mb_str_split($letters, 1, 'UTF-8') as $char) {
-            if (!$this->hasGlyph($char) && \function_exists('transliterator_transliterate')) {
+            if (!Image::hasGlyph($this->getFont(), $char) && \function_exists('transliterator_transliterate')) {
                 $latin = (string) \transliterator_transliterate('Any-Latin; Latin-ASCII', $char);
                 $char = \mb_strtoupper(\mb_substr($latin, 0, 1, 'UTF-8'), 'UTF-8');
             }
 
-            if ($char !== '' && $this->hasGlyph($char)) {
+            if ($char !== '' && Image::hasGlyph($this->getFont(), $char)) {
                 $drawable .= $char;
             }
         }
 
         return $drawable;
-    }
-
-    /**
-     * Whether the bundled font has a visible glyph for the character —
-     * missing glyphs draw as blank space, not as a replacement box.
-     */
-    private function hasGlyph(string $char): bool
-    {
-        $canvas = new Imagick();
-        $canvas->newImage(32, 32, 'transparent');
-
-        $draw = new ImagickDraw();
-        $draw->setFont($this->getFont());
-        $draw->setFontSize(24);
-        $draw->setFillColor(new ImagickPixel('black'));
-        $draw->annotation(4, 26, $char);
-
-        $canvas->drawImage($draw);
-
-        return $canvas->getImageChannelRange(Imagick::CHANNEL_ALPHA)['maxima'] > 0;
     }
 
     private function getFont(): string

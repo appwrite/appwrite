@@ -28,7 +28,7 @@
         "ext-utopia": "*"
     },
     "require-dev": {
-        "ext-imagick": "*"
+        "ext-gd": "*"
     },
     "minimum-stability": "dev"
 }

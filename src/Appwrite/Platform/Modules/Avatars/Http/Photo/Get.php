@@ -228,7 +228,7 @@ class Get extends Action
      */
     private function process(string $raw, int $width, int $height, int $quality, string $output): string
     {
-        if (! \extension_loaded('imagick') || $raw === '') {
+        if ($raw === '') {
             return $raw;
         }
 

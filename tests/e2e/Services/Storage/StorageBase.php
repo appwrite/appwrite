@@ -1025,13 +1025,12 @@ trait StorageBase
         $this->assertEquals('image/png', $file3['headers']['content-type']);
         $this->assertNotEmpty($file3['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($file3['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+        $image = \getimagesizefromstring($file3['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
 
         $file4 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -1048,13 +1047,12 @@ trait StorageBase
         $this->assertEquals('image/jpeg', $file4['headers']['content-type']);
         $this->assertNotEmpty($file4['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($file4['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
+        $image = \getimagesizefromstring($file4['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.jpg');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/jpeg', $image['mime']);
 
         $file5 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
@@ -1215,13 +1213,12 @@ trait StorageBase
         $this->assertEquals('image/png', $file7['headers']['content-type']);
         $this->assertNotEmpty($file7['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($file7['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+        $image = \getimagesizefromstring($file7['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
 
         /**
          * Test large files decompress successfully
@@ -1315,10 +1312,9 @@ trait StorageBase
         $this->assertSame(200, $preview['headers']['status-code']);
         $this->assertSame('image/png', $preview['headers']['content-type']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($preview['body']);
-        $this->assertSame(1, $image->getImageWidth());
-        $this->assertSame(1, $image->getImageHeight());
+        $image = \getimagesizefromstring($preview['body']);
+        $this->assertSame(1, $image[0]);
+        $this->assertSame(1, $image[1]);
     }
 
     public function testFileViewSvgIsNotExecutable(): void
@@ -1535,8 +1531,7 @@ trait StorageBase
         $this->assertEquals('image/png', $file3['headers']['content-type']);
         $this->assertNotEmpty($file3['body']);
 
-        $imageBefore = new \Imagick();
-        $imageBefore->readImageBlob($file3['body']);
+        $imageBefore = $this->getImagePixels($file3['body']);
 
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
@@ -1588,10 +1583,7 @@ trait StorageBase
             $this->assertEquals('image/png', $file3['headers']['content-type']);
             $this->assertNotEmpty($file3['body']);
 
-            $imageAfter = new \Imagick();
-            $imageAfter->readImageBlob($file3['body']);
-
-            $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+            $this->assertFalse($imageBefore === $this->getImagePixels($file3['body']), 'The preview is still the deleted file\'s.');
         }, 10_000, 500);
     }
 
