@@ -424,6 +424,8 @@ export const heSitesDictionary: Record<string, string> = {
     'הדומיין הזה כבר מפנה ל-Appwrite. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות.',
   'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
     'הדומיין הזה נמצא בשימוש בפרויקט אחר. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות כדי להעביר אותו לכאן.',
+  "This domain's DNS is managed by another organization. Add this TXT record to that domain's DNS, or ask that organization's owners to add it, then verify. The domain stays in that organization.":
+    'ה-DNS של הדומיין הזה מנוהל על ידי ארגון אחר. הוסיפו את רשומת ה-TXT הזו ל-DNS של הדומיין, או בקשו מבעלי הארגון להוסיף אותה, ולאחר מכן בצעו אימות. הדומיין נשאר בארגון ההוא.',
   Required: 'שדה חובה',
   Invalid: 'לא תקין',
   'Invalid URL': 'כתובת URL לא תקינה',

@@ -29,14 +29,12 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   ensureApexDomainInOrganization,
-  isDomainClaimError,
+  getDomainClaimReason,
+  type DomainClaimReason,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
-import {
-  getAppwriteErrorInfo,
-  getErrorMessage,
-} from '@/lib/utils/error-formatting'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -70,7 +68,7 @@ export function AddDomainWizard() {
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
-  const [claimRequired, setClaimRequired] = useState(false)
+  const [claimReason, setClaimReason] = useState<DomainClaimReason>('pointed')
   const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/functions/${functionId}/domains`
@@ -167,10 +165,9 @@ export function AddDomainWizard() {
     try {
       await createRule(d)
     } catch (err) {
-      if (isDomainClaimError(err)) {
-        setClaimRequired(
-          getAppwriteErrorInfo(err).type === 'rule_claim_required',
-        )
+      const reason = getDomainClaimReason(err)
+      if (reason) {
+        setClaimReason(reason)
         setClaimDomain(d)
         return
       }
@@ -292,7 +289,7 @@ export function AddDomainWizard() {
       >
         <ClaimDomainContent
           domain={claimDomain}
-          claimRequired={claimRequired}
+          reason={claimReason}
           projectId={projectId!}
           verificationError={verificationError}
         />
