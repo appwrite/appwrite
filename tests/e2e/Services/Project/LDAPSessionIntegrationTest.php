@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Id;
+use Utopia\Database\Query;
 
 /**
  * Sign-in flows against a real directory: the OpenLDAP fixture from
@@ -414,7 +415,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame($user['body']['$id'], $response['body']['userId']);
 
         // Linked, and the name now follows the directory.
-        $identities = $this->client->call(Client::METHOD_GET, '/users/' . $user['body']['$id'] . '/identities', $this->serverHeaders());
+        $identities = $this->identitiesOf($user['body']['$id']);
 
         $this->assertSame(200, $identities['headers']['status-code']);
         $this->assertSame(1, $identities['body']['total']);
@@ -495,7 +496,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame('alice@appwrite.test', $user['body']['email']);
         $this->assertSame('+15550000001', $user['body']['phone']);
 
-        $identities = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'] . '/identities', $this->serverHeaders());
+        $identities = $this->identitiesOf($alice['userId']);
 
         $this->assertSame(1, $identities['body']['total']);
         $this->assertSame('alice@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
@@ -530,7 +531,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame('alice@appwrite.test', $user['body']['email']);
 
         // The identity records the address the account holds, not the one it could not take.
-        $identities = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'] . '/identities', $this->serverHeaders());
+        $identities = $this->identitiesOf($alice['userId']);
 
         $this->assertSame(1, $identities['body']['total']);
         $this->assertSame('alice@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
@@ -594,12 +595,12 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame('Alice Smith', $user['body']['name']);
         $this->assertSame('alice@appwrite.test', $user['body']['email']);
 
-        $identities = $this->client->call(Client::METHOD_GET, '/users/' . $account['userId'] . '/identities', $this->serverHeaders());
+        $identities = $this->identitiesOf($account['userId']);
 
         $this->assertSame(1, $identities['body']['total']);
         $this->assertSame($account['providerUid'], $identities['body']['identities'][0]['providerUid']);
 
-        $identities = $this->client->call(Client::METHOD_GET, '/users/' . $bob['body']['userId'] . '/identities', $this->serverHeaders());
+        $identities = $this->identitiesOf($bob['body']['userId']);
 
         $this->assertSame(1, $identities['body']['total']);
         $this->assertSame('ldap', $identities['body']['identities'][0]['provider']);
@@ -759,11 +760,14 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertStringContainsString('not a member', (string) $response['body']['message']);
 
         // A directory nobody can reach is reported with the host that was dialled.
-        $this->updateLDAP([
+        $response = $this->updateLDAP([
             'hosts' => ['127.0.0.1'],
             'port' => 1,
+            'bindPassword' => self::BIND_PASSWORD,
             'enabled' => false,
         ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
 
         $response = $this->createLDAPTest();
 
@@ -921,6 +925,13 @@ final class LDAPSessionIntegrationTest extends Scope
             'userId' => $response['body']['userId'],
             'providerUid' => $response['body']['providerUid'],
         ];
+    }
+
+    private function identitiesOf(string $userId): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/users/identities', $this->serverHeaders(), [
+            'queries' => [Query::equal('userId', [$userId])->toString()],
+        ]);
     }
 
     private function updateLDAP(array $params): array
