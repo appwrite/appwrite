@@ -79,3 +79,14 @@ fn a_resized_animation_is_held_to_the_budget_as_a_whole() {
     assert!(exhausted(canvas.apply(doubled).unwrap().encode(OutputFormat::Gif, None)));
     assert!(canvas.encode(OutputFormat::Gif, None).is_ok());
 }
+
+#[test]
+fn a_half_turn_needs_no_room_for_a_second_copy() {
+    // Decoding this 100x100 RGB PNG holds 30,000 bytes of its own pixels and the 40,000 of
+    // the canvas made from them. 75,000 leaves no room for a second canvas.
+    let canvas = Canvas::decode(PNG, Limits { memory: 75_000, ..Limits::default() }).unwrap();
+    let turned = |rotation| canvas.apply(utopia_image::Transform { rotation, ..Default::default() }).unwrap();
+    assert!(turned(180).encode(OutputFormat::Png, None).is_ok());
+    // A quarter turn builds its replacement while the source is still held.
+    assert!(exhausted(turned(90).encode(OutputFormat::Png, None)));
+}
