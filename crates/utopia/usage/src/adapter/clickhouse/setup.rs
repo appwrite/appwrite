@@ -16,6 +16,7 @@ pub(super) const EVENT_TIME_BUCKET: &str = "toStartOfHour(`time`, 'UTC')";
 
 /// Per-dimension event projections, keyed on the hourly bucket.
 pub(super) const EVENT_PROJECTIONS: &[(&str, &[&str])] = &[
+    ("p_by_resourceType", &["resourceType"]),
     ("p_by_path", &["path"]),
     ("p_by_country", &["country"]),
     ("p_by_service", &["service"]),
