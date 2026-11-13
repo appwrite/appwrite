@@ -46,6 +46,8 @@ export interface DomainTargetCardProps {
   providerRepositoryId?: string | null
   /** Whether repo is connected (needed for branch option) */
   hasRepository?: boolean
+  /** An existing rule cannot change type: lock to its deployment or redirect options */
+  ruleType?: 'deployment' | 'redirect'
   disabled?: boolean
 }
 
@@ -62,11 +64,13 @@ export function DomainTargetCard({
   installationId,
   providerRepositoryId,
   hasRepository = false,
+  ruleType,
   disabled = false,
 }: DomainTargetCardProps) {
   const t = useT()
-  const branchDisabled = !hasRepository
-  const redirectDisabled = false
+  const activeDisabled = ruleType === 'redirect'
+  const branchDisabled = !hasRepository || ruleType === 'redirect'
+  const redirectDisabled = ruleType === 'deployment'
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -81,13 +85,13 @@ export function DomainTargetCard({
           <button
             type="button"
             onClick={() => onBehaviourChange('active')}
-            disabled={disabled}
+            disabled={disabled || activeDisabled}
             className={cn(
               'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'active'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',
-              disabled && 'opacity-50 cursor-not-allowed',
+              (disabled || activeDisabled) && 'opacity-50 cursor-not-allowed',
             )}
           >
             <Rocket className="h-5 w-5 text-muted-foreground mb-2" />
@@ -103,7 +107,7 @@ export function DomainTargetCard({
             type="button"
             onClick={() => !branchDisabled && onBehaviourChange('branch')}
             disabled={disabled || branchDisabled}
-            title={branchDisabled ? t('Connect repository first') : undefined}
+            title={!hasRepository ? t('Connect repository first') : undefined}
             className={cn(
               'text-start rounded-lg border p-4 transition-all cursor-pointer',
               behaviour === 'branch'
