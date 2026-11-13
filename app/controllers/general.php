@@ -1511,6 +1511,7 @@ Http::error()
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
             case 422: // Error allowed publicly
+            case 424: // Error allowed publicly
             case 429: // Error allowed publicly
             case 451: // Error allowed publicly
             case 501: // Error allowed publicly
