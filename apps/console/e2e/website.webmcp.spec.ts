@@ -316,3 +316,28 @@ test('a call cancelled before the page connects its handlers is answered', async
   // page's own answer through, which shows the waiting call was released.
   expect(result.code).toBe(WEBMCP_CHANNEL ? 'AbortError' : 'cancelled')
 })
+
+test('a self-hosted console registers no Appwrite Cloud tools', async ({
+  page,
+}) => {
+  // Prerendered pages are shared by both profiles, so the inline script has
+  // to read the profile from the runtime config at load.
+  await page.addInitScript((key) => {
+    let config: Record<string, unknown> | undefined
+    Object.defineProperty(window, key, {
+      configurable: true,
+      get: () => config,
+      set: (value: Record<string, unknown>) => {
+        config = { ...value, consoleProfile: 'self-hosted' }
+      },
+    })
+  }, RUNTIME_CONFIG_WINDOW_KEY)
+  await openAsAgent(page, '/home', 0)
+  await page.waitForLoadState('load')
+  expect(
+    await page.evaluate(async () => ({
+      bridge: window.__appwriteSiteTools === undefined,
+      tools: (await document.modelContext!.getTools()).length,
+    })),
+  ).toEqual({ bridge: true, tools: 0 })
+})

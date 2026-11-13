@@ -6,10 +6,7 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { SITE_TOOLS_SCRIPT } from '@/lib/webmcp/site/tools'
-import {
-  siteToolsEnabled,
-  useSiteTools,
-} from '@/lib/webmcp/site/use-site-tools'
+import { useSiteTools } from '@/lib/webmcp/site/use-site-tools'
 
 export const Route = createFileRoute('/docs')({
   ...marketingRouteLifetime,
@@ -23,7 +20,7 @@ function DocsLayoutRoute() {
   useSiteTools()
   return (
     <DocsPageShell>
-      {siteToolsEnabled() && <ScriptOnce>{SITE_TOOLS_SCRIPT}</ScriptOnce>}
+      <ScriptOnce>{SITE_TOOLS_SCRIPT}</ScriptOnce>
       <Outlet />
     </DocsPageShell>
   )

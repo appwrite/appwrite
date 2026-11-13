@@ -27,6 +27,16 @@ declare global {
  * handlers useSiteTools connects from ./actions once the app loads.
  */
 export function installSiteTools(): void {
+  // Read at runtime: prerendered HTML is shared by cloud and self-hosted
+  // consoles, and only the runtime config (window.__APP_CONFIG__, set earlier
+  // in the page) says which this is. Self-hosted consoles don't offer
+  // Appwrite Cloud's tools.
+  const profile =
+    (window as unknown as { __APP_CONFIG__?: { consoleProfile?: string } })
+      .__APP_CONFIG__?.consoleProfile ?? ''
+  if (profile.toLowerCase().trim().replace(/\s+/g, '-') === 'self-hosted') {
+    return
+  }
   const modelContext = document.modelContext ?? navigator.modelContext
   if (!modelContext || window.__appwriteSiteTools) return
 
