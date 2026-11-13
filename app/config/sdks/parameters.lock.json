@@ -34,6 +34,11 @@
         "account.createJWT": [
             "duration"
         ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
+            "duration"
+        ],
         "account.createMFAAuthenticator": [
             "type"
         ],
@@ -924,6 +929,11 @@
             "name"
         ],
         "account.createJWT": [
+            "duration"
+        ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
             "duration"
         ],
         "account.createMFAAuthenticator": [
@@ -3006,6 +3016,10 @@
             "expire",
             "description"
         ],
+        "project.createLDAPTest": [
+            "username",
+            "password"
+        ],
         "project.createLinuxPlatform": [
             "platformId",
             "name",
@@ -3148,6 +3162,25 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "project.updateLDAP": [
+            "hosts",
+            "port",
+            "encryption",
+            "tls",
+            "caCertificate",
+            "timeout",
+            "baseDn",
+            "bindDn",
+            "bindPassword",
+            "usernameAttribute",
+            "userFilter",
+            "idAttribute",
+            "emailAttribute",
+            "nameAttribute",
+            "phoneAttribute",
+            "requiredGroupDn",
+            "enabled"
         ],
         "project.updateLabels": [
             "labels"
@@ -5186,6 +5219,11 @@
             "accessTokenExpiry",
             "name"
         ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
+            "duration"
+        ],
         "account.createMFAAuthenticator": [
             "type"
         ],
@@ -7187,6 +7225,10 @@
             "scopes",
             "duration"
         ],
+        "project.createLDAPTest": [
+            "username",
+            "password"
+        ],
         "project.createLinuxPlatform": [
             "platformId",
             "name",
@@ -7329,6 +7371,25 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "project.updateLDAP": [
+            "hosts",
+            "port",
+            "encryption",
+            "tls",
+            "caCertificate",
+            "timeout",
+            "baseDn",
+            "bindDn",
+            "bindPassword",
+            "usernameAttribute",
+            "userFilter",
+            "idAttribute",
+            "emailAttribute",
+            "nameAttribute",
+            "phoneAttribute",
+            "requiredGroupDn",
+            "enabled"
         ],
         "project.updateLabels": [
             "labels"
