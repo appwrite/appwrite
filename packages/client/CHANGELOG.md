@@ -13,6 +13,7 @@ This project follows semantic versioning.
 ### Added
 
 - `Utopia\Client\Destinations` decides where a client may connect. `Client` takes one as an optional second constructor argument and through `withDestinations()`; the default is `Anywhere`.
+- Under destinations that refuse a proxy, the cURL adapter resolves the host and checks its addresses before connecting, then pins curl to the allowed ones with `CURLOPT_RESOLVE`, so a refused host is never contacted and the error cannot tell whether it would have answered. Outside a Swoole coroutine this needs `ext-sockets`.
 - `Destinations\Anywhere` (any address, any proxy), `Destinations\PublicInternet` (refuses private, reserved and special-use ranges, except the `IPRange`s it is given), and `Destinations\IPRange` (validated in its constructor).
 - `Utopia\Client\PHPStan\DisallowRawCurlExtension`, a PHPStan extension that reports `curl_init()` and `curl_multi_init()` outside the cURL adapter.
 
