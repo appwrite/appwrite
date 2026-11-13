@@ -70,6 +70,11 @@ pub fn rawurlencode(s: &[u8]) -> String {
 
 fn url_decode(s: &[u8], plus: bool) -> Vec<u8> {
     let mut out = Vec::with_capacity(s.len());
+    url_decode_into(&mut out, s, plus);
+    out
+}
+
+fn url_decode_into(out: &mut Vec<u8>, s: &[u8], plus: bool) {
     let mut i = 0;
     while i < s.len() {
         let c = s[i];
@@ -83,7 +88,16 @@ fn url_decode(s: &[u8], plus: bool) -> Vec<u8> {
         }
         i += 1;
     }
-    out
+}
+
+/// [`urldecode`], appended to `out` instead of a new buffer.
+pub fn urldecode_into(out: &mut Vec<u8>, s: &[u8]) {
+    url_decode_into(out, s, true);
+}
+
+/// [`rawurldecode`], appended to `out` instead of a new buffer.
+pub fn rawurldecode_into(out: &mut Vec<u8>, s: &[u8]) {
+    url_decode_into(out, s, false);
 }
 
 /// PHP `urldecode`: `+` is a space and `%XX` a byte; a `%` not followed by
