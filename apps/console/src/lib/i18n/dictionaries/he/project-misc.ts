@@ -3391,7 +3391,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Switch to production': 'מעבר לפרודקשן',
   'Environment ID': 'מזהה סביבה',
   // Environments by plan: Pro and above, and the cap per project
-  Environments: 'סביבות',
   'Project environments are available on Pro':
     'סביבות פרויקט זמינות בתוכנית Pro',
   'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':

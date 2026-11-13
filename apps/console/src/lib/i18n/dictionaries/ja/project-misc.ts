@@ -3457,7 +3457,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Switch to production': '本番に切り替え',
   'Environment ID': '環境 ID',
   // Environments by plan: Pro and above, and the cap per project
-  Environments: '環境',
   'Project environments are available on Pro':
     'プロジェクト環境は Pro プランで利用できます',
   'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
