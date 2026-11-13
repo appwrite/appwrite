@@ -263,4 +263,4 @@ mutation {
 
 {% /multicode %}
 
-By enabling security phrase feature, you will recieve `phrase` in the response. You need to display this phrase to the user, and we recommend informing user what this phrase is and how to check it. When security phrase is enabled, email will also include a new section providing user with the security phrase.
+By enabling security phrase feature, you will receive `phrase` in the response. You need to display this phrase to the user, and we recommend informing user what this phrase is and how to check it. When security phrase is enabled, email will also include a new section providing user with the security phrase.
