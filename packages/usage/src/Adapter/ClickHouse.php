@@ -19,6 +19,7 @@ use Utopia\Query\Query;
 use Utopia\Query\Schema\ClickHouse as ClickHouseSchema;
 use Utopia\Query\Schema\ClickHouse\Engine;
 use Utopia\Query\Schema\Table\ClickHouse as ClickHouseTable;
+use Utopia\Usage\Engine as Extension;
 use Utopia\Usage\Metric;
 use Utopia\Usage\Sample;
 use Utopia\Usage\SampleGap;
@@ -159,6 +160,11 @@ class ClickHouse extends SQL
     private readonly ?int $retention;
 
     /**
+     * The `utopia` extension's engine, or null to run this class's own PHP.
+     */
+    private readonly ?Extension $engine;
+
+    /**
      * @param  string  $host  ClickHouse host
      * @param  string  $username  ClickHouse username (default: 'default')
      * @param  string  $password  ClickHouse password (default: '')
@@ -230,6 +236,81 @@ class ClickHouse extends SQL
         // a pure transport.
         $this->client = $client ?? new Client(new CurlAdapter()->withConnectionReuse());
         $this->requestFactory = new RequestFactory();
+
+        // The `utopia` extension, when it is switched on for this library
+        // (`_APP_EXTENSION_LIBRARIES=usage`), builds the statements and reads
+        // the responses. Requests still go through `$this->client`.
+        $this->engine = \class_exists(Extension::class, false)
+            ? new Extension([
+                'host' => $host,
+                'username' => $username,
+                'password' => $password,
+                'port' => $port,
+                'secure' => $secure,
+                'namespace' => $namespace,
+                'database' => $database,
+                'sharedTables' => $sharedTables,
+                'asyncInserts' => $asyncInserts,
+                'asyncInsertWait' => $asyncInsertWait,
+                'dualReadSampleRate' => $this->dualReadSampleRate,
+                'retention' => $retention,
+            ], $this->send(...))
+            : null;
+    }
+
+    /**
+     * The engine's transport: one POST through the injected client. A request
+     * that could not be answered is reported as a negative status and the
+     * reason, which the engine wraps as this class wraps a thrown client error.
+     *
+     * @param  array<string, string>  $headers
+     * @return array{int, string}
+     */
+    private function send(string $url, array $headers, string $body): array
+    {
+        $contentType = $headers['Content-Type'] ?? 'application/octet-stream';
+        unset($headers['Content-Type']);
+
+        try {
+            $response = $this->client->sendRequest(
+                $this->requestFactory->body(HttpMethod::POST, $url, $body, $contentType, $headers)
+            );
+
+            return [$response->getStatusCode(), (string) $response->getBody()];
+        } catch (Throwable $e) {
+            return [-1, $e->getMessage()];
+        }
+    }
+
+    /**
+     * Queries as the engine reads them: JSON, with a `DateTime` value written
+     * as this class formats one.
+     *
+     * @param  array<Query>  $queries
+     * @return array<string>
+     */
+    private function encode(array $queries): array
+    {
+        $plain = function (Query $query) use (&$plain): Query {
+            $values = \array_map(fn (mixed $value): mixed => match (true) {
+                $value instanceof DateTime => $value->format('Y-m-d H:i:s.v'),
+                $value instanceof Query => $plain($value),
+                default => $value,
+            }, $query->getValues());
+
+            return (clone $query)->setValues($values);
+        };
+
+        return \array_values(\array_map(fn (Query $query): string => $plain($query)->toString(), $queries));
+    }
+
+    /**
+     * @param  array<array<string, mixed>>  $rows
+     * @return array<Metric>
+     */
+    private function metrics(array $rows): array
+    {
+        return \array_map(fn (array $row): Metric => new Metric($row), $rows);
     }
 
     /**
@@ -240,6 +321,12 @@ class ClickHouse extends SQL
      */
     public function setNextQueryId(?string $queryId): self
     {
+        if ($this->engine !== null) {
+            $this->engine->setNextQueryId($queryId);
+
+            return $this;
+        }
+
         $this->nextQueryId = $queryId;
         return $this;
     }
@@ -253,11 +340,21 @@ class ClickHouse extends SQL
      */
     public function getRouteLog(): array
     {
+        if ($this->engine !== null) {
+            return $this->engine->getRouteLog();
+        }
+
         return $this->routeLog;
     }
 
     public function clearRouteLog(): self
     {
+        if ($this->engine !== null) {
+            $this->engine->clearRouteLog();
+
+            return $this;
+        }
+
         $this->routeLog = [];
         return $this;
     }
@@ -270,7 +367,7 @@ class ClickHouse extends SQL
     public function getConnectionStats(): array
     {
         return [
-            'request_count' => $this->requestCount,
+            'request_count' => $this->engine?->getRequestCount() ?? $this->requestCount,
             'async_inserts' => $this->asyncInserts,
             'async_insert_wait' => $this->asyncInsertWait,
         ];
@@ -291,6 +388,10 @@ class ClickHouse extends SQL
      */
     public function healthCheck(): array
     {
+        if ($this->engine !== null) {
+            return $this->engine->healthCheck();
+        }
+
         $this->setOperationContext('healthCheck()');
 
         $startTime = microtime(true);
@@ -1185,6 +1286,12 @@ class ClickHouse extends SQL
      */
     public function setup(): void
     {
+        if ($this->engine !== null) {
+            $this->engine->setup();
+
+            return;
+        }
+
         $this->migrate();
 
         $this->setOperationContext('setup()');
@@ -1201,6 +1308,12 @@ class ClickHouse extends SQL
      */
     public function migrate(): void
     {
+        if ($this->engine !== null) {
+            $this->engine->migrate();
+
+            return;
+        }
+
         $this->setOperationContext('migrate()');
 
         $escapedDatabase = $this->escapeIdentifier($this->database);
@@ -1970,6 +2083,12 @@ class ClickHouse extends SQL
      */
     public function backfillDaily(string $from, string $to, bool $force = false): void
     {
+        if ($this->engine !== null) {
+            $this->engine->backfillDaily($from, $to, $force);
+
+            return;
+        }
+
         try {
             // The constructor's timezone argument is ignored when the string
             // carries its own offset, and the bindings are formatted without
@@ -2375,6 +2494,10 @@ class ClickHouse extends SQL
      */
     public function addBatch(array $metrics, string $type, int $batchSize = self::INSERT_BATCH_SIZE): bool
     {
+        if ($this->engine !== null) {
+            return $this->engine->addBatch($metrics, $type, $batchSize);
+        }
+
         if (empty($metrics)) {
             return true;
         }
@@ -2813,6 +2936,10 @@ class ClickHouse extends SQL
      */
     public function find(string $tenant, array $queries = [], ?string $type = null): array
     {
+        if ($this->engine !== null) {
+            return $this->metrics($this->engine->find($tenant, $this->encode($queries), $type));
+        }
+
         $this->setOperationContext('find()');
 
         return $this->findScoped($tenant, $queries, $type);
@@ -2834,6 +2961,10 @@ class ClickHouse extends SQL
      */
     public function findAcrossTenants(array $queries = [], ?string $type = null): array
     {
+        if ($this->engine !== null) {
+            return $this->metrics($this->engine->findAcrossTenants($this->encode($queries), $type));
+        }
+
         $this->setOperationContext('findAcrossTenants()');
 
         if (!$this->sharedTables) {
@@ -3337,6 +3468,10 @@ class ClickHouse extends SQL
      */
     public function count(string $tenant, array $queries = [], ?string $type = null, ?int $max = null): int
     {
+        if ($this->engine !== null) {
+            return $this->engine->count($tenant, $this->encode($queries), $type, $max);
+        }
+
         $this->setOperationContext('count()');
 
         if ($type !== null) {
@@ -3420,6 +3555,10 @@ class ClickHouse extends SQL
      */
     public function sum(string $tenant, array $queries = [], string $attribute = 'value', string $type = Usage::TYPE_EVENT): int
     {
+        if ($this->engine !== null) {
+            return $this->engine->sum($tenant, $this->encode($queries), $attribute, $type);
+        }
+
         $this->setOperationContext('sum()');
 
         if ($type === Usage::TYPE_EVENT && $attribute === 'value') {
@@ -4322,6 +4461,10 @@ class ClickHouse extends SQL
      */
     public function findDaily(string $tenant, array $queries = []): array
     {
+        if ($this->engine !== null) {
+            return $this->metrics($this->engine->findDaily($tenant, $this->encode($queries)));
+        }
+
         $this->setOperationContext('findDaily()');
 
         $tableName = $this->getEventsDailyTableName();
@@ -4373,6 +4516,10 @@ class ClickHouse extends SQL
      */
     public function sumDaily(string $tenant, array $queries = [], string $attribute = 'value'): int
     {
+        if ($this->engine !== null) {
+            return $this->engine->sumDaily($tenant, $this->encode($queries), $attribute);
+        }
+
         $this->setOperationContext('sumDaily()');
 
         return $this->sumDailyTotal($tenant, $queries, $attribute);
@@ -4420,6 +4567,10 @@ class ClickHouse extends SQL
      */
     public function sumDailyBatch(string $tenant, array $metrics, array $queries = []): array
     {
+        if ($this->engine !== null) {
+            return $this->engine->sumDailyBatch($tenant, $metrics, $this->encode($queries));
+        }
+
         if (empty($metrics)) {
             return [];
         }
@@ -4482,6 +4633,10 @@ class ClickHouse extends SQL
      */
     public function getTimeSeries(string $tenant, array $metrics, string $interval, string $startDate, string $endDate, array $queries = [], bool $zeroFill = true, ?string $type = null): array
     {
+        if ($this->engine !== null) {
+            return $this->engine->getTimeSeries($tenant, $metrics, $interval, $startDate, $endDate, $this->encode($queries), $zeroFill, $type);
+        }
+
         if (empty($metrics)) {
             return [];
         }
@@ -4755,6 +4910,10 @@ class ClickHouse extends SQL
      */
     public function getTotal(string $tenant, string $metric, array $queries = [], ?string $type = null): int
     {
+        if ($this->engine !== null) {
+            return $this->engine->getTotal($tenant, $metric, $this->encode($queries), $type);
+        }
+
         $this->setOperationContext('getTotal()');
 
         if ($type === Usage::TYPE_EVENT) {
@@ -4843,6 +5002,10 @@ class ClickHouse extends SQL
      */
     public function getTotalBatch(string $tenant, array $metrics, array $queries = [], ?string $type = null): array
     {
+        if ($this->engine !== null) {
+            return $this->engine->getTotalBatch($tenant, $metrics, $this->encode($queries), $type);
+        }
+
         if (empty($metrics)) {
             return [];
         }
@@ -5624,6 +5787,10 @@ class ClickHouse extends SQL
      */
     public function purge(string $tenant, array $queries = [], ?string $type = null): bool
     {
+        if ($this->engine !== null) {
+            return $this->engine->purge($tenant, $this->encode($queries), $type);
+        }
+
         $this->setOperationContext('purge()');
 
         $typesToPurge = [];
