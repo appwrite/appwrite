@@ -11,14 +11,7 @@ import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { useIntersectionVisible } from '@/hooks/use-intersection-visible'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableHeader } from '@/components/ui/table'
 
 const OFFICIAL_PLUGINS = getOfficialPlugins()
 
@@ -219,74 +212,40 @@ function BenchmarkTable() {
   const t = useT()
   return (
     <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-      <Table className="min-w-[56rem]">
+      <Table className="min-w-[56rem] [&_td]:px-4 [&_td]:py-3 [&_td]:align-middle [&_td]:whitespace-nowrap [&_td+td]:text-end [&_td+td]:text-[13px] [&_td+td]:tabular-nums [&_td+td]:text-muted-foreground [&_th]:px-4 [&_th]:py-3 [&_th]:text-start [&_th]:align-middle [&_th]:text-[12px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wider [&_th]:whitespace-nowrap [&_th]:text-muted-foreground [&_th+th]:text-end [&_td:nth-child(3)]:font-semibold [&_td:nth-child(3)]:text-emerald-600 dark:[&_td:nth-child(3)]:text-emerald-400 [&_thead_tr]:border-b [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-accent/10 [&_tbody_tr:not(:last-child)]:border-b">
         <TableHeader>
-          <TableRow className="hover:bg-transparent border-b border-border">
-            <TableHead className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Model')}
-            </TableHead>
-            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Cost/1M')}
-            </TableHead>
-            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Overall')}
-            </TableHead>
-            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Auth')}
-            </TableHead>
-            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              TablesDB
-            </TableHead>
-            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Functions')}
-            </TableHead>
-            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Storage')}
-            </TableHead>
-            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Sites')}
-            </TableHead>
-            <TableHead className="px-4 py-3 text-end text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('Messaging')}
-            </TableHead>
-          </TableRow>
+          <tr>
+            <th>{t('Model')}</th>
+            <th>{t('Cost/1M')}</th>
+            <th>{t('Overall')}</th>
+            <th>{t('Auth')}</th>
+            <th>TablesDB</th>
+            <th>{t('Functions')}</th>
+            <th>{t('Storage')}</th>
+            <th>{t('Sites')}</th>
+            <th>{t('Messaging')}</th>
+          </tr>
         </TableHeader>
         <TableBody>
           {BENCHMARK_ROWS.map((row) => (
-            <TableRow key={row.model} className="hover:bg-accent/10">
-              <TableCell className="px-4 py-3">
+            <tr key={row.model}>
+              <td>
                 <span className="flex items-center gap-2.5">
                   <img src={row.icon} alt="" className="size-4 object-contain" />
                   <span className="text-[13px] font-medium text-foreground">
                     {row.model}
                   </span>
                 </span>
-              </TableCell>
-              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
-                {row.cost}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-end text-[13px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                {formatScore(row.overall)}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
-                {formatScore(row.auth)}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
-                {formatScore(row.tablesDb)}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
-                {formatScore(row.functions)}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
-                {formatScore(row.storage)}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
-                {formatScore(row.sites)}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-end text-[13px] tabular-nums text-muted-foreground">
-                {formatScore(row.messaging)}
-              </TableCell>
-            </TableRow>
+              </td>
+              <td>{row.cost}</td>
+              <td>{formatScore(row.overall)}</td>
+              <td>{formatScore(row.auth)}</td>
+              <td>{formatScore(row.tablesDb)}</td>
+              <td>{formatScore(row.functions)}</td>
+              <td>{formatScore(row.storage)}</td>
+              <td>{formatScore(row.sites)}</td>
+              <td>{formatScore(row.messaging)}</td>
+            </tr>
           ))}
         </TableBody>
       </Table>
