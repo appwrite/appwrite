@@ -231,6 +231,14 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * Get the parent context, 'collection' or 'table', for messages.
+     */
+    protected function getParentContext(): string
+    {
+        return $this->isCollectionsAPI() ? 'collection' : 'table';
+    }
+
+    /**
      * Get the correct collections context for Events queue.
      */
     protected function getCollectionsEventsContext(): string
@@ -380,8 +388,7 @@ abstract class Action extends DatabasesAction
             $options['side'] = RelationshipSide::Parent->value;
             $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection'] ?? '');
             if ($relatedCollection->isEmpty()) {
-                $parent = $this->isCollectionsAPI() ? 'collection' : 'table';
-                throw new Exception($this->getParentNotFoundException(), "The related $parent was not found.");
+                throw new Exception($this->getParentNotFoundException(), "The related {$this->getParentContext()} was not found.");
             }
         }
 
@@ -489,21 +496,22 @@ abstract class Action extends DatabasesAction
                     'options' => $options !== [] ? $options : null,
                 ]));
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
-            } catch (DuplicateException) {
-                throw new Exception($this->getDuplicateException(), params: [$twoWayKey]);
-            } catch (LimitException) {
-                throw new Exception($this->getLimitException(), params: [$relatedCollection->getId()]);
-            } catch (StructureException) {
-                throw new Exception($this->getStructureException());
             } catch (Throwable $e) {
-                $dbForProject->deleteDocument('attributes', $attribute->getId());
-                throw $e;
+                try {
+                    $dbForProject->deleteDocument('attributes', $attribute->getId());
+                } finally {
+                    throw match (true) {
+                        $e instanceof DuplicateException => new Exception($this->getDuplicateException(), params: [$twoWayKey]),
+                        $e instanceof LimitException => new Exception($this->getLimitException(), params: [$relatedCollection->getId()]),
+                        $e instanceof StructureException => new Exception($this->getStructureException(), $e->getMessage()),
+                        default => $e,
+                    };
+                }
             } finally {
                 $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
                 $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
             }
 
-            // If operation succeeded, purge the cache for the related collection too
             $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
             $dbForDatabases->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $relatedCollection->getSequence());
         }

@@ -6,13 +6,17 @@ namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Event\Realtime;
 use Appwrite\Platform\Modules\Databases\Workers\Databases;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Relationship;
 use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipSide;
 use Utopia\Database\RelationshipType;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Message;
@@ -37,13 +41,12 @@ final class DatabasesTest extends TestCase
             '$id' => 'attr1',
             'key' => 'note',
             'type' => ColumnType::String->value,
+            'status' => 'processing',
             'size' => 64,
             'required' => false,
             'default' => null,
         ]);
 
-        // The shared project DB owns the `attributes` metadata but must never
-        // receive the collection DDL for a dedicated backing.
         $dbForProject = $this->createMock(Database::class);
         $dbForProject->method('getDocument')->willReturnCallback(
             fn (string $collection, string $id) => $collection === 'attributes' ? $attribute : new Document()
@@ -51,7 +54,6 @@ final class DatabasesTest extends TestCase
         $dbForProject->method('updateDocument')->willReturnArgument(2);
         $dbForProject->expects($this->never())->method('createAttribute');
 
-        // The resolved (dedicated) backing must receive the physical DDL.
         $dbForDatabases = $this->createMock(Database::class);
         $dbForDatabases->expects($this->once())
             ->method('createAttribute')
@@ -74,6 +76,7 @@ final class DatabasesTest extends TestCase
             '$id' => 'attr1',
             'key' => 'author',
             'type' => ColumnType::Relationship->value,
+            'status' => 'processing',
             'options' => [
                 'relatedCollection' => 'authors',
                 'relationType' => RelationshipType::ManyToOne->value,
@@ -109,6 +112,141 @@ final class DatabasesTest extends TestCase
             ->willReturnArgument(1);
 
         $this->process(DATABASE_TYPE_CREATE_ATTRIBUTE, ['$id' => 'attr1'], [], $dbForProject, $dbForDatabases);
+    }
+
+    public function testCreateRelationshipRedeliveryMarksTheExistingRelationshipAvailable(): void
+    {
+        $updates = [];
+
+        $this->processRelationshipCreation(
+            $this->duplicateBacking('Attribute already exists', $this->existingRelationship('author', RelationshipDeleteAction::SetNull)),
+            $updates,
+        );
+
+        \ksort($updates);
+        $this->assertSame([
+            'attributes/30360_2_books' => ['status' => 'available'],
+            'attributes/attr1' => ['status' => 'available'],
+        ], $updates);
+    }
+
+    public function testCreateRelationshipConflictMarksBothSidesFailed(): void
+    {
+        $updates = [];
+
+        try {
+            $this->processRelationshipCreation(
+                $this->duplicateBacking('Related attribute already exists', $this->existingRelationship('writer', RelationshipDeleteAction::SetNull)),
+                $updates,
+            );
+            $this->fail('A conflicting relationship must propagate');
+        } catch (DuplicateException $exception) {
+            $this->assertSame('Related attribute already exists', $exception->getMessage());
+        }
+
+        \ksort($updates);
+        $this->assertSame([
+            'attributes/30360_2_books' => ['status' => 'failed', 'error' => 'Related attribute already exists'],
+            'attributes/attr1' => ['status' => 'failed', 'error' => 'Related attribute already exists'],
+        ], $updates);
+    }
+
+    public function testCreateRelationshipRedeliveryWithDifferentOptionsMarksFailed(): void
+    {
+        $updates = [];
+
+        try {
+            $this->processRelationshipCreation(
+                $this->duplicateBacking('Attribute already exists', $this->existingRelationship('author', RelationshipDeleteAction::Cascade)),
+                $updates,
+            );
+            $this->fail('A relationship with different options must propagate');
+        } catch (DuplicateException $exception) {
+            $this->assertSame('Attribute already exists', $exception->getMessage());
+        }
+
+        \ksort($updates);
+        $this->assertSame([
+            'attributes/30360_2_books' => ['status' => 'failed', 'error' => 'Attribute already exists'],
+            'attributes/attr1' => ['status' => 'failed', 'error' => 'Attribute already exists'],
+        ], $updates);
+    }
+
+    public function testCreateRelationshipDuplicateOfChildSideMarksBothSidesFailed(): void
+    {
+        $updates = [];
+
+        try {
+            $this->processRelationshipCreation(
+                $this->duplicateBacking('Attribute already exists', $this->existingRelationship('author', RelationshipDeleteAction::SetNull, RelationshipSide::Child)),
+                $updates,
+            );
+            $this->fail('A duplicate of the child side must propagate');
+        } catch (DuplicateException $exception) {
+            $this->assertSame('Attribute already exists', $exception->getMessage());
+        }
+
+        \ksort($updates);
+        $this->assertSame([
+            'attributes/30360_2_books' => ['status' => 'failed', 'error' => 'Attribute already exists'],
+            'attributes/attr1' => ['status' => 'failed', 'error' => 'Attribute already exists'],
+        ], $updates);
+    }
+
+    public function testCreateOneWayRelationshipRedeliveryLeavesTheTwinUntouched(): void
+    {
+        $updates = [];
+        $fetched = [];
+
+        $this->processRelationshipCreation(
+            $this->duplicateBacking('Attribute already exists', $this->existingRelationship('author', RelationshipDeleteAction::SetNull, twoWay: false)),
+            $updates,
+            $fetched,
+            twoWay: false,
+        );
+
+        $this->assertNotContains('attributes/30360_2_books', $fetched);
+        $this->assertSame(['attributes/attr1' => ['status' => 'available']], $updates);
+    }
+
+    #[DataProvider('staleAttributes')]
+    public function testCreateAttributeSkipsAttributeThatIsNoLongerProcessing(?Document $stored): void
+    {
+        $dbForProject = $this->createMock(Database::class);
+        $dbForProject->method('getDocument')->willReturnCallback(
+            static fn (string $collection, string $id): Document => match ([$collection, $id]) {
+                ['attributes', 'attr1'] => $stored ?? new Document(),
+                ['attributes', '30360_2_books'] => new Document(['$id' => '30360_2_books', 'key' => 'books', 'status' => 'processing']),
+                ['database_30360', 'authors'] => new Document(['$id' => 'authors', '$sequence' => '2']),
+                default => new Document(),
+            }
+        );
+        $dbForProject->expects($this->never())->method('updateDocument');
+
+        $dbForDatabases = $this->createMock(Database::class);
+        $dbForDatabases->expects($this->never())->method('createRelationship');
+        $dbForDatabases->expects($this->never())->method('createAttribute');
+
+        $this->process(DATABASE_TYPE_CREATE_ATTRIBUTE, ['$id' => 'attr1'], [], $dbForProject, $dbForDatabases);
+    }
+
+    /**
+     * @return \Iterator<string, array{?Document}>
+     */
+    public static function staleAttributes(): \Iterator
+    {
+        $column = new Document([
+            '$id' => 'attr1',
+            'key' => 'note',
+            'type' => ColumnType::String->value,
+            'size' => 64,
+        ]);
+        yield 'relationship available' => [self::relationshipRow('available', true)];
+        yield 'relationship deleting' => [self::relationshipRow('deleting', true)];
+        yield 'relationship stuck' => [self::relationshipRow('stuck', true)];
+        yield 'column available' => [(clone $column)->setAttribute('status', 'available')];
+        yield 'column deleting' => [(clone $column)->setAttribute('status', 'deleting')];
+        yield 'deleted row' => [null];
     }
 
     public function testDeleteAttributeRemovesTheMetadataWhenTheColumnIsDropped(): void
@@ -203,6 +341,85 @@ final class DatabasesTest extends TestCase
             'key' => 'title_key',
             'status' => 'deleting',
         ], [], $dbForProject, $dbForDatabases);
+    }
+
+    private function existingRelationship(
+        string $key,
+        RelationshipDeleteAction $onDelete,
+        RelationshipSide $side = RelationshipSide::Parent,
+        bool $twoWay = true,
+    ): Attribute {
+        return Attribute::relationship($key, Relationship::fromArray([
+            'relatedCollection' => 'database_30360_collection_2',
+            'relationType' => RelationshipType::ManyToOne->value,
+            'twoWay' => $twoWay,
+            'key' => $key,
+            'twoWayKey' => 'books',
+            'onDelete' => $onDelete->value,
+        ]), $side);
+    }
+
+    private function duplicateBacking(string $message, Attribute $existing): Database
+    {
+        $dbForDatabases = $this->createStub(Database::class);
+        $dbForDatabases->method('createRelationship')->willThrowException(new DuplicateException($message));
+        $dbForDatabases->method('findCollection')->willReturnCallback(
+            static fn (string $id): ?Collection => $id === self::PHYSICAL_COLLECTION
+                ? Collection::create(self::PHYSICAL_COLLECTION, attributes: [$existing])
+                : null
+        );
+
+        return $dbForDatabases;
+    }
+
+    private static function relationshipRow(string $status, bool $twoWay): Document
+    {
+        return new Document([
+            '$id' => 'attr1',
+            'key' => 'author',
+            'type' => ColumnType::Relationship->value,
+            'status' => $status,
+            'options' => [
+                'relatedCollection' => 'authors',
+                'relationType' => RelationshipType::ManyToOne->value,
+                'twoWay' => $twoWay,
+                'twoWayKey' => 'books',
+                'onDelete' => RelationshipDeleteAction::SetNull->value,
+            ],
+        ]);
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $updates
+     * @param list<string> $fetched
+     */
+    private function processRelationshipCreation(Database $dbForDatabases, array &$updates, array &$fetched = [], bool $twoWay = true): void
+    {
+        $attribute = self::relationshipRow('processing', $twoWay);
+        $relatedAttribute = new Document(['$id' => '30360_2_books', 'key' => 'books', 'status' => 'processing']);
+
+        $dbForProject = $this->createStub(Database::class);
+        $dbForProject->method('getDocument')->willReturnCallback(
+            static function (string $collection, string $id) use ($attribute, $relatedAttribute, &$fetched): Document {
+                $fetched[] = $collection . '/' . $id;
+
+                return match ([$collection, $id]) {
+                    ['attributes', 'attr1'] => $attribute,
+                    ['attributes', '30360_2_books'] => $relatedAttribute,
+                    ['database_30360', 'authors'] => new Document(['$id' => 'authors', '$sequence' => '2']),
+                    default => new Document(),
+                };
+            }
+        );
+        $dbForProject->method('updateDocument')->willReturnCallback(
+            static function (string $collection, string $id, Document $update) use (&$updates): Document {
+                $updates[$collection . '/' . $id] = $update->getArrayCopy();
+
+                return $update;
+            }
+        );
+
+        $this->process(DATABASE_TYPE_CREATE_ATTRIBUTE, ['$id' => 'attr1'], [], $dbForProject, $dbForDatabases);
     }
 
     /**

@@ -12,12 +12,14 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
+use Utopia\Database\RelationshipSide;
 use Utopia\Database\SetType;
 use Utopia\Platform\Action;
 use Utopia\Query\OrderDirection;
@@ -28,6 +30,8 @@ use Utopia\Span\Span;
 
 class Databases extends Action
 {
+    private const array CREATABLE_STATUSES = ['processing', 'failed'];
+
     public static function getName(): string
     {
         return 'databases';
@@ -152,8 +156,7 @@ class Databases extends Action
          */
         $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
 
-        if ($attribute->isEmpty()) {
-            // Attribute was deleted before job was processed
+        if (! \in_array($attribute->getAttribute('status'), self::CREATABLE_STATUSES, true)) {
             return;
         }
 
@@ -194,18 +197,30 @@ class Databases extends Action
                         throw new DatabaseException('Collection/Table not found');
                     }
 
-                    $dbForDatabases->createRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), Relationship::fromArray([
+                    if ($options['twoWay']) {
+                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
+                    }
+
+                    $physicalId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+                    $relationship = Relationship::fromArray([
                         'relatedCollection' => 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                         'relationType' => $options['relationType'],
                         'twoWay' => $options['twoWay'],
                         'key' => $key,
                         'twoWayKey' => $options['twoWayKey'],
                         'onDelete' => $options['onDelete'],
-                    ]));
+                    ]);
 
-                    if ($options['twoWay']) {
-                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
-                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'available'));
+                    try {
+                        $dbForDatabases->createRelationship($physicalId, $relationship);
+                    } catch (Duplicate $e) {
+                        if (! $this->relationshipExists($dbForDatabases, $physicalId, $relationship)) {
+                            throw $e;
+                        }
+                    }
+
+                    if (! $relatedAttribute->isEmpty()) {
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'available']));
                     }
                     break;
                 default:
@@ -223,27 +238,20 @@ class Databases extends Action
                     ]));
             }
 
-            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
+            $available = ['status' => 'available'];
+            $attribute->setAttributes($available);
+            $dbForProject->updateDocument('attributes', $attribute->getId(), new Document($available));
         } catch (\Throwable $e) {
+            $failure = ['status' => 'failed'];
             if ($e instanceof DatabaseException) {
-                $attribute->setAttribute('error', $e->getMessage());
-                if (! $relatedAttribute->isEmpty()) {
-                    $relatedAttribute->setAttribute('error', $e->getMessage());
-                }
+                $failure['error'] = $e->getMessage();
             }
 
-            $dbForProject->updateDocument(
-                'attributes',
-                $attribute->getId(),
-                $attribute->setAttribute('status', 'failed')
-            );
+            $attribute->setAttributes($failure);
+            $dbForProject->updateDocument('attributes', $attribute->getId(), new Document($failure));
 
             if (! $relatedAttribute->isEmpty()) {
-                $dbForProject->updateDocument(
-                    'attributes',
-                    $relatedAttribute->getId(),
-                    $relatedAttribute->setAttribute('status', 'failed')
-                );
+                $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document($failure));
             }
 
             throw $e;
@@ -258,6 +266,28 @@ class Databases extends Action
 
             $this->trigger($database, $collection, $project, $event, $queueForRealtime, $attribute);
         }
+    }
+
+    private function relationshipExists(Database $dbForDatabases, string $collection, Relationship $relationship): bool
+    {
+        foreach ($dbForDatabases->findCollection($collection)?->attributes() ?? [] as $attribute) {
+            $existing = $attribute->relationship;
+
+            if (
+                $existing !== null
+                && $attribute->side === RelationshipSide::Parent
+                && \strtolower($attribute->key) === \strtolower($relationship->key ?? '')
+                && $existing->relatedCollection === $relationship->relatedCollection
+                && $existing->type === $relationship->type
+                && $existing->twoWay === $relationship->twoWay
+                && \strtolower($existing->twoWayKey ?? '') === \strtolower($relationship->twoWayKey ?? '')
+                && $existing->onDelete === $relationship->onDelete
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
