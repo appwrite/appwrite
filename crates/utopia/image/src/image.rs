@@ -10,7 +10,7 @@ use crate::decode;
 use crate::draw;
 use crate::encode;
 use crate::error::{Error, Result};
-use crate::frame::{Format, Frame};
+use crate::frame::{self, Format, Frame};
 use crate::options::{FocalPoint, Gravity, OutputFormat, canvas_bytes, check_pixels};
 use crate::transform::{self, RoundRect};
 
@@ -250,13 +250,11 @@ impl Image {
         let (x, y) = crop_coordinates(width, height, resize_width, resize_height, gravity, focal);
         let dims = |v: i64| u32::try_from(v.max(0)).unwrap_or(u32::MAX);
         let (w, h, rw, rh) = (dims(width), dims(height), dims(resize_width), dims(resize_height));
-        // Every frame is held at once, and the one being resized alongside its replacement,
-        // so the animation as a whole must fit the budget at the largest size a frame takes.
-        let largest = canvas_bytes(u64::from(rw.max(w)), u64::from(rh.max(h)));
         if self.frames.len() > 1 {
-            check_pixels(largest.saturating_mul(self.frames.len() as u64 + 1))?;
-        }
-        if self.frames.len() > 1 {
+            // Every frame is resampled to the target and kept, and the
+            // transforms below each check one canvas only: what the whole
+            // animation costs is checked here, before the first allocation.
+            self.check_frames(w, h, center, (resize_width, resize_height))?;
             for frame in &mut self.frames {
                 if center {
                     transform::crop_thumbnail(frame, w, h)?;
@@ -457,6 +455,23 @@ impl Image {
             }
         }
         Ok(())
+    }
+
+    /// Fails when cropping every frame to `width` x `height` would hold more
+    /// pixels than the budget. A frame's new canvas replaces its old pixels,
+    /// so the frames peak at whichever of the two sets is larger; on top of
+    /// them the frame being worked on holds at once the canvas it is resampled
+    /// to -- `resize` for a crop by gravity, the one covering the target for a
+    /// centred crop -- and the canvas cropped out of it.
+    fn check_frames(&self, width: u32, height: u32, center: bool, resize: (i64, i64)) -> Result<()> {
+        let bytes = |(w, h): (i64, i64)| canvas_bytes(w.max(0) as u64, h.max(0) as u64);
+        let target = canvas_bytes(width.into(), height.into());
+        let frames = target.saturating_mul(self.frames.len() as u64);
+        // A border grows the frame it was applied to and nothing else, so the
+        // cover canvas is the largest frame's, not the image's.
+        let cover = |frame: &Frame| bytes(transform::cover(width, height, frame.width(), frame.height()));
+        let working = if center { self.frames.iter().map(cover).max().unwrap_or(0) } else { bytes(resize) };
+        check_pixels(frame::retained(&self.frames).max(frames).saturating_add(working).saturating_add(target))
     }
 
     /// The width that keeps the aspect ratio at `height`.

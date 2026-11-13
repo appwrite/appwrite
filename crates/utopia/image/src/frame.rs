@@ -3,6 +3,7 @@
 use image::RgbaImage;
 
 use crate::color::Color;
+use crate::options::canvas_bytes;
 
 /// The format a frame was read in or last set to.
 pub(crate) use crate::format::Format;
@@ -27,6 +28,12 @@ impl Page {
     pub(crate) fn at_origin(width: u32, height: u32) -> Self {
         Page { width, height, x: 0, y: 0 }
     }
+}
+
+/// Bytes of pixels `frames` hold together: what a transform over a whole
+/// image has to count, since the per-frame transforms each see one canvas.
+pub(crate) fn retained(frames: &[Frame]) -> u64 {
+    frames.iter().map(Frame::bytes).fold(0, u64::saturating_add)
 }
 
 /// A frame: straight (not premultiplied) RGBA pixels, whether it has an alpha
@@ -60,6 +67,11 @@ impl Frame {
 
     pub(crate) fn height(&self) -> u32 {
         self.pixels.height()
+    }
+
+    /// Bytes of pixels the frame holds.
+    pub(crate) fn bytes(&self) -> u64 {
+        canvas_bytes(self.width().into(), self.height().into())
     }
 
     /// Replaces the pixels, keeping everything else.

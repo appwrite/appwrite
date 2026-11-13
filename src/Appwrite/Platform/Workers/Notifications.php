@@ -830,14 +830,14 @@ class Notifications extends Action
 
     /**
      * Mail the platform writes to a project's console users, such as an alert
-     * rule changing state, goes out through the platform mailer, never through
-     * the SMTP server the project configured for its own users.
+     * rule changing state or a domain going live, goes out through the platform
+     * mailer, never through the SMTP server the project configured for its own users.
      *
      * @param array<string, mixed> $payload
      */
     protected function isPlatformMail(array $payload): bool
     {
-        return ($payload['template'] ?? '') === MAIL_TEMPLATE_ALERT;
+        return \in_array($payload['template'] ?? '', [MAIL_TEMPLATE_ALERT, MAIL_TEMPLATE_DOMAIN_VERIFIED], true);
     }
 
     private function validateConsoleRecipient(array $recipient): void

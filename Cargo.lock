@@ -694,8 +694,7 @@ dependencies = [
 [[package]]
 name = "ext-php-rs"
 version = "0.16.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af52a43b4a06ff1aa4068018c15e7480f7cab2ecb1231710497686587a964156"
+source = "git+https://github.com/extphprs/ext-php-rs?rev=fb34246728d501d81b44348f679c7538f3d1d16a#fb34246728d501d81b44348f679c7538f3d1d16a"
 dependencies = [
  "anyhow",
  "bindgen",
@@ -718,8 +717,7 @@ dependencies = [
 [[package]]
 name = "ext-php-rs-build"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27fdebdb7e4287ce25231551be917d80281d5befaee335ba9b1b77ffb01a1c6b"
+source = "git+https://github.com/extphprs/ext-php-rs?rev=fb34246728d501d81b44348f679c7538f3d1d16a#fb34246728d501d81b44348f679c7538f3d1d16a"
 dependencies = [
  "anyhow",
 ]
@@ -727,8 +725,7 @@ dependencies = [
 [[package]]
 name = "ext-php-rs-derive"
 version = "0.12.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28378724430eac91c5db4004e16699dd68deaf519d2c74f7dd970af3d1b298a2"
+source = "git+https://github.com/extphprs/ext-php-rs?rev=fb34246728d501d81b44348f679c7538f3d1d16a#fb34246728d501d81b44348f679c7538f3d1d16a"
 dependencies = [
  "convert_case",
  "darling",
@@ -741,8 +738,7 @@ dependencies = [
 [[package]]
 name = "ext-php-rs-introspection"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "efa29f09b08e644d5dc1e76a318f758afc9dccbe92ccf84b4778e0433a78eecc"
+source = "git+https://github.com/extphprs/ext-php-rs?rev=fb34246728d501d81b44348f679c7538f3d1d16a#fb34246728d501d81b44348f679c7538f3d1d16a"
 
 [[package]]
 name = "fast_image_resize"
@@ -2525,10 +2521,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a3b425286980a367278453f3b6d28cdcb134b574e5a35824a6ff5eebad50bb6"
 
 [[package]]
+name = "utopia-dsn"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "utopia-extension"
 version = "0.1.0"
 dependencies = [
  "ext-php-rs",
+ "utopia-dsn",
  "utopia-image",
 ]
 

@@ -18,6 +18,37 @@ docker compose exec appwrite php --ri utopia
 Built on [ext-php-rs](https://github.com/extphprs/ext-php-rs); it needs `php-config`
 and libclang at build time.
 
+## Switching a class on
+
+`Utopia\Image\Canvas` and `Utopia\Image\Font` are always registered: `packages/image` has no PHP
+implementation of them. Every other class is registered only when `_APP_EXTENSION_LIBRARIES` names
+its package. Otherwise Composer loads the package's PHP class as before:
+
+```sh
+_APP_EXTENSION_LIBRARIES=dsn   # Utopia\DSN\DSN from the extension; comma separate more
+```
+
+The extension reads it once, when PHP loads the module, so changing it takes a restart and no
+deploy. Each library is canaried on Cloud this way before it becomes the default.
+
+## Utopia\DSN\DSN
+
+Over `crates/utopia/dsn` (`_APP_EXTENSION_LIBRARIES=dsn`). It declares the PHP class's protected
+properties, so `==`, `var_dump()` and `(array)` see what they see in PHP. The DSN, `from()`'s user
+and its password are `#[\SensitiveParameter]`, as in PHP, so exception traces never hold them.
+
+`crates/extension/tests/dsn.php` prints a corpus of results (#14308's `tests/compat/dsn` cases, plus
+edge cases) that must be identical on both implementations, and asserts these known differences on
+the extension:
+
+- A DSN that is not UTF-8 is refused as malformed, where `parse_url` takes any bytes.
+- `from()` takes string parameters; PHP also round-trips a list value (`['a' => ['b', 'c']]`).
+- `serialize()` refuses the object, as it does every class with Rust state.
+- PHP fills the protected `$params` with the parsed query on the first `getParam()`, which then
+  shows in `var_dump()` and `==`; it stays `null` here.
+- A user, password or path that URL-decodes to bytes that are not UTF-8 (`%FF`) reads exactly
+  through its getter and lossily through `var_dump()`.
+
 ## Utopia\Image\Canvas and Utopia\Image\Font
 
 Over `crates/utopia/image`, with the signatures in `packages/image/stubs/Canvas.php`. The value

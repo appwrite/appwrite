@@ -834,13 +834,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $execution
                 ->setAttribute('duration', \microtime(true) - $durationStart)
-                ->setAttribute('responseStatusCode', 500);
+                ->setAttribute('responseStatusCode', 500)
+                ->setAttribute('status', 'failed')
+                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
-            if ($type === 'function') {
-                $execution
-                    ->setAttribute('status', 'failed')
-                    ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
-            }
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
