@@ -297,16 +297,20 @@ pub(crate) fn rotate(frame: &mut Frame, degrees: f64) -> Result<()> {
     let shear_y = angle.to_radians().sin();
     let page = frame.page;
     if shear_x.abs() < 1e-12 && shear_y.abs() < 1e-12 {
-        // A quarter turn swaps the sides, and the two limits may differ.
-        if rotations % 2 == 1 {
-            check_replacement(&frame.pixels, frame.height().into(), frame.width().into())?;
-        }
-        frame.pixels = match rotations {
-            1 => image::imageops::rotate90(&frame.pixels),
-            2 => image::imageops::rotate180(&frame.pixels),
-            3 => image::imageops::rotate270(&frame.pixels),
+        // A quarter turn swaps the sides, and the two limits may differ; its replacement is
+        // held alongside the source. A half turn is done in place.
+        match rotations {
+            1 | 3 => {
+                check_replacement(&frame.pixels, frame.height().into(), frame.width().into())?;
+                frame.pixels = if rotations == 1 {
+                    image::imageops::rotate90(&frame.pixels)
+                } else {
+                    image::imageops::rotate270(&frame.pixels)
+                };
+            }
+            2 => image::imageops::rotate180_in_place(&mut frame.pixels),
             _ => return Ok(()),
-        };
+        }
         let (w, h) = (i64::from(frame.width()), i64::from(frame.height()));
         let (pw, ph) = (i64::from(page.width), i64::from(page.height));
         // ImageMagick's IntegralRotateImage turns the page with the pixels.
