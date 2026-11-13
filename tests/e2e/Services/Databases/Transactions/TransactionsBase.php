@@ -6689,7 +6689,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'items' => Operator::arrayRemove('item2')->toString()
+                'items' => ['$operator' => Operator::arrayRemove('item2')->toArray()]
             ]
         ]);
 
@@ -6702,7 +6702,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'items' => Operator::arrayInsert(2, 'newItem')->toString()
+                'items' => ['$operator' => Operator::arrayInsert(2, 'newItem')->toArray()]
             ]
         ]);
 
@@ -6820,7 +6820,7 @@ trait TransactionsBase
                     $this->getContainerIdParam() => $tableId,
                     $this->getRecordIdParam() => 'doc1',
                     'data' => [
-                        'tags' => Operator::arrayRemove('javascript')->toString()
+                        'tags' => ['$operator' => Operator::arrayRemove('javascript')->toArray()]
                     ]
                 ],
                 [
@@ -6829,7 +6829,7 @@ trait TransactionsBase
                     $this->getContainerIdParam() => $tableId,
                     $this->getRecordIdParam() => 'doc1',
                     'data' => [
-                        'tags' => Operator::arrayAppend(['go', 'rust'])->toString()
+                        'tags' => ['$operator' => Operator::arrayAppend(['go', 'rust'])->toArray()]
                     ]
                 ]
             ]
@@ -6955,7 +6955,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'list1' => Operator::arrayPrepend(['z'])->toString()
+                'list1' => ['$operator' => Operator::arrayPrepend(['z'])->toArray()]
             ]
         ]);
 
@@ -6966,7 +6966,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'list2' => Operator::arrayAppend(['w'])->toString()
+                'list2' => ['$operator' => Operator::arrayAppend(['w'])->toArray()]
             ]
         ]);
 
@@ -6977,7 +6977,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'list3' => Operator::arrayRemove('3')->toString()
+                'list3' => ['$operator' => Operator::arrayRemove('3')->toArray()]
             ]
         ]);
 
@@ -7001,6 +7001,289 @@ trait TransactionsBase
         $this->assertEquals(['z', 'a', 'b', 'c'], $row['body']['list1'], 'arrayPrepend should add element at the beginning');
         $this->assertEquals(['x', 'y', 'z', 'w'], $row['body']['list2'], 'arrayAppend should add element at the end');
         $this->assertEquals(['1', '2', '4', '5'], $row['body']['list3'], 'arrayRemove should remove the element');
+    }
+
+    public function testCommitWithOperatorLikeStrings(): void
+    {
+        [$databaseId, $tableId] = $this->setupOperatorTable();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $replace = '{"method":"stringReplace","values":["a",""]}';
+        $concat = ' {"values":["!"],"method":"stringConcat"}';
+
+        $rowIds = [];
+        foreach (['updated', 'staged'] as $name) {
+            $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), $headers, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => ['body' => 'banana'],
+            ]);
+            $this->assertSame(201, $row['headers']['status-code']);
+            $rowIds[$name] = $row['body']['$id'];
+        }
+        $rowIds['inserted'] = Id::unique();
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $tableId, $rowIds['updated']), $headers, [
+            'transactionId' => $transactionId,
+            'data' => ['body' => $replace],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $operations = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+            'operations' => [
+                [
+                    'action' => 'update',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $tableId,
+                    $this->getRecordIdParam() => $rowIds['staged'],
+                    'data' => ['body' => $concat],
+                ],
+                [
+                    'action' => 'upsert',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $tableId,
+                    $this->getRecordIdParam() => $rowIds['inserted'],
+                    'data' => ['body' => $replace],
+                ],
+            ],
+        ]);
+        $this->assertSame(201, $operations['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertSame(200, $commit['headers']['status-code']);
+
+        $expected = ['updated' => $replace, 'staged' => $concat, 'inserted' => $replace];
+        foreach ($expected as $name => $body) {
+            $row = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $tableId, $rowIds[$name]), $headers);
+            $this->assertSame(200, $row['headers']['status-code'], $name);
+            $this->assertSame($body, $row['body']['body'], $name);
+        }
+    }
+
+    public function testStageWithInvalidOperators(): void
+    {
+        [$databaseId, $tableId] = $this->setupOperatorTable();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['body' => 'banana'],
+        ]);
+        $this->assertSame(201, $row['headers']['status-code']);
+        $rowId = $row['body']['$id'];
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $operator = ['$operator' => ['method' => 'stringConcat', 'values' => ['!']]];
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = [
+            'unknown method' => ['body' => ['$operator' => ['method' => 'explode', 'values' => []]]],
+            'extra key' => ['body' => [...$operator, 'method' => 'stringConcat']],
+            'nested in an object' => ['body' => ['note' => $operator]],
+        ];
+        foreach ($invalid as $name => $data) {
+            foreach ([Client::METHOD_PATCH, Client::METHOD_PUT] as $method) {
+                $response = $this->client->call($method, $this->getRecordUrl($databaseId, $tableId, $rowId), $headers, [
+                    'transactionId' => $transactionId,
+                    'data' => $data,
+                ]);
+                $this->assertSame(400, $response['headers']['status-code'], "{$method} {$name}");
+                $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "{$method} {$name}");
+            }
+
+            $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $tableId), $serverHeaders, [
+                'transactionId' => $transactionId,
+                'queries' => [Query::equal('$id', [$rowId])->toString()],
+                'data' => $data,
+            ]);
+            $this->assertSame(400, $response['headers']['status-code'], "bulk update {$name}");
+            $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "bulk update {$name}");
+
+            $response = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $tableId), $serverHeaders, [
+                'transactionId' => $transactionId,
+                $this->getRecordResource() => [['$id' => $rowId, ...$data]],
+            ]);
+            $this->assertSame(400, $response['headers']['status-code'], "bulk upsert {$name}");
+            $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "bulk upsert {$name}");
+
+            $operations = [
+                'update' => [$this->getRecordIdParam() => $rowId, 'data' => $data],
+                'upsert' => [$this->getRecordIdParam() => $rowId, 'data' => $data],
+                'bulkUpdate' => ['data' => ['queries' => [Query::equal('$id', [$rowId])->toString()], 'data' => $data]],
+                'bulkUpsert' => ['data' => [['$id' => $rowId, ...$data]]],
+            ];
+            foreach ($operations as $action => $operation) {
+                $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $serverHeaders, [
+                    'operations' => [
+                        [
+                            'action' => $action,
+                            'databaseId' => $databaseId,
+                            $this->getContainerIdParam() => $tableId,
+                            ...$operation,
+                        ],
+                    ],
+                ]);
+                $this->assertSame(400, $response['headers']['status-code'], "staged {$action} {$name}");
+                $this->assertSame(Exception::GENERAL_BAD_REQUEST, $response['body']['type'], "staged {$action} {$name}");
+            }
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), $headers, [
+            'transactionId' => $transactionId,
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['body' => $operator],
+        ]);
+        $this->assertSame(400, $created['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $created['body']['type']);
+
+        $operations = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+            'operations' => [
+                [
+                    'action' => 'create',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $tableId,
+                    $this->getRecordIdParam() => Id::unique(),
+                    'data' => ['body' => $operator],
+                ],
+            ],
+        ]);
+        $this->assertSame(400, $operations['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $operations['body']['type']);
+
+        $transaction = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $headers);
+        $this->assertSame(200, $transaction['headers']['status-code']);
+        $this->assertSame('pending', $transaction['body']['status']);
+        $this->assertSame(0, $transaction['body']['operations']);
+    }
+
+    public function testCommitWithLegacyOperators(): void
+    {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        [$databaseId, $tableId] = $this->setupOperatorTable();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '2.6.0',
+        ], $this->getHeaders());
+
+        $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['body' => 'banana', 'count' => 1],
+        ]);
+        $this->assertSame(201, $row['headers']['status-code']);
+        $rowId = $row['body']['$id'];
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $tableId, $rowId), $headers, [
+            'transactionId' => $transactionId,
+            'data' => ['count' => Operator::increment(2)->toString()],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $operations = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+            'operations' => [
+                [
+                    'action' => 'update',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $tableId,
+                    $this->getRecordIdParam() => $rowId,
+                    'data' => ['body' => Operator::stringConcat('!')->toString()],
+                ],
+            ],
+        ]);
+        $this->assertSame(201, $operations['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertSame(200, $commit['headers']['status-code']);
+
+        $row = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $tableId, $rowId), $headers);
+        $this->assertSame(200, $row['headers']['status-code']);
+        $this->assertSame(3, $row['body']['count']);
+        $this->assertSame('banana!', $row['body']['body']);
+    }
+
+    private function setupOperatorTable(): array
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Operators',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Operators',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $body = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $tableId, 'varchar'), $headers, [
+                'key' => 'body',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->assertSame(202, $body['headers']['status-code']);
+
+            $count = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $tableId, 'integer'), $headers, [
+                'key' => 'count',
+                'required' => false,
+            ]);
+            $this->assertSame(202, $count['headers']['status-code']);
+
+            $this->waitForAllAttributes($databaseId, $tableId);
+        }
+
+        return [$databaseId, $tableId];
     }
 
     public function testDistinctReadInATransactionCarriesOnlyTheSelectedAttributes(): void
