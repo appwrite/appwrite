@@ -2192,6 +2192,50 @@ trait DatabasesBase
         }
     }
 
+    /**
+     * Columns that do not fit the row the adapter allows must name that limit.
+     * It used to be reported as the database running out of tables, a limit that
+     * does not exist, which discarded the only actionable detail.
+     */
+    public function testCreateCollectionInlineRowWidthExceeded(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $containerId = Id::unique();
+
+        // Each of these spends 16002 bytes of the row, so five of them do not fit
+        // the 65535-byte row every SQL adapter allows.
+        $schema = [];
+        for ($i = 0; $i < 5; $i++) {
+            $schema[] = ['key' => 'wide' . $i, 'type' => ColumnType::String->value, 'size' => 4000];
+        }
+
+        $wide = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => $containerId,
+            'name' => 'Wide',
+            $this->getSchemaResource() => $schema,
+        ]);
+
+        $this->assertSame(400, $wide['headers']['status-code']);
+        $this->assertSame(
+            $this->isTablesAPI() ? Exception::COLUMN_LIMIT_EXCEEDED : Exception::ATTRIBUTE_LIMIT_EXCEEDED,
+            $wide['body']['type'],
+        );
+        $this->assertStringContainsString('Document size limit of', $wide['body']['message']);
+        $this->assertStringNotContainsString('maximum number of ' . $this->getContainerResource(), $wide['body']['message']);
+
+        $missing = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
+        $this->assertSame(404, $missing['headers']['status-code']);
+    }
+
     public function testCreateCollectionInlineEncryptedStringTooSmall(): void
     {
         if (!$this->getSupportForAttributes()) {

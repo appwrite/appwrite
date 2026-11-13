@@ -144,7 +144,6 @@ Errors found when using Appwrite Authentication.
 Errors found when using Appwrite Databases.
 | Code | Type | Description |
 | ---- | ---- | ----------- |
-| 400  | table_limit_exceeded | The maximum number of tables has been reached. |
 | 400  | row_invalid_structure | The row structure is invalid. Please ensure the columns match the table definition. |
 | 400  | row_missing_data | The row data is missing. Try again with row data populated. |
 | 400  | row_missing_payload | The row data and permissions are missing. You must provide either row data or permissions to be updated. |

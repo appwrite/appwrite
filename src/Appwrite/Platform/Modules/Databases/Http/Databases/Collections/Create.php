@@ -136,8 +136,6 @@ class Create extends Action
             ]));
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
-        } catch (LimitException) {
-            throw new Exception($this->getLimitException(), params: [$databaseId]);
         } catch (NotFoundException) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
@@ -240,9 +238,13 @@ class Create extends Action
         } catch (IndexException $e) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getInvalidIndexException(), $e->getMessage());
-        } catch (LimitException) {
+        } catch (LimitException $e) {
+            // The only limits left are on this collection's own columns: their count,
+            // and the row width they add up to. Too many indexes is already refused by
+            // the indexes validator above, so it can never reach this. The library
+            // message names which of the two it was and by how much, so forward it.
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
-            throw new Exception($this->getLimitException(), params: [$collectionId]);
+            throw new Exception($this->getColumnLimitException(), $e->getMessage());
         } catch (\Throwable $e) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw $e;
