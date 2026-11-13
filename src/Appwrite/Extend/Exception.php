@@ -2,7 +2,13 @@
 
 namespace Appwrite\Extend;
 
+use Utopia\Cache\Exception\Unavailable as CacheUnavailableException;
 use Utopia\Config\Config;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Timeout as TimeoutException;
+use Utopia\Http\Exception as HttpException;
+use Utopia\VCS\Exception\OwnerNotFound;
 
 class Exception extends \Exception
 {
@@ -510,6 +516,39 @@ class Exception extends \Exception
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
 
         parent::__construct($this->message, $this->code, $previous);
+    }
+
+    /**
+     * Matches the exact class only, so subclasses of a mapped library exception are left to their own handling.
+     */
+    public static function tryFrom(\Throwable $error): ?self
+    {
+        return match ($error::class) {
+            HttpException::class => self::fromHttp($error),
+            AuthorizationException::class => new self(self::USER_UNAUTHORIZED),
+            TimeoutException::class => new self(self::DATABASE_TIMEOUT, previous: $error),
+            CacheUnavailableException::class => new self(self::GENERAL_CACHE_UNAVAILABLE, previous: $error),
+            StructureException::class => new self(self::GENERAL_ARGUMENT_INVALID, $error->getMessage(), previous: $error),
+            OwnerNotFound::class => new self(self::INSTALLATION_NOT_FOUND, previous: $error),
+            default => null,
+        };
+    }
+
+    private static function fromHttp(HttpException $error): self
+    {
+        $exception = new self(self::GENERAL_UNKNOWN, $error->getMessage(), $error->getCode(), $error);
+
+        $type = match ($error->getCode()) {
+            400 => self::GENERAL_ARGUMENT_INVALID,
+            404 => self::GENERAL_ROUTE_NOT_FOUND,
+            default => null,
+        };
+
+        if ($type !== null) {
+            $exception->setType($type);
+        }
+
+        return $exception;
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Utopia\VCS\Adapter\Git;
 
 use Ahc\Jwt\JWT;
 use Exception;
+use OpenSSLAsymmetricKey;
 use Utopia\Cache\Cache;
 use Utopia\Console\Command;
 use Utopia\VCS\Adapter\Git;
@@ -28,19 +29,43 @@ class GitHub extends Git
     public const CONTENTS_FILE = 'file';
 
     /**
-     * GitHub App JWT expiry in seconds. GitHub allows a maximum of 10 minutes;
-     * we use 9 minutes to leave a 1-minute safety margin for clock drift.
+     * Seconds from signing until a GitHub App JWT expires. Together with the
+     * backdated iat the JWT spans the 10 minutes GitHub allows at most.
      *
      * @see https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-json-web-token-jwt-for-a-github-app
-     * "The time must be no more than 10 minutes into the future."
      */
     public const GITHUB_APP_JWT_EXPIRY = 60 * 9;
+
+    /**
+     * Seconds a GitHub App JWT's iat is backdated, as GitHub recommends, so a
+     * GitHub clock running behind ours still accepts it.
+     */
+    public const GITHUB_APP_JWT_CLOCK_DRIFT = 60;
+
+    /**
+     * A GitHub App JWT with fewer seconds than this left is signed afresh
+     * before use, so a request in flight never carries an expired one.
+     */
+    public const GITHUB_APP_JWT_REFRESH_MARGIN = 60;
+
+    /**
+     * Seconds an installation access token is shared through the cache.
+     * GitHub issues it for an hour, which leaves any adapter holding it
+     * well over 50 minutes of use.
+     */
+    public const ACCESS_TOKEN_CACHE_TTL = 60 * 8;
 
     protected string $endpoint = 'https://api.github.com';
 
     protected string $accessToken = '';
 
-    protected string $jwtToken;
+    protected string $jwtToken = '';
+
+    protected int $jwtExpiresAt = 0;
+
+    protected ?OpenSSLAsymmetricKey $signingKey = null;
+
+    protected int|string|null $issuer = null;
 
     protected string $installationId;
 
@@ -70,22 +95,76 @@ class GitHub extends Git
     {
         $this->installationId = $installationId;
 
-        // Cache for 1 minute less than the JWT expiry so we refresh before the token actually expires.
-        $response = $this->cache->load($installationId, self::GITHUB_APP_JWT_EXPIRY - 60);
+        $response = $this->cache->load($installationId, self::ACCESS_TOKEN_CACHE_TTL);
         if ($response == false) {
             $this->generateAccessToken($privateKey, $appId);
 
+            // The JWT is never read back here, but releases before per-instance signing still read it
             $tokens = json_encode([
                 'jwtToken' => $this->jwtToken,
                 'accessToken' => $this->accessToken,
             ]) ?: '{}';
 
             $this->cache->save($installationId, $tokens);
-        } else {
-            $parsed = json_decode((string) $response, true);
-            $this->jwtToken = $parsed['jwtToken'] ?? '';
-            $this->accessToken = $parsed['accessToken'] ?? '';
+
+            return;
         }
+
+        $this->loadSigningKey($privateKey, $appId);
+
+        $parsed = json_decode((string) $response, true);
+        $this->accessToken = \is_array($parsed) && \is_string($parsed['accessToken'] ?? null) ? $parsed['accessToken'] : '';
+    }
+
+    protected function loadSigningKey(string $privateKey, ?string $appId): void
+    {
+        $this->signingKey = $this->parsePrivateKey($privateKey);
+        // GitHub 401s a numeric App ID encoded as a JSON string.
+        $this->issuer = \is_string($appId) && ctype_digit($appId) ? (int) $appId : $appId;
+        $this->jwtExpiresAt = 0;
+    }
+
+    /**
+     * @throws Exception when the key is not a readable private key
+     */
+    protected function parsePrivateKey(string $privateKey): OpenSSLAsymmetricKey
+    {
+        // Some env files can't hold a multiline PEM, so also accept it base64-encoded or with escaped newlines.
+        // Strict decoding rejects the '-' in a raw PEM, so a working key is never decoded.
+        $decoded = base64_decode($privateKey, true);
+        if ($decoded !== false && str_contains($decoded, '-----BEGIN')) {
+            $privateKey = $decoded;
+        }
+        if (str_contains($privateKey, '-----BEGIN')) {
+            $privateKey = str_replace('\n', "\n", $privateKey);
+        }
+
+        // adhocore/jwt treats a string key as a file path, so it must receive the parsed key object
+        $signingKey = openssl_pkey_get_private($privateKey);
+        if ($signingKey === false) {
+            throw new Exception('Failed to read the GitHub App private key');
+        }
+
+        return $signingKey;
+    }
+
+    protected function appJwt(): string
+    {
+        if (!$this->signingKey instanceof OpenSSLAsymmetricKey) {
+            throw new Exception('initializeVariables() must be called before authenticating as the app');
+        }
+
+        if ($this->jwtExpiresAt - time() <= self::GITHUB_APP_JWT_REFRESH_MARGIN) {
+            $now = time();
+            $this->jwtExpiresAt = $now + self::GITHUB_APP_JWT_EXPIRY;
+            $this->jwtToken = new JWT($this->signingKey, 'RS256')->encode([
+                'iat' => $now - self::GITHUB_APP_JWT_CLOCK_DRIFT,
+                'exp' => $this->jwtExpiresAt,
+                'iss' => $this->issuer,
+            ]);
+        }
+
+        return $this->jwtToken;
     }
 
     /**
@@ -234,7 +313,7 @@ class GitHub extends Git
     public function hasAccessToAllRepositories(): bool
     {
         $url = '/app/installations/' . $this->installationId;
-        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "Bearer $this->jwtToken"]);
+        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => 'Bearer ' . $this->appJwt()]);
         $responseBody = $response['body'] ?? [];
         return ($responseBody['repository_selection'] ?? '') === 'all';
     }
@@ -649,46 +728,28 @@ class GitHub extends Git
 
     /**
      * Generate Access Token
+     *
+     * @throws OwnerNotFound when the installation no longer exists
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
-        // Some env files can't hold a multiline PEM, so also accept it base64-encoded or with escaped newlines.
-        // Strict decoding rejects the '-' in a raw PEM, so a working key is never decoded.
-        $decoded = base64_decode($privateKey, true);
-        if ($decoded !== false && str_contains($decoded, '-----BEGIN')) {
-            $privateKey = $decoded;
-        }
-        if (str_contains($privateKey, '-----BEGIN')) {
-            $privateKey = str_replace('\n', "\n", $privateKey);
-        }
+        $this->loadSigningKey($privateKey, $appId);
 
-        // adhocore/jwt treats a string key as a file path, so it must receive the parsed key object
-        $privateKeyObj = openssl_pkey_get_private($privateKey);
-        if ($privateKeyObj === false) {
-            throw new Exception('Failed to read the GitHub App private key');
-        }
-
-        $iat = time();
-        $exp = $iat + self::GITHUB_APP_JWT_EXPIRY;
-        $payload = [
-            'iat' => $iat,
-            'exp' => $exp,
-            // GitHub 401s a numeric App ID encoded as a JSON string.
-            'iss' => \is_string($appId) && ctype_digit($appId) ? (int) $appId : $appId,
-        ];
-
-        // generate access token
-        $jwt = new JWT($privateKeyObj, 'RS256');
-        $token = $jwt->encode($payload);
-        $this->jwtToken = $token;
-        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $token]);
+        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->appJwt()]);
         $responseBody = $response['body'] ?? [];
         $statusCode = $response['headers']['status-code'] ?? 0;
+        if ($statusCode === 404) {
+            throw new OwnerNotFound("Installation '{$this->installationId}' was not found.", 404);
+        }
         if (!\array_key_exists('token', $responseBody)) {
-            $safeBody = json_encode(array_intersect_key($responseBody, array_flip(['message', 'documentation_url'])));
-            throw new Exception('Failed to retrieve access token from GitHub API. Status: ' . $statusCode . '. Response: ' . $safeBody, $statusCode);
+            throw new Exception('Failed to retrieve access token from GitHub API. Status: ' . $statusCode . '. Response: ' . $this->describeError($responseBody), $statusCode);
         }
         $this->accessToken = $responseBody['token'] ?? '';
+    }
+
+    private function describeError(mixed $responseBody): string
+    {
+        return \is_array($responseBody) ? (json_encode(array_intersect_key($responseBody, array_flip(['message', 'documentation_url']))) ?: '') : '';
     }
 
     /**
@@ -711,15 +772,14 @@ class GitHub extends Git
             $params['permissions'] = $permissions;
         }
 
-        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->jwtToken], $params);
+        $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->appJwt()], $params);
         $responseBody = $response['body'] ?? [];
         $responseHeaders = $response['headers'] ?? [];
         $statusCode = \is_array($responseHeaders) ? ($responseHeaders['status-code'] ?? 0) : 0;
         $statusCode = \is_int($statusCode) ? $statusCode : 0;
 
         if (!\is_array($responseBody) || !\is_string($responseBody['token'] ?? null) || !\is_string($responseBody['expires_at'] ?? null)) {
-            $safeBody = \is_array($responseBody) ? json_encode(array_intersect_key($responseBody, array_flip(['message', 'documentation_url']))) : '';
-            throw new Exception('Failed to create access token from GitHub API. Status: ' . $statusCode . '. Response: ' . $safeBody, $statusCode);
+            throw new Exception('Failed to create access token from GitHub API. Status: ' . $statusCode . '. Response: ' . $this->describeError($responseBody), $statusCode);
         }
 
         return [
@@ -746,20 +806,27 @@ class GitHub extends Git
      * @param string $installationId GitHub App installation ID
      * @param int|null $repositoryId Not used by GitHub (parameter exists for this adapter compatibility)
      * @return string Owner login/username
+     *
+     * @throws OwnerNotFound when the installation no longer exists
      */
     public function getOwnerName(string $installationId, ?int $repositoryId = null): string
     {
         // GitHub doesn't use $repositoryId - only installationId
         $url = '/app/installations/' . $installationId;
-        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "Bearer $this->jwtToken"]);
+        $response = $this->call(self::METHOD_GET, $url, ['Authorization' => 'Bearer ' . $this->appJwt()]);
+        $responseBody = $response['body'] ?? [];
 
         // Only a missing installation is permanent; rate limits and server errors stay retryable failures
         $responseHeaders = $response['headers'] ?? [];
-        if (\is_array($responseHeaders) && ($responseHeaders['status-code'] ?? 0) === 404) {
-            throw new OwnerNotFound("Installation '{$installationId}' was not found.");
+        $statusCode = \is_array($responseHeaders) ? ($responseHeaders['status-code'] ?? 0) : 0;
+        $statusCode = \is_int($statusCode) ? $statusCode : 0;
+        if ($statusCode === 404) {
+            throw new OwnerNotFound("Installation '{$installationId}' was not found.", 404);
+        }
+        if ($statusCode >= 300) {
+            throw new Exception("Failed to retrieve the owner of installation '{$installationId}' from GitHub API. Status: {$statusCode}. Response: " . $this->describeError($responseBody));
         }
 
-        $responseBody = $response['body'] ?? [];
         $responseBodyAccount = $responseBody['account'] ?? [];
 
         if (!\array_key_exists('login', $responseBodyAccount)) {

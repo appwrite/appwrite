@@ -1404,42 +1404,14 @@ Http::error()
     ->inject('authorization')
     ->inject('localeCodes')
     ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, Bus $bus, Authorization $authorization, array $localeCodes) {
-        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request)?->route;
-        $class = \get_class($error);
-        $code = $error->getCode();
-        $message = $error->getMessage();
         $file = $error->getFile();
         $line = $error->getLine();
         $trace = $error->getTrace();
 
         Span::current()?->setError($error);
 
-        switch ($class) {
-            case Utopia\Http\Exception::class:
-                $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
-                switch ($code) {
-                    case 400:
-                        $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
-                        break;
-                    case 404:
-                        $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
-                        break;
-                }
-                break;
-            case Utopia\Database\Exception\Authorization::class:
-                $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
-                break;
-            case Utopia\Database\Exception\Timeout::class:
-                $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
-                break;
-            case Utopia\Cache\Exception\Unavailable::class:
-                $error = new AppwriteException(AppwriteException::GENERAL_CACHE_UNAVAILABLE, previous: $error);
-                break;
-            case Utopia\Database\Exception\Structure::class:
-                $error = new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $message, previous: $error);
-                break;
-        }
+        $error = AppwriteException::tryFrom($error) ?? $error;
 
         $code = $error->getCode();
         $message = $error->getMessage();
