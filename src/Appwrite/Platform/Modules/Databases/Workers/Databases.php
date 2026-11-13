@@ -448,47 +448,80 @@ class Databases extends Action
             throw new Exception('Missing index');
         }
 
+        $stored = $dbForProject->getDocument('indexes', $index->getId());
+        $stale = $this->creationStaleness($index, $stored);
+
+        if ($stale !== null) {
+            Span::add('database.index.stale', $stale);
+            return;
+        }
+
         $projectId = $project->getId();
         $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update';
         $collectionId = $collection->getId();
-        $key = $index->getAttribute('key', '');
-        $type = $index->getAttribute('type', '');
-        $attributes = $index->getAttribute('attributes', []);
-        $lengths = $index->getAttribute('lengths', []);
+        $name = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        $key = $stored->getAttribute('key', '');
+        $type = $stored->getAttribute('type', '');
+        $attributes = $stored->getAttribute('attributes', []);
+        $lengths = $stored->getAttribute('lengths', []);
         // Stored as the 'ASC'/'DESC' strings the endpoint validates, while the
         // index model takes Order cases and rejects anything else outright --
         // and an InvalidArgumentException is not a DatabaseException, so the
         // failure would be recorded with no message at all.
         $orders = \array_map(
             static fn (mixed $order): ?OrderDirection => OrderDirection::tryFrom(\is_string($order) ? \strtoupper($order) : ''),
-            $index->getAttribute('orders', []),
+            $stored->getAttribute('orders', []),
         );
         $project = $dbForPlatform->getDocument('projects', $projectId);
+        $built = false;
+        $superseded = false;
 
         try {
-            $dbForDatabases->createIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), IndexObject::fromArray([
+            $dbForDatabases->createIndex($name, IndexObject::fromArray([
                 'key' => $key,
                 'type' => IndexType::from($type),
                 'attributes' => $attributes,
                 'lengths' => $lengths,
                 'orders' => $orders,
             ]));
-            $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
-        } catch (\Throwable $e) {
-            if ($e instanceof DatabaseException) {
-                $index->setAttribute('error', $e->getMessage());
+            $built = true;
+            $stored->setAttribute('status', 'available');
+            $superseded = $this->isSuperseded($dbForProject, $stored)
+                || $dbForProject->updateDocument('indexes', $stored->getId(), new Document(['status' => 'available']))->isEmpty();
+
+            if ($superseded) {
+                Span::add('database.index.orphaned', $stored->getId());
+                $this->dropIndex($dbForDatabases, $name, $key);
             }
-            $dbForProject->updateDocument(
-                'indexes',
-                $index->getId(),
-                $index->setAttribute('status', 'failed')
-            );
+        } catch (\Throwable $e) {
+            if ($superseded) {
+                throw $e;
+            }
+
+            $latest = $dbForProject->getDocument('indexes', $stored->getId());
+            $stale = $built ? $this->staleness($stored, $latest) : $this->creationStaleness($stored, $latest);
+
+            if ($stale !== null) {
+                Span::add('database.index.superseded', $stale . ': ' . $e->getMessage());
+                $superseded = true;
+
+                if ($built) {
+                    $this->dropIndex($dbForDatabases, $name, $key);
+                }
+
+                return;
+            }
+
+            $this->markIndex($dbForProject, $stored, 'failed', $e);
 
             throw $e;
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
-            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
-            $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
+            $dbForDatabases->purgeCachedCollection($name);
+
+            if (! $superseded) {
+                $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $stored);
+            }
         }
     }
 
@@ -517,15 +550,27 @@ class Databases extends Action
             throw new Exception('Missing index');
         }
 
+        $stale = $this->staleness($index, $dbForProject->getDocument('indexes', $index->getId()));
+
+        if ($stale !== null) {
+            Span::add('database.index.stale', $stale);
+            return;
+        }
+
         $projectId = $project->getId();
         $event = 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete';
         $key = $index->getAttribute('key');
-        $status = $index->getAttribute('status', '');
+        $name = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed') {
-                $dbForDatabases->deleteIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
+            try {
+                $dbForDatabases->deleteIndex($name, $key);
+            } catch (NotFound $e) {
+                if ($dbForDatabases->findCollection($name) === null) {
+                    throw $e;
+                }
+                Span::add('database.index.not_found', $e->getMessage());
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
@@ -535,22 +580,63 @@ class Databases extends Action
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (\Throwable $e) {
-            if ($e instanceof DatabaseException) {
-                $index->setAttribute('error', $e->getMessage());
-            }
-            $dbForProject->updateDocument(
-                'indexes',
-                $index->getId(),
-                $index->setAttribute('status', 'stuck')
-            );
+            $this->markIndex($dbForProject, $index, 'stuck', $e);
 
             throw $e;
-
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
-            $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $dbForDatabases->purgeCachedCollection($name);
             $this->trigger($database, $collection, $project, $event, $queueForRealtime, null, $index);
         }
+    }
+
+    private function staleness(Document $queued, Document $stored): ?string
+    {
+        if ($stored->isEmpty()) {
+            return 'deleted';
+        }
+
+        $sequence = $queued->getSequence();
+
+        if ($sequence !== null && $stored->getSequence() !== $sequence) {
+            return 'recreated as ' . $stored->getSequence();
+        }
+
+        return null;
+    }
+
+    private function dropIndex(Database $dbForDatabases, string $name, string $key): void
+    {
+        try {
+            $dbForDatabases->deleteIndex($name, $key);
+        } catch (NotFound $e) {
+            Span::add('database.index.not_found', $e->getMessage());
+        }
+    }
+
+    private function creationStaleness(Document $queued, Document $stored): ?string
+    {
+        return $this->staleness($queued, $stored)
+            ?? ($stored->getAttribute('status') === 'processing' ? null : 'status ' . $stored->getAttribute('status'));
+    }
+
+    private function isSuperseded(Database $dbForProject, Document $stored): bool
+    {
+        return $this->staleness($stored, $dbForProject->getDocument('indexes', $stored->getId())) !== null;
+    }
+
+    private function markIndex(Database $dbForProject, Document $index, string $status, \Throwable $error): void
+    {
+        $message = $error instanceof DatabaseException ? $error->getMessage() : '';
+
+        $index
+            ->setAttribute('status', $status)
+            ->setAttribute('error', $message);
+
+        $dbForProject->updateDocument('indexes', $index->getId(), new Document([
+            'status' => $status,
+            'error' => $message,
+        ]));
     }
 
     /**
