@@ -3456,6 +3456,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project environment': 'プロジェクト環境',
   'Switch to production': '本番に切り替え',
   'Environment ID': '環境 ID',
+  // Environments by plan: Pro and above, and the cap per project
+  Environments: '環境',
+  'Project environments are available on Pro':
+    'プロジェクト環境は Pro プランで利用できます',
+  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
+    'にはプロジェクト環境が含まれていません。アップグレードすると、各プロジェクトに staging や preview などの環境を作成でき、それぞれが独自のリソースとユーザーを持ちます。',
+  environments: '個の環境',
+  'environments per project.': '個の環境をプロジェクトごとに作成できます。',
+  'Delete an environment to create another.':
+    '別の環境を作成するには、環境を 1 つ削除してください。',
   // Settings of an environment: its name, its ID, and deleting it
   'Environment name has been updated': '環境名を更新しました',
   'Failed to update environment name': '環境名の更新に失敗しました',

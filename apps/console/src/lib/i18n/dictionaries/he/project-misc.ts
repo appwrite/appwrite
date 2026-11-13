@@ -3390,6 +3390,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Project environment': 'סביבת פרויקט',
   'Switch to production': 'מעבר לפרודקשן',
   'Environment ID': 'מזהה סביבה',
+  // Environments by plan: Pro and above, and the cap per project
+  Environments: 'סביבות',
+  'Project environments are available on Pro':
+    'סביבות פרויקט זמינות בתוכנית Pro',
+  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
+    'אינה כוללת סביבות פרויקט. שדרגו כדי לתת לכל פרויקט סביבות כמו staging ו-preview, עם משאבים ומשתמשים משלהן.',
+  environments: 'סביבות',
+  'environments per project.': 'סביבות לכל פרויקט.',
+  'Delete an environment to create another.':
+    'מחקו סביבה כדי ליצור סביבה אחרת.',
   // Settings of an environment: its name, its ID, and deleting it
   'Environment name has been updated': 'שם הסביבה עודכן',
   'Failed to update environment name': 'עדכון שם הסביבה נכשל',

@@ -129,13 +129,22 @@ interface Sent {
   projectRenames: string[]
   /** DELETE /project, which deletes whatever the request acts in */
   projectDeletes: Array<string | null>
+  /** POST /project/environments */
+  environmentCreates: Array<{ environmentId: string; name: string }>
 }
 
 interface Mock {
   sent: Sent
   /** Status the migrations list answers with; flipped by a spec to recover */
   migrations: { status: number }
+  /** The organization's plan: Free and Start offer no environments, Pro and above 3 */
+  plan: { $id: string; name: string; environments: number }
+  /** The project's environments, as its list answers */
+  environments: Array<typeof ENVIRONMENT>
 }
+
+const PRO = { $id: 'tier-1', name: 'Pro', environments: 3 }
+const FREE = { $id: 'tier-0', name: 'Free', environments: 0 }
 
 function corsHeaders(route: Route): Record<string, string> {
   return {
@@ -153,8 +162,11 @@ async function mockAppwriteApi(page: Page): Promise<Mock> {
       environmentDeletes: [],
       projectRenames: [],
       projectDeletes: [],
+      environmentCreates: [],
     },
     migrations: { status: 200 },
+    plan: PRO,
+    environments: [ENVIRONMENT],
   }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
 
@@ -208,7 +220,9 @@ async function mockAppwriteApi(page: Page): Promise<Mock> {
       apiPath === `/organizations/${ORGANIZATION.$id}` ||
       apiPath === `/teams/${ORGANIZATION.$id}`
     )
-      return json(200, ORGANIZATION)
+      return json(200, { ...ORGANIZATION, billingPlan: mock.plan.$id })
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`)
+      return json(200, mock.plan)
     if (apiPath.endsWith('/memberships'))
       return json(200, { total: 0, memberships: [] })
 
@@ -238,8 +252,17 @@ async function mockAppwriteApi(page: Page): Promise<Mock> {
       }
       return json(200, inside ? PROJECT_AS_ENVIRONMENT : PROJECT)
     }
-    if (apiPath === '/project/environments')
-      return json(200, { total: 1, environments: [ENVIRONMENT] })
+    if (apiPath === '/project/environments') {
+      if (method === 'POST') {
+        const { environmentId, name } = request.postDataJSON()
+        mock.sent.environmentCreates.push({ environmentId, name })
+        return json(201, { ...ENVIRONMENT, $id: environmentId, name })
+      }
+      return json(200, {
+        total: mock.environments.length,
+        environments: mock.environments,
+      })
+    }
     if (apiPath === `/project/environments/${ENVIRONMENT.$id}`) {
       if (method === 'PATCH') {
         const name = request.postDataJSON()?.name
@@ -311,6 +334,19 @@ async function enterEnvironment(page: Page) {
     },
     [PROJECT.$id, ENVIRONMENT.$id],
   )
+}
+
+/**
+ * Turn the environments experiment on, as the quality team's experiments
+ * toggle does: the sidebar switcher and the create page sit behind it.
+ */
+async function enableEnvironmentsExperiment(page: Page) {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      'debug:consoleProfile',
+      JSON.stringify({ id: 'cloud', features: { projectEnvironments: true } }),
+    )
+  })
 }
 
 async function openSettings(page: Page) {
@@ -498,5 +534,94 @@ test.describe('the project itself', () => {
       .click()
     await expect.poll(() => mock.sent.projectRenames).toEqual(['Storefront 2'])
     expect(mock.sent.environmentRenames).toEqual([])
+  })
+})
+
+test.describe('creating an environment on the plan', () => {
+  test('on Free the switcher offers environments as an upgrade', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page)
+    mock.plan = FREE
+    mock.environments = []
+    await enableEnvironmentsExperiment(page)
+    await openSettings(page)
+
+    // The feature stays in view, marked Beta, with creating marked Pro
+    await page.getByRole('button', { name: 'Switch environment' }).click()
+    const menu = page.getByRole('menu')
+    await expect(menu).toContainText('Beta')
+    const create = menu.getByRole('menuitem', { name: /Create environment/ })
+    await expect(create).toContainText('Pro')
+    await create.click()
+
+    await expect(page).toHaveURL(/\/environments\/create/)
+    const notice = page
+      .getByRole('alert')
+      .filter({ hasText: 'Project environments are available on Pro' })
+    await expect(notice).toBeVisible({ timeout: 30_000 })
+    await expect(notice).toContainText('Free')
+    // The way out is the upgrade of this organization
+    await expect(notice.getByRole('link', { name: 'Upgrade' })).toHaveAttribute(
+      'href',
+      new RegExp(`/upgrade\\?orgId=${ORGANIZATION.$id}`),
+    )
+    await expect(page.getByText('Beta', { exact: true }).first()).toBeVisible()
+
+    // Shown, not usable: nothing can be sent that the plan refuses
+    await expect(page.locator('#environment-name')).toBeDisabled()
+    await expect(
+      page.getByRole('button', { name: 'Create environment' }),
+    ).toBeDisabled()
+    expect(mock.sent.environmentCreates).toEqual([])
+  })
+
+  test('on Pro at its cap the page says so, with no upgrade to offer', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page)
+    mock.environments = ['staging', 'preview', 'qa'].map(($id) => ({
+      ...ENVIRONMENT,
+      $id,
+      name: $id,
+    }))
+    await enableEnvironmentsExperiment(page)
+    await openSettings(page)
+
+    await page.getByRole('button', { name: 'Switch environment' }).click()
+    await expect(
+      page.getByRole('menuitem', { name: /Create environment/ }),
+    ).toContainText('3/3')
+
+    await page.goto(`/projects/${PROJECT.$id}/environments/create`, {
+      waitUntil: 'domcontentloaded',
+    })
+    const notice = page
+      .getByRole('alert')
+      .filter({ hasText: "You've reached the limit of 3 environments" })
+    await expect(notice).toBeVisible({ timeout: 30_000 })
+    // Every plan with environments stops at the same cap: an upgrade would not help
+    await expect(notice.getByRole('link', { name: 'Upgrade' })).toHaveCount(0)
+    await expect(
+      page.getByRole('button', { name: 'Create environment' }),
+    ).toBeDisabled()
+  })
+
+  test('on Pro with room an environment is created', async ({ page }) => {
+    const mock = await mockAppwriteApi(page)
+    await enableEnvironmentsExperiment(page)
+    await page.goto(`/projects/${PROJECT.$id}/environments/create`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    const name = page.locator('#environment-name')
+    await expect(name).toBeEnabled({ timeout: 45_000 })
+    await name.fill('Preview')
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Create environment' }).click()
+
+    await expect
+      .poll(() => mock.sent.environmentCreates)
+      .toEqual([{ environmentId: 'preview', name: 'Preview' }])
   })
 })

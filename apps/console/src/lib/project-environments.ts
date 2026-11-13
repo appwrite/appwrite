@@ -91,6 +91,30 @@ export function suggestProjectEnvironmentName(
 }
 
 /**
+ * Where a project stands against its organization's plan for environments. The
+ * plan caps environments per project, and a cap of 0 is a plan without them
+ * (Free and Start), not one without a cap. `unknown` until both the plan and the
+ * project's environments have loaded, so nothing is offered or refused on a guess.
+ */
+export type ProjectEnvironmentsAllowance =
+  | { status: 'unknown' }
+  | { status: 'not-offered' }
+  | { status: 'available'; limit: number }
+  | { status: 'at-limit'; limit: number }
+
+export function projectEnvironmentsAllowance(
+  plan: { environments?: number | null } | null | undefined,
+  environmentCount: number | undefined,
+): ProjectEnvironmentsAllowance {
+  if (!plan || environmentCount === undefined) return { status: 'unknown' }
+  const limit = Number(plan.environments ?? 0)
+  if (!Number.isFinite(limit) || limit <= 0) return { status: 'not-offered' }
+  return environmentCount >= limit
+    ? { status: 'at-limit', limit }
+    : { status: 'available', limit }
+}
+
+/**
  * The environment a project document answers as, or null for production: while
  * the Console is in an environment, the project answers as that environment.
  * The pinned Console SDK's `Models.Project` does not carry `environmentId` yet.
