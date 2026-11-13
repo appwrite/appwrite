@@ -4013,8 +4013,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Service account used to search for users. Leave empty if the directory allows anonymous search.':
     'חשבון השירות שמשמש לחיפוש משתמשים. השאירו ריק אם הספרייה מאפשרת חיפוש אנונימי.',
   'Bind password': 'סיסמת Bind',
-  'Stored securely. Required again when hosts, port, encryption or bind DN change.':
-    'נשמרת באופן מאובטח. נדרשת שוב בכל שינוי של מארחים, פורט, הצפנה או bind DN.',
   'Username attribute': 'מאפיין שם משתמש',
   'Attribute the username is matched against: uid, or sAMAccountName on Active Directory.':
     'המאפיין שמולו מושווה שם המשתמש: uid, או sAMAccountName ב-Active Directory.',
@@ -4063,4 +4061,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'המשתמש נמצא, בדיקת הקבוצה עברה, הסיסמה התקבלה.',
   'User found, group check passed.': 'המשתמש נמצא, בדיקת הקבוצה עברה.',
   'Failed to test the LDAP connection': 'בדיקת חיבור ה-LDAP נכשלה',
+  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate verification, CA certificate or bind DN change.':
+    'נשמרת באופן מאובטח ולא מוצגת שוב. נדרשת שוב בכל שינוי של מארחים, פורט, הצפנה, אימות אישור, אישור CA או bind DN.',
+  'Enter the bind password again to save: the connection or certificate settings changed.':
+    'הזינו שוב את סיסמת ה-bind כדי לשמור: הגדרות החיבור או האישור השתנו.',
+  'Add at least one host and a base DN to enable LDAP sign-in.':
+    'הוסיפו לפחות מארח אחד ו-base DN כדי להפעיל התחברות דרך LDAP.',
+  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
+    'הוסיפו לפחות מארח אחד ו-base DN תחת הגדרות > שרתי זהויות כדי להפעיל התחברות דרך LDAP.',
 }

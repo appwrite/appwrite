@@ -145,6 +145,24 @@ const TEXT_FIELDS = [
   'requiredGroupDn',
 ] as const
 
+/**
+ * Changing any of these points the stored bind password at another directory or
+ * trusts another certificate, so the API refuses the change unless the password
+ * is sent again.
+ */
+const BIND_PASSWORD_GUARDED_FIELDS = [
+  'hosts',
+  'port',
+  'encryption',
+  'tls',
+  'caCertificate',
+  'bindDn',
+] as const
+
+function changesGuardedField(data: LdapUpdateData): boolean {
+  return BIND_PASSWORD_GUARDED_FIELDS.some((field) => data[field] !== undefined)
+}
+
 /** Only what differs from the saved configuration is sent; a field left out keeps its stored value. */
 function changedFields(form: LdapForm, saved: LdapForm): LdapUpdateData {
   const data: LdapUpdateData = {}
@@ -159,7 +177,12 @@ function changedFields(form: LdapForm, saved: LdapForm): LdapUpdateData {
     if (value !== saved[field]) data[field] = value
   }
   // Write-only: a typed password is itself a change.
-  if (form.bindPassword !== '') data.bindPassword = form.bindPassword
+  if (form.bindPassword !== '') {
+    data.bindPassword = form.bindPassword
+  } else if (changesGuardedField(data) && form.bindDn.trim() === '') {
+    // Anonymous search binds without a password: clear the stored one.
+    data.bindPassword = ''
+  }
   return data
 }
 
@@ -232,8 +255,20 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
     [form, saved],
   )
   const hasChanges = Object.keys(changes).length > 0
+  // The service account's password has to come with any change that moves or re-trusts the directory.
+  const needsBindPassword =
+    changesGuardedField(changes) && changes.bindPassword === undefined
 
   const handleUpdate = async () => {
+    if (
+      form.enabled &&
+      (form.hosts.length === 0 || form.baseDn.trim() === '')
+    ) {
+      toast.error(
+        t('Add at least one host and a base DN to enable LDAP sign-in.'),
+      )
+      return
+    }
     if (
       changes.port !== undefined &&
       (changes.port < LDAP_PORT_MIN || changes.port > LDAP_PORT_MAX)
@@ -516,8 +551,9 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                   <Field
                     id="ldap-bind-password"
                     label={t('Bind password')}
+                    required={needsBindPassword}
                     hint={t(
-                      'Stored securely. Required again when hosts, port, encryption or bind DN change.',
+                      'Stored securely and never shown again. Required again when hosts, port, encryption, certificate verification, CA certificate or bind DN change.',
                     )}
                   >
                     <Input
@@ -528,8 +564,16 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                       onChange={(e) => patch({ bindPassword: e.target.value })}
                       disabled={isBusy}
                       autoComplete="new-password"
+                      aria-invalid={needsBindPassword || undefined}
                       className={INPUT_CLASS_NAME}
                     />
+                    {needsBindPassword ? (
+                      <p className="text-[11px] text-destructive">
+                        {t(
+                          'Enter the bind password again to save: the connection or certificate settings changed.',
+                        )}
+                      </p>
+                    ) : null}
                   </Field>
 
                   <Field
@@ -672,7 +716,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleUpdate}
-              disabled={!hasChanges || isBusy}
+              disabled={!hasChanges || needsBindPassword || isBusy}
             >
               {t('Update')}
             </Button>

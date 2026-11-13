@@ -4088,8 +4088,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Service account used to search for users. Leave empty if the directory allows anonymous search.':
     'ユーザー検索に使うサービスアカウント。ディレクトリが匿名検索を許可している場合は空にします。',
   'Bind password': 'バインドパスワード',
-  'Stored securely. Required again when hosts, port, encryption or bind DN change.':
-    '安全に保存されます。ホスト、ポート、暗号化、バインド DN を変更する際は再入力が必要です。',
   'Username attribute': 'ユーザー名属性',
   'Attribute the username is matched against: uid, or sAMAccountName on Active Directory.':
     'ユーザー名と照合する属性。uid、Active Directory では sAMAccountName。',
@@ -4140,4 +4138,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'User found, group check passed.':
     'ユーザーが見つかり、グループの確認に合格しました。',
   'Failed to test the LDAP connection': 'LDAP 接続のテストに失敗しました',
+  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate verification, CA certificate or bind DN change.':
+    '安全に保存され、再表示されません。ホスト、ポート、暗号化、証明書の検証、CA 証明書、バインド DN を変更する際は再入力が必要です。',
+  'Enter the bind password again to save: the connection or certificate settings changed.':
+    '保存するにはバインドパスワードを再入力してください。接続または証明書の設定が変更されています。',
+  'Add at least one host and a base DN to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、少なくとも 1 つのホストとベース DN を追加してください。',
+  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、[設定] > [ID サーバー] で少なくとも 1 つのホストとベース DN を追加してください。',
 }

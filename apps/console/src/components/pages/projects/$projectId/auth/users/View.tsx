@@ -34,6 +34,7 @@ import {
   Copy,
   Check,
   ShieldAlert,
+  Network,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
@@ -2668,6 +2669,7 @@ function IdentitiesTab({
       auth0: 'Auth0',
       authentik: 'Authentik',
       oidc: 'OIDC',
+      ldap: 'LDAP',
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -2734,14 +2736,18 @@ function IdentitiesTab({
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <img
-                        src={`/icons/${getProviderIcon(identity.provider)}`}
-                        alt={identity.provider}
-                        className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
-                        onError={(e) => {
-                          e.currentTarget.src = '/icons/empty.svg'
-                        }}
-                      />
+                      {identity.provider === 'ldap' ? (
+                        <Network className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <img
+                          src={`/icons/${getProviderIcon(identity.provider)}`}
+                          alt={identity.provider}
+                          className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
+                          onError={(e) => {
+                            e.currentTarget.src = '/icons/empty.svg'
+                          }}
+                        />
+                      )}
                       <span className="text-[13px] font-medium text-foreground">
                         {getProviderName(identity.provider)}
                       </span>
@@ -3185,6 +3191,7 @@ function SessionsTab({
       discord: 'Discord',
       twitch: 'Twitch',
       spotify: 'Spotify',
+      ldap: 'LDAP',
     }
     return nameMap[provider.toLowerCase()] || provider
   }
@@ -3320,6 +3327,8 @@ function SessionsTab({
                                     e.currentTarget.style.display = 'none'
                                   }}
                                 />
+                              ) : session.provider === 'ldap' ? (
+                                <Network className="h-3 w-3 text-muted-foreground/60" />
                               ) : (
                                 <Key className="h-3 w-3 text-muted-foreground/60" />
                               )}
