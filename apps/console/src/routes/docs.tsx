@@ -1,11 +1,11 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, ScriptOnce } from '@tanstack/react-router'
 import { NotFoundView } from '@/components/error/NotFound'
 import { DocsPageShell } from '@/lib/docs/DocsPageShell'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
-import { WEBMCP_DETECT_SCRIPT } from '@/lib/webmcp/site/detect'
+import { SITE_TOOLS_SCRIPT } from '@/lib/webmcp/site/tools'
 import { useSiteTools } from '@/lib/webmcp/site/use-site-tools'
 
 export const Route = createFileRoute('/docs')({
@@ -13,7 +13,6 @@ export const Route = createFileRoute('/docs')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
   notFoundComponent: NotFoundView,
-  head: () => ({ scripts: [WEBMCP_DETECT_SCRIPT] }),
   component: DocsLayoutRoute,
 })
 
@@ -21,6 +20,7 @@ function DocsLayoutRoute() {
   useSiteTools()
   return (
     <DocsPageShell>
+      <ScriptOnce>{SITE_TOOLS_SCRIPT}</ScriptOnce>
       <Outlet />
     </DocsPageShell>
   )

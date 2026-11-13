@@ -1,6 +1,6 @@
 import { PRODUCT_REGISTRY } from '@/lib/products/registry'
 import type { ProductId } from '@/lib/products/types'
-import { toolError, type ToolError } from '@/lib/webmcp/register'
+import { toolError, type ToolError, type ToolHandler } from '@/lib/webmcp/calls'
 
 /** What appwrite.io's tools do. Each resolves a JSON-serialisable result or a ToolError. */
 
@@ -66,13 +66,7 @@ async function fetchMarkdown(
   }
 }
 
-export async function searchDocs({
-  query,
-  limit,
-}: {
-  query: string
-  limit?: number
-}) {
+async function searchDocs({ query, limit }: { query: string; limit?: number }) {
   const { searchDocs } = await import('@/lib/docs/search')
   const results = searchDocs(query, limit ?? 5).map((entry) => ({
     title: entry.title,
@@ -84,10 +78,7 @@ export async function searchDocs({
   return { query, results }
 }
 
-export async function getDocPage(
-  { path }: { path: string },
-  signal: AbortSignal,
-) {
+async function getDocPage({ path }: { path: string }, signal: AbortSignal) {
   const page = sitePath(path.replace(/\.md$/, ''))
   if (!page || (page !== '/docs' && !page.startsWith('/docs/'))) {
     return toolError(
@@ -98,11 +89,11 @@ export async function getDocPage(
   return fetchMarkdown(`${page}.md`, signal)
 }
 
-export function getPricing(signal: AbortSignal) {
+function getPricing(signal: AbortSignal) {
   return fetchMarkdown('/pricing.md', signal)
 }
 
-export async function getProductOverview(
+async function getProductOverview(
   { product }: { product: ProductId },
   signal: AbortSignal,
 ) {
@@ -121,7 +112,7 @@ export async function getProductOverview(
   }
 }
 
-export async function listChangelog(
+async function listChangelog(
   { limit }: { limit?: number },
   signal: AbortSignal,
 ) {
@@ -140,7 +131,7 @@ export async function listChangelog(
   return { entries }
 }
 
-export async function searchCommunityThreads({
+async function searchCommunityThreads({
   query,
   limit,
 }: {
@@ -172,10 +163,7 @@ export async function searchCommunityThreads({
   }
 }
 
-export async function navigateToPage(
-  { path }: { path: string },
-  navigate: Navigate,
-) {
+async function navigateToPage({ path }: { path: string }, navigate: Navigate) {
   const page = sitePath(path)
   if (!page) {
     return toolError(
@@ -187,4 +175,24 @@ export async function navigateToPage(
   // runs never delivers its result; so answer first, then navigate.
   setTimeout(() => void navigate(page))
   return { navigating: true, url: toUrl(page) }
+}
+
+/** What each of appwrite.io's tools does, keyed by the tool name `site/tools.ts` registers. */
+export function siteHandlers(navigate: Navigate): Record<string, ToolHandler> {
+  return {
+    search_docs: async (input) =>
+      searchDocs(input as { query: string; limit?: number }),
+    get_doc_page: async (input, { signal }) =>
+      getDocPage(input as { path: string }, signal),
+    get_pricing: async (_input, { signal }) => getPricing(signal),
+    get_product_overview: async (input, { signal }) =>
+      getProductOverview(input as { product: ProductId }, signal),
+    list_changelog: async (input, { signal }) =>
+      listChangelog(input as { limit?: number }, signal),
+    search_community_threads: async (input) =>
+      searchCommunityThreads(input as { query: string; limit?: number }),
+    navigate_to_page: async (input) =>
+      navigateToPage(input as { path: string }, navigate),
+    open_sign_up: async () => navigateToPage({ path: '/sign-up' }, navigate),
+  }
 }

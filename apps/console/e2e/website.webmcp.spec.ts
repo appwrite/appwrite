@@ -1,4 +1,4 @@
-import type { ToolError } from '../src/lib/webmcp/register'
+import type { ToolError } from '../src/lib/webmcp/calls'
 import type { Page } from '@playwright/test'
 import { RUNTIME_CONFIG_WINDOW_KEY } from '../src/lib/runtime-config-shared'
 import { expect, test } from './fixtures'
@@ -250,7 +250,7 @@ test.describe('WebMCP tools', () => {
 
 // This file launches Chromium with the flag that exposes navigator.modelContext,
 // so this test starts its own browser without it.
-test('a browser without WebMCP never downloads the tools', async ({
+test('a browser without WebMCP never downloads the tool actions', async ({
   playwright,
   baseURL,
 }) => {
@@ -261,8 +261,8 @@ test('a browser without WebMCP never downloads the tools', async ({
     page.on('request', (request) => {
       const url = new URL(request.url())
       if (
-        /\/assets\/tools-[^/]+\.js$/.test(url.pathname) ||
-        url.pathname.endsWith('/lib/webmcp/site/tools.ts')
+        /\/assets\/actions-[^/]+\.js$/.test(url.pathname) ||
+        url.pathname.endsWith('/lib/webmcp/site/actions.ts')
       ) {
         requested.push(url.pathname)
       }
@@ -271,10 +271,8 @@ test('a browser without WebMCP never downloads the tools', async ({
     await page.goto('/home')
     await expect(page.locator('main')).toBeVisible()
     expect(
-      await page.evaluate(
-        () => (window as unknown as { __WEBMCP__?: boolean }).__WEBMCP__,
-      ),
-    ).toBe(false)
+      await page.evaluate(() => window.__appwriteSiteTools === undefined),
+    ).toBe(true)
     await page
       .waitForLoadState('networkidle', { timeout: 10_000 })
       .catch(() => {})
