@@ -448,7 +448,9 @@ trait LDAPBase
         // A host inside the network is refused at write time: the service
         // credential must not be sent to, and the error message must not
         // describe, anything Appwrite can reach but the caller cannot.
-        foreach (['10.0.0.1', '192.168.1.10', '169.254.169.254', 'fd00::1', '[::1]'] as $host) {
+        // Loopback is left out: the dev and CI environment allows 127.0.0.1 and ::1 through
+        // _APP_ALLOWED_INTERNAL_ADDRESSES.
+        foreach (['10.0.0.1', '192.168.1.10', '169.254.169.254', 'fd00::1', '[fd12:3456::1]', 'fe80::1'] as $host) {
             $response = $this->updateLDAP([
                 'hosts' => [$host],
             ]);
