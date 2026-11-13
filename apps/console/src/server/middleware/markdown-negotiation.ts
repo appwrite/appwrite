@@ -38,7 +38,13 @@ export const markdownNegotiationMiddleware = createMiddleware({
       `${page.slice(1)}.md`,
       'text/markdown; charset=utf-8',
       async () => {
-        const response = await fetch(new URL(page, request.url))
+        const origin =
+          process.env.NODE_ENV === 'production'
+            ? `http://localhost:${process.env.PORT ?? 3000}`
+            : request.url
+        const response = await fetch(new URL(page, origin), {
+          redirect: 'manual',
+        })
         if (!response.ok) {
           throw new Response('Not found', {
             status: response.status,
