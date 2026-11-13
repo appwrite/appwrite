@@ -3409,6 +3409,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Environment: 'סביבה',
   'Project:': 'פרויקט:',
   'Failed to load migrations': 'טעינת המיגרציות נכשלה',
+  'Failed to refresh migrations': 'רענון המיגרציות נכשל',
+  'The list below may be out of date.': 'ייתכן שהרשימה שלהלן אינה עדכנית.',
   'An environment with this ID already exists in this project.':
     'סביבה עם המזהה הזה כבר קיימת בפרויקט.',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':

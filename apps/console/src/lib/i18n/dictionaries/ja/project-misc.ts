@@ -3475,6 +3475,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Environment: '環境',
   'Project:': 'プロジェクト:',
   'Failed to load migrations': 'マイグレーションの読み込みに失敗しました',
+  'Failed to refresh migrations': 'マイグレーションの更新に失敗しました',
+  'The list below may be out of date.': '以下の一覧は最新でない可能性があります。',
   'An environment with this ID already exists in this project.':
     'この ID の環境はこのプロジェクトに既に存在します。',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':

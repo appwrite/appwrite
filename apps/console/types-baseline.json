@@ -821,9 +821,6 @@
     "TS2304: Cannot find name 'createCompactCountAxisTickFormatter'.": 1,
     "TS2769: No overload matches this call.": 2
   },
-  "src/components/pages/projects/$projectId/settings/Migrations.tsx": {
-    "TS6133: 'effectiveTotal' is declared but its value is never read.": 1
-  },
   "src/components/pages/projects/$projectId/settings/SMTP.tsx": {
     "TS2322: Type '{ enabled: boolean; senderName: string | undefined; senderEmail: string | undefined; replyTo: string | undefined; host: string | undefined; port: number | undefined; username: string | undefined; password: string | undefined; secure: string | undefined; }' is not assignable to type 'SmtpUpdateData'.": 1,
     "TS2339: Property 'email' does not exist on type '{}'.": 1,

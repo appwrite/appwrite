@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useProjectMigrations, useProject } from '@/lib/react-query/hooks'
 import {
   Table,
@@ -57,21 +57,25 @@ export function Migrations({
   const [selectedMigrationId, setSelectedMigrationId] = useState<string | null>(
     null,
   )
-  const { migrations, total, isLoading, isSuccess, error, refetch } =
+  const { migrations, isLoading, hasData, error, refetch } =
     useProjectMigrations(projectId, region)
   const detailsOpen = selectedMigrationId !== null
-  // The list once it was read, empty included; until then the prefetched
-  // initialData, so first paint has content
-  const effectiveMigrations = isSuccess
-    ? migrations
-    : (initialData?.migrations ?? [])
-  const effectiveTotal = isSuccess ? total : (initialData?.total ?? 0)
+  // The list as last read, empty included, and kept through a refetch that
+  // fails; until it is first read, the prefetched initialData, so first paint
+  // has content
+  const effectiveMigrations = useMemo(
+    () => (hasData ? migrations : (initialData?.migrations ?? [])),
+    [hasData, migrations, initialData],
+  )
   const selectedMigration =
     effectiveMigrations.find((m) => m.$id === selectedMigrationId) ?? null
   const showLoading = isLoading && !initialData
   // A list that could not be read is not an empty one. Showing the first-run
-  // screen for it tells someone looking for a migration that there is none.
-  const loadFailed = !!error && !isSuccess && !initialData
+  // screen for it tells someone looking for a migration that there is none, so
+  // with nothing to show the failure takes the list's place. Rows already shown
+  // stay, under a notice that they may be out of date.
+  const loadFailed = !!error && effectiveMigrations.length === 0
+  const refreshFailed = !!error && effectiveMigrations.length > 0
   const showsFirstRunEmptyState =
     !showLoading && !loadFailed && effectiveMigrations.length === 0
   useEffect(() => {
@@ -141,21 +145,12 @@ export function Migrations({
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : loadFailed ? (
-        <Alert variant="destructive" data-testid="migrations-load-failed">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{t('Failed to load migrations')}</AlertTitle>
-          <AlertDescription className="text-[13px]">
-            <p>{getErrorMessage(error, t('Please try again.'))}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-3 h-8 text-[13px]"
-              onClick={() => void refetch()}
-            >
-              {t('Retry')}
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <MigrationsReadError
+          testId="migrations-load-failed"
+          title={t('Failed to load migrations')}
+          detail={getErrorMessage(error, t('Please try again.'))}
+          onRetry={() => void refetch()}
+        />
       ) : showsFirstRunEmptyState ? (
         <MigrationsEmptyState
           onImport={() =>
@@ -168,98 +163,111 @@ export function Migrations({
           importDisabledTooltip={createDisabledTooltip}
         />
       ) : (
-        <div className="rounded-lg border border-border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Migration ID')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Date')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Source')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Destination')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Status')}
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('Progress')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {effectiveMigrations.map((migration) => {
-                const showProgress =
-                  migration.status === 'pending' ||
-                  migration.status === 'processing'
-                const progress = getMigrationProgress(migration)
-                const { succeeded, total } = getMigrationCounts(migration)
-                const hasCounts = total > 0
-                return (
-                  <MigrationContextMenu
-                    key={migration.$id}
-                    projectId={projectId}
-                    region={region}
-                    migration={migration}
-                    onViewDetails={handleViewDetails}
-                  >
-                  <TableRow
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleViewDetails(migration)}
-                  >
-                    <TableCell className="px-4 py-3">
-                      <CopyableId id={migration.$id} size="xs" />
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DateTooltip
-                        date={migration.$createdAt}
-                        className="text-[12px] text-muted-foreground font-mono"
-                      />
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <span className="text-[13px] text-muted-foreground">
-                        {migration.source}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <span className="text-[13px] text-muted-foreground">
-                        {(migration as { destination?: string }).destination ??
-                          '-'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                        {getStatusBadge(migration.status)}
-                        {hasCounts && (
-                          <span className="text-[11px] text-muted-foreground">
-                            {succeeded} / {total}
+        <>
+          {refreshFailed ? (
+            <MigrationsReadError
+              testId="migrations-refresh-failed"
+              title={t('Failed to refresh migrations')}
+              detail={`${t('The list below may be out of date.')} ${getErrorMessage(error, t('Please try again.'))}`}
+              onRetry={() => void refetch()}
+            />
+          ) : null}
+          <div className="rounded-lg border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Migration ID')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Date')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Source')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Destination')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Status')}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('Progress')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {effectiveMigrations.map((migration) => {
+                  const showProgress =
+                    migration.status === 'pending' ||
+                    migration.status === 'processing'
+                  const progress = getMigrationProgress(migration)
+                  const { succeeded, total } = getMigrationCounts(migration)
+                  const hasCounts = total > 0
+                  return (
+                    <MigrationContextMenu
+                      key={migration.$id}
+                      projectId={projectId}
+                      region={region}
+                      migration={migration}
+                      onViewDetails={handleViewDetails}
+                    >
+                      <TableRow
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleViewDetails(migration)}
+                      >
+                        <TableCell className="px-4 py-3">
+                          <CopyableId id={migration.$id} size="xs" />
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <DateTooltip
+                            date={migration.$createdAt}
+                            className="text-[12px] text-muted-foreground font-mono"
+                          />
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <span className="text-[13px] text-muted-foreground">
+                            {migration.source}
                           </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      {showProgress ? (
-                        <div className="min-w-[120px]">
-                          <ProgressBarRow value={progress} className="mb-0" />
-                        </div>
-                      ) : (
-                        <span className="text-[12px] text-muted-foreground">
-                           - 
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                  </MigrationContextMenu>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <span className="text-[13px] text-muted-foreground">
+                            {(migration as { destination?: string })
+                              .destination ?? '-'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                            {getStatusBadge(migration.status)}
+                            {hasCounts && (
+                              <span className="text-[11px] text-muted-foreground">
+                                {succeeded} / {total}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          {showProgress ? (
+                            <div className="min-w-[120px]">
+                              <ProgressBarRow
+                                value={progress}
+                                className="mb-0"
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-[12px] text-muted-foreground">
+                              -
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    </MigrationContextMenu>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
 
       {selectedMigrationId && selectedMigration && (
@@ -270,5 +278,37 @@ export function Migrations({
         />
       )}
     </div>
+  )
+}
+
+/** The list could not be read: what failed, and a way to read it again. */
+function MigrationsReadError({
+  testId,
+  title,
+  detail,
+  onRetry,
+}: {
+  testId: string
+  title: string
+  detail: string
+  onRetry: () => void
+}) {
+  const t = useT()
+  return (
+    <Alert variant="destructive" data-testid={testId}>
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>{title}</AlertTitle>
+      <AlertDescription className="text-[13px]">
+        <p>{detail}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 h-8 text-[13px]"
+          onClick={onRetry}
+        >
+          {t('Retry')}
+        </Button>
+      </AlertDescription>
+    </Alert>
   )
 }
