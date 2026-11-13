@@ -497,6 +497,25 @@ jobs:
             _APP_EXTENSION_LIBRARIES=dsn php crates/extension/tests/dsn.php > /tmp/rust.jsonl
             diff /tmp/php.jsonl /tmp/rust.jsonl'
 
+      - name: Test usage on the extension
+        run: |
+          # Utopia\Usage\Engine is registered only when _APP_EXTENSION_LIBRARIES names usage, and
+          # Adapter\ClickHouse then delegates to it. The package's tests, the adapter's against a
+          # real ClickHouse among them, must pass on it as they do on PHP; usage.php checks the
+          # transport contract and that a request suspends only its own coroutine.
+          docker network create usage
+          docker run --detach --name clickhouse --network usage --env CLICKHOUSE_USER=default \
+            --env CLICKHOUSE_PASSWORD=clickhouse --env CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1 \
+            clickhouse/clickhouse-server:25.11-alpine
+          timeout 120 sh -c 'until docker exec clickhouse clickhouse-client --password clickhouse -q "SELECT 1" >/dev/null 2>&1; do sleep 2; done'
+          docker run --rm --network usage --env CLICKHOUSE_HOST=clickhouse \
+            --volume "$PWD/packages:/usr/src/code/packages" \
+            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
+            set -e
+            _APP_EXTENSION_LIBRARIES=usage php crates/extension/tests/usage.php
+            _APP_EXTENSION_LIBRARIES=usage vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php \
+              --exclude-filter DatabaseTest packages/usage/tests'
+
   build:
     name: Build
     needs: changes

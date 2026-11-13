@@ -5,8 +5,9 @@
 //! `Utopia\Image\Canvas` and `Utopia\Image\Font` are always registered: their
 //! package has no PHP implementation. Every other library still has one, and
 //! its class is registered only when `_APP_EXTENSION_LIBRARIES` names its
-//! package (`dsn`), so each can be canaried and switched back to PHP with a
-//! restart, not a deploy.
+//! package (`dsn`, `usage`), so each can be canaried and switched back to PHP
+//! with a restart, not a deploy. `usage` registers an engine the PHP adapter
+//! delegates to, not the adapter itself: see `usage.rs`.
 
 mod canvas;
 mod dsn;

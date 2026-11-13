@@ -222,7 +222,8 @@ impl Transport for Callback {
         let answer = callable.try_call(vec![&url, &headers, &body]).map_err(|e| e.to_string())?;
         let answer = answer.array().ok_or("the transport did not answer with [status, body]")?;
         let status = answer.get_index(0).and_then(Zval::long).ok_or("the transport answered without a status")?;
-        let body = answer.get_index(1).and_then(Zval::zend_str).map(|body| body.as_bytes().to_vec()).unwrap_or_default();
+        let body =
+            answer.get_index(1).and_then(Zval::zend_str).map(|body| body.as_bytes().to_vec()).unwrap_or_default();
         match u16::try_from(status) {
             Ok(status) => Ok(Response { status, body }),
             Err(_) => Err(String::from_utf8_lossy(&body).into_owned()),
@@ -410,9 +411,9 @@ impl Engine {
         r#type: Option<&str>,
     ) -> PhpResult<Zval> {
         let (queries, kind) = (self::queries(&queries)?, kind(r#type)?);
-        let found = block_on(self.adapter.time_series(
-            tenant, &metrics, interval, start_date, end_date, &queries, zero_fill, kind,
-        ))?;
+        let found = block_on(
+            self.adapter.time_series(tenant, &metrics, interval, start_date, end_date, &queries, zero_fill, kind),
+        )?;
         series(&found.map_err(thrown)?)
     }
 

@@ -28,6 +28,7 @@
       "rustfmt.toml",
       "packages/dsn/",
       "packages/image/",
+      "packages/usage/",
       "Dockerfile",
       ".dockerignore"
     ],
