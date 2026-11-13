@@ -724,6 +724,45 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals('user_device_session_not_found', $response['body']['type']);
     }
 
+    public function testDeviceRefusesBlockedUsers(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $email = \uniqid() . 'blocked@localhost.test';
+        $userId = $this->createUserWithPassword($email, 'password');
+        $deviceCookie = $this->createDevice()['cookie'];
+
+        $session = $this->signIn($deviceCookie, $email, 'password');
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $deviceCookie = $session['cookies'][$deviceKey];
+
+        $blocked = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/status', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'status' => false,
+        ]);
+        $this->assertEquals(200, $blocked['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - the device still holds the session, but its user is blocked
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', \array_merge($headers, [
+            'cookie' => $deviceKey . '=' . $deviceCookie,
+        ]), [
+            'sessionId' => $session['body']['$id'],
+        ]);
+        $this->assertEquals(403, $response['headers']['status-code']);
+        $this->assertEquals('user_blocked', $response['body']['type']);
+    }
+
     public function testFallbackCookiesCarryTheDeviceAndTheSession(): void
     {
         $projectId = $this->getProject()['$id'];
