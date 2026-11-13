@@ -69,11 +69,11 @@ exceptions; placeholder values of every type; the scalar arguments PHP converts;
 each case raises. It asserts these known differences on the extension:
 
 - `setLanguageFromArray()` refuses a translation that is not a string; PHP stores it and returns it.
-- Language names, keys and the texts `setLanguageFromArray()` takes are read as UTF-8: other bytes
-  become U+FFFD, in lookups, in returned texts and in the `Key named "…" not found` message, so two
-  names or keys that differ only in such bytes are one. Translation files are always UTF-8
-  (`json_decode` refuses anything else). The `{{key}}` returned for a missing key keeps the exact
-  bytes.
+- A language name, translation key or text that is not UTF-8 is refused with an `Exception` when it
+  is registered, where PHP stores the bytes; translation files are always UTF-8 (`json_decode`
+  refuses anything else). A key or name looked up with such bytes is read with U+FFFD in their
+  place, so it can only match one that holds U+FFFD itself; the `{{key}}` returned for a missing key
+  keeps the exact bytes.
 - Reading an unregistered default language raises the same `TypeError` without PHP's
   `Undefined array key` warning before it.
 - `serialize()` refuses the object, as it does every class with Rust state.

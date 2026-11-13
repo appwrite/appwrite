@@ -14,7 +14,7 @@ use ext_php_rs::boxed::ZBox;
 use ext_php_rs::class::RegisteredClass;
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ArrayKey, ZendCallable, ZendClassObject, ZendHashTable, ZendStr, Zval};
+use ext_php_rs::types::{ZendCallable, ZendClassObject, ZendHashTable, ZendStr, Zval};
 use ext_php_rs::zend::{ClassEntry, ce};
 use php_std::types::KeyRef;
 use utopia_locale::{DEFAULT_DYNAMIC_KEY, Error, Languages, Missing, Translations};
@@ -75,9 +75,13 @@ fn thrown(error: Error) -> PhpException {
     PhpException::new(error.to_string(), 0, class)
 }
 
-/// Language names and keys are read as UTF-8; other bytes become U+FFFD.
-fn lossy(bytes: &[u8]) -> String {
-    String::from_utf8_lossy(bytes).into_owned()
+/// `bytes` as UTF-8, which the crate holds names, keys and texts as. PHP takes any
+/// bytes; other bytes are refused rather than altered, so two names never merge.
+fn utf8(bytes: &[u8], what: impl FnOnce() -> String) -> PhpResult<String> {
+    match std::str::from_utf8(bytes) {
+        Ok(text) => Ok(text.to_owned()),
+        Err(_) => Err(thrown(Error::Unsupported(format!("{} is not UTF-8.", what())))),
+    }
 }
 
 /// The language `$default` or `$fallback` names, as PHP reads it as an array key:
@@ -326,22 +330,20 @@ impl Locale {
     }
 
     /// `setLanguageFromArray(string $name, array $translations): void`. A value
-    /// that is not a string is refused, where PHP stores it.
+    /// that is not a string, or a name, key or text that is not UTF-8, is refused,
+    /// where PHP stores it.
     pub fn set_language_from_array(name: PhpString<'_>, translations: &ZendHashTable) -> PhpResult<()> {
+        let name = utf8(name.bytes(), || "Language name".into())?;
         let mut texts = Translations::with_capacity_and_hasher(translations.len(), Default::default());
-        for (key, value) in translations {
-            let key = match key {
-                ArrayKey::Long(key) => key.to_string(),
-                ArrayKey::String(key) => key,
-                ArrayKey::Str(key) => key.to_owned(),
-                ArrayKey::ZendString(key) => lossy(key.as_bytes()),
-            };
+        for (key, value) in entries(translations) {
+            let key = utf8(key.bytes(), || "Translation key".into())?;
             let Some(text) = value.zend_str() else {
                 return Err(thrown(Error::Unsupported(format!("Translation \"{key}\" is not a string."))));
             };
-            texts.insert(key, lossy(text.as_bytes()));
+            let text = utf8(text.as_bytes(), || format!("Translation \"{key}\""))?;
+            texts.insert(key, text);
         }
-        insert(lossy(name.bytes()), |languages, name| {
+        insert(name, |languages, name| {
             languages.insert(name, texts);
             Ok(())
         })
@@ -351,6 +353,7 @@ impl Locale {
     /// with PHP's `file_exists()` and `file_get_contents()`.
     #[php(name = "setLanguageFromJSON")]
     pub fn set_language_from_json(name: PhpString<'_>, path: PhpString<'_>) -> PhpResult<()> {
+        let name = utf8(name.bytes(), || "Language name".into())?;
         let exceptions = languages(|languages| languages.exceptions());
         if exceptions && !call("file_exists", path.bytes()).is_some_and(|exists| exists.coerce_to_bool()) {
             return Err(thrown(Error::Exception("Translation file not found.".into())));
@@ -359,7 +362,7 @@ impl Locale {
             return Ok(());
         };
         let content = content.zend_str().map(ZendStr::as_bytes).unwrap_or_default();
-        insert(lossy(name.bytes()), |languages, name| languages.insert_json(name, content))
+        insert(name, |languages, name| languages.insert_json(name, content))
     }
 
     /// `__construct(string $default)`.
