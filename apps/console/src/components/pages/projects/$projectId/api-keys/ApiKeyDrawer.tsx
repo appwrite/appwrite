@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Copy, Check, Eye, EyeOff } from 'lucide-react'
+import { Copy, Check, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { BlogPageAnchor } from '@/components/global/shared/BlogPageAnchor'
 import { DateTimePicker } from '@/components/global/shared/DateTimePicker'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
@@ -257,6 +259,29 @@ export function ApiKeyDrawer({
 
               {!showCreatedKey && (
                 <div className="space-y-5">
+                  {!isEditing && scopeCatalog === 'project' && (
+                    <Alert className="border-border bg-muted/30">
+                      <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                      <AlertTitle className="text-[12px] font-medium">
+                        {t('Prefer ephemeral keys in Functions and Sites')}
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] text-muted-foreground">
+                        <p>
+                          {t(
+                            'Ephemeral keys are more secure than a long-lived API key. Appwrite generates a scoped key for every function execution, site build, and SSR request that expires on its own, so there is no secret to store or rotate.',
+                          )}{' '}
+                          <BlogPageAnchor
+                            href="/blog/post/how-to-leverage-dynamic-api-keys-for-better-security"
+                            className="link-neutral"
+                          >
+                            {t('Learn more about ephemeral keys')}
+                          </BlogPageAnchor>
+                          .
+                        </p>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   <div className="space-y-2">
                     <Label htmlFor="name">
                       {t('Name')} <span className="text-destructive">*</span>

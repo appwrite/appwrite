@@ -67,6 +67,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Select the scopes this API key will have access to.':
     'בחרו את היקפי הגישה שאליהם יוכל מפתח ה-API הזה לגשת.',
   'Learn more about API key scopes': 'למידע נוסף על היקפי גישה של מפתחות API',
+  'Prefer ephemeral keys in Functions and Sites':
+    'העדיפו מפתחות זמניים בפונקציות ובאתרים',
+  'Ephemeral keys are more secure than a long-lived API key. Appwrite generates a scoped key for every function execution, site build, and SSR request that expires on its own, so there is no secret to store or rotate.':
+    'מפתחות זמניים מאובטחים יותר ממפתח API ארוך טווח. Appwrite יוצר לכל הרצה של פונקציה, Build של אתר ובקשת SSR מפתח שמוגבל להרשאות הגישה שהגדרתם ופג תוקף מעצמו, כך שאין סוד לשמור או להחליף.',
+  'Learn more about ephemeral keys': 'למידע נוסף על מפתחות זמניים',
 
   // Explorer
   Explorer: 'אקספלורר',
