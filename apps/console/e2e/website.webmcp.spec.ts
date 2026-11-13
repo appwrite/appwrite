@@ -1,4 +1,4 @@
-import type { ToolError } from '../src/lib/webmcp/register'
+import type { ToolError } from '../src/lib/webmcp/calls'
 import type { Page } from '@playwright/test'
 import { RUNTIME_CONFIG_WINDOW_KEY } from '../src/lib/runtime-config-shared'
 import { expect, test } from './fixtures'
@@ -22,7 +22,7 @@ const READ_ONLY_TOOLS = [
   'list_changelog',
   'search_community_threads',
 ]
-const NAVIGATION_TOOLS = ['navigate_to_page', 'open_sign_up']
+const NAVIGATION_TOOLS = ['navigate_to_page', 'navigate_to_sign_up']
 
 type MarkdownPage = { url: string; markdown: string; truncated: boolean }
 
@@ -209,7 +209,7 @@ test.describe('WebMCP tools', () => {
     }
   })
 
-  test('navigate_to_page and open_sign_up move the tab on this site only', async ({
+  test('navigate_to_page and navigate_to_sign_up move the tab on this site only', async ({
     page,
   }) => {
     const offsite = await agent.call<ToolError>('navigate_to_page', {
@@ -240,7 +240,7 @@ test.describe('WebMCP tools', () => {
     // Sign-up is outside the public-site layouts: the call still answers, then
     // the tools unregister once the tab leaves.
     const signUp = await agent.call<{ navigating: boolean; url: string }>(
-      'open_sign_up',
+      'navigate_to_sign_up',
     )
     expect(signUp.url).toMatch(/\/sign-up$/)
     await expect(page).toHaveURL(/\/sign-up/)
@@ -250,7 +250,7 @@ test.describe('WebMCP tools', () => {
 
 // This file launches Chromium with the flag that exposes navigator.modelContext,
 // so this test starts its own browser without it.
-test('a browser without WebMCP never downloads the tools', async ({
+test('a browser without WebMCP never downloads the tool actions', async ({
   playwright,
   baseURL,
 }) => {
@@ -261,8 +261,8 @@ test('a browser without WebMCP never downloads the tools', async ({
     page.on('request', (request) => {
       const url = new URL(request.url())
       if (
-        /\/assets\/tools-[^/]+\.js$/.test(url.pathname) ||
-        url.pathname.endsWith('/lib/webmcp/site/tools.ts')
+        /\/assets\/actions-[^/]+\.js$/.test(url.pathname) ||
+        url.pathname.endsWith('/lib/webmcp/site/actions.ts')
       ) {
         requested.push(url.pathname)
       }
@@ -271,10 +271,8 @@ test('a browser without WebMCP never downloads the tools', async ({
     await page.goto('/home')
     await expect(page.locator('main')).toBeVisible()
     expect(
-      await page.evaluate(
-        () => (window as unknown as { __WEBMCP__?: boolean }).__WEBMCP__,
-      ),
-    ).toBe(false)
+      await page.evaluate(() => window.__appwriteSiteTools === undefined),
+    ).toBe(true)
     await page
       .waitForLoadState('networkidle', { timeout: 10_000 })
       .catch(() => {})
@@ -282,4 +280,64 @@ test('a browser without WebMCP never downloads the tools', async ({
   } finally {
     await browser.close()
   }
+})
+
+test('a call cancelled before the page connects its handlers is answered', async ({
+  page,
+}) => {
+  // Hold back the handlers so the call waits on the inline tools.
+  await page.route(
+    /\/(assets\/actions-[^/]+\.js|lib\/webmcp\/site\/actions\.ts)(\?.*)?$/,
+    () => {},
+  )
+  await openAsAgent(
+    page,
+    '/home',
+    READ_ONLY_TOOLS.length + NAVIGATION_TOOLS.length,
+  )
+
+  const result = await page.evaluate(async () => {
+    const tool = (await document.modelContext!.getTools()).find(
+      (registered) => registered.name === 'search_docs',
+    )!
+    const controller = new AbortController()
+    const call = document.modelContext!.executeTool(
+      tool,
+      { query: 'create a row' },
+      { signal: controller.signal },
+    )
+    setTimeout(() => controller.abort(), 500)
+    return call.then(
+      (output) => JSON.parse(output) as { code?: string },
+      (error: Error) => ({ code: error.name }),
+    )
+  })
+  // Chrome rejects an aborted executeTool() itself; the registry passes the
+  // page's own answer through, which shows the waiting call was released.
+  expect(result.code).toBe(WEBMCP_CHANNEL ? 'AbortError' : 'cancelled')
+})
+
+test('a self-hosted console registers no Appwrite Cloud tools', async ({
+  page,
+}) => {
+  // Prerendered pages are shared by both profiles, so the inline script has
+  // to read the profile from the runtime config at load.
+  await page.addInitScript((key) => {
+    let config: Record<string, unknown> | undefined
+    Object.defineProperty(window, key, {
+      configurable: true,
+      get: () => config,
+      set: (value: Record<string, unknown>) => {
+        config = { ...value, consoleProfile: 'self-hosted' }
+      },
+    })
+  }, RUNTIME_CONFIG_WINDOW_KEY)
+  await openAsAgent(page, '/home', 0)
+  await page.waitForLoadState('load')
+  expect(
+    await page.evaluate(async () => ({
+      bridge: window.__appwriteSiteTools === undefined,
+      tools: (await document.modelContext!.getTools()).length,
+    })),
+  ).toEqual({ bridge: true, tools: 0 })
 })
