@@ -44,7 +44,7 @@ npm install @huggingface/inference node-appwrite
 
 {% section #step-3 step=3 title="Parsing the body" %}
 After installing the SDK, write the code that will parse the body of the request.
-The function will serve two purposes: it can recieve a body via direct execution or it can be called via a file create event.
+The function will serve two purposes: it can receive a body via direct execution or it can be called via a file create event.
 
 Open up your `src/index.js` file and replace the function body with the following code:
 
