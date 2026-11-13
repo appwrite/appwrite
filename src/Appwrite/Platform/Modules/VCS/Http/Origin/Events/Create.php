@@ -7,6 +7,8 @@ use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\DeliveryClaim;
+use Appwrite\Vcs\DeliveryClaims;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -14,7 +16,6 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
@@ -491,7 +492,9 @@ class Create extends Action
      * a delivery it got an error for. Each repository claims the delivery once
      * and gives the claim back only when it failed without deploying, so a
      * retry deploys just the repositories that did not, and one that keeps
-     * failing never redeploys the others.
+     * failing never redeploys the others. A retry that arrives while an
+     * earlier attempt still holds a repository fails too, as that attempt can
+     * still fail, and Origin delivers it again once it is through.
      *
      * @param array<Document> $repositories
      * @param string $subject What in the delivery is deployed, such as a branch, so one delivery updating several claims each once
@@ -499,7 +502,9 @@ class Create extends Action
      */
     private function deployOnce(array $repositories, string $deliveryId, string $subject, string $commitHash, string $branch, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB, callable $deploy): void
     {
+        $claims = new DeliveryClaims($dbForPlatform, $authorization, 'origin');
         $errors = [];
+        $busy = false;
         foreach ($repositories as $repository) {
             // Every region gets the delivery and they share the platform
             // database, so a region claims only the repositories it deploys -
@@ -509,27 +514,41 @@ class Create extends Action
                 continue;
             }
 
-            // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
-            $claim = 'origin-' . \substr(\hash('sha256', $deliveryId . ':' . $subject . ':' . $repository->getId()), 0, 29);
-            try {
-                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $claim])));
-            } catch (Duplicate) {
+            $claim = $claims->take($deliveryId . ':' . $subject . ':' . $repository->getId());
+            if ($claim->status === DeliveryClaim::DONE) {
+                continue;
+            }
+            if ($claim->status === DeliveryClaim::BUSY) {
+                $busy = true;
                 continue;
             }
 
-            $attemptedAt = DateTime::now();
+            // An attempt that stopped half way may have deployed already
+            if ($claim->resumedFrom !== null && $this->hasDeployed($repository, $commitHash, $branch, $claim->resumedFrom, $dbForPlatform, $authorization, $getProjectDB)) {
+                $claims->finish($claim);
+                continue;
+            }
+
+            $attemptedAt = $claim->resumedFrom ?? DateTime::now();
             try {
                 $deploy($repository);
             } catch (\Throwable $error) {
-                if (!$this->hasDeployed($repository, $commitHash, $branch, $attemptedAt, $dbForPlatform, $authorization, $getProjectDB)) {
-                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $claim));
-                }
                 $errors[] = $error->getMessage();
+                if (!$this->hasDeployed($repository, $commitHash, $branch, $attemptedAt, $dbForPlatform, $authorization, $getProjectDB)) {
+                    $claims->release($claim);
+                    continue;
+                }
             }
+
+            $claims->finish($claim);
         }
 
         if (!empty($errors)) {
             throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
+        }
+
+        if ($busy) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'An earlier attempt at this delivery is still deploying; Origin delivers it again.');
         }
     }
 
@@ -538,8 +557,9 @@ class Create extends Action
      * the attempt began that did not fail - a push can fail after its
      * deployment is accepted, and retrying it then would build the commit
      * twice. One that failed, such as a build that could not be queued, is
-     * retried. A lookup that fails counts as no deployment, so the push is
-     * retried rather than dropped.
+     * retried. One that was canceled counts as deployed: someone stopped it
+     * on purpose, and a retry must not build it again. A lookup that fails
+     * counts as no deployment, so the push is retried rather than dropped.
      */
     private function hasDeployed(Document $repository, string $commitHash, string $branch, string $since, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB): bool
     {
