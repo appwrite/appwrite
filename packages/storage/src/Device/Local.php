@@ -82,7 +82,7 @@ class Local extends Device
         $chunkFilePath = $tmp . DIRECTORY_SEPARATOR . pathinfo($path, PATHINFO_FILENAME) . '.part.' . $chunk;
 
         // A resent chunk replaces the stored one, as S3 does with a resent part.
-        $this->writeFile($chunkFilePath, $data);
+        $this->writeAtomic($chunkFilePath, $data);
 
         $chunksReceived = $this->countChunks($tmp, $path);
         $metadata['parts'][$chunk] = true;
