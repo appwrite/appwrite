@@ -11,8 +11,10 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
 use Utopia\Query\Schema\ColumnType;
 
-class Executions extends Base
+class Executions extends Base implements Restricted
 {
+    use Restrictions;
+
     protected const ATTRIBUTE_TYPES = [
         'trigger' => ColumnType::String->value,
         'status' => ColumnType::String->value,
@@ -71,6 +73,8 @@ class Executions extends Base
                 'array' => false,
             ]),
         ];
+
+        $this->allowedAttributes = \array_map(fn (Document $attribute) => $attribute->getAttribute('key'), $attributes);
 
         parent::__construct([
             new Limit(),
