@@ -83,7 +83,25 @@ final class Http
                 throw new RuntimeException('Unable to create the TLS fixture CSR.');
             }
 
-            $certificate = openssl_csr_sign($csr, null, $key, 1);
+            $configFile = tempnam(sys_get_temp_dir(), 'utopia-tls-config-');
+            if ($configFile === false) {
+                throw new RuntimeException('Unable to create the TLS fixture config.');
+            }
+
+            $host = \trim($peerName, '[]');
+            $subjectAlternativeName = (filter_var($host, FILTER_VALIDATE_IP) === false ? 'DNS:' : 'IP:') . $host;
+            if (file_put_contents($configFile, "[req]\ndistinguished_name = name\n[name]\n[extensions]\nbasicConstraints = critical, CA:TRUE\nsubjectAltName = {$subjectAlternativeName}\n") === false) {
+                unlink($configFile);
+
+                throw new RuntimeException('Unable to write the TLS fixture config.');
+            }
+
+            try {
+                $certificate = openssl_csr_sign($csr, null, $key, 1, ['config' => $configFile, 'digest_alg' => 'sha256', 'x509_extensions' => 'extensions']);
+            } finally {
+                unlink($configFile);
+            }
+
             if ($certificate === false) {
                 throw new RuntimeException('Unable to sign the TLS fixture certificate.');
             }
