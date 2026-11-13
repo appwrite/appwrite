@@ -615,18 +615,39 @@ class Notifications extends Action
                 }
             }
 
-            $message = new PushMessage(
-                to: [$token],
-                title: (string) ($push['title'] ?? ''),
-                body: (string) ($push['body'] ?? ''),
-                data: $data === [] ? null : $data,
-                sound: $critical && $service === PushService::APNS ? 'siren.caf' : null,
-                tag: ($push['tag'] ?? '') === '' ? null : (string) $push['tag'],
-                critical: $critical && $service === PushService::APNS ? true : null,
-                priority: Priority::HIGH,
-                // Android rings through Do Not Disturb by the channel, which the app creates.
-                channelId: $service === PushService::FCM ? ($critical ? 'critical' : 'alerts') : null,
-            );
+            $title = (string) ($push['title'] ?? '');
+            $body = (string) ($push['body'] ?? '');
+            $tag = ($push['tag'] ?? '') === '' ? null : (string) $push['tag'];
+
+            $message = $service === PushService::FCM
+                // Data-only: a notification block makes Android draw a background push itself, so the
+                // app never sees it. These are the keys Expo's notification builder reads, so an app
+                // that draws nothing of its own still shows the same title, body, channel (the one
+                // that rings through Do Not Disturb, for critical) and replacing tag.
+                ? new PushMessage(
+                    to: [$token],
+                    data: [
+                        ...$data,
+                        'title' => $title,
+                        'message' => $body,
+                        'channelId' => $critical ? 'critical' : 'alerts',
+                        ...($tag === null ? [] : ['tag' => $tag]),
+                    ],
+                    priority: Priority::HIGH,
+                )
+                // Mutable content runs the app's notification service extension, which can add to the
+                // alert before iOS shows it; without one, iOS shows it unchanged.
+                : new PushMessage(
+                    to: [$token],
+                    title: $title,
+                    body: $body,
+                    data: $data === [] ? null : $data,
+                    sound: $critical ? 'siren.caf' : null,
+                    tag: $tag,
+                    critical: $critical ? true : null,
+                    priority: Priority::HIGH,
+                    mutableContent: true,
+                );
 
             try {
                 $result = $adapter->send($message);
