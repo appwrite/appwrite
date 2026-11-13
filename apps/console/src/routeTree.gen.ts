@@ -34,6 +34,7 @@ import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as ApiChangelogDotjsonRouteImport } from './routes/_api/changelog[.]json'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as ApiOpenapiDotjsonRouteImport } from './routes/_api/openapi[.]json'
+import { Route as ApiSchemamapDotxmlRouteImport } from './routes/_api/schemamap[.]xml'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
 import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
@@ -622,6 +623,11 @@ const ApiHelloRoute = ApiHelloRouteImport.update({
 const ApiOpenapiDotjsonRoute = ApiOpenapiDotjsonRouteImport.update({
   id: '/_api/openapi.json',
   path: '/openapi.json',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSchemamapDotxmlRoute = ApiSchemamapDotxmlRouteImport.update({
+  id: '/_api/schemamap.xml',
+  path: '/schemamap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthJoinRoute = AuthJoinRouteImport.update({
@@ -3587,6 +3593,7 @@ export interface FileRoutesByFullPath {
   '/changelog.json': typeof ApiChangelogDotjsonRoute
   '/hello': typeof ApiHelloRoute
   '/openapi.json': typeof ApiOpenapiDotjsonRoute
+  '/schemamap.xml': typeof ApiSchemamapDotxmlRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
   '/recovery': typeof AuthRecoveryRoute
@@ -4076,6 +4083,7 @@ export interface FileRoutesByTo {
   '/changelog.json': typeof ApiChangelogDotjsonRoute
   '/hello': typeof ApiHelloRoute
   '/openapi.json': typeof ApiOpenapiDotjsonRoute
+  '/schemamap.xml': typeof ApiSchemamapDotxmlRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
   '/recovery': typeof AuthRecoveryRoute
@@ -4518,6 +4526,7 @@ export interface FileRoutesById {
   '/_api/changelog.json': typeof ApiChangelogDotjsonRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_api/openapi.json': typeof ApiOpenapiDotjsonRoute
+  '/_api/schemamap.xml': typeof ApiSchemamapDotxmlRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
   '/_auth/recovery': typeof AuthRecoveryRoute
@@ -5012,6 +5021,7 @@ export interface FileRouteTypes {
     | '/changelog.json'
     | '/hello'
     | '/openapi.json'
+    | '/schemamap.xml'
     | '/join'
     | '/mfa'
     | '/recovery'
@@ -5501,6 +5511,7 @@ export interface FileRouteTypes {
     | '/changelog.json'
     | '/hello'
     | '/openapi.json'
+    | '/schemamap.xml'
     | '/join'
     | '/mfa'
     | '/recovery'
@@ -5942,6 +5953,7 @@ export interface FileRouteTypes {
     | '/_api/changelog.json'
     | '/_api/hello'
     | '/_api/openapi.json'
+    | '/_api/schemamap.xml'
     | '/_auth/join'
     | '/_auth/mfa'
     | '/_auth/recovery'
@@ -6438,6 +6450,7 @@ export interface RootRouteChildren {
   ApiChangelogDotjsonRoute: typeof ApiChangelogDotjsonRoute
   ApiHelloRoute: typeof ApiHelloRoute
   ApiOpenapiDotjsonRoute: typeof ApiOpenapiDotjsonRoute
+  ApiSchemamapDotxmlRoute: typeof ApiSchemamapDotxmlRoute
   BlogLlmsDottxtRoute: typeof BlogLlmsDottxtRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
   CliInstallDotshRoute: typeof CliInstallDotshRoute
@@ -6641,6 +6654,13 @@ declare module '@tanstack/react-router' {
       path: '/openapi.json'
       fullPath: '/openapi.json'
       preLoaderRoute: typeof ApiOpenapiDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/schemamap.xml': {
+      id: '/_api/schemamap.xml'
+      path: '/schemamap.xml'
+      fullPath: '/schemamap.xml'
+      preLoaderRoute: typeof ApiSchemamapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/join': {
@@ -12024,6 +12044,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChangelogDotjsonRoute: ApiChangelogDotjsonRoute,
   ApiHelloRoute: ApiHelloRoute,
   ApiOpenapiDotjsonRoute: ApiOpenapiDotjsonRoute,
+  ApiSchemamapDotxmlRoute: ApiSchemamapDotxmlRoute,
   BlogLlmsDottxtRoute: BlogLlmsDottxtRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,
   CliInstallDotshRoute: CliInstallDotshRoute,
