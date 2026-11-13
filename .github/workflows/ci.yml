@@ -471,7 +471,7 @@ jobs:
             rustup component add clippy rustfmt &&
             cargo fmt --all --check &&
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
-            cargo test --locked -p php-std -p utopia-image --all-features'
+            cargo test --locked -p php-std -p utopia-image -p utopia-query -p utopia-validators -p utopia-usage --all-features'
 
       - name: Build the image
         run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
