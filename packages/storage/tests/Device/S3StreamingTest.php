@@ -106,6 +106,26 @@ final class S3StreamingTest extends TestCase
         });
     }
 
+    public function testReadRetriesAProxyUnavailableResponse(): void
+    {
+        $this->serve(function (Device $device, string $marker): void {
+            $this->assertSame('abcdefgh', (string) $device->read('/unavailable-once'));
+            $this->assertSame('2', file_get_contents($marker . '.requests'));
+        });
+    }
+
+    public function testStreamRetriesAProxyUnavailableResponse(): void
+    {
+        $this->serve(function (Device $device, string $marker): void {
+            $bytes = '';
+            $device->stream('/unavailable-once', static function (string $chunk) use (&$bytes): void {
+                $bytes .= $chunk;
+            });
+            $this->assertSame('abcdefgh', $bytes);
+            $this->assertSame('2', file_get_contents($marker . '.requests'));
+        });
+    }
+
     /** @param callable(Device, string): void $test */
     private function serve(callable $test): void
     {

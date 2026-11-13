@@ -24,7 +24,20 @@ With no configuration it uses `Backoff`, the default best-practice strategy:
 `RequestExceptionInterface` failures (a bad URI, a malformed response) are never
 retried — see [error handling](error-handling.md) for that distinction. Streaming
 requests are retried only when the failure occurs before any byte reaches the sink,
-since replaying would duplicate delivered data.
+since replaying would duplicate delivered data. When the adapter exposes response
+headers before streaming (`supportsResponseStreaming()`), the body of an error
+response (status `400` or above) is held back until the strategy decides: it is
+discarded if the request is retried, or delivered to the sink once if not, so a
+proxy's `503` error page does not count as delivered data. Only the first 64 KiB
+(`Retry\Attempt::HELD_BODY_LIMIT`) of an error body is held: a longer one, such as an
+error streamed as Server-Sent Events, is passed through to the sink as it arrives
+and that attempt is not retried. If the sink throws while a held body is being
+delivered, the failure is rethrown and the request is not replayed.
+
+An `onResponse` callback passed to `stream()` runs for every attempt, including
+attempts whose response is then discarded and retried. Reset any per-attempt
+state there, as `Utopia\Storage\Device\S3::stream()` does, rather than assuming
+it fires once.
 
 ## Tuning the default
 

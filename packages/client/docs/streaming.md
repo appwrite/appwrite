@@ -47,6 +47,10 @@ Notes:
   (e.g. SSE), set the transport timeout to no-limit (`CURLOPT_TIMEOUT_MS => 0` on
   cURL, `timeout => -1` on Swoole) and stop by throwing from the sink.
 - The Swoole adapter must run inside a coroutine, like `sendRequest()`.
+- Wrapped in `Decorator\Retry`, up to 64 KiB of an error response's body (status
+  `400` or above) is held until the retry strategy decides, then discarded or
+  delivered. A longer error body streams through as it arrives and is not retried.
+  See [retries](retries.md).
 
 ## Requests
 

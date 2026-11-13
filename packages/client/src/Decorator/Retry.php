@@ -10,6 +10,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Decorator;
+use Utopia\Client\Decorator\Retry\Attempt;
 use Utopia\Client\Decorator\Retry\Backoff;
 use Utopia\Client\Decorator\Retry\Strategy;
 use Utopia\Client\Exception\AdapterPreconditionException;
@@ -18,8 +19,9 @@ use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 /**
  * An adapter that decorates another adapter and retries it according to a
  * Strategy. The strategy owns every policy decision (which outcomes to retry, how
- * long to wait, when to stop); this decorator only loops and sleeps. Configuration
- * forwarding is inherited from Decorator.
+ * long to wait, when to stop); this decorator only loops, sleeps, and holds back
+ * streamed error bodies until the strategy has decided. Configuration forwarding is
+ * inherited from Decorator.
  */
 final class Retry extends Decorator implements ResponseStreamingClientInterface
 {
@@ -63,57 +65,77 @@ final class Retry extends Decorator implements ResponseStreamingClientInterface
         }
     }
 
+    #[\Override]
     public function supportsResponseStreaming(): bool
     {
-        return $this->adapter instanceof ResponseStreamingClientInterface && $this->adapter->supportsResponseStreaming();
+        return $this->responseStreamingAdapter() instanceof ResponseStreamingClientInterface;
     }
 
     #[\Override]
     public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
-        $stream = $this->adapter->stream(...);
-        if ($onResponse !== null) {
-            if (!$this->adapter instanceof ResponseStreamingClientInterface || !$this->adapter->supportsResponseStreaming()) {
-                throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
-            }
-
-            $adapter = $this->adapter;
-            $stream = static fn (RequestInterface $request, callable $sink): ResponseInterface => $adapter->stream($request, $sink, $onResponse);
+        $adapter = $this->responseStreamingAdapter();
+        if ($onResponse !== null && !$adapter instanceof ResponseStreamingClientInterface) {
+            throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
         }
 
-        for ($attempt = 1; ; $attempt++) {
-            $delivered = 0;
-            $countingSink = static function (string $chunk) use ($sink, &$delivered): void {
-                $delivered += \strlen($chunk);
-                $sink($chunk);
-            };
+        for ($number = 1; ; $number++) {
+            $attempt = new Attempt($sink(...));
 
             try {
-                $response = $stream($request, $countingSink);
+                $response = $adapter instanceof ResponseStreamingClientInterface
+                    ? $adapter->stream($request, $attempt->write(...), $this->observer($attempt, $onResponse))
+                    : $this->adapter->stream($request, $attempt->deliver(...));
 
-                // Once bytes have reached the sink, replaying would duplicate them.
-                if ($delivered > 0) {
+                if ($attempt->hasDelivered()) {
                     return $response;
                 }
 
-                $delay = $this->strategy->delay($request, $attempt, $response, null);
+                $delay = $this->strategy->delay($request, $number, $attempt->withHeldBody($response), null);
 
                 if ($delay === null) {
+                    $attempt->release();
+
                     return $response;
                 }
             } catch (ClientExceptionInterface $error) {
-                if ($delivered > 0) {
+                if ($attempt->hasDelivered()) {
                     throw $error;
                 }
 
-                $delay = $this->strategy->delay($request, $attempt, null, $error);
+                $delay = $this->strategy->delay($request, $number, null, $error);
 
                 if ($delay === null) {
                     throw $error;
                 }
+            } finally {
+                $attempt->close();
             }
 
             ($this->sleep)($delay);
         }
+    }
+
+    private function responseStreamingAdapter(): ?ResponseStreamingClientInterface
+    {
+        $adapter = $this->adapter;
+
+        return $adapter instanceof ResponseStreamingClientInterface && $adapter->supportsResponseStreaming() ? $adapter : null;
+    }
+
+    /**
+     * @param (callable(ResponseInterface): void)|null $onResponse
+     *
+     * @return Closure(ResponseInterface): void
+     */
+    private function observer(Attempt $attempt, ?callable $onResponse): Closure
+    {
+        return static function (ResponseInterface $response) use ($attempt, $onResponse): void {
+            $attempt->observe($response);
+
+            if ($onResponse !== null) {
+                $onResponse($response);
+            }
+        };
     }
 }
