@@ -679,6 +679,22 @@ impl<T: Transport> ClickHouse<T> {
     }
 }
 
+/// Appends `text` as `json_encode` writes a string. Printable ASCII with nothing to
+/// escape, which is nearly every value a metric row holds, is copied; anything else
+/// goes through the encoder.
+fn push_json(out: &mut String, text: &[u8]) -> std::result::Result<(), json::Error> {
+    let plain = |byte: &u8| matches!(byte, b' '..=b'~') && !matches!(byte, b'"' | b'\\' | b'/');
+    match std::str::from_utf8(text) {
+        Ok(text) if text.bytes().all(|byte| plain(&byte)) => {
+            out.push('"');
+            out.push_str(text);
+            out.push('"');
+        }
+        _ => out.push_str(&json::encode(&Value::Str(text.into()), Flags::NONE, json::DEFAULT_DEPTH)?),
+    }
+    Ok(())
+}
+
 /// `http_build_query($pairs)` (RFC 1738: spaces as `+`).
 fn build_query(pairs: &[(&str, &str)]) -> String {
     let mut out = Vec::new();
@@ -738,27 +754,48 @@ impl<T: Transport + 'static> Adapter for ClickHouse<T> {
         let statement = builder.formatted_insert()?.unwrap_or_else(|| unreachable!("insert_format() was set"));
         let sql = self.qualify(&statement.query, &[&table]);
 
+        // A row is written straight to its JSON: every row has the same keys in the same
+        // order, so there is no array to build first. `json_encode` writes the same bytes.
+        let failed = |e: json::Error| Error::exception(format!("Failed to JSON encode metric row: {}", e.message()));
+        let mut time: Option<(&str, String)> = None;
         for chunk in metrics.chunks(batch_size) {
+            let mut ids = vec![0u8; chunk.len() * 16];
+            getrandom::fill(&mut ids).unwrap_or_else(|e| panic!("the system random source failed: {e}"));
             let mut rows = Vec::with_capacity(chunk.len());
-            for entry in chunk {
+            for (entry, id) in chunk.iter().zip(ids.chunks_exact(16)) {
                 let columns = Metric::extract_columns(&entry.tags, kind)?;
-                let mut row = Array::default();
-                row.set(ArrayKey::from("id"), Value::from(php::random_hex(16).as_str()));
-                row.set(ArrayKey::from("metric"), Value::from(entry.metric.as_str()));
-                row.set(ArrayKey::from("value"), Value::Int(entry.value));
-                row.set(ArrayKey::from("time"), Value::from(self.format_time(entry.time.as_ref())?.as_str()));
-                for (column, value) in columns {
-                    row.set(ArrayKey::from(column), value.map_or(Value::Null, Value::Str));
-                }
-                if self.config.shared_tables {
-                    row.set(ArrayKey::from("tenant"), entry.tenant.as_deref().map_or(Value::Null, Value::from));
-                }
-                match json::encode(&Value::Array(row), Flags::NONE, json::DEFAULT_DEPTH) {
-                    Ok(encoded) => rows.push(encoded),
-                    Err(e) => {
-                        return Err(Error::exception(format!("Failed to JSON encode metric row: {}", e.message())));
+                let formatted = match (&entry.time, &time) {
+                    (Some(super::Time::Text(text)), Some((last, formatted))) if text == last => formatted.clone(),
+                    (Some(super::Time::Text(text)), _) => {
+                        let formatted = self.format_time(entry.time.as_ref())?;
+                        time = Some((text.as_str(), formatted.clone()));
+                        formatted
+                    }
+                    _ => self.format_time(entry.time.as_ref())?,
+                };
+                let mut row = String::with_capacity(1024);
+                row.push_str("{\"id\":\"");
+                row.push_str(&hex::encode(id));
+                row.push_str("\",\"metric\":");
+                push_json(&mut row, entry.metric.as_bytes()).map_err(failed)?;
+                row.push_str(",\"value\":");
+                row.push_str(&entry.value.to_string());
+                row.push_str(",\"time\":");
+                push_json(&mut row, formatted.as_bytes()).map_err(failed)?;
+                let tenant = self.config.shared_tables.then(|| ("tenant", entry.tenant.as_deref().map(str::as_bytes)));
+                let columns =
+                    columns.iter().map(|(column, value)| (*column, value.as_ref().map(|value| value.as_bytes())));
+                for (column, value) in columns.chain(tenant) {
+                    row.push_str(",\"");
+                    row.push_str(column);
+                    row.push_str("\":");
+                    match value {
+                        Some(value) => push_json(&mut row, value).map_err(failed)?,
+                        None => row.push_str("null"),
                     }
                 }
+                row.push('}');
+                rows.push(row);
             }
             self.insert(&table, &sql, &rows, false).await?;
         }
