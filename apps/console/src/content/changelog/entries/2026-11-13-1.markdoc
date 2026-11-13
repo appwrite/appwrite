@@ -10,7 +10,7 @@ You can now require every user in a project to choose a new password with [force
 
 Click **Reset all passwords** under **Auth** > **Settings** > **Security actions** in the Appwrite Console, or call the Project service's `deletePasswords` method with an API key that has the `users.write` scope. From then on, an email and password sign-in with an older password fails with `user_password_reset_required` until the user sets a new password through password recovery. Existing sessions stay active, so pair it with **Force sign out** when sessions may be compromised too.
 
-The reset applies instantly at any project size. Users without a password, users who sign up afterwards, and API keys are not affected. It ships in the next self-hosted Appwrite release.
+The reset applies instantly at any project size. Users without a password, users who sign up afterwards, and API keys are not affected. 
 
 {% arrow_link href="/blog/post/announcing-force-password-reset" %}
 Read the announcement
