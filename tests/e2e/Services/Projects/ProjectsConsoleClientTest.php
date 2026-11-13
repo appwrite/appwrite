@@ -2590,7 +2590,7 @@ final class ProjectsConsoleClientTest extends Scope
         $id = $response['body']['$id'];
 
         $auth = require(__DIR__ . '/../../../../app/config/auth.php');
-        unset($auth['passkey']); // Not exposed in these older response formats
+        unset($auth['passkey'], $auth['ldap']); // Not exposed in these older response formats
         $originalEmail = uniqid() . 'user@localhost.test';
         $originalPassword = 'password';
         $originalName = 'User Name';
@@ -2617,9 +2617,9 @@ final class ProjectsConsoleClientTest extends Scope
 
         $session = $response['cookies']['a_session_' . $id];
 
-        // LDAP is listed for every response format, older ones included (appwrite#15594),
-        // and disabled on a fresh project: with no directory configured it cannot
-        // authenticate anyone.
+        // LDAP is hidden from older response formats, whose SDKs reject auth
+        // method IDs outside their enum, and disabled on a fresh project: with
+        // no directory configured it cannot authenticate anyone.
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2627,7 +2627,7 @@ final class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse($response['body']['authLDAP']);
+        $this->assertArrayNotHasKey('authLDAP', $response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -2777,10 +2777,6 @@ final class ProjectsConsoleClientTest extends Scope
         // Cleanup
 
         foreach ($auth as $index => $method) {
-            if ($index === 'ldap') {
-                continue; // It was off to begin with, and enabling it needs a directory.
-            }
-
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/' . $index, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],

@@ -8,6 +8,7 @@ use Appwrite\Models\Project as GeneratedProject;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V28;
 use Appwrite\Utopia\Response\Filters\V29;
+use Appwrite\Utopia\Response\Filters\V30;
 use Appwrite\Utopia\Response\Model\Project as ProjectModel;
 use Appwrite\Utopia\Response\Model\Provider as ProviderModel;
 use Exception;
@@ -121,7 +122,8 @@ final class ResponseTest extends TestCase
         $this->response->setModel(new ProjectModel());
         $this->response->setModel(new ProviderModel());
 
-        // The generated PHP SDK sends a response format older than 2.3.0, so its responses pass through V29 and V28.
+        // The generated PHP SDK sends a response format older than 2.3.0, so its responses pass through V30, V29 and V28.
+        $this->response->addFilter(new V30());
         $this->response->addFilter(new V29());
         $this->response->addFilter(new V28());
 
@@ -158,11 +160,6 @@ final class ResponseTest extends TestCase
         // Match the JSON round trip performed by SDK clients. Empty objects on
         // the wire decode to associative arrays in the generated PHP SDK.
         $decoded = \json_decode(\json_encode($project, JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
-
-        // `ldap` is listed for every response format on purpose (appwrite#15594): SDKs generated
-        // before it reject the unknown ProjectAuthMethodId, which was accepted. This test is about
-        // the OAuth2 fields, so the vendored SDK hydrates the project without it.
-        $decoded['authMethods'] = \array_values(\array_filter($decoded['authMethods'], fn (array $method): bool => $method['$id'] !== 'ldap'));
         $generated = GeneratedProject::from($decoded);
 
         foreach ([
