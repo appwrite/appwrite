@@ -273,7 +273,7 @@ export function buildAppwriteLlmsTxt(
   const sections: LlmsSection[] = [
     {
       heading: 'MCP Server',
-      intro: `One remote server at ${MCP_SERVER_URL}. Add it to Cursor, Claude, Codex, ChatGPT, and other MCP clients so the agent can call the Appwrite API and search the docs. Server name: appwrite. To search the docs without signing in, use the docs MCP server at ${MCP_DOCS_SERVER_URL}.`,
+      intro: `One remote server at ${MCP_SERVER_URL}. Add it to Cursor, Claude, Codex, ChatGPT, and other MCP clients so the agent can call the Appwrite API and search the docs. Server name: appwrite. Add only this server; an agent that cannot sign in can search the docs through the docs MCP server at ${MCP_DOCS_SERVER_URL}.`,
       links: [
         {
           title: 'Agent setup',
