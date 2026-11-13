@@ -164,6 +164,7 @@ export const heCatalog: EnCatalog = {
           network: 'רשת',
           analytics: 'אנליטיקה',
           firewall: 'Firewall',
+          mcp1: 'MCP1',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,
@@ -177,7 +178,6 @@ export const heCatalog: EnCatalog = {
           roadmap: 'מפת דרכים',
           sourceCode: 'קוד מקור',
           arena: 'Arena',
-          mcp1: 'MCP1',
           techNews: 'חדשות טכנולוגיה',
         },
         programs: {

@@ -1,4 +1,4 @@
-import { Settings2, ShieldCheck } from 'lucide-react'
+import { ArrowUpRight, Settings2, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Accordion,
@@ -52,6 +52,8 @@ type FooterLink = {
   external?: boolean
   analyticsAction?: AnalyticsActionId
   isNew?: boolean
+  /** Shows an arrow marking a link that opens another site in a new window. */
+  arrow?: boolean
 }
 
 type ExpandedFooterGroup = {
@@ -230,6 +232,12 @@ function getExpandedFooterGroups(
             ),
           ]
         : []),
+      {
+        label: footerCopy.expanded.products.mcp1,
+        href: 'https://mcp1.com/?utm_source=appwrite&utm_medium=footer',
+        external: true,
+        arrow: true,
+      },
     ],
   },
   {
@@ -249,7 +257,6 @@ function getExpandedFooterGroups(
       { label: footerCopy.expanded.learn.roadmap, href: 'https://github.com/appwrite/appwrite/projects', external: true }, // pragma: allowlist secret
       { label: footerCopy.expanded.learn.sourceCode, href: 'https://github.com/appwrite/appwrite', external: true }, // pragma: allowlist secret
       { label: footerCopy.expanded.learn.arena, href: 'https://arena.appwrite.io/', external: true }, // pragma: allowlist secret
-      { label: footerCopy.expanded.learn.mcp1, href: 'https://mcp1.com/?utm_source=appwrite&utm_medium=footer', external: true },
       { label: footerCopy.expanded.learn.techNews, href: 'https://refetch.io/', external: true },
     ],
   },
@@ -381,6 +388,12 @@ function FooterGroupLinks({
             className="link-unstyled inline-flex items-center gap-1.5 text-[13px] leading-5 text-muted-foreground transition-colors hover:text-foreground"
           >
             {link.label}
+            {link.arrow ? (
+              <ArrowUpRight
+                className="-ms-0.5 size-3 shrink-0 rtl:-scale-x-100"
+                aria-hidden
+              />
+            ) : null}
             {link.isNew ? <ProductNewBadge label={newLabel} /> : null}
           </a>
         </li>
