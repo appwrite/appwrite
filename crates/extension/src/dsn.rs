@@ -303,8 +303,7 @@ impl Dsn {
     /// `getParam(string $key, string $default = ''): string`.
     #[php(defaults(default = "\"\""))]
     pub fn get_param(&self, key: PhpString<'_>, default: PhpString<'_>) -> PhpResult<Param<'_>> {
-        let key = text(key.bytes(), MALFORMED).unwrap_or_default();
-        Ok(match self.dsn.param(key).map_err(thrown)? {
+        Ok(match self.dsn.param(key.bytes()).map_err(thrown)? {
             Some(value) => Param::Found(value),
             None => Param::Default(default.0.into_owned()),
         })
