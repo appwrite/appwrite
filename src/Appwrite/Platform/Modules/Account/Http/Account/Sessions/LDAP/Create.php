@@ -3,12 +3,14 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\LDAP;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Auth\AuthDevice;
 use Appwrite\Auth\LDAP\Client;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
@@ -108,6 +110,8 @@ class Create extends Base
             ->inject('mqtt')
             ->inject('queueForRealtime')
             ->inject('publicHostname')
+            ->inject('authDevice')
+            ->inject('publisherForDeletes')
             ->callback($this->action(...));
     }
 
@@ -134,6 +138,8 @@ class Create extends Base
         Mqtt $mqtt,
         Realtime $queueForRealtime,
         PublicHostname $publicHostname,
+        ?Document $authDevice,
+        DeletePublisher $publisherForDeletes,
     ): void {
         $ldap = $project->getAttribute('ldap', []);
 
@@ -149,6 +155,10 @@ class Create extends Base
 
         $entry = (new Client($publicHostname, $ldap))->authenticate($username, $password);
 
+        // A browser on an account switching device may already be signed in. Signing in adds
+        // the directory's user to the device; the entry is never linked to whoever is signed in.
+        $user->exchangeArray([]);
+
         // The directory is the project's own authority on who its users are, so the address
         // it returns is trusted the way a provider's attested email is for OAuth2.
         [$newUser, $newTarget] = $this->resolveUser($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], true, $entry['name'], $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime);
@@ -160,9 +170,11 @@ class Create extends Base
             throw new Exception(Exception::USER_BLOCKED);
         }
 
-        $this->upsertIdentity($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], [], ['providerEmail' => $entry['email']], $dbForProject, $authorization, $newUser, $newTarget);
+        // The account follows the directory first, so the identity only records an address
+        // the account actually moved to.
+        $emailFollowsDirectory = $this->refresh($user, $entry, $dbForProject, $project, $plan, $authorization);
 
-        $this->refresh($user, $entry, $dbForProject, $project, $plan, $authorization);
+        $this->upsertIdentity($user, SESSION_PROVIDER_LDAP, $entry['id'], $entry['email'], [], $emailFollowsDirectory ? ['providerEmail' => $entry['email']] : [], $dbForProject, $authorization, $newUser, $newTarget);
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $secret = $proofForToken->generate();
@@ -172,6 +184,9 @@ class Create extends Base
                 '$id' => Id::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
+                // The account switching device the session joins, when the browser holds one
+                'deviceId' => $authDevice?->getId() ?? '',
+                'deviceInternalId' => $authDevice?->getSequence() ?? '',
                 'provider' => SESSION_PROVIDER_LDAP,
                 'providerUid' => $entry['id'],
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
@@ -224,11 +239,19 @@ class Create extends Base
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
+        // The session joins the account switching device and becomes its active one, before the
+        // response goes out so the device reads consistently on the client's next request
+        if ($authDevice !== null) {
+            $authDevice = AuthDevice::attach($dbForProject, $authorization, $proofForToken, $authDevice, $session, $publisherForDeletes, $project, $mqtt);
+            AuthDevice::refreshCookie($request, $response, $project, $authDevice, $protocol, $domainVerification, $cookieDomain);
+        }
+
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
+            ->setAttribute('userName', $user->getAttribute('name', ''))
             ->setAttribute('secret', $encoded)
         ;
 
@@ -251,11 +274,15 @@ class Create extends Base
     /**
      * Keep the account in step with the directory entry it was created from: the
      * directory is the authority on the user's name, email and phone, so a change
-     * there is applied on the next sign-in. Mutates `$user` in place.
+     * there is applied on the next sign-in. A change another account blocks, because it
+     * already holds the address or number, is skipped and the user still signs in:
+     * refusing would lock them out over someone else's account and tell the caller
+     * that the address has one. Mutates `$user` in place.
      *
      * @param array{id: string, dn: string, email: string, name: string, phone: string} $entry
+     * @return bool whether the account's email is the directory's
      */
-    private function refresh(User $user, array $entry, Database $dbForProject, Document $project, array $plan, Authorization $authorization): void
+    private function refresh(User $user, array $entry, Database $dbForProject, Document $project, array $plan, Authorization $authorization): bool
     {
         if ($entry['name'] !== '' && $entry['name'] !== $user->getAttribute('name')) {
             $user->setAttribute('name', $entry['name']);
@@ -264,31 +291,38 @@ class Create extends Base
             ]));
         }
 
-        if ($entry['email'] !== '' && $entry['email'] !== $user->getAttribute('email')) {
-            $this->refreshEmail($user, $entry['email'], $dbForProject, $project, $plan, $authorization);
-        }
+        $emailFollowsDirectory = $entry['email'] === '' || $this->refreshEmail($user, $entry['email'], $dbForProject, $project, $plan, $authorization);
 
         // A number the directory holds in another format cannot be messaged, so it is left alone
         if ($entry['phone'] !== '' && $entry['phone'] !== $user->getAttribute('phone') && (new Phone())->isValid($entry['phone'])) {
             $this->refreshPhone($user, $entry['phone'], $dbForProject, $authorization);
         }
+
+        return $emailFollowsDirectory;
     }
 
     /**
      * Move the account to the address the directory now holds, the way updateEmail does
      * for the user: the email target follows it, and tokens and challenges proving the
-     * old address are dropped. Another account already using the address is a conflict.
+     * old address are dropped. Returns false, changing nothing, when another account
+     * already uses the address.
      */
-    private function refreshEmail(User $user, string $providerEmail, Database $dbForProject, Document $project, array $plan, Authorization $authorization): void
+    private function refreshEmail(User $user, string $providerEmail, Database $dbForProject, Document $project, array $plan, Authorization $authorization): bool
     {
         [$email, $emails, $emailMetadata, $canonicalize] = $this->parseEmail($providerEmail, true, $project, $plan);
+
+        // Already the account's address, in the form it stores it (canonical when the
+        // project canonicalizes emails)
+        if (\in_array($user->getAttribute('email'), $emails, true)) {
+            return true;
+        }
 
         $userWithMatchingEmail = $dbForProject->find('users', [
             Query::equal('email', $emails),
             Query::notEqual('$id', $user->getId()),
         ]);
         if (!empty($userWithMatchingEmail)) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            return false;
         }
 
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
@@ -296,14 +330,14 @@ class Create extends Base
             Query::notEqual('userInternalId', $user->getSequence()),
         ]);
         if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            return false;
         }
 
         $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$email]),
         ]));
         if (!$target->isEmpty() && $target->getAttribute('userInternalId') !== $user->getSequence()) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            return false;
         }
 
         $this->assertEmailPolicy($emailMetadata, $email, $canonicalize, $project, $plan);
@@ -373,17 +407,21 @@ class Create extends Base
                 return $updated;
             });
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            // Another account took the address since the checks above
+            return false;
         }
 
         $user->setAttributes($updated->getArrayCopy());
         $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        return true;
     }
 
     /**
      * Move the account to the number the directory now holds, the way updatePhone does
      * for the user. The number is not verified: the directory vouches for who the user
-     * is, not for who answers the phone.
+     * is, not for who answers the phone. Nothing changes when another account already
+     * uses the number.
      */
     private function refreshPhone(User $user, string $phone, Database $dbForProject, Authorization $authorization): void
     {
@@ -391,7 +429,7 @@ class Create extends Base
             Query::equal('identifier', [$phone]),
         ]));
         if (!$target->isEmpty() && $target->getAttribute('userInternalId') !== $user->getSequence()) {
-            throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
+            return;
         }
 
         try {
@@ -447,7 +485,8 @@ class Create extends Base
                 return $updated;
             });
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
+            // Another account took the number since the check above
+            return;
         }
 
         $user->setAttributes($updated->getArrayCopy());

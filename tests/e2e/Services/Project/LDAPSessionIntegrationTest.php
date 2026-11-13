@@ -464,6 +464,109 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame('alice@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
     }
 
+    public function testAccountKeepsItsAddressWhenTheDirectoryOneIsTaken(): void
+    {
+        // Another account already holds the address the directory now lists. The user
+        // still signs in and keeps their address: refusing would lock them out over
+        // someone else's account and tell the caller that the address has one.
+        $other = $this->client->call(Client::METHOD_POST, '/users', $this->serverHeaders(), [
+            'userId' => Id::unique(),
+            'email' => 'alice.alt@appwrite.test',
+            'password' => 'otherpassword',
+        ]);
+
+        $this->assertSame(201, $other['headers']['status-code']);
+
+        $this->configureDirectory([
+            'emailAttribute' => 'description',
+        ]);
+
+        $response = $this->signIn('alice', 'alicepass');
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(self::$aliceId, $response['body']['userId']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId, $this->serverHeaders());
+
+        $this->assertSame('alice@appwrite.test', $user['body']['email']);
+
+        // The identity records the address the account holds, not the one it could not take.
+        $identities = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId . '/identities', $this->serverHeaders());
+
+        $this->assertSame(1, $identities['body']['total']);
+        $this->assertSame('alice@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/users/' . $other['body']['$id'], $this->serverHeaders());
+
+        $this->assertSame(204, $deleted['headers']['status-code']);
+    }
+
+    public function testSignInJoinsAccountSwitchingDevice(): void
+    {
+        $this->configureDirectory();
+
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $sessionKey = 'a_session_' . $projectId;
+
+        $device = $this->client->call(Client::METHOD_POST, '/account/devices', $this->clientHeaders());
+
+        $this->assertSame(201, $device['headers']['status-code']);
+
+        $deviceCookie = $device['cookies'][$deviceKey];
+
+        /**
+         * Test for SUCCESS - the session joins the device and becomes its active one
+         */
+        $alice = $this->signIn('alice', 'alicepass', headers: ['cookie' => $deviceKey . '=' . $deviceCookie]);
+
+        $this->assertSame(201, $alice['headers']['status-code']);
+        $this->assertSame(self::$aliceId, $alice['body']['userId']);
+        $this->assertSame('Alice Smith', $alice['body']['userName']);
+
+        // Joining a session rotates the device secret
+        $deviceCookie = $alice['cookies'][$deviceKey];
+
+        $current = $this->getDevice($deviceKey . '=' . $deviceCookie);
+
+        $this->assertSame(200, $current['headers']['status-code']);
+        $this->assertCount(1, $current['body']['sessions']);
+        $this->assertSame($alice['body']['$id'], $current['body']['activeSessionId']);
+
+        /**
+         * Test for SUCCESS - with Alice signed in, another directory user signs in on the
+         * same device: their own account joins it, and Alice's is not linked to their entry
+         */
+        $bob = $this->signIn('bob', 'bobpass', headers: ['cookie' => $sessionKey . '=' . $alice['cookies'][$sessionKey] . '; ' . $deviceKey . '=' . $deviceCookie]);
+
+        $this->assertSame(201, $bob['headers']['status-code']);
+        $this->assertNotSame(self::$aliceId, $bob['body']['userId']);
+        $this->assertSame('Bob Jones', $bob['body']['userName']);
+
+        $deviceCookie = $bob['cookies'][$deviceKey];
+
+        $current = $this->getDevice($deviceKey . '=' . $deviceCookie);
+
+        $this->assertCount(2, $current['body']['sessions']);
+        $this->assertSame($bob['body']['$id'], $current['body']['activeSessionId']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId, $this->serverHeaders());
+
+        $this->assertSame('Alice Smith', $user['body']['name']);
+        $this->assertSame('alice@appwrite.test', $user['body']['email']);
+
+        $identities = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId . '/identities', $this->serverHeaders());
+
+        $this->assertSame(1, $identities['body']['total']);
+        $this->assertSame(self::$aliceUid, $identities['body']['identities'][0]['providerUid']);
+
+        $identities = $this->client->call(Client::METHOD_GET, '/users/' . $bob['body']['userId'] . '/identities', $this->serverHeaders());
+
+        $this->assertSame(1, $identities['body']['total']);
+        $this->assertSame('ldap', $identities['body']['identities'][0]['provider']);
+        $this->assertSame('bob@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
+    }
+
     public function testEmailPolicyApplies(): void
     {
         $this->configureDirectory();
@@ -780,12 +883,19 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->fail('The project does not list the ldap auth method.');
     }
 
-    private function signIn(string $username, string $password, array $params = []): array
+    private function signIn(string $username, string $password, array $params = [], array $headers = []): array
     {
-        return $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', $this->clientHeaders(), \array_merge([
+        return $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', \array_merge($this->clientHeaders(), $headers), \array_merge([
             'username' => $username,
             'password' => $password,
         ], $params));
+    }
+
+    private function getDevice(string $cookie): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/account/devices/current', \array_merge($this->clientHeaders(), [
+            'cookie' => $cookie,
+        ]));
     }
 
     /**
