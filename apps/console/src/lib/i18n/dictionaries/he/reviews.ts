@@ -193,4 +193,20 @@ export const heReviewsDictionary: Record<string, string> = {
   'Repositories added to the installation later are not included.':
     'מאגרים שיתווספו להתקנה בהמשך לא ייכללו.',
   'Review pull requests in {name}': 'סקירת Pull requests ב-{name}',
+
+  // Review strength
+  Strength: 'עוצמה',
+  Basic: 'בסיסית',
+  Normal: 'רגילה',
+  Expert: 'מומחה',
+  'Cheaper models that read the code without running it':
+    'מודלים זולים יותר שקוראים את הקוד בלי להריץ אותו',
+  'The default models, running commands in a sandbox':
+    'מודלי ברירת המחדל, עם הרצת פקודות בסביבה מבודדת',
+  'Stronger models that split the work across subagents':
+    'מודלים חזקים יותר שמחלקים את העבודה בין תת-סוכנים',
+  '{credits} credits per review': '{credits} קרדיטים לכל סקירה',
+  'Review strength updated': 'עוצמת הסקירה עודכנה',
+  'Failed to update review strength': 'עדכון עוצמת הסקירה נכשל',
+  'Review strength for {name}': 'עוצמת הסקירה עבור {name}',
 }

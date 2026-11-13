@@ -13,6 +13,7 @@ import type {
   ReviewList,
   ReviewRepository,
   ReviewRepositoryList,
+  ReviewStrength,
 } from './models'
 
 export class Reviews {
@@ -117,21 +118,52 @@ export class Reviews {
    *
    * @param {string} params.installationId - Installation ID.
    * @param {string} params.providerRepositoryId - GitHub repository ID.
+   * @param {ReviewStrength} params.strength - How hard pull requests are reviewed. Defaults to normal.
    * @throws {AppwriteException}
    * @returns {Promise<ReviewRepository>}
    */
   createRepository(params: {
     installationId: string
     providerRepositoryId: string
+    strength?: ReviewStrength
   }): Promise<ReviewRepository> {
+    const payload: Record<string, unknown> = {
+      installationId: params.installationId,
+      providerRepositoryId: params.providerRepositoryId,
+    }
+    if (typeof params.strength !== 'undefined') {
+      payload['strength'] = params.strength
+    }
     return this.client.call(
       'post',
       this.uri('/reviews/repositories'),
       { ...this.headers(), 'content-type': 'application/json' },
-      {
-        installationId: params.installationId,
-        providerRepositoryId: params.providerRepositoryId,
-      },
+      payload,
+    )
+  }
+
+  /**
+   * Change how hard a repository's pull requests are reviewed. Reviews already
+   * queued keep the strength they were queued at.
+   *
+   * @param {string} params.repositoryId - Repository ID.
+   * @param {ReviewStrength} params.strength - How hard pull requests are reviewed.
+   * @throws {AppwriteException}
+   * @returns {Promise<ReviewRepository>}
+   */
+  updateRepositoryStrength(params: {
+    repositoryId: string
+    strength: ReviewStrength
+  }): Promise<ReviewRepository> {
+    const apiPath = '/reviews/repositories/{repositoryId}/strength'.replace(
+      '{repositoryId}',
+      encodeURIComponent(params.repositoryId),
+    )
+    return this.client.call(
+      'patch',
+      this.uri(apiPath),
+      { ...this.headers(), 'content-type': 'application/json' },
+      { strength: params.strength },
     )
   }
 

@@ -19,6 +19,7 @@ final class Review extends Base
         public readonly int $pullNumber,
         public readonly string $headSha,
         public readonly array $trigger,
+        public readonly string $strength,
     ) {
     }
 
@@ -32,6 +33,7 @@ final class Review extends Base
             'pullNumber' => $this->pullNumber,
             'headSha' => $this->headSha,
             'trigger' => $this->trigger,
+            'strength' => $this->strength,
         ];
     }
 
@@ -44,6 +46,7 @@ final class Review extends Base
             pullNumber: (int) ($data['pullNumber'] ?? 0),
             headSha: $data['headSha'] ?? '',
             trigger: $data['trigger'] ?? [],
+            strength: $data['strength'] ?? 'normal',
         );
     }
 }

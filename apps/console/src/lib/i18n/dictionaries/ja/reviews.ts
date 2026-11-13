@@ -195,4 +195,20 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Repositories added to the installation later are not included.':
     '後からインストールに追加されたリポジトリは含まれません。',
   'Review pull requests in {name}': '{name} のプルリクエストをレビュー',
+
+  // Review strength
+  Strength: '強度',
+  Basic: 'ベーシック',
+  Normal: 'ノーマル',
+  Expert: 'エキスパート',
+  'Cheaper models that read the code without running it':
+    'コードを実行せずに読む低コストのモデル',
+  'The default models, running commands in a sandbox':
+    '標準のモデル。サンドボックスでコマンドを実行します',
+  'Stronger models that split the work across subagents':
+    '作業をサブエージェントに分担する高性能なモデル',
+  '{credits} credits per review': 'レビューごとに {credits} クレジット',
+  'Review strength updated': 'レビュー強度を更新しました',
+  'Failed to update review strength': 'レビュー強度を更新できませんでした',
+  'Review strength for {name}': '{name} のレビュー強度',
 }

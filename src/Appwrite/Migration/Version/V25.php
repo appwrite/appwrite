@@ -178,6 +178,17 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'repositories':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'strength');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"strength\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'webhooks':
                     // The encrypted password is about 1.4x its plaintext plus a 121-char wrapper, so the 255-char column
                     // only fit passwords of up to about 99 chars, well below the 2048 the API accepts.
@@ -573,7 +584,17 @@ class V25 extends Migration
                         $this->dbForProject->setTenant(null);
                     }
                     try {
+                        // An install already on 2.7 has the collection, and gets the attributes
+                        // added to it since created on their own.
+                        $existed = $this->dbForProject->findCollection($id) !== null;
                         $this->createCollection($id);
+                        if ($existed && $id === 'reviews') {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, 'strength');
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"strength\" in collection {$id}: {$th->getMessage()}");
+                            }
+                        }
                     } finally {
                         $this->dbForProject->setTenant($tenant);
                     }

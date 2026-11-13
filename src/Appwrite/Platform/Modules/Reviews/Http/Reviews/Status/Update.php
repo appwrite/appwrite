@@ -135,16 +135,18 @@ class Update extends Base
             $dbForProject->updateDocument('reviews', $review->getId(), $update);
         }));
 
-        // Completed reviews are what a project is billed for; skipped ones are not counted. The model
-        // tokens any review spent are metered separately, as the service reports them.
-        $metric = match ($status) {
-            'completed' => METRIC_REVIEWS,
-            'failed' => METRIC_REVIEWS_FAILED,
-            default => null,
-        };
-        if ($metric !== null) {
-            $this->publishUsage($project, $this->getRepositoryUsage($review)->addMetric($metric, 1), $publisherForUsage);
+        // Completed reviews are what a project is billed for, at the rate of the strength each ran at;
+        // skipped ones are not counted. The model tokens any review spent are metered separately, as
+        // the service reports them.
+        $usage = $this->getRepositoryUsage($review);
+        if ($status === 'completed') {
+            $usage
+                ->addMetric(METRIC_REVIEWS, 1)
+                ->addMetric(\str_replace('{strength}', $review->getAttribute('strength', 'normal'), METRIC_REVIEWS_STRENGTH), 1);
+        } elseif ($status === 'failed') {
+            $usage->addMetric(METRIC_REVIEWS_FAILED, 1);
         }
+        $this->publishUsage($project, $usage, $publisherForUsage);
 
         $response->noContent();
     }
