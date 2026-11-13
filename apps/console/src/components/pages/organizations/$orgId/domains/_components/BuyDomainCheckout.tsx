@@ -329,7 +329,8 @@ export function BuyDomainCheckout({
       await queryClient.refetchQueries({
         queryKey: ['domains', 'organization', orgId],
       })
-      toast.success(`${selection.domain} ${t('registered successfully')}`)
+      // A caller that takes the purchase onward confirms it on its next screen:
+      // a toast here would cover that screen's footer buttons.
       if (onPurchaseSuccess) {
         onPurchaseSuccess({
           domainId: result.domainId,
@@ -337,6 +338,7 @@ export function BuyDomainCheckout({
         })
         return
       }
+      toast.success(`${selection.domain} ${t('registered successfully')}`)
       navigate({
         to: '/organizations/$orgId/domains/$domainId',
         params: { orgId, domainId: result.domainId },

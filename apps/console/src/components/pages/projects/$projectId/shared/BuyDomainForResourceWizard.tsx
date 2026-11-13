@@ -295,6 +295,15 @@ function AssignRuleStage({
       }
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+        <Alert
+          variant="default"
+          className="border-emerald-500/30 bg-emerald-500/5"
+        >
+          <AlertDescription className="text-[13px] text-emerald-700 dark:text-emerald-400">
+            {t('Payment confirmed. Your domain is registered.')}
+          </AlertDescription>
+        </Alert>
+
         <div>
           <h2 className="text-[15px] font-semibold text-foreground">
             {t('Assign a domain rule')}

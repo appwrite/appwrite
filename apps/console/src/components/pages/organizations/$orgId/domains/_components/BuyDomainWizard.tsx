@@ -87,7 +87,6 @@ export function BuyDomainWizard({
           await queryClient.refetchQueries({
             queryKey: ['domains', 'organization', orgId],
           })
-          toast.success(t('Payment confirmed'))
           if (onPurchaseComplete) {
             let domain = routeSearch.domain?.trim().toLowerCase() ?? ''
             if (!domain) {
@@ -97,6 +96,7 @@ export function BuyDomainWizard({
             onPurchaseComplete({ domainId: result.domainId, domain })
             return
           }
+          toast.success(t('Payment confirmed'))
           navigate({
             to: '/organizations/$orgId/domains/$domainId',
             params: { orgId, domainId: result.domainId },
