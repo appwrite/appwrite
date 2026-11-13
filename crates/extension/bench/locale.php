@@ -7,6 +7,14 @@ require __DIR__ . '/../../../vendor/autoload.php';
 
 use Utopia\Locale\Locale;
 
+// A run meant for the extension that gets the PHP class would time PHP against PHP.
+$internal = (new ReflectionClass(Locale::class))->isInternal();
+$requested = in_array('locale', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
+if ($internal !== $requested) {
+    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' locale, but the other implementation loaded' . PHP_EOL);
+    exit(1);
+}
+
 // What app/init/locales.php does at boot.
 $translations = __DIR__ . '/../../../app/config/locale/translations';
 $files = glob("{$translations}/*.json");

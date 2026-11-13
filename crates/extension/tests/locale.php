@@ -313,6 +313,11 @@ $waivers = [
 ];
 Locale::$exceptions = true;
 $waivers['non-UTF-8 key message'] = outcome(fn () => (new Locale('en-US'))->getText("\xff"));
+$waivers['non-UTF-8 text'] = outcome(function () {
+    Locale::setLanguageFromArray('binary', ['k' => "a\xffb"]);
+
+    return bin2hex((new Locale('binary'))->getText('k'));
+});
 $expected = $internal ? [
     'array values' => ['throws' => 'Exception', 'message' => 'Translation "n" is not a string.'],
     'non-UTF-8 key' => ['value' => true],
@@ -320,6 +325,7 @@ $expected = $internal ? [
     'unknown default translations' => ['throws' => 'TypeError', 'message' => 'Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, null returned'],
     'serialize' => ['throws' => 'Exception', 'message' => "Serialization of 'Utopia\\Locale\\Locale' is not allowed"],
     'non-UTF-8 key message' => ['throws' => 'Exception', 'message' => "Key named \"\u{FFFD}\" not found"],
+    'non-UTF-8 text' => ['value' => '61efbfbd62'],
 ] : $waivers;
 foreach ($expected as $name => $outcome) {
     if ($waivers[$name] !== $outcome) {
