@@ -15,6 +15,8 @@ export const MARKETING_PAGE_PATHS = [
   '/baa',
   '/company',
   '/startups',
+  '/agencies',
+  '/innovation-teams',
   '/education',
   '/for-agents',
   '/partners',

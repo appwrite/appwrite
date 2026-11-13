@@ -40,6 +40,26 @@ const MARKDOWN_PAGES: Array<{
     path: '/integrations/ai-openai.md',
     contains: [/^---\n/, /layout: integration/],
   },
+  {
+    name: 'pricing',
+    path: '/pricing.md',
+    contains: [/^# Appwrite Cloud pricing/, /### Pro: From \$25\/month/],
+  },
+  {
+    name: 'marketing page twin',
+    path: '/affiliates.md',
+    contains: [
+      /^---\ntitle: "Affiliates"\n/,
+      /canonical: "https:\/\/appwrite\.io\/affiliates"/,
+      /\n# Earn credits by referring developers\n/,
+      /\]\(https:\/\/appwrite\.io\/sign-up/,
+    ],
+  },
+  {
+    name: 'product page twin',
+    path: '/products/auth.md',
+    contains: [/^---\n/, /\n# Authentication that ships with your product\n/],
+  },
 ]
 
 test.describe('markdown exports (read-only)', () => {
@@ -74,9 +94,30 @@ test.describe('markdown exports (read-only)', () => {
     expect(body).toContain('## Documentation')
     expect(body).toContain('/docs/llms.txt')
     expect(body).toContain('/setup.md')
-    expect(body).toContain('/blog.md')
+    expect(body).toContain('/blog/llms.txt')
     // Hub stays curated; it must not dump every docs page.
     expect(body.length).toBeLessThan(100_000)
+  })
+
+  test('homepage negotiates markdown and advertises agent links', async ({
+    request,
+  }) => {
+    const markdown = await request.get('/', {
+      headers: { Accept: 'text/markdown' },
+    })
+    expect(markdown.status()).toBe(200)
+    expect(markdown.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    expect(markdown.headers()['vary']).toContain('Accept')
+    expect(await markdown.text()).toMatch(/^---\ntitle: "Appwrite"\n[\s\S]*\n---\n\n# Appwrite/)
+
+    const html = await request.get('/', { headers: { Accept: 'text/html' } })
+    expect(html.headers()['content-type']).toMatch(/text\/html/)
+    expect(html.headers()['vary']).toContain('Accept')
+    expect(html.headers()['link']).toContain('rel="api-catalog"')
+
+    const index = await request.get('/index.md')
+    expect(index.status()).toBe(200)
+    expect(index.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
   })
 
   test('setup.md serves MCP install instructions', async ({ request }) => {
@@ -126,18 +167,23 @@ test.describe('markdown exports (read-only)', () => {
     expect(mcpBody.name).toBe('io.appwrite/mcp')
     expect(mcpBody.remotes?.[0]?.url).toContain('mcp.appwrite.io')
 
-    const catalog = await request.get('/.well-known/ai-catalog.json')
-    expect(catalog.status()).toBe(200)
-    expect(catalog.headers()['content-type']).toMatch(
-      /application\/(ai-catalog\+json|json)/,
-    )
-    const catalogBody = await catalog.json()
-    expect(catalogBody.entries?.[0]?.type).toBe(
-      'application/mcp-server-card+json',
-    )
-    expect(catalogBody.entries?.[0]?.url).toContain(
-      '/.well-known/mcp/server-card.json',
-    )
+    for (const path of [
+      '/.well-known/ard.json',
+      '/.well-known/ai-catalog.json',
+    ]) {
+      const catalog = await request.get(path)
+      expect(catalog.status()).toBe(200)
+      expect(catalog.headers()['content-type']).toMatch(JSON_CONTENT_TYPE)
+      expect(catalog.headers()['access-control-allow-origin']).toBe('*')
+      const catalogBody = await catalog.json()
+      expect(catalogBody.host?.displayName).toBe('Appwrite')
+      const entry = catalogBody.entries?.[0]
+      expect(entry?.identifier).toBe('urn:air:appwrite.io:mcp:appwrite')
+      expect(entry?.displayName).toBeTruthy()
+      expect(entry?.type).toBe('application/mcp-server-card+json')
+      expect(entry?.url).toContain('/.well-known/mcp/server-card.json')
+      expect(entry?.data).toBeUndefined()
+    }
 
     const skills = await request.get('/.well-known/agent-skills/index.json')
     expect(skills.status()).toBe(200)
@@ -251,5 +297,101 @@ test.describe('markdown exports (read-only)', () => {
   test('missing markdown page returns 404', async ({ request }) => {
     const response = await request.get('/blog/post/this-post-does-not-exist.md')
     expect(response.status()).toBe(404)
+  })
+
+  test('404 asked for as markdown gets a markdown body', async ({ request }) => {
+    const response = await request.get('/this-page-does-not-exist', {
+      headers: { Accept: 'text/markdown' },
+    })
+    expect(response.status()).toBe(404)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    const body = await response.text()
+    expect(body).toMatch(/^# Page not found\n/)
+    expect(body).toContain('/llms.txt')
+  })
+
+  test('auth.md explains how agents get credentials', async ({ request }) => {
+    const response = await request.get('/auth.md')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    const body = await response.text()
+    expect(body).toMatch(/^# Appwrite auth\.md\n/)
+    for (const section of [
+      '## Step 1 — Discover',
+      '## Step 2 — Pick a method',
+      '## Step 3 — Register',
+      '## Step 5 — Exchange',
+      '## Step 6 — Use the access_token',
+      '## Errors',
+      '## Revocation',
+    ]) {
+      expect(body, section).toContain(section)
+    }
+    expect(body).toContain(
+      'https://mcp.appwrite.io/.well-known/oauth-protected-resource',
+    )
+    expect(body).toContain('code_challenge_method=S256')
+  })
+
+  test('AI agents get markdown when they ask for HTML', async ({ request }) => {
+    for (const [userAgent, path, heading] of [
+      ['Mozilla/5.0 (compatible; ClaudeBot/1.0)', '/', /^---\ntitle: "Appwrite"/],
+      ['Mozilla/5.0 (compatible; ChatGPT-User/1.0)', '/company', /^---\ntitle: /],
+    ] as const) {
+      const response = await request.get(path, {
+        headers: { 'User-Agent': userAgent, Accept: 'text/html' },
+      })
+      expect(response.status(), path).toBe(200)
+      expect(response.headers()['content-type'], path).toMatch(
+        MARKDOWN_CONTENT_TYPE,
+      )
+      expect(response.headers()['vary'], path).toContain('User-Agent')
+      expect(await response.text(), path).toMatch(heading)
+    }
+
+    const browser = await request.get('/company', {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36',
+        Accept: 'text/html',
+      },
+    })
+    expect(browser.headers()['content-type']).toMatch(/text\/html/)
+  })
+
+  test('openapi.json declares OAuth 2.0 with named scopes', async ({
+    request,
+  }) => {
+    const response = await request.get('/openapi.json')
+    expect(response.status()).toBe(200)
+    const spec = await response.json()
+    const oauth2 = spec.components.securitySchemes.OAuth2
+    expect(oauth2.type).toBe('oauth2')
+    expect(oauth2.flows.authorizationCode.authorizationUrl).toMatch(
+      /\/oauth2\/console\/authorize$/,
+    )
+    expect(oauth2.flows.authorizationCode.scopes['project:rows.read']).toBe(
+      'Read rows in a project.',
+    )
+    const listRows = Object.values(spec.paths)
+      .flatMap((path) => Object.values(path as Record<string, unknown>))
+      .find(
+        (operation) =>
+          (operation as { operationId?: string }).operationId ===
+          'tablesDBListRows',
+      ) as { security: Array<Record<string, string[]>> }
+    expect(listRows.security).toContainEqual({
+      Project: [],
+      OAuth2: ['project:rows.read'],
+    })
+  })
+
+  test('blog llms.txt lists posts', async ({ request }) => {
+    const response = await request.get('/blog/llms.txt')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    const body = await response.text()
+    expect(body).toMatch(/^# Appwrite Blog\n/)
+    expect(body).toMatch(/\(https?:\/\/[^\s)]+\/blog\/post\/[^\s)]+\.md\)/)
   })
 })

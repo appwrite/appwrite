@@ -11,7 +11,11 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-use Utopia\Image\Image;
+use Utopia\Image\Blank;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
+use Utopia\Image\Path;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -42,7 +46,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-qr.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -61,25 +65,32 @@ class Get extends Action
 
     public function action(string $text, int $size, int $margin, bool $download, Response $response)
     {
-        $options = new QROptions([
+        $matrix = (new QRCode(new QROptions([
             'addQuietzone' => true,
             'quietzoneSize' => $margin,
-            'outputType' => QRCode::OUTPUT_IMAGICK,
-            'scale' => 15,
-        ]);
+        ])))->getMatrix($text);
 
-        $qrcode = new QRCode($options);
+        // One square of path for every dark module, drawn 15 pixels to a module
+        $modules = '';
+        foreach ($matrix->matrix(true) as $y => $row) {
+            foreach ($row as $x => $dark) {
+                $modules .= $dark ? "M{$x} {$y}h1v1h-1Z" : '';
+            }
+        }
+
+        $scale = 15;
+        $side = $matrix->size() * $scale;
+        $image = (new Canvas(new Blank($side, $side, '#ffffff')))
+            ->draw(new Path($modules, '#000000', scale: $scale))
+            ->apply(new Transform(width: $size, height: $size));
 
         if ($download) {
             $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
         }
 
-        $image = new Image($qrcode->render($text));
-        $image->crop((int) $size, (int) $size);
-
         $response
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
-            ->send($image->output('png', 90));
+            ->send($image->encode(Format::Png, 90));
     }
 }

@@ -1,0 +1,21 @@
+[package]
+name = "utopia-extension"
+description = "The utopia PHP extension: Utopia crates registered as the PHP classes of their Composer packages."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lib]
+name = "utopia"
+crate-type = ["cdylib"]
+
+[dependencies]
+ext-php-rs.workspace = true
+# Not the default `ravif`: libheif writes AVIF as ImageMagick does, and rav1e
+# would bring its thread pool (rayon) into a process that forks.
+php-std.workspace = true
+utopia-dsn.workspace = true
+utopia-image = { workspace = true, features = ["libwebp", "libheif"] }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Queue\Tests\E2E;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Queue\Broker\Redis;
 use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Connection\Redis as Connection;
@@ -231,6 +232,7 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
                 parent::__construct($host, $port);
             }
 
+            /** @return array<mixed>|string|null */
             #[\Override]
             public function get(string $key): array|string|null
             {
@@ -297,6 +299,48 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
 
         $this->assertSame(0, $this->processingSize(), 'the stranded claim is reclaimed by the sweep');
         $this->assertSame(1, $broker->getQueueSize($this->queue), 'the message is back on the queue');
+    }
+
+    /**
+     * A processing list left behind by a release without the sweep holds claims
+     * months old. The first sweep must park them, not run them all again.
+     */
+    public function testMaintainParksClaimsOlderThanReapMaxAge(): void
+    {
+        $broker = new Redis($this->connection, $this->connection, reapAfter: 0, reapMaxAge: 600);
+        $broker->publish($this->queue, ['n' => 1]);
+        $claimed = $broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
+        $this->backdate($claimed->getPid(), 3600);
+        $this->expire('.claims.*');
+
+        $broker->maintain();
+
+        $this->assertSame(0, $this->processingSize());
+        $this->assertSame(1, $this->deadSize(), 'the ancient claim is parked, not re-run');
+        $this->assertSame(0, $broker->getQueueSize($this->queue));
+    }
+
+    public function testMaintainParksClaimsPastReapMaxAttempts(): void
+    {
+        $broker = new Redis($this->connection, $this->connection, reapAfter: 0, reapMaxAttempts: 1);
+        $broker->publish($this->queue, ['n' => 1]);
+        $broker->receive($this->queue, 0);
+        $this->expire('.claims.*');
+
+        $broker->maintain();
+
+        $claimed = $broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
+        $this->assertSame(1, $claimed->getAttempts(), 'the first stranding is recovered');
+        $this->expire('.claims.*');
+        $this->expire('.reap-lock.*');
+
+        $broker->maintain();
+
+        $this->assertSame(0, $this->processingSize());
+        $this->assertSame(1, $this->deadSize(), 'the exhausted claim is parked, not looped');
+        $this->assertSame(0, $broker->getQueueSize($this->queue));
     }
 
     public function testTheReapLockAdmitsOneSweepPerInterval(): void
@@ -476,5 +520,34 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
 
         $this->broker->commit($this->queue, $claimed);
         $this->assertSame(0, $this->processingSize(), 'and settles it itself');
+    }
+
+    /**
+     * @return \Iterator<string, array{string, ?int}>
+     */
+    public static function retryDestinationProvider(): \Iterator
+    {
+        yield 'ready queue' => ['queue', null];
+        yield 'dead queue' => ['dead', 0];
+    }
+
+    #[DataProvider('retryDestinationProvider')]
+    public function testRetryLeavesTheJobFailedWhenItsDestinationIsNotAList(string $destination, ?int $maxAttempts): void
+    {
+        $this->broker->publish($this->queue, ['n' => 1]);
+        $claimed = $this->broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
+        $this->broker->reject($this->queue, $claimed);
+        $this->backdate($claimed->getPid());
+        $this->redis->set("{$this->namespace}.{$destination}.recovery", 'occupied');
+
+        try {
+            $this->broker->retry($this->queue, maxAttempts: $maxAttempts);
+            $this->fail('A destination of the wrong type must surface');
+        } catch (\RedisException $error) {
+            $this->assertStringContainsString('WRONGTYPE', $error->getMessage());
+        }
+
+        $this->assertSame([$claimed->getPid()], $this->redis->lRange("{$this->namespace}.failed.recovery", 0, -1), 'the job is still failed');
     }
 }

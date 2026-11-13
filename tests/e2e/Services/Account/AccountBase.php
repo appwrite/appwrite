@@ -217,6 +217,9 @@ trait AccountBase
         $this->assertNotEmpty($code);
         $this->assertStringContainsStringIgnoringCase('Use OTP ' . $code . ' to sign in to '. $this->getProject()['name'] . '. Expires in 15 minutes.', $lastEmail['text']);
 
+        // The code is bound to the requesting origin for mail clients and autofill
+        $this->assertEquals('"' . $code . '"; origin="http://localhost"', $lastEmail['headers']['otp-token'] ?? '');
+
         // Only Console project has branded logo in email.
         if ($isConsoleProject) {
             $this->assertStringContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);

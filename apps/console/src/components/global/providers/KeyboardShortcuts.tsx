@@ -98,8 +98,8 @@ export function KeyboardShortcutsProvider({
         }
         return
       }
-      if (section === 'explorer') {
-        navigate({ to: '/projects/$projectId/explorer', params: { projectId } })
+      if (section === 'playground') {
+        navigate({ to: '/projects/$projectId/playground', params: { projectId } })
         return
       }
       if (section === 'auth') {
@@ -300,7 +300,9 @@ export function KeyboardShortcutsProvider({
     if (canShowConnectSection(access, features)) {
       shortcuts['g i'] = () => navigateToSection('apps')
       shortcuts['g k'] = () => navigateToSection('api-keys')
-      shortcuts['g x'] = () => navigateToSection('explorer')
+    }
+    if (canSeeProjectNavItem(access, features, 'playground')) {
+      shortcuts['g x'] = () => navigateToSection('playground')
     }
     if (canSeeProjectNavItem(access, features, 'databases')) {
       shortcuts['g d'] = () => navigateToSection('databases')

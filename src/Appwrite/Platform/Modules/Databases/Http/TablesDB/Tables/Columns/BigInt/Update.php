@@ -15,6 +15,7 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Update extends BigIntUpdate
 {
@@ -63,6 +64,7 @@ class Update extends BigIntUpdate
             ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true, example: '1000000')
             ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when column is required.', example: '0')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'New Column Key.', true, ['dbForProject'])
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

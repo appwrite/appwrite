@@ -10,6 +10,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
+use Appwrite\Vcs\Validator\Directory;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Config\Config;
 use Utopia\Config\Exception\Parse;
@@ -93,7 +94,7 @@ class Create extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework', enum: new Enum(name: 'VCSDetectionType'))
-            ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
+            ->param('providerRootDirectory', '', new Directory(256), 'Path to Root Directory', true)
             ->inject('vcsFactory')
             ->inject('installationTokens')
             ->inject('response')

@@ -10,6 +10,7 @@ use Appwrite\PubSub\Adapter as PubSub;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
@@ -125,11 +126,13 @@ final class AppwriteTest extends TestCase
             id: 'pushLedger',
             attributes: [
                 Attribute::string(key: 'topic', size: 255, required: true),
+                Attribute::string(key: 'topicInternalId', size: 255, required: true),
                 Attribute::string(key: 'data', size: 65535, required: true),
                 Attribute::string(key: 'messageId', size: 255),
                 Attribute::string(key: 'messageInternalId', size: 255),
                 Attribute::integer(key: 'sequence', required: true),
             ],
+            indexes: Config::getParam('collections', [])['projects']['pushLedger']['indexes'],
             permissions: $any,
             documentSecurity: false,
         ));
@@ -208,6 +211,7 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $ledger);
         $row = $ledger[0];
         $this->assertSame('topic-1', $row->getAttribute('topic'));
+        $this->assertSame((string) $topic->getSequence(), $row->getAttribute('topicInternalId'));
         $this->assertSame(1, $row->getAttribute('sequence'));
         $this->assertSame('msg-1', $row->getAttribute('messageId'));
         $this->assertSame('internal-1', $row->getAttribute('messageInternalId'));
@@ -277,6 +281,70 @@ final class AppwriteTest extends TestCase
 
         $this->assertCount(1, $this->ledger());
         $this->assertSame(1, $this->topic('topic-1')->getAttribute('sequence'));
+    }
+
+    public function testRecreatedTopicGetsItsOwnLedger(): void
+    {
+        $this->seedTopic('topic-1', 0);
+        $broker = new FakeBroker();
+        $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['topic-1'], title: 'deleted topic'));
+        $deleted = (string) $this->topic('topic-1')->getSequence();
+        $this->database->deleteDocument('topics', 'topic-1');
+        $this->seedTopic('topic-1', 0);
+        $recreated = (string) $this->topic('topic-1')->getSequence();
+
+        $this->adapter($broker, messageId: 'msg-2')->send(new Push(to: ['topic-1'], title: 'recreated topic'));
+
+        $rows = [];
+        foreach ($this->ledger() as $row) {
+            $rows[$row->getAttribute('messageId')] = $row;
+        }
+        $this->assertNotSame($deleted, $recreated);
+        $this->assertSame($deleted, $rows['msg-1']->getAttribute('topicInternalId'));
+        $this->assertSame($recreated, $rows['msg-2']->getAttribute('topicInternalId'), 'a recreated topic must not share the deleted topic\'s ledger');
+        $this->assertSame(1, $rows['msg-2']->getAttribute('sequence'));
+    }
+
+    public function testMessageReusedOnRecreatedTopicPublishes(): void
+    {
+        $this->seedTopic('topic-1', 0);
+        $broker = new FakeBroker();
+        $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['topic-1'], title: 'deleted topic'));
+        $this->database->deleteDocument('topics', 'topic-1');
+        $this->seedTopic('topic-1', 0);
+        $recreated = (string) $this->topic('topic-1')->getSequence();
+
+        $response = $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['topic-1'], title: 'recreated topic'));
+
+        $this->assertSame(1, $response['deliveredTo'], 'a message id already in the deleted topic\'s ledger must still publish to the recreated topic');
+        $this->assertSame('success', $response['results'][0]['status']);
+        $this->assertCount(2, $broker->published);
+        $rows = \array_values(\array_filter(
+            $this->ledger(),
+            static fn (Document $row): bool => $row->getAttribute('topicInternalId') === $recreated,
+        ));
+        $this->assertCount(1, $rows);
+        $this->assertSame(1, $rows[0]->getAttribute('sequence'));
+    }
+
+    public function testLedgerRowWithoutTopicInstanceDoesNotBlockPublish(): void
+    {
+        $this->seedTopic('topic-1', 3);
+        $this->database->skipValidation(fn () => $this->database->createDocument('pushLedger', new Document([
+            'topic' => 'topic-1',
+            'data' => '{}',
+            'messageId' => 'msg-1',
+            'messageInternalId' => 'internal-1',
+            'sequence' => 3,
+        ])));
+
+        $broker = new FakeBroker();
+        $response = $this->adapter($broker, messageId: 'msg-1')->send(new Push(to: ['topic-1'], title: 'after upgrade'));
+
+        $this->assertSame(1, $response['deliveredTo'], 'a ledger row written before topic instances were recorded must not block a publish of the same message');
+        $this->assertSame('success', $response['results'][0]['status']);
+        $this->assertCount(2, $this->ledger());
+        $this->assertSame(4, $this->topic('topic-1')->getAttribute('sequence'));
     }
 
     public function testEachTopicGetsItsOwnSequence(): void

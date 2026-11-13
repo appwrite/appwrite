@@ -58,7 +58,7 @@ trait WebhooksBase
 
     public static function getWebhookSignature(array $webhook, string $signatureKey): string
     {
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url     = $webhook['url'];
         return base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
     }
@@ -1517,7 +1517,7 @@ trait WebhooksBase
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$id}.update.prefs"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 

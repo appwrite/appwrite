@@ -8,10 +8,10 @@ use Override;
 use PHPUnit\Framework\TestCase;
 use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Abuse\Result;
+use Utopia\Abuse\Tests\TimeLimit\RacingDatabase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -20,12 +20,12 @@ final class DatabaseSchemaTest extends TestCase
 {
     private const int SECONDS = 1_000_000_000;
 
-    private Database $database;
+    private RacingDatabase $database;
 
     #[Override]
     protected function setUp(): void
     {
-        $this->database = new Database(new Memory(), new Cache(new NoCache()));
+        $this->database = new RacingDatabase(new Memory(), new Cache(new NoCache()));
         $this->database->setDatabase('abuse')->setNamespace('schema');
         $this->database->create();
 
@@ -40,6 +40,23 @@ final class DatabaseSchemaTest extends TestCase
         $this->assertTrue($this->check('login', 2), 'the window stays exhausted');
 
         $this->assertFalse($this->check('signup', 2), 'another key has its own count');
+    }
+
+    public function testConcurrentHitCannotTakeTheSameLastSlot(): void
+    {
+        $this->assertFalse($this->check('login', 2), 'first hit is within the limit');
+
+        $competing = null;
+        $this->database->race = function () use (&$competing): void {
+            $competing = $this->hit('login', 2);
+        };
+
+        $result = $this->hit('login', 2);
+
+        $this->assertInstanceOf(Result::class, $competing);
+        $this->assertFalse($competing->limited, 'the competing hit takes the last slot');
+        $this->assertTrue($result->limited, 'the hit that lost the race is limited');
+        $this->assertSame(0, $result->remaining);
     }
 
     public function testEarlierWindowDoesNotCountTowardsTheCurrentOne(): void

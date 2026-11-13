@@ -90,14 +90,14 @@ jobs:
                   cleanup: false
 
             - name: Login to GitHub Container Registry
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ${{ env.REGISTRY_GITHUB }}
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Login to Docker Hub
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ${{ env.REGISTRY_DOCKERHUB }}
                   username: ${{ vars.DOCKERHUB_USERNAME }}
@@ -137,14 +137,14 @@ jobs:
         timeout-minutes: 10
         steps:
             - name: Login to GitHub Container Registry
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ${{ env.REGISTRY_GITHUB }}
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Login to Docker Hub
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ${{ env.REGISTRY_DOCKERHUB }}
                   username: ${{ vars.DOCKERHUB_USERNAME }}
@@ -202,14 +202,14 @@ jobs:
                   cleanup: false
 
             - name: Login to GitHub Container Registry
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ${{ env.REGISTRY_GITHUB }}
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Login to Docker Hub
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ${{ env.REGISTRY_DOCKERHUB }}
                   username: ${{ vars.DOCKERHUB_USERNAME }}
@@ -245,14 +245,14 @@ jobs:
               uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
             - name: Login to GitHub Container Registry
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ${{ env.REGISTRY_GITHUB }}
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Login to Docker Hub
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ${{ env.REGISTRY_DOCKERHUB }}
                   username: ${{ vars.DOCKERHUB_USERNAME }}
@@ -288,7 +288,7 @@ jobs:
                   persist-credentials: false
 
             - name: Login to GitHub Container Registry
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ${{ env.REGISTRY_GITHUB }}
                   username: ${{ github.actor }}

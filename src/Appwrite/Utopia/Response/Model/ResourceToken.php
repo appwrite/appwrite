@@ -3,10 +3,10 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Document;
-use Utopia\System\System;
 
 class ResourceToken extends Model
 {
@@ -45,6 +45,7 @@ class ResourceToken extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'JWT encoded string.',
                 'default' => '',
                 // this is a secret but is converted to a JWT token when sent back to the client after filter.
@@ -64,7 +65,7 @@ class ResourceToken extends Model
         $expire = $document->getAttribute('expire');
 
         // Use a large but reasonable maxAge to avoid auto-exp when we set explicit exp
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // 10 years
+        $jwt = new JWT(EncryptionKey::current(), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // 10 years
 
         $payload = [
             'tokenId' => $document->getId(),

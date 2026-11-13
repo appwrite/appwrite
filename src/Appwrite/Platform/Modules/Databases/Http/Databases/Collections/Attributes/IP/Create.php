@@ -20,6 +20,7 @@ use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\IP;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Create extends Action
 {
@@ -69,6 +70,7 @@ class Create extends Action
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new IP()), 'Default value. Cannot be set when attribute is required.', true, example: '192.0.2.0')
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -78,13 +80,14 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $attribute = $this->createAttribute(
             $databaseId,
             $collectionId,
             new Document([
                 'key' => $key,
+                'description' => $description,
                 'type' => ColumnType::String->value,
                 'size' => 39,
                 'required' => $required,

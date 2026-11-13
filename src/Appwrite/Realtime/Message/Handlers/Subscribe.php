@@ -9,8 +9,10 @@ use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Realtime\Message\Validators\SubscribePayload as SubscribePayloadValidator;
 use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Role;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
@@ -31,6 +33,7 @@ class Subscribe extends Action
             ->inject('projectId')
             ->inject('eventTailRegistry')
             ->inject('dbForConsole')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -46,8 +49,14 @@ class Subscribe extends Action
         ?string $projectId,
         EventTailRegistry $eventTailRegistry,
         Database $dbForConsole,
+        ?Document $project,
     ): array {
         $roles = $realtime->connections[$connectionId]['roles'] ?? [Role::guests()->toString()];
+
+        // A guest may still sign in over this connection, so it is not closed.
+        if (\in_array(Role::guests()->toString(), $roles, true) && ($project?->getAttribute('auths', [])['realtimeGuests'] ?? false)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'This project does not allow guests to subscribe. Sign in first.');
+        }
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
 
         $parsedPayloads = [];
@@ -79,9 +88,8 @@ class Subscribe extends Action
         // Console live event tail: authorize every `console.tail.<projectId>` channel
         // FIRST — before any subscription state is mutated — so a batch mixing authorized
         // and unauthorized tails can't leave partial state behind. Each tail is authorized
-        // by team membership of the target project's owning team, with ownership resolved
-        // fresh (projects can be transferred between teams, so a cached teamId could
-        // authorize the wrong team).
+        // by the target project's read permissions, resolved fresh (projects can be
+        // transferred between teams, so cached permissions could authorize the wrong team).
         $now = \microtime(true);
         $pendingTails = [];
         foreach ($parsedPayloads as $parsedPayload) {
@@ -117,10 +125,10 @@ class Subscribe extends Action
                         'Not authorized to tail project "' . $targetProjectId . '".'
                     );
                 }
-                $teamId = (string) $project->getAttribute('teamId', '');
-                $requiredRole = Role::team($teamId)->toString();
+                // The roles that may read the project: its team owners and developers, and members with a role on this project.
+                $readRoles = $project->getPermissionsByType(PermissionType::Read);
 
-                if ($teamId === '' || !\in_array($requiredRole, $roles, true)) {
+                if (empty(\array_intersect($readRoles, $roles))) {
                     throw new Exception(
                         Exception::REALTIME_POLICY_VIOLATION,
                         'Not authorized to tail project "' . $targetProjectId . '".'
@@ -128,10 +136,53 @@ class Subscribe extends Action
                 }
 
                 $compiled ??= RuntimeQuery::prepare($parsedPayload['queries']);
-                // Carry the authorizing role so the tail can be revoked if the viewer
-                // later loses team membership (or the project is transferred).
-                $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled, $requiredRole];
+                // Carry the authorizing roles so the tail is revoked when the viewer's roles change.
+                $pendingTails[] = [$parsedPayload['subscriptionId'], $targetProjectId, $compiled, $readRoles];
             }
+        }
+
+        // Checked on fresh state just before the tree changes, as the tail lookups above can yield.
+        // Subscribing again with an existing id adds its channels and replaces its queries.
+        $maxSubscriptions = $realtime->connections[$connectionId]['limits']['subscriptions'] ?? APP_LIMIT_REALTIME_SUBSCRIPTIONS;
+        $maxChannels = $realtime->connections[$connectionId]['limits']['channels'] ?? APP_LIMIT_REALTIME_CHANNELS;
+        $maxQueries = $realtime->connections[$connectionId]['limits']['queries'] ?? APP_LIMIT_REALTIME_QUERIES;
+        $channels = [];
+        $queries = [];
+        foreach ($realtime->getSubscriptionMetadata($connectionId) as $subscriptionId => $subscription) {
+            $channels[$subscriptionId] = \array_flip($subscription['channels']);
+            $queries[$subscriptionId] = $subscription['count'];
+        }
+        foreach ($parsedPayloads as $parsedPayload) {
+            $subscriptionId = $parsedPayload['subscriptionId'];
+            $channels[$subscriptionId] = ($channels[$subscriptionId] ?? []) + \array_flip($parsedPayload['convertedChannels']);
+            $queries[$subscriptionId] = Realtime::countQueries($parsedPayload['queries']);
+            if (\count($channels[$subscriptionId]) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                throw new Exception(
+                    Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                    'Subscription "' . $subscriptionId . '" must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.'
+                );
+            }
+        }
+        // A subscription without channels is never stored, so it counts towards nothing.
+        $channels = \array_filter($channels);
+        $queries = \array_intersect_key($queries, $channels);
+        if (\count($channels) > $maxSubscriptions) {
+            throw new Exception(
+                Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                'Connection must have at most ' . $maxSubscriptions . ' subscriptions. Unsubscribe from some before subscribing to more.'
+            );
+        }
+        if (\array_sum(\array_map(\count(...), $channels)) > $maxChannels) {
+            throw new Exception(
+                Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                'Connection must have at most ' . $maxChannels . ' channels across its subscriptions. Unsubscribe from some before subscribing to more.'
+            );
+        }
+        if (\array_sum($queries) > $maxQueries) {
+            throw new Exception(
+                Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+                'Connection must have at most ' . $maxQueries . ' queries across its subscriptions. Unsubscribe from some before subscribing to more.'
+            );
         }
 
         foreach ($parsedPayloads as $parsedPayload) {
@@ -149,8 +200,8 @@ class Subscribe extends Action
         // registry is keyed by (connId, subId, projectId): re-subscribing the same channel
         // overwrites its filter in place, while a reused subscription id that names a new
         // tail channel keeps the ones already registered (mirrors the tree).
-        foreach ($pendingTails as [$subId, $targetProjectId, $compiled, $role]) {
-            $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now, $role);
+        foreach ($pendingTails as [$subId, $targetProjectId, $compiled, $readRoles]) {
+            $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now, $readRoles);
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));

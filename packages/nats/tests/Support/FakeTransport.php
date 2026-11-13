@@ -30,6 +30,24 @@ final class FakeTransport implements Transport
      */
     public bool $answerPings = true;
 
+    /**
+     * Whether the server has closed the socket. Set true to emulate a peer that
+     * went away for good -- a restarted or evicted server, or a connection an
+     * intermediary reaped while idle. Writes still succeed, as they do into a
+     * kernel buffer, so only a read can tell. Cleared by connect(), so a
+     * reconnect is served normally.
+     */
+    public bool $closedByServer = false;
+
+    /** Thrown by connect() when set. */
+    public ?\Throwable $refuse = null;
+
+    /** @var list<string> Hosts connect() refuses, as a server that is down would. */
+    public array $refuseHosts = [];
+
+    /** The host connect() was asked for. */
+    public string $host = '';
+
     private string $inbound = '';
     private bool $connected = false;
 
@@ -40,7 +58,16 @@ final class FakeTransport implements Transport
 
     public function connect(string $host, int $port, float $timeout): void
     {
+        $this->host = $host;
+        if ($this->refuse instanceof \Throwable) {
+            throw $this->refuse;
+        }
+        if (\in_array($host, $this->refuseHosts, true)) {
+            throw new ConnectionException("Failed to connect to tcp://{$host}:{$port}: [111] Connection refused");
+        }
+
         $this->connected = true;
+        $this->closedByServer = false;
         $this->inbound .= $this->infoLine();
     }
 
@@ -65,6 +92,10 @@ final class FakeTransport implements Transport
 
     public function read(int $maxBytes, ?float $timeout = null): string
     {
+        if ($this->closedByServer) {
+            throw new ConnectionException('Connection closed by server');
+        }
+
         if ($this->inbound === '') {
             throw new TimeoutException('No inbound data');
         }
@@ -77,6 +108,10 @@ final class FakeTransport implements Transport
 
     public function readLine(?float $timeout = null): string
     {
+        if ($this->closedByServer) {
+            throw new ConnectionException('Connection closed by server');
+        }
+
         $pos = strpos($this->inbound, "\n");
         if ($pos === false) {
             throw new TimeoutException('No inbound line');

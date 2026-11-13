@@ -37,6 +37,8 @@ class Query
 
     protected string $alias = '';
 
+    protected bool $aliasDefaulted = false;
+
     /**
      * Construct a new query object
      *
@@ -48,6 +50,7 @@ class Query
         $this->attribute = $attribute;
         $this->values = $values;
         $this->alias = $alias;
+        $this->aliasDefaulted = $this->method->isJoin() && $alias !== '' && $alias === $attribute;
     }
 
     public function __clone(): void
@@ -103,6 +106,15 @@ class Query
     public function getAlias(): string
     {
         return $this->alias;
+    }
+
+    /**
+     * Whether a join is read under the name of the collection it joins, as a join given no alias
+     * is. It is decided when the query is built, so it holds after the collection is renamed.
+     */
+    public function isAliasDefaulted(): bool
+    {
+        return $this->aliasDefaulted;
     }
 
     /**
@@ -1391,6 +1403,7 @@ class Query
     }
 
     /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
      * @param  list<Query>  $on  on() conditions and filters
      */
     public static function join(string $collection, string $alias, array $on): static
@@ -1399,6 +1412,7 @@ class Query
     }
 
     /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
      * @param  list<Query>  $on  on() conditions and filters
      */
     public static function leftJoin(string $collection, string $alias, array $on): static
@@ -1407,6 +1421,7 @@ class Query
     }
 
     /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
      * @param  list<Query>  $on  on() conditions and filters
      */
     public static function rightJoin(string $collection, string $alias, array $on): static
@@ -1415,6 +1430,7 @@ class Query
     }
 
     /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
      * @param  list<Query>  $on  on() conditions and filters
      */
     public static function fullOuterJoin(string $collection, string $alias, array $on): static
@@ -1422,11 +1438,17 @@ class Query
         return self::createJoin(Method::FullOuterJoin, $collection, $alias, $on);
     }
 
+    /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
+     */
     public static function crossJoin(string $collection, string $alias): static
     {
         return self::createJoin(Method::CrossJoin, $collection, $alias, []);
     }
 
+    /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
+     */
     public static function naturalJoin(string $collection, string $alias): static
     {
         return self::createJoin(Method::NaturalJoin, $collection, $alias, []);
@@ -1439,6 +1461,7 @@ class Query
      */
     private static function createJoin(Method $method, string $collection, string $alias, array $on): static
     {
+        $alias = $alias !== '' ? $alias : $collection;
         if ($alias === '') {
             throw new ValidationException('Join alias is required: '.$method->value.' '.$collection);
         }

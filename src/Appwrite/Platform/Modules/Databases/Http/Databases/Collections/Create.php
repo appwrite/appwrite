@@ -31,6 +31,7 @@ use Utopia\Database\Validator\IndexDefinition as IndexValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Http\Http;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -89,15 +90,17 @@ class Create extends Action
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->param('attributes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
             ->param('indexes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial, trigram), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the collection.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('authorization')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, array $attributes, array $indexes, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, array $attributes, array $indexes, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization, array $plan): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -128,7 +131,8 @@ class Create extends Action
                 'documentSecurity' => $documentSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
-                'search' => \implode(' ', [$collectionId, $name]),
+                'description' => $description,
+                'search' => \implode(' ', [$collectionId, $name, $description]),
             ]));
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
@@ -156,6 +160,22 @@ class Create extends Action
             if (($attribute['type'] ?? '') === ColumnType::Relationship->value) {
                 $dbForProject->deleteDocument($databaseKey, $collection->getId());
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Relationship attributes cannot be created inline. Use the create relationship endpoint instead.');
+            }
+
+            // Loose match, as the attribute response filter reads it, so no filters shape skips the checks
+            if (!\in_array('encrypt', (array) ($attribute['filters'] ?? []))) {
+                continue;
+            }
+
+            $resources = $this->isCollectionsAPI() ? 'attributes' : 'columns';
+            if (!Http::isDevelopment() && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
+                $dbForProject->deleteDocument($databaseKey, $collection->getId());
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted ' . $resources . ' are not available on your plan. Please upgrade to create encrypted ' . $resources . '.');
+            }
+
+            if (AttributeDefinition::resolve($attribute)['size'] < APP_DATABASE_ENCRYPT_SIZE_MIN) {
+                $dbForProject->deleteDocument($databaseKey, $collection->getId());
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Size too small. Encrypted strings require a minimum size of ' . APP_DATABASE_ENCRYPT_SIZE_MIN . ' characters.');
             }
         }
 
@@ -327,6 +347,7 @@ class Create extends Action
         $document = new Document([
             '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
+            'description' => $attribute['description'] ?? '',
             'databaseInternalId' => $database->getSequence(),
             'databaseId' => $database->getId(),
             'collectionInternalId' => $collection->getSequence(),
@@ -396,6 +417,7 @@ class Create extends Action
         $document = new Document([
             '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
+            'description' => $indexDef['description'] ?? '',
             'status' => 'available',
             'databaseInternalId' => $database->getSequence(),
             'databaseId' => $database->getId(),

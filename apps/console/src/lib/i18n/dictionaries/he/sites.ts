@@ -174,6 +174,31 @@ export const heSitesDictionary: Record<string, string> = {
   'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
+  'Waiting for DNS': 'ממתין ל-DNS',
+  'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
+    'Appwrite בודק את רשומות ה-DNS כל כמה דקות במשך 3 ימים לאחר הוספת הדומיין. לחצו על "בדוק עכשיו" כדי לבדוק מיד.',
+  'Appwrite stopped checking 3 days after the domain was added. Fix the DNS records, then Retry.':
+    'Appwrite הפסיק לבדוק 3 ימים לאחר הוספת הדומיין. תקנו את רשומות ה-DNS ולאחר מכן לחצו על "ניסיון חוזר".',
+  'Last check:': 'בדיקה אחרונה:',
+  'Check now': 'בדוק עכשיו',
+  'Not verified yet. Appwrite keeps checking.':
+    'עדיין לא אומת. Appwrite ממשיך לבדוק.',
+  'Certificate expired': 'פג תוקף התעודה',
+  'Renewal failed': 'חידוש התעודה נכשל',
+  'Certificate blocked': 'הנפקת התעודה חסומה',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
+    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים ולאחר מכן נסו שוב.',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs.':
+    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה בלוגים.',
+  'Renewal blocked': 'חידוש התעודה חסום',
+  'Certificate renewal started': 'חידוש התעודה התחיל',
+  'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
+  "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
+    'תוקף התעודה פג. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
+  "View logs for details. Check that the domain's DNS still points to Appwrite.":
+    'צפו בלוגים לפרטים נוספים. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
+  'Renewal is waiting on a DNS record. View logs to see which record to add.':
+    'חידוש התעודה ממתין לרשומת DNS. צפו בלוגים כדי לראות איזו רשומה להוסיף.',
 
   // Site layout and settings shell
   Deployments: 'פריסות',
@@ -344,9 +369,10 @@ export const heSitesDictionary: Record<string, string> = {
   // Settings: silent mode card
   'Silent mode': 'מצב שקט',
   // pragma: allowlist secret
-  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.':
-    'קובע אם Appwrite מפרסם תגובות אוטומטיות על קומיטים ב-repo ה-GitHub המחובר שלכם (למשל הערות פריסה על pull requests). פריסות, בדיקות ובניות אינן משתנות; רק תגובות אופציונליות על קומיטים מדולגות כשמצב שקט פעיל.', // pragma: allowlist secret
-  'Disable automated commit comments': 'השבתת תגובות אוטומטיות על קומיטים',
+  "When on, Appwrite doesn't comment on pull requests or report checks and deployments to your Git provider. Builds and deployments run as usual.":
+    'כשהמצב פעיל, Appwrite לא מוסיף תגובות ל-pull requests ולא מדווח לספק ה-Git שלכם על בדיקות ופריסות. הבנייה והפריסה ממשיכות כרגיל.', // pragma: allowlist secret
+  'Skip pull request comments, checks and deployment reports':
+    'דילוג על תגובות ב-pull requests, בדיקות ודיווחי פריסה',
 
   // Settings: variables card
   'Environment variables': 'משתני סביבה',
@@ -393,6 +419,13 @@ export const heSitesDictionary: Record<string, string> = {
   'Failed to remove domain': 'הסרת הדומיין נכשלה',
   'Failed to add domain': 'הוספת הדומיין נכשלה',
   'Failed to register domain': 'רישום הדומיין נכשל',
+  'Verify domain ownership': 'אימות בעלות על הדומיין',
+  'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
+    'הדומיין הזה כבר מפנה ל-Appwrite. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות.',
+  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
+    'הדומיין הזה נמצא בשימוש בפרויקט אחר. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות כדי להעביר אותו לכאן.',
+  "This domain's DNS is managed by another organization. Add this TXT record to that domain's DNS, or ask that organization's owners to add it, then verify. The domain stays in that organization.":
+    'ה-DNS של הדומיין הזה מנוהל על ידי ארגון אחר. הוסיפו את רשומת ה-TXT הזו ל-DNS של הדומיין, או בקשו מבעלי הארגון להוסיף אותה, ולאחר מכן בצעו אימות. הדומיין נשאר בארגון ההוא.',
   Required: 'שדה חובה',
   Invalid: 'לא תקין',
   'Invalid URL': 'כתובת URL לא תקינה',
@@ -425,6 +458,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Connect GitHub': 'חיבור GitHub',
   'Connect GitLab': 'חיבור GitLab',
   'Connect Bitbucket': 'חיבור Bitbucket',
+  'Connect Gitea': 'חיבור Gitea',
   'Connect Origin': 'חיבור Origin',
   'Select organization': 'בחירת ארגון',
   'Add account': 'הוספת חשבון',
@@ -487,8 +521,6 @@ export const heSitesDictionary: Record<string, string> = {
     'ה-Branch של הפרודקשן בה-repo המקושר לאתר. פריסות מוצלחות מה-Branch הזה מופעלות אוטומטית.',
   'Path to site code in the linked repo. Use the repository root (./) or a subdirectory that contains your app (e.g. ./apps/web).':
     'הנתיב לקוד האתר בה-repo המקושר. השתמשו בשורש ה-repo (./) או בתת-תיקייה שמכילה את האפליקציה שלכם (למשל ./apps/web).',
-  'Disable automated comments on repository commits':
-    'השבתת תגובות אוטומטיות על קומיטים ב-repo',
   configured: 'הוגדרו',
   'Ready to deploy': 'מוכן לפריסה',
 
@@ -516,6 +548,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Template variables': 'משתני תבנית',
   'Configure the environment variables for this template':
     'הגדירו את משתני הסביבה עבור התבנית הזו',
+  'This template grants these scopes to the ephemeral key generated for every site build and SSR execution. You can change them in the site settings.':
+    'התבנית הזו מעניקה את הרשאות הגישה האלה למפתח הזמני שנוצר עבור כל בנייה והרצת SSR של האתר. אפשר לשנות אותן בהגדרות האתר.',
   'Optional variables': 'משתנים אופציונליים',
   Secret: 'סודי',
 
@@ -583,4 +617,6 @@ export const heSitesDictionary: Record<string, string> = {
   'Go live': 'עלייה לאוויר',
   'Get an appwrite.network URL right away, then add your own domain.':
     'קבלו כתובת appwrite.network מיד, ואז הוסיפו דומיין משלכם.',
+  "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
+    'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
 }

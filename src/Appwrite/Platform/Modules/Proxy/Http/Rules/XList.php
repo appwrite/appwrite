@@ -96,7 +96,7 @@ class XList extends Action
             $ruleId = $cursor->getValue();
             $cursorDocument = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
 
-            if ($cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('projectInternalId') !== $project->getSequence()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Rule '{$ruleId}' for the 'cursor' value not found.");
             }
 
@@ -121,6 +121,8 @@ class XList extends Action
             }
 
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+            $rule->setAttribute('expireAt', $certificate->getAttribute('expireDate', ''));
+            $rule->setAttribute('certificateStatus', $certificate->getAttribute('status', ''));
 
             // Rename 'created' status to 'unverified' for consistency.
             // 'verifying' and 'verified' statuses stay as is.

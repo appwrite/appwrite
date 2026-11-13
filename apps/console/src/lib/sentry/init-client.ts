@@ -4,6 +4,10 @@ import {
   getSentryEnvironment,
   isLocalDevelopmentRuntime,
 } from '@/lib/sentry/environment'
+import {
+  redactSentryBreadcrumb,
+  redactSentryEvent,
+} from '@/lib/sentry/redact-url'
 import { shouldSkipSentryError } from '@/lib/sentry/skip-error'
 
 let sentryInitialized = false
@@ -31,8 +35,9 @@ export function initSentryClient(options?: InitSentryClientOptions): boolean {
     sendDefaultPii: false,
     beforeSend(event, hint) {
       if (shouldSkipSentryError(hint.originalException)) return null
-      return event
+      return redactSentryEvent(event)
     },
+    beforeBreadcrumb: redactSentryBreadcrumb,
   })
   sentryInitialized = true
   return !!Sentry.getClient()

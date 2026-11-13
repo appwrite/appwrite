@@ -63,6 +63,7 @@ class Update extends EnumUpdate
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new Text(0)), 'Default value for column when not provided. Cannot be set when column is required.', example: 'active')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'New Column Key.', true, ['dbForProject'])
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

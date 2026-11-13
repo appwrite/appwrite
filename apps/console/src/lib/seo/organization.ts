@@ -1,6 +1,9 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { SEO_SITE_NAME } from '@/lib/seo/page-meta'
 
+export const APPWRITE_DESCRIPTION =
+  'Appwrite is an open-source backend platform for web, mobile, and AI apps: auth, databases, storage, functions, messaging, realtime, and hosting.'
+
 const ORGANIZATION_ID = `${MARKETING_SITE_ORIGIN}/#organization`
 
 /** Official profiles, matching the footer's social links. */
@@ -21,6 +24,19 @@ export function getOrganizationSchema() {
     logo: {
       '@type': 'ImageObject',
       url: `${MARKETING_SITE_ORIGIN}/apple-touch-icon.png`,
+    },
+    description: APPWRITE_DESCRIPTION,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: 'support@appwrite.io',
+    },
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'HaSheizaf St 4',
+      addressLocality: "Ra'anana",
+      postalCode: '4366411',
+      addressCountry: 'IL',
     },
     sameAs: ORGANIZATION_PROFILES,
   }

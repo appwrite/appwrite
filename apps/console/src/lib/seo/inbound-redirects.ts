@@ -6,6 +6,7 @@ import {
   isReferenceVersion,
   type ReferenceService,
 } from '@/lib/docs/references/constants'
+import { markdownTwinPage } from '@/lib/seo/markdown-twins'
 
 /**
  * 301 targets for URLs that still 404 after the exact legacy map: TanStack
@@ -63,7 +64,6 @@ const DOCS_SLUG_ALIASES: Record<string, string> = {
   'server/tablesdb': 'references/cloud/server-nodejs/tablesDB',
   'server/tablesdbdb': 'references/cloud/server-nodejs/tablesDB',
   'products/authentication': 'products/auth',
-  'products/auth/passkeys': 'products/auth',
   'products/sites/quick-starts': 'products/sites/quick-start',
   'products/sites/domain': 'products/sites/domains',
   'products/sites/cdn': 'products/network/cdn',
@@ -591,18 +591,18 @@ const EXACT_REDIRECTS: Record<string, string> = {
   '/startups/hosting': '/startups',
   '/legal/baa': '/baa',
   '/mcp': '/docs/tooling/ai/mcp-servers',
-  '/openapi.json': '/references-api/open-api-spec',
-  '/oas': '/references-api/open-api-spec',
+  '/oas': '/openapi.json',
+  '/swagger.json': '/openapi.json',
   '/mcp.json': '/.well-known/mcp/server-card.json',
   '/.well-known/mcp.json': '/.well-known/mcp/server-card.json',
   '/.well-known/webmcp.json': '/.well-known/mcp/server-card.json',
   '/webmcp.json': '/.well-known/mcp/server-card.json',
-  '/agents.json': '/.well-known/ai-catalog.json',
-  '/.well-known/agents.json': '/.well-known/ai-catalog.json',
-  '/.well-known/agent.json': '/.well-known/ai-catalog.json',
-  '/.well-known/agent-card.json': '/.well-known/ai-catalog.json',
-  '/.well-known/a2a/agent-card.json': '/.well-known/ai-catalog.json',
-  '/agent-card.json': '/.well-known/ai-catalog.json',
+  '/agents.json': '/.well-known/ard.json',
+  '/.well-known/agents.json': '/.well-known/ard.json',
+  '/.well-known/agent.json': '/.well-known/ard.json',
+  '/.well-known/agent-card.json': '/.well-known/ard.json',
+  '/.well-known/a2a/agent-card.json': '/.well-known/ard.json',
+  '/agent-card.json': '/.well-known/ard.json',
   '/index.html': '/',
   '/index.html.md': '/',
   '/docker-compose.yml': '/docs/advanced/self-hosting',
@@ -641,6 +641,7 @@ function exactAndPrefixRedirect(pathname: string): string | null {
   const extraProduct = pathname.match(/^\/products\/([^/]+)(?:\/(.+))?$/)
   if (extraProduct) {
     const id = extraProduct[1] ?? ''
+    if (!extraProduct[2] && markdownTwinPage(pathname)) return null
     if (!LIVE_PRODUCTS.has(id)) return '/'
     if (extraProduct[2]) return `/products/${id}`
   }
@@ -650,7 +651,11 @@ function exactAndPrefixRedirect(pathname: string): string | null {
     return '/init'
   }
   if (pathname === '/privacy.' || pathname === '/를') return pathname === '/를' ? '/' : '/privacy'
-  if (pathname.startsWith('/pricing') && pathname !== '/pricing') {
+  if (
+    pathname.startsWith('/pricing') &&
+    pathname !== '/pricing' &&
+    pathname !== '/pricing.md'
+  ) {
     const rest = pathname.slice('/pricing'.length)
     if (/^[^\w/]/.test(rest)) return '/pricing'
   }

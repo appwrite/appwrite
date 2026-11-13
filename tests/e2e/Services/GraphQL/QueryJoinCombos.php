@@ -2563,6 +2563,49 @@ trait QueryJoinCombos
         return self::$restrictedOrdersFixtures[$cacheKey] = $fixture;
     }
 
+    public function testDistinctRowsCarryNoStoredFields(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support distinct queries');
+        }
+
+        $data = $this->setupJoinComboFixture();
+        $field = $this->joinListField();
+        $container = $this->joinContainerIdParam();
+        $query = 'query listDistinct($databaseId: String!, $' . $container . ': String!, $queries: [String!]) {
+            ' . $field . '(databaseId: $databaseId, ' . $container . ': $' . $container . ', queries: $queries) {
+                ' . $this->joinItemsKey() . ' {
+                    _id
+                    _sequence
+                    _createdAt
+                    _updatedAt
+                    _permissions
+                    data
+                }
+            }
+        }';
+
+        $result = $this->graphqlJoin($query, $this->joinListVariables($data['databaseId'], $data['customersId'], [
+            Query::distinct()->toString(),
+            Query::select(['name'])->toString(),
+        ]));
+
+        $this->assertArrayNotHasKey('errors', $result['body'], \json_encode($result['body']) ?: '');
+        $records = $this->joinListRecords($result);
+        $this->assertCount(2, $records);
+        $names = [];
+        foreach ($records as $record) {
+            foreach (['_id', '_sequence', '_createdAt', '_updatedAt', '_permissions'] as $stored) {
+                $this->assertNull($record[$stored], "{$stored} of a distinct row");
+            }
+            $decoded = $this->decodeJoinData($record);
+            $this->assertSame(['name'], \array_keys($decoded));
+            $names[] = $decoded['name'];
+        }
+        \sort($names);
+        $this->assertSame(['Alice', 'Carol'], $names);
+    }
+
     protected function seedVisibleToCaller(): Seed
     {
         return Seed::create()->visibleTo($this->getSide() === 'client');

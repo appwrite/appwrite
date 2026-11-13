@@ -2,10 +2,12 @@ import { useCallback, useMemo, useState } from 'react'
 import { useParams, useLocation, useNavigate } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
+  canSeeProjectNavItem,
   canWriteProjectDomains,
   canWriteWebhooks,
   canCreateMigration,
 } from '@/lib/console-access-checks'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
@@ -16,7 +18,12 @@ import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
 import { Variables } from './Variables'
+import { Firewall } from '../firewall/Firewall'
 import type { Models } from '@appwrite.io/console'
+import type { FirewallResourceSelection } from '@/lib/firewall/conditions'
+
+/** The settings Firewall tab manages rules for the project API. */
+const API_SCOPE: FirewallResourceSelection = { resourceType: 'api' }
 
 export interface SettingsViewProps {
   /** Prefetched migrations from route loader; avoids loading spinner on first paint */
@@ -63,9 +70,14 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
       if (pathParts[settingsIndex + 1]) {
         const tabFromPath = pathParts[settingsIndex + 1]
         if (
-          ['domains', 'webhooks', 'migrations', 'smtp', 'variables'].includes(
-            tabFromPath,
-          )
+          [
+            'domains',
+            'webhooks',
+            'migrations',
+            'smtp',
+            'variables',
+            'firewall',
+          ].includes(tabFromPath)
         ) {
           return tabFromPath
         }
@@ -75,6 +87,12 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
     // Default to overview for index route (/projects/:projectId/settings or /projects/:projectId/settings/)
     return 'overview'
   }, [location.pathname])
+
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showFirewallTab =
+    isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
 
   // Update tabs with route paths
   const tabs: Tab[] = useMemo(
@@ -91,6 +109,16 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         to: '/projects/$projectId/settings/domains',
         params: { projectId: projectId as string },
       },
+      ...(showFirewallTab
+        ? [
+            {
+              id: 'firewall',
+              label: t('Firewall'),
+              to: '/projects/$projectId/settings/firewall',
+              params: { projectId: projectId as string },
+            },
+          ]
+        : []),
       {
         id: 'variables',
         label: t('Variables'),
@@ -116,12 +144,9 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         params: { projectId: projectId as string },
       },
     ],
-    [projectId, t],
+    [projectId, showFirewallTab, t],
   )
 
-  const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId)
   const noDomainsPermission = !canWriteProjectDomains(access, features)
   const noWebhooksPermission = !canWriteWebhooks(access, features)
   const noMigrationsPermission = !canCreateMigration(access, features)
@@ -142,7 +167,8 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
   const hasSearch =
     activeTab !== 'overview' &&
     activeTab !== 'smtp' &&
-    activeTab !== 'variables'
+    activeTab !== 'variables' &&
+    activeTab !== 'firewall'
   const searchPlaceholder = hasSearch
     ? activeTab === 'domains'
       ? t('Search domains...')
@@ -190,6 +216,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         activeTab={activeTab}
         showFilters={false}
         fullWidthBorder
+        fullWidth={activeTab === 'firewall'}
         hideToolbar={firstRunEmptyTab === activeTab}
         searchPlaceholder={searchPlaceholder}
         searchValue={hasSearch ? searchValue : undefined}
@@ -257,6 +284,9 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
         {activeTab === 'variables' && <Variables />}
+        {activeTab === 'firewall' && (
+          <Firewall projectId={projectId} resourceSelection={API_SCOPE} />
+        )}
       </div>
     </div>
   )

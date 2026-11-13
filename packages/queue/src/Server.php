@@ -349,6 +349,10 @@ class Server
                 $messageCallback = function (Message $message) {
                     $receivedAtTimestamp = microtime(true);
                     $job = $this->jobFor($message);
+                    $attributes = [
+                        'messaging.destination.name' => $message->getQueue(),
+                        'messaging.destination.namespace' => $this->adapter->namespace,
+                    ];
                     try {
                         // The enqueue timestamp comes from the publisher's
                         // clock and this from the consumer's, so on an idle
@@ -363,11 +367,11 @@ class Server
                             0.0,
                             microtime(true) - $message->getTimestamp(),
                         );
-                        $this->jobWaitTime->record($waitDuration);
+                        $this->jobWaitTime->record($waitDuration, $attributes);
 
                         $size = $message->getSize();
                         if ($size !== null) {
-                            $this->messageSize->record($size);
+                            $this->messageSize->record($size, $attributes);
                         }
 
                         $this->context()->set('message', fn (): \Utopia\Queue\Message => $message);
@@ -381,6 +385,9 @@ class Server
                                         $message->getPayload(),
                                     );
                                     $hook->getAction()(...$arguments);
+                                    if ($message->isSkipped()) {
+                                        return;
+                                    }
                                 }
                             }
                         }
@@ -394,6 +401,9 @@ class Server
                                         $message->getPayload(),
                                     );
                                     $hook->getAction()(...$arguments);
+                                    if ($message->isSkipped()) {
+                                        return;
+                                    }
                                 }
                             }
                         }
@@ -407,7 +417,7 @@ class Server
                             ),
                         );
                     } finally {
-                        $this->processDuration->record(microtime(true) - $receivedAtTimestamp);
+                        $this->processDuration->record(microtime(true) - $receivedAtTimestamp, $attributes);
                     }
                 };
 

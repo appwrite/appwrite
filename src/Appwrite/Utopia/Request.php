@@ -16,6 +16,11 @@ use Utopia\System\System;
 class Request extends UtopiaRequest
 {
     /**
+     * Value of a param listed in the route's `cache.negotiate` label that asks the server to pick it from the Accept header.
+     */
+    public const string NEGOTIATE_AUTO = 'auto';
+
+    /**
      * @var array<Filter>
      */
     private array $filters = [];
@@ -27,8 +32,13 @@ class Request extends UtopiaRequest
     {
         $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
         $this->trustedProxies = TrustedProxies::fromEnvironment();
+        $fromProxy = $this->trustedProxies->contains($request->server['remote_addr'] ?? '0.0.0.0');
 
-        parent::__construct($request, new TrustedHeaders(ip: explode(',', $trustedHeaders)));
+        parent::__construct($request, new TrustedHeaders(
+            ip: explode(',', $trustedHeaders),
+            host: $fromProxy ? ['x-forwarded-host'] : [],
+            port: $fromProxy ? ['x-forwarded-port'] : [],
+        ));
     }
 
     #[\Override]
@@ -216,9 +226,21 @@ class Request extends UtopiaRequest
      */
     public function getHeaders(): array
     {
-        $headers = parent::getHeaders();
+        return $this->getHeadersWithoutCookies([]);
+    }
 
-        $cookies = $this->getCookieParams();
+    /**
+     * Get all headers like getHeaders(), leaving the named cookies out of the synthesized `cookie` header.
+     *
+     * @param list<string> $names
+     * @return array<string, array<int, string>>
+     */
+    public function getHeadersWithoutCookies(array $names): array
+    {
+        $headers = parent::getHeaders();
+        unset($headers['cookie']);
+
+        $cookies = \array_diff_key($this->getCookieParams(), \array_flip($names));
         if (!empty($cookies)) {
             $pairs = [];
             foreach ($cookies as $key => $value) {
@@ -254,14 +276,109 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * Index of the chunk this range starts in, for chunks of the given size. 0 without a valid range.
+     */
+    public function getContentRangeChunk(int $size): int
+    {
+        $start = $this->getContentRangeStart();
+
+        if ($start === null) {
+            return 0;
+        }
+
+        return \intdiv($start, $size);
+    }
+
+    /**
+     * @return array{unit: string, size: int, start: int, end: int}|null
+     */
+    #[\Override]
+    protected function parseContentRange(): ?array
+    {
+        $data = parent::parseContentRange();
+
+        // Bounds past PHP_INT_MAX saturate to it, and end + 1 must stay an integer.
+        if ($data === null || $data['size'] >= PHP_INT_MAX) {
+            return null;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Returns the first of the given MIME types the client lists in its Accept header with a non-zero quality.
+     * Only exact entries count: wildcard ranges (`image/*`, any type) do not promise the client decodes a given format.
+     *
+     * @param array<string> $types MIME types in server preference order
+     */
+    public function getAcceptedType(array $types): ?string
+    {
+        $accepted = [];
+        foreach (\explode(',', $this->getHeaderLine('accept')) as $entry) {
+            $parts = \explode(';', $entry);
+            $type = \strtolower(\trim($parts[0]));
+            $quality = 1.0;
+            foreach (\array_slice($parts, 1) as $parameter) {
+                [$name, $value] = \array_pad(\explode('=', $parameter, 2), 2, '');
+                if (\strtolower(\trim($name)) === 'q') {
+                    $quality = (float) \trim($value);
+                }
+            }
+            if ($type !== '' && $quality > 0) {
+                $accepted[$type] = true;
+            }
+        }
+
+        foreach ($types as $type) {
+            if (isset($accepted[\strtolower($type)])) {
+                return $type;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolves params set to `auto` that the route negotiates from the Accept header.
+     *
+     * The route's `cache.negotiate` label maps a param to `[value => MIME type]` in preference order.
+     * An `auto` param resolves to the first value whose type the client accepts, or to an empty string when none is.
+     *
+     * @return array<string, string> resolved values keyed by param, only for params set to `auto`
+     */
+    public function getNegotiatedParams(): array
+    {
+        $negotiate = $this->getRoute()?->getLabel('cache.negotiate', []) ?? [];
+        $params = $this->getParams();
+        $resolved = [];
+        foreach ($negotiate as $param => $types) {
+            if (($params[$param] ?? null) !== self::NEGOTIATE_AUTO) {
+                continue;
+            }
+            $type = $this->getAcceptedType(\array_values($types));
+            $resolved[$param] = $type === null ? '' : (string) \array_search($type, $types, true);
+        }
+
+        return $resolved;
+    }
+
+    /**
      * Creates a unique stable cache identifier for this GET request.
      * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
+     * Negotiated `auto` params are keyed by their resolved value, so they share entries with explicit requests.
      *
      * @return string
      */
     public function cacheIdentifier(): string
     {
         $params = $this->getParams();
+        foreach ($this->getNegotiatedParams() as $param => $value) {
+            if ($value === '') {
+                unset($params[$param]);
+            } else {
+                $params[$param] = $value;
+            }
+        }
         $allowedParams = $this->getRoute()?->getLabel('cache.params', null);
         if ($allowedParams !== null) {
             $params = array_intersect_key($params, array_flip($allowedParams));
@@ -276,6 +393,11 @@ class Request extends UtopiaRequest
     private ?Authorization $authorization = null;
     private ?User $user = null;
 
+    /**
+     * @var array<string> Scopes the caller holds, set once the request is authorized
+     */
+    private array $scopes = [];
+
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
@@ -284,5 +406,21 @@ class Request extends UtopiaRequest
     public function setUser(User $user): void
     {
         $this->user = $user;
+    }
+
+    /**
+     * @param array<string> $scopes
+     */
+    public function setScopes(array $scopes): void
+    {
+        $this->scopes = $scopes;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getScopes(): array
+    {
+        return $this->scopes;
     }
 }

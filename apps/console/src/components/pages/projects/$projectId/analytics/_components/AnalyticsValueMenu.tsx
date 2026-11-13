@@ -13,7 +13,10 @@ import {
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { copyToClipboard, openInNewTab } from '@/lib/utils/context-menu'
 import { buildFilterQueryString } from '@/lib/table-filters'
-import { analyticsFilterAttributeForDimension } from '@/lib/analytics/analytics-filters'
+import {
+  analyticsFilterAttributeForDimension,
+  type AnalyticsFilterAttribute,
+} from '@/lib/analytics/analytics-filters'
 import {
   firewallAllowOnlyCountryQuery,
   firewallCreateQueryForAnalyticsValue,
@@ -33,12 +36,15 @@ import {
  */
 export function AnalyticsValueMenu({
   dimension,
+  attribute: attributeOverride,
   value,
   label,
   href,
   children,
 }: {
   dimension: AnalyticsDimension
+  /** Filter attribute when it isn't the dimension's own (custom props). */
+  attribute?: AnalyticsFilterAttribute | null
   /** Raw value (filters, firewall). */
   value: string
   /** Display value for the menu title (e.g. country name). */
@@ -52,7 +58,10 @@ export function AnalyticsValueMenu({
     useAnalyticsFilters()
   const { projectId, firewallSiteId } = useAnalyticsValueMenuContext()
 
-  const attribute = analyticsFilterAttributeForDimension(dimension)
+  const attribute =
+    attributeOverride !== undefined
+      ? attributeOverride
+      : analyticsFilterAttributeForDimension(dimension)
   const isActive = attribute ? isFilterActive(attribute, value) : false
   const isExcluded = attribute
     ? Array.from(filterMap.keys()).some(

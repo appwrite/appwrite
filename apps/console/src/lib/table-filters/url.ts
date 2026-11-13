@@ -74,6 +74,26 @@ export function findCompactFilterKeyInMap(
 }
 
 /**
+ * Copy of `map` with `key` set to `query`. When it replaces `replaceKey`, the
+ * filter keeps that one's place, so editing a filter does not reorder them.
+ */
+export function withFilter(
+  map: FilterMap,
+  key: CompactFilterKey,
+  query: string,
+  replaceKey?: CompactFilterKey,
+): FilterMap {
+  if (replaceKey && map.has(replaceKey)) {
+    return new Map(
+      Array.from(map, ([k, q]) => (k === replaceKey ? [key, query] : [k, q])),
+    )
+  }
+  const next = new Map(map)
+  next.set(key, query)
+  return next
+}
+
+/**
  * Decode `query` param to FilterMap (compact keys → query strings).
  * Rebuilds query strings from keys; no tag stored in URL.
  */

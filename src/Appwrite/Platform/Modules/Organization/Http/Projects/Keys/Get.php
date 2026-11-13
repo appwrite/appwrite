@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -53,6 +54,7 @@ class Get extends Action
             ->inject('team')
             ->inject('authorization')
             ->inject('apiKey')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -64,6 +66,7 @@ class Get extends Action
         Document $team,
         Authorization $authorization,
         ?Key $apiKey,
+        Request $request,
     ) {
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
@@ -71,6 +74,16 @@ class Get extends Action
 
         if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
+        }
+
+        // Secrets are only for callers that could have created the key: a session with the
+        // keys write scope, or a key whose grant covers it. A JWT never sees them.
+        if (
+            \array_intersect(['organization.projects.keys.write', 'keys.write'], $request->getScopes()) === []
+            || $request->getHeaderLine('x-appwrite-jwt', '') !== ''
+            || ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $key->getAttribute('scopes', []), $key->getAttribute('expire')))
+        ) {
+            $key->setAttribute('secret', '');
         }
 
         $response->dynamic($key, Response::MODEL_KEY);

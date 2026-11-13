@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Workers\Mails;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\FixedLookup;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Exception\InvalidArgumentException;
@@ -75,6 +78,47 @@ final class SpyMailAdapter extends EmailAdapter
 
 final class MailsTest extends TestCase
 {
+    public function testUnsubscribeLinkJoinsTheFooterOnlyForMailThatCarriesOne(): void
+    {
+        $template = __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl';
+        $send = function (array $variables) use ($template): string {
+            $adapter = new SpyMailAdapter();
+            $registry = new Registry();
+            $registry->set('smtp', static fn (): Pool => new Pool(new Stack(), 'smtp', 1, static fn (): SpyMailAdapter => $adapter, 1.0));
+            $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+            \putenv('_APP_SMTP_HOST=spy.smtp.test');
+            try {
+                (new Mails())->action(
+                    new Message(['pid' => 'pid', 'queue' => 'v1-mails', 'timestamp' => \time(), 'payload' => [
+                        'smtp' => [],
+                        'recipient' => 'owner@example.test',
+                        'name' => 'Owner',
+                        'subject' => 'Alert',
+                        'body' => 'Body',
+                        'bodyTemplate' => $template,
+                        'variables' => $variables,
+                    ]]),
+                    new Document(['$id' => 'console']),
+                    $registry,
+                    new None(),
+                    new PublicHostname(new PublicInternet(), new FixedLookup()),
+                );
+            } finally {
+                \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+            }
+
+            return (string) $adapter->captured?->getContent();
+        };
+
+        $html = $send(['unsubscribeUrl' => 'https://console.example/auth/alerts/unsubscribe?token=one&x=1']);
+        $this->assertMatchesRegularExpression('#>Privacy</a></td>\s*<td[^>]*><div[^>]*>\|</div></td><td><a href="https://console\.example/auth/alerts/unsubscribe\?token=one&amp;x=1">Unsubscribe</a></td>#', $html);
+
+        // Every other mail keeps the footer it had.
+        $html = $send([]);
+        $this->assertStringNotContainsString('Unsubscribe', $html);
+        $this->assertStringNotContainsString('{{unsubscribeLink}}', $html);
+    }
+
     public function testGlobalSmtpAdapterIsTakenFromThePoolPerMessage(): void
     {
         $adapters = [];
@@ -113,12 +157,14 @@ final class MailsTest extends TestCase
                 new Document(['$id' => 'project-x']),
                 $registry,
                 new None(),
+                new PublicHostname(new PublicInternet(), new FixedLookup()),
             );
             $worker->action(
                 $message,
                 new Document(['$id' => 'project-x']),
                 $registry,
                 new None(),
+                new PublicHostname(new PublicInternet(), new FixedLookup()),
             );
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
@@ -163,6 +209,7 @@ final class MailsTest extends TestCase
                 new Document(['$id' => 'project-x']),
                 $registry,
                 new None(),
+                new PublicHostname(new PublicInternet(), new FixedLookup()),
             );
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
@@ -219,6 +266,20 @@ final class MailsTest extends TestCase
         $this->assertSame(1, $adapter->sendCount);
     }
 
+    public function testProjectSmtpAtAPrivateAddressIsSkippedWithoutADial(): void
+    {
+        $adapter = new SpyMailAdapter();
+
+        // Dialling would fail and throw; a refused host is skipped before any connection.
+        $this->runMailWorker($adapter, recipient: 'john@example.test', smtp: [
+            'host' => '10.0.0.1',
+            'port' => 25,
+            'senderEmail' => 'sender@example.test',
+        ]);
+
+        $this->assertSame(0, $adapter->sendCount);
+    }
+
     private function assertMailWorkerThrows(SpyMailAdapter $adapter, string $expectedMessage): void
     {
         $this->expectException(\Exception::class);
@@ -258,6 +319,7 @@ final class MailsTest extends TestCase
                 new Document(['$id' => 'project-x']),
                 $registry,
                 new None(),
+                new PublicHostname(new PublicInternet(), new FixedLookup()),
             );
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);

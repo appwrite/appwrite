@@ -15,7 +15,10 @@ const JSON_HEADERS = {
 } as const
 
 function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
+  // Shared caches must not pin a transient error.
+  const headers =
+    status === 200 ? JSON_HEADERS : { ...JSON_HEADERS, 'Cache-Control': 'no-store' }
+  return new Response(JSON.stringify(body), { status, headers })
 }
 
 function notFoundResponse(): Response {
@@ -127,8 +130,9 @@ export async function handleReferenceOpenApiSpecRequest(
 ): Promise<Response> {
   return handleReferenceError(async () => {
     const url = new URL(request.url)
-    const version = url.searchParams.get('version') ?? ''
-    const mode = url.searchParams.get('mode') ?? ''
+    // Bare requests (/openapi.json) get the Cloud server spec.
+    const version = url.searchParams.get('version') ?? 'cloud'
+    const mode = url.searchParams.get('mode') ?? 'server'
 
     if (!isReferenceVersion(version) || (mode !== 'client' && mode !== 'server')) {
       return badRequestResponse('Invalid OpenAPI spec parameters')
@@ -139,6 +143,9 @@ export async function handleReferenceOpenApiSpecRequest(
       version as ReferenceVersion,
       mode as ApiExplorerProjectPlatform,
     )
-    return jsonResponse(spec)
+    if (version !== 'cloud') return jsonResponse(spec)
+    const { withCloudOAuth2 } = await import('./cloud-oauth2')
+    // The OAuth 2.0 scopes are additive; serve the plain spec if they fail.
+    return jsonResponse(await withCloudOAuth2(spec).catch(() => spec))
   })
 }

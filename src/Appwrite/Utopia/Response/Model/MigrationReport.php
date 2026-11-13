@@ -23,6 +23,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 20,
             ])
+            ->addRule(Resource::TYPE_MEMBERSHIP, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of memberships to be migrated.',
+                'default' => 0,
+                'example' => 20,
+            ])
             ->addRule(Resource::TYPE_DATABASE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of databases to be migrated.',
@@ -92,6 +98,12 @@ class MigrationReport extends Model
             ->addRule(Resource::TYPE_PROJECT_LABELS, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of label sets to be migrated (always 0 or 1 — the project-level RBAC label array).',
+                'default' => 0,
+                'example' => 1,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_PREFERENCES, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of project preference sets to be migrated (always 0 or 1).',
                 'default' => 0,
                 'example' => 1,
             ])

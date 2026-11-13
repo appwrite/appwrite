@@ -54,7 +54,7 @@ class HelloWorldService extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
-        $this->addAction('hello', new HelloWorldAction());
+        $this->addAction('hello', HelloWorldAction::class);
     }
 }
 

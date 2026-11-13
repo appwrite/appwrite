@@ -50,7 +50,7 @@ services:
       - ./tests/fixtures/supabase:/mockoon
 
   tests:
-    image: appwrite/base:2.1.0
+    image: appwrite/base:2.2.1
     entrypoint: ["tail", "-f", "/dev/null"]
     networks:
       - tests

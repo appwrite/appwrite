@@ -150,6 +150,10 @@ $register->set('pools', function () {
 
     $poolTimeout = (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10);
 
+    // Bounds every Redis connect and reply, so an unresponsive Redis fails a request
+    // instead of holding it. Must stay above the 2 s a queue retry blocks on a pop.
+    $redisTimeout = (float) System::getEnv('_APP_REDIS_TIMEOUT', 3);
+
     foreach ($connections as $key => $connection) {
         $type = $connection['type'];
         $multiple = $connection['multiple'];
@@ -204,13 +208,14 @@ $register->set('pools', function () {
                 'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => false]);
                 },
-                default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass) {
+                default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $redisTimeout) {
                     $redis = new \Redis();
-                    @$redis->pconnect($dsnHost, (int)$dsnPort);
+                    @$redis->pconnect($dsnHost, (int)$dsnPort, $redisTimeout);
+                    // Not the pconnect argument: a socket reused from the persistent pool keeps its old read timeout
+                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, $redisTimeout);
                     if ($dsnPass !== null && $dsnPass !== '') {
                         $redis->auth($dsnUser !== null && $dsnUser !== '' ? [$dsnUser, $dsnPass] : $dsnPass);
                     }
-                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
                     return $redis;
                 },
@@ -231,7 +236,7 @@ $register->set('pools', function () {
                 default => $poolSize,
             };
 
-            $pool = new Pool(new SwoolePool(), $name, $connectionPoolSize, function () use ($type, $resource, $dsn) {
+            $pool = new Pool(new SwoolePool(), $name, $connectionPoolSize, function () use ($type, $resource, $dsn, $redisTimeout) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
@@ -253,8 +258,8 @@ $register->set('pools', function () {
                     case 'publisher':
                         // Publishers never block on receive, so one connection backs both broker slots.
                         return match ($dsn->getScheme()) {
-                            'redis' => (function () use ($dsn) {
-                                $connection = Queue\Connection\Redis::fromDSN($dsn);
+                            'redis' => (function () use ($dsn, $redisTimeout) {
+                                $connection = Queue\Connection\Redis::fromDSN($dsn, $redisTimeout, $redisTimeout);
                                 return new Queue\Broker\Redis($connection, $connection);
                             })(),
                             default => null

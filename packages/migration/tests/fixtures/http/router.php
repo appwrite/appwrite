@@ -17,6 +17,14 @@ if ($path === '/echo') {
     return;
 }
 
+if ($path === '/compressed') {
+    // Decodes to one byte past Target::MAX_RESPONSE_SIZE
+    \header('Content-Encoding: gzip');
+    echo \gzencode(\str_repeat('x', 32 * 1024 * 1024 + 1), 9);
+
+    return;
+}
+
 if ($path === '/redirect') {
     \header('Location: '.($_GET['to'] ?? '/echo'), true, 302);
 

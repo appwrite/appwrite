@@ -721,6 +721,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'More about the Appwrite Network': 'גלו עוד על Appwrite Network', // pragma: allowlist secret
   'More customers': 'עוד לקוחות',
   'More providers': 'עוד ספקים',
+  'Move your data to Appwrite': 'העבירו את הנתונים שלכם ל-Appwrite',
   'My functions': 'הפונקציות שלי',
   'N/A': 'לא זמין',
   'mySHOEFITTER sized 12,000+ feet accurately for major EU retailers':
@@ -933,6 +934,7 @@ export const heMarketingDictionary: Record<string, string> = {
     'שחזור גרסה מחליף את הפריסה המוגשת. שום קוד לא נמחק, משתנה או נבנה מחדש, כך שההתאוששות כמעט מיידית וללא השבתה.',
   'Round-the-clock Slack and email from our engineering team.': 'זמינות מסביב לשעון ב-Slack ובאימייל מצוות ההנדסה שלנו.',
   'rows': 'שורות',
+  'Run Appwrite on your own infrastructure': 'הריצו את Appwrite על התשתית שלכם',
   'Run Enterprise on fully managed Appwrite Cloud or as a premium self-hosted edition in your environment.': // pragma: allowlist secret
     'הריצו את Enterprise על Appwrite Cloud בניהול מלא או כמהדורת פרימיום באירוח עצמי בסביבה שלכם.', // pragma: allowlist secret
   'Run on localhost': 'הרצה על localhost',

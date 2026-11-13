@@ -26,7 +26,8 @@ use Utopia\Database\Validator\Authorization;
 /**
  * Document create has no API-side permission gate: the database hooks appwrite installs decide nested related
  * documents, written the way the create action writes them. API keys pass; a session needs create on the related collection for a new nested document and update
- * (collection-level, or document-level under document security) to link or change a stored one.
+ * (collection-level, or document-level under document security) to link or change a stored one, except a many-to-one link, which is only the key on the parent
+ * and needs read.
  */
 final class NestedPermissionsTest extends TestCase
 {
@@ -56,13 +57,14 @@ final class NestedPermissionsTest extends TestCase
 
         foreach ([RelationshipType::OneToMany, RelationshipType::OneToOne, RelationshipType::ManyToOne, RelationshipType::ManyToMany] as $type) {
             $name = $type->value;
+            $link = $type === RelationshipType::ManyToOne ? null : self::NO_UPDATE;
 
             yield "{$name}: a session creates a nested document with create" => [$type, false, $create, [], self::NEW, self::SESSION, null];
             yield "{$name}: a session without create cannot create a nested document" => [$type, false, $read, [], self::NEW, self::SESSION, self::NO_CREATE];
             yield "{$name}: a session links with collection update" => [$type, false, $update, [], self::STORED, self::SESSION, null];
-            yield "{$name}: a session without update cannot link" => [$type, false, $read, [], self::STORED, self::SESSION, self::NO_UPDATE];
+            yield "{$name}: a session without update cannot link" => [$type, false, $read, [], self::STORED, self::SESSION, $link];
             yield "{$name}: a session links with document update under document security" => [$type, true, $read, $own, self::STORED, self::SESSION, null];
-            yield "{$name}: document security without any update refuses the link" => [$type, true, $read, [Permission::read(Role::user(self::USER))], self::STORED, self::SESSION, self::NO_UPDATE];
+            yield "{$name}: document security without any update refuses the link" => [$type, true, $read, [Permission::read(Role::user(self::USER))], self::STORED, self::SESSION, $link];
             yield "{$name}: an API key creates without any permission" => [$type, false, [], [], self::NEW, self::KEY, null];
             yield "{$name}: an API key links without any permission" => [$type, false, [], [], self::STORED, self::KEY, null];
             yield "{$name}: a guest cannot create a nested document" => [$type, false, $create, [], self::NEW, self::GUEST, 'Missing "create" permission for role "users". Only "["any","guests"]" scopes are allowed and "["users"]" was given.'];

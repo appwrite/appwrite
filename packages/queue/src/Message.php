@@ -11,8 +11,10 @@ class Message
     protected int $timestamp;
     protected array $payload;
     protected int $attempts = 0;
+    protected ?int $maxAttempts = null;
     protected ?int $sequence = null;
     protected bool $terminal = false;
+    protected bool $skipped = false;
     protected ?int $size = null;
 
     public function __construct(array $array = [])
@@ -106,6 +108,29 @@ class Message
     }
 
     /**
+     * Deliveries the broker allows before it dead-letters a failure; null on a broker that doesn't say.
+     */
+    public function getMaxAttempts(): ?int
+    {
+        return $this->maxAttempts;
+    }
+
+    public function setMaxAttempts(?int $maxAttempts): self
+    {
+        $this->maxAttempts = $maxAttempts;
+
+        return $this;
+    }
+
+    /**
+     * Whether a failure on this delivery is dead-lettered. Always false on Redis.
+     */
+    public function isLastAttempt(): bool
+    {
+        return $this->maxAttempts !== null && $this->attempts + 1 >= $this->maxAttempts;
+    }
+
+    /**
      * The broker's own position for this message, where it has one.
      *
      * A stronger deduplication key than the pid for a handler that needs one.
@@ -183,6 +208,22 @@ class Message
     public function isTerminal(): bool
     {
         return $this->terminal;
+    }
+
+    /**
+     * Set from an init hook to acknowledge the message without running its job.
+     * Shutdown hooks still run; error hooks do not.
+     */
+    public function skip(bool $skipped = true): self
+    {
+        $this->skipped = $skipped;
+
+        return $this;
+    }
+
+    public function isSkipped(): bool
+    {
+        return $this->skipped;
     }
 
     public function asArray(): array

@@ -8,7 +8,7 @@ Dokploy is an open-source, self-hosted deployment platform that simplifies appli
 
 # Prerequisites {% #prerequisites %}
 
-Before starting, ensure your server meets the [minimum requirements](/docs/advanced/self-hosting#system-requirements) for hosting Appwrite with Dokploy.
+Before starting, ensure your server meets the [minimum requirements](/docs/advanced/self-hosting/installation#system-requirements) for hosting Appwrite with Dokploy.
 
 # Installation {% #installation %}
 

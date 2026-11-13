@@ -36,6 +36,10 @@ class Tcp extends Transport
      * @param int $idleTimeout Seconds before idle connections are closed (RFC 7766)
      * @param bool $proxyProtocol Expect a PROXY protocol v1/v2 header on each
      *     connection (sent by load balancers to preserve the client address)
+     * @param int $writeTimeout Seconds a response may spend retrying a full send
+     *     buffer before the client is dropped. Matches the SO_SNDTIMEO set on
+     *     accept, which has no effect on a non-blocking socket and so never
+     *     bounds this on its own.
      */
     public function __construct(
         string $host = '0.0.0.0',
@@ -45,6 +49,7 @@ class Tcp extends Transport
         protected int $maxFrameSize = Message::MAX_SIZE,
         protected int $idleTimeout = 30,
         protected bool $proxyProtocol = false,
+        protected int $writeTimeout = 5,
     ) {
         parent::__construct($host, $port);
     }
@@ -217,6 +222,12 @@ class Tcp extends Transport
     /**
      * Send a response with the 2-byte length prefix per RFC 1035 Section 4.2.2.
      * Oversized responses close the connection rather than send corrupted data.
+     *
+     * This runs synchronously inside the single select loop that services every
+     * other client and both the TCP and UDP transports, so a peer that never
+     * drains its receive window must not be allowed to retry here forever: that
+     * stalls the whole server, not just this one connection. $writeTimeout
+     * bounds the retry the same way the idle timeout bounds a silent reader.
      */
     protected function respond(Socket $client, string $payload): void
     {
@@ -228,14 +239,20 @@ class Tcp extends Transport
         $frame = pack('n', \strlen($payload)) . $payload;
         $total = \strlen($frame);
         $sent = 0;
+        $deadline = microtime(true) + $this->writeTimeout;
 
         while ($sent < $total) {
-            $written = @socket_write($client, substr($frame, $sent));
+            $written = $this->write($client, substr($frame, $sent));
 
             if ($written === false) {
-                $error = socket_last_error($client);
+                $error = $this->writeErrno($client);
 
                 if (\in_array($error, [SOCKET_EAGAIN, SOCKET_EWOULDBLOCK], true)) {
+                    if (microtime(true) >= $deadline) {
+                        $this->close($client);
+                        return;
+                    }
+
                     socket_clear_error($client);
                     usleep(1000);
                     continue;
@@ -247,6 +264,25 @@ class Tcp extends Transport
 
             $sent += $written;
         }
+    }
+
+    /**
+     * Thin wrapper around socket_write(), overridden in tests to simulate a
+     * stalled peer deterministically: real kernel send buffers on a loopback
+     * connection do not stay blocked under sustained backpressure, so there is
+     * no reliable way to force a genuine, lasting EAGAIN from userspace alone.
+     */
+    protected function write(Socket $client, string $data): int|false
+    {
+        return @socket_write($client, $data);
+    }
+
+    /**
+     * Paired with write() above: overridden alongside it in tests.
+     */
+    protected function writeErrno(Socket $client): int
+    {
+        return socket_last_error($client);
     }
 
     protected function close(Socket $client): void

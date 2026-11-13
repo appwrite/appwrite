@@ -72,6 +72,7 @@ class Create extends Action
             ->param('authUsername', '', new Text(255), 'Webhook HTTP user. Max length: 255 chars.', true)
             ->param('authPassword', '', new PasswordFormat(new Text(2048)), 'Webhook HTTP password. Max length: 2048 chars.', true)
             ->param('secret', null, new Nullable(new Text(256, 8)), 'Webhook secret key. If not provided, a new key will be generated automatically. Key must be at least 8 characters long, and at max 256 characters.', optional: true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the webhook.', true)
             ->inject('response')
             ->inject('project')
             ->inject('queueForEvents')
@@ -93,6 +94,7 @@ class Create extends Action
         string $authUsername,
         string $authPassword,
         ?string $secret,
+        string $description,
         Response $response,
         Document $project,
         QueueEvent $queueForEvents,
@@ -107,6 +109,7 @@ class Create extends Action
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'name' => $name,
+            'description' => $description,
             'events' => $events,
             'url' => $url,
             'security' => $tls,

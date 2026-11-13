@@ -16,6 +16,19 @@ type ActivityEventCountryFields = Models.ActivityEvent & {
   countryName?: string
 }
 
+/**
+ * `reason` lands in the generated SDK model once a Console SDK release carries
+ * it; until then read it off the event the API already returns.
+ */
+type ActivityEventReasonFields = Models.ActivityEvent & {
+  reason?: string
+}
+
+/** Why the actor made the request (`X-Appwrite-Reason`); empty when none was given. */
+export function getActivityReason(event: Models.ActivityEvent): string {
+  return (event as ActivityEventReasonFields).reason?.trim() ?? ''
+}
+
 /** Pretty-printed full audit row (same shape as the API / drawer raw JSON). */
 export function formatActivityEventJson(event: Models.ActivityEvent): string {
   return JSON.stringify(event, null, 2)

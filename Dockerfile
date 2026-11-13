@@ -1,5 +1,9 @@
 FROM composer:2 AS composer
 
+# Distrust the compromised eMudhra chains before downloading dependencies.
+RUN apk add --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
+    update-ca-certificates
+
 ARG TESTING=false
 ENV TESTING=$TESTING
 
@@ -12,7 +16,24 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.1.0 AS base
+# The utopia extension, built against the base image's own PHP headers and
+# libheif so the ABI matches. Alpine's Rust is older than the workspace needs.
+FROM appwrite/base:2.3.0@sha256:e9519544a2315be040f150625d07c0bb24693a043130fc9e5f628411d4dfd5a7 AS extension-build
+
+RUN apk add --no-cache rustup clang-dev libheif-dev build-base && \
+    rustup-init -y --profile minimal --default-toolchain 1.97.1
+
+WORKDIR /usr/local/src
+
+COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY .cargo ./.cargo
+COPY crates ./crates
+
+RUN . "$HOME/.cargo/env" && \
+    cargo build --release --locked -p utopia-extension && \
+    strip target/release/libutopia.so
+
+FROM appwrite/base:2.3.0@sha256:e9519544a2315be040f150625d07c0bb24693a043130fc9e5f628411d4dfd5a7 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -39,6 +60,7 @@ COPY ./src /usr/src/code/src
 COPY ./packages /usr/src/code/packages
 COPY ./dev /usr/src/code/dev
 COPY ./docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
+COPY ./docker/php.ini /usr/local/etc/php/conf.d/zz-php.ini
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 COPY ./clickhouse-config.xml /usr/src/code/clickhouse-config.xml
@@ -70,6 +92,7 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/encryption && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
@@ -78,9 +101,11 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/mqtt && \
     chmod +x /usr/local/bin/schedule && \
+    chmod +x /usr/local/bin/schedule-alerts && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-executions && \
     chmod +x /usr/local/bin/schedule-messages && \
+    chmod +x /usr/local/bin/schedule-maintenance && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
@@ -95,6 +120,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/queue-count-processing && \
     chmod +x /usr/local/bin/queue-count-success && \
     chmod +x /usr/local/bin/worker && \
+    chmod +x /usr/local/bin/worker-alerts && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-jobs && \
     chmod +x /usr/local/bin/worker-screenshots && \
@@ -104,6 +130,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-executions && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
+    chmod +x /usr/local/bin/worker-maintenance && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
@@ -112,6 +139,10 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-webhooks
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
+
+# Registers Utopia\Image\Canvas; see crates/extension/README.md.
+COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
+RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
 
 FROM base AS production
 
@@ -124,7 +155,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.1.0-xdebug AS xdebug
+FROM appwrite/base:2.3.0-xdebug@sha256:f600c77d1efdd46af67c27ca700b40426c05db7f584f99e7d82afedd33a7f131 AS xdebug
 
 FROM base AS development
 
@@ -134,7 +165,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.1.0 ships without XDebug, so it cannot reach production or
+# appwrite/base:2.3.0 ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.

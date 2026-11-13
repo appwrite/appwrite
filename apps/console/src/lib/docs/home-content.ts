@@ -163,6 +163,11 @@ export const DOCS_HOME_IDE_AI_TOOLS: DocsHomeToolCard[] = [
     href: '/docs/tooling/ai/agents/grok-build',
     iconSrc: '/icons/grok-build.svg',
   },
+  {
+    title: 'Pi',
+    href: '/docs/tooling/ai/agents/pi',
+    iconSrc: '/icons/pi.svg',
+  },
 ]
 
 export const DOCS_HOME_VIBE_AI_TOOLS: DocsHomeToolCard[] = [

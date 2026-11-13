@@ -78,7 +78,8 @@ export function useDatabaseMonitorChartFilters(
 
   const setDateRange = useCallback(
     (nextDateRange: DateRange | undefined) => {
-      const normalizedSelection = normalizeUsageDateRangeSelection(nextDateRange)
+      const normalizedSelection =
+        normalizeUsageDateRangeSelection(nextDateRange)
       if (!normalizedSelection?.from) {
         setDateRangePresetId(DEFAULT_MONITOR_PRESET_ID)
         setCustomDateRange(null)
@@ -87,6 +88,7 @@ export function useDatabaseMonitorChartFilters(
             current,
             getStableMonitorChartDateRange(),
             plan,
+            { refine: false },
           ),
         )
         return
@@ -97,8 +99,7 @@ export function useDatabaseMonitorChartFilters(
         to: normalizedSelection.to ?? normalizedSelection.from,
       }
 
-      const matchingPreset =
-        findMatchingUsageDateRangePreset(resolvedDateRange)
+      const matchingPreset = findMatchingUsageDateRangePreset(resolvedDateRange)
       if (matchingPreset) {
         setDateRangePresetId(matchingPreset.value)
         setCustomDateRange(null)
@@ -108,7 +109,9 @@ export function useDatabaseMonitorChartFilters(
       }
 
       setChartIntervalState((current) =>
-        resolveUsageChartIntervalForRange(current, resolvedDateRange, plan),
+        resolveUsageChartIntervalForRange(current, resolvedDateRange, plan, {
+          refine: false,
+        }),
       )
     },
     [plan],

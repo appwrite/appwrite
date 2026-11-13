@@ -42,6 +42,7 @@ interface ApiKeysListProps {
   onCopy?: (key: string, field: string) => void
   copiedField?: string | null
   showActions?: boolean
+  actionsDisabled?: boolean
   /** When set, wrap each row with a right-click context menu */
   projectId?: string
   /** Organization API keys: wrap each row with the org key context menu */
@@ -72,6 +73,7 @@ export function ApiKeysList({
   onCopy,
   copiedField,
   showActions = true,
+  actionsDisabled = false,
   projectId,
   organizationId,
   embedded = false,
@@ -138,11 +140,15 @@ export function ApiKeysList({
             const expirationStatus = getExpirationStatus(apiKey.expire)
             const row = (
               <div
-                role={onUpdate ? 'button' : undefined}
-                tabIndex={onUpdate ? 0 : undefined}
-                onClick={onUpdate ? () => onUpdate(apiKey.id) : undefined}
+                role={onUpdate && !actionsDisabled ? 'button' : undefined}
+                tabIndex={onUpdate && !actionsDisabled ? 0 : undefined}
+                onClick={
+                  onUpdate && !actionsDisabled
+                    ? () => onUpdate(apiKey.id)
+                    : undefined
+                }
                 onKeyDown={
-                  onUpdate
+                  onUpdate && !actionsDisabled
                     ? (e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
@@ -153,7 +159,7 @@ export function ApiKeysList({
                 }
                 className={cn(
                   'flex items-center justify-between gap-3 p-4 overflow-hidden',
-                  onUpdate &&
+                  onUpdate && !actionsDisabled &&
                     'cursor-pointer transition-colors hover:bg-muted/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
                 )}
               >
@@ -262,6 +268,8 @@ export function ApiKeysList({
                       <DropdownMenuContent align="end">
                         {onUpdate && (
                           <DropdownMenuItem
+                            disabled={actionsDisabled}
+                            title={actionsDisabled ? t("You don't have permission to perform this action.") : undefined}
                             onSelect={() =>
                               openDialogAfterOverlayCloses(() =>
                                 onUpdate(apiKey.id),
@@ -275,6 +283,8 @@ export function ApiKeysList({
                         )}
                         {onDelete && (
                           <DropdownMenuItem
+                            disabled={actionsDisabled}
+                            title={actionsDisabled ? t("You don't have permission to perform this action.") : undefined}
                             onSelect={() =>
                               openDialogAfterOverlayCloses(() =>
                                 onDelete(apiKey.id),
@@ -314,6 +324,7 @@ export function ApiKeysList({
                 <OrgApiKeyContextMenu
                   key={apiKey.id}
                   organizationId={organizationId}
+                  actionsDisabled={actionsDisabled}
                   apiKey={{
                     id: apiKey.id,
                     name: apiKey.name,

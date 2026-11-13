@@ -62,12 +62,13 @@ class MediumText extends Column
      *     format: string,
      *     createdAt: string,
      *     updatedAt: string,
+     *     description?: string,
      * } $array
      * @return self
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['key'],
             Table::fromArray($array['table'] ?? $array['collection']),
             required: $array['required'],
@@ -77,7 +78,7 @@ class MediumText extends Column
             format: $array['format'],
             createdAt: $array['createdAt'] ?? '',
             updatedAt: $array['updatedAt'] ?? '',
-        );
+        ))->setDescription($array['description'] ?? '');
     }
 
     public function getType(): string

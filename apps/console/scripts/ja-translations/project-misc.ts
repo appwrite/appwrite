@@ -1011,7 +1011,7 @@ export const jaProjectMiscTranslations: Record<string, string> = {
   'SMTP': 'SMTP',
   'SMTP server has been disabled.': 'SMTP サーバーを無効にしました。',
   'SMTP server has been enabled.': 'SMTP サーバーを有効にしました。',
-  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.': 'SSL 証明書を発行中です。通常数分かかります。操作は不要です。',
+  "SSL certificate is being issued. This usually takes a few minutes. If the logs ask for a DNS record, add it where your domain's DNS is managed.": 'SSL 証明書を発行中です。通常数分かかります。ログで DNS レコードの追加を求められた場合は、ドメインの DNS を管理しているサービスで追加してください。',
   'Search domains...': 'ドメインを検索...',
   'Search migrations...': 'マイグレーションを検索...',
   'Search webhooks...': 'Webhook を検索...',

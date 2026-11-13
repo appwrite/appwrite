@@ -1,5 +1,114 @@
 # Change Log
 
+## 28.12.1
+
+* Fixed: `terminal` lists organizations on Cloud
+* Fixed: output masks every response field the API marks as a password
+
+## 28.12.0
+
+* Breaking: `push` no longer deletes databases, tables or columns missing from the config; pass `--prune`
+* Breaking: `--force` no longer approves deletions or column recreations; only `--prune` does
+* Added: `--prune` on `push`, `push all`, `push table` and `push collection`, showing row counts and backup coverage first
+* Added: `--prune` without a terminal requires `--reason`
+* Added: `appwrite terminal`, an interactive interface for browsing a project
+* Added: `account create-device`, `get-device`, `delete-device` and `update-device-session`
+* Added: `project update-account-devices-policy`
+* Fixed: `push table` no longer deletes databases before a later step fails
+* Fixed: a second value after a list flag explains how to repeat the flag
+* Fixed: `push settings` only lists keys the config changes
+* Updated: built against Go SDK `v7.18.0`
+
+## 28.11.0
+
+* Added: `init project` lists the closest Cloud region first, and picks it when there is no terminal
+* Added: `--region` on `init project`
+* Added: project environments, through `--environment-id` on `init project` and `client`, and `APPWRITE_ENVIRONMENT_ID`
+* Added: `--reason` and `APPWRITE_REASON` to record why a command ran on its audit logs
+* Added: `project get-prefs` and `update-prefs`
+* Added: `project update-o-auth-2-vipps` and `update-o-auth-2-vipps-sandbox`
+* Added: `proxy update-function-rule`, `update-redirect-rule` and `update-site-rule`
+* Added: `--schedule` on `waf` rule create and update commands
+* Added: analytics property `--type` and `--identify-users`, event `--interactive`, metrics `--prop-key`
+* Fixed: sites get a default Cloud domain when pushed with an API key
+* Updated: built against Go SDK `v7.17.0`, which sends response format `2.7.1`
+
+## 28.10.2
+
+* Fixed: `logout` revokes the server session on endpoints trusted as self-signed
+* Fixed: chunked uploads print the finished file, not an earlier chunk's progress
+
+## 28.10.1
+
+* Fixed: `init apns` suggests a Notification Service Extension only when an Appwrite push provider is enabled
+* Fixed: `init apns` no longer asks to enable an Appwrite push provider that APNs alone does not need
+
+## 28.10.0
+
+* Breaking: removed `migrations get-appwrite-report`, which the Go SDK no longer provides
+* Added: `project delete-sessions` to sign out every user in the project
+* Added: `project update-deny-realtime-guests-policy`
+* Added: `--resources` on `project create-environment` to choose what the environment copies
+* Fixed: an API key is no longer carried to a newly configured endpoint
+* Fixed: self-signed certificate trust stays with the server it was granted for, including trust saved by older CLI versions, and `login` reuses the trust saved for its endpoint
+* Fixed: `appwrite run` binds the local runtime to loopback only
+* Fixed: the shell installer downloads into a private temporary directory
+* Fixed: `login --switch` is only suggested for signed-in sessions
+* Fixed: path parameters are percent-encoded as one segment; `.` and `..` are refused
+* Updated: built against Go SDK `v7.16.0`, which sends response format `2.6.2`
+* Updated: password hash examples for `users create-argon-2-user`, `create-bcrypt-user` and `create-ph-pass-user` use valid hashes
+
+## 28.9.0
+
+* Added: `migrations` commands for provider reports, imports, exports, retries, and migration management
+* Fixed: shell installer verified downloaded binaries against release checksums
+* Fixed: rejected incomplete JSON and trailing content before rewriting project and included configs
+* Fixed: respected Unicode characters, escapes and negations in deployment ignore patterns
+* Updated: required patched Go `1.26.10` when building the CLI from source
+* Updated: WAF command help covered request content and session age conditions
+* Updated: built against Go SDK `v7.15.0`
+
+## 28.8.0
+
+* Added: `account list-memberships`
+* Added: `--description` on create and update commands for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `--deny-list` on `project update-password-dictionary-policy` and `update-password-personal-data-policy`
+* Added: `--strip-metadata` on `storage create-bucket` and `update-bucket`
+* Added: `--self-signed` on `login` to accept a self-signed certificate for that sign-in
+* Fixed: an array flag given only `[]` sends an empty array, so lists such as `--deny-list` can be cleared
+* Fixed: `pull all` and `push all` skip console-only resources such as project settings with a warning when only an API key is configured, instead of stopping
+* Updated: built against sdk-for-go v7.14.0
+
+## 28.7.0
+
+* Added: `appwrite types -l python` generates Pydantic models for tables
+* Added: `--enum-style const` on `types` and `generate` emits erasable `as const` objects instead of TypeScript enums
+* Added: config directory follows `XDG_CONFIG_HOME` when `~/.appwrite` does not exist
+* Added: `create-query` on `databases`, `documentsdb` and `tablesdb` to send queries in the request body, with `--select`
+* Added: `--total` on list commands in `activities`, `analytics`, `backups`, `domains`, `mongo`, `mysql` and `postgresql`
+* Added: `--emails` on `messaging create-email` and `messaging update-email`
+* Fixed: `login` completes MFA when the account requires more factors
+* Fixed: `init site` downloads templates on Windows and no longer changes the global git config
+* Updated: built on Go SDK v7.13.0
+
+## 28.6.0
+
+* Added: `analytics` in `appwrite.config.json`, synced by `pull analytics`, `push analytics`, `pull all` and `push all`
+* Added: `pull analytics` and `pull all` skip analytics on servers that do not offer it
+
+## 28.5.0
+
+* Breaking: built on Go SDK v7.12.0; requests send response format `2.5.0` and JSON output follows the 2.5 shapes
+* Breaking: removed `--public` from `analytics create-property` and `analytics update-property`
+* Added: `appwrite init apns` to set up Apple Push Notification service for Appwrite Push
+* Added: `mongo`, `mysql` and `postgresql` `promote-restoration`, and `--restore-mode`, `--target-name` and `--auto-promote` on `create-restoration`
+* Added: `proxy create-smtp-rule`
+* Added: `--email-enabled` on `functions update`
+* Added: `project` commands `list-environments`, `create-environment`, `get-environment`, `update-environment` and `delete-environment`
+* Added: `project update-password-rotation-policy`
+* Added: `--fingerprints` on `project create-android-platform` and `update-android-platform`
+* Updated: generated TypeScript types take a typed `QueryBuilder` for queries
+
 ## 28.4.0
 
 * Added: `account` passkey commands `list-passkeys`, `create-passkey`, `get-passkey`, `update-passkey`, `delete-passkey` and `update-passkey-verification`

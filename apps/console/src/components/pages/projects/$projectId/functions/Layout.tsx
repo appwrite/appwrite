@@ -4,12 +4,9 @@ import {
   useLocation,
   Outlet,
   useNavigate,
+  useRouterState,
 } from '@tanstack/react-router'
-import {
-  useMutation,
-  useQueryClient,
-  useIsFetching,
-} from '@tanstack/react-query'
+import { useMutation, useQueryClient, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { BuyDomainHeaderButton } from '../shared/BuyDomainHeaderButton'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
@@ -23,7 +20,12 @@ import {
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
-import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
+import {
+  canSeeProjectNavItem,
+  canSeeUsageNav,
+  canShowFunctionSecuritySettings,
+} from '@/lib/console-access-checks'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { AlertCircle, ArrowLeft, Info } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -85,6 +87,9 @@ function FunctionLayoutContent() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const location = useLocation()
+  const resolvedPathname = useRouterState({
+    select: (s) => s.resolvedLocation?.pathname ?? s.location.pathname,
+  })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { triggerRefresh, hasRefreshHandler } = useRefresh()
@@ -94,7 +99,7 @@ function FunctionLayoutContent() {
     }) > 0
 
   const activeTab = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
+    const pathParts = resolvedPathname.split('/').filter(Boolean)
     const functionIndex = pathParts.findIndex(
       (part, idx) =>
         part === 'functions' &&
@@ -107,9 +112,12 @@ function FunctionLayoutContent() {
         const tabFromPath = pathParts[functionIndex + 2]
         if (
           [
+            'overview',
             'deployments',
             'executions',
             'domains',
+            'usage',
+            'firewall',
             'variables',
             'security',
             'settings',
@@ -120,8 +128,8 @@ function FunctionLayoutContent() {
       }
     }
 
-    return 'deployments'
-  }, [location.pathname])
+    return 'overview'
+  }, [resolvedPathname])
 
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
   const activeDeploymentId = getRedeploySourceDeploymentId(func)
@@ -147,16 +155,9 @@ function FunctionLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSecuritySettings = canShowFunctionSecuritySettings(access, features)
-
-  // Get search value from URL (location.search may be string or parsed object in TanStack Router)
-  const domainsSearchValue = (() => {
-    const search = location.search
-    if (typeof search === 'object' && search !== null && 'search' in search) {
-      return (search as { search?: string }).search ?? ''
-    }
-    const params = new URLSearchParams(typeof search === 'string' ? search : '')
-    return params.get('search') || ''
-  })()
+  const showUsageTab = features.usageStats && canSeeUsageNav(access, features)
+  const showFirewallTab =
+    isCloudProfile() && canSeeProjectNavItem(access, features, 'firewall')
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const functionFilterMap = useMemo(() => {
@@ -229,9 +230,18 @@ function FunctionLayoutContent() {
   const tabs: Tab[] = useMemo(() => {
     const base: Tab[] = [
       {
+        id: 'overview',
+        label: t('Overview'),
+        to: '/projects/$projectId/functions/$functionId',
+        params: {
+          projectId: projectId as string,
+          functionId: functionId as string,
+        },
+      },
+      {
         id: 'deployments',
         label: t('Deployments'),
-        to: '/projects/$projectId/functions/$functionId',
+        to: '/projects/$projectId/functions/$functionId/deployments',
         params: {
           projectId: projectId as string,
           functionId: functionId as string,
@@ -255,6 +265,32 @@ function FunctionLayoutContent() {
           functionId: functionId as string,
         },
       },
+      ...(showUsageTab
+        ? [
+            {
+              id: 'usage' as const,
+              label: t('Usage'),
+              to: '/projects/$projectId/functions/$functionId/usage',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
+      ...(showFirewallTab
+        ? [
+            {
+              id: 'firewall' as const,
+              label: t('Firewall'),
+              to: '/projects/$projectId/functions/$functionId/firewall',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
       ...(showSecuritySettings
         ? [
             {
@@ -288,7 +324,14 @@ function FunctionLayoutContent() {
         : []),
     ]
     return base
-  }, [projectId, functionId, showSecuritySettings, t])
+  }, [
+    projectId,
+    functionId,
+    showUsageTab,
+    showFirewallTab,
+    showSecuritySettings,
+    t,
+  ])
 
   // Redirect from variables/security/settings when user lacks permission
   useEffect(() => {
@@ -305,17 +348,6 @@ function FunctionLayoutContent() {
       })
     }
   }, [showSecuritySettings, activeTab, projectId, functionId, navigate])
-
-  const handleDomainsSearchChange = (value: string) => {
-    navigate({
-      to: location.pathname,
-      search: (prev) => ({
-        ...prev,
-        search: value || undefined,
-      }),
-      replace: true,
-    })
-  }
 
   const [gitDeployOpen, setGitDeployOpen] = useState(false)
   const [cliDeployOpen, setCliDeployOpen] = useState(false)
@@ -545,52 +577,136 @@ function FunctionLayoutContent() {
       >
         <div
           className={cn(
-            isExecutionsTabLayout && 'sticky top-0 z-20 shrink-0 bg-background',
+            isExecutionsTabLayout &&
+              'sticky top-0 z-20 shrink-0 bg-background',
           )}
         >
           <ServiceHeader
             title={
-              <DetailResourceHeaderTitle
-                kind="function"
-                label={func.name || t('Unnamed Function')}
-                resourceId={func.$id}
-                projectId={projectId}
-                back={{
-                  to: '/projects/$projectId/functions',
-                  params: { projectId: projectId! },
-                  'aria-label': t('Back to functions'),
+            <DetailResourceHeaderTitle
+              kind="function"
+              label={func.name || t('Unnamed Function')}
+              resourceId={func.$id}
+              projectId={projectId}
+              back={{
+                to: '/projects/$projectId/functions',
+                params: { projectId: projectId! },
+                'aria-label': t('Back to functions'),
+              }}
+            />
+          }
+          tabs={tabs}
+          activeTab={activeTab}
+          fullWidthBorder
+          fullWidth={
+            activeTab === 'executions' ||
+            activeTab === 'usage' ||
+            activeTab === 'firewall'
+          }
+          showToolbarBottomBorder={isExecutionsTabLayout}
+          showFilters={activeTab === 'executions' || activeTab === 'domains'}
+          filterTrigger={
+            activeTab === 'executions' || activeTab === 'domains' ? (
+              <FiltersPopover
+                open={filtersOpen}
+                onOpenChange={setFiltersOpen}
+                columns={functionFilterColumns}
+                filterMap={functionFilterMap}
+                onRemoveFilter={removeFunctionFilter}
+                onClearAll={clearAllFunctionFilters}
+                onApplyFilter={applyFunctionFilter}
+                resourceLabel={
+                  activeTab === 'executions' ? 'executions' : 'domains'
+                }
+                filterScope={`functions.${activeTab}`}
+                onApplyQuery={(queryParam) => {
+                  navigate({
+                    to: location.pathname,
+                    search: (prev) => ({
+                      ...(typeof prev === 'object' && prev !== null
+                        ? prev
+                        : {}),
+                      query: queryParam ?? undefined,
+                      page: 1,
+                    }),
+                    replace: true,
+                  })
                 }}
+                teamId={project?.teamId}
               />
-            }
-            tabs={tabs}
-            activeTab={activeTab}
-            fullWidthBorder
-            fullWidth={activeTab === 'executions'}
-            showToolbarBottomBorder={isExecutionsTabLayout}
-            searchPlaceholder={
-              activeTab === 'domains' ? t('Search domain...') : undefined
-            }
-            searchValue={
-              activeTab === 'domains' ? domainsSearchValue : undefined
-            }
-            onSearchChange={
-              activeTab === 'domains' ? handleDomainsSearchChange : undefined
-            }
-            showFilters={activeTab === 'executions' || activeTab === 'domains'}
-            filterTrigger={
-              activeTab === 'executions' || activeTab === 'domains' ? (
+            ) : undefined
+          }
+          showRefresh={activeTab === 'executions' && hasRefreshHandler}
+          onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
+          isRefreshing={executionsListRefreshing}
+          beforeCreateButtons={
+            activeTab === 'domains' ? (
+              <BuyDomainHeaderButton
+                orgId={project?.teamId}
+                onClick={() =>
+                  navigate({
+                    to: '/projects/$projectId/functions/$functionId/domains/buy',
+                    params: {
+                      projectId: projectId!,
+                      functionId: functionId!,
+                    },
+                  })
+                }
+              />
+            ) : undefined
+          }
+          createLabel={
+            activeTab === 'deployments'
+              ? undefined
+              : activeTab === 'executions'
+                ? t('Create execution')
+                : activeTab === 'domains'
+                  ? t('Add domain')
+                  : undefined
+          }
+          createAnalyticsAction={
+            activeTab === 'executions' ? 'create-execution' : undefined
+          }
+          onCreate={
+            activeTab === 'deployments'
+              ? undefined
+              : activeTab === 'executions'
+                ? handleCreateExecution
+                : activeTab === 'domains'
+                  ? handleAddDomain
+                  : undefined
+          }
+          createDisabled={activeTab === 'executions' && !func?.deploymentId}
+          contentAfterBorder={
+            disabledAlert || buildingAlert || configAlert ? (
+              <div>
+                {disabledAlert}
+                {buildingAlert}
+                {configAlert}
+              </div>
+            ) : undefined
+          }
+        />
+        </div>
+        <div
+          className={cn(
+            'flex-1 min-h-0',
+            isExecutionsTabLayout && 'flex flex-col',
+          )}
+        >
+          <DeploymentsToolbarContext.Provider
+            value={
+              <>
                 <FiltersPopover
                   open={filtersOpen}
                   onOpenChange={setFiltersOpen}
-                  columns={functionFilterColumns}
+                  columns={deploymentsFilterColumns}
                   filterMap={functionFilterMap}
                   onRemoveFilter={removeFunctionFilter}
                   onClearAll={clearAllFunctionFilters}
                   onApplyFilter={applyFunctionFilter}
-                  resourceLabel={
-                    activeTab === 'executions' ? 'executions' : 'domains'
-                  }
-                  filterScope={`functions.${activeTab}`}
+                  resourceLabel="deployments"
+                  filterScope="functions.deployments"
                   onApplyQuery={(queryParam) => {
                     navigate({
                       to: location.pathname,
@@ -606,102 +722,12 @@ function FunctionLayoutContent() {
                   }}
                   teamId={project?.teamId}
                 />
-              ) : undefined
-            }
-            showRefresh={activeTab === 'executions' && hasRefreshHandler}
-            onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
-            isRefreshing={executionsListRefreshing}
-            beforeCreateButtons={
-              activeTab === 'domains' ? (
-                <BuyDomainHeaderButton
-                  orgId={project?.teamId}
-                  onClick={() =>
-                    navigate({
-                      to: '/projects/$projectId/functions/$functionId/domains/buy',
-                      params: {
-                        projectId: projectId!,
-                        functionId: functionId!,
-                      },
-                    })
-                  }
+                <CreateDeploymentDropdown
+                  onSelectGit={() => setGitDeployOpen(true)}
+                  onSelectCli={() => setCliDeployOpen(true)}
+                  onSelectManual={() => setManualDeployOpen(true)}
                 />
-              ) : undefined
-            }
-            createLabel={
-              activeTab === 'deployments'
-                ? undefined
-                : activeTab === 'executions'
-                  ? t('Create execution')
-                  : activeTab === 'domains'
-                    ? t('Add domain')
-                    : undefined
-            }
-            createAnalyticsAction={
-              activeTab === 'executions' ? 'create-execution' : undefined
-            }
-            onCreate={
-              activeTab === 'deployments'
-                ? undefined
-                : activeTab === 'executions'
-                  ? handleCreateExecution
-                  : activeTab === 'domains'
-                    ? handleAddDomain
-                    : undefined
-            }
-            createDisabled={activeTab === 'executions' && !func?.deploymentId}
-            contentAfterBorder={
-              disabledAlert || buildingAlert || configAlert ? (
-                <div>
-                  {disabledAlert}
-                  {buildingAlert}
-                  {configAlert}
-                </div>
-              ) : undefined
-            }
-          />
-        </div>
-        <div
-          className={cn(
-            'flex-1 min-h-0',
-            isExecutionsTabLayout && 'flex flex-col',
-          )}
-        >
-          <DeploymentsToolbarContext.Provider
-            value={
-              activeTab === 'deployments' ? (
-                <>
-                  <FiltersPopover
-                    open={filtersOpen}
-                    onOpenChange={setFiltersOpen}
-                    columns={functionFilterColumns}
-                    filterMap={functionFilterMap}
-                    onRemoveFilter={removeFunctionFilter}
-                    onClearAll={clearAllFunctionFilters}
-                    onApplyFilter={applyFunctionFilter}
-                    resourceLabel="deployments"
-                    filterScope="functions.deployments"
-                    onApplyQuery={(queryParam) => {
-                      navigate({
-                        to: location.pathname,
-                        search: (prev) => ({
-                          ...(typeof prev === 'object' && prev !== null
-                            ? prev
-                            : {}),
-                          query: queryParam ?? undefined,
-                          page: 1,
-                        }),
-                        replace: true,
-                      })
-                    }}
-                    teamId={project?.teamId}
-                  />
-                  <CreateDeploymentDropdown
-                    onSelectGit={() => setGitDeployOpen(true)}
-                    onSelectCli={() => setCliDeployOpen(true)}
-                    onSelectManual={() => setManualDeployOpen(true)}
-                  />
-                </>
-              ) : null
+              </>
             }
           >
             <Outlet />
@@ -740,10 +766,7 @@ function FunctionLayoutContent() {
           </>
         )}
         {activeDeployment && (
-          <Dialog
-            open={redeployDialogOpen}
-            onOpenChange={setRedeployDialogOpen}
-          >
+          <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 pb-4 text-start">
                 <DialogTitle>{t('Redeploy deployment')}</DialogTitle>
@@ -755,10 +778,7 @@ function FunctionLayoutContent() {
                     "This will create a new build for this deployment using the current function configuration. The original deployment's code will be preserved and used for the new build.",
                   )}
                 </DialogDescription>
-                <DeploymentInfo
-                  deployment={activeDeployment}
-                  showStatus={true}
-                />
+                <DeploymentInfo deployment={activeDeployment} showStatus={true} />
               </div>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button

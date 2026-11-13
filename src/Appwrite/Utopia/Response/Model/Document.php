@@ -18,6 +18,11 @@ class Document extends Any
         '$permissions',
     ];
 
+    private const array LOCATION_ATTRIBUTES = [
+        '$databaseId',
+        '$collectionId',
+    ];
+
     /**
      * Get Name
      *
@@ -94,11 +99,15 @@ class Document extends Any
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
 
-        if ($document->offsetExists('$id') && \in_array($document->getAttribute('$id'), [null, ''], true)) {
+        if ($document->offsetExists('$id') && $document->getAttribute('$id') === '') {
             foreach (self::STORED_ATTRIBUTES as $attribute) {
                 $document->removeAttribute($attribute);
             }
-        } elseif (!$document->isEmpty() && !$document instanceof Aggregate) {
+        } elseif ($document instanceof Aggregate) {
+            foreach (self::LOCATION_ATTRIBUTES as $attribute) {
+                $document->removeAttribute($attribute);
+            }
+        } elseif (!$document->isEmpty()) {
             $document->setAttribute('$sequence', (string)$document->getAttribute('$sequence', ''));
             $document->setAttribute('$createdAt', (string)$document->getAttribute('$createdAt', ''));
             $document->setAttribute('$updatedAt', (string)$document->getAttribute('$updatedAt', ''));

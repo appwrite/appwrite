@@ -49,7 +49,7 @@ export function PropertyContextMenu({
   children,
 }: {
   projectId: string
-  property: Pick<Models.AnalyticsProperty, '$id' | 'name' | 'domain' | 'snippetId'>
+  property: Pick<Models.AnalyticsProperty, '$id' | 'name' | 'domain'>
   /** Omit when the viewer can't delete properties. */
   onDelete?: () => void
   children: ReactNode
@@ -113,14 +113,6 @@ export function PropertyContextMenu({
               >
                 <ContextMenuIcon icon={Copy} />
                 {t('Copy name')}
-              </ContextMenuItem>
-            ) : null}
-            {property.snippetId ? (
-              <ContextMenuItem
-                onSelect={() => copyToClipboard('Snippet ID', property.snippetId)}
-              >
-                <ContextMenuIcon icon={Copy} />
-                {t('Copy snippet ID')}
               </ContextMenuItem>
             ) : null}
             {property.domain ? (

@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { AlertTriangle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useProject } from '@/lib/react-query/hooks/projects'
+import { useOrganizationPlan } from '@/lib/react-query/hooks/organizations'
 import {
   Select,
   SelectContent,
@@ -12,21 +17,34 @@ import {
 import {
   getRetentionOptions,
   MAX_DEPLOYMENT_RETENTION,
+  DEPLOYMENT_RETENTION_CHANGE_DATE,
+  getCloudRetentionLimit,
 } from '@/lib/deployment-retention'
 import { useT } from '@/lib/i18n/translate'
 
 interface DeploymentRetentionCardProps {
+  projectId: string | null | undefined
   deploymentRetention: number
   onUpdate: (deploymentRetention: number) => void
   isPending?: boolean
 }
 
 export function DeploymentRetentionCard({
+  projectId,
   deploymentRetention: currentRetention,
   onUpdate,
   isPending = false,
 }: DeploymentRetentionCardProps) {
   const t = useT()
+  const { isCloud } = useConsoleProfile()
+  const { project } = useProject(projectId ?? undefined)
+  const { plan, isLoading } = useOrganizationPlan(
+    isCloud ? project?.teamId : null,
+  )
+  const cloudLimit = getCloudRetentionLimit(plan)
+  const maxRetention = isCloud ? (cloudLimit ?? 90) : MAX_DEPLOYMENT_RETENTION
+  const limitsUnavailable = isCloud && (isLoading || cloudLimit === undefined)
+  const beforeChange = Date.now() < DEPLOYMENT_RETENTION_CHANGE_DATE
   const [unlimitedRetention, setUnlimitedRetention] = useState(
     currentRetention === 0,
   )
@@ -39,20 +57,21 @@ export function DeploymentRetentionCard({
     setRetentionDays(currentRetention > 0 ? currentRetention : 30)
   }, [currentRetention])
 
+  const selectedDays = Math.min(retentionDays, maxRetention)
   const retentionOptions = useMemo(
-    () => getRetentionOptions(retentionDays),
-    [retentionDays],
+    () => getRetentionOptions(selectedDays, maxRetention),
+    [selectedDays, maxRetention],
   )
 
-  const deploymentRetention = unlimitedRetention ? 0 : retentionDays
+  const deploymentRetention = !isCloud && unlimitedRetention ? 0 : selectedDays
   const isUnchanged = currentRetention === deploymentRetention
   const isInvalid =
-    !unlimitedRetention &&
-    (retentionDays < 1 || retentionDays > MAX_DEPLOYMENT_RETENTION)
+    (isCloud || !unlimitedRetention) &&
+    (selectedDays < 1 || selectedDays > maxRetention)
 
   const selectedLabel =
-    retentionOptions.find((option) => option.value === retentionDays)?.label ??
-    `${retentionDays} days`
+    retentionOptions.find((option) => option.value === selectedDays)?.label ??
+    `${selectedDays} days`
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -64,7 +83,7 @@ export function DeploymentRetentionCard({
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
               {t(
-                'Control how long inactive deployments are kept before they are automatically deleted. Active deployments are always retained.',
+                'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.',
               )}
             </p>
           </div>
@@ -73,31 +92,53 @@ export function DeploymentRetentionCard({
       <div className="border-t border-border" />
       <div className="px-6 py-4">
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Switch
-              id="deployment-retention-unlimited"
-              checked={unlimitedRetention}
-              onCheckedChange={setUnlimitedRetention}
-              disabled={isPending}
-            />
-            <Label
-              htmlFor="deployment-retention-unlimited"
-              className="text-[13px] text-foreground cursor-pointer"
-            >
-              {t('Keep deployments forever')}
-            </Label>
-          </div>
+          {isCloud && beforeChange && (
+            <Alert className="border-amber-500/30 bg-amber-500/5 [&>svg]:text-amber-700 dark:[&>svg]:text-amber-400">
+              <AlertTriangle aria-hidden="true" />
+              <AlertDescription className="text-[13px] text-amber-700 dark:text-amber-400">
+                <p>
+                  {t(
+                    'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.',
+                  )}{' '}
+                  <a
+                    href="https://appwrite.io/blog/post/default-deployment-retention"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-4"
+                  >
+                    {t('Learn more')}
+                  </a>
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+          {!isCloud && (
+            <div className="flex items-center gap-3">
+              <Switch
+                id="deployment-retention-unlimited"
+                checked={unlimitedRetention}
+                onCheckedChange={setUnlimitedRetention}
+                disabled={isPending}
+              />
+              <Label
+                htmlFor="deployment-retention-unlimited"
+                className="text-[13px] text-foreground cursor-pointer"
+              >
+                {t('Keep deployments forever')}
+              </Label>
+            </div>
+          )}
 
-          {!unlimitedRetention ? (
+          {isCloud || !unlimitedRetention ? (
             <>
               <div className="space-y-2 max-w-[200px]">
                 <Label htmlFor="deployment-retention" className="text-[13px]">
                   {t('Retention period')}
                 </Label>
                 <Select
-                  value={String(retentionDays)}
+                  value={String(selectedDays)}
                   onValueChange={(value) => setRetentionDays(Number(value))}
-                  disabled={isPending}
+                  disabled={isPending || limitsUnavailable}
                 >
                   <SelectTrigger
                     id="deployment-retention"
@@ -118,9 +159,32 @@ export function DeploymentRetentionCard({
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-[12px] text-muted-foreground">
-                {`${t('Inactive deployments are deleted after')} ${t(selectedLabel).toLowerCase()}.`}
-              </p>
+              {isCloud ? (
+                <p className="text-[12px] text-muted-foreground">
+                  {limitsUnavailable
+                    ? t(
+                        'Retention limits are unavailable. Try reloading this page.',
+                      )
+                    : maxRetention === 90
+                      ? t(
+                          'Your plan keeps up to 100 inactive deployments for up to 90 days.',
+                        )
+                      : maxRetention === 1095
+                        ? t('Your plan allows retention for up to 3 years.')
+                        : t('Your organization has a custom retention policy.')}
+                </p>
+              ) : (
+                <p className="text-[12px] text-muted-foreground">
+                  {`${t('Inactive deployments are deleted after')} ${t(selectedLabel).toLowerCase()}.`}
+                </p>
+              )}
+              {isCloud && currentRetention > maxRetention && (
+                <p className="text-[12px] text-muted-foreground">
+                  {t(
+                    'Your saved retention exceeds your plan limit. Save a supported period to update it.',
+                  )}
+                </p>
+              )}
             </>
           ) : (
             <p className="text-[12px] text-muted-foreground">
@@ -133,7 +197,7 @@ export function DeploymentRetentionCard({
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={isUnchanged || isInvalid || isPending}
+          disabled={isUnchanged || isInvalid || isPending || limitsUnavailable}
           onClick={() => onUpdate(deploymentRetention)}
         >
           {t('Update')}

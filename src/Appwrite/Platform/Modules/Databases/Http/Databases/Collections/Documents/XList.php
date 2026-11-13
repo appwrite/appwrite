@@ -116,6 +116,19 @@ class XList extends Action
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
+        if ($transactionId !== null) {
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                : $dbForProject->getDocument('transactions', $transactionId);
+            if (
+                (($isAPIKey || $isPrivilegedUser) && $transaction->isEmpty())
+                || (!$transaction->isEmpty() && $this->isTransactionTypeMismatch($transaction))
+            ) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
+            }
+        }
+
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
@@ -143,6 +156,10 @@ class XList extends Action
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
 
+            if ($cursorDocument->isEmpty() && $transactionId !== null) {
+                $cursorDocument = $transactionState->getDocument($database, $collectionTableId, (string) $documentId, $transactionId);
+            }
+
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "$type '{$documentId}' for the 'cursor' value not found.");
@@ -155,75 +172,62 @@ class XList extends Action
 
         try {
             $parsed = Query::groupByType($queries);
+            $readsRecords = !$parsed->isAggregation() && !$parsed->distinct;
+            $hydrate = static fn (array $row): Document => $readsRecords ? new Document($row) : new Aggregate($row);
+            $read = $parsed->selections !== []
+                ? fn (): array => $dbForDatabases->find($collectionTableId, $queries)
+                : fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries));
             $find = match (true) {
-                $parsed->isAggregation() => fn (): array => \array_map(
-                    static fn (array $row): Aggregate => new Aggregate($row),
-                    $dbForDatabases->aggregate($collectionTableId, $queries),
-                ),
-                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
-                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
+                $parsed->isAggregation() => fn (): array => \array_map($hydrate, $dbForDatabases->aggregate($collectionTableId, $queries)),
+                $parsed->distinct => fn (): array => \array_map(static fn (Document $row): Aggregate => new Aggregate($row->getArrayCopy()), $read()),
+                default => $read,
             };
 
             if ($transactionId !== null) {
                 $documents = \array_map(
-                    fn (Document $document): Document => $this->stampTransactionRead($document, $databaseId, $collectionId),
+                    fn (Document $document): Document => $readsRecords
+                        ? $this->stampTransactionRead($document, $databaseId, $collectionId)
+                        : new Aggregate($document->getArrayCopy()),
                     $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries),
                 );
                 $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
             } elseif ((int)$ttl > 0 && $parsed->joins === []) {
-                $cache = $dbForProject->getCache();
-                $cacheKey = $this->getListCacheKey($dbForProject, $database, $collectionId);
+                $listCache = $this->getListCache($dbForProject, $database, $collectionId);
                 $roles = $dbForProject->getAuthorization()->getRoles();
                 $documentsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_DOCUMENTS);
                 $operationsField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_OPERATIONS);
 
-                $documentsCacheHit = false;
-                try {
-                    $cachedDocuments = $cache->load($cacheKey, $ttl, $documentsField);
-                } catch (\Throwable) {
-                    $cachedDocuments = null;
-                }
+                // The version is taken before every query below, so this response is read from and saved under
+                // the version it was queried at. A permission write purges the collection and changes the
+                // version, leaving nothing here for it to read and nowhere it can still be served from.
+                $version = $listCache->getVersion();
 
-                if (\is_array($cachedDocuments)) {
-                    $documents = \array_map(fn (array $document): Document => $parsed->isAggregation() ? new Aggregate($document) : new Document($document), $cachedDocuments);
-                    $documentsCacheHit = true;
+                $cachedDocuments = $listCache->load($documentsField, $ttl, $version);
+                $documentsCacheHit = \is_array($cachedDocuments);
 
-                    try {
-                        $cachedOperations = $cache->load($cacheKey, $ttl, $operationsField);
-                    } catch (\Throwable) {
-                        $cachedOperations = null;
-                    }
-                    $this->recordCachedOperations($operations, $documents, $cachedOperations);
+                if ($documentsCacheHit) {
+                    $documents = \array_map($hydrate, $cachedDocuments);
+                    $this->recordCachedOperations($operations, $documents, $listCache->load($operationsField, $ttl, $version));
                 } else {
                     $documents = $find();
 
-                    try {
-                        if ($documents !== []) {
-                            $cache->saveMany($cacheKey, [
-                                $documentsField => \array_map(fn (Document $document): array => $document->getArrayCopy(), $documents),
-                                $operationsField => $operations->counts($documents),
-                            ]);
-                        }
-                    } catch (\Throwable) {
+                    if ($documents !== []) {
+                        $listCache->save([
+                            $documentsField => \array_map(fn (Document $document): array => $document->getArrayCopy(), $documents),
+                            $operationsField => $operations->counts($documents),
+                        ], $version);
                     }
                 }
 
                 $total = 0;
                 if ($includeTotal) {
                     $totalField = $this->getListCacheField($collection, $roles, $queries, self::LIST_CACHE_FIELD_TOTAL);
-                    try {
-                        $cachedTotal = $cache->load($cacheKey, $ttl, $totalField);
-                    } catch (\Throwable) {
-                        $cachedTotal = null;
-                    }
+                    $cachedTotal = $listCache->load($totalField, $ttl, $version);
                     if ($cachedTotal !== null && $cachedTotal !== false) {
                         $total = (int) $cachedTotal;
                     } else {
                         $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
-                        try {
-                            $cache->save($cacheKey, (string) $total, $totalField);
-                        } catch (\Throwable) {
-                        }
+                        $listCache->save([$totalField => (string) $total], $version);
                     }
                 }
 

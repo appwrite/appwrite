@@ -9,6 +9,7 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Attribute;
 use Utopia\Database\Attribute\Update as AttributeUpdate;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Index;
@@ -313,6 +314,74 @@ class DatabaseTest extends TestCase
         } finally {
             self::dropCollection($database);
         }
+    }
+
+    public function testSetupAddsTheColumnsAndIndexesAnExistingCollectionLacks(): void
+    {
+        $database = $this->connect('utopiaTests', self::SCHEMA_NAMESPACE);
+        $database->create();
+        self::dropCollection($database);
+
+        $adapter = new AdapterDatabase($database);
+        $database->createCollection(Collection::create(
+            id: SQL::COLLECTION,
+            attributes: \array_values(\array_filter(
+                $adapter->getAttributeDocuments(Usage::TYPE_EVENT),
+                static fn (Attribute $attribute): bool => $attribute->key !== 'ordinal',
+            )),
+            indexes: \array_values(\array_filter(
+                $adapter->getIndexDocuments(Usage::TYPE_EVENT),
+                static fn (Index $index): bool => !\in_array('ordinal', $index->attributes, true),
+            )),
+        ));
+
+        try {
+            $adapter->setup();
+            $adapter->setup();
+
+            $collection = $database->getCollection(SQL::COLLECTION);
+
+            $this->assertSame(
+                self::byKey(\array_map(self::describeDeclaredAttribute(...), self::declaredAttributes())),
+                self::byKey(\array_map(self::describeAttribute(...), $collection->attributes())),
+                'setup() must add every declared column an existing collection lacks, once',
+            );
+            $this->assertSame(
+                self::byKey(\array_map(self::describeDeclaredIndex(...), self::declaredIndexes())),
+                self::byKey(\array_map(self::describeIndex(...), $collection->indexes())),
+                'setup() must add every declared index an existing collection lacks, once',
+            );
+
+            $usage = new Usage($adapter);
+            $this->assertTrue($usage->addBatch([
+                ['tenant' => '1', 'metric' => 'schema-ordinal', 'value' => 1, 'tags' => ['ordinal' => '2']],
+            ], Usage::TYPE_EVENT));
+
+            $rows = $usage->find('1', [Query::equal('metric', ['schema-ordinal'])], Usage::TYPE_EVENT);
+            $this->assertCount(1, $rows);
+            $this->assertSame('2', $rows[0]->getOrdinal(), 'a row written after setup() must keep the added column');
+        } finally {
+            self::dropCollection($database);
+        }
+    }
+
+    /**
+     * @param array<array<string, mixed>> $described
+     * @return array<string, array<string, mixed>>
+     */
+    private static function byKey(array $described): array
+    {
+        $keyed = [];
+        foreach ($described as $description) {
+            $key = $description['key'];
+            if (!\is_string($key)) {
+                throw new \UnexpectedValueException('A described column or index has no key');
+            }
+            $keyed[$key] = $description;
+        }
+        \ksort($keyed);
+
+        return $keyed;
     }
 
     private static function dropCollection(Database $database): void

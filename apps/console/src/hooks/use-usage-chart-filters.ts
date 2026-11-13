@@ -89,12 +89,11 @@ export function useUsageChartFilters(
     }
 
     const clampedDateRange =
-      logRetentionHours != null &&
-      hasFiniteLogRetentionHours(logRetentionHours)
-        ? clampDateRangeToRetentionFloor(
+      logRetentionHours != null && hasFiniteLogRetentionHours(logRetentionHours)
+        ? (clampDateRangeToRetentionFloor(
             resolvedDateRange,
             logRetentionHours,
-          ) ?? resolvedDateRange
+          ) ?? resolvedDateRange)
         : resolvedDateRange
 
     return {
@@ -169,7 +168,8 @@ export function useUsageChartFilters(
     (nextDateRange: DateRange | undefined) => {
       if (!account) return
 
-      const normalizedSelection = normalizeUsageDateRangeSelection(nextDateRange)
+      const normalizedSelection =
+        normalizeUsageDateRangeSelection(nextDateRange)
       let nextResolvedDateRange = normalizedSelection?.from
         ? {
             from: normalizedSelection.from,
@@ -188,10 +188,16 @@ export function useUsageChartFilters(
           ) ?? nextResolvedDateRange
       }
 
+      // Keep the saved interval when a short range only displays 1m. Widening
+      // the range again restores 15m (or whatever was saved) instead of
+      // leaving the chart on 1-minute buckets.
+      const storedInterval =
+        parseUsageChartIntervalFromPrefs(accountPrefs) ?? chartInterval
       const nextInterval = resolveUsageChartInterval(
-        chartInterval,
+        storedInterval,
         nextResolvedDateRange,
         plan,
+        { refine: false },
       )
 
       if (
@@ -207,7 +213,15 @@ export function useUsageChartFilters(
         chartInterval: nextInterval,
       })
     },
-    [account, chartInterval, dateRange, logRetentionHours, plan, updateMutation],
+    [
+      account,
+      accountPrefs,
+      chartInterval,
+      dateRange,
+      logRetentionHours,
+      plan,
+      updateMutation,
+    ],
   )
 
   const setChartInterval = useCallback(

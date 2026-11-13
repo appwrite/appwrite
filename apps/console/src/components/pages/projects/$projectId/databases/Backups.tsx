@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { Link, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID, BackupServices } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { setActiveEnvironment } from '@/lib/active-environment'
+import { projectEnvironmentId } from '@/lib/project-environments'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { formatDateTime } from '@/lib/date-utils'
 import {
+  isProjectBackupPolicy,
   useBackupPolicies,
   useBackupArchives,
   useDatabaseRestoreMigrations,
@@ -46,6 +49,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ENVIRONMENT_BACKUPS_TOOLTIP } from './_components/DatabaseBackupsNavLink'
 import {
   Tooltip,
   TooltipContent,
@@ -87,7 +91,12 @@ import {
 } from '@/lib/databases/backup-policy-plan-limits'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { BackupsEmptyState } from './_components/BackupsEmptyState'
-import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
+import {
+  isSelfServiceProPlan,
+  resolveOrganizationPlanDisplayLabel,
+} from '@/lib/utils/plan-filter'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { toByteCount } from '@/lib/utils/byte-display-unit'
 
 type BackupStatusVariant = 'completed' | 'failed' | 'pending' | 'processing'
@@ -150,8 +159,11 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   >([])
 
   // Get project to get teamId for organization plan
-  const { project } = useProject(projectId)
+  const { project, projectData } = useProject(projectId)
   const region = project?.region
+  // An environment is backed up with the project it belongs to: its backup
+  // routes refuse, so nothing is asked of them
+  const isEnvironment = !!projectEnvironmentId(projectData)
 
   // Get organization plan to check backups availability
   const { plan: organizationPlan, isLoading: planLoading } =
@@ -162,24 +174,26 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
     planName: organizationPlan?.name ?? null,
     planId: organizationPlan?.$id,
   })
+  // Custom backup policies are Enterprise only, so Upgrade can't help Pro.
+  const showContactSales = isSelfServiceProPlan(organizationPlan)
 
   // Fetch policies and archives - only if backups are enabled
   const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
     projectId,
     databaseId,
-    { enabled: backupsEnabled, dbKind },
+    { enabled: backupsEnabled && !isEnvironment, dbKind },
   )
   const { data: archivesData, isLoading: archivesLoading } = useBackupArchives(
     projectId,
     databaseId,
     backupsPage - 1,
     backupsPageSize,
-    { enabled: backupsEnabled, dbKind },
+    { enabled: backupsEnabled && !isEnvironment, dbKind },
   )
   const { data: restoreMigrations } = useDatabaseRestoreMigrations(
     projectId,
     databaseId,
-    { enabled: backupsEnabled, dbKind },
+    { enabled: backupsEnabled && !isEnvironment, dbKind },
   )
 
   const visibleRestorations = (() => {
@@ -201,17 +215,26 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   })()
 
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
+  const databasePolicyCount = policies.filter(
+    (policy) => !isProjectBackupPolicy(policy),
+  ).length
   const archives: Models.BackupArchive[] = archivesData?.archives || []
   const archivesTotal =
     typeof archivesData?.total === 'bigint'
       ? Number(archivesData.total)
       : archivesData?.total || 0
   const isAtBackupPoliciesLimit = isBackupPoliciesAtPlanLimit(
-    policies.length,
+    databasePolicyCount,
     backupPoliciesLimit,
   )
   const showPlanLimitWarning =
-    backupPoliciesLimit > 0 && policies.length >= backupPoliciesLimit * 0.5
+    backupPoliciesLimit > 0 && databasePolicyCount >= backupPoliciesLimit * 0.5
+  const policiesBadge =
+    backupPoliciesLimit === 0
+      ? t('Unlimited')
+      : databasePolicyCount === policies.length
+        ? `${policies.length}/${backupPoliciesLimit}`
+        : String(policies.length)
   const createPolicyDisabledTooltip = isAtBackupPoliciesLimit
     ? t("You've reached the limit for this resource on your plan")
     : undefined
@@ -476,7 +499,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   })
 
   // Format backup size (API may return int64 size as bigint)
-  const formatSize = (bytes: number | bigint | undefined) => {
+  const formatSize = (bytes: number | bigint | null | undefined) => {
     const n = toByteCount(bytes)
     if (n <= 0) return '-'
     const mb = n / (1000 * 1000)
@@ -544,6 +567,47 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
     setSelectedBackups(new Set()) // Clear selection on page size change
   }
 
+  if (isEnvironment) {
+    return (
+      <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Backups')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(ENVIRONMENT_BACKUPS_TOOLTIP)}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4 min-h-[400px]">
+            <EmptyState
+              icon={Archive}
+              title={t('Backed up with the project')}
+              description={t(
+                'Backup policies and archives are managed on the project this environment belongs to.',
+              )}
+              isEmpty={true}
+              variant="centered"
+              iconSize="md"
+              action={
+                <Button asChild variant="outline" size="sm">
+                  <Link
+                    to="/projects/$projectId/databases"
+                    params={{ projectId }}
+                    onClick={() => setActiveEnvironment(projectId, null)}
+                  >
+                    {t('Open the project')}
+                  </Link>
+                </Button>
+              }
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (isBackupsDisabled) {
     return (
       <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
@@ -607,12 +671,13 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
       ) : null}
       {organizationPlan !== undefined ? (
         <PlanLimitWarning
-          currentCount={policies.length}
+          currentCount={databasePolicyCount}
           limit={backupPoliciesLimit}
           planName={planName}
           resourceName="backup policies"
           orgId={project?.teamId}
           fullWidth
+          salesSource={showContactSales ? 'backups' : undefined}
         />
       ) : null}
       <div
@@ -646,9 +711,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
                 variant="secondary"
                 className="text-[12px] font-normal"
               >
-                {backupPoliciesLimit > 0
-                  ? `${policies.length}/${backupPoliciesLimit}`
-                  : t('Unlimited')}
+                {policiesBadge}
               </Badge>
             </div>
             {isAtBackupPoliciesLimit ? (
@@ -732,28 +795,38 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
                             <h4 className="text-[14px] font-medium text-foreground">
                               {policy.name || t('Unnamed Policy')}
                             </h4>
+                            {isProjectBackupPolicy(policy) ? (
+                              <Badge
+                                variant="secondary"
+                                className="text-[12px] font-normal"
+                              >
+                                {t('Project-wide')}
+                              </Badge>
+                            ) : null}
                           </div>
                           <p className="text-[13px] text-muted-foreground">
                             {scheduleText} • {retentionText}
                           </p>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <RowActionsMenuTrigger />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedPolicy(policy)
-                                setDeletePolicyDialogOpen(true)
-                              }}
-                            >
-                              <MenuItemContent icon={Trash2}>
-                                {t('Delete')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {isProjectBackupPolicy(policy) ? null : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <RowActionsMenuTrigger />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedPolicy(policy)
+                                  setDeletePolicyDialogOpen(true)
+                                }}
+                              >
+                                <MenuItemContent icon={Trash2}>
+                                  {t('Delete')}
+                                </MenuItemContent>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                       <div className="border-t border-border my-3" />
                       <div className="grid grid-cols-2 gap-4 text-[13px]">
@@ -1101,8 +1174,10 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
         }}
         isLoading={createPolicyMutation.isPending}
         databaseId={databaseId}
-        existingPoliciesCount={policies.length}
+        existingPoliciesCount={databasePolicyCount}
         backupPoliciesLimit={backupPoliciesLimit}
+        orgId={project?.teamId}
+        showContactSales={showContactSales}
       />
 
       {/* Create Manual Backup Dialog */}
@@ -1177,6 +1252,9 @@ interface CreatePolicyDialogProps {
   databaseId: string
   existingPoliciesCount: number
   backupPoliciesLimit: number
+  orgId: string | undefined
+  /** Point plans without custom policies at sales instead of Upgrade. */
+  showContactSales: boolean
 }
 
 function CreatePolicyDialog({
@@ -1186,7 +1264,9 @@ function CreatePolicyDialog({
   isLoading,
   databaseId,
   existingPoliciesCount,
-  backupPoliciesLimit}: CreatePolicyDialogProps) {
+  backupPoliciesLimit,
+  orgId,
+  showContactSales}: CreatePolicyDialogProps) {
   const t = useT()
   const [selectedPresets, setSelectedPresets] = useState<string[]>([])
   const [customPolicies, setCustomPolicies] = useState<
@@ -1315,9 +1395,25 @@ function CreatePolicyDialog({
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Create backup policy')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {supportsCustomPolicies
-              ? t('Choose preset policies or create custom backup schedules.')
-              : t('Your plan only supports the daily preset policy. Upgrade to create custom policies.')}
+            {supportsCustomPolicies ? (
+              t('Choose preset policies or create custom backup schedules.')
+            ) : showContactSales ? (
+              <>
+                <EnterpriseBadge />
+                {t(
+                  'Your plan includes the daily backup policy. Custom schedules and retention are available on Enterprise.',
+                )}{' '}
+                <ContactSalesLink
+                  source="backups"
+                  orgId={orgId}
+                  className="font-medium text-foreground underline hover:no-underline"
+                >
+                  {t('Contact sales')}
+                </ContactSalesLink>
+              </>
+            ) : (
+              t('Your plan only supports the daily preset policy. Upgrade to create custom policies.')
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -1707,7 +1803,7 @@ function RestoreBackupDialog({
   const [newDatabaseId, setNewDatabaseId] = useState('')
   const [confirmSameDbRestore, setConfirmSameDbRestore] = useState(false)
 
-  const formatSize = (bytes: number | bigint | undefined) => {
+  const formatSize = (bytes: number | bigint | null | undefined) => {
     const n = toByteCount(bytes)
     if (n <= 0) return '-'
     const mb = n / (1000 * 1000)

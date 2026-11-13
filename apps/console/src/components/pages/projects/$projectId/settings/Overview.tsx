@@ -6,7 +6,6 @@ import {
   Upload,
   ArrowUpDown,
   Globe,
-  AlertTriangle,
   Copy,
   Check,
   User,
@@ -17,8 +16,6 @@ import {
   Folder,
   Building2,
   UserCircle,
-  Shield,
-  CreditCard,
 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -49,20 +46,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import {
@@ -77,6 +60,7 @@ import {
 } from '@/lib/project-settings'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { PremiumGeoDBCard } from './_components/PremiumGeoDBCard'
+import { TransferProjectCard } from './_components/TransferProjectCard'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -250,9 +234,6 @@ export function ProjectSettingsOverview({
   // State for git installations
   const [installationsPage, setInstallationsPage] = useState(0)
   const installationsLimit = 25
-
-  // State for organization transfer
-  const [selectedOrgId, setSelectedOrgId] = useState('')
 
   // State for delete confirmation
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -562,71 +543,6 @@ export function ProjectSettingsOverview({
     },
   })
 
-  // Mutation to transfer project
-  const transferProjectMutation = useMutation({
-    mutationFn: async (teamId: string) => {
-      if (!supportsMultiTenancy) {
-        throw new Error(
-          'This console profile does not support transferring between organizations',
-        )
-      }
-      await sdk.forConsole.projects.updateTeam({ projectId, teamId })
-    },
-    onSuccess: async (_, teamId) => {
-      const oldTeamId = project?.teamId
-
-      // Get organization name from query cache
-      const orgsData = queryClient.getQueryData([
-        'organizations',
-        'console',
-      ]) as { teams?: Models.Team[] } | undefined
-      const org = orgsData?.teams?.find((t) => t.$id === teamId)
-      const orgName = org?.name || t('Organization')
-
-      toast.success(
-        `${project?.name || t('Project')} ${t('has been transferred to')} ${orgName}`,
-      )
-
-      // Refetch project query to refresh project data (teamId changed)
-      await queryClient.refetchQueries({
-        queryKey: ['project', projectId],
-        exact: true,
-        type: 'all',
-      })
-      await queryClient.refetchQueries({
-        queryKey: [Dependencies.PROJECT, projectId],
-        exact: true,
-        type: 'all',
-      })
-
-      // Invalidate projects list for old organization (if it exists)
-      if (oldTeamId) {
-        await queryClient.refetchQueries({
-          queryKey: ['projects', 'team', oldTeamId],
-          type: 'all',
-        })
-      }
-
-      // Refetch projects list for new organization
-      await queryClient.refetchQueries({
-        queryKey: ['projects', 'team', teamId],
-        type: 'all',
-      })
-
-      // Refetch all project lists (active/pinned/team) so cards update immediately.
-      await refetchProjectLists()
-
-      // Track analytics: Submit.ProjectUpdateTeam
-      navigate({
-        to: '/organizations/$orgId',
-        params: { orgId: teamId },
-      })
-    },
-    onError: (error: Error) => {
-      toast.error(getErrorMessage(error, t('Failed to transfer project')))
-    },
-  })
-
   // Mutation to delete project
   const deleteProjectMutation = useMutation({
     mutationFn: async () => {
@@ -727,19 +643,7 @@ export function ProjectSettingsOverview({
   const anyProtocolUpdating =
     updatingProtocols.size > 0 || updateAllProtocolsMutation.isPending
 
-  // Get organizations for transfer (excluding current)
-  const { organizations: allOrganizations, isLoading: organizationsLoading } =
-    useOrganizations()
-  const organizations = useMemo(() => {
-    if (!allOrganizations || !project) return []
-
-    return allOrganizations
-      .filter((org) => org.$id !== project.teamId)
-      .map((org) => ({
-        value: org.$id,
-        label: org.name,
-      }))
-  }, [allOrganizations, project])
+  const { organizations: allOrganizations } = useOrganizations()
   const supportsMultiTenancy = canSwitchOrganizations(
     features,
     allOrganizations.length,
@@ -1105,13 +1009,9 @@ export function ProjectSettingsOverview({
 
           {/* Change Organization Section (cloud multi-tenancy only) */}
           {supportsMultiTenancy && (
-            <ChangeOrganizationSection
-              project={project}
-              organizations={organizations}
-              organizationsLoading={organizationsLoading}
-              selectedOrgId={selectedOrgId}
-              onOrgChange={setSelectedOrgId}
-              onTransfer={transferProjectMutation}
+            <TransferProjectCard
+              projectId={projectId}
+              teamId={project.teamId}
             />
           )}
 
@@ -1176,226 +1076,6 @@ export function ProjectSettingsOverview({
         </>
       )}
     </div>
-  )
-}
-
-// Change Organization Section Component
-interface ChangeOrganizationSectionProps {
-  project: Pick<Models.Project, 'name' | 'teamId' | '$id' | 'region'> & {
-    platforms?: unknown[]
-  }
-  organizations: Array<{ value: string; label: string }>
-  organizationsLoading: boolean
-  selectedOrgId: string
-  onOrgChange: (orgId: string) => void
-  onTransfer: { isPending: boolean; mutate: (teamId: string) => void }
-}
-
-function ChangeOrganizationSection({
-  project,
-  organizations,
-  organizationsLoading,
-  selectedOrgId,
-  onOrgChange,
-  onTransfer,
-}: ChangeOrganizationSectionProps) {
-  const t = useT()
-  const [transferDialogOpen, setTransferDialogOpen] = useState(false)
-  const hasNoTargetOrgs = !organizationsLoading && organizations.length === 0
-  const isMoveDisabled =
-    hasNoTargetOrgs ||
-    !selectedOrgId ||
-    selectedOrgId === project.teamId ||
-    onTransfer.isPending
-
-  return (
-    <>
-      <div
-        data-card-id="transfer-project"
-        className="rounded-xl border border-border bg-card/50 overflow-hidden"
-      >
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Transfer project')}
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 @container">
-          <div className="flex gap-6 @[600px]:flex-row flex-col">
-            <div className="@[600px]:w-64 shrink-0">
-              <p className="text-[13px] text-muted-foreground">
-                {t('To transfer this project, you must be a member of both the current and target organization. Select a destination below.')}
-              </p>
-            </div>
-            <div className="flex-1 min-w-0">
-              {hasNoTargetOrgs && (
-                <Alert className="mb-4">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription className="text-[13px]">
-                    {t('You do not have any organizations you can transfer this project to. Create or join another organization to transfer.')}
-                  </AlertDescription>
-                </Alert>
-              )}
-              <Label
-                htmlFor="organization"
-                className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block"
-              >
-                {t('Move to')}
-              </Label>
-              <Select
-                value={selectedOrgId}
-                onValueChange={onOrgChange}
-                disabled={organizationsLoading}
-              >
-                <SelectTrigger id="organization" className="mt-2 h-9 max-w-sm">
-                  <SelectValue
-                    placeholder={
-                      organizationsLoading
-                        ? t('Loading organizations...')
-                        : t('Select destination')
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {organizations.length === 0 ? (
-                    <div className="px-2 py-1.5 text-[13px] text-muted-foreground">
-                      {organizationsLoading
-                        ? t('Loading...')
-                        : t('No other organizations available')}
-                    </div>
-                  ) : (
-                    organizations.map((org) => (
-                      <SelectItem key={org.value} value={org.value}>
-                        {org.label}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          {isMoveDisabled ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-block">
-                    <Button
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      disabled
-                      onClick={() => setTransferDialogOpen(true)}
-                    >
-                      {t('Transfer project')}
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {hasNoTargetOrgs
-                    ? t('You do not have any organizations you can transfer this project to.')
-                    : !selectedOrgId || selectedOrgId === project.teamId
-                      ? t('Select a different organization to transfer to.')
-                      : t('Transfer this project to the selected organization')}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setTransferDialogOpen(true)}
-            >
-              {t('Transfer project')}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Transfer Confirmation Dialog */}
-      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-start">
-            <DialogTitle>
-              {t('Transfer project')}{' '}
-              <span
-                title={getProjectNameDisplayTitle(project.name) ?? project.name}
-              >
-                {formatProjectNameForDisplay(project.name)}
-              </span>
-            </DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              {t('Consider the following before transferring your project:')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4 space-y-3">
-            <div className="flex gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <Shield className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-[13px] font-medium text-foreground">
-                  {t('Permissions')}
-                </p>
-                <p className="text-[12px] text-muted-foreground mt-0.5">
-                  {t('Depending on your role in the target organization, your level of access may change after transfer.')}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-[13px] font-medium text-foreground">
-                  {t('Access')}
-                </p>
-                <p className="text-[12px] text-muted-foreground mt-0.5">
-                  {t('Members who are not part of the destination organization will lose access and must be invited to the new organization to regain access.')}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-[13px] font-medium text-foreground">
-                  {t('Features and usage')}
-                </p>
-                <p className="text-[12px] text-muted-foreground mt-0.5">
-                  {t('The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.')}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setTransferDialogOpen(false)}
-            >
-              {t('Cancel')}
-            </Button>
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              disabled={onTransfer.isPending}
-              onClick={() => {
-                if (selectedOrgId) {
-                  onTransfer.mutate(selectedOrgId)
-                  setTransferDialogOpen(false)
-                }
-              }}
-            >
-              {t('Transfer project')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
   )
 }
 

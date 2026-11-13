@@ -44,12 +44,13 @@ class Table extends Resource
      *     permissions: ?array<string>,
      *     createdAt: string,
      *     updatedAt: string,
-     *     enabled: bool
+     *     enabled: bool,
+     *     description?: string,
      * } $array
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             Database::fromArray($array['database']),
             name: $array['name'],
             id: $array['id'],
@@ -58,7 +59,7 @@ class Table extends Resource
             createdAt: $array['createdAt'] ?? '',
             updatedAt: $array['updatedAt'] ?? '',
             enabled: $array['enabled'] ?? true,
-        );
+        ))->setDescription($array['description'] ?? '');
     }
 
     /**
@@ -67,6 +68,7 @@ class Table extends Resource
     public function jsonSerialize(): array
     {
         return array_merge([
+            'description' => $this->description,
             'database' => $this->database,
             'id' => $this->id,
             'name' => $this->name,

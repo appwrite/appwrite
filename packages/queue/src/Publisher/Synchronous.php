@@ -45,6 +45,13 @@ interface Synchronous
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int;
 
     /**
+     * Seconds the oldest message not yet handed to a consumer has waited, or 0
+     * when none is waiting. Unlike the size it says whether consumers keep up:
+     * a deep queue that drains in seconds reads low.
+     */
+    public function getQueueAge(Queue $queue): int;
+
+    /**
      * Messages this queue could not get through, whatever stopped them.
      *
      * A message leaves the work queue for more than one reason -- rejected with

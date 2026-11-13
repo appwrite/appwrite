@@ -72,6 +72,7 @@ class Create extends Action
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true, example: 'active')
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -81,7 +82,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         if (!is_null($default) && !\in_array($default, $elements, true)) {
             throw new Exception($this->getInvalidValueException(), 'Default value not found in elements');
@@ -92,6 +93,7 @@ class Create extends Action
             $collectionId,
             new Document([
                 'key' => $key,
+                'description' => $description,
                 'type' => ColumnType::String->value,
                 'size' => Database::LENGTH_KEY,
                 'required' => $required,

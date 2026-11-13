@@ -2,15 +2,22 @@ import { useMemo } from 'react'
 import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useParams } from '@tanstack/react-router'
 import {
+  useOrganizationPlan,
+  useProject,
   useProjectFunction,
   useFunctionSpecifications,
   buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
+import { isSelfServiceProPlan } from '@/lib/utils/plan-filter'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { SpecificationType } from '@/lib/specifications'
+import {
+  hasUnavailableSpecifications,
+  SpecificationType,
+} from '@/lib/specifications'
+import { SpecificationsUpgradeNote } from '@/components/global/shared/SpecificationsUpgradeNote'
 import { SpecificationTableCard } from '../../shared/SpecificationTableCard'
 import { FunctionImageCard } from './FunctionImageCard'
 import { FunctionTimeoutCard } from './FunctionTimeoutCard'
@@ -27,6 +34,8 @@ export function View() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { data: func, isLoading: funcLoading } = useProjectFunction(
     projectId,
     functionId,
@@ -158,7 +167,15 @@ export function View() {
                 hasChanges={specDirty}
                 isSaving={updateFunctionMutation.isPending}
                 onSave={handleSaveSpecification}
-                footerNote={<FunctionRuntimeEnterpriseOfferingNote />}
+                footerNote={
+                  isSelfServiceProPlan(organizationPlan) ? (
+                    <FunctionRuntimeEnterpriseOfferingNote
+                      orgId={project?.teamId}
+                    />
+                  ) : hasUnavailableSpecifications(specifications) ? (
+                    <SpecificationsUpgradeNote orgId={project?.teamId} />
+                  ) : undefined
+                }
               />
             ),
           } satisfies SettingsCardItem,

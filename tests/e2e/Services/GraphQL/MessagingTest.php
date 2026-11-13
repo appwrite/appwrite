@@ -1083,9 +1083,17 @@ final class MessagingTest extends Scope
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $subscriber = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/subscribers/' . $subscriberId, \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $subscriber['headers']['status-code']);
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
