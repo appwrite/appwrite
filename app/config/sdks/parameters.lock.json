@@ -2852,7 +2852,7 @@
             "cooldown",
             "enabled",
             "notify",
-            "critical"
+            "severity"
         ],
         "monitors.delete": [
             "monitorId"
@@ -2872,7 +2872,7 @@
             "cooldown",
             "enabled",
             "notify",
-            "critical"
+            "severity"
         ],
         "notifications.list": [
             "queries",
@@ -3042,6 +3042,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -3327,6 +3328,11 @@
             "tenant",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
@@ -7069,7 +7075,7 @@
             "cooldown",
             "enabled",
             "notify",
-            "critical"
+            "severity"
         ],
         "monitors.delete": [
             "monitorId"
@@ -7089,7 +7095,7 @@
             "cooldown",
             "enabled",
             "notify",
-            "critical"
+            "severity"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",
@@ -7217,6 +7223,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -7502,6 +7509,11 @@
             "tenant",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Notion": [
             "oauthClientId",

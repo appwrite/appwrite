@@ -1708,6 +1708,18 @@ After flagging a post:
 
 ---
 
+## WebMCP tools
+
+appwrite.io exposes tools to in-browser agents through [WebMCP](https://webmachinelearning.github.io/webmcp/) (`document.modelContext`).
+
+- `src/lib/webmcp/register.ts` owns the standard: which `modelContext` to use, the shared lifetime (one `AbortSignal` per tool set), registration failures, and the `ToolError` result. Don't call `document.modelContext` anywhere else.
+- A tool set is a folder under `src/lib/webmcp/` (today `site/`, for the public site): `tools.ts` lists the tools and `actions.ts` holds what they do. A new surface, such as signed-in console tools, gets its own folder and a `use…Tools()` hook called from that surface's layout route (`site/` is used by `_marketing` and `/docs`). The layout also adds `WEBMCP_DETECT_SCRIPT` (`site/detect.ts`) to its `head`: an inline check that records whether the browser has WebMCP, so the hook downloads the tools chunk only where an agent can use it. Scanners read inline scripts and `<script src>`, not TanStack's modulepreloaded chunks, so that inline check is also where they find `modelContext`.
+- In `tools.ts`, pass each definition to `modelContext.registerTool({...}, options)` as an object literal. Agent-readiness scanners read the definitions from the shipped bundle, so don't build them from arrays or helpers.
+- Name tools `verb_noun` in snake_case, give each a `title`, describe what it returns in one sentence, and describe every input property.
+- Annotations must match behaviour: `readOnlyHint` for tools that only read, `untrustedContentHint` when output contains text other people wrote, and `consequentialHint` for tools that buy, send, delete or publish. Omit a hint instead of setting it to `false`.
+- On failure, an action resolves `toolError(code, message, retryable)` instead of throwing.
+- Cover tool changes in `e2e/website.webmcp.spec.ts` through `openAsAgent()`. Run it against Chrome's native API with `E2E_WEBMCP_CHANNEL=chrome` (Chrome 149+); CI's bundled Chromium uses a registry that follows the spec.
+
 ## Environment
 
 For screenshot captures, set `VITE_CONSOLE_SCREENSHOT_MODE=true` before starting the dev or production server. Screenshot mode defaults to off when unset. A saved browser preference overrides the environment default; typing `smile` outside an input or editor toggles the mode and saves that choice. Remove `screenshot:modeOpen` from localStorage to use the environment default again.

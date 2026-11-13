@@ -57,6 +57,7 @@ $image = new Image(png(16, 8));
 $image->crop(8, 8, Image::GRAVITY_TOP_LEFT)->setBorderRadius(2)->setOpacity(0.5)->setRotation(90)->setBackground('#ffffff');
 check('jpeg output', substr($image->output('jpg', 80), 0, 2) === "\xff\xd8");
 check('save() without a path', substr($image->save(null, 'gif'), 0, 3) === 'GIF');
+check('save() to an empty path', substr($image->save('', 'gif'), 0, 3) === 'GIF');
 
 $path = sys_get_temp_dir() . '/utopia-extension-' . getmypid() . '/out.png';
 check('save() to a path', $image->save($path, 'png') === null && is_file($path));
@@ -78,7 +79,28 @@ $unknown = (new Image(png(16, 8)))->crop(6, 4, 'no-such-gravity')->output('png')
 check('unknown gravity is a centred focal point', $unknown === (new Image(png(16, 8)))->crop(6, 4, x: 0.5, y: 0.5)->output('png'));
 check('argument type', str_starts_with(thrown(fn () => $image->crop('wide', 2)), 'TypeError: '));
 
+$font = __DIR__ . '/../../../app/assets/fonts/inter-v8-latin-regular.ttf';
+$drawn = Image::create(32, 16, '#000000');
+check('create size', [$drawn->getWidth(), $drawn->getHeight(), $drawn->getOrientation()] === [32, 16, 1]);
+check('path and text chain', $drawn->path('M0 0h4v4h-4Z', '#ffffff', 2, 2, 2) === $drawn && $drawn->text('A', $font, 12, '#ffffff', 16, 12) === $drawn);
+check('drawn png size', array_slice(getimagesizefromstring($drawn->output('png')), 0, 2) === [32, 16]);
+check('glyphs', Image::hasGlyph($font, 'A') && ! Image::hasGlyph($font, '山'));
+check('more than one character', thrown(fn () => Image::hasGlyph($font, 'AB')) === 'InvalidArgumentException: Expected one character');
+check('invalid path', thrown(fn () => $drawn->path('M0 0 Q bogus', '#fff')) === 'InvalidArgumentException: Invalid path at offset 7');
+check('missing font', str_starts_with(thrown(fn () => $drawn->text('A', '/no/such/font.ttf', 12, '#fff', 0, 0)), "InvalidArgumentException: Can't read font /no/such/font.ttf"));
+check('empty canvas', thrown(fn () => Image::create(0, 4)) === 'InvalidArgumentException: Width and height must be positive');
+
 Image::setResourceLimit('memory', 64 * 1024 * 1024);
 Image::setResourceLimit('unknown', 1);
+
+Image::setResourceLimit('width', 8);
+check('width limit', thrown(fn () => new Image(png(16, 8))) === 'Exception: Image exceeds the size or memory limits');
+Image::setResourceLimit('width', 50000);
+Image::setResourceLimit('height', 4);
+check('height limit', thrown(fn () => new Image(png(16, 8))) === 'Exception: Image exceeds the size or memory limits');
+check('a quarter turn is held to the limits', thrown(fn () => (new Image(png(8, 4)))->setRotation(90)->output('png'))
+    === 'Exception: Image exceeds the size or memory limits');
+Image::setResourceLimit('height', 50000);
+check('limits restored', (new Image(png(16, 8)))->getWidth() === 16);
 
 exit(empty($failed) ? 0 : 1);

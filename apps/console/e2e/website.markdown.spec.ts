@@ -45,6 +45,21 @@ const MARKDOWN_PAGES: Array<{
     path: '/pricing.md',
     contains: [/^# Appwrite Cloud pricing/, /### Pro: From \$25\/month/],
   },
+  {
+    name: 'marketing page twin',
+    path: '/affiliates.md',
+    contains: [
+      /^---\ntitle: "Affiliates"\n/,
+      /canonical: "https:\/\/appwrite\.io\/affiliates"/,
+      /\n# Earn credits by referring developers\n/,
+      /\]\(https:\/\/appwrite\.io\/sign-up/,
+    ],
+  },
+  {
+    name: 'product page twin',
+    path: '/products/auth.md',
+    contains: [/^---\n/, /\n# Authentication that ships with your product\n/],
+  },
 ]
 
 test.describe('markdown exports (read-only)', () => {
@@ -79,7 +94,7 @@ test.describe('markdown exports (read-only)', () => {
     expect(body).toContain('## Documentation')
     expect(body).toContain('/docs/llms.txt')
     expect(body).toContain('/setup.md')
-    expect(body).toContain('/blog.md')
+    expect(body).toContain('/blog/llms.txt')
     // Hub stays curated; it must not dump every docs page.
     expect(body.length).toBeLessThan(100_000)
   })
@@ -93,7 +108,7 @@ test.describe('markdown exports (read-only)', () => {
     expect(markdown.status()).toBe(200)
     expect(markdown.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
     expect(markdown.headers()['vary']).toContain('Accept')
-    expect(await markdown.text()).toMatch(/^# Appwrite/)
+    expect(await markdown.text()).toMatch(/^---\ntitle: "Appwrite"\n[\s\S]*\n---\n\n# Appwrite/)
 
     const html = await request.get('/', { headers: { Accept: 'text/html' } })
     expect(html.headers()['content-type']).toMatch(/text\/html/)
@@ -282,5 +297,25 @@ test.describe('markdown exports (read-only)', () => {
   test('missing markdown page returns 404', async ({ request }) => {
     const response = await request.get('/blog/post/this-post-does-not-exist.md')
     expect(response.status()).toBe(404)
+  })
+
+  test('404 asked for as markdown gets a markdown body', async ({ request }) => {
+    const response = await request.get('/this-page-does-not-exist', {
+      headers: { Accept: 'text/markdown' },
+    })
+    expect(response.status()).toBe(404)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    const body = await response.text()
+    expect(body).toMatch(/^# Page not found\n/)
+    expect(body).toContain('/llms.txt')
+  })
+
+  test('blog llms.txt lists posts', async ({ request }) => {
+    const response = await request.get('/blog/llms.txt')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    const body = await response.text()
+    expect(body).toMatch(/^# Appwrite Blog\n/)
+    expect(body).toMatch(/\(https?:\/\/[^\s)]+\/blog\/post\/[^\s)]+\.md\)/)
   })
 })

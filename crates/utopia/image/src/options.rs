@@ -223,6 +223,10 @@ pub enum Resource {
     Memory,
     /// `thread`: worker threads.
     Thread,
+    /// `width`: the largest width of an image, in pixels.
+    Width,
+    /// `height`: the largest height of an image, in pixels.
+    Height,
 }
 
 impl Resource {
@@ -235,18 +239,22 @@ impl Resource {
             "map" => Resource::Map,
             "memory" => Resource::Memory,
             "thread" => Resource::Thread,
+            "width" => Resource::Width,
+            "height" => Resource::Height,
             _ => return None,
         })
     }
 
     fn slot(self) -> &'static AtomicU64 {
-        static LIMITS: [AtomicU64; 6] = [
+        static LIMITS: [AtomicU64; 8] = [
             AtomicU64::new(512_000_000),
             AtomicU64::new(4_294_967_296),
             AtomicU64::new(768),
             AtomicU64::new(536_870_912),
             AtomicU64::new(268_435_456),
             AtomicU64::new(1),
+            AtomicU64::new(50_000),
+            AtomicU64::new(50_000),
         ];
         &LIMITS[self as usize]
     }
@@ -283,10 +291,6 @@ pub fn set_resource_limit(resource: Resource, value: i64) {
     resource.slot().store(value.max(0) as u64, Ordering::Relaxed);
 }
 
-/// The largest width or height of an image (ImageMagick's `width` and `height`
-/// policy in Appwrite's image).
-pub const MAX_DIMENSION: u64 = 50_000;
-
 /// Bytes of RGBA pixels held for one canvas of `width` x `height`.
 pub(crate) fn canvas_bytes(width: u64, height: u64) -> u64 {
     width.saturating_mul(height).saturating_mul(4)
@@ -314,10 +318,11 @@ pub(crate) fn check_pixels(bytes: u64) -> Result<()> {
     Ok(())
 }
 
-/// Fails like ImageMagick's pixel cache when a dimension passes the limit,
-/// or when one canvas of this size would pass the pixel budget.
+/// Fails like ImageMagick's pixel cache when a dimension passes its `width` or
+/// `height` limit (50,000 each until set), or when one canvas of this size
+/// would pass the pixel budget.
 pub(crate) fn check_dimensions(width: u64, height: u64) -> Result<()> {
-    if width > MAX_DIMENSION || height > MAX_DIMENSION {
+    if width > Resource::Width.limit() || height > Resource::Height.limit() {
         return Err(Error::LimitExceeded);
     }
     check_pixels(canvas_bytes(width, height))

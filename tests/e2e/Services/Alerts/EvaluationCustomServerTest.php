@@ -101,17 +101,17 @@ final class EvaluationCustomServerTest extends Scope
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'window' => 3600,
             'cooldown' => 300,
-            'critical' => true,
+            'severity' => 'critical',
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
-        $this->assertTrue($created['body']['critical']);
+        $this->assertSame('critical', $created['body']['severity']);
         $monitorId = $created['body']['$id'];
 
         /**
          * Test for SUCCESS
          */
         $firing = $this->waitForStatus($monitorId, 'firing');
-        $this->assertTrue($firing['critical']);
+        $this->assertSame('critical', $firing['severity']);
         $this->assertGreaterThan(0, $firing['value']);
         $this->assertNotNull($firing['triggeredAt']);
         $this->assertNotNull($firing['evaluatedAt']);
@@ -120,6 +120,7 @@ final class EvaluationCustomServerTest extends Scope
         $alert = $this->getAlert($firing['alertId']);
         $this->assertSame('firing', $alert['status']);
         // The alert keeps what the monitor was when it fired.
+        $this->assertSame('critical', $alert['severity']);
         $this->assertTrue($alert['critical']);
         $this->assertSame($monitorId, $alert['monitorId']);
         $this->assertSame($name, $alert['name']);
@@ -147,7 +148,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame($name, $delivery['data']['name']);
         $this->assertSame('usage', $delivery['data']['type']);
         $this->assertSame('network.outbound', $delivery['data']['metric']);
-        $this->assertTrue($delivery['data']['critical']);
+        $this->assertSame('critical', $delivery['data']['severity']);
         $this->assertGreaterThan(0, $delivery['data']['value']);
         $this->assertNull($delivery['data']['resolvedAt']);
         $this->assertArrayNotHasKey('projectInternalId', $delivery['data']);
@@ -185,6 +186,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertTrue($push['critical']);
         $this->assertSame('siren.caf', $push['sound']);
         $this->assertSame('alert', $push['data']['type']);
+        $this->assertSame('critical', $push['data']['severity']);
         $this->assertSame($firing['alertId'], $push['data']['alertId']);
         $this->assertSame($monitorId, $push['data']['monitorId']);
         $this->assertSame($this->getProject()['$id'], $push['data']['projectId']);
@@ -296,7 +298,7 @@ final class EvaluationCustomServerTest extends Scope
             'rules' => [Query::greaterThan('network.outbound', 10)->toString()],
             'cooldown' => 300,
             'enabled' => false,
-            'critical' => true,
+            'severity' => 'critical',
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];

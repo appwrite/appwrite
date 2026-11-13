@@ -62,6 +62,7 @@
 
 mod color;
 mod decode;
+mod draw;
 mod encode;
 mod error;
 mod format;
@@ -74,10 +75,11 @@ mod options;
 mod transform;
 
 pub use crate::color::Color;
+pub use crate::draw::has_glyph;
 pub use crate::error::{Error, Result};
 pub use crate::format::Format;
 pub use crate::image::Image;
-pub use crate::options::{FocalPoint, Gravity, MAX_DIMENSION, OutputFormat, Resource, set_resource_limit};
+pub use crate::options::{FocalPoint, Gravity, OutputFormat, Resource, set_resource_limit};
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
 #[cfg(doctest)]

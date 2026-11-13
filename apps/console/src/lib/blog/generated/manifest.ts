@@ -45,6 +45,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-vipps-mobilepay-login",
+    "href": "/blog/post/announcing-vipps-mobilepay-login",
+    "title": "Announcing Vipps MobilePay login for Appwrite Auth",
+    "description": "Appwrite Auth now supports Vipps MobilePay as an OAuth2 provider, so users in Norway, Denmark, Finland, and Sweden can sign in with the app they pay with.",
+    "date": "2026-11-11",
+    "lastUpdated": "2026-11-11",
+    "timeToRead": 6,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-vipps-mobilepay-login/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-monorepo-support-for-sites",
     "href": "/blog/post/announcing-monorepo-support-for-sites",
     "title": "Announcing monorepo support in Appwrite Sites",

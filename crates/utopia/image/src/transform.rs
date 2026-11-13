@@ -290,6 +290,10 @@ pub(crate) fn rotate(frame: &mut Frame, degrees: f64) -> Result<()> {
     let shear_y = angle.to_radians().sin();
     let page = frame.page;
     if shear_x.abs() < 1e-12 && shear_y.abs() < 1e-12 {
+        // A quarter turn swaps the sides, and the two limits may differ.
+        if rotations % 2 == 1 {
+            check_dimensions(frame.height().into(), frame.width().into())?;
+        }
         frame.pixels = match rotations {
             1 => image::imageops::rotate90(&frame.pixels),
             2 => image::imageops::rotate180(&frame.pixels),

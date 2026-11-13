@@ -1,19 +1,17 @@
 # utopia PHP extension
 
-Utopia crates registered as the PHP classes of their Composer packages. A class the
-extension registers exists before any autoloader runs, so Composer never loads the
-PHP one, and PHP code runs the Rust implementation unchanged. The rest of a package
-(its other classes, its tests) still loads from `packages/<name>`.
+Utopia crates registered as PHP classes. A class the extension registers has no PHP
+source; the rest of its package (other classes, a stub for static analysis, tests)
+stays in `packages/<name>`.
 
 ```sh
 cargo build --release -p utopia-extension
 php -d extension="$PWD/target/release/libutopia.so" ...   # libutopia.dylib on macOS
 ```
 
-The Appwrite image builds and loads it only when asked; the default build compiles no Rust:
+The Appwrite image builds and loads it:
 
 ```sh
-docker compose build --build-arg UTOPIA_EXTENSION=true
 docker compose exec appwrite php --ri utopia
 ```
 
@@ -22,20 +20,25 @@ and libclang at build time.
 
 ## Utopia\Image\Image
 
-Over `crates/utopia/image`, with the signatures of `packages/image/src/Image.php`.
+Over `crates/utopia/image`, with the signatures in `packages/image/stubs/Image.php`.
 
-`crates/extension/tests/image.php` runs without Composer. The package's own suite is
-the parity check: with the extension loaded, all 104 tests of `packages/image/tests` pass.
+`crates/extension/tests/image.php` runs without Composer; `packages/image/tests` is the
+full suite, and is skipped where the extension is not loaded.
+
+Beyond previews, the class draws what Appwrite used ImageMagick for: `Image::create()` makes a
+canvas, `path()` fills SVG path data and `text()` draws a line of text from a TrueType or OpenType
+file (no kerning or shaping), which is how the fallback and initials avatars are made.
+`Image::hasGlyph()` says whether a font draws a character.
 
 The extension turns on the crate's `libwebp` and `libheif` features, so it needs
 libheif's headers to build (`libheif-dev`) and the library at run time; libwebp is
 built from source. AVIF and HEIC follow the system's libheif, as they do for
-ImageMagick: Appwrite's base image decodes both, encodes AVIF, and has no HEVC encoder
-unless `libheif-x265` is installed (the `UTOPIA_EXTENSION=true` image installs it).
+ImageMagick: Appwrite's base image decodes both, encodes AVIF, and has no HEVC encoder,
+so HEIC output is unavailable unless `libheif-x265` (GPL-2.0-or-later) is installed.
 
 How it behaves inside a Swoole worker:
 
-- **Errors.** One hierarchy, shared with the PHP library: `Exception\ImageException` and
+- **Errors.** One hierarchy: `Exception\ImageException` and
   its `UnsupportedFormatException`, `CorruptImageException` and `LimitExceededException`
   for what an image or the system makes fail, `\InvalidArgumentException` for an argument
   that could never work. The classes load from the Composer package (without it they are
@@ -47,11 +50,7 @@ How it behaves inside a Swoole worker:
   (the crate's default `ravif` feature) is left out: with its pool, a process that had
   encoded an AVIF and then forked left the child waiting forever on its next encode.
 
-Known difference from ImageMagick: a greyscale JPEG source is written as a colour
-JPEG (about 10% larger; ImageMagick writes one component).
-
-Not bound: the protected `getSizeByFixedHeight` and `getSizeByFixedWidth`. The class
-cannot be cloned.
+The class cannot be cloned.
 
 `crates/support/php-std` here holds only the functions `utopia-image` calls, copied
 unchanged from the full crate on `feat/rust-utopia-conversion`.

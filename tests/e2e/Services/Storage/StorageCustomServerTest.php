@@ -84,12 +84,15 @@ final class StorageCustomServerTest extends Scope
         if ($source === false) {
             $this->fail('Failed to create a temporary image');
         }
-        $subject = new \Imagick(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg');
-        $subject->resizeImage(900, 0, \Imagick::FILTER_LANCZOS, 1);
-        $canvas = new \Imagick();
-        $canvas->newImage(2400, 1920, 'white', 'png');
-        $canvas->compositeImage($subject, \Imagick::COMPOSITE_OVER, 1450, 0);
-        $canvas->writeImage($source);
+        $subject = \imagecreatefromjpeg(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg');
+        $this->assertNotFalse($subject);
+        $subject = \imagescale($subject, 900);
+        $this->assertNotFalse($subject);
+        $canvas = \imagecreatetruecolor(2400, 1920);
+        $this->assertNotFalse($canvas);
+        \imagefill($canvas, 0, 0, 0xFFFFFF);
+        \imagecopy($canvas, $subject, 1450, 0, 0, 0, \imagesx($subject), \imagesy($subject));
+        \imagepng($canvas, $source);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
@@ -132,24 +135,20 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals('miss', $preview['headers']['x-appwrite-cache']);
         $this->assertNotEmpty($preview['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($preview['body']);
-        $this->assertSame(120, $image->getImageWidth());
-        $this->assertSame(320, $image->getImageHeight());
+        $size = \getimagesizefromstring($preview['body']);
+        $this->assertSame(120, $size[0]);
+        $this->assertSame(320, $size[1]);
+        $image = $this->getImageSignature($preview['body']);
 
         $center = $this->client->call(Client::METHOD_GET, $path, $headers, [...$params, 'gravity' => 'center']);
-        $centerImage = new \Imagick();
-        $centerImage->readImageBlob($center['body']);
-        $this->assertNotSame($centerImage->getImageSignature(), $image->getImageSignature());
+        $this->assertNotSame($this->getImageSignature($center['body']), $image);
 
         $cached = [];
         $this->assertEventually(function () use (&$cached, $path, $headers, $params, $image): void {
             $cached = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
 
             $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
-            $cachedImage = new \Imagick();
-            $cachedImage->readImageBlob($cached['body']);
-            $this->assertSame($image->getImageSignature(), $cachedImage->getImageSignature());
+            $this->assertSame($image, $this->getImageSignature($cached['body']));
         });
 
         $this->assertEquals(200, $cached['headers']['status-code']);
@@ -572,10 +571,7 @@ final class StorageCustomServerTest extends Scope
      */
     private function getImageSignature(string $body): string
     {
-        $image = new \Imagick();
-        $image->readImageBlob($body);
-
-        return $image->getImageSignature();
+        return \hash('sha256', $this->getImagePixels($body));
     }
 
     private function copyCacheEntryToFilesystem(Device $filesystem, Device $device, string $key): void
@@ -1350,40 +1346,98 @@ final class StorageCustomServerTest extends Scope
     {
         $path = \sys_get_temp_dir() . '/strip-photo-' . \uniqid() . '.jpg';
 
-        $image = new \Imagick();
-        $image->newImage($width, $height, new \ImagickPixel('skyblue'));
+        $image = \imagecreatetruecolor($width, $height);
+        $this->assertNotFalse($image);
+        \imagefill($image, 0, 0, 0x87CEEB);
         if ($noise) {
-            $image->addNoiseImage(\Imagick::NOISE_RANDOM);
-            $image->setImageCompressionQuality(100);
+            for ($y = 0; $y < $height; $y++) {
+                for ($x = 0; $x < $width; $x++) {
+                    \imagesetpixel($image, $x, $y, \mt_rand(0, 0xFFFFFF));
+                }
+            }
         }
-        $image->setImageFormat('jpeg');
+        \ob_start();
+        \imagejpeg($image, null, $noise ? 100 : -1);
+        $photo = (string) \ob_get_clean();
 
         // tagged.jpg carries a location, camera, capture time, orientation, and XMP and IPTC creators.
-        $tagged = new \Imagick(__DIR__ . '/../../../resources/disk-a/tagged.jpg');
-        foreach ($tagged->getImageProfiles('*', true) as $name => $profile) {
-            $image->profileImage($name, $profile);
+        $metadata = '';
+        foreach ($this->readSegments((string) \file_get_contents(__DIR__ . '/../../../resources/disk-a/tagged.jpg')) as [$marker, $segment]) {
+            if ($marker === 0xE1 || $marker === 0xED) {
+                $metadata .= "\xFF" . \chr($marker) . \pack('n', \strlen($segment) + 2) . $segment;
+            }
         }
-        // Imagick writes the orientation from its own setting, not from the copied EXIF.
-        $image->setImageOrientation($tagged->getImageOrientation());
-        $image->writeImage($path);
+        // They go after the JFIF header, which is the first thing GD writes.
+        $header = 4 + \unpack('n', $photo, 4)[1];
+        \file_put_contents($path, \substr($photo, 0, $header) . $metadata . \substr($photo, $header));
 
         return $path;
     }
 
     /**
-     * @return array<string, string> EXIF tags by name, plus XMP and IPTC when those blocks are present
+     * @return array<array{int, string}> The marker and contents of each JPEG segment before the image data
+     */
+    private function readSegments(string $jpeg): array
+    {
+        $segments = [];
+        $offset = 2;
+        while ($offset + 4 <= \strlen($jpeg) && $jpeg[$offset] === "\xFF" && $jpeg[$offset + 1] !== "\xDA") {
+            $length = \unpack('n', $jpeg, $offset + 2)[1];
+            $segments[] = [\ord($jpeg[$offset + 1]), \substr($jpeg, $offset + 4, $length - 2)];
+            $offset += 2 + $length;
+        }
+
+        return $segments;
+    }
+
+    /**
+     * @return array<string, string> The EXIF tags the tests look for by name, plus XMP and IPTC when those blocks are present.
+     *                               A tag's value is read only when it is a number, as Orientation is.
      */
     private function readTags(string $contents): array
     {
-        $image = new \Imagick();
-        $image->readImageBlob($contents);
+        $tags = [];
+        foreach ($this->readSegments($contents) as [$marker, $segment]) {
+            if ($marker === 0xE1 && \str_starts_with($segment, 'http://ns.adobe.com/xap/1.0/')) {
+                $tags['XMP'] = 'xmp';
+            } elseif ($marker === 0xED && \str_contains($segment, "8BIM\x04\x04")) {
+                $tags['IPTC'] = 'iptc';
+            } elseif ($marker === 0xE1 && \str_starts_with($segment, "Exif\0\0")) {
+                $tags += $this->readExif(\substr($segment, 6));
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function readExif(string $tiff): array
+    {
+        [$short, $long] = $tiff[0] === 'I' ? ['v', 'V'] : ['n', 'N'];
+        $names = [
+            'main' => [0x010F => 'Make', 0x0110 => 'Model', 0x0112 => 'Orientation', 0x9003 => 'DateTimeOriginal'],
+            'gps' => [0x0002 => 'GPSLatitude', 0x0004 => 'GPSLongitude'],
+        ];
 
         $tags = [];
-        foreach ($image->getImageProperties('exif:*') as $name => $value) {
-            $tags[\substr($name, \strlen('exif:'))] = $value;
-        }
-        foreach ($image->getImageProfiles('*', false) as $name) {
-            $tags[\strtoupper($name)] = $name;
+        // The first directory points to the Exif and GPS ones.
+        $directories = [[\unpack($long, $tiff, 4)[1], 'main']];
+        for ($i = 0; $i < \count($directories); $i++) {
+            [$offset, $kind] = $directories[$i];
+            $count = \unpack($short, $tiff, $offset)[1];
+            for ($entry = $offset + 2; $entry < $offset + 2 + 12 * $count; $entry += 12) {
+                $tag = \unpack($short, $tiff, $entry)[1];
+                $isShort = \unpack($short, $tiff, $entry + 2)[1] === 3;
+                $value = \unpack($isShort ? $short : $long, $tiff, $entry + 8)[1];
+
+                if ($kind === 'main' && ($tag === 0x8769 || $tag === 0x8825)) {
+                    $directories[] = [$value, $tag === 0x8825 ? 'gps' : 'main'];
+                } elseif (isset($names[$kind][$tag])) {
+                    $tags[$names[$kind][$tag]] = $isShort ? (string) $value : '';
+                }
+            }
         }
 
         return $tags;
@@ -1621,6 +1675,19 @@ final class StorageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(404, $file['headers']['status-code']);
+
+        $binary = \tempnam(\sys_get_temp_dir(), 'binary');
+        \file_put_contents($binary, \random_bytes(1024));
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile($binary, 'image/png', 'binary.png'),
+        ]);
+        \unlink($binary);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_file_type_unsupported', $file['body']['type']);
     }
 
     public function testIdleChunkedUploadDeletedByMaintenance(): void

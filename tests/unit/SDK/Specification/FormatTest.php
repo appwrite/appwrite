@@ -1310,6 +1310,10 @@ final class FormatTest extends TestCase
         $this->assertSame('webhook-password', $authPassword['example']);
         $this->assertArrayNotHasKey('x-example', $authPassword);
 
+        // Secrets the API returns are marked too, so clients can keep them out of their output.
+        $secret = $openApi['components']['schemas']['webhook']['properties']['secret'];
+        $this->assertSame('password', $secret['format']);
+        $this->assertArrayNotHasKey('format', $openApi['components']['schemas']['webhook']['properties']['name']);
     }
 
     public function testHashParamsHaveValidHashExamples(): void

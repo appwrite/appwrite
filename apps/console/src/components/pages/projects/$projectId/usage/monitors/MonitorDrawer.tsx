@@ -40,6 +40,7 @@ import {
   ruleFormFromMonitor,
   monitorInputFromForm,
   roleLabel,
+  SEVERITIES,
   type RuleForm,
 } from './RuleFields'
 
@@ -418,16 +419,21 @@ export function MonitorDrawer({
                     </span>
                   )}
                 </dd>
-                {monitor.critical && (
-                  <>
-                    <dt className="border-t border-border py-2 text-muted-foreground">
-                      {t('Critical')}
-                    </dt>
-                    <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
+                <dt className="border-t border-border py-2 text-muted-foreground">
+                  {t('Severity')}
+                </dt>
+                <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
+                  {t(
+                    SEVERITIES.find(({ value }) => value === monitor.severity)
+                      ?.label ?? monitor.severity,
+                  )}
+                  {monitor.severity === 'critical' && (
+                    <span className="text-muted-foreground">
+                      {' · '}
                       {t('Rings on phones even on silent')}
-                    </dd>
-                  </>
-                )}
+                    </span>
+                  )}
+                </dd>
               </dl>
             </div>
           )
