@@ -2536,6 +2536,7 @@ dependencies = [
  "php-std",
  "utopia-dsn",
  "utopia-image",
+ "utopia-locale",
 ]
 
 [[package]]
@@ -2555,6 +2556,15 @@ dependencies = [
  "thiserror 2.0.21",
  "webp",
  "zeno",
+]
+
+[[package]]
+name = "utopia-locale"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "php-std",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

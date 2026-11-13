@@ -19,3 +19,4 @@ ext-php-rs.workspace = true
 php-std.workspace = true
 utopia-dsn.workspace = true
 utopia-image = { workspace = true, features = ["libwebp", "libheif"] }
+utopia-locale.workspace = true
