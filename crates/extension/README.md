@@ -73,7 +73,6 @@ each case raises. It asserts these known differences on the extension:
   `Key named "…" not found` message. The `{{key}}` returned for a missing key keeps the exact bytes.
 - Reading an unregistered default language raises the same `TypeError` without PHP's
   `Undefined array key` warning before it.
-- `$default` and `$fallback` take strings: assigning another type throws, where PHP stores it.
 - `serialize()` refuses the object, as it does every class with Rust state.
 
 A warning PHP raises inside the class (`file_get_contents()` of a missing file) names the caller's

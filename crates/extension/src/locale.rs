@@ -8,6 +8,8 @@ use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
+use foldhash::fast::RandomState;
+
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::class::RegisteredClass;
 use ext_php_rs::exception::PhpException;
@@ -24,7 +26,7 @@ thread_local! {
     static LANGUAGES: RefCell<Languages> = RefCell::new(Languages::new());
     /// What `getTranslations()` returned for each language, which later calls share
     /// by refcount, as PHP shares `self::$language[$name]`.
-    static ARRAYS: RefCell<HashMap<String, Zval>> = RefCell::new(HashMap::new());
+    static ARRAYS: RefCell<HashMap<String, Zval, RandomState>> = RefCell::new(HashMap::default());
     /// Where PHP keeps `Locale::$exceptions` this request, found on first use.
     static EXCEPTIONS: Cell<*const Zval> = const { Cell::new(std::ptr::null()) };
 }
@@ -76,6 +78,35 @@ fn thrown(error: Error) -> PhpException {
 /// Language names and keys are read as UTF-8; other bytes become U+FFFD.
 fn lossy(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
+}
+
+/// The language `$default` or `$fallback` names, as PHP reads it as an array key:
+/// `null` is `""`, ints and bools their decimal form.
+fn name(value: &Zval) -> Cow<'_, str> {
+    if let Some(string) = value.zend_str() {
+        return String::from_utf8_lossy(string.as_bytes());
+    }
+    if let Some(long) = value.long() {
+        return Cow::Owned(long.to_string());
+    }
+    Cow::Borrowed(match value.bool() {
+        Some(true) => "1",
+        Some(false) => "0",
+        None => "",
+    })
+}
+
+/// `{{name}}`, built on the stack when it is short, as most keys are.
+fn braced<T>(name: &[u8], run: impl FnOnce(&[u8]) -> T) -> T {
+    let mut buffer = [0u8; 128];
+    let length = name.len() + 4;
+    if length > buffer.len() {
+        return run(&[b"{{", name, b"}}"].concat());
+    }
+    buffer[..2].copy_from_slice(b"{{");
+    buffer[2..length - 2].copy_from_slice(name);
+    buffer[length - 2..length].copy_from_slice(b"}}");
+    run(&buffer[..length])
 }
 
 /// Calls a PHP function, so its warnings, stream wrappers and Swoole hooks apply.
@@ -130,35 +161,86 @@ impl ext_php_rs::convert::StubLiteral for Placeholders<'_> {
     }
 }
 
-/// `Utopia\Locale\Locale`.
+/// A property value of any type, shared by refcount.
+pub struct Value(Zval);
+
+impl ext_php_rs::convert::IntoZval for Value {
+    const TYPE: ext_php_rs::flags::DataType = ext_php_rs::flags::DataType::Mixed;
+    const NULLABLE: bool = true;
+
+    fn set_zval(self, zv: &mut Zval, _: bool) -> ext_php_rs::error::Result<()> {
+        *zv = self.0;
+        Ok(())
+    }
+}
+
+impl ext_php_rs::convert::FromZval<'_> for Value {
+    const TYPE: ext_php_rs::flags::DataType = ext_php_rs::flags::DataType::Mixed;
+
+    fn from_zval(zval: &Zval) -> Option<Self> {
+        Some(Self(zval.shallow_clone()))
+    }
+}
+
+/// `Utopia\Locale\Locale`. `$default` and `$fallback` are PHP values, as in PHP:
+/// a name is a PHP string, shared by refcount, and any value can be assigned.
 #[php_class]
 #[php(name = "Utopia\\Locale\\Locale")]
-#[derive(Clone)]
 pub struct Locale {
     /// `public static $exceptions = true`, held by PHP.
     #[expect(dead_code, reason = "PHP holds a static property's value; the field only declares it")]
     #[php(prop, static, default = true)]
     exceptions: bool,
-    /// `public $default`.
-    #[php(prop)]
-    default: String,
-    /// `public $fallback = null`.
-    #[php(prop)]
-    fallback: Option<String>,
+    default: Zval,
+    fallback: Zval,
+}
+
+impl Clone for Locale {
+    fn clone(&self) -> Self {
+        Self { exceptions: true, default: self.default.shallow_clone(), fallback: self.fallback.shallow_clone() }
+    }
 }
 
 impl Locale {
-    /// `name` if it is registered, or `Locale not found` while exceptions are on.
-    fn checked(name: &[u8]) -> PhpResult<String> {
-        let name = lossy(name);
-        languages(|languages| utopia_locale::Locale::new(languages, &name).map(drop)).map_err(thrown)?;
-        Ok(name)
+    /// `name` as a PHP string if it is registered, or `Locale not found` while exceptions are on.
+    fn checked(name: &[u8]) -> PhpResult<Zval> {
+        let text = String::from_utf8_lossy(name);
+        languages(|languages| utopia_locale::Locale::new(languages, &text).map(drop)).map_err(thrown)?;
+        Ok(string(name))
+    }
+
+    /// The crate's view of this locale's languages.
+    fn view<'a>(&'a self, languages: &'a Languages) -> utopia_locale::Locale<'a> {
+        let fallback = (!self.fallback.is_null()).then(|| name(&self.fallback));
+        utopia_locale::Locale::with(languages, name(&self.default), fallback)
     }
 }
 
 #[php_impl]
 impl Locale {
     pub const DEFAULT_DYNAMIC_KEY: &'static str = DEFAULT_DYNAMIC_KEY;
+
+    /// `public $default`.
+    #[php(getter, name = "default")]
+    pub fn default_property(&self) -> Value {
+        Value(self.default.shallow_clone())
+    }
+
+    #[php(setter, name = "default")]
+    pub fn set_default_property(&mut self, value: Value) {
+        self.default = value.0;
+    }
+
+    /// `public $fallback = null`.
+    #[php(getter, name = "fallback")]
+    pub fn fallback_property(&self) -> Value {
+        Value(self.fallback.shallow_clone())
+    }
+
+    #[php(setter, name = "fallback")]
+    pub fn set_fallback_property(&mut self, value: Value) {
+        self.fallback = value.0;
+    }
 
     /// `getLanguages(): array`: the names as PHP's array keys hold them, so a
     /// numeric name is an int.
@@ -215,7 +297,9 @@ impl Locale {
 
     /// `__construct(string $default)`.
     pub fn __construct(default: PhpString<'_>) -> PhpResult<Self> {
-        Ok(Self { exceptions: true, default: Self::checked(default.bytes())?, fallback: None })
+        let mut fallback = Zval::new();
+        fallback.set_null();
+        Ok(Self { exceptions: true, default: Self::checked(default.bytes())?, fallback })
     }
 
     /// `setFallback(string $name): self`.
@@ -223,7 +307,7 @@ impl Locale {
         self_: &'a mut ZendClassObject<Locale>,
         name: PhpString<'_>,
     ) -> PhpResult<&'a mut ZendClassObject<Locale>> {
-        self_.fallback = Some(Self::checked(name.bytes())?);
+        self_.fallback = Self::checked(name.bytes())?;
         Ok(self_)
     }
 
@@ -247,24 +331,25 @@ impl Locale {
         placeholders: Placeholders<'_>,
     ) -> PhpResult<Option<Zval>> {
         let fill = placeholders.0.filter(|placeholders| !placeholders.is_empty());
-        let name = String::from_utf8_lossy(key.bytes());
+        let key_text = String::from_utf8_lossy(key.bytes());
         let found = languages(|languages| {
-            let locale = utopia_locale::Locale::with(languages, self.default.as_str(), self.fallback.as_deref());
-            let text = locale.text(&name, Missing::Null, &[])?;
+            let locale = self.view(languages);
+            let text = locale.text(&key_text, Missing::Null, &[])?;
             Ok(text.map(|text| match fill {
                 None => Found::Done(string(text.as_bytes())),
                 Some(_) => Found::Fill(text.as_bytes().to_vec()),
             }))
         })
         .map_err(thrown)?;
-        let mut text = match (found, default) {
-            (Some(Found::Done(text)), _) => return Ok(Some(text)),
-            (Some(Found::Fill(text)), _) => text,
-            (None, None) => return Ok(None),
-            (None, Some(default)) if default.bytes() == DEFAULT_DYNAMIC_KEY.as_bytes() => {
-                [b"{{", key.bytes(), b"}}"].concat()
-            }
-            (None, Some(default)) => default.0.into_owned(),
+        let dynamic = |default: &PhpString<'_>| default.bytes() == DEFAULT_DYNAMIC_KEY.as_bytes();
+        let mut text = match (found, default, fill) {
+            (Some(Found::Done(text)), _, _) => return Ok(Some(text)),
+            (Some(Found::Fill(text)), _, _) => text,
+            (None, None, _) => return Ok(None),
+            (None, Some(default), None) if dynamic(&default) => return Ok(Some(braced(key.bytes(), string))),
+            (None, Some(default), None) => return Ok(Some(string(default.bytes()))),
+            (None, Some(default), Some(_)) if dynamic(&default) => braced(key.bytes(), <[u8]>::to_vec),
+            (None, Some(default), Some(_)) => default.0.into_owned(),
         };
         for (name, value) in fill.into_iter().flat_map(ZendHashTable::iter) {
             let name = match name {
@@ -276,8 +361,8 @@ impl Locale {
             let Some(value) = cast(value) else {
                 return Ok(None);
             };
-            let search = [b"{{", name.as_ref(), b"}}"].concat();
-            if let Cow::Owned(replaced) = php_std::string::str_replace(&search, &value, &text).0 {
+            if let Cow::Owned(replaced) = braced(&name, |search| php_std::string::str_replace(search, &value, &text).0)
+            {
                 text = replaced;
             }
         }
@@ -286,11 +371,12 @@ impl Locale {
 
     /// `getTranslations(): array`: built once per language, then shared.
     pub fn get_translations(&self) -> PhpResult<Zval> {
-        if let Some(array) = ARRAYS.with_borrow(|arrays| arrays.get(&self.default).map(Zval::shallow_clone)) {
+        let default = name(&self.default);
+        if let Some(array) = ARRAYS.with_borrow(|arrays| arrays.get(default.as_ref()).map(Zval::shallow_clone)) {
             return Ok(array);
         }
         let array = languages(|languages| {
-            let locale = utopia_locale::Locale::with(languages, self.default.as_str(), None::<&str>);
+            let locale = utopia_locale::Locale::with(languages, default.as_ref(), None::<&str>);
             let translations = locale.translations().map_err(thrown)?;
             let mut array = ZendHashTable::with_capacity(u32::try_from(translations.len()).unwrap_or(u32::MAX));
             for (key, text) in translations {
@@ -304,7 +390,7 @@ impl Locale {
         })?;
         let mut zval = Zval::new();
         zval.set_hashtable(array);
-        ARRAYS.with_borrow_mut(|arrays| arrays.insert(self.default.clone(), zval.shallow_clone()));
+        ARRAYS.with_borrow_mut(|arrays| arrays.insert(default.into_owned(), zval.shallow_clone()));
         Ok(zval)
     }
 }

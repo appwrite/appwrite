@@ -277,6 +277,25 @@ emit('clone', outcome(function () {
 
     return [$locale->default, $locale->fallback, $copy->default, $copy->fallback, $copy->getText('world')];
 }));
+Locale::$exceptions = false;
+emit('assigned properties', outcome(function () {
+    $locale = new Locale('en-US');
+    $read = [];
+    foreach ([7, '7', 7.0, true, null, 'he-IL', ['x']] as $value) {
+        $locale->default = $value;
+        $locale->fallback = $value;
+        $read[] = [$locale->default, $locale->fallback];
+    }
+    $locale->default = 7;
+    $locale->fallback = 'en-US';
+    $read[] = [$locale->getText('k'), $locale->getText('hello')];
+    $locale->default = 'he-IL';
+    $locale->fallback = null;
+    $read[] = [$locale->getText('hello'), $locale->getText('world', 'd')];
+
+    return $read;
+}));
+Locale::$exceptions = true;
 emit('constant', outcome(fn () => [Locale::DEFAULT_DYNAMIC_KEY, (new ReflectionClassConstant(Locale::class, 'DEFAULT_DYNAMIC_KEY'))->getValue()]));
 $methods = (new ReflectionClass(Locale::class))->getMethods(ReflectionMethod::IS_PUBLIC);
 usort($methods, fn (ReflectionMethod $a, ReflectionMethod $b) => strcmp($a->getName(), $b->getName()));
@@ -290,12 +309,6 @@ $waivers = [
     'non-UTF-8 key' => outcome(fn () => (new Locale('en-US'))->getText("\xff", 'd') === 'd'),
     'unknown default language' => outcome(fn () => (new Locale('unknown'))->getText('a')),
     'unknown default translations' => outcome(fn () => (new Locale('unknown'))->getTranslations()),
-    'assigned properties' => outcome(function () {
-        $locale = new Locale('en-US');
-        $locale->default = 5;
-
-        return $locale->default;
-    }),
     'serialize' => outcome(fn () => strlen(serialize(new Locale('en-US')))),
 ];
 Locale::$exceptions = true;
@@ -305,7 +318,6 @@ $expected = $internal ? [
     'non-UTF-8 key' => ['value' => true],
     'unknown default language' => ['throws' => 'TypeError', 'message' => 'array_key_exists(): Argument #2 ($array) must be of type array, null given'],
     'unknown default translations' => ['throws' => 'TypeError', 'message' => 'Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, null returned'],
-    'assigned properties' => ['throws' => 'Exception', 'message' => 'Failed to set property: could not convert from Long'],
     'serialize' => ['throws' => 'Exception', 'message' => "Serialization of 'Utopia\\Locale\\Locale' is not allowed"],
     'non-UTF-8 key message' => ['throws' => 'Exception', 'message' => "Key named \"\u{FFFD}\" not found"],
 ] : $waivers;
