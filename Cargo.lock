@@ -98,6 +98,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-trait"
+version = "0.1.92"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82f6aeea286b8eb4dd3431a1be1b59d290ace00f5bfd8e2a159bc2a05e2c1667"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.10",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -926,6 +937,12 @@ name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
+
+[[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hmac"
@@ -2555,6 +2572,39 @@ dependencies = [
  "thiserror 2.0.21",
  "webp",
  "zeno",
+]
+
+[[package]]
+name = "utopia-query"
+version = "0.1.0"
+dependencies = [
+ "md-5",
+ "php-std",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "utopia-usage"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "getrandom 0.3.4",
+ "hex",
+ "indexmap",
+ "md-5",
+ "php-std",
+ "sha2 0.10.9",
+ "utopia-query",
+ "utopia-validators",
+]
+
+[[package]]
+name = "utopia-validators"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
