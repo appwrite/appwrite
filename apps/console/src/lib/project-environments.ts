@@ -95,6 +95,10 @@ export function suggestProjectEnvironmentName(
  * plan caps environments per project, and a cap of 0 is a plan without them
  * (Free and Start), not one without a cap. `unknown` until both the plan and the
  * project's environments have loaded, so nothing is offered or refused on a guess.
+ * The self-hosted plan is `unknown` too: environments are Cloud's, and there it
+ * is the fallback for a plan request that failed (as `isCronAllowed` reads it),
+ * so it says nothing about what the plan offers. The API still refuses what the
+ * plan does not allow.
  */
 export type ProjectEnvironmentsAllowance =
   | { status: 'unknown' }
@@ -103,10 +107,12 @@ export type ProjectEnvironmentsAllowance =
   | { status: 'at-limit'; limit: number }
 
 export function projectEnvironmentsAllowance(
-  plan: { environments?: number | null } | null | undefined,
+  plan: { $id?: string; environments?: number | null } | null | undefined,
   environmentCount: number | undefined,
 ): ProjectEnvironmentsAllowance {
-  if (!plan || environmentCount === undefined) return { status: 'unknown' }
+  if (!plan || plan.$id === 'self-hosted' || environmentCount === undefined) {
+    return { status: 'unknown' }
+  }
   const limit = Number(plan.environments ?? 0)
   if (!Number.isFinite(limit) || limit <= 0) return { status: 'not-offered' }
   return environmentCount >= limit

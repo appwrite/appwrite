@@ -137,8 +137,8 @@ interface Mock {
   sent: Sent
   /** Status the migrations list answers with; flipped by a spec to recover */
   migrations: { status: number }
-  /** The organization's plan: Free and Start offer no environments, Pro and above 3 */
-  plan: { $id: string; name: string; environments: number }
+  /** The organization's plan: Free and Start offer no environments, Pro and above 3. Null fails the request. */
+  plan: { $id: string; name: string; environments: number } | null
   /** The project's environments, as its list answers */
   environments: Array<typeof ENVIRONMENT>
 }
@@ -220,9 +220,20 @@ async function mockAppwriteApi(page: Page): Promise<Mock> {
       apiPath === `/organizations/${ORGANIZATION.$id}` ||
       apiPath === `/teams/${ORGANIZATION.$id}`
     )
-      return json(200, { ...ORGANIZATION, billingPlan: mock.plan.$id })
-    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`)
-      return json(200, mock.plan)
+      return json(200, {
+        ...ORGANIZATION,
+        billingPlan: mock.plan?.$id ?? PRO.$id,
+      })
+    if (apiPath === `/organizations/${ORGANIZATION.$id}/plan`) {
+      return mock.plan
+        ? json(200, mock.plan)
+        : json(500, {
+            message: 'Server Error',
+            code: 500,
+            type: 'general_unknown',
+            version: '1.0',
+          })
+    }
     if (apiPath.endsWith('/memberships'))
       return json(200, { total: 0, memberships: [] })
 
@@ -605,6 +616,28 @@ test.describe('creating an environment on the plan', () => {
     await expect(
       page.getByRole('button', { name: 'Create environment' }),
     ).toBeDisabled()
+  })
+
+  test('a plan that cannot be read neither upsells nor blocks', async ({
+    page,
+  }) => {
+    const mock = await mockAppwriteApi(page)
+    mock.plan = null
+    await enableEnvironmentsExperiment(page)
+    await page.goto(`/projects/${PROJECT.$id}/environments/create`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    // The failed request says nothing about the plan: the API decides
+    const name = page.locator('#environment-name')
+    await expect(name).toBeEnabled({ timeout: 45_000 })
+    await expect(page.getByRole('alert')).toHaveCount(0)
+    await name.fill('Preview')
+    await page.getByRole('button', { name: 'Create environment' }).click()
+
+    await expect
+      .poll(() => mock.sent.environmentCreates)
+      .toEqual([{ environmentId: 'preview', name: 'Preview' }])
   })
 
   test('on Pro with room an environment is created', async ({ page }) => {

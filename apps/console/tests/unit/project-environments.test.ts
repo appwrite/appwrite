@@ -166,6 +166,14 @@ describe('project environments on the plan', () => {
     ).toEqual({ status: 'unknown' })
   })
 
+  test('a plan request that failed decides nothing', () => {
+    // On Cloud the Console answers a failed plan request with the self-hosted
+    // plan, whose cap of 0 is not the organization's
+    expect(
+      projectEnvironmentsAllowance({ $id: 'self-hosted', environments: 0 }, 0),
+    ).toEqual({ status: 'unknown' })
+  })
+
   test('a plan that does not name the cap offers none', () => {
     // A cloud older than the cap, or a plan written without it
     expect(projectEnvironmentsAllowance({}, 0)).toEqual({
