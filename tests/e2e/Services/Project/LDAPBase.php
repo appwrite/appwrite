@@ -262,6 +262,7 @@ trait LDAPBase
         $this->assertArrayHasKey('authMethods', $response['body']);
 
         foreach ([
+            'ldapEnabled',
             'ldapHosts',
             'ldapPort',
             'ldapEncryption',
@@ -282,6 +283,7 @@ trait LDAPBase
             $this->assertArrayHasKey($key, $response['body']);
         }
 
+        $this->assertIsBool($response['body']['ldapEnabled']);
         $this->assertIsArray($response['body']['ldapHosts']);
         $this->assertIsInt($response['body']['ldapPort']);
         $this->assertIsBool($response['body']['ldapTls']);
@@ -321,6 +323,27 @@ trait LDAPBase
 
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(false, $this->ldapEnabled($this->getProjectDocument()));
+    }
+
+    public function testLDAPEnabledIsReadableWhereAuthMethodsLeaveItOut(): void
+    {
+        // Response formats before 2.8.0 leave ldap out of authMethods, so older SDKs can read
+        // the project. ldapEnabled still tells those clients, the Console among them, the state.
+        $response = $this->updateAuthMethod(true);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        try {
+            $response = $this->client->call(Client::METHOD_GET, '/project', \array_merge($this->projectHeaders(), [
+                'x-appwrite-response-format' => '2.7.1',
+            ]));
+
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertNotContains('ldap', \array_column($response['body']['authMethods'], '$id'));
+            $this->assertTrue($response['body']['ldapEnabled']);
+        } finally {
+            $this->updateAuthMethod(false);
+        }
     }
 
     public function testUpdateLDAPEnabledConfigurationIsCheckedOnChange(): void
@@ -566,6 +589,8 @@ trait LDAPBase
     {
         foreach ($project['authMethods'] ?? [] as $method) {
             if ($method['$id'] === 'ldap') {
+                $this->assertSame($method['enabled'], $project['ldapEnabled'], 'ldapEnabled must carry the authMethods flag.');
+
                 return $method['enabled'];
             }
         }

@@ -955,6 +955,8 @@ final class LDAPSessionIntegrationTest extends Scope
     {
         foreach ($project['authMethods'] ?? [] as $method) {
             if ($method['$id'] === 'ldap') {
+                $this->assertSame($method['enabled'], $project['ldapEnabled'], 'ldapEnabled must carry the authMethods flag.');
+
                 return $method['enabled'];
             }
         }

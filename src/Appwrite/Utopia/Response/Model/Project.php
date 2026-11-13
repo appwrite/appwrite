@@ -116,6 +116,13 @@ class Project extends Model
             ])
 
             // Resource: LDAP
+            ->addRule('ldapEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Status for LDAP sign-in',
+                'default' => false,
+                'example' => false,
+                'array' => false
+            ])
             ->addRule('ldapHosts', [
                 'type' => self::TYPE_STRING,
                 'description' => 'LDAP directory hosts, tried in order.',
@@ -384,6 +391,11 @@ class Project extends Model
 
     private function expandLdapFields(Document $document): void
     {
+        // The flag the ldap entry in authMethods carries, read next to the configuration the way
+        // smtpEnabled is, and kept for the response formats before 2.8.0 that leave that entry out.
+        $method = Config::getParam('auth', [])['ldap'];
+        $document->setAttribute('ldapEnabled', (bool) ($document->getAttribute('auths', [])[$method['key']] ?? $method['enabled']));
+
         if (!$document->isSet('ldap')) {
             return;
         }
