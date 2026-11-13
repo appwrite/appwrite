@@ -6,10 +6,17 @@
  * @see https://github.com/modelcontextprotocol/experimental-ext-server-card
  */
 
-import { MCP_SERVER_NAME, MCP_SERVER_URL } from '../config/mcp.ts'
+import {
+  MCP_DOCS_SERVER_URL,
+  MCP_SERVER_NAME,
+  MCP_SERVER_URL,
+} from '../config/mcp.ts'
 
 /** SEP-1649 well-known Server Card location. */
 export const APPWRITE_MCP_SERVER_CARD_PATH = '/.well-known/mcp/server-card.json'
+/** Card for the public docs-only MCP server, listed in the catalog. */
+export const APPWRITE_MCP_DOCS_SERVER_CARD_PATH =
+  '/.well-known/mcp/docs/server-card.json'
 
 /**
  * Agentic Resource Discovery (ARD v0.91) manifest. Points clients at the
@@ -43,6 +50,7 @@ export const MCP_SERVER_CARD_SCHEMA =
 
 /** Reverse-DNS server name (exactly one `/`). */
 export const APPWRITE_MCP_SERVER_CARD_NAME = 'io.appwrite/mcp'
+export const APPWRITE_MCP_DOCS_SERVER_CARD_NAME = 'io.appwrite/mcp-docs'
 
 export const MCP_SERVER_CARD_CONTENT_TYPE =
   'application/mcp-server-card+json; charset=utf-8'
@@ -208,6 +216,36 @@ export function buildMcpServerCard(origin: string = 'https://appwrite.io') {
   }
 }
 
+/** MCP Server Card for the public docs-only server (no sign-in). */
+export function buildMcpDocsServerCard(origin: string = 'https://appwrite.io') {
+  return {
+    $schema: MCP_SERVER_CARD_SCHEMA,
+    name: APPWRITE_MCP_DOCS_SERVER_CARD_NAME,
+    title: 'Appwrite Docs',
+    icons: [
+      {
+        src: `${origin}/apple-touch-icon.png`,
+        mimeType: 'image/png',
+        sizes: ['180x180'],
+      },
+    ],
+    description:
+      'Search the Appwrite documentation. No sign-in; use it only when an agent cannot sign in.',
+    version: '1.0.0',
+    websiteUrl: `${origin}${APPWRITE_MCP_DOCS_PATH}`,
+    repository: {
+      url: 'https://github.com/appwrite/mcp',
+      source: 'github',
+    },
+    remotes: [
+      {
+        type: 'streamable-http' as const,
+        url: MCP_DOCS_SERVER_URL,
+      },
+    ],
+  }
+}
+
 /** @deprecated Use {@link buildMcpServerCard}. */
 export function buildMcpDiscoveryDocument(
   origin: string = 'https://appwrite.io',
@@ -236,6 +274,18 @@ export function buildAiCatalogDocument(origin: string = 'https://appwrite.io') {
           'add email and OAuth sign-in to my app',
           'deploy a serverless function',
           'upload files to a storage bucket',
+        ],
+      },
+      {
+        identifier: 'urn:air:appwrite.io:mcp:appwrite-docs',
+        displayName: 'Appwrite Docs MCP Server',
+        type: 'application/mcp-server-card+json',
+        url: `${origin}${APPWRITE_MCP_DOCS_SERVER_CARD_PATH}`,
+        description:
+          'Search the Appwrite documentation without signing in. Agents that can sign in should use the Appwrite MCP Server, which includes docs search.',
+        representativeQueries: [
+          'how do I query rows in Appwrite',
+          'Appwrite OAuth sign-in setup',
         ],
       },
     ],

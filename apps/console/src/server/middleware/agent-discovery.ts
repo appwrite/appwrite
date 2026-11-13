@@ -7,11 +7,13 @@ import {
   APPWRITE_API_CATALOG_PATH,
   API_CATALOG_CONTENT_TYPE,
   DISCOVERY_CORS_HEADERS,
+  APPWRITE_MCP_DOCS_SERVER_CARD_PATH,
   APPWRITE_MCP_SERVER_CARD_PATH,
   MCP_SERVER_CARD_CONTENT_TYPE,
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
   buildApiCatalogDocument,
+  buildMcpDocsServerCard,
   buildMcpServerCard,
   discoveryJsonResponse,
   serializeDiscoveryJson,
@@ -25,6 +27,10 @@ const DISCOVERY_HANDLERS: Record<
   [APPWRITE_MCP_SERVER_CARD_PATH]: {
     contentType: MCP_SERVER_CARD_CONTENT_TYPE,
     body: () => serializeDiscoveryJson(buildMcpServerCard()),
+  },
+  [APPWRITE_MCP_DOCS_SERVER_CARD_PATH]: {
+    contentType: MCP_SERVER_CARD_CONTENT_TYPE,
+    body: () => serializeDiscoveryJson(buildMcpDocsServerCard()),
   },
   [APPWRITE_ARD_PATH]: {
     contentType: ARD_CONTENT_TYPE,

@@ -16,6 +16,7 @@ import { isFeatureGatedDocsSlugHidden } from '../src/lib/docs/feature-gated-docs
 import {
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
+  buildMcpDocsServerCard,
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from '../src/lib/seo/agent-discovery'
@@ -351,6 +352,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
     {
       relativePath: '.well-known/mcp/server-card.json',
       contents: serializeDiscoveryJson(buildMcpServerCard(SITE_ORIGIN)),
+    },
+    {
+      relativePath: '.well-known/mcp/docs/server-card.json',
+      contents: serializeDiscoveryJson(buildMcpDocsServerCard(SITE_ORIGIN)),
     },
     {
       relativePath: '.well-known/ard.json',

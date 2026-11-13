@@ -26,6 +26,7 @@ export function getOrganizationSchema() {
       url: `${MARKETING_SITE_ORIGIN}/apple-touch-icon.png`,
     },
     description: APPWRITE_DESCRIPTION,
+    knowsAbout: ['Backend as a service', 'Serverless functions'],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',
