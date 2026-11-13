@@ -608,15 +608,10 @@ export const heSitesDictionary: Record<string, string> = {
   'Create your first site': 'יצירת האתר הראשון שלכם',
   'Deploy web apps from Git or a template. Every push gets a build, a preview URL, and fast global delivery.':
     'פרסו אפליקציות ווב מ-Git או מתבנית. כל Push מקבל Build, כתובת תצוגה מקדימה והפצה גלובלית מהירה.',
-  'Connect a repository': 'חיבור מאגר',
-  'Deploy on every push to your production branch, with a preview URL for every other branch.':
-    'פריסה בכל Push ל-Branch של הפרודקשן, עם כתובת תצוגה מקדימה לכל Branch אחר.',
-  'Pick a framework': 'בחירת Framework',
-  'Appwrite detects TanStack Start, Next.js, Nuxt, SvelteKit, and more, and sets up the build for you.':
-    'Appwrite מזהה את TanStack Start,‏ Next.js,‏ Nuxt,‏ SvelteKit ועוד, ומגדיר עבורכם את ה-Build.',
-  'Go live': 'עלייה לאוויר',
-  'Get an appwrite.network URL right away, then add your own domain.':
-    'קבלו כתובת appwrite.network מיד, ואז הוסיפו דומיין משלכם.',
+  'Connect a Git provider to deploy on every push.':
+    'חברו ספק Git כדי לפרוס בכל Push.',
+  'Deploy a working site in a few clicks, then make it yours.':
+    'פרסו אתר עובד בכמה קליקים, ואז התאימו אותו לצרכים שלכם.',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
 }

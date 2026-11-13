@@ -570,15 +570,10 @@ export const jaSitesDictionary: Record<string, string> = {
   'Create your first site': '最初のサイトを作成',
   'Deploy web apps from Git or a template. Every push gets a build, a preview URL, and fast global delivery.':
     'Git またはテンプレートから Web アプリをデプロイします。プッシュごとにビルド、プレビュー URL、高速なグローバル配信が提供されます。',
-  'Connect a repository': 'リポジトリを接続',
-  'Deploy on every push to your production branch, with a preview URL for every other branch.':
-    '本番ブランチへのプッシュごとにデプロイし、その他のブランチにはそれぞれプレビュー URL が付きます。',
-  'Pick a framework': 'フレームワークを選択',
-  'Appwrite detects TanStack Start, Next.js, Nuxt, SvelteKit, and more, and sets up the build for you.':
-    'Appwrite は TanStack Start、Next.js、Nuxt、SvelteKit などを検出し、ビルドを自動で設定します。',
-  'Go live': '公開する',
-  'Get an appwrite.network URL right away, then add your own domain.':
-    'すぐに appwrite.network の URL が発行されます。その後、独自ドメインを追加できます。',
+  'Connect a Git provider to deploy on every push.':
+    'Git プロバイダーを接続すると、プッシュのたびにデプロイされます。',
+  'Deploy a working site in a few clicks, then make it yours.':
+    '数クリックで動作するサイトをデプロイし、自由にカスタマイズできます。',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
 }
