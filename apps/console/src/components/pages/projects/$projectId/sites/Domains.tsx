@@ -8,7 +8,8 @@ import {
   FileText,
   RefreshCw,
   Trash2,
-  ExternalLink} from 'lucide-react'
+  ExternalLink,
+  Pencil} from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
@@ -30,9 +31,11 @@ import {
 import {
   siteDomainsQueryOptions,
   useProject,
+  useProjectSite,
   useOrganizationDomains} from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
+import { EditDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/EditDomain'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
@@ -69,6 +72,8 @@ export function View() {
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
+  const [editRule, setEditRule] = useState<Models.ProxyRule | null>(null)
+  const { data: site } = useProjectSite(projectId, siteId)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
     null,
   )
@@ -145,6 +150,10 @@ export function View() {
       setViewLogsRule(rule)
       setViewLogsOpen(true)
     })
+  }
+
+  const handleEdit = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => setEditRule(rule))
   }
 
   const handleDelete = (rule: Models.ProxyRule) => {
@@ -338,6 +347,13 @@ export function View() {
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
+                                  onClick={() => handleEdit(rule)}
+                                >
+                                  <MenuItemContent icon={Pencil}>
+                                    {t('Edit')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   onClick={() => {
                                     const apex = getApexDomain(rule.domain)
                                     const orgDomainId = apex
@@ -432,6 +448,22 @@ export function View() {
             }}
           />
         </>
+      )}
+      {editRule && (
+        <EditDomainDialog
+          key={editRule.$id}
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditRule(null)
+          }}
+          projectId={projectId ?? ''}
+          region={project?.region}
+          rule={editRule}
+          resourceType="site"
+          resourceId={siteId ?? ''}
+          installationId={site?.installationId}
+          providerRepositoryId={site?.providerRepositoryId}
+        />
       )}
       {viewLogsRule && (
         <ViewLogsDialog
