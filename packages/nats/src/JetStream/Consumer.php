@@ -71,6 +71,7 @@ final class Consumer
 
         $payload = json_encode($request, JSON_THROW_ON_ERROR);
 
+        $this->conn->settle($timeout);
         $inbox = $this->conn->newInbox();
         $sub = $this->conn->subscribe($inbox);
 

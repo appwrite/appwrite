@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\NATS\Tests\Support;
 
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Transport\Pollable;
 use Utopia\NATS\Transport\Transport;
 
 /**
@@ -13,7 +14,7 @@ use Utopia\NATS\Transport\Transport;
  * coroutine yet would: the reply waits on the socket. arriveAfter() makes
  * nothing readable until then, as a reply still in transit would.
  */
-final class LateReadTransport implements Transport
+final class LateReadTransport implements Pollable, Transport
 {
     private float $delay = 0.0;
 
@@ -66,6 +67,15 @@ final class LateReadTransport implements Transport
     public function isConnected(): bool
     {
         return $this->inner->isConnected();
+    }
+
+    public function poll(): bool
+    {
+        if ($this->delay > 0 || microtime(true) < $this->arrival) {
+            return false;
+        }
+
+        return $this->inner instanceof Pollable && $this->inner->poll();
     }
 
     public function close(): void

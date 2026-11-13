@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\NATS\Tests\Protocol;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Protocol\Parser;
 use Utopia\NATS\Protocol\ServerOp;
@@ -51,6 +52,7 @@ final class ParserTest extends TestCase
                 return $line;
             }
 
+            /** @param array<string, mixed> $options */
             public function upgradeTls(array $options): void
             {
             }
@@ -181,5 +183,87 @@ final class ParserTest extends TestCase
         $parser = $this->createParser("UNKNOWN command\r\n");
         $this->expectException(ProtocolException::class);
         $parser->next();
+    }
+
+    public function testCompleteLineIsReportedOnlyOnceItHasArrived(): void
+    {
+        $parser = $this->createParser("PING\r\nPONG\r\nMSG foo 1");
+
+        $this->assertFalse($parser->hasCompleteLine(), 'Nothing has been read yet');
+
+        $parser->next();
+        $this->assertTrue($parser->hasCompleteLine());
+
+        $parser->next();
+        $this->assertFalse($parser->hasCompleteLine(), 'A partial line is buffered data, not a line');
+        $this->assertTrue($parser->hasBufferedData());
+    }
+
+    public function testFrameCutShortPoisonsTheParser(): void
+    {
+        $parser = $this->createParser("MSG foo 1 10\r\nabc");
+        $this->assertFalse($parser->isPoisoned());
+
+        try {
+            $parser->next();
+            $this->fail('A frame cut short must fail');
+        } catch (ConnectionException) {
+        }
+
+        $this->assertTrue($parser->isPoisoned());
+        $this->assertFalse($parser->hasBufferedData());
+    }
+
+    public function testHeaderTimeoutBoundsOnlyTheWaitForTheOperationLine(): void
+    {
+        $transport = new class () implements Transport {
+            /** @var list<?float> */
+            public array $timeouts = [];
+
+            /** @var list<string> */
+            private array $chunks = ["MSG foo 1 5\r\n", "hello\r\n"];
+
+            public function connect(string $host, int $port, float $timeout): void
+            {
+            }
+
+            public function write(string $data): int
+            {
+                return \strlen($data);
+            }
+
+            public function read(int $maxBytes, ?float $timeout = null): string
+            {
+                $this->timeouts[] = $timeout;
+
+                return array_shift($this->chunks) ?? '';
+            }
+
+            public function readLine(?float $timeout = null): string
+            {
+                return '';
+            }
+
+            /** @param array<string, mixed> $options */
+            public function upgradeTls(array $options): void
+            {
+            }
+
+            public function isConnected(): bool
+            {
+                return true;
+            }
+
+            public function close(): void
+            {
+            }
+        };
+
+        [$operation, $data] = new Parser($transport)->next(1.0, 0.05);
+
+        $this->assertSame(ServerOp::Msg, $operation);
+        $this->assertIsArray($data);
+        $this->assertSame('hello', $data['payload']);
+        $this->assertSame([0.05, 1.0], $transport->timeouts);
     }
 }
