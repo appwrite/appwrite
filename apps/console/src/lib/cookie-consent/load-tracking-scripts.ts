@@ -55,7 +55,7 @@ function deferNonCriticalTracking(callback: () => void): void {
   window.setTimeout(callback, 2500)
 }
 
-/** Sentry and ads pixel. Call only after analytics consent. */
+/** Sentry, ads pixel and Appwrite Analytics. Call only after analytics consent. */
 export function loadTrackingScriptsAfterConsent() {
   if (typeof window === 'undefined') return
 
@@ -67,6 +67,9 @@ export function loadTrackingScriptsAfterConsent() {
     if (isCloudProfile()) {
       void import('@/lib/openai-ads').then((module) => {
         module.loadOpenAiAdsPixel()
+      })
+      void import('@/lib/appwrite-analytics').then((module) => {
+        module.startAppwriteAnalytics()
       })
     }
   })

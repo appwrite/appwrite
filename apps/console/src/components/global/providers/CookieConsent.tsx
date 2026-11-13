@@ -10,6 +10,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { CookieConsentBanner } from '@/components/global/shared/CookieConsentBanner'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { stopAppwriteAnalytics } from '@/lib/appwrite-analytics'
 import {
   canTrackAnalytics,
   setCookieConsentState,
@@ -43,6 +44,8 @@ function applyAnalyticsConsent(analytics: boolean) {
   })
   if (analytics) {
     loadTrackingScriptsAfterConsent()
+  } else {
+    stopAppwriteAnalytics()
   }
 }
 

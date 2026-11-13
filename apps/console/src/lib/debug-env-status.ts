@@ -77,6 +77,21 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
       'Plausible script URL loaded in the browser (SSR exports POST to /api/event)',
   },
   {
+    key: 'VITE_APPWRITE_ANALYTICS_ENDPOINT',
+    group: 'Runtime',
+    description: 'Appwrite Analytics project endpoint',
+  },
+  {
+    key: 'VITE_APPWRITE_ANALYTICS_PROJECT_ID',
+    group: 'Runtime',
+    description: 'Appwrite Analytics project ID',
+  },
+  {
+    key: 'VITE_APPWRITE_ANALYTICS_PROPERTY_ID',
+    group: 'Runtime',
+    description: 'Appwrite Analytics property ID',
+  },
+  {
     key: 'VITE_CONSOLE_USER_VERIFICATION',
     group: 'Runtime',
     description: 'Override post-signup email verification',
@@ -254,6 +269,15 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_STRIPE_PUBLISHABLE_KEY: isNonEmpty(config.stripePublishableKey),
     VITE_SENTRY_DSN: isNonEmpty(config.sentryDsn),
     VITE_PLAUSIBLE_SCRIPT_SRC: isNonEmpty(config.plausibleScriptSrc),
+    VITE_APPWRITE_ANALYTICS_ENDPOINT: isNonEmpty(
+      config.appwriteAnalyticsEndpoint,
+    ),
+    VITE_APPWRITE_ANALYTICS_PROJECT_ID: isNonEmpty(
+      config.appwriteAnalyticsProjectId,
+    ),
+    VITE_APPWRITE_ANALYTICS_PROPERTY_ID: isNonEmpty(
+      config.appwriteAnalyticsPropertyId,
+    ),
     VITE_CONSOLE_USER_VERIFICATION: isNonEmpty(config.userVerification),
     VITE_CONSOLE_COOKIE_BANNER: isNonEmpty(config.cookieBanner),
     VITE_CONSOLE_BROWSER_API: isNonEmpty(config.browserApi),
