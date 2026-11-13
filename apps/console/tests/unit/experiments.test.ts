@@ -20,15 +20,23 @@ describe('hasQualityLabel', () => {
 })
 
 describe('experiments catalog', () => {
-  test('lists Appwrite Analytics and project environments', () => {
+  test('lists Appwrite Analytics, project environments, and Origin', () => {
     expect(EXPERIMENTS.map((experiment) => experiment.flag)).toEqual([
       'analytics',
       'projectEnvironments',
+      'vcsOrigin',
     ])
     expect(EXPERIMENTS[0]?.name).toBe('Appwrite Analytics')
     expect(EXPERIMENTS[1]?.name).toBe('Project environments')
+    expect(EXPERIMENTS[2]?.name).toBe('Origin Git provider')
     for (const experiment of EXPERIMENTS) {
       expect(experiment.description.length).toBeGreaterThan(0)
+    }
+  })
+
+  test('Origin is off in every profile until the experiment turns it on', () => {
+    for (const profile of Object.values(CONSOLE_PROFILES)) {
+      expect(profile.features.vcsOrigin).toBe(false)
     }
   })
 
