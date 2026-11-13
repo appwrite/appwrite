@@ -19,6 +19,9 @@ export function getPlatformIdentifier(
   return ''
 }
 
+/** Web platform hostname for local development; the server also accepts its IP spellings. */
+export const LOOPBACK_HOSTNAME = 'localhost'
+
 /** Web platform hostname that accepts requests from every website. */
 export const WILDCARD_HOSTNAME = '*'
 
