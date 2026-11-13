@@ -38,6 +38,7 @@ import {
 import type { LlmsContentMeta } from '../src/lib/seo/llms'
 import { buildForAgentsMarkdown } from '../src/lib/for-agents/content'
 import { buildPricingMarkdown } from '../src/lib/pricing/markdown'
+import { buildAuthMarkdown } from '../src/lib/seo/auth-markdown'
 import { MARKDOWN_TWIN_PAGES } from '../src/lib/seo/markdown-twins'
 import { pageHtmlToMarkdown } from '../src/lib/seo/page-markdown'
 import { getProductionRobotsTxt } from '../src/lib/seo/robots'
@@ -370,6 +371,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
     {
       relativePath: 'pricing.md',
       contents: buildPricingMarkdown(SITE_ORIGIN),
+    },
+    {
+      relativePath: 'auth.md',
+      contents: buildAuthMarkdown(SITE_ORIGIN),
     },
     {
       relativePath: 'robots.txt',

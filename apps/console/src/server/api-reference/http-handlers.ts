@@ -143,6 +143,9 @@ export async function handleReferenceOpenApiSpecRequest(
       version as ReferenceVersion,
       mode as ApiExplorerProjectPlatform,
     )
-    return jsonResponse(spec)
+    if (version !== 'cloud') return jsonResponse(spec)
+    const { withCloudOAuth2 } = await import('./cloud-oauth2')
+    // The OAuth 2.0 scopes are additive; serve the plain spec if they fail.
+    return jsonResponse(await withCloudOAuth2(spec).catch(() => spec))
   })
 }

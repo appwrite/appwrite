@@ -371,7 +371,7 @@ export function resolveConsoleListHref(
   const pid = projectId?.trim()
   if (!pid) return undefined
   const type = resourceType.trim().toLowerCase()
-  if (type === 'user' || type === 'users') return `/projects/${pid}/auth`
+  if (type === 'user' || type === 'users') return `/projects/${pid}/auth/users`
   if (type === 'team' || type === 'teams') return `/projects/${pid}/auth/teams`
   if (type === 'bucket' || type === 'buckets' || type === 'file' || type === 'files') {
     return `/projects/${pid}/storage`

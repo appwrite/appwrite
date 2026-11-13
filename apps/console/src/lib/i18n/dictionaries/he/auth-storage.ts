@@ -1759,4 +1759,26 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'All users must now reset their password.':
     'כל המשתמשים נדרשים כעת לאפס את הסיסמה שלהם.',
   'Failed to reset passwords': 'איפוס הסיסמאות נכשל',
+  // Auth overview
+  'The Free plan includes {count} monthly active users.':
+    'תוכנית Free כוללת {count} משתמשים פעילים חודשיים.',
+  'Upgrade for more': 'שדרגו כדי לקבל יותר',
+  '1 social provider': 'ספק OAuth אחד',
+  '{count} social providers': '{count} ספקי OAuth',
+  'Recent users': 'משתמשים אחרונים',
+  'Users will appear here when they sign up': 'משתמשים יופיעו כאן לאחר שיירשמו',
+  'Last sign-up': 'הרשמה אחרונה',
+  '{enabled} of {total}': '{enabled} מתוך {total}',
+  '{enabled} of {total} enabled': '{enabled} מתוך {total} מופעלות',
+  'No social providers enabled': 'לא הופעלו ספקי OAuth',
+  'Configure methods': 'הגדרת שיטות אימות',
+  'Configure providers': 'הגדרת ספקי OAuth',
+  'Configure policies': 'הגדרת כללי מדיניות',
+  'Sessions, passwords and limits': 'סשנים, סיסמאות ומגבלות',
+  'No active users yet': 'עדיין אין משתמשים פעילים',
+  "Couldn't load active users": 'לא ניתן היה לטעון משתמשים פעילים',
+  'No sign-ups yet': 'עדיין אין הרשמות',
+  "Couldn't load sign-ups": 'לא ניתן היה לטעון הרשמות',
+  'sign-ups': 'הרשמות',
+  second: 'שנייה',
 }

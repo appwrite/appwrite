@@ -90,6 +90,9 @@ test.describe('markdown exports (read-only)', () => {
     const body = await response.text()
     expect(body).toMatch(/^# Appwrite\n/)
     expect(body).toContain('## MCP Server')
+    expect(body).toContain(
+      'docs MCP server at https://mcp.appwrite.io/docs/mcp',
+    )
     expect(body).toContain('## Skills')
     expect(body).toContain('## Documentation')
     expect(body).toContain('/docs/llms.txt')
@@ -308,6 +311,82 @@ test.describe('markdown exports (read-only)', () => {
     const body = await response.text()
     expect(body).toMatch(/^# Page not found\n/)
     expect(body).toContain('/llms.txt')
+  })
+
+  test('auth.md explains how agents get credentials', async ({ request }) => {
+    const response = await request.get('/auth.md')
+    expect(response.status()).toBe(200)
+    expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
+    const body = await response.text()
+    expect(body).toMatch(/^# Appwrite auth\.md\n/)
+    for (const section of [
+      '## Step 1 — Discover',
+      '## Step 2 — Pick a method',
+      '## Step 3 — Register',
+      '## Step 5 — Exchange',
+      '## Step 6 — Use the access_token',
+      '## Errors',
+      '## Revocation',
+    ]) {
+      expect(body, section).toContain(section)
+    }
+    expect(body).toContain(
+      'https://mcp.appwrite.io/.well-known/oauth-protected-resource',
+    )
+    expect(body).toContain('code_challenge_method=S256')
+  })
+
+  test('AI agents get markdown when they ask for HTML', async ({ request }) => {
+    for (const [userAgent, path, heading] of [
+      ['Mozilla/5.0 (compatible; ClaudeBot/1.0)', '/', /^---\ntitle: "Appwrite"/],
+      ['Mozilla/5.0 (compatible; ChatGPT-User/1.0)', '/company', /^---\ntitle: /],
+    ] as const) {
+      const response = await request.get(path, {
+        headers: { 'User-Agent': userAgent, Accept: 'text/html' },
+      })
+      expect(response.status(), path).toBe(200)
+      expect(response.headers()['content-type'], path).toMatch(
+        MARKDOWN_CONTENT_TYPE,
+      )
+      expect(response.headers()['vary'], path).toContain('User-Agent')
+      expect(await response.text(), path).toMatch(heading)
+    }
+
+    const browser = await request.get('/company', {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36',
+        Accept: 'text/html',
+      },
+    })
+    expect(browser.headers()['content-type']).toMatch(/text\/html/)
+  })
+
+  test('openapi.json declares OAuth 2.0 with named scopes', async ({
+    request,
+  }) => {
+    const response = await request.get('/openapi.json')
+    expect(response.status()).toBe(200)
+    const spec = await response.json()
+    const oauth2 = spec.components.securitySchemes.OAuth2
+    expect(oauth2.type).toBe('oauth2')
+    expect(oauth2.flows.authorizationCode.authorizationUrl).toMatch(
+      /\/oauth2\/console\/authorize$/,
+    )
+    expect(oauth2.flows.authorizationCode.scopes['project:rows.read']).toBe(
+      'Read rows in a project.',
+    )
+    const listRows = Object.values(spec.paths)
+      .flatMap((path) => Object.values(path as Record<string, unknown>))
+      .find(
+        (operation) =>
+          (operation as { operationId?: string }).operationId ===
+          'tablesDBListRows',
+      ) as { security: Array<Record<string, string[]>> }
+    expect(listRows.security).toContainEqual({
+      Project: [],
+      OAuth2: ['project:rows.read'],
+    })
   })
 
   test('blog llms.txt lists posts', async ({ request }) => {

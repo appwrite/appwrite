@@ -87,7 +87,6 @@ import {
 } from '@/components/ui/dialog'
 import type { Models } from '@appwrite.io/console'
 import { ConnectAgentCta } from '@/components/global/shared/ConnectAgentCta'
-import { PremiumGeoOverviewBanner } from './_components/PremiumGeoOverviewBanner'
 import { ProjectResources } from './_components/ProjectResources'
 import { AppsCard, overviewConnectRows } from './_components/AppsCard'
 import { ApiKeysCard } from './_components/ApiKeysCard'
@@ -993,8 +992,6 @@ export function View({ projectId, initialData }: ViewProps) {
 
         <div className="border-b border-border" />
       </div>
-
-      <PremiumGeoOverviewBanner projectId={projectId} />
 
       {/* Usage charts (cloud only) - full width, like Firewall and Analytics */}
       {visibleOverviewChartTabs.length > 0 && (

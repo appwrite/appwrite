@@ -14,6 +14,7 @@ import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AlternativeToDotmdRouteImport } from './routes/alternative-to[.]md'
+import { Route as AuthDotmdRouteImport } from './routes/auth[.]md'
 import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
 import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
@@ -315,6 +316,7 @@ import { Route as PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport } from 
 import { Route as PublicProjectsProjectIdAuthPoliciesSessionsRouteImport } from './routes/_public/projects.$projectId.auth.policies.sessions'
 import { Route as PublicProjectsProjectIdAuthPoliciesUsersRouteImport } from './routes/_public/projects.$projectId.auth.policies.users'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId'
+import { Route as PublicProjectsProjectIdAuthUsersIndexRouteImport } from './routes/_public/projects.$projectId.auth.users.index'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId'
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId'
@@ -519,6 +521,11 @@ const PublicRoute = PublicRouteImport.update({
 const AlternativeToDotmdRoute = AlternativeToDotmdRouteImport.update({
   id: '/alternative-to.md',
   path: '/alternative-to.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthDotmdRoute = AuthDotmdRouteImport.update({
+  id: '/auth.md',
+  path: '/auth.md',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogDotmdRoute = BlogDotmdRouteImport.update({
@@ -2209,6 +2216,12 @@ const PublicProjectsProjectIdAuthTeamsTeamIdRoute =
     path: '/$teamId',
     getParentRoute: () => PublicProjectsProjectIdAuthTeamsRoute,
   } as any)
+const PublicProjectsProjectIdAuthUsersIndexRoute =
+  PublicProjectsProjectIdAuthUsersIndexRouteImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
 const PublicProjectsProjectIdAuthUsersUserIdRoute =
   PublicProjectsProjectIdAuthUsersUserIdRouteImport.update({
     id: '/users/$userId',
@@ -3548,6 +3561,7 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
   '/alternative-to.md': typeof AlternativeToDotmdRoute
+  '/auth.md': typeof AuthDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3889,6 +3903,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/analytics/$propertyId/': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
+  '/projects/$projectId/auth/users/': typeof PublicProjectsProjectIdAuthUsersIndexRoute
   '/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4036,6 +4051,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
   '/alternative-to.md': typeof AlternativeToDotmdRoute
+  '/auth.md': typeof AuthDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -4328,6 +4344,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
+  '/projects/$projectId/auth/users': typeof PublicProjectsProjectIdAuthUsersIndexRoute
   '/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4473,6 +4490,7 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/alternative-to.md': typeof AlternativeToDotmdRoute
+  '/auth.md': typeof AuthDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -4815,6 +4833,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/_public/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/_public/projects/$projectId/analytics/$propertyId/': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
+  '/_public/projects/$projectId/auth/users/': typeof PublicProjectsProjectIdAuthUsersIndexRoute
   '/_public/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/_public/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/_public/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4964,6 +4983,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/alternative-to.md'
+    | '/auth.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5305,6 +5325,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/domains/$domainId/'
     | '/organizations/$orgId/marketplace/$appId/'
     | '/projects/$projectId/analytics/$propertyId/'
+    | '/projects/$projectId/auth/users/'
     | '/projects/$projectId/functions/$functionId/'
     | '/projects/$projectId/functions/create/'
     | '/projects/$projectId/messaging/$messageId/'
@@ -5452,6 +5473,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/alternative-to.md'
+    | '/auth.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5744,6 +5766,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/domains/$domainId'
     | '/organizations/$orgId/marketplace/$appId'
     | '/projects/$projectId/analytics/$propertyId'
+    | '/projects/$projectId/auth/users'
     | '/projects/$projectId/functions/$functionId'
     | '/projects/$projectId/functions/create'
     | '/projects/$projectId/messaging/$messageId'
@@ -5888,6 +5911,7 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/_public'
     | '/alternative-to.md'
+    | '/auth.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -6230,6 +6254,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/domains/$domainId/'
     | '/_public/organizations/$orgId/marketplace/$appId/'
     | '/_public/projects/$projectId/analytics/$propertyId/'
+    | '/_public/projects/$projectId/auth/users/'
     | '/_public/projects/$projectId/functions/$functionId/'
     | '/_public/projects/$projectId/functions/create/'
     | '/_public/projects/$projectId/messaging/$messageId/'
@@ -6381,6 +6406,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
   AlternativeToDotmdRoute: typeof AlternativeToDotmdRoute
+  AuthDotmdRoute: typeof AuthDotmdRoute
   BlogDotmdRoute: typeof BlogDotmdRoute
   ChangelogDotmdRoute: typeof ChangelogDotmdRoute
   DiscordRoute: typeof DiscordRoute
@@ -6462,6 +6488,13 @@ declare module '@tanstack/react-router' {
       path: '/alternative-to.md'
       fullPath: '/alternative-to.md'
       preLoaderRoute: typeof AlternativeToDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth.md': {
+      id: '/auth.md'
+      path: '/auth.md'
+      fullPath: '/auth.md'
+      preLoaderRoute: typeof AuthDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog.md': {
@@ -8571,6 +8604,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthTeamsRoute
     }
+    '/_public/projects/$projectId/auth/users/': {
+      id: '/_public/projects/$projectId/auth/users/'
+      path: '/users'
+      fullPath: '/projects/$projectId/auth/users/'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
     '/_public/projects/$projectId/auth/users/$userId': {
       id: '/_public/projects/$projectId/auth/users/$userId'
       path: '/users/$userId'
@@ -10503,6 +10543,7 @@ interface PublicProjectsProjectIdAuthRouteChildren {
   PublicProjectsProjectIdAuthTemplatesRoute: typeof PublicProjectsProjectIdAuthTemplatesRoute
   PublicProjectsProjectIdAuthIndexRoute: typeof PublicProjectsProjectIdAuthIndexRoute
   PublicProjectsProjectIdAuthUsersUserIdRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRouteWithChildren
+  PublicProjectsProjectIdAuthUsersIndexRoute: typeof PublicProjectsProjectIdAuthUsersIndexRoute
 }
 
 const PublicProjectsProjectIdAuthRouteChildren: PublicProjectsProjectIdAuthRouteChildren =
@@ -10525,6 +10566,8 @@ const PublicProjectsProjectIdAuthRouteChildren: PublicProjectsProjectIdAuthRoute
       PublicProjectsProjectIdAuthIndexRoute,
     PublicProjectsProjectIdAuthUsersUserIdRoute:
       PublicProjectsProjectIdAuthUsersUserIdRouteWithChildren,
+    PublicProjectsProjectIdAuthUsersIndexRoute:
+      PublicProjectsProjectIdAuthUsersIndexRoute,
   }
 
 const PublicProjectsProjectIdAuthRouteWithChildren =
@@ -11941,6 +11984,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
   AlternativeToDotmdRoute: AlternativeToDotmdRoute,
+  AuthDotmdRoute: AuthDotmdRoute,
   BlogDotmdRoute: BlogDotmdRoute,
   ChangelogDotmdRoute: ChangelogDotmdRoute,
   DiscordRoute: DiscordRoute,

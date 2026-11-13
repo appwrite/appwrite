@@ -594,7 +594,7 @@ function resourceCreateLink(
       }
     case 'auth':
       return {
-        to: '/projects/$projectId/auth',
+        to: '/projects/$projectId/auth/users',
         params,
         search: { create: 'user' },
       }

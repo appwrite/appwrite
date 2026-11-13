@@ -58,9 +58,10 @@ use std::fmt;
 #[cfg(doctest)]
 #[doc = include_str!("../guide.md")]
 pub struct GettingStarted;
+use std::ops::Range;
 use std::sync::OnceLock;
 
-use php_std::encoding::{parse_str, rawurldecode, rawurlencode, urldecode};
+use php_std::encoding::{parse_str, rawurldecode_into, rawurlencode, urldecode_into};
 use php_std::{Array, ArrayKey, Value};
 
 /// Why a DSN was refused or a parameter could not be read.
@@ -150,13 +151,17 @@ impl Error {
 /// ```
 #[derive(Clone)]
 pub struct Dsn {
-    scheme: String,
-    user: Option<Vec<u8>>,
-    password: Option<Vec<u8>>,
-    host: String,
+    /// Every component, decoded, in one allocation; the ranges index it.
+    /// The scheme, host and query are copied from the `&str` input whole, so
+    /// they are UTF-8.
+    buffer: Box<[u8]>,
+    scheme: Range<usize>,
+    user: Option<Range<usize>>,
+    password: Option<Range<usize>>,
+    host: Range<usize>,
     port: Option<u16>,
-    path: Vec<u8>,
-    query: Option<String>,
+    path: Range<usize>,
+    query: Option<Range<usize>>,
     /// The query parsed by `parse_str`, on first use.
     params: OnceLock<Array>,
 }
@@ -198,16 +203,27 @@ impl Dsn {
                 "Unable to parse DSN: host is required"
             }));
         };
-        // Components of a `&str` split at ASCII bytes are UTF-8.
-        let text = |b: &[u8]| String::from_utf8_lossy(b).into_owned();
+        // Decoding never lengthens a component, so one allocation holds them all.
+        let mut buffer = Vec::with_capacity(dsn.len());
+        let scheme = append(&mut buffer, |b| b.extend_from_slice(&scheme));
+        let user = url.user().map(|u| append(&mut buffer, |b| urldecode_into(b, &u)));
+        let password = url.pass().map(|p| append(&mut buffer, |b| urldecode_into(b, &p)));
+        let host = append(&mut buffer, |b| b.extend_from_slice(&host));
+        let path = append(&mut buffer, |b| {
+            if let Some(p) = url.path() {
+                rawurldecode_into(b, php_std::string::ltrim(&p, b"/"));
+            }
+        });
+        let query = url.query().map(|q| append(&mut buffer, |b| b.extend_from_slice(&q)));
         Ok(Self {
-            scheme: text(&scheme),
-            user: url.user().map(|u| urldecode(&u)),
-            password: url.pass().map(|p| urldecode(&p)),
-            host: text(&host),
+            buffer: buffer.into_boxed_slice(),
+            scheme,
+            user,
+            password,
+            host,
             port: url.port(),
-            path: url.path().map(|p| rawurldecode(php_std::string::ltrim(&p, b"/"))).unwrap_or_default(),
-            query: url.query().map(|q| text(&q)),
+            path,
+            query,
             params: OnceLock::new(),
         })
     }
@@ -306,13 +322,13 @@ impl Dsn {
 
         // getParam() reads the query with parse_str, which nests `a[b]` and
         // rewrites `.` and spaces in keys.
-        let query = parse_str(parsed.query.as_deref().unwrap_or_default().as_bytes());
-        if parsed.scheme != scheme
-            || parsed.host != host
-            || parsed.user.as_deref() != user
-            || parsed.password.as_deref() != password
+        let query = parse_str(parsed.query().unwrap_or_default().as_bytes());
+        if parsed.scheme() != scheme
+            || parsed.host() != host
+            || parsed.user() != user
+            || parsed.password() != password
             || parsed.port.map(i64::from) != port
-            || parsed.path != path
+            || parsed.path() != path
             || !Value::Array(query).strict_eq(&Value::Array(wanted))
         {
             return Err(Error::InvalidArgument("Unable to build DSN: a part does not survive encoding"));
@@ -339,7 +355,7 @@ impl Dsn {
     /// echo $dsn->getScheme(), "\n"; // postgresql
     /// ```
     pub fn scheme(&self) -> &str {
-        &self.scheme
+        self.text(&self.scheme)
     }
 
     /// The URL-decoded user, which can be any bytes (`%FF`).
@@ -361,7 +377,7 @@ impl Dsn {
     /// echo $dsn->getUser(), "\n"; // mail@example.com
     /// ```
     pub fn user(&self) -> Option<&[u8]> {
-        self.user.as_deref()
+        self.user.clone().map(|range| &self.buffer[range])
     }
 
     /// The URL-decoded password, which can be any bytes (`%FF`).
@@ -383,7 +399,7 @@ impl Dsn {
     /// echo $dsn->getPassword(), "\n"; // p@ss/word
     /// ```
     pub fn password(&self) -> Option<&[u8]> {
-        self.password.as_deref()
+        self.password.clone().map(|range| &self.buffer[range])
     }
 
     /// The host name or address.
@@ -405,7 +421,7 @@ impl Dsn {
     /// echo $dsn->getHost(), "\n"; // mongo.internal
     /// ```
     pub fn host(&self) -> &str {
-        &self.host
+        self.text(&self.host)
     }
 
     /// The port, or `None` when the DSN has none.
@@ -451,7 +467,7 @@ impl Dsn {
     /// echo (new DSN('s3://key:secret@s3.amazonaws.com/backups/daily'))->getPath(), "\n"; // backups/daily
     /// ```
     pub fn path(&self) -> &[u8] {
-        &self.path
+        &self.buffer[self.path.clone()]
     }
 
     /// The raw query string, or `None` when the DSN has none.
@@ -472,7 +488,7 @@ impl Dsn {
     /// echo (new DSN('mariadb://db/appwrite?charset=utf8mb4&timeout=5'))->getQuery(), "\n"; // charset=utf8mb4&timeout=5
     /// ```
     pub fn query(&self) -> Option<&str> {
-        self.query.as_deref()
+        self.query.as_ref().map(|range| self.text(range))
     }
 
     /// The URL-decoded value of a query parameter, or `Ok(None)` when it is
@@ -502,13 +518,13 @@ impl Dsn {
     /// echo $dsn->getParam('from'), "\n";          // +15550100
     /// var_dump($dsn->getParam('region'));         // string(0) ""
     /// ```
-    pub fn param(&self, key: &str) -> Result<Option<&[u8]>, Error> {
-        let query = match self.query.as_deref() {
+    pub fn param(&self, key: impl AsRef<[u8]>) -> Result<Option<&[u8]>, Error> {
+        let query = match self.query() {
             None | Some("" | "0") => return Ok(None),
             Some(q) => q,
         };
         let params = self.params.get_or_init(|| parse_str(query.as_bytes()));
-        match params.get_str(key) {
+        match params.get_ref(php_std::types::KeyRef::normalize(key.as_ref())) {
             None => Ok(None),
             Some(Value::Str(value)) => Ok(Some(value)),
             Some(_) => {
@@ -535,7 +551,7 @@ impl Dsn {
     /// $dsn = new DSN('s3://key:secret@s3.amazonaws.com/backups');
     /// echo $dsn->getParam('region', 'us-east-1'), "\n"; // us-east-1
     /// ```
-    pub fn param_or<'a>(&'a self, key: &str, default: &'a [u8]) -> Result<&'a [u8], Error> {
+    pub fn param_or<'a>(&'a self, key: impl AsRef<[u8]>, default: &'a [u8]) -> Result<&'a [u8], Error> {
         Ok(self.param(key)?.unwrap_or(default))
     }
 }
@@ -583,19 +599,33 @@ impl fmt::Display for Dsn {
     /// // mariadb://user:p%40ss@localhost:3306/data%20base?charset=utf8
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut dsn = format!("{}://", self.scheme);
-        write_credentials(&mut dsn, self.user.as_deref(), self.password.as_deref());
-        dsn.push_str(&self.host);
+        let mut dsn = format!("{}://", self.scheme());
+        write_credentials(&mut dsn, self.user(), self.password());
+        dsn.push_str(self.host());
         if let Some(port) = self.port {
             dsn.push(':');
             dsn.push_str(&port.to_string());
         }
-        write_path(&mut dsn, &self.path);
-        if let Some(query) = &self.query {
+        write_path(&mut dsn, self.path());
+        if let Some(query) = self.query() {
             dsn.push('?');
             dsn.push_str(query);
         }
         f.write_str(&dsn)
+    }
+}
+
+/// The range of `buffer` that `write` appends.
+fn append(buffer: &mut Vec<u8>, write: impl FnOnce(&mut Vec<u8>)) -> Range<usize> {
+    let start = buffer.len();
+    write(buffer);
+    start..buffer.len()
+}
+
+impl Dsn {
+    /// A UTF-8 component: the scheme, the host or the query.
+    fn text(&self, range: &Range<usize>) -> &str {
+        std::str::from_utf8(&self.buffer[range.clone()]).unwrap_or_default()
     }
 }
 
@@ -609,13 +639,13 @@ impl fmt::Debug for Dsn {
     /// `<hidden>`.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Dsn")
-            .field("scheme", &self.scheme)
-            .field("user", &self.user.as_deref().map(String::from_utf8_lossy))
+            .field("scheme", &self.scheme())
+            .field("user", &self.user().map(String::from_utf8_lossy))
             .field("password", &self.password.as_ref().map(|_| "<hidden>"))
-            .field("host", &self.host)
+            .field("host", &self.host())
             .field("port", &self.port)
-            .field("path", &String::from_utf8_lossy(&self.path))
-            .field("query", &self.query)
+            .field("path", &String::from_utf8_lossy(self.path()))
+            .field("query", &self.query())
             .finish()
     }
 }
@@ -634,6 +664,7 @@ mod tests {
         assert_eq!(d.path(), b"database");
         assert_eq!(d.param("timezone").unwrap(), Some(&b"UTC"[..]));
         assert_eq!(d.param_or("region", b"us-east-1").unwrap(), b"us-east-1");
+        assert_eq!(Dsn::parse("s://h?%ff=1&=2").unwrap().param(b"\xff").unwrap(), Some(&b"1"[..]));
         let d = Dsn::parse("sms://user:sl%2Fsh%2B%24%40no%3Aher@localhost").unwrap();
         assert_eq!(d.password(), Some(&b"sl/sh+$@no:her"[..]));
         assert_eq!(d.path(), b"");

@@ -212,13 +212,13 @@ export function KeyboardShortcutsProvider({
         })
       } else if (type === 'user') {
         navigate({
-          to: '/projects/$projectId/auth',
+          to: '/projects/$projectId/auth/users',
           params: { projectId },
           search: { create: 'user' },
         })
       } else if (type === 'team') {
         navigate({
-          to: '/projects/$projectId/auth',
+          to: '/projects/$projectId/auth/teams',
           params: { projectId },
           search: { create: 'team' },
         })
