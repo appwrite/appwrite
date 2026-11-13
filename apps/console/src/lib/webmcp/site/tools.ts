@@ -39,8 +39,22 @@ export function installSiteTools(): void {
     input: Record<string, unknown>,
     options: WebMCP.ToolExecuteCallbackOptions,
   ) => {
-    while (!handlers)
-      await new Promise<void>((resolve) => waiting.push(resolve))
+    while (!handlers) {
+      // Unregistered, or cancelled by the agent, before the handlers connected.
+      if (!controller || options.signal.aborted) {
+        return {
+          error: 'The call was cancelled before the page could answer it.',
+          code: 'cancelled',
+          retryable: true,
+        }
+      }
+      await new Promise<void>((resolve) => {
+        waiting.push(resolve)
+        options.signal.addEventListener('abort', () => resolve(), {
+          once: true,
+        })
+      })
+    }
     return handlers[name](input, options)
   }
 
@@ -280,6 +294,7 @@ export function installSiteTools(): void {
     unregister: () => {
       controller?.abort()
       controller = null
+      for (const resolve of waiting.splice(0)) resolve()
     },
     connect: (next) => {
       handlers = next

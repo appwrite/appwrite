@@ -281,3 +281,38 @@ test('a browser without WebMCP never downloads the tool actions', async ({
     await browser.close()
   }
 })
+
+test('a call cancelled before the page connects its handlers is answered', async ({
+  page,
+}) => {
+  // Hold back the handlers so the call waits on the inline tools.
+  await page.route(
+    /\/(assets\/actions-[^/]+\.js|lib\/webmcp\/site\/actions\.ts)(\?.*)?$/,
+    () => {},
+  )
+  await openAsAgent(
+    page,
+    '/home',
+    READ_ONLY_TOOLS.length + NAVIGATION_TOOLS.length,
+  )
+
+  const result = await page.evaluate(async () => {
+    const tool = (await document.modelContext!.getTools()).find(
+      (registered) => registered.name === 'search_docs',
+    )!
+    const controller = new AbortController()
+    const call = document.modelContext!.executeTool(
+      tool,
+      { query: 'create a row' },
+      { signal: controller.signal },
+    )
+    setTimeout(() => controller.abort(), 500)
+    return call.then(
+      (output) => JSON.parse(output) as { code?: string },
+      (error: Error) => ({ code: error.name }),
+    )
+  })
+  // Chrome rejects an aborted executeTool() itself; the registry passes the
+  // page's own answer through, which shows the waiting call was released.
+  expect(result.code).toBe(WEBMCP_CHANNEL ? 'AbortError' : 'cancelled')
+})
