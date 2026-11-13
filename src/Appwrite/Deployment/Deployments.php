@@ -1073,7 +1073,7 @@ readonly class Deployments
             "APPWRITE_{$prefix}_RUNTIME_VERSION" => $runtime['version'] ?? '',
             "APPWRITE_{$prefix}_CPUS" => $cpus,
             "APPWRITE_{$prefix}_MEMORY" => $memory,
-            'OPEN_RUNTIMES_NFT' => System::getEnv('_APP_OPEN_RUNTIMES_NFT', 'enabled'),
+            'OPEN_RUNTIMES_NFT' => $vars['OPEN_RUNTIMES_NFT'] ?? System::getEnv('_APP_OPEN_RUNTIMES_NFT', 'enabled'),
         ]);
     }
 
