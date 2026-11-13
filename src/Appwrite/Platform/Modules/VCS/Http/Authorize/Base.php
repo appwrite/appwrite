@@ -56,7 +56,7 @@ abstract class Base extends Action
             ->setHttpPath('/v1/vcs/' . $key . '/authorize')
             ->desc('Create ' . $name . ' installation')
             ->groups(['api', 'vcs'])
-            ->label('scope', 'vcs.read')
+            ->label('scope', 'vcs.write')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->label('sdk', new Method(
                 namespace: 'vcs',

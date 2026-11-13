@@ -136,4 +136,36 @@ export class Alerts {
 
     return request
   }
+
+  /**
+   * Acknowledge a firing alert, or undo that. Everyone who can read the alert sees who acknowledged it and when. The alert keeps firing until its monitor recovers; a resolved alert keeps its acknowledgement and cannot be changed.
+   *
+   * @param {string} params.alertId - Alert ID.
+   * @param {boolean} params.acknowledged - Whether the alert is acknowledged. False undoes an acknowledgement.
+   * @throws {AppwriteException}
+   * @returns {Promise<Alert>}
+   */
+  update(params: { alertId: string; acknowledged: boolean }): Promise<Alert> {
+    const { alertId, acknowledged } = params
+
+    if (typeof alertId === 'undefined' || alertId === '') {
+      throw new AppwriteException('Missing required parameter: "alertId"')
+    }
+    if (typeof acknowledged === 'undefined') {
+      throw new AppwriteException('Missing required parameter: "acknowledged"')
+    }
+    const apiPath = '/alerts/{alertId}'.replace(
+      '{alertId}',
+      encodeURIComponent(alertId),
+    )
+    const apiPayload: Payload = { acknowledged }
+    const uri = new URL(this.client.config.endpoint + apiPath)
+
+    const apiHeaders: { [header: string]: string } = {
+      'X-Appwrite-Project': this.client.config.project,
+      'content-type': 'application/json',
+    }
+
+    return this.client.call('patch', uri, apiHeaders, apiPayload)
+  }
 }

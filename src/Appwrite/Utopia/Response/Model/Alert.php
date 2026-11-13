@@ -3,10 +3,12 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Alert\Comparator;
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\State;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
+use Utopia\Database\Document;
 
 class Alert extends Model
 {
@@ -63,6 +65,25 @@ class Alert extends Model
                 'required' => false,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('acknowledgedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Date a member acknowledged the alert, in ISO 8601 format. Empty while nobody has.',
+                'default' => null,
+                'required' => false,
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('acknowledgedBy', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the user who acknowledged the alert. Empty while nobody has, or when it was acknowledged with an API key.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('acknowledgedByName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of the user who acknowledged the alert, when they did.',
+                'default' => '',
+                'example' => 'Jane Doe',
+            ])
             ->addRule('rules', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The monitor\'s rules when the alert fired, as query strings.',
@@ -70,9 +91,17 @@ class Alert extends Model
                 'example' => ['{"method":"greaterThan","attribute":"network.outbound","values":[5000000]}'],
                 'array' => true,
             ])
+            ->addRule('severity', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'The monitor\'s severity when the alert fired: `info`, `warning`, `error` or `critical`.',
+                'default' => Severity::Warning->value,
+                'example' => Severity::Warning->value,
+                'enum' => Severity::values(),
+                'enumSDKName' => 'AlertSeverity',
+            ])
             ->addRule('critical', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether the monitor was critical when the alert fired.',
+                'description' => 'Deprecated: use `severity`. Whether the monitor was critical when the alert fired.',
                 'default' => false,
                 'example' => false,
             ])
@@ -148,5 +177,15 @@ class Alert extends Model
     public function getType(): string
     {
         return Response::MODEL_ALERT;
+    }
+
+    /**
+     * `critical` predates `severity` and stays for clients that read it.
+     */
+    public function filter(Document $document): Document
+    {
+        $document->setAttribute('critical', $document->getAttribute('severity') === Severity::Critical->value);
+
+        return $document;
     }
 }

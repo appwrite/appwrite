@@ -420,19 +420,20 @@ const PROJECT_TABS: CommandEntry[] = [
     to: (ctx) => `/projects/${ctx.projectId}/settings/identity-servers`,
   },
 
-  // ── Security ────────────────────────────────────────────────────────────
   {
     id: 'project.tab.firewall',
     scopes: ['project'],
     kind: 'tab',
-    group: 'Security',
-    label: 'Security · Firewall rules',
+    group: 'Settings',
+    label: 'Settings · Firewall',
     description: 'IP allow/block lists and request rules',
     icon: Shield,
     keywords: ['firewall', 'rules', 'ip', 'allowlist', 'deny', 'rate limit'],
     available: () => isCloudProfile(),
-    to: (ctx) => `/projects/${ctx.projectId}/firewall`,
+    to: (ctx) => `/projects/${ctx.projectId}/settings/firewall`,
   },
+
+  // ── Security ────────────────────────────────────────────────────────────
   {
     id: 'project.create.firewall-rule',
     scopes: ['project'],

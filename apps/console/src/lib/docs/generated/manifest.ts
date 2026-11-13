@@ -101,6 +101,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "advanced/billing/project-transfers",
+    "title": "Project transfers",
+    "description": "Move an Appwrite Cloud project to another organization, directly or with a single-use transfer link that an owner of the other organization claims.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
     "slug": "advanced/billing/refund-policy",
     "title": "Refund policy",
     "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
@@ -210,7 +217,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Encryption",
     "description": "Learn about Appwrite's use of encryption across Appwrite's databases and storage buckets to protect user data.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "advanced/security/gdpr",
@@ -322,7 +329,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 25
+    "readingTimeMinutes": 26
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -1323,14 +1330,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Email OTP",
     "description": "Seamless sign in with Email OTP authentication in Appwrite. Learn how to provide simple and secure passwordless user accounts.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/auth/email-password",
     "title": "Email and password login",
     "description": "Implement email and password authentication with Appwrite. Securely register and authenticate users in your applications using Appwrite's robust email-based authentication system.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/email-policies",
@@ -1386,7 +1393,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Multi-factor authentication",
     "description": "Add multiple layers of authentication to your applications powered by Appwrite Authentication.",
     "layout": "article",
-    "readingTimeMinutes": 4
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/auth/multi-tenancy",
@@ -1677,7 +1684,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Verify user",
     "description": "Learn about Appwrite's email and phone verification system, including verification flows and role-based access control.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "products/avatars",
@@ -3014,7 +3021,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Functions",
     "description": "Master serverless function development with Appwrite. Learn how to write and test functions locally, debug code, and optimize for efficient execution.",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 11
   },
   {
     "slug": "products/functions/develop-locally",
@@ -3105,7 +3112,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Apple Push Notification service",
     "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 8
+  },
+  {
+    "slug": "products/messaging/appwrite-push",
+    "title": "Appwrite Push",
+    "description": "Deliver push notifications from Appwrite to apps built with the Web, Flutter, React Native, Android, and Apple SDKs, without Firebase or device tokens.",
+    "layout": "article",
+    "readingTimeMinutes": 17
   },
   {
     "slug": "products/messaging/fcm",
@@ -3161,7 +3175,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Send push notification",
     "description": "Send push notification to your users using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/messaging/send-sms-messages",
@@ -3217,7 +3231,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Topics",
     "description": "Allow groups of users to subscribe to a common topic and receive the same notifications.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/messaging/twilio",
@@ -3336,7 +3350,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy from Git",
     "description": "Learn to version and update your Appwrite Sites' code with deployments.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 5
   },
   {
     "slug": "products/sites/deploy-manually",
@@ -3357,7 +3371,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Develop Appwrite Sites",
     "description": "Master site development with Appwrite.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/sites/domains",
@@ -3399,7 +3413,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Migrating from Vercel to Appwrite Sites",
     "description": "A step-by-step guide to migrate your web applications from Vercel to Appwrite Sites.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/sites/previews",
@@ -3924,7 +3938,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "AI in Functions",
     "description": "Learn how to integrate AI capabilities into your Appwrite Functions using the Vercel AI SDK.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "tooling/ai/arena",

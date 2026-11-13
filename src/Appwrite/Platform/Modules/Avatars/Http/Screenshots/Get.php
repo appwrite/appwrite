@@ -12,11 +12,14 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Image\Image;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -68,6 +71,7 @@ class Get extends Action
             ->label('abuse', [Limit::attempts(['url', 'ip'], 60)])
             ->label('cache', true)
             ->label('cache.resource', 'avatar/screenshot')
+            ->label('cache.negotiate', ['output' => Config::getParam('storage-outputs-auto')])
             ->label('sdk', new Method(
                 namespace: 'avatars',
                 group: null,
@@ -82,7 +86,7 @@ class Get extends Action
                         model: Response::MODEL_NONE,
                     )
                 ],
-                contentType: ContentType::IMAGE_PNG
+                contentType: ContentType::IMAGE
             ))
             ->param('url', '', fn (PublicURL $publicURL) => $publicURL, 'Website URL which you want to capture.', false, ['publicURL'], example: 'https://example.com')
             ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Only Accept and Accept-Language are allowed. Defaults to empty.', true, example: '{"Accept-Language":"en-US,en;q=0.9"}')
@@ -103,18 +107,15 @@ class Get extends Action
             ->param('width', 0, new Range(0, 2000), 'Output image width. Pass 0 to use original width, or an integer between 1 to 2000. Defaults to 0 (original width).', true, example: '800')
             ->param('height', 0, new Range(0, 2000), 'Output image height. Pass 0 to use original height, or an integer between 1 to 2000. Defaults to 0 (original height).', true, example: '600')
             ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true, example: '85')
-            ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, example: 'jpeg', enum: new Enum(name: 'ImageFormat'))
+            ->param('output', '', new WhiteList([...\array_keys(Config::getParam('storage-outputs')), Request::NEGOTIATE_AUTO], true), 'Output format type (jpeg, jpg, png, gif, webp, heic and avif). Pass auto to serve avif or webp when the Accept header of your request supports it, falling back to png.', true, example: 'jpeg', enum: new Enum(name: 'ImageFormat'))
+            ->inject('request')
             ->inject('response')
             ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(string $url, array $headers, int $viewportWidth, int $viewportHeight, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response, Context $usage)
+    public function action(string $url, array $headers, int $viewportWidth, int $viewportHeight, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Request $request, Response $response, Context $usage)
     {
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
         foreach ($headers as $key => $value) {
             if (!\in_array(\strtolower((string) $key), self::ALLOWED_HEADERS, true)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Header '{$key}' is not allowed. Allowed headers: Accept, Accept-Language.");
@@ -123,6 +124,12 @@ class Get extends Action
             if (!\is_string($value) || \strlen($value) > self::HEADER_VALUE_MAX_LENGTH || !\ctype_print($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Header '{$key}' must be a non-empty printable ASCII string of at most " . self::HEADER_VALUE_MAX_LENGTH . ' characters.');
             }
+        }
+
+        $negotiated = $output === Request::NEGOTIATE_AUTO;
+        if ($negotiated) {
+            // resolved the same way as the cache key, so cached and fresh responses match
+            $output = $request->getNegotiatedParams()['output'] ?? '';
         }
 
         // Create a new object to ensure proper JSON serialization
@@ -213,13 +220,10 @@ class Get extends Action
 
             if ($needsProcessing) {
                 // Process image with cropping, quality adjustment, or format conversion
-                $image = new Image($screenshot);
-
-                $image->crop($width, $height);
-
                 $output = $output ?: 'png'; // Default to PNG if not specified
-                $resizedScreenshot = $image->output($output, $quality);
-                unset($image);
+                $resizedScreenshot = (new Canvas($screenshot, Config::getParam('storage-image-limits')))
+                    ->apply(new Transform(width: $width, height: $height))
+                    ->encode(Format::from($output === 'jpeg' ? 'jpg' : $output), $quality === -1 ? null : $quality);
             } else {
                 // Return original screenshot without processing
                 $resizedScreenshot = $screenshot;
@@ -231,6 +235,10 @@ class Get extends Action
             $contentType = $outputs[$output] ?? $outputs['png'];
 
             $usage->addMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED, 1);
+
+            if ($negotiated) {
+                $response->addHeader('Vary', 'Accept');
+            }
 
             $response
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days

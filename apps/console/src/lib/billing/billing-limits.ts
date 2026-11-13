@@ -99,6 +99,25 @@ export function isProjectLockedByPlanUsage(
 }
 
 /**
+ * True when a project's own `billingLimits` lock it. Cloud writes these for
+ * plans that meter usage per project (Pro, Scale), where overage is billed and
+ * only bandwidth suspends the API. Free plans lock through the organization's
+ * `billingLimits`, checked with {@link isProjectLockedByPlanUsage}.
+ */
+export function isProjectLockedByProjectUsage(
+  resource:
+    | {
+        billingLimits?: BillingLimitsMap | null
+      }
+    | null
+    | undefined,
+): boolean {
+  return getReachedPlanUsageLimitKeys(resource?.billingLimits).includes(
+    'bandwidth',
+  )
+}
+
+/**
  * English recovery sentence after "reached its plan limit for {resource}".
  */
 export function getPlanUsageLimitRecoveryCopy(

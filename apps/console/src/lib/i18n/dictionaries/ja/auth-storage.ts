@@ -466,8 +466,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     'このオプションを有効にすると、新しいセッションが作成された際にユーザーにメールが送信されます。',
   'Encrypt files stored in this bucket':
     'このバケットに保存されたファイルを暗号化',
-  "Encrypt files stored in this bucket. For file size above 20MB encryption is skipped even if it's enabled. This change will only apply to new files uploaded after the update.":
-    'このバケットに保存されたファイルを暗号化します。20MB を超えるファイルは有効でも暗号化がスキップされます。この変更は更新後にアップロードされる新しいファイルにのみ適用されます。',
+  'Encrypt files stored in this bucket. This change will only apply to new files uploaded after the update.':
+    'このバケットに保存されたファイルを暗号化します。この変更は更新後にアップロードされる新しいファイルにのみ適用されます。',
   Encryption: '暗号化',
   'Encryption setting has been updated': '暗号化設定を更新しました',
   "Enhance the user's account security by requiring a second sign-in method.":
@@ -1785,4 +1785,18 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     'リアルタイムのゲスト拒否ポリシーを更新しました',
   'Failed to update deny realtime guests policy':
     'リアルタイムのゲスト拒否ポリシーの更新に失敗しました',
+
+  // Project-wide security actions (force sign out, force password reset)
+  'Security actions': 'セキュリティ操作',
+  'Apply an action to every user in the project at once, for example when responding to a security incident.':
+    'プロジェクト内のすべてのユーザーに一括で操作を適用します。セキュリティインシデントへの対応時などに使用します。',
+  'Force password reset': '強制パスワードリセット',
+  'Require every user to set a new password before they can sign in with email and password again. Existing sessions stay active, and users without a password are not affected.':
+    'メールとパスワードで再度サインインする前に、すべてのユーザーに新しいパスワードの設定を求めます。既存のセッションは有効なままで、パスワードを持たないユーザーには影響しません。',
+  'Reset all passwords': 'すべてのパスワードをリセット',
+  'Every user will have to set a new password through password recovery before they can sign in with email and password again. Existing sessions stay active, so sign out all users as well if sessions may be compromised. This action cannot be undone.':
+    'すべてのユーザーは、メールとパスワードで再度サインインする前に、パスワードリカバリーで新しいパスワードを設定する必要があります。既存のセッションは有効なままのため、セッションが侵害されている可能性がある場合は、すべてのユーザーのサインアウトもあわせて実行してください。この操作は元に戻せません。',
+  'All users must now reset their password.':
+    'すべてのユーザーはパスワードのリセットが必要になりました。',
+  'Failed to reset passwords': 'パスワードのリセットに失敗しました',
 }

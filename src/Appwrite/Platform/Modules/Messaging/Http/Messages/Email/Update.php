@@ -93,11 +93,8 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        // Stored attachments are delivered too, so any update of an attached message needs files.read.
-        $hasAttachments = !empty($attachments ?? $message->getAttribute('data', [])['attachments'] ?? []);
-        if ($hasAttachments && !\in_array('files.read', $request->getScopes(), true)) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Attachments require the files.read scope.');
-        }
+        $this->assertProviderType($message, MESSAGE_TYPE_EMAIL);
+        $this->requireAttachmentsScope($message, $request, $attachments);
 
         if (!\is_null($draft) || !\is_null($scheduledAt)) {
             if ($draft) {

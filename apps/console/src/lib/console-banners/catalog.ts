@@ -40,6 +40,8 @@ export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
 export const FIREWALL_SPIDER_PROMO_BANNER_ID = 'firewall-spider-promo-2026-10'
 export const GITHUB_STAR_WIZARD_BANNER_ID = 'github-star-wizard-2026'
+export const MCP1_LAUNCH_BANNER_ID = 'mcp1-launch-2026-11'
+export const FIREWALL_MOVED_BANNER_ID = 'firewall-moved-2026-11'
 
 /** Appwrite Start regional promo for the launch countries (IN, NP, NG, PK), inclusive UTC. */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
@@ -174,6 +176,33 @@ export const FIREWALL_SPIDER_PROMO_BANNER_END_MS = Date.UTC(
 export const GITHUB_STAR_WIZARD_START_MS = Date.UTC(2026, 10, 2, 0, 0, 0, 0)
 export const GITHUB_STAR_WIZARD_END_MS = Date.UTC(2099, 11, 31, 23, 59, 59, 999)
 
+/** MCP1 launch: three days from launch day, 9–11 Nov 2026 (inclusive, UTC). */
+export const MCP1_LAUNCH_BANNER_START_MS = Date.UTC(2026, 10, 9, 0, 0, 0, 0)
+export const MCP1_LAUNCH_BANNER_END_MS = Date.UTC(
+  2026,
+  10,
+  11,
+  23,
+  59,
+  59,
+  999,
+)
+
+/**
+ * Firewall left the sidebar for tabs on functions, sites and project
+ * settings: explain where it went for 60 days from 11 Nov 2026 (UTC).
+ */
+export const FIREWALL_MOVED_BANNER_START_MS = Date.UTC(2026, 10, 11, 0, 0, 0, 0)
+export const FIREWALL_MOVED_BANNER_END_MS = Date.UTC(
+  2027,
+  0,
+  9,
+  23,
+  59,
+  59,
+  999,
+)
+
 /** Registered console promo banners (header strips, floating cards, takeovers). */
 export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
   {
@@ -264,6 +293,26 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     startMs: GITHUB_STAR_WIZARD_START_MS,
     endMs: GITHUB_STAR_WIZARD_END_MS,
     event: 'github-star-wizard-star',
+  },
+  {
+    id: MCP1_LAUNCH_BANNER_ID,
+    title: 'MCP1 by Appwrite: one URL for every MCP server',
+    scope: 'console',
+    placement: 'header',
+    startMs: MCP1_LAUNCH_BANNER_START_MS,
+    endMs: MCP1_LAUNCH_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'mcp1-launch-banner-try',
+  },
+  {
+    id: FIREWALL_MOVED_BANNER_ID,
+    title: 'Firewall has moved',
+    scope: 'project',
+    placement: 'bottom-left',
+    startMs: FIREWALL_MOVED_BANNER_START_MS,
+    endMs: FIREWALL_MOVED_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'firewall-moved-banner-open',
   },
 ] as const
 

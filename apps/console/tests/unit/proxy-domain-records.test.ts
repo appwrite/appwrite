@@ -3,6 +3,7 @@ import { AppwriteException } from '@appwrite.io/console'
 import {
   getClaimRecord,
   getRecordName,
+  getVerificationMethods,
   isDomainClaimError,
 } from '@/lib/utils/proxy-domains'
 
@@ -17,6 +18,56 @@ describe('getRecordName', () => {
     expect(getRecordName('app.example.com')).toBe('app')
     expect(getRecordName('a.b.example.com')).toBe('a.b')
     expect(getRecordName('in.mail.example.co.uk')).toBe('in.mail')
+  })
+})
+
+describe('getVerificationMethods', () => {
+  const targets = {
+    cname: 'cloud.appwrite.io',
+    a: '1.2.3.4',
+    aaaa: '::1',
+    nameservers: ['ns1.appwrite.zone', 'ns2.appwrite.zone'],
+  }
+
+  test('leads an apex on Cloud with the nameservers, then A and AAAA, not a CNAME on @', () => {
+    expect(
+      getVerificationMethods({
+        domain: 'example.com',
+        cloud: true,
+        ...targets,
+      }),
+    ).toEqual(['nameservers', 'a', 'aaaa', 'cname'])
+  })
+
+  test('leads a subdomain on Cloud with the CNAME and keeps A and AAAA hidden', () => {
+    expect(
+      getVerificationMethods({
+        domain: 'app.example.com',
+        cloud: true,
+        ...targets,
+      }),
+    ).toEqual(['cname', 'nameservers'])
+  })
+
+  test('leads an apex on self-hosted with A and AAAA', () => {
+    expect(
+      getVerificationMethods({
+        domain: 'example.com',
+        cloud: false,
+        ...targets,
+      }),
+    ).toEqual(['a', 'aaaa', 'cname'])
+  })
+
+  test('leaves out what the server does not report', () => {
+    expect(
+      getVerificationMethods({
+        domain: 'example.com',
+        cloud: true,
+        cname: 'cloud.appwrite.io',
+        nameservers: [],
+      }),
+    ).toEqual(['cname'])
   })
 })
 

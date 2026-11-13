@@ -41,6 +41,7 @@
         "DELETE /v1/project",
         "DELETE /v1/project/keys/:keyId",
         "DELETE /v1/project/mock-phones/:number",
+        "DELETE /v1/project/passwords",
         "DELETE /v1/project/platforms/:platformId",
         "DELETE /v1/project/sessions",
         "DELETE /v1/project/variables/:variableId",
@@ -335,6 +336,7 @@
         "PATCH /v1/account/prefs",
         "PATCH /v1/account/sessions/:sessionId",
         "PATCH /v1/account/status",
+        "PATCH /v1/alerts/:alertId",
         "PATCH /v1/databases/:databaseId/collections/:collectionId/attributes/bigint/:key",
         "PATCH /v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key",
         "PATCH /v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key",
@@ -415,6 +417,7 @@
         "PATCH /v1/project/oauth2/kick",
         "PATCH /v1/project/oauth2/linkedin",
         "PATCH /v1/project/oauth2/microsoft",
+        "PATCH /v1/project/oauth2/naver",
         "PATCH /v1/project/oauth2/notion",
         "PATCH /v1/project/oauth2/oidc",
         "PATCH /v1/project/oauth2/okta",
@@ -755,7 +758,12 @@
         "PUT /v1/vectorsdb/:databaseId/collections/:collectionId",
         "PUT /v1/vectorsdb/:databaseId/collections/:collectionId/documents",
         "PUT /v1/vectorsdb/:databaseId/collections/:collectionId/documents/:documentId",
-        "PUT /v1/webhooks/:webhookId"
+        "PUT /v1/webhooks/:webhookId",
+        "DELETE /v1/account/devices/:deviceId",
+        "GET /v1/account/devices/:deviceId",
+        "PATCH /v1/account/devices/:deviceId/session",
+        "PATCH /v1/project/policies/account-devices",
+        "POST /v1/account/devices"
     ],
     "findings": [
         {

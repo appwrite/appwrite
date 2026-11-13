@@ -12,6 +12,7 @@ class MFARecoveryCodes extends Model
         $this
             ->addRule('recoveryCodes', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Recovery codes.',
                 'array' => true,
                 'default' => [],

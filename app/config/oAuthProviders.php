@@ -313,6 +313,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Microsoft',
     ],
+    'naver' => [
+        'name' => 'Naver',
+        'developers' => 'https://developers.naver.com/docs/login/overview/overview.md',
+        'icon' => 'icon-naver',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Naver',
+    ],
     'notion' => [
         'name' => 'Notion',
         'developers' => 'https://developers.notion.com/docs',

@@ -4023,6 +4023,7 @@ class Appwrite extends Destination
             'passwordPwned' => $resource->getPasswordPwned(),
             'passwordRotation' => $resource->getPasswordRotation(),
             'realtimeGuests' => $resource->getDenyRealtimeGuests(),
+            'accountDevices' => $resource->getAccountDevices(),
             'passkeyRpId' => $this->resolvePasskeyRpId($resource->getPasskeyRpId(), \is_array($auths) ? $this->optionalString($auths, 'passkeyRpId') ?? '' : ''),
         ];
         foreach ($reported as $key => $value) {

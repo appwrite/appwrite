@@ -1010,6 +1010,25 @@ export function useDeleteProjectSessions(projectId: string | null | undefined) {
 }
 
 /**
+ * Hook to force every user in the project to reset their password
+ *
+ * @param projectId - The project ID
+ */
+export function useDeleteProjectPasswords(
+  projectId: string | null | undefined,
+) {
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk.forProject(projectId).project.deletePasswords()
+    },
+  })
+}
+
+/**
  * Hook to update project mock phone numbers
  *
  * @param projectId - The project ID
@@ -1258,6 +1277,29 @@ export function useUpdateDenyRealtimeGuestsPolicy(
       return await sdk
         .forProject(projectId)
         .project.updateDenyRealtimeGuestsPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the account switching (account devices) policy.
+ */
+export function useUpdateAccountDevicesPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateAccountDevicesPolicy({ enabled })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)

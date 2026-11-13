@@ -50,6 +50,7 @@ const OAUTH2_UPDATE_BY_PROVIDER: Partial<
   [ProjectOAuthProviderId.Kick]: (p, b) => p.updateOAuth2Kick(b),
   [ProjectOAuthProviderId.Linkedin]: (p, b) => p.updateOAuth2Linkedin(b),
   [ProjectOAuthProviderId.Microsoft]: (p, b) => p.updateOAuth2Microsoft(b),
+  [ProjectOAuthProviderId.Naver]: (p, b) => p.updateOAuth2Naver(b),
   [ProjectOAuthProviderId.Notion]: (p, b) => p.updateOAuth2Notion(b),
   [ProjectOAuthProviderId.Oidc]: (p, b) => p.updateOAuth2Oidc(b),
   [ProjectOAuthProviderId.Okta]: (p, b) => p.updateOAuth2Okta(b),

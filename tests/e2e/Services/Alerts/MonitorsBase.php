@@ -40,6 +40,7 @@ trait MonitorsBase
         $this->assertSame(1800, $monitor['body']['cooldown']);
         $this->assertTrue($monitor['body']['enabled']);
         $this->assertSame(['owner'], $monitor['body']['notify']);
+        $this->assertSame('warning', $monitor['body']['severity']);
         $this->assertFalse($monitor['body']['critical']);
         $this->assertSame('ok', $monitor['body']['status']);
         $this->assertSame('', $monitor['body']['alertId']);
@@ -152,7 +153,7 @@ trait MonitorsBase
             'rules' => [Query::lessThanEqual('files.storage', 42)->toString()],
             'enabled' => false,
             'notify' => ['owner', 'developer'],
-            'critical' => true,
+            'severity' => 'critical',
         ]);
 
         /**
@@ -164,6 +165,8 @@ trait MonitorsBase
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $monitor['body']['rules']);
         $this->assertFalse($monitor['body']['enabled']);
         $this->assertSame(['owner', 'developer'], $monitor['body']['notify']);
+        $this->assertSame('critical', $monitor['body']['severity']);
+        // The deprecated flag follows the severity, for clients that still read it.
         $this->assertTrue($monitor['body']['critical']);
         $this->assertSame('Before', $monitor['body']['name']);
         $this->assertSame(900, $monitor['body']['cooldown']);
@@ -173,16 +176,21 @@ trait MonitorsBase
         // Rules left out are kept.
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $renamed['body']['rules']);
         $this->assertSame(['owner', 'developer'], $renamed['body']['notify']);
-        $this->assertTrue($renamed['body']['critical']);
+        $this->assertSame('critical', $renamed['body']['severity']);
 
         $found = $this->listMonitors([Query::search('search', 'After ' . $monitorId)->toString()]);
         $this->assertSame([$monitorId], \array_column($found['body']['monitors'], '$id'));
-        $this->assertTrue($found['body']['monitors'][0]['critical']);
+        $this->assertSame('critical', $found['body']['monitors'][0]['severity']);
         $critical = $this->listMonitors([
             Query::search('search', 'After ' . $monitorId)->toString(),
-            Query::equal('critical', [false])->toString(),
+            Query::equal('severity', ['critical'])->toString(),
         ]);
-        $this->assertSame([], $critical['body']['monitors']);
+        $this->assertSame([$monitorId], \array_column($critical['body']['monitors'], '$id'));
+        $warning = $this->listMonitors([
+            Query::search('search', 'After ' . $monitorId)->toString(),
+            Query::equal('severity', ['warning'])->toString(),
+        ]);
+        $this->assertSame([], $warning['body']['monitors']);
 
         /**
          * Test for FAILURE

@@ -7,8 +7,7 @@ use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
-use Appwrite\Permission;
-use Appwrite\Role;
+use Appwrite\Screenshots\Access;
 use Appwrite\Screenshots\Client;
 use Appwrite\Screenshots\Exception as ScreenshotsException;
 use Exception;
@@ -171,7 +170,7 @@ class Screenshots extends Action
             $updates = new Document([]);
 
             // The project may have moved to another team since the build queued this capture
-            $teamId = $dbForPlatform->getDocument('projects', $project->getId())->getAttribute('teamId', '');
+            $permissions = Access::permissions($dbForPlatform->getDocument('projects', $project->getId()));
 
             foreach ($captures as $key => $screenshot) {
                 $fileId = Id::unique();
@@ -187,9 +186,7 @@ class Screenshots extends Action
 
                 $file = new Document([
                     '$id' => $fileId,
-                    '$permissions' => [
-                        Permission::read(Role::team(Id::custom($teamId))),
-                    ],
+                    '$permissions' => $permissions,
                     'bucketId' => $bucket->getId(),
                     'bucketInternalId' => $bucket->getSequence(),
                     'name' => $fileName,

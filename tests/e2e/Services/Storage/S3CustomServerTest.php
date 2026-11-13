@@ -373,6 +373,34 @@ final class S3CustomServerTest extends Scope
         $this->assertSame($part, $object['body']);
     }
 
+    public function testPutObjectRejectsDisallowedContent(): void
+    {
+        $bucketId = $this->setupBucket(['allowedFileExtensions' => ['png']]);
+        $png = \file_get_contents(__DIR__ . '/../../../resources/logo.png');
+        $pdf = \file_get_contents(__DIR__ . '/../../../resources/document.pdf');
+
+        /**
+         * Test for SUCCESS
+         */
+        $object = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/logo.png', body: $png, headers: ['content-type' => 'image/png']);
+        $this->assertSame(200, $object['headers']['status-code'], $object['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $object = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/document.png', body: $pdf, headers: ['content-type' => 'image/png']);
+        $this->assertSame(400, $object['headers']['status-code'], $object['body']);
+
+        $object = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/binary.png', body: \random_bytes(1024), headers: ['content-type' => 'image/png']);
+        $this->assertSame(400, $object['headers']['status-code'], $object['body']);
+
+        // Part 1 decides the type, even when it arrives after another part.
+        $uploadId = $this->createMultipartUpload($bucketId, 'multipart.png', ['content-type' => 'image/png']);
+        $this->uploadPart($bucketId, 'multipart.png', $uploadId, 2, $png);
+        $part = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/multipart.png', ['partNumber' => '1', 'uploadId' => $uploadId], \str_pad($pdf, self::PART_SIZE));
+        $this->assertSame(400, $part['headers']['status-code'], $part['body']);
+    }
+
     public function testListObjectsWithDuplicateNames(): void
     {
         $bucketId = $this->setupBucket();

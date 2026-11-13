@@ -34,6 +34,12 @@ class Session extends Model
                 'default' => '',
                 'example' => '5e5bb8c16897e',
             ])
+            ->addRule('userName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of the user the session belongs to. Lets a client label the account, for example in an account switcher.',
+                'default' => '',
+                'example' => 'John Doe',
+            ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Session expiration date in ISO 8601 format.',
@@ -54,6 +60,7 @@ class Session extends Model
             ])
             ->addRule('providerAccessToken', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Session Provider Access Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
@@ -67,6 +74,7 @@ class Session extends Model
             ])
             ->addRule('providerRefreshToken', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Session Provider Refresh Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
@@ -177,6 +185,7 @@ class Session extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Secret used to authenticate the user. Only included if the request was made with an API key',
                 'default' => '',
                 'example' => '5e5bb8c16897e',

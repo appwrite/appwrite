@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Alerts;
 
 use Appwrite\Alert\Rules;
 use Appwrite\Alert\Schedules;
+use Appwrite\Alert\Severity;
 use Appwrite\Alert\Status;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -62,7 +63,7 @@ class Base extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         Authorization $authorization,
-        bool $critical = false,
+        Severity $severity = Severity::Warning,
     ): void {
         $parsed = $this->parseRules($rules);
 
@@ -84,7 +85,7 @@ class Base extends Action
             'window' => $window,
             'cooldown' => $cooldown,
             'notify' => \array_values(\array_unique($notify)),
-            'critical' => $critical,
+            'severity' => $severity->value,
             'enabled' => $enabled,
             'status' => Status::Ok->value,
             'search' => $this->search($monitorId, $name, $parsed->metric, $parsed->resourceType, $resourceId),
@@ -123,7 +124,7 @@ class Base extends Action
         Database $dbForPlatform,
         Database $dbForProject,
         Authorization $authorization,
-        ?bool $critical = null,
+        ?Severity $severity = null,
     ): void {
         $monitor = $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId);
 
@@ -147,7 +148,7 @@ class Base extends Action
             'cooldown' => $cooldown,
             'enabled' => $enabled,
             'notify' => $notify === null ? null : \array_values(\array_unique($notify)),
-            'critical' => $critical,
+            'severity' => $severity?->value,
         ] as $key => $value) {
             if ($value !== null) {
                 $changes->setAttribute($key, $value);

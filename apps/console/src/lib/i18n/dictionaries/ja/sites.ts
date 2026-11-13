@@ -88,11 +88,22 @@ export const jaSitesDictionary: Record<string, string> = {
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
+  'Waiting for DNS': 'DNS を待機中',
+  'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
+    'Appwrite はドメインの追加後 3 日間、数分ごとに DNS レコードを確認します。すぐに確認するには「今すぐ確認」を使用してください。',
+  'Appwrite stopped checking 3 days after the domain was added. Fix the DNS records, then Retry.':
+    'Appwrite はドメインの追加から 3 日後に確認を停止しました。DNS レコードを修正してから、再試行してください。',
+  'Last check:': '最終確認:',
+  'Check now': '今すぐ確認',
+  'Not verified yet. Appwrite keeps checking.':
+    'まだ検証されていません。Appwrite は確認を続けます。',
   'Certificate expired': '証明書の期限切れ',
   'Renewal failed': '証明書の更新に失敗しました',
   'Certificate blocked': '証明書の発行が保留中',
   'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
     '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してから、再試行してください。',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs.':
+    '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してください。',
   'Renewal blocked': '証明書の更新が保留中',
   'Certificate renewal started': '証明書の更新を開始しました',
   'Certificate expires on {date}.': '証明書の有効期限は{date}です。',
@@ -224,6 +235,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Verify domain ownership': 'ドメイン所有権の検証',
   'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
     'このドメインはすでに Appwrite を指しています。所有者であることを証明するため、この TXT レコードを追加してから検証してください。',
+  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
+    'このドメインは別のプロジェクトで使用されています。所有者であることを証明するため、この TXT レコードを追加してから検証し、このプロジェクトに移動してください。',
   'Invalid URL': '無効な URL',
   'Enter URL': 'URL を入力',
   'Select branch': 'Branch を選択',

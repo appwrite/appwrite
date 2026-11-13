@@ -21,7 +21,7 @@ trait Procedures
             $direction = $param[0]->value;
             $name = $this->quote($param[1]);
 
-            if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\s+[A-Za-z_][A-Za-z0-9_]*)*(\s*\(\s*[A-Za-z0-9_,\s]+\s*\))?$/', $param[2])) {
+            if (! \preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\s+[A-Za-z_][A-Za-z0-9_]*)*(\s*\(\s*[A-Za-z0-9_,\s]+\s*\))?$/D', $param[2])) {
                 throw new ValidationException('Invalid procedure parameter type: ' . $param[2]);
             }
 

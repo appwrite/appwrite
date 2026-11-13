@@ -120,8 +120,8 @@ export const ANALYTICS_PAGEVIEW_EVENT = 'pageview'
 
 /**
  * Events the trackers send on their own (see the setup wizard's snippet
- * notes): the web tracker's automatic events plus Flutter's screen and
- * lifecycle events. Everything else is a custom event the app tracks
+ * notes): the web tracker's automatic events plus the mobile SDKs' screen,
+ * lifecycle, install and push events. Everything else is a custom event the app tracks
  * explicitly.
  */
 export const ANALYTICS_AUTOMATIC_EVENTS: ReadonlySet<string> = new Set([
@@ -133,6 +133,10 @@ export const ANALYTICS_AUTOMATIC_EVENTS: ReadonlySet<string> = new Set([
   'screen_view',
   'app_backgrounded',
   'app_foregrounded',
+  'first_open',
+  'app_updated',
+  'push_received',
+  'push_opened',
 ])
 
 export function isCustomAnalyticsEvent(

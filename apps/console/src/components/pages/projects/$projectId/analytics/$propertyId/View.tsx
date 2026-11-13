@@ -51,15 +51,18 @@ import {
   usePropertyTabs,
 } from '../_components/PropertyHeader'
 import { ExportMenu } from '../_components/ExportMenu'
+import { InstallsPushPanel } from '../_components/InstallsPushPanel'
 import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
   BotsPanel,
   EventPropertiesPanel,
   LocationsPanel,
+  ModelsPanel,
   PagesPanel,
   TechnologyPanel,
   TrafficSourcesPanel,
   UsersPanel,
+  useModelTabs,
   useShowUsersPanel,
 } from '../_components/DimensionPanels'
 import { EventsPanel } from '../_components/EventsPanel'
@@ -82,6 +85,7 @@ import {
 import {
   mapToQueryParam,
   queryParamToMap,
+  withFilter,
   type FilterMap,
 } from '@/lib/table-filters'
 
@@ -116,6 +120,8 @@ type DimensionPanel =
   | 'bots'
   | 'users'
   | 'eventProps'
+  | 'models'
+  | 'installs'
 
 // Overview, custom events, users and event properties apply to every type. Mobile
 // apps have no referrers or crawlers; agents only send their own events.
@@ -134,13 +140,14 @@ const PANELS_BY_TYPE: Record<
     'eventProps',
   ]),
   [AnalyticsPropertyType.Mobile]: new Set([
+    'installs',
     'pages',
     'locations',
     'technology',
     'users',
     'eventProps',
   ]),
-  [AnalyticsPropertyType.Agent]: new Set(['users', 'eventProps']),
+  [AnalyticsPropertyType.Agent]: new Set(['models', 'users', 'eventProps']),
 }
 
 function defaultIntervalForRange(dateRange: DateRange): AnalyticsChartInterval {
@@ -257,10 +264,7 @@ export function View({
         commitFilterMap(next)
       },
       onApplyFilter: (key, queryStr, replaceKey) => {
-        const next = new Map(filterMap)
-        if (replaceKey) next.delete(replaceKey)
-        next.set(key, queryStr)
-        commitFilterMap(next)
+        commitFilterMap(withFilter(filterMap, key, queryStr, replaceKey))
       },
       onRemoveFilter: (key) => {
         const next = new Map(filterMap)
@@ -339,6 +343,13 @@ export function View({
   const showUsersPanel = useShowUsersPanel(
     { projectId, propertyId, range },
     filters,
+  )
+  const resolvedType = propertyType(property)
+  const panels = PANELS_BY_TYPE[resolvedType]
+  const modelTabs = useModelTabs(
+    { projectId, propertyId, range },
+    filters,
+    panels.has('models'),
   )
 
   // Hourly buckets are capped at 31 days and daily buckets need more than a
@@ -487,10 +498,12 @@ export function View({
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
 
-  const resolvedType = propertyType(property)
-  const panels = PANELS_BY_TYPE[resolvedType]
   const breakdownCount = [...panels].filter(
-    (panel) => panel !== 'users' && panel !== 'eventProps',
+    (panel) =>
+      panel !== 'users' &&
+      panel !== 'eventProps' &&
+      panel !== 'models' &&
+      panel !== 'installs',
   ).length
 
   if (!property && !propertyLoading) {
@@ -658,6 +671,17 @@ export function View({
                 of its visible tab, and every card has a fixed body height
                 so switching tabs never shifts the grid. */}
               <div className="grid gap-4 lg:grid-cols-2">
+                {panels.has('installs') ? (
+                  <div className="lg:col-span-2">
+                    <InstallsPushPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      interval={resolvedInterval}
+                      onOpenSetup={() => setInstallOpen(true)}
+                    />
+                  </div>
+                ) : null}
                 {/* Channels, referrers and UTM campaigns in one card. */}
                 {panels.has('sources') ? (
                   <TrafficSourcesPanel
@@ -702,6 +726,7 @@ export function View({
                       projectId={projectId}
                       propertyId={propertyId}
                       range={range}
+                      type={resolvedType}
                     />
                   </div>
                 ) : null}
@@ -711,6 +736,16 @@ export function View({
                     propertyId={propertyId}
                     range={range}
                   />
+                ) : null}
+                {panels.has('models') && modelTabs.length > 0 ? (
+                  <div className="lg:col-span-2">
+                    <ModelsPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      tabs={modelTabs}
+                    />
+                  </div>
                 ) : null}
                 {panels.has('users') && showUsersPanel ? (
                   <UsersPanel

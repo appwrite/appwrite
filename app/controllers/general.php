@@ -835,13 +835,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             $execution
                 ->setAttribute('duration', \microtime(true) - $durationStart)
-                ->setAttribute('responseStatusCode', 500);
+                ->setAttribute('responseStatusCode', 500)
+                ->setAttribute('status', 'failed')
+                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
-            if ($type === 'function') {
-                $execution
-                    ->setAttribute('status', 'failed')
-                    ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
-            }
             Console::error($th->getMessage());
 
             if ($th instanceof AppwriteException) {
@@ -1634,6 +1631,8 @@ Http::get('/robots.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });
@@ -1668,6 +1667,8 @@ Http::get('/humans.txt')
         } else {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $bus, $executor, $geo, $getIsResourceBlocked, $platform, $previewHostname, $authorization, $apiKey, $publisherForDeletes, $executionsRetentionCount, $lock)) {
                 $utopia->match($request)?->route->label('router', true);
+            } else {
+                throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
             }
         }
     });

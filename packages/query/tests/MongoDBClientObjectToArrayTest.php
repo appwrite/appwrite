@@ -2,6 +2,7 @@
 
 namespace Utopia\Query\Tests;
 
+use Closure;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Utopia\Query\Tests\E2E\MongoDBClient;
@@ -26,9 +27,9 @@ class MongoDBClientObjectToArrayTest extends TestCase
     private MongoDBClient $client;
 
     /**
-     * @var callable(mixed): mixed
+     * @var Closure(mixed): mixed
      */
-    private $convert;
+    private Closure $convert;
 
     protected function setUp(): void
     {
@@ -38,9 +39,7 @@ class MongoDBClientObjectToArrayTest extends TestCase
         $this->client = $instance;
 
         $method = $reflection->getMethod('objectToArray');
-        /** @var callable(mixed): mixed $bound */
-        $bound = $method->getClosure($this->client);
-        $this->convert = $bound;
+        $this->convert = $method->getClosure($this->client);
     }
 
     public function testScalarsPassThrough(): void

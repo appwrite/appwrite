@@ -467,8 +467,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Enabling this option will send an email to the users when a new session is created.':
     'הפעלת אפשרות זו תשלח אימייל למשתמשים כאשר נוצר סשן חדש.',
   'Encrypt files stored in this bucket': 'הצפנת קבצים המאוחסנים בבאקט זה',
-  "Encrypt files stored in this bucket. For file size above 20MB encryption is skipped even if it's enabled. This change will only apply to new files uploaded after the update.":
-    'הצפינו קבצים המאוחסנים בבאקט זה. עבור קבצים בגודל מעל 20MB ההצפנה מדולגת גם אם היא מופעלת. שינוי זה יחול רק על קבצים חדשים שיועלו לאחר העדכון.',
+  'Encrypt files stored in this bucket. This change will only apply to new files uploaded after the update.':
+    'הצפינו קבצים המאוחסנים בבאקט זה. שינוי זה יחול רק על קבצים חדשים שיועלו לאחר העדכון.',
   Encryption: 'הצפנה',
   'Encryption setting has been updated': 'הגדרת ההצפנה עודכנה',
   "Enhance the user's account security by requiring a second sign-in method.":
@@ -1746,4 +1746,18 @@ export const heAuthStorageDictionary: Record<string, string> = {
     'מדיניות חסימת אורחים ב-Realtime עודכנה',
   'Failed to update deny realtime guests policy':
     'עדכון מדיניות חסימת אורחים ב-Realtime נכשל',
+
+  // Project-wide security actions (force sign out, force password reset)
+  'Security actions': 'פעולות אבטחה',
+  'Apply an action to every user in the project at once, for example when responding to a security incident.':
+    'החילו פעולה על כל המשתמשים בפרויקט בבת אחת, למשל בתגובה לאירוע אבטחה.',
+  'Force password reset': 'איפוס סיסמה בכפייה',
+  'Require every user to set a new password before they can sign in with email and password again. Existing sessions stay active, and users without a password are not affected.':
+    'דרשו מכל המשתמשים להגדיר סיסמה חדשה לפני שיוכלו להתחבר שוב עם אימייל וסיסמה. סשנים קיימים נשארים פעילים, ומשתמשים ללא סיסמה אינם מושפעים.',
+  'Reset all passwords': 'איפוס כל הסיסמאות',
+  'Every user will have to set a new password through password recovery before they can sign in with email and password again. Existing sessions stay active, so sign out all users as well if sessions may be compromised. This action cannot be undone.':
+    'כל משתמש יצטרך להגדיר סיסמה חדשה דרך שחזור סיסמה לפני שיוכל להתחבר שוב עם אימייל וסיסמה. סשנים קיימים נשארים פעילים, לכן נתקו גם את כל המשתמשים אם ייתכן שהסשנים נפרצו. פעולה זו אינה ניתנת לביטול.',
+  'All users must now reset their password.':
+    'כל המשתמשים נדרשים כעת לאפס את הסיסמה שלהם.',
+  'Failed to reset passwords': 'איפוס הסיסמאות נכשל',
 }

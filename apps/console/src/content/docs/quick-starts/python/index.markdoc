@@ -77,17 +77,17 @@ Finally, create a file `my_app.py`.
 Install the Python Appwrite SDK.
 
 ```sh
-python -m pip install "appwrite==27.0.0"
+python -m pip install "appwrite==27.2.0"
 ```
 
 Or with `uv`:
 
 ```sh
-uv add "appwrite==27.0.0"
+uv add "appwrite==27.2.0"
 ```
 
 {% info title="Upgrading from SDK 26.0.0" %}
-Python 3.9 is no longer supported. Use a Python 3.10+ environment and run `python -m pip install --upgrade "appwrite==27.0.0"`. Update dependency pins or constraints that exclude `requests>=2.34.2,<3` or `urllib3>=2.8.0,<3`. Service methods, models, and response format `2.5.0` are unchanged from SDK 26.0.0.
+Python 3.9 is no longer supported. Use a Python 3.10+ environment and run `python -m pip install --upgrade "appwrite==27.2.0"`. Update dependency pins or constraints that exclude `requests>=2.34.2,<3` or `urllib3>=2.8.0,<3`. Service methods, models, and response format `2.5.0` are unchanged from SDK 26.0.0.
 {% /info %}
 
 {% /section %}

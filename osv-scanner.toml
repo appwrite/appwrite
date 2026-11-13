@@ -1,0 +1,7 @@
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0436"
+reason = "paste is unmaintained, not vulnerable. It is a proc-macro, so it runs only at compile time and nothing of it ships; it is reached only through rav1e (AVIF encoding in utopia-image's default `ravif` feature, which the PHP extension does not build), whose latest release still depends on it."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0449"
+reason = "unsafe-libyaml is unmaintained, not vulnerable: the advisory has no fixed version and reports no flaw. Only php-std's yaml module (PHP's yaml_parse()) uses it, and nothing the utopia extension builds calls that yet."

@@ -22,6 +22,11 @@ export const POLICIES_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     keywords: ['password change', 'revoke', 'sign out'],
   },
   {
+    sectionId: 'sessions',
+    title: 'Account switching',
+    keywords: ['device', 'devices', 'multiple accounts', 'switch'],
+  },
+  {
     sectionId: 'users',
     title: 'Users limit',
     keywords: ['signup', 'maximum', 'registration', 'unlimited'],

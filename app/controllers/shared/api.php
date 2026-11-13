@@ -28,8 +28,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Bus\Bus;
-use Utopia\Cache\Adapter\Filesystem;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
@@ -604,9 +602,11 @@ Http::init()
         $request->setUser($user);
 
         $roles = $authorization->getRoles();
-        $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
-            && ! $user->isKey($roles)
-            && ! $user->isPrivileged($roles);
+        $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+        // A key or a privileged console caller is trusted with throughput, so the limits that only pace legitimate
+        // work are read for its headers and never counted. A limit declared for everyone still counts for it:
+        // being trusted to call an endpoint is not the same as being trusted to guess the secret it takes.
+        $trusted = $user->isKey($roles) || $user->isPrivileged($roles);
 
         $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
         $multiplier = \in_array($project->getId(), $increasedLimitProjects, true) ? 100 : 1;
@@ -619,6 +619,7 @@ Http::init()
 
         foreach ($limits as $limit) {
             $max = $limit->limit * $multiplier;
+            $shouldCheckAbuse = $abuseEnabled && $limit->counts($trusted);
 
             try {
                 $isRateLimited = $timelimit($limit->key($values), $max, $limit->seconds, function (TimeLimit $timeLimit) use ($response, $shouldCheckAbuse, &$closestLimit): bool {
@@ -680,9 +681,10 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->inject('cacheControlForStorage')
+    ->inject('responseCache')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, AuditContext $auditContext, Context $usage, FunctionPublisher $publisherForFunctions, Database $dbForProject, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Telemetry $telemetry, array $platform, Authorization $authorization, callable $cacheControlForStorage, callable $responseCache, Document $impersonatorUser, User $targetUser) {
 
         $response->setUser($targetUser);
         $response->setImpersonatorUser($impersonatorUser);
@@ -751,13 +753,23 @@ Http::init()
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
             $key = $request->cacheIdentifier();
+            // `auto` params resolved from the Accept header: the response varies by Accept
+            $negotiated = ! empty($request->getNegotiatedParams());
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
-            $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-            );
+            [$cache, $fallback] = $responseCache($key);
+            Span::add('storage.cache.device', $fallback !== null);
             $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
+
+            // A key that just moved to the device: copy it across instead of regenerating it.
+            if (empty($data) && $fallback !== null) {
+                $data = $fallback->load($key, $timestamp);
+                if (! empty($data)) {
+                    $cache->save($key, $data);
+                    Span::add('storage.cache.copied', true);
+                }
+            }
 
             if (! empty($data) && ! $cacheLog->isEmpty()) {
                 $cacheControl = \sprintf('private, max-age=%d', $timestamp);
@@ -826,6 +838,7 @@ Http::init()
                             fileSecurity: $fileSecurity,
                             cacheLog: $cacheLog,
                             route: $route,
+                            negotiated: $negotiated,
                         ));
                     }
                 }
@@ -835,14 +848,20 @@ Http::init()
                     $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
                         'accessedAt' => DateTime::now(),
                     ])));
-                    // Refresh the filesystem file's mtime so TTL-based expiry in cache->load() stays valid
-                    $cache->save($key, $data);
+                    // Refresh the file's mtime so TTL-based expiry in cache->load() stays valid.
+                    // A device entry isn't rewritten: if it expires, it misses and refills once.
+                    if ($fallback === null) {
+                        $cache->save($key, $data);
+                    }
                 }
 
                 $response
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+                if ($negotiated) {
+                    $response->addHeader('Vary', 'Accept');
+                }
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
                     Span::add('storage.cache.hit', true);
@@ -864,10 +883,18 @@ Http::init()
     ->groups(['session'])
     ->inject('route')
     ->inject('user')
-    ->action(function (Route $route, User $user) {
+    ->inject('authDevice')
+    ->action(function (Route $route, User $user, ?Document $authDevice) {
         // Sign-ins that link to or upgrade the current account accept a caller
         // who is already logged in (e.g. converting an anonymous account)
         if ($route->getLabel('session.allowActive', false)) {
+            return;
+        }
+
+        // An account switching device may hold several accounts at once: creating another
+        // session adds it to the device instead of being refused. The create action attaches
+        // the new session and makes it the active one (see AuthDevice::attach).
+        if ($authDevice !== null) {
             return;
         }
 
@@ -1009,13 +1036,16 @@ Http::shutdown()
     ->action(function (Route $route, Request $request, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams) {
         // Shutdown hooks run only when the request did not throw, so it is not a failure: give back the hits its
         // failure limits reserved on arrival. A request that failed never gets here and keeps them.
-        $roles = $authorization->getRoles();
-        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled' || $user->isKey($roles) || $user->isPrivileged($roles)) {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled') {
             return;
         }
 
+        $roles = $authorization->getRoles();
+        $trusted = $user->isKey($roles) || $user->isPrivileged($roles);
+
+        // Only the limits init counted for this caller reserved anything, so only those have a hit to give back.
         /** @var list<Limit> $limits */
-        $limits = \array_filter($route->getLabel('abuse', []), fn (Limit $limit): bool => $limit->failures);
+        $limits = \array_filter($route->getLabel('abuse', []), fn (Limit $limit): bool => $limit->failures && $limit->counts($trusted));
         if ($limits === []) {
             return;
         }
@@ -1109,7 +1139,8 @@ Http::shutdown()
     ->inject('user')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization) {
+    ->inject('responseCache')
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, callable $responseCache) {
         if (! $route->getLabel('cache', false)) {
             return;
         }
@@ -1120,10 +1151,8 @@ Http::shutdown()
             return;
         }
 
-        $cache = new Cache(
-            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-        );
         $key = $request->cacheIdentifier();
+        [$cache, $fallback] = $responseCache($key);
         $signature = md5($data['payload']);
         $now = DateTime::now();
         $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -1165,7 +1194,8 @@ Http::shutdown()
         }
 
         // Existing entry: refresh the access time once per APP_CACHE_UPDATE window
-        // (keeps the file mtime current for TTL checks) and re-persist on content change.
+        // (on the filesystem, also the file mtime for TTL checks) and re-persist on content
+        // change, or when the load missed, so an emptied store refills instead of waiting.
         $stale = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $cacheLog->getAttribute('accessedAt', 0);
         if ($stale) {
             $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
@@ -1173,7 +1203,11 @@ Http::shutdown()
             ])));
         }
 
-        if ($stale || $signature !== $cacheLog->getAttribute('signature')) {
+        // A read entry is rewritten on the device on one day in 15, spread by key, so a bucket's
+        // expiry counted from the last write doesn't take out everything copied on the same day.
+        $rewrite = $stale && ($fallback === null || \crc32($key) % 15 === \intdiv(\time(), 86400) % 15);
+        $missed = \in_array('miss', $response->getHeaders()['x-appwrite-cache'] ?? [], true);
+        if ($rewrite || $missed || $signature !== $cacheLog->getAttribute('signature')) {
             $cache->save($key, $data['payload']);
         }
     });

@@ -24,6 +24,10 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\DSN\DSN;
+use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
 use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
@@ -33,6 +37,14 @@ final class StorageCustomServerTest extends Scope
     use StorageBase;
     use ProjectCustom;
     use SideServer;
+
+    private const string CACHE_OUTAGE_STATE = '/tmp/appwrite-response-cache-outage.json';
+
+    /**
+     * Seconds a request may take with the device down: a read and a copy, each a 1s
+     * timeout retried once, and margin. A default client's 30s timeout can't fit in this.
+     */
+    private const int CACHE_OUTAGE_BUDGET = 6;
 
     /**
      * @var array Cached bucket data for tests
@@ -72,12 +84,15 @@ final class StorageCustomServerTest extends Scope
         if ($source === false) {
             $this->fail('Failed to create a temporary image');
         }
-        $subject = new \Imagick(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg');
-        $subject->resizeImage(900, 0, \Imagick::FILTER_LANCZOS, 1);
-        $canvas = new \Imagick();
-        $canvas->newImage(2400, 1920, 'white', 'png');
-        $canvas->compositeImage($subject, \Imagick::COMPOSITE_OVER, 1450, 0);
-        $canvas->writeImage($source);
+        $subject = \imagecreatefromjpeg(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg');
+        $this->assertNotFalse($subject);
+        $subject = \imagescale($subject, 900);
+        $this->assertNotFalse($subject);
+        $canvas = \imagecreatetruecolor(2400, 1920);
+        $this->assertNotFalse($canvas);
+        \imagefill($canvas, 0, 0, 0xFFFFFF);
+        \imagecopy($canvas, $subject, 1450, 0, 0, 0, \imagesx($subject), \imagesy($subject));
+        \imagepng($canvas, $source);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
@@ -120,28 +135,448 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals('miss', $preview['headers']['x-appwrite-cache']);
         $this->assertNotEmpty($preview['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($preview['body']);
-        $this->assertSame(120, $image->getImageWidth());
-        $this->assertSame(320, $image->getImageHeight());
+        $size = \getimagesizefromstring($preview['body']);
+        $this->assertSame(120, $size[0]);
+        $this->assertSame(320, $size[1]);
+        $image = $this->getImageSignature($preview['body']);
 
         $center = $this->client->call(Client::METHOD_GET, $path, $headers, [...$params, 'gravity' => 'center']);
-        $centerImage = new \Imagick();
-        $centerImage->readImageBlob($center['body']);
-        $this->assertNotSame($centerImage->getImageSignature(), $image->getImageSignature());
+        $this->assertNotSame($this->getImageSignature($center['body']), $image);
 
         $cached = [];
         $this->assertEventually(function () use (&$cached, $path, $headers, $params, $image): void {
             $cached = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
 
             $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
-            $cachedImage = new \Imagick();
-            $cachedImage->readImageBlob($cached['body']);
-            $this->assertSame($image->getImageSignature(), $cachedImage->getImageSignature());
+            $this->assertSame($image, $this->getImageSignature($cached['body']));
         });
 
         $this->assertEquals(200, $cached['headers']['status-code']);
         $this->assertEquals('image/png', $cached['headers']['content-type']);
+    }
+
+    public function testFilePreviewCacheStore(): void
+    {
+        $project = $this->getProject(true);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
+        $devices = $this->getCacheStores($project['$id']);
+        $stored = fn (): int => \array_sum(\array_map(fn ($device) => \count($device->listFiles($device->getRoot())->files), $devices));
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Cache store',
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+
+        $upload = function () use ($bucket, $headers): string {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', ['content-type' => 'multipart/form-data'] + $headers, [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            ]);
+            $this->assertSame(201, $file['headers']['status-code']);
+
+            return $file['body']['$id'];
+        };
+        $preview = fn (string $fileId): array => $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $fileId . '/preview', $headers, ['width' => 77, 'output' => 'png']);
+
+        $fileId = $upload();
+        $this->assertSame('miss', $preview($fileId)['headers']['x-appwrite-cache']);
+        $this->assertEventually(fn () => $this->assertSame('hit', $preview($fileId)['headers']['x-appwrite-cache']));
+
+        // An emptied store refills, though the row is fresh and the signature unchanged.
+        foreach ($devices as $device) {
+            $device->delete($device->getRoot(), true);
+        }
+        $this->assertSame(0, $stored());
+        $this->assertSame('miss', $preview($fileId)['headers']['x-appwrite-cache']);
+        $this->assertEventually(fn () => $this->assertSame('hit', $preview($fileId)['headers']['x-appwrite-cache']));
+        $this->assertSame(1, $stored());
+
+        // At 100 percent the entry is on the device, not the filesystem.
+        if ($connection !== '' && System::getEnv('_APP_STORAGE_CACHE_PERCENT', '0') === '100') {
+            $this->assertCount(1, $devices[1]->listFiles($devices[1]->getRoot())->files);
+        }
+
+        // A purge clears where the API wrote.
+        $delete = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $fileId, $headers);
+        $this->assertSame(204, $delete['headers']['status-code']);
+        $this->assertEventually(fn () => $this->assertSame(0, $stored()), 30_000, 500);
+
+        // So does deleting the project.
+        $fileId = $upload();
+        $this->assertSame('miss', $preview($fileId)['headers']['x-appwrite-cache']);
+        $this->assertEventually(fn () => $this->assertSame('hit', $preview($fileId)['headers']['x-appwrite-cache']));
+        $this->assertSame(1, $stored());
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/projects/' . $project['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+        $this->assertEventually(fn () => $this->assertSame(0, $stored()), 60_000, 500);
+    }
+
+    #[Group('responseCache')]
+    public function testFilePreviewCacheSplitsKeysByPercent(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+        $percent = (int) System::getEnv('_APP_STORAGE_CACHE_PERCENT', '0');
+
+        ['path' => $path, 'entries' => $entries] = $this->warmPreviewCache($headers, $filesystem, $device);
+        $onDevice = $this->getCacheKeys($device);
+        $onFilesystem = $this->getCacheKeys($filesystem);
+
+        $this->assertCount(\count($entries), [...$onDevice, ...$onFilesystem]);
+        foreach ($onDevice as $key) {
+            $this->assertLessThan($percent, \crc32($key) % 100, $key . ' is on the device');
+        }
+        foreach ($onFilesystem as $key) {
+            $this->assertGreaterThanOrEqual($percent, \crc32($key) % 100, $key . ' is on the filesystem');
+        }
+        if ($percent < 100) {
+            $this->assertNotEmpty($onDevice);
+            $this->assertNotEmpty($onFilesystem);
+        }
+
+        // Every key answers from the side it landed on, and stays there.
+        foreach ($entries as $width => $entry) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+            $this->assertSame($entry['image'], $this->getImageSignature($preview['body']));
+        }
+        $this->assertSame($onDevice, $this->getCacheKeys($device));
+        $this->assertSame($onFilesystem, $this->getCacheKeys($filesystem));
+    }
+
+    #[Group('responseCache')]
+    public function testFilePreviewCacheCopiesFilesystemEntryToDevice(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+
+        ['path' => $path, 'entries' => $entries] = $this->warmPreviewCache($headers, $filesystem, $device);
+        $onDevice = $this->getCacheKeys($device);
+        $this->assertNotEmpty($onDevice);
+
+        // As if these keys were written before the percentage was raised over them.
+        foreach ($onDevice as $key) {
+            $this->copyCacheEntryToFilesystem($filesystem, $device, $key);
+            $device->delete($device->getPath($key));
+        }
+        $this->assertSame([], $this->getCacheKeys($device));
+
+        foreach ($entries as $width => $entry) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame('hit', $preview['headers']['x-appwrite-cache'], 'served from the filesystem, not regenerated');
+            $this->assertSame($entry['image'], $this->getImageSignature($preview['body']));
+        }
+
+        // Copied across with the same image, and the original kept so lowering the percentage finds it warm.
+        $this->assertSame($onDevice, $this->getCacheKeys($device));
+        $this->assertCount(\count($entries), $this->getCacheKeys($filesystem));
+        foreach ($onDevice as $key) {
+            $this->assertSame($this->getImageSignature((string) \file_get_contents($filesystem->getPath($key))), $this->getImageSignature((string) $device->read($device->getPath($key))));
+        }
+
+        // The copy answers once the original is gone.
+        foreach ($onDevice as $key) {
+            $filesystem->delete($filesystem->getPath($key));
+        }
+        foreach ($entries as $width => $entry) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+        }
+    }
+
+    #[Group('responseCache')]
+    public function testFilePreviewCachePurgeClearsBothStores(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+
+        ['path' => $path] = $this->warmPreviewCache($headers, $filesystem, $device);
+        foreach ($this->getCacheKeys($device) as $key) {
+            $this->copyCacheEntryToFilesystem($filesystem, $device, $key);
+        }
+        $this->assertNotEmpty($this->getCacheKeys($device));
+        $this->assertNotEmpty($this->getCacheKeys($filesystem));
+
+        $delete = $this->client->call(Client::METHOD_DELETE, \dirname($path), $headers);
+        $this->assertSame(204, $delete['headers']['status-code']);
+
+        $this->assertEventually(function () use ($filesystem, $device): void {
+            $this->assertSame([], $this->getCacheKeys($filesystem), 'the filesystem');
+            $this->assertSame([], $this->getCacheKeys($device), 'the device');
+        }, 30_000, 500);
+    }
+
+    #[Group('responseCache')]
+    public function testProjectDeletionClearsBothCacheStores(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+
+        $this->warmPreviewCache($headers, $filesystem, $device);
+        foreach ($this->getCacheKeys($device) as $key) {
+            $this->copyCacheEntryToFilesystem($filesystem, $device, $key);
+        }
+        $this->assertNotEmpty($this->getCacheKeys($device));
+        $this->assertNotEmpty($this->getCacheKeys($filesystem));
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/projects/' . $headers['x-appwrite-project'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $this->assertEventually(function () use ($filesystem, $device): void {
+            $this->assertSame([], $this->getCacheKeys($filesystem), 'the filesystem');
+            $this->assertSame([], $this->getCacheKeys($device), 'the device');
+        }, 60_000, 500);
+    }
+
+    /**
+     * Leaves entries for the outage test to read after CI has taken the device down: the
+     * test process can't, and once it's down they can no longer be written or found.
+     */
+    #[Group('responseCache')]
+    public function testFilePreviewCachePrepareOutage(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+
+        ['path' => $path, 'entries' => $entries] = $this->warmPreviewCache($headers, $filesystem, $device);
+
+        // One width with a copy on the filesystem for the outage to fall back to, one without.
+        $widths = \array_keys(\array_filter($entries, fn (array $entry): bool => $entry['onDevice']));
+        $this->assertGreaterThanOrEqual(2, \count($widths));
+        [$copied, $uncopied] = $widths;
+        $this->copyCacheEntryToFilesystem($filesystem, $device, $entries[$copied]['key']);
+
+        $this->assertNotFalse(\file_put_contents(self::CACHE_OUTAGE_STATE, \json_encode([
+            'headers' => $headers,
+            'path' => $path,
+            'entries' => $entries,
+            'copied' => $copied,
+            'uncopied' => $uncopied,
+        ])));
+    }
+
+    /**
+     * Runs twice in the Response Cache lane: with the device paused, so connections are
+     * accepted and never answered, and with it stopped, so its name no longer resolves.
+     */
+    #[Group('responseCacheOutage')]
+    public function testFilePreviewCacheSurvivesDeviceOutage(): void
+    {
+        $this->skipUnlessCacheDeviceDown();
+
+        $state = \json_decode((string) \file_get_contents(self::CACHE_OUTAGE_STATE), true);
+        ['headers' => $headers, 'path' => $path, 'entries' => $entries, 'copied' => $copied, 'uncopied' => $uncopied] = $state;
+        $request = function (int $width) use ($headers, $path): array {
+            $started = \microtime(true);
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame(200, $preview['headers']['status-code']);
+            $this->assertSame('image/png', $preview['headers']['content-type']);
+
+            return [$preview, \microtime(true) - $started];
+        };
+
+        // On the filesystem side nothing waits on the device.
+        $width = \array_key_first(\array_filter($entries, fn (array $entry): bool => ! $entry['onDevice']));
+        [$preview, $elapsed] = $request($width);
+        $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+        $this->assertSame($entries[$width]['image'], $this->getImageSignature($preview['body']));
+        $this->assertLessThan(2, $elapsed);
+
+        // On the device side a copy on the filesystem answers once the read has failed.
+        [$preview, $elapsed] = $request($copied);
+        $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+        $this->assertSame($entries[$copied]['image'], $this->getImageSignature($preview['body']));
+        $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
+
+        // With no copy the route regenerates.
+        [$preview, $elapsed] = $request($uncopied);
+        $this->assertSame('miss', $preview['headers']['x-appwrite-cache']);
+        $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
+
+        // Twice as many requests per worker as it has device connections: the rest get a miss from the
+        // pool, not an error. They're all on one key, so each of them has the filesystem copy to answer with.
+        $workers = \swoole_cpu_num() * (int) System::getEnv('_APP_WORKER_PER_CORE', '6');
+        $started = \microtime(true);
+        $previews = $this->client->callConcurrently(\array_fill(0, $workers * 8, [Client::METHOD_GET, $path, $headers, ['width' => $copied, 'output' => 'png']]));
+        $elapsed = \microtime(true) - $started;
+        foreach ($previews as $preview) {
+            $this->assertSame(200, $preview['headers']['status-code']);
+            $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+        }
+        $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
+    }
+
+    /**
+     * A purge the device can't answer must not stop the rest: the rows are gone by the time
+     * it fails, so an entry skipped here is never purged. The default client waits out a
+     * paused device, retries included, before the first purge fails.
+     */
+    #[Group('responseCacheOutage')]
+    public function testFilePreviewCachePurgeSurvivesDeviceOutage(): void
+    {
+        $this->skipUnlessCacheDeviceDown();
+
+        [$headers, $filesystem] = $this->getCacheFixture();
+        $path = $this->createPreviewFile($headers);
+        foreach (\range(20, 31) as $width) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame(200, $preview['headers']['status-code']);
+        }
+
+        // The first row's filesystem entry goes before its device purge fails, so it takes a second to tell.
+        $this->assertEventually(fn () => $this->assertGreaterThanOrEqual(2, \count($this->getCacheKeys($filesystem))));
+
+        $delete = $this->client->call(Client::METHOD_DELETE, \dirname($path), $headers);
+        $this->assertSame(204, $delete['headers']['status-code']);
+
+        $this->assertEventually(fn () => $this->assertSame([], $this->getCacheKeys($filesystem)), 300_000, 1000);
+    }
+
+    private function skipUnlessCacheDeviceDown(): void
+    {
+        $handle = \curl_init(System::getEnv('_APP_STORAGE_S3_ENDPOINT', ''));
+        \curl_setopt_array($handle, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 2]);
+        if (System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '') === '' || \curl_exec($handle) !== false) {
+            $this->markTestSkipped('Needs the cache device to be down');
+        }
+    }
+
+    /**
+     * @return array<Device> The filesystem, then the device when one is configured
+     */
+    private function getCacheStores(string $projectId): array
+    {
+        $root = '/storage/cache/app-' . $projectId;
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
+        if ($connection === '') {
+            return [new Local($root)];
+        }
+
+        $dsn = new DSN($connection);
+
+        return [new Local($root), new S3(
+            $dsn->getPath() . $root,
+            $dsn->getUser() ?? '',
+            $dsn->getPassword() ?? '',
+            System::getEnv('_APP_STORAGE_S3_ENDPOINT', ''),
+            $dsn->getParam('region'),
+            bucket: $dsn->getPath(),
+        )];
+    }
+
+    /**
+     * @return array{0: array<string, string>, 1: Device, 2: Device} A new project's headers and its two stores
+     */
+    private function getCacheFixture(): array
+    {
+        if (System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '') === '' || System::getEnv('_APP_STORAGE_CACHE_PERCENT', '0') === '0') {
+            $this->markTestSkipped('Needs keys routed to a cache device');
+        }
+
+        $project = $this->getProject(true);
+        [$filesystem, $device] = $this->getCacheStores($project['$id']);
+
+        return [
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ],
+            $filesystem,
+            $device,
+        ];
+    }
+
+    /**
+     * Caches a run of preview sizes, each its own key, noting where each one landed.
+     *
+     * @param array<string, string> $headers
+     * @return array{path: string, entries: array<int, array{key: string, image: string, onDevice: bool}>}
+     */
+    private function warmPreviewCache(array $headers, Device $filesystem, Device $device): array
+    {
+        $path = $this->createPreviewFile($headers);
+        $entries = [];
+        foreach (\range(20, 51) as $width) {
+            $before = $this->getCacheKeys($device);
+            $beforeFilesystem = $this->getCacheKeys($filesystem);
+
+            $params = ['width' => $width, 'output' => 'png'];
+            $first = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
+            $this->assertSame('miss', $first['headers']['x-appwrite-cache']);
+            $this->assertEventually(fn () => $this->assertSame('hit', $this->client->call(Client::METHOD_GET, $path, $headers, $params)['headers']['x-appwrite-cache']));
+
+            $added = \array_diff($this->getCacheKeys($device), $before);
+            $addedFilesystem = \array_diff($this->getCacheKeys($filesystem), $beforeFilesystem);
+            $this->assertCount(1, [...$added, ...$addedFilesystem]);
+            $entries[$width] = [
+                'key' => [...$added, ...$addedFilesystem][0],
+                'image' => $this->getImageSignature($first['body']),
+                'onDevice' => $added !== [],
+            ];
+        }
+
+        return ['path' => $path, 'entries' => $entries];
+    }
+
+    /**
+     * @param array<string, string> $headers
+     * @return string The preview path of a new file in a new bucket
+     */
+    private function createPreviewFile(array $headers): string
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Cache stores',
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', ['content-type' => 'multipart/form-data'] + $headers, [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+
+        return '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'] . '/preview';
+    }
+
+    /**
+     * @return array<string> A store's keys in order: an entry's file name is its key
+     */
+    private function getCacheKeys(Device $store): array
+    {
+        $keys = \array_map(fn ($file): string => \basename($file->path), $store->listFiles($store->getRoot())->files);
+        \sort($keys);
+
+        return $keys;
+    }
+
+    /**
+     * Compares pixels, since a render stamps the time into the file and a read that beats the cache write renders again.
+     */
+    private function getImageSignature(string $body): string
+    {
+        return \hash('sha256', $this->getImagePixels($body));
+    }
+
+    private function copyCacheEntryToFilesystem(Device $filesystem, Device $device, string $key): void
+    {
+        $filesystem->write($filesystem->getPath($key), $device->read($device->getPath($key)), 'application/octet-stream');
     }
 
     public function testCreateBucket(): void
@@ -911,40 +1346,98 @@ final class StorageCustomServerTest extends Scope
     {
         $path = \sys_get_temp_dir() . '/strip-photo-' . \uniqid() . '.jpg';
 
-        $image = new \Imagick();
-        $image->newImage($width, $height, new \ImagickPixel('skyblue'));
+        $image = \imagecreatetruecolor($width, $height);
+        $this->assertNotFalse($image);
+        \imagefill($image, 0, 0, 0x87CEEB);
         if ($noise) {
-            $image->addNoiseImage(\Imagick::NOISE_RANDOM);
-            $image->setImageCompressionQuality(100);
+            for ($y = 0; $y < $height; $y++) {
+                for ($x = 0; $x < $width; $x++) {
+                    \imagesetpixel($image, $x, $y, \mt_rand(0, 0xFFFFFF));
+                }
+            }
         }
-        $image->setImageFormat('jpeg');
+        \ob_start();
+        \imagejpeg($image, null, $noise ? 100 : -1);
+        $photo = (string) \ob_get_clean();
 
         // tagged.jpg carries a location, camera, capture time, orientation, and XMP and IPTC creators.
-        $tagged = new \Imagick(__DIR__ . '/../../../resources/disk-a/tagged.jpg');
-        foreach ($tagged->getImageProfiles('*', true) as $name => $profile) {
-            $image->profileImage($name, $profile);
+        $metadata = '';
+        foreach ($this->readSegments((string) \file_get_contents(__DIR__ . '/../../../resources/disk-a/tagged.jpg')) as [$marker, $segment]) {
+            if ($marker === 0xE1 || $marker === 0xED) {
+                $metadata .= "\xFF" . \chr($marker) . \pack('n', \strlen($segment) + 2) . $segment;
+            }
         }
-        // Imagick writes the orientation from its own setting, not from the copied EXIF.
-        $image->setImageOrientation($tagged->getImageOrientation());
-        $image->writeImage($path);
+        // They go after the JFIF header, which is the first thing GD writes.
+        $header = 4 + \unpack('n', $photo, 4)[1];
+        \file_put_contents($path, \substr($photo, 0, $header) . $metadata . \substr($photo, $header));
 
         return $path;
     }
 
     /**
-     * @return array<string, string> EXIF tags by name, plus XMP and IPTC when those blocks are present
+     * @return array<array{int, string}> The marker and contents of each JPEG segment before the image data
+     */
+    private function readSegments(string $jpeg): array
+    {
+        $segments = [];
+        $offset = 2;
+        while ($offset + 4 <= \strlen($jpeg) && $jpeg[$offset] === "\xFF" && $jpeg[$offset + 1] !== "\xDA") {
+            $length = \unpack('n', $jpeg, $offset + 2)[1];
+            $segments[] = [\ord($jpeg[$offset + 1]), \substr($jpeg, $offset + 4, $length - 2)];
+            $offset += 2 + $length;
+        }
+
+        return $segments;
+    }
+
+    /**
+     * @return array<string, string> The EXIF tags the tests look for by name, plus XMP and IPTC when those blocks are present.
+     *                               A tag's value is read only when it is a number, as Orientation is.
      */
     private function readTags(string $contents): array
     {
-        $image = new \Imagick();
-        $image->readImageBlob($contents);
+        $tags = [];
+        foreach ($this->readSegments($contents) as [$marker, $segment]) {
+            if ($marker === 0xE1 && \str_starts_with($segment, 'http://ns.adobe.com/xap/1.0/')) {
+                $tags['XMP'] = 'xmp';
+            } elseif ($marker === 0xED && \str_contains($segment, "8BIM\x04\x04")) {
+                $tags['IPTC'] = 'iptc';
+            } elseif ($marker === 0xE1 && \str_starts_with($segment, "Exif\0\0")) {
+                $tags += $this->readExif(\substr($segment, 6));
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function readExif(string $tiff): array
+    {
+        [$short, $long] = $tiff[0] === 'I' ? ['v', 'V'] : ['n', 'N'];
+        $names = [
+            'main' => [0x010F => 'Make', 0x0110 => 'Model', 0x0112 => 'Orientation', 0x9003 => 'DateTimeOriginal'],
+            'gps' => [0x0002 => 'GPSLatitude', 0x0004 => 'GPSLongitude'],
+        ];
 
         $tags = [];
-        foreach ($image->getImageProperties('exif:*') as $name => $value) {
-            $tags[\substr($name, \strlen('exif:'))] = $value;
-        }
-        foreach ($image->getImageProfiles('*', false) as $name) {
-            $tags[\strtoupper($name)] = $name;
+        // The first directory points to the Exif and GPS ones.
+        $directories = [[\unpack($long, $tiff, 4)[1], 'main']];
+        for ($i = 0; $i < \count($directories); $i++) {
+            [$offset, $kind] = $directories[$i];
+            $count = \unpack($short, $tiff, $offset)[1];
+            for ($entry = $offset + 2; $entry < $offset + 2 + 12 * $count; $entry += 12) {
+                $tag = \unpack($short, $tiff, $entry)[1];
+                $isShort = \unpack($short, $tiff, $entry + 2)[1] === 3;
+                $value = \unpack($isShort ? $short : $long, $tiff, $entry + 8)[1];
+
+                if ($kind === 'main' && ($tag === 0x8769 || $tag === 0x8825)) {
+                    $directories[] = [$value, $tag === 0x8825 ? 'gps' : 'main'];
+                } elseif (isset($names[$kind][$tag])) {
+                    $tags[$names[$kind][$tag]] = $isShort ? (string) $value : '';
+                }
+            }
         }
 
         return $tags;
@@ -1136,6 +1629,65 @@ final class StorageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals('renamed.png', $file['body']['name']);
+    }
+
+    public function testCreateFileRejectsDisallowedContent(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => Id::unique(),
+            'name' => 'Content Bucket',
+            'allowedFileExtensions' => ['png', 'jpg'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg'), 'image/png', 'kitten.png'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $fileId = Id::unique();
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => $fileId,
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/document.pdf'), 'image/png', 'document.png'),
+        ]);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_file_type_unsupported', $file['body']['type']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $file['headers']['status-code']);
+
+        $binary = \tempnam(\sys_get_temp_dir(), 'binary');
+        \file_put_contents($binary, \random_bytes(1024));
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile($binary, 'image/png', 'binary.png'),
+        ]);
+        \unlink($binary);
+        $this->assertEquals(400, $file['headers']['status-code']);
+        $this->assertEquals('storage_file_type_unsupported', $file['body']['type']);
     }
 
     public function testIdleChunkedUploadDeletedByMaintenance(): void

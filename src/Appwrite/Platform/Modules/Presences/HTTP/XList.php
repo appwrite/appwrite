@@ -103,18 +103,23 @@ class XList extends PlatformAction
                 $presenceState = new PresenceState();
                 $roles = $dbForProject->getAuthorization()->getRoles();
 
+                // Taken before every query below, so this response is read from and saved under the
+                // version it was queried at. A permission change purges the cached pages and changes
+                // the version, leaving nothing here for a later read and nowhere this fill can still
+                // be served from.
+                $version = $presenceState->getListCacheVersion($dbForProject);
+
                 $documentsCacheHit = false;
                 $cachedDocuments = $presenceState->getListCacheField(
                     $dbForProject,
                     $roles,
                     $queries,
                     PresenceState::LIST_CACHE_FIELD_PRESENCES,
-                    $ttl
+                    $ttl,
+                    $version
                 );
 
-                if ($cachedDocuments !== null &&
-                    $cachedDocuments !== false &&
-                    \is_array($cachedDocuments)) {
+                if (\is_array($cachedDocuments)) {
                     $documents = \array_map(function ($doc) {
                         return new Document($doc);
                     }, $cachedDocuments);
@@ -129,7 +134,8 @@ class XList extends PlatformAction
                         $roles,
                         $queries,
                         PresenceState::LIST_CACHE_FIELD_PRESENCES,
-                        $documentsArray
+                        $documentsArray,
+                        $version
                     );
                 }
 
@@ -139,9 +145,10 @@ class XList extends PlatformAction
                         $roles,
                         $filterQueries,
                         PresenceState::LIST_CACHE_FIELD_TOTAL,
-                        $ttl
+                        $ttl,
+                        $version
                     );
-                    if ($cachedTotal !== null && $cachedTotal !== false) {
+                    if ($cachedTotal !== false) {
                         $total = (int) $cachedTotal;
                     } else {
                         $total = $dbForProject->count('presenceLogs', [...$filterQueries, $expiryFilter], APP_LIMIT_COUNT);
@@ -150,7 +157,8 @@ class XList extends PlatformAction
                             $roles,
                             $filterQueries,
                             PresenceState::LIST_CACHE_FIELD_TOTAL,
-                            $total
+                            (string) $total,
+                            $version
                         );
                     }
                 } else {

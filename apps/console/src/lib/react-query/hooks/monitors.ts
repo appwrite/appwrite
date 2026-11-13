@@ -5,6 +5,7 @@
 import {
   infiniteQueryOptions,
   queryOptions,
+  type InfiniteData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -112,6 +113,44 @@ export function alertsInfiniteQueryOptions(
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
+  })
+}
+
+/**
+ * Acknowledges a firing alert for the team, or undoes that. The feed's cached
+ * pages take the alert as the server returns it, so its row updates in place.
+ */
+export function useUpdateAlert(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      alertId,
+      acknowledged,
+    }: {
+      alertId: string
+      acknowledged: boolean
+    }) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return await sdk
+        .forProject(projectId)
+        .alerts.update({ alertId, acknowledged })
+    },
+    onSuccess: (alert) => {
+      queryClient.setQueriesData<InfiniteData<{ alerts: Alert[] }>>(
+        { queryKey: ['alerts', 'project', projectId] },
+        (current) =>
+          current && {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              alerts: page.alerts.map((entry) =>
+                entry.$id === alert.$id ? alert : entry,
+              ),
+            })),
+          },
+      )
+    },
   })
 }
 

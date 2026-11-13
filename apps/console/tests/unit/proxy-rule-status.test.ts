@@ -119,13 +119,25 @@ describe('getRuleStatusBadgeConfig', () => {
     expect(config.hint).toBeDefined()
   })
 
-  test('shows a rule whose DNS check failed as a failed verification', () => {
-    expect(
-      getRuleStatusBadgeConfig(
-        { status: 'unverified', certificateStatus: '' },
-        NOW,
-      ),
-    ).toEqual({ variant: 'error', label: 'Verification failed' })
+  test('waits for DNS while Appwrite still checks a rule, and fails it once the checks stop', () => {
+    // The API reports 'unverified' with no certificate; realtime keeps 'created'.
+    for (const rule of [
+      { status: 'unverified', certificateStatus: '' },
+      { status: 'created' },
+    ]) {
+      expect(
+        getRuleStatusBadgeConfig(
+          { ...rule, $createdAt: expiresIn(-DAY_MS) },
+          NOW,
+        ),
+      ).toMatchObject({ variant: 'warning', label: 'Waiting for DNS' })
+      expect(
+        getRuleStatusBadgeConfig(
+          { ...rule, $createdAt: expiresIn(-4 * DAY_MS) },
+          NOW,
+        ),
+      ).toMatchObject({ variant: 'error', label: 'Verification failed' })
+    }
   })
 
   test('keeps the certificate label for a failed certificate, and on a server that reports no certificate state', () => {
@@ -140,16 +152,32 @@ describe('getRuleStatusBadgeConfig', () => {
   })
 
   test('keeps the issuing badge while a blocked certificate is retried', () => {
+    // A retry clears the logs but leaves the certificate status from before.
     expect(
       getRuleStatusBadgeConfig(
-        { status: 'verifying', certificateStatus: 'blocked' },
+        { status: 'verifying', certificateStatus: 'blocked', logs: '' },
         NOW,
       ),
     ).toEqual(getDomainStatusBadgeConfig('verifying'))
   })
 
+  test('tells a verifying rule blocked on a DNS record to add it, without Retry', () => {
+    const rule = {
+      status: 'verifying',
+      certificateStatus: 'blocked',
+      logs: 'Add a CNAME record for _acme-challenge.app.example.com.',
+    }
+    expect(getRuleStatusBadgeConfig(rule, NOW)).toEqual({
+      variant: 'warning',
+      label: 'Certificate blocked',
+      hint: 'The certificate is waiting on a DNS record. Add the record shown in View logs.',
+    })
+    expect(canRetryRule(rule, NOW)).toBe(false)
+    expect(canViewRuleLogs(rule)).toBe(true)
+  })
+
   test('keeps the domain status badge for a rule that is not verified', () => {
-    for (const status of ['verifying', 'created', 'unverified']) {
+    for (const status of ['verifying', 'unverified']) {
       expect(
         getRuleStatusBadgeConfig(
           {

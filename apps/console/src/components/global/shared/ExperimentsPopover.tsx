@@ -1,7 +1,7 @@
 import {
-  ArrowLeftRight,
   Fingerprint,
   FlaskConical,
+  GitBranch,
   Layers,
   type LucideIcon,
 } from 'lucide-react'
@@ -33,7 +33,7 @@ import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
 const EXPERIMENT_ICONS = {
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
-  projectTransfers: ArrowLeftRight,
+  vcsOrigin: GitBranch,
   identityServers: Fingerprint,
 } as const satisfies Record<Experiment['flag'], LucideIcon>
 

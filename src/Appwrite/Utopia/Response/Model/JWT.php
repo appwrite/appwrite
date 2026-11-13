@@ -12,6 +12,7 @@ class JWT extends Model
         $this
             ->addRule('jwt', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'JWT encoded string.',
                 'default' => '',
                 'example' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
