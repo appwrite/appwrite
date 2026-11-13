@@ -19,9 +19,15 @@ use Utopia\Query\AST\Reference\Table;
 use Utopia\Query\AST\Specification\Window as WindowSpecification;
 use Utopia\Query\AST\Statement\Select;
 use Utopia\Query\Exception;
+use Utopia\Query\StringLiteral;
 
 class Serializer
 {
+    public function __construct(
+        protected readonly StringLiteral $literal = StringLiteral::Backslash,
+    ) {
+    }
+
     public function serialize(Select $stmt): string
     {
         $parts = [];
@@ -149,6 +155,10 @@ class Serializer
 
         $sql = $left . ' ' . $expression->operator . ' ' . $right;
 
+        if ($expression->escape !== null) {
+            $sql .= ' ESCAPE ' . $this->serializeBinaryChild($expression->escape, $rightPrec);
+        }
+
         if ($parentPrecedence !== null && $prec < $parentPrecedence) {
             return '(' . $sql . ')';
         }
@@ -212,8 +222,7 @@ class Serializer
         if (is_float($expression->value)) {
             return (string) $expression->value;
         }
-        $escaped = str_replace(['\\', "'"], ['\\\\', "''"], $expression->value);
-        return "'" . $escaped . "'";
+        return $this->literal->quote($expression->value);
     }
 
     private function serializeStar(Star $expression): string

@@ -236,6 +236,40 @@ class PostgreSQLIntegrationTest extends IntegrationTestCase
         $this->assertSame('0', (string) $scoreCol['column_default']); // @phpstan-ignore cast.string
     }
 
+    public function testCommentsAndDefaultWithBackslashAndQuoteReadBackUnchanged(): void
+    {
+        $table = 'test_literal_' . uniqid();
+        $this->trackPostgresTable($table);
+        $value = "C:\\dir\\it's \\' done";
+
+        $this->postgresStatement(
+            $this->schema->table($table)
+                ->integer('id')->primary()
+                ->string('path', 100)->default($value)
+                ->create()
+                ->query
+        );
+        $this->postgresStatement($this->schema->commentOnTable($table, $value)->query);
+        $this->postgresStatement($this->schema->commentOnColumn($table, 'path', $value)->query);
+
+        $pdo = $this->connectPostgres();
+        $pdo->prepare('INSERT INTO "' . $table . '" ("id") VALUES (1)')->execute();
+
+        $relation = "'" . $table . "'::regclass";
+        $stmt = $pdo->query(
+            'SELECT obj_description(' . $relation . ', \'pg_class\') AS table_comment, '
+            . 'col_description(' . $relation . ', (SELECT attnum FROM pg_attribute WHERE attrelid = ' . $relation . ' AND attname = \'path\')) AS column_comment, '
+            . '(SELECT "path" FROM "' . $table . '" WHERE "id" = 1) AS stored'
+        );
+        \assert($stmt instanceof \PDOStatement);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        \assert(\is_array($row));
+
+        $this->assertSame($value, $row['table_comment']);
+        $this->assertSame($value, $row['column_comment']);
+        $this->assertSame($value, $row['stored']);
+    }
+
     public function testTruncateTable(): void
     {
         $table = 'test_truncate_' . uniqid();

@@ -2,6 +2,7 @@
 
 namespace Utopia\Query\Tests\E2E\Builder;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Query\Builder\SQLite as Builder;
 use Utopia\Query\Query;
 use Utopia\Query\Tests\E2E\IntegrationTestCase;
@@ -367,5 +368,38 @@ class SQLiteIntegrationTest extends IntegrationTestCase
 
         $values = array_map(static fn (array $row): int => (int) $row['n'], $rows); // @phpstan-ignore cast.int
         $this->assertSame([1, 2, 3, 4, 5], $values);
+    }
+
+    /**
+     * @return iterable<string, array{Query, list<string>}>
+     */
+    public static function likePatterns(): iterable
+    {
+        yield 'contains percent' => [Query::containsString('value', ['50%']), ['50%']];
+        yield 'starts with underscore' => [Query::startsWith('value', 'a_'), ['a_c']];
+        yield 'contains backslash' => [Query::containsString('value', ['\\']), ['C:\\dir']];
+        yield 'not contains underscore' => [Query::notContains('value', ['_']), ['50%', '500', 'abc', 'C:\\dir', 'C:dir']];
+    }
+
+    /**
+     * @param  list<string>  $expected
+     */
+    #[DataProvider('likePatterns')]
+    public function testLikePatternMatchesLiterally(Query $query, array $expected): void
+    {
+        $this->sqliteStatement('CREATE TABLE `patterns` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `value` TEXT NOT NULL)');
+        $insert = $this->connectSqlite()->prepare('INSERT INTO `patterns` (`value`) VALUES (?)');
+        foreach (['50%', '500', 'a_c', 'abc', 'C:\\dir', 'C:dir'] as $value) {
+            $insert->execute([$value]);
+        }
+
+        $result = new Builder()
+            ->from('patterns')
+            ->select(['value'])
+            ->filter([$query])
+            ->sortAsc('id')
+            ->build();
+
+        $this->assertSame($expected, \array_column($this->executeOnSqlite($result), 'value'));
     }
 }

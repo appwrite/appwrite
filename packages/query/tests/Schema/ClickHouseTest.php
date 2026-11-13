@@ -577,7 +577,7 @@ class ClickHouseTest extends TestCase
             ->enum('status', ["a\\'b"])
             ->create();
 
-        $this->assertSame("CREATE TABLE `items` (`status` Enum8('a\\\\\\'b' = 1)) ENGINE = MergeTree() ORDER BY tuple()", $result->query);
+        $this->assertSame("CREATE TABLE `items` (`status` Enum8('a\\\\''b' = 1)) ENGINE = MergeTree() ORDER BY tuple()", $result->query);
     }
 
     public function testCreateMergeTreeWithoutPrimaryKeysEmitsOrderByTuple(): void

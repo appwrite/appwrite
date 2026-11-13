@@ -3,6 +3,7 @@
 namespace Utopia\Query\Tokenizer;
 
 use Utopia\Query\Exception\ValidationException;
+use Utopia\Query\StringLiteral;
 
 class Tokenizer
 {
@@ -48,6 +49,11 @@ class Tokenizer
 
     private int $pos;
 
+    public function __construct(
+        protected readonly StringLiteral $literal = StringLiteral::Backslash,
+    ) {
+    }
+
     /**
      * @return Token[]
      */
@@ -68,7 +74,8 @@ class Tokenizer
                 $char === ' ' || $char === "\t" || $char === "\n" || $char === "\r" => $this->readWhitespace($start),
                 $char === '-' => $this->readDashPrefix($start),
                 $char === '/' => $this->readSlashPrefix($start),
-                $char === '\'' => $this->readString($start),
+                $char === '\'' => $this->readString($start, $this->literal->escapesInPlainLiteral()),
+                $this->startsEscapeString($char) => $this->readEscapeString($start),
                 $char === $quoteChar => $this->readQuotedIdentifier($start, $quoteChar),
                 $char === '"' => $this->readQuotedIdentifier($start, '"'),
                 $char >= '0' && $char <= '9' => $this->readNumber($start),
@@ -255,14 +262,29 @@ class Tokenizer
         return new Token(TokenType::BlockComment, substr($this->sql, $start, $this->pos - $start), $start);
     }
 
-    private function readString(int $start): Token
+    private function startsEscapeString(string $char): bool
+    {
+        $prefix = $this->literal->escapePrefix();
+
+        return $prefix !== ''
+            && \strcasecmp($char, $prefix) === 0
+            && $this->peek(1) === '\'';
+    }
+
+    private function readEscapeString(int $start): Token
+    {
+        $this->pos += \strlen($this->literal->escapePrefix());
+
+        return $this->readString($start, true);
+    }
+
+    private function readString(int $start, bool $escapes): Token
     {
         $this->pos++;
         $terminated = false;
         while ($this->pos < $this->length) {
             $char = $this->sql[$this->pos];
-            if ($char === '\\') {
-                // Backslash escape: skip next character. Reject trailing backslash at EOF.
+            if ($escapes && $char === '\\') {
                 if ($this->pos + 1 >= $this->length) {
                     throw new ValidationException('Unterminated string literal');
                 }

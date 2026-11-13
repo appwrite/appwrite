@@ -2,6 +2,8 @@
 
 namespace Utopia\Query\Builder;
 
+use Utopia\Query\AST\Serializer;
+use Utopia\Query\AST\Serializer\ClickHouse as ClickHouseSerializer;
 use Utopia\Query\Builder as BaseBuilder;
 use Utopia\Query\Builder\ClickHouse\Format;
 use Utopia\Query\Builder\ClickHouse\FormattedInsertStatement;
@@ -26,6 +28,9 @@ use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Hook\Join\Placement;
 use Utopia\Query\Query;
 use Utopia\Query\QuotesIdentifiers;
+use Utopia\Query\StringLiteral;
+use Utopia\Query\Tokenizer\ClickHouse as ClickHouseTokenizer;
+use Utopia\Query\Tokenizer\Tokenizer;
 
 class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, TableSampling, FullOuterJoins, StringAggregates, StatisticalAggregates, BitwiseAggregates, LimitBy, ArrayJoins, AsofJoins, WithFill, Rollup, Cube, Totals, ApproximateAggregates, RawSql, CrossJoins
 {
@@ -42,6 +47,8 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     use Trait\RawSql;
     use Trait\StatisticalAggregates;
     use Trait\StringAggregates;
+
+    protected StringLiteral $literal = StringLiteral::BackslashUtf8;
 
     /**
      * @var array<Query>
@@ -95,6 +102,18 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
      * asynchronously) and is opt-in via `deleteMode('mutation')`.
      */
     protected string $deleteMode = self::DELETE_MODE_LIGHTWEIGHT;
+
+    #[\Override]
+    protected function createAstSerializer(): Serializer
+    {
+        return new ClickHouseSerializer($this->literal);
+    }
+
+    #[\Override]
+    protected function createTokenizer(): Tokenizer
+    {
+        return new ClickHouseTokenizer($this->literal);
+    }
 
     /**
      * Add PREWHERE filters (evaluated before reading all columns — major ClickHouse optimization)
@@ -600,7 +619,6 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
         /** @var string $rawVal */
         $rawVal = $values[0];
 
-        // startsWith: prefix='', suffix='%'
         if ($prefix === '' && $suffix === '%') {
             $func = $not ? 'NOT startsWith' : 'startsWith';
             $this->addBinding($rawVal, $column);
@@ -608,7 +626,6 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
             return $func . '(' . $attribute . ', ?)';
         }
 
-        // endsWith: prefix='%', suffix=''
         if ($prefix === '%' && $suffix === '') {
             $func = $not ? 'NOT endsWith' : 'endsWith';
             $this->addBinding($rawVal, $column);
@@ -616,12 +633,9 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
             return $func . '(' . $attribute . ', ?)';
         }
 
-        // Fallback for any other LIKE pattern (should not occur in practice)
-        $val = $this->escapeLikeValue($rawVal);
-        $this->addBinding($prefix . $val . $suffix, $column);
-        $keyword = $not ? 'NOT LIKE' : 'LIKE';
+        $this->addBinding($prefix . $this->escapeLikeValue($rawVal) . $suffix, $column);
 
-        return $attribute . ' ' . $keyword . ' ?';
+        return $this->compileLikePredicate($attribute, $not);
     }
 
     /**

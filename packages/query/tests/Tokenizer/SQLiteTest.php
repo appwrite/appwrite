@@ -46,6 +46,15 @@ class SQLiteTest extends TestCase
         $this->assertSame('"users"', $tokens[3]->value);
     }
 
+    public function testBacktickIdentifier(): void
+    {
+        $tokens = $this->meaningful('SELECT `name` FROM `users`');
+
+        $this->assertSame(TokenType::QuotedIdentifier, $tokens[1]->type);
+        $this->assertSame('`name`', $tokens[1]->value);
+        $this->assertSame(TokenType::QuotedIdentifier, $tokens[3]->type);
+    }
+
     public function testDoubleQuoteNotString(): void
     {
         $tokens = $this->meaningful('"col"');
