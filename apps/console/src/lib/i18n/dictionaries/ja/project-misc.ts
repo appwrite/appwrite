@@ -3456,6 +3456,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project environment': 'プロジェクト環境',
   'Switch to production': '本番に切り替え',
   'Environment ID': '環境 ID',
+  // Settings of an environment: its name, its ID, and deleting it
+  'Environment name has been updated': '環境名を更新しました',
+  'Failed to update environment name': '環境名の更新に失敗しました',
+  "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.":
+    'この環境には、プロジェクトの API エンドポイントとプロジェクト ID に加え、本番と区別するための環境 ID を使用してアクセスします。', // pragma: allowlist secret
+  'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.':
+    'この環境をリソースとユーザーごと完全に削除します。この環境が属するプロジェクトと他の環境には影響しません。この操作は元に戻せません。',
+  Environment: '環境',
+  'Project:': 'プロジェクト:',
+  'Failed to load migrations': 'マイグレーションの読み込みに失敗しました',
   'An environment with this ID already exists in this project.':
     'この ID の環境はこのプロジェクトに既に存在します。',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':

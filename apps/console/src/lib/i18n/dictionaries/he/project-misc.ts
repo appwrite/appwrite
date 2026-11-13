@@ -3390,6 +3390,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Project environment': 'סביבת פרויקט',
   'Switch to production': 'מעבר לפרודקשן',
   'Environment ID': 'מזהה סביבה',
+  // Settings of an environment: its name, its ID, and deleting it
+  'Environment name has been updated': 'שם הסביבה עודכן',
+  'Failed to update environment name': 'עדכון שם הסביבה נכשל',
+  "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.":
+    'הגישה לסביבה הזו היא באמצעות נקודת הקצה של ה-API ומזהה הפרויקט של הפרויקט, יחד עם מזהה הסביבה שמבדיל אותה מפרודקשן.', // pragma: allowlist secret
+  'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.':
+    'מחיקה לצמיתות של הסביבה הזו, עם המשאבים והמשתמשים שלה. הפרויקט שאליו היא שייכת והסביבות האחרות שלו אינם מושפעים. לא ניתן לבטל פעולה זו.',
+  Environment: 'סביבה',
+  'Project:': 'פרויקט:',
+  'Failed to load migrations': 'טעינת המיגרציות נכשלה',
   'An environment with this ID already exists in this project.':
     'סביבה עם המזהה הזה כבר קיימת בפרויקט.',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
