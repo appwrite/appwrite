@@ -747,8 +747,9 @@ class Certificates extends Action
 
     /**
      * Mail and notify the project owners, the same way webhook alerts do.
+     * Protected for workers that verify a rule outside certificate generation.
      */
-    private function sendVerifiedAlert(Document $rule, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $platform, array $plan): void
+    protected function sendVerifiedAlert(Document $rule, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $platform, array $plan): void
     {
         $projectId = (string) $rule->getAttribute('projectId', '');
         if ($projectId === '' || $projectId === 'console') {
