@@ -148,6 +148,7 @@ export const enCatalog = {
           network: 'Network',
           analytics: 'Analytics',
           firewall: 'Firewall',
+          mcp1: 'MCP1',
         },
         learn: {
           blog: 'Blog',
@@ -229,7 +230,6 @@ export const enCatalog = {
         usage: 'Usage',
         analytics: 'Analytics',
         errors: 'Errors',
-        firewall: 'Firewall',
         advisor: 'Advisor',
         settings: 'Settings',
       },

@@ -42,11 +42,10 @@ export type ConsoleProfileFeatures = {
   /** Console account Applications page (OAuth2 consents granted on the account). */
   accountApplications: boolean
   /**
-   * Extra Git (VCS) OAuth connect providers (Origin). GitHub, GitLab, and
-   * Bitbucket are always shown. Existing installations of a hidden provider
-   * still render; only new connect actions are gated.
+   * Origin (Cursor) on Git connect. An experiment, off by default; existing
+   * installations still render, only new connect actions are gated.
    */
-  extraVcsOAuth: boolean
+  vcsOrigin: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
   /** Organization API keys */
@@ -76,8 +75,8 @@ export type ConsoleProfileFeatures = {
   reviews: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
-  /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
-  projectTransfers: boolean
+  /** Project settings › Identity servers tab: LDAP directory sign-in, with more identity servers to follow. Preview, switched on from the Previews menu or the debug menu. */
+  identityServers: boolean
   /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
   alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
@@ -135,7 +134,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountOAuth: 'Account OAuth sign-in',
   accountPasskeys: 'Account passkeys',
   accountApplications: 'Account applications',
-  extraVcsOAuth: 'Extra VCS OAuth',
+  vcsOrigin: 'Origin Git provider',
   compliance: 'Compliance',
   orgApiKeys: 'Partners keys',
   agent: 'Agent',
@@ -148,7 +147,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   videos: 'Videos',
   reviews: 'Review',
   projectEnvironments: 'Project environments',
-  projectTransfers: 'Project transfers',
+  identityServers: 'Identity servers',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
@@ -192,7 +191,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountOAuth: true,
       accountPasskeys: true,
       accountApplications: true,
-      extraVcsOAuth: false,
+      vcsOrigin: false,
       compliance: true,
       orgApiKeys: false,
       agent: false,
@@ -205,7 +204,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       reviews: false,
       projectEnvironments: false,
-      projectTransfers: false,
+      identityServers: false,
       alerts: false,
       multiRegion: true,
       edgeNetwork: true,
@@ -238,7 +237,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountOAuth: false,
       accountPasskeys: false,
       accountApplications: false,
-      extraVcsOAuth: false,
+      vcsOrigin: false,
       compliance: false,
       orgApiKeys: false,
       agent: false,
@@ -251,7 +250,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       reviews: false,
       projectEnvironments: false,
-      projectTransfers: false,
+      identityServers: false,
       alerts: false,
       multiRegion: false,
       edgeNetwork: false,
@@ -368,6 +367,8 @@ const REMOVED_PROFILE_FEATURE_KEYS = [
   'aiAssistant',
   'executionLogs',
   'extraOAuthLogin',
+  'projectTransfers',
+  'extraVcsOAuth',
 ] as const
 
 function migrateStoredProfileFeatures(
@@ -377,6 +378,9 @@ function migrateStoredProfileFeatures(
     Record<string, unknown>
   if (!('agent' in next) && typeof next.aiAssistant === 'boolean') {
     next.agent = next.aiAssistant
+  }
+  if (!('vcsOrigin' in next) && typeof next.extraVcsOAuth === 'boolean') {
+    next.vcsOrigin = next.extraVcsOAuth
   }
   for (const key of REMOVED_PROFILE_FEATURE_KEYS) {
     delete next[key]
@@ -556,7 +560,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH,
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_VCS_ORIGIN,
  * VITE_CONSOLE_DATABASE_PITR_RESTORE,
  * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
@@ -579,9 +583,9 @@ function applyEnvFeatureOverrides(
   if (blogDrafts !== null) {
     next = { ...next, blogDrafts }
   }
-  const extraVcsOAuth = parseEnvFeatureOverride(config.extraVcsOAuth)
-  if (extraVcsOAuth !== null) {
-    next = { ...next, extraVcsOAuth }
+  const vcsOrigin = parseEnvFeatureOverride(config.vcsOrigin)
+  if (vcsOrigin !== null) {
+    next = { ...next, vcsOrigin }
   }
   const databasePitrRestore = parseEnvFeatureOverride(
     config.databasePitrRestore,

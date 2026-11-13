@@ -101,17 +101,17 @@ final class EvaluationCustomServerTest extends Scope
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'window' => 3600,
             'cooldown' => 300,
-            'critical' => true,
+            'severity' => 'critical',
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
-        $this->assertTrue($created['body']['critical']);
+        $this->assertSame('critical', $created['body']['severity']);
         $monitorId = $created['body']['$id'];
 
         /**
          * Test for SUCCESS
          */
         $firing = $this->waitForStatus($monitorId, 'firing');
-        $this->assertTrue($firing['critical']);
+        $this->assertSame('critical', $firing['severity']);
         $this->assertGreaterThan(0, $firing['value']);
         $this->assertNotNull($firing['triggeredAt']);
         $this->assertNotNull($firing['evaluatedAt']);
@@ -120,6 +120,7 @@ final class EvaluationCustomServerTest extends Scope
         $alert = $this->getAlert($firing['alertId']);
         $this->assertSame('firing', $alert['status']);
         // The alert keeps what the monitor was when it fired.
+        $this->assertSame('critical', $alert['severity']);
         $this->assertTrue($alert['critical']);
         $this->assertSame($monitorId, $alert['monitorId']);
         $this->assertSame($name, $alert['name']);
@@ -147,7 +148,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame($name, $delivery['data']['name']);
         $this->assertSame('usage', $delivery['data']['type']);
         $this->assertSame('network.outbound', $delivery['data']['metric']);
-        $this->assertTrue($delivery['data']['critical']);
+        $this->assertSame('critical', $delivery['data']['severity']);
         $this->assertGreaterThan(0, $delivery['data']['value']);
         $this->assertNull($delivery['data']['resolvedAt']);
         $this->assertArrayNotHasKey('projectInternalId', $delivery['data']);
@@ -184,7 +185,10 @@ final class EvaluationCustomServerTest extends Scope
         // The monitor is critical, so its firing rings with the critical sound.
         $this->assertTrue($push['critical']);
         $this->assertSame('siren.caf', $push['sound']);
+        // Mutable content lets the app's notification service extension add to it before iOS shows it.
+        $this->assertTrue($push['mutableContent']);
         $this->assertSame('alert', $push['data']['type']);
+        $this->assertSame('critical', $push['data']['severity']);
         $this->assertSame($firing['alertId'], $push['data']['alertId']);
         $this->assertSame($monitorId, $push['data']['monitorId']);
         $this->assertSame($this->getProject()['$id'], $push['data']['projectId']);
@@ -296,7 +300,7 @@ final class EvaluationCustomServerTest extends Scope
             'rules' => [Query::greaterThan('network.outbound', 10)->toString()],
             'cooldown' => 300,
             'enabled' => false,
-            'critical' => true,
+            'severity' => 'critical',
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -315,19 +319,30 @@ final class EvaluationCustomServerTest extends Scope
         foreach ([$first, $second, $removed, $quiet['device']] as $device) {
             $pushes = $this->pushes($device['token'], $tag);
             $this->assertCount(1, $pushes, $device['token']);
-            $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
             $this->assertSame('high', $pushes[0]['priority']);
-            $this->assertSame($tag, $pushes[0]['tag']);
             if (\ctype_xdigit($device['token'])) {
                 $this->assertSame(PushService::APNS->value, $pushes[0]['service']);
+                $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
+                $this->assertSame($tag, $pushes[0]['tag']);
                 $this->assertTrue($pushes[0]['critical']);
                 $this->assertSame('siren.caf', $pushes[0]['sound']);
+                $this->assertTrue($pushes[0]['mutableContent']);
                 $this->assertArrayNotHasKey('channelId', $pushes[0]);
             } else {
+                // Data-only, so the app draws it even in the background, under the keys Expo reads.
                 $this->assertSame(PushService::FCM->value, $pushes[0]['service']);
-                $this->assertSame('critical', $pushes[0]['channelId']);
+                $this->assertArrayNotHasKey('title', $pushes[0]);
+                $this->assertArrayNotHasKey('body', $pushes[0]);
+                $this->assertArrayNotHasKey('tag', $pushes[0]);
+                $this->assertArrayNotHasKey('channelId', $pushes[0]);
                 $this->assertArrayNotHasKey('critical', $pushes[0]);
                 $this->assertArrayNotHasKey('sound', $pushes[0]);
+                $this->assertArrayNotHasKey('mutableContent', $pushes[0]);
+                $this->assertSame('Firing: ' . $name, $pushes[0]['data']['title']);
+                $this->assertNotSame('', $pushes[0]['data']['message']);
+                $this->assertSame($tag, $pushes[0]['data']['tag']);
+                $this->assertSame('critical', $pushes[0]['data']['channelId']);
+                $this->assertSame('alert', $pushes[0]['data']['type']);
             }
         }
         // Owners who muted the organization or the project get none.
@@ -344,12 +359,12 @@ final class EvaluationCustomServerTest extends Scope
         foreach ([$first, $second] as $device) {
             $resolved = \array_values(\array_filter($this->pushes($device['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'));
             $this->assertCount(1, $resolved);
-            $this->assertSame('Resolved: ' . $name, $resolved[0]['title']);
+            $this->assertSame('Resolved: ' . $name, $resolved[0]['title'] ?? $resolved[0]['data']['title']);
             $this->assertArrayNotHasKey('critical', $resolved[0]);
             $this->assertArrayNotHasKey('sound', $resolved[0]);
         }
         // A resolved push on Android goes on the normal channel.
-        $this->assertSame('alerts', \array_values(\array_filter($this->pushes($second['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'))[0]['channelId']);
+        $this->assertSame('alerts', \array_values(\array_filter($this->pushes($second['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'))[0]['data']['channelId']);
         $this->assertCount(1, $this->pushes($quiet['device']['token'], $tag));
 
         // Signing out of a phone, or removing its target, stops its pushes.

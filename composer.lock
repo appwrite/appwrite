@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "66e1718698ff6be6781b97ded91060cb",
+    "content-hash": "d0c3ea2367878992f78c1321ac7b8726",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "32.2.0",
+            "version": "32.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "58b5464354e7226517122cddcf519872a0f3fc62"
+                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/58b5464354e7226517122cddcf519872a0f3fc62",
-                "reference": "58b5464354e7226517122cddcf519872a0f3fc62",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
+                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
                 "shasum": ""
             },
             "require": {
@@ -111,10 +111,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/32.2.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.3.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-11-03T11:11:00+00:00"
+            "time": "2026-11-11T13:02:34+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -661,6 +661,245 @@
                 "source": "https://github.com/darylldoyle/svg-sanitizer/tree/1.0.0"
             },
             "time": "2026-09-01T09:35:47+00:00"
+        },
+        {
+            "name": "freedsx/asn1",
+            "version": "0.4.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/ASN1.git",
+                "reference": "a136e7981d2ca76b140570834bd65debf42ee3da"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/ASN1/zipball/a136e7981d2ca76b140570834bd65debf42ee3da",
+                "reference": "a136e7981d2ca76b140570834bd65debf42ee3da",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "friends-of-phpspec/phpspec-code-coverage": "^4.3|^6.1",
+                "phpspec/phpspec": "^5.1|^6.1|^7.1",
+                "phpstan/phpstan": "^0.11.15|^0.12",
+                "slevomat/coding-standard": "~7.0",
+                "squizlabs/php_codesniffer": "3.*",
+                "symplify/easy-coding-standard": "^6.1|^7.3|^9.0"
+            },
+            "suggest": {
+                "ext-gmp": "For big integer support in Integer/Enumerated/OID types and tag numbers."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Asn1\\": "src/FreeDSx/Asn1"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "An ASN.1 library for PHP.",
+            "homepage": "https://github.com/FreeDSx/ASN1",
+            "keywords": [
+                "DER",
+                "asn.1",
+                "asn1",
+                "ber",
+                "x.690"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/ASN1/issues",
+                "source": "https://github.com/FreeDSx/ASN1/tree/0.4.8"
+            },
+            "time": "2024-10-13T15:35:35+00:00",
+            "published-time": "2024-10-13T15:40:40+00:00"
+        },
+        {
+            "name": "freedsx/ldap",
+            "version": "0.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/LDAP.git",
+                "reference": "839bef5acc9bbee5b4bec56a56d91439b4be509f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/LDAP/zipball/839bef5acc9bbee5b4bec56a56d91439b4be509f",
+                "reference": "839bef5acc9bbee5b4bec56a56d91439b4be509f",
+                "shasum": ""
+            },
+            "require": {
+                "freedsx/asn1": ">=0.4,<1.0",
+                "freedsx/sasl": ">=0.1,<1.0",
+                "freedsx/socket": ">=0.5,<1.0",
+                "php": ">=7.1",
+                "psr/log": "^1||^2||^3"
+            },
+            "require-dev": {
+                "friends-of-phpspec/phpspec-code-coverage": "^4.3|^6.1|dev-master",
+                "phpspec/phpspec": "^7.2|^7.1|^6.1|^5.1",
+                "phpstan/phpstan": "^0.12.70",
+                "phpunit/phpunit": "^9.3|^8.0|^7.0",
+                "slevomat/coding-standard": "~7.0",
+                "squizlabs/php_codesniffer": "3.*",
+                "symfony/process": "^3.0|^4.0|^5.0",
+                "symplify/easy-coding-standard": "^6.1|^7.3|^9.0"
+            },
+            "suggest": {
+                "ext-openssl": "For SSL/TLS support and some SASL mechanisms.",
+                "ext-pcntl": "For LDAP server functionality.",
+                "ext-posix": "For LDAP server functionality."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Ldap\\": "src/FreeDSx/Ldap"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "A Pure PHP LDAP library",
+            "homepage": "https://github.com/FreeDSx/LDAP",
+            "keywords": [
+                "activedirectory",
+                "ldap",
+                "openldap"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/LDAP/issues",
+                "source": "https://github.com/FreeDSx/LDAP/tree/0.9.0"
+            },
+            "time": "2026-08-28T22:14:23+00:00",
+            "published-time": "2026-08-28T22:16:08+00:00"
+        },
+        {
+            "name": "freedsx/sasl",
+            "version": "0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/SASL.git",
+                "reference": "8dfa6e105f101960d9fa5f9c57d9c461d2c20593"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/SASL/zipball/8dfa6e105f101960d9fa5f9c57d9c461d2c20593",
+                "reference": "8dfa6e105f101960d9fa5f9c57d9c461d2c20593",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^0.11|^0.12",
+                "phpunit/phpunit": "^7.0|^8.5|^9.5",
+                "symfony/polyfill-php80": "^1.27",
+                "symplify/easy-coding-standard": ">=6.1"
+            },
+            "suggest": {
+                "ext-openssl": "Needed for encryption for certain mechanisms."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Sasl\\": "src/FreeDSx/Sasl"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "A Pure PHP SASL Library",
+            "homepage": "https://github.com/FreeDSx/SASL",
+            "keywords": [
+                "CRAM-MD5",
+                "DIGEST-MD5",
+                "sasl"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/SASL/issues",
+                "source": "https://github.com/FreeDSx/SASL/tree/0.2.1"
+            },
+            "time": "2026-03-22T23:50:16+00:00",
+            "published-time": "2026-03-22T23:51:18+00:00"
+        },
+        {
+            "name": "freedsx/socket",
+            "version": "0.6.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/Socket.git",
+                "reference": "d0c8c6f684582e5ddbf5fc3d59d2316d3914b271"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/Socket/zipball/d0c8c6f684582e5ddbf5fc3d59d2316d3914b271",
+                "reference": "d0c8c6f684582e5ddbf5fc3d59d2316d3914b271",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "freedsx/asn1": ">=0.4, <1.0",
+                "friends-of-phpspec/phpspec-code-coverage": "^6.1|^7.0",
+                "phpspec/phpspec": "^7.1|^8.0",
+                "phpstan/phpstan": "^2.0"
+            },
+            "suggest": {
+                "ext-openssl": "For SSL/TLS support.",
+                "freedsx/asn1": "For ASN.1 based message queues."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Socket\\": "src/FreeDSx/Socket"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "A simple socket library for FreeDSx",
+            "homepage": "https://github.com/FreeDSx/Socket",
+            "keywords": [
+                "Socket",
+                "tcp",
+                "udp"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/Socket/issues",
+                "source": "https://github.com/FreeDSx/Socket/tree/0.6.3"
+            },
+            "time": "2026-04-25T17:18:43+00:00",
+            "published-time": "2026-04-25T17:19:56+00:00"
         },
         {
             "name": "google/protobuf",
@@ -4427,16 +4666,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "10.1.0",
+            "version": "10.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "950a4907d5519efd7ac7d1aff8978e482f8e07ae"
+                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/950a4907d5519efd7ac7d1aff8978e482f8e07ae",
-                "reference": "950a4907d5519efd7ac7d1aff8978e482f8e07ae",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0f136bb85cf69e8310db135b3fc2da1360dbf726",
+                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726",
                 "shasum": ""
             },
             "require": {
@@ -4494,9 +4733,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/10.1.0"
+                "source": "https://github.com/utopia-php/database/tree/10.1.2"
             },
-            "time": "2026-11-01T18:56:51+00:00"
+            "time": "2026-11-11T13:40:42+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4861,16 +5100,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.15.0",
+            "version": "5.19.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "92ee10585c83dc83805b468784e71faa44316b44"
+                "reference": "18aedd92d4d95646524f6c597d39f6282a11480d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/92ee10585c83dc83805b468784e71faa44316b44",
-                "reference": "92ee10585c83dc83805b468784e71faa44316b44",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/18aedd92d4d95646524f6c597d39f6282a11480d",
+                "reference": "18aedd92d4d95646524f6c597d39f6282a11480d",
                 "shasum": ""
             },
             "require": {
@@ -4908,9 +5147,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.15.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.19.1"
             },
-            "time": "2026-11-03T14:36:04+00:00"
+            "time": "2026-11-12T14:56:25+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -5680,7 +5919,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-03T12:14:22+00:00"
+            "time": "2026-11-03T12:14:22+00:00",
+            "published-time": "2026-11-03T12:14:36+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -7689,7 +7929,6 @@
     "platform": {
         "php": ">=8.5.0",
         "ext-curl": "*",
-        "ext-imagick": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
         "ext-yaml": "*",
@@ -7706,5 +7945,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }

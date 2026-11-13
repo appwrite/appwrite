@@ -640,6 +640,7 @@ export function View() {
     <EmptyState icon={Globe} isEmpty={false} hasFilters variant="card" />
   ) : (
     <SitesEmptyState
+      projectId={projectId!}
       onCreate={() => {
         navigate({
           to: '/projects/$projectId/sites/create',

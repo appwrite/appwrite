@@ -88,6 +88,15 @@ export const jaSitesDictionary: Record<string, string> = {
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
+  'Waiting for DNS': 'DNS を待機中',
+  'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
+    'Appwrite はドメインの追加後 3 日間、数分ごとに DNS レコードを確認します。すぐに確認するには「今すぐ確認」を使用してください。',
+  'Appwrite stopped checking 3 days after the domain was added. Fix the DNS records, then Retry.':
+    'Appwrite はドメインの追加から 3 日後に確認を停止しました。DNS レコードを修正してから、再試行してください。',
+  'Last check:': '最終確認:',
+  'Check now': '今すぐ確認',
+  'Not verified yet. Appwrite keeps checking.':
+    'まだ検証されていません。Appwrite は確認を続けます。',
   'Certificate expired': '証明書の期限切れ',
   'Renewal failed': '証明書の更新に失敗しました',
   'Certificate blocked': '証明書の発行が保留中',
@@ -228,6 +237,8 @@ export const jaSitesDictionary: Record<string, string> = {
     'このドメインはすでに Appwrite を指しています。所有者であることを証明するため、この TXT レコードを追加してから検証してください。',
   'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
     'このドメインは別のプロジェクトで使用されています。所有者であることを証明するため、この TXT レコードを追加してから検証し、このプロジェクトに移動してください。',
+  "This domain's DNS is managed by another organization. Add this TXT record to that domain's DNS, or ask that organization's owners to add it, then verify. The domain stays in that organization.":
+    'このドメインの DNS は別の組織が管理しています。そのドメインの DNS にこの TXT レコードを追加するか、その組織のオーナーに追加を依頼してから検証してください。ドメインはその組織に残ります。',
   'Invalid URL': '無効な URL',
   'Enter URL': 'URL を入力',
   'Select branch': 'Branch を選択',
@@ -559,15 +570,10 @@ export const jaSitesDictionary: Record<string, string> = {
   'Create your first site': '最初のサイトを作成',
   'Deploy web apps from Git or a template. Every push gets a build, a preview URL, and fast global delivery.':
     'Git またはテンプレートから Web アプリをデプロイします。プッシュごとにビルド、プレビュー URL、高速なグローバル配信が提供されます。',
-  'Connect a repository': 'リポジトリを接続',
-  'Deploy on every push to your production branch, with a preview URL for every other branch.':
-    '本番ブランチへのプッシュごとにデプロイし、その他のブランチにはそれぞれプレビュー URL が付きます。',
-  'Pick a framework': 'フレームワークを選択',
-  'Appwrite detects TanStack Start, Next.js, Nuxt, SvelteKit, and more, and sets up the build for you.':
-    'Appwrite は TanStack Start、Next.js、Nuxt、SvelteKit などを検出し、ビルドを自動で設定します。',
-  'Go live': '公開する',
-  'Get an appwrite.network URL right away, then add your own domain.':
-    'すぐに appwrite.network の URL が発行されます。その後、独自ドメインを追加できます。',
+  'Connect a Git provider to deploy on every push.':
+    'Git プロバイダーを接続すると、プッシュのたびにデプロイされます。',
+  'Deploy a working site in a few clicks, then make it yours.':
+    '数クリックで動作するサイトをデプロイし、自由にカスタマイズできます。',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
 }

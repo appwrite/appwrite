@@ -7692,6 +7692,36 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(401, $verification2['headers']['status-code']);
 
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $challengeIds = array_map(function () use ($headers): string {
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', $headers, [
+                'factor' => 'recoveryCode'
+            ]);
+            $this->assertEquals(201, $challenge['headers']['status-code']);
+
+            return $challenge['body']['$id'];
+        }, range(1, 4));
+
+        $responses = $this->client->callConcurrently(array_map(fn (string $challengeId): array => [
+            Client::METHOD_PUT,
+            '/account/mfa/challenge',
+            $headers,
+            [
+                'challengeId' => $challengeId,
+                'otp' => $recoveryCodes[1],
+            ],
+        ], $challengeIds));
+
+        $statuses = array_map(fn (array $response): int => $response['headers']['status-code'], $responses);
+        $counts = array_count_values($statuses);
+
+        $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the recovery code: ' . json_encode($statuses));
+        $this->assertSame(3, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
+
         // Test FAILURE: Invalid recovery code
         $challenge3 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
             'content-type' => 'application/json',
@@ -10766,14 +10796,12 @@ final class AccountCustomClientTest extends Scope
             return false;
         }
 
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image);
 
-        $color = $image
-            ->getImagePixelColor(\intdiv($image->getImageWidth(), 2), \intdiv($image->getImageHeight(), 2))
-            ->getColor();
+        $color = \imagecolorsforindex($image, (int) \imagecolorat($image, \intdiv(\imagesx($image), 2), \intdiv(\imagesy($image), 2)));
 
-        return $color['r'] === 0 && $color['g'] === 255 && $color['b'] === 0;
+        return $color['red'] === 0 && $color['green'] === 255 && $color['blue'] === 0;
     }
 
     /**

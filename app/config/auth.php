@@ -59,4 +59,11 @@ return [
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreatePasskeyToken',
         'enabled' => false,
     ],
+    'ldap' => [
+        'name' => 'LDAP',
+        'key' => 'LDAP',
+        'icon' => '/images/users/ldap.png',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateLDAPSession',
+        'enabled' => false,
+    ],
 ];

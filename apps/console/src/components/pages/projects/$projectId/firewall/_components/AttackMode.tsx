@@ -32,7 +32,7 @@ import {
   serviceHeaderIconOnlyButton,
   serviceHeaderShowLabel,
 } from '../../shared/service-header-container'
-import type { FirewallResourceSelection } from './FirewallResourceSelector'
+import type { FirewallResourceSelection } from '@/lib/firewall/conditions'
 
 type AttackModeConfirmIntent = 'on' | 'off'
 

@@ -261,6 +261,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Filter name': 'שם הסינון',
   Filters: 'סינונים',
   'Filtered by': 'מסונן לפי',
+  'Change operator': 'שינוי אופרטור',
+  'Change value': 'שינוי ערך',
   'Find a branch...': 'חיפוש ענף...',
   'Fix payment': 'הסדרת התשלום',
   'Authorize payment': 'אישור תשלום',
@@ -1101,7 +1103,27 @@ export const heSharedUiDictionary: Record<string, string> = {
     'שרת SMTP מותאם אישית לאימיילים יוצאים',
   Advisor: 'יועץ',
   Firewall: 'חומת אש',
-  'Security · Firewall rules': 'אבטחה · כללי חומת אש',
+  'Settings · Firewall': 'הגדרות · חומת אש',
+  'Firewall has moved': 'חומת האש עברה למקום אחר',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'כללי חומת האש נמצאים עכשיו ליד מה שהם מגינים עליו: לשונית חומת אש בכל פונקציה ובכל אתר, ואחת בהגדרות הפרויקט עבור ה-API.',
+  'Got it': 'הבנתי',
+  'Open API firewall': 'פתיחת חומת האש של ה-API',
+  // Function and site overview cards, filter chips
+  '1 rule': 'כלל אחד',
+  '{count} rules': '{count} כללים',
+  'vs previous 24 hours': 'לעומת 24 השעות הקודמות',
+  'No blocked traffic yet': 'עדיין אין תעבורה חסומה',
+  'Denied requests will show up here.': 'בקשות שנדחו יופיעו כאן.',
+  '24 hours ago': 'לפני 24 שעות',
+  'No requests yet': 'עדיין אין בקשות',
+  'No bandwidth yet': 'עדיין אין תעבורת נתונים',
+  Humans: 'בני אדם',
+  Bots: 'בוטים',
+  only: 'בלבד',
+  On: 'פעיל',
+  SSR: 'SSR',
+  Static: 'סטטי',
   'IP allow/block lists and request rules':
     'רשימות היתר/חסימה של IP וכללי בקשות',
 
@@ -1401,8 +1423,9 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Project environments': 'סביבות פרויקט',
   'Switch or clone staging and production.':
     'מעבר או שכפול בין staging לפרודקשן.',
-  'Project transfers': 'העברות פרויקטים',
-  'Move a project to another organization.': 'העברת פרויקט לארגון אחר.',
+  'Origin Git provider': 'ספק ה-Git Origin',
+  'Deploy from Cursor Origin repositories.': 'פריסה מ-repos של Cursor Origin.',
+  'LDAP directory sign-in for a project.': 'כניסה לפרויקט באמצעות ספריית LDAP.',
   'Repository not available': 'ה-repo לא זמין',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
@@ -1416,4 +1439,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No thanks': 'לא תודה',
   'One-time ask, promise. May your builds be ever green.':
     'מבקשים רק פעם אחת, מבטיחים. שה-builds שלכם יהיו תמיד ירוקים.',
+  'Settings · Identity servers': 'הגדרות · שרתי זהויות',
+  'LDAP directory sign-in': 'התחברות דרך ספריית LDAP',
 }

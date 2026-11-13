@@ -6,6 +6,7 @@ import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
 import { EnvironmentCopyBox } from '@/components/global/environment-copy'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import { NativeOAuthPromoBanner } from '@/components/global/shared/NativeOAuthPromoBanner'
+import { FirewallMovedBanner } from '@/components/global/shared/FirewallMovedBanner'
 import { canShowProjectTerminal } from '@/lib/console-access-checks'
 import { useProgressPanelToastOffset } from '@/lib/layout/progress-panel-offset'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -57,6 +58,7 @@ export function ProjectCliShellLayout({
           {children}
         </ConsoleLayout>
         <NativeOAuthPromoBanner />
+        <FirewallMovedBanner />
         <div
           ref={progressPanelRef}
           className="fixed bottom-4 end-4 z-50 flex flex-col gap-2 max-w-sm w-full"

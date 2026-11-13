@@ -19,8 +19,11 @@ use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Client;
-use Utopia\Image\Exception\UnsupportedFormatException;
-use Utopia\Image\Image;
+use Utopia\Config\Config;
+use Utopia\Image\Canvas;
+use Utopia\Image\Exception\ImageException;
+use Utopia\Image\Format;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Header;
@@ -78,11 +81,6 @@ class Get extends Action
         $width = 56;
         $height = 56;
         $quality = 80;
-        $output = 'png';
-
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
 
         $userAgent = \sprintf(
             APP_USERAGENT,
@@ -166,7 +164,7 @@ class Get extends Action
 
         $data = (string) $iconResponse->getBody();
 
-        if ('ico' === $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
+        if ('ico' === $outputExt) { // Skip crop, icon files are not decoded
             if (
                 empty($data) ||
                 stripos($data, '<html') === 0 ||
@@ -181,7 +179,7 @@ class Get extends Action
             return;
         }
 
-        if ('svg' === $outputExt) { // Skip crop, Imagick isn\'t supporting svg files
+        if ('svg' === $outputExt) { // Skip crop, SVG files are not decoded
             $sanitizer = new SvgSanitizer();
             $sanitizer->minify(true);
             $cleanSvg = $sanitizer->sanitize($data);
@@ -196,19 +194,17 @@ class Get extends Action
         }
 
         try {
-            $image = new Image($data);
-        } catch (UnsupportedFormatException | \ImagickException) {
+            $data = (new Canvas($data, Config::getParam('storage-image-limits')))
+                ->apply(new Transform(width: $width, height: $height))
+                ->encode(Format::Png, $quality);
+        } catch (ImageException) {
             throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
         }
-
-        $image->crop((int) $width, (int) $height);
-        $data = $image->output($output, $quality);
 
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
-        unset($image);
     }
 
     /**

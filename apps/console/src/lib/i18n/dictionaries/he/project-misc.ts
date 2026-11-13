@@ -330,6 +330,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You don't have permission to update firewall settings.":
     'אין לכם הרשאה לעדכן הגדרות חומת אש.',
   'No firewall rules': 'אין כללי חומת אש',
+  'Configure rules': 'הגדרת כללים',
+  'Rules that apply to this site appear here.':
+    'הכללים שחלים על האתר הזה יופיעו כאן.',
+  'Rules that apply to this function appear here.':
+    'הכללים שחלים על הפונקציה הזו יופיעו כאן.',
   'No API firewall rules': 'אין כללי חומת אש ל-API',
   'No function firewall rules': 'אין כללי חומת אש לפונקציות',
   'No site firewall rules': 'אין כללי חומת אש לאתרים',
@@ -993,6 +998,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Clear: 'ניקוי',
   Apply: 'החלה',
   Compare: 'השוואה',
+  vs: 'לעומת',
   'No comparison': 'ללא השוואה',
   'Show only current period': 'הצגת התקופה הנוכחית בלבד',
   'Previous period': 'תקופה קודמת',
@@ -1067,6 +1073,20 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Models and tools': 'מודלים וכלים',
   'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
   'No calls in this range': 'אין קריאות בטווח הזה',
+  'Installs and push': 'התקנות והתראות פוש',
+  'Installs, updates and push notifications from the tracking SDK':
+    'התקנות, עדכונים והתראות פוש מ-SDK המעקב',
+  'No installs tracked yet': 'עדיין לא נמדדו התקנות',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    'הוסיפו לאפליקציה את גרסת SDK המעקב העדכנית כדי לספור התקנות, עדכונים והתראות פוש.',
+  'Add the tracking SDK': 'הוספת SDK המעקב',
+  Installs: 'התקנות',
+  Updates: 'עדכונים',
+  'Push received': 'התראות פוש שהתקבלו',
+  'Push opened': 'התראות פוש שנפתחו',
+  'Push opened by message': 'התראות פוש שנפתחו לפי הודעה',
+  'No opened pushes with a message ID in this range':
+    'אין בטווח הזה התראות פוש שנפתחו עם מזהה הודעה',
   'Values of the props sent with your events':
     'ערכי ה-props שנשלחו עם האירועים',
   'No event props in this range': 'אין props של אירועים בטווח הזה',
@@ -1410,6 +1430,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'for development (no port or protocol). Add a separate platform for each origin (e.g. localhost and production).':
     'לפיתוח (ללא פורט או פרוטוקול). הוסיפו פלטפורמה נפרדת לכל מקור (למשל localhost וסביבת ייצור).',
   'Troubleshoot CORS errors': 'פתרון שגיאות CORS',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'כל אתר יכול לשלוח בקשות לפרויקט הזה. לפני העלייה לאוויר, החליפו את * בדומיין של האפליקציה שלכם, למשל app.example.com.',
   'Bundle ID': 'מזהה Bundle',
   'Application ID': 'מזהה אפליקציה',
   'Package identifier': 'מזהה חבילה',
@@ -1934,6 +1956,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Use a date range longer than this interval.':
     'השתמשו בטווח תאריכים ארוך מהמרווח הזה.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
+  'This interval is larger than the selected date range.':
+    'המרווח הזה גדול מטווח התאריכים שנבחר.',
   Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
   'Copy API endpoint': 'העתקת נקודת קצה של API',
@@ -2496,7 +2520,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to rotate secret': 'החלפת הסוד נכשלה',
   'Failed to send test email': 'שליחת אימייל הבדיקה נכשלה',
   'Failed to start migration': 'התחלת המיגרציה נכשלה',
-  'Failed to transfer project': 'העברת הפרויקט נכשלה',
   'Failed to update SMTP settings': 'עדכון הגדרות ה-SMTP נכשל',
   'Failed to update project name': 'עדכון שם הפרויקט נכשל',
   'Failed to update protocol': 'עדכון הפרוטוקול נכשל',
@@ -2632,7 +2655,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Search migrations...': 'חיפוש מיגרציות...',
   'Search webhooks...': 'חיפוש webhooks...',
   'Secure protocol': 'פרוטוקול מאובטח',
-  'Select a different organization to transfer to.': 'בחרו ארגון אחר להעברה.',
   'Select at least one event': 'בחרו לפחות אירוע אחד',
   'Select at least one resource': 'בחרו לפחות משאב אחד',
   'Select destination': 'בחירת יעד',
@@ -2690,12 +2712,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד.',
   'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
     'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד. העתיקו אותו עכשיו.',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
-    'כדי להעביר את הפרויקט, עליכם להיות חברים גם בארגון הנוכחי וגם בארגון היעד. בחרו יעד למטה.',
   'Transfer between organizations': 'העברה בין ארגונים',
   'Transfer project': 'העברת פרויקט',
-  'Transfer this project to the selected organization':
-    'העברת הפרויקט לארגון שנבחר',
   'URL is required': 'נדרשת כתובת URL',
   'Update webhook': 'עדכון webhook',
   'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
@@ -2723,10 +2741,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כאשר במהלך הייבוא נמצאת שורה עם מזהה קיים.',
   'When enabled, all emails will be sent through your configured SMTP server.':
     'כאשר האפשרות מופעלת, כל האימיילים יישלחו דרך שרת ה-SMTP שהגדרתם.',
-  'You do not have any organizations you can transfer this project to.':
-    'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה.',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
-    'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה. צרו ארגון אחר או הצטרפו אליו כדי להעביר.',
   'an A or AAAA record': 'רשומת A או AAAA',
   'and all its databases, functions, and files? This action cannot be undone.':
     'ואת כל מסדי הנתונים, הפונקציות והקבצים שלו? לא ניתן לבטל פעולה זו.',
@@ -3376,6 +3390,27 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Project environment': 'סביבת פרויקט',
   'Switch to production': 'מעבר לפרודקשן',
   'Environment ID': 'מזהה סביבה',
+  // Environments by plan: Pro and above, and the cap per project
+  'Project environments are available on Pro':
+    'סביבות פרויקט זמינות בתוכנית Pro',
+  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
+    'אינה כוללת סביבות פרויקט. שדרגו כדי לתת לכל פרויקט סביבות כמו staging ו-preview, עם משאבים ומשתמשים משלהן.',
+  environments: 'סביבות',
+  'environments per project.': 'סביבות לכל פרויקט.',
+  'Delete an environment to create another.':
+    'מחקו סביבה כדי ליצור סביבה אחרת.',
+  // Settings of an environment: its name, its ID, and deleting it
+  'Environment name has been updated': 'שם הסביבה עודכן',
+  'Failed to update environment name': 'עדכון שם הסביבה נכשל',
+  "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.":
+    'הגישה לסביבה הזו היא באמצעות נקודת הקצה של ה-API ומזהה הפרויקט של הפרויקט, יחד עם מזהה הסביבה שמבדיל אותה מפרודקשן.', // pragma: allowlist secret
+  'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.':
+    'מחיקה לצמיתות של הסביבה הזו, עם המשאבים והמשתמשים שלה. הפרויקט שאליו היא שייכת והסביבות האחרות שלו אינם מושפעים. לא ניתן לבטל פעולה זו.',
+  Environment: 'סביבה',
+  'Project:': 'פרויקט:',
+  'Failed to load migrations': 'טעינת המיגרציות נכשלה',
+  'Failed to refresh migrations': 'רענון המיגרציות נכשל',
+  'The list below may be out of date.': 'ייתכן שהרשימה שלהלן אינה עדכנית.',
   'An environment with this ID already exists in this project.':
     'סביבה עם המזהה הזה כבר קיימת בפרויקט.',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
@@ -3862,6 +3897,13 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Critical: 'קריטי',
   "Rings on your phone even when it's on silent or in Do Not Disturb.":
     "מצלצל בטלפון גם כשהוא במצב שקט או ב'נא לא להפריע'.",
+  Severity: 'חומרה',
+  Warning: 'אזהרה',
+  'Worth knowing about. Nothing needs doing yet.':
+    'כדאי לדעת. עדיין אין צורך לעשות דבר.',
+  'Look into it soon, before it becomes a problem.':
+    'כדאי לבדוק בקרוב, לפני שזה יהפוך לבעיה.',
+  'Something is broken and needs fixing.': 'משהו לא עובד וצריך תיקון.',
   'Critical. Rings on phones even on silent.':
     'קריטי. מצלצל בטלפונים גם במצב שקט.',
   'Rings on phones even on silent': 'מצלצל בטלפונים גם במצב שקט',
@@ -3959,4 +4001,98 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Send email, SMS, and push notifications to your users.':
     'שלחו למשתמשים שלכם אימיילים, הודעות SMS והתראות פוש.',
   'Auto-deploy on every push': 'פריסה אוטומטית בכל push',
+  // Identity servers (LDAP)
+  'Identity servers': 'שרתי זהויות',
+  LDAP: 'LDAP',
+  'Connect the identity systems your organization already runs so people can sign in with the accounts they have.':
+    'חברו את מערכות הזהויות שהארגון שלכם כבר מפעיל, כדי שמשתמשים יוכלו להתחבר עם החשבונות שכבר יש להם.',
+  'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
+    'אפשרו למשתמשים להתחבר עם פרטי האימות של ספריית ה-LDAP שלכם, כמו Active Directory או OpenLDAP.',
+  'Turn on LDAP sign-in for this project. Enabling connects to the directory to validate the configuration, so add at least one host and a base DN first.':
+    'הפעלת התחברות דרך LDAP לפרויקט הזה. ההפעלה מתחברת לספרייה כדי לאמת את התצורה, לכן הוסיפו קודם לפחות מארח אחד ו-base DN.',
+  Directory: 'ספרייה',
+  Hosts: 'מארחים',
+  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10. Paste an LDAP URL to also fill in encryption, port and base DN.':
+    'שמות מארחים או כתובות IP של הספרייה, מנוסים לפי הסדר עד שאחד מהם עונה. לחצו Enter אחרי כל מארח, עד 10 מארחים. הדביקו כתובת URL של LDAP כדי למלא גם את ההצפנה, הפורט וה-base DN.',
+  'Use {dn} as the base DN?': 'להשתמש ב-{dn} בתור base DN?',
+  Use: 'שימוש',
+  'Leave empty for the default: 636 for LDAPS, 389 otherwise.':
+    'השאירו ריק לברירת המחדל: 636 עבור LDAPS, אחרת 389.',
+  'LDAPS encrypts from the first byte, StartTLS upgrades a plain connection, None is for a trusted network only.':
+    'LDAPS מצפין מהבייט הראשון, StartTLS משדרג חיבור לא מוצפן, ו"ללא" מיועד לרשת מהימנה בלבד.',
+  'Verify certificate': 'אימות תעודה',
+  "Check the directory's certificate against the certificate below, or the system trust store if it is empty.":
+    'בדיקת התעודה של הספרייה מול התעודה שלמטה, או מול מאגר התעודות המהימנות של המערכת אם השדה ריק.',
+  'Timeout (seconds)': 'Timeout (שניות)',
+  'Seconds to wait for the directory to connect and answer each operation, from 1 to 30.':
+    'מספר השניות להמתין לחיבור לספרייה ולמענה על כל פעולה, בין 1 ל-30.',
+  'Certificate (PEM)': 'תעודה (PEM)',
+  "Certificate of the authority that signed the directory's certificate, or the directory's own certificate if it is self-signed. Paste several to trust more than one. Leave empty to use the system trust store.":
+    'התעודה של הרשות שחתמה על תעודת הספרייה, או התעודה של הספרייה עצמה אם היא בחתימה עצמית. הדביקו כמה תעודות כדי לסמוך על יותר מאחת. השאירו ריק כדי להשתמש במאגר התעודות המהימנות של המערכת.',
+  'Base DN': 'Base DN',
+  'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
+    'תת-העץ שממנו מתחיל חיפוש המשתמשים, למשל ou=people,dc=example,dc=com.',
+  'Bind DN': 'Bind DN',
+  'Service account used to search for users. Leave empty if the directory allows anonymous search.':
+    'חשבון השירות שמשמש לחיפוש משתמשים. השאירו ריק אם הספרייה מאפשרת חיפוש אנונימי.',
+  'Bind password': 'סיסמת Bind',
+  'User filter': 'מסנן משתמשים',
+  'Finds the person signing in. {username} is replaced with what they type.':
+    'מאתר את מי שמתחבר. {username} מוחלף במה שהוא מקליד.',
+  'The user filter must contain {username}.':
+    'מסנן המשתמשים חייב לכלול את {username}.',
+  'Sign-in rules': 'כללי התחברות',
+  'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.':
+    'משתמשים ב-Active Directory? הגדירו את מסנן המשתמשים ל-(sAMAccountName={username}) ואת מאפיין המזהה ל-objectGUID.',
+  'Attribute mapping': 'מיפוי מאפיינים',
+  'ID attribute': 'מאפיין מזהה',
+  'Attribute with the identifier that stays the same when an entry is renamed or moved: entryUUID, or objectGUID on Active Directory.':
+    'המאפיין שמכיל את המזהה שנשאר קבוע גם כששם הרשומה משתנה או כשהיא מועברת: entryUUID, או objectGUID ב-Active Directory.',
+  'Email attribute': 'מאפיין אימייל',
+  'Attribute holding the email address, usually mail.':
+    'המאפיין שמכיל את כתובת האימייל, בדרך כלל mail.',
+  'Name attribute': 'מאפיין שם',
+  'Attribute holding the display name: cn, or displayName on Active Directory.':
+    'המאפיין שמכיל את שם התצוגה: cn, או displayName ב-Active Directory.',
+  'Phone attribute': 'מאפיין טלפון',
+  'Attribute holding the phone number in E.164 format, for example mobile. Leave empty to skip phone numbers.':
+    'המאפיין שמכיל את מספר הטלפון בפורמט E.164, למשל mobile. השאירו ריק כדי לדלג על מספרי טלפון.',
+  'Required group DN': 'DN של קבוצה נדרשת',
+  'Group a user must belong to in order to sign in, checked on every sign-in. Leave empty to allow every user the directory authenticates.':
+    'קבוצה שמשתמש חייב להשתייך אליה כדי להתחבר, נבדקת בכל התחברות. השאירו ריק כדי לאפשר כניסה לכל משתמש שהספרייה מאמתת.',
+  'Port must be between 1 and 65535.': 'הפורט חייב להיות בין 1 ל-65535.',
+  'LDAP settings have been updated.': 'הגדרות ה-LDAP עודכנו.',
+  'LDAP sign-in has been enabled.': 'ההתחברות דרך LDAP הופעלה.',
+  'LDAP sign-in has been disabled.': 'ההתחברות דרך LDAP הושבתה.',
+  'Failed to update LDAP settings': 'עדכון הגדרות ה-LDAP נכשל',
+  'Test connection': 'בדיקת חיבור',
+  'Update the configuration with at least one host and a base DN before testing the connection.':
+    'עדכנו את התצורה עם לפחות מארח אחד ו-base DN לפני בדיקת החיבור.',
+  'Test LDAP connection': 'בדיקת חיבור LDAP',
+  'Checks the configuration saved on this project: it connects to the directory, binds as the service account and reads the base DN.':
+    'בודק את התצורה השמורה בפרויקט הזה: מתחבר לספרייה, מבצע bind כחשבון השירות וקורא את ה-base DN.',
+  'Unsaved changes in the form are not included: update first to test them.':
+    'שינויים שלא נשמרו בטופס לא נכללים: עדכנו קודם כדי לבדוק אותם.',
+  'Username (optional)': 'שם משתמש (אופציונלי)',
+  'Also looks this user up and checks the required group.':
+    'בנוסף מאתר את המשתמש הזה ובודק את הקבוצה הנדרשת.',
+  'Password (optional)': 'סיסמה (אופציונלי)',
+  'Also verifies the password of that user.':
+    'בנוסף מאמת את הסיסמה של אותו משתמש.',
+  'Run test': 'הרצת בדיקה',
+  'Testing the connection…': 'בודק את החיבור…',
+  'Connection, service account and base DN look good.':
+    'החיבור, חשבון השירות וה-base DN תקינים.',
+  'User found, group check passed, password accepted.':
+    'המשתמש נמצא, בדיקת הקבוצה עברה, הסיסמה התקבלה.',
+  'User found, group check passed.': 'המשתמש נמצא, בדיקת הקבוצה עברה.',
+  'Failed to test the LDAP connection': 'בדיקת חיבור ה-LDAP נכשלה',
+  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate settings or bind DN change.':
+    'נשמרת באופן מאובטח ולא מוצגת שוב. נדרשת שוב בכל שינוי של מארחים, פורט, הצפנה, הגדרות התעודה או bind DN.',
+  'Enter the bind password again to save: the connection or certificate settings changed.':
+    'הזינו שוב את סיסמת ה-bind כדי לשמור: הגדרות החיבור או האישור השתנו.',
+  'Add at least one host and a base DN to enable LDAP sign-in.':
+    'הוסיפו לפחות מארח אחד ו-base DN כדי להפעיל התחברות דרך LDAP.',
+  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
+    'הוסיפו לפחות מארח אחד ו-base DN תחת הגדרות > שרתי זהויות כדי להפעיל התחברות דרך LDAP.',
 }

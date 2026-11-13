@@ -9,6 +9,10 @@ on:
       package:
         required: true
         type: string
+      path:
+        required: false
+        type: string
+        default: ''
 
 permissions:
   issues: write
@@ -23,9 +27,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PACKAGE: ${{ inputs.package }}
+          PATH_IN_MONOREPO: ${{ inputs.path != '' && inputs.path || format('packages/{0}', inputs.package) }}
           PR: ${{ github.event.pull_request.html_url }}
         run: |
-          gh pr comment "$PR" --body "Thanks for contributing! This repository is a read-only mirror; development for this library happens in [\`packages/$PACKAGE\`](https://github.com/appwrite/appwrite/tree/main/packages/$PACKAGE) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Please open this pull request there instead."
+          gh pr comment "$PR" --body "Thanks for contributing! This repository is a read-only mirror; development for this library happens in [\`$PATH_IN_MONOREPO\`](https://github.com/appwrite/appwrite/tree/main/$PATH_IN_MONOREPO) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Please open this pull request there instead."
           gh pr close "$PR"
 
       - name: Redirect issue to appwrite/appwrite
@@ -33,7 +38,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE: ${{ github.event.issue.html_url }}
-          PACKAGE: ${{ inputs.package }}
+          PATH_IN_MONOREPO: ${{ inputs.path != '' && inputs.path || format('packages/{0}', inputs.package) }}
         run: |
-          gh issue comment "$ISSUE" --body "Thanks for opening this! This repository is a read-only mirror; issue tracking for this library happens in [\`packages/$PACKAGE\`](https://github.com/appwrite/appwrite/tree/main/packages/$PACKAGE) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Please open this issue there instead."
+          gh issue comment "$ISSUE" --body "Thanks for opening this! This repository is a read-only mirror; issue tracking for this library happens in [\`$PATH_IN_MONOREPO\`](https://github.com/appwrite/appwrite/tree/main/$PATH_IN_MONOREPO) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Please open this issue there instead."
           gh issue close "$ISSUE"

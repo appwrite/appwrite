@@ -11,7 +11,7 @@ This page covers organization member roles for the Appwrite Console. Visit the A
 {% /info %}
 
 ## Owner {% #owner %}
-The highest level of access, the Owner role has full control over all aspects of the Console, including team management, billing, and all development resources. Only owners can create new projects.
+The highest level of access, the Owner role has full control over all aspects of the Console, including team management, billing, and all development resources. Only owners can create new projects and [transfer projects](/docs/advanced/billing/project-transfers) between organizations. A transfer needs an owner of the organization that gives the project and an owner of the organization that receives it.
 
 ## Developer {% #developer %}
 Developers have access to all resources and scopes available to the Owner, with the exception of team management and billing writes. This role is ideal for team members focusing solely on development tasks.

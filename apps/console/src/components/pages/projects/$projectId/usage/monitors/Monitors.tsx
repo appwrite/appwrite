@@ -472,7 +472,7 @@ export function Monitors({
                         state === 'paused' && 'opacity-50',
                       )}
                     />
-                    {monitor.critical && (
+                    {monitor.severity === 'critical' && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span

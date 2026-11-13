@@ -174,6 +174,15 @@ export const heSitesDictionary: Record<string, string> = {
   'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
+  'Waiting for DNS': 'ממתין ל-DNS',
+  'Appwrite checks the DNS records every few minutes for 3 days after the domain is added. Use Check now to look again right away.':
+    'Appwrite בודק את רשומות ה-DNS כל כמה דקות במשך 3 ימים לאחר הוספת הדומיין. לחצו על "בדוק עכשיו" כדי לבדוק מיד.',
+  'Appwrite stopped checking 3 days after the domain was added. Fix the DNS records, then Retry.':
+    'Appwrite הפסיק לבדוק 3 ימים לאחר הוספת הדומיין. תקנו את רשומות ה-DNS ולאחר מכן לחצו על "ניסיון חוזר".',
+  'Last check:': 'בדיקה אחרונה:',
+  'Check now': 'בדוק עכשיו',
+  'Not verified yet. Appwrite keeps checking.':
+    'עדיין לא אומת. Appwrite ממשיך לבדוק.',
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
   'Certificate blocked': 'הנפקת התעודה חסומה',
@@ -415,6 +424,8 @@ export const heSitesDictionary: Record<string, string> = {
     'הדומיין הזה כבר מפנה ל-Appwrite. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות.',
   'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
     'הדומיין הזה נמצא בשימוש בפרויקט אחר. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות כדי להעביר אותו לכאן.',
+  "This domain's DNS is managed by another organization. Add this TXT record to that domain's DNS, or ask that organization's owners to add it, then verify. The domain stays in that organization.":
+    'ה-DNS של הדומיין הזה מנוהל על ידי ארגון אחר. הוסיפו את רשומת ה-TXT הזו ל-DNS של הדומיין, או בקשו מבעלי הארגון להוסיף אותה, ולאחר מכן בצעו אימות. הדומיין נשאר בארגון ההוא.',
   Required: 'שדה חובה',
   Invalid: 'לא תקין',
   'Invalid URL': 'כתובת URL לא תקינה',
@@ -597,15 +608,10 @@ export const heSitesDictionary: Record<string, string> = {
   'Create your first site': 'יצירת האתר הראשון שלכם',
   'Deploy web apps from Git or a template. Every push gets a build, a preview URL, and fast global delivery.':
     'פרסו אפליקציות ווב מ-Git או מתבנית. כל Push מקבל Build, כתובת תצוגה מקדימה והפצה גלובלית מהירה.',
-  'Connect a repository': 'חיבור מאגר',
-  'Deploy on every push to your production branch, with a preview URL for every other branch.':
-    'פריסה בכל Push ל-Branch של הפרודקשן, עם כתובת תצוגה מקדימה לכל Branch אחר.',
-  'Pick a framework': 'בחירת Framework',
-  'Appwrite detects TanStack Start, Next.js, Nuxt, SvelteKit, and more, and sets up the build for you.':
-    'Appwrite מזהה את TanStack Start,‏ Next.js,‏ Nuxt,‏ SvelteKit ועוד, ומגדיר עבורכם את ה-Build.',
-  'Go live': 'עלייה לאוויר',
-  'Get an appwrite.network URL right away, then add your own domain.':
-    'קבלו כתובת appwrite.network מיד, ואז הוסיפו דומיין משלכם.',
+  'Connect a Git provider to deploy on every push.':
+    'חברו ספק Git כדי לפרוס בכל Push.',
+  'Deploy a working site in a few clicks, then make it yours.':
+    'פרסו אתר עובד בכמה קליקים, ואז התאימו אותו לצרכים שלכם.',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
 }

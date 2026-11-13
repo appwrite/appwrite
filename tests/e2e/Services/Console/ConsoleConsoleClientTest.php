@@ -30,7 +30,7 @@ final class ConsoleConsoleClientTest extends Scope
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET_A']);
         $this->assertIsInt($response['body']['_APP_COMPUTE_BUILD_TIMEOUT']);
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET_AAAA']);
-        $this->assertIsString($response['body']['_APP_DOMAIN_TARGET_CAA']);
+        $this->assertSame('0 issue "digicert.com"', $response['body']['_APP_DOMAIN_TARGET_CAA']);
         $this->assertIsInt($response['body']['_APP_STORAGE_LIMIT']);
         $this->assertIsInt($response['body']['_APP_COMPUTE_SIZE_LIMIT']);
         $this->assertIsBool($response['body']['_APP_DOMAIN_ENABLED']);

@@ -42,6 +42,7 @@ import { ProductBentoCardLink } from '@/components/pages/home/product-bento/Prod
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { McpIcon } from '@/components/global/shared/McpIcon'
 import { Button } from '@/components/ui/button'
+import { SpriteIcon } from '@/components/ui/sprite-icon'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
@@ -312,10 +313,13 @@ export function View() {
               asChild
             >
               <MarketingSiteLink href="/init">
-                <Megaphone className="size-3.5" />
+                <SpriteIcon icon={Megaphone} className="size-3.5" />
                 <span className="text-[var(--brand-cta)]">{homeCopy.announcementNew}</span>
                 {homeCopy.announcementText}
-                <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5" />
+                <SpriteIcon
+                  icon={ArrowRight}
+                  className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5"
+                />
               </MarketingSiteLink>
             </Button>
 
@@ -373,11 +377,11 @@ export function View() {
                     <span className="font-medium text-foreground">
                       {homeCopy.heroPreviewWorkspace}
                     </span>
-                    <ChevronRight className="size-3" />
+                    <SpriteIcon icon={ChevronRight} className="size-3" />
                     <span className="truncate">
                       {homeCopy.heroPreviewOrganization}
                     </span>
-                    <ChevronRight className="size-3" />
+                    <SpriteIcon icon={ChevronRight} className="size-3" />
                     <span className="truncate">{homeCopy.heroPreviewProject}</span>
                   </div>
                 </div>
@@ -421,12 +425,12 @@ export function View() {
                   key={tool.name}
                   href={tool.href}
                   aria-label={tool.name}
-                  className="group flex size-9 items-center justify-center transition-transform duration-200 hover:scale-110"
+                  className="home-tool-link group"
                 >
                   <img
                     src={tool.icon}
                     alt=""
-                    className="size-8 object-contain opacity-45 transition-opacity duration-200 group-hover:opacity-100 dark:opacity-40 dark:group-hover:opacity-100"
+                    className="home-tool-logo"
                   />
                 </MarketingSiteLink>
               ))}
@@ -480,13 +484,13 @@ export function View() {
                     >
                       <div className="relative z-10 shrink-0 pb-4">
                         <div className="flex items-center gap-2.5">
-                          <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--foreground)_6%,transparent)] transition-colors duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))]">
-                            <Icon
+                          <span className="product-bento-icon">
+                            <SpriteIcon
+                              icon={Icon}
                               className="size-3.5 text-foreground transition-colors duration-300 group-hover:text-[var(--brand-cta)]"
-                              aria-hidden
                             />
                           </span>
-                          <h3 className="font-aeonik-pro text-[17px] font-normal tracking-[-0.01em] text-foreground">
+                          <h3 className="product-bento-title font-aeonik-pro">
                             {item.title}
                           </h3>
                           {item.label ? (
@@ -494,13 +498,13 @@ export function View() {
                               {item.label}
                             </span>
                           ) : null}
-                          <ArrowUpRight
-                            className="ms-auto size-4 shrink-0 translate-y-1 text-muted-foreground opacity-0 transition-[opacity,translate] duration-300 group-hover:translate-y-0 group-hover:opacity-100 rtl:-scale-x-100 motion-reduce:transition-none"
-                            aria-hidden
+                          <SpriteIcon
+                            icon={ArrowUpRight}
+                            className="product-bento-arrow"
                           />
                         </div>
                         <p
-                          className={`mt-2.5 min-h-10 max-w-xl text-pretty text-[13px] leading-5 text-muted-foreground ${item.compact ? 'line-clamp-2' : 'line-clamp-3'}`}
+                          className={`product-bento-description ${item.compact ? 'line-clamp-2' : 'line-clamp-3'}`}
                         >
                           {item.description}
                         </p>
@@ -561,13 +565,13 @@ export function View() {
                 return (
                   <article
                     key={item.id}
-                    className="group border-b border-border p-5 transition-colors duration-300 hover:bg-accent/15 sm:border-e sm:[&:nth-child(2n)]:border-e-0 sm:[&:nth-child(n+7)]:border-b-0 lg:[&:nth-child(2n)]:border-e lg:[&:nth-child(4n)]:border-e-0 lg:[&:nth-child(n+5)]:border-b-0"
+                    className="home-security-card group"
                   >
                     <div className="flex flex-col gap-3">
-                      <span className="flex size-7 items-center justify-center rounded-md border border-border bg-muted/40 transition-colors duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))] group-hover:bg-[var(--brand-cta)]/10">
-                        <Icon
+                      <span className="home-security-icon">
+                        <SpriteIcon
+                          icon={Icon}
                           className="size-3.5 text-[var(--brand-cta)]"
-                          aria-hidden
                         />
                       </span>
                       <div>

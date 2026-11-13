@@ -2301,6 +2301,79 @@ html[data-init-ticket-video-capturing] [data-init-ticket-export-control] * {
   }
 }
 
+/* Repeated home page markup: one short class keeps the prerendered HTML lean (Ora content-no-js ratio). */
+@layer components {
+  .sprite-icon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .product-avatar {
+    @apply flex size-9 items-center justify-center rounded-full border border-muted-foreground/6 bg-muted-foreground/[0.025] shadow-none ring-1 ring-background backdrop-blur-sm transition-[border-color,opacity,transform] duration-300 hover:z-10 hover:scale-105 hover:border-muted-foreground/10 hover:bg-muted-foreground/[0.04] sm:size-10 dark:bg-muted/10;
+  }
+
+  .product-bento-spotlight {
+    @apply pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(520px_circle_at_var(--spot-x,50%)_var(--spot-y,0%),rgba(133,219,216,0.14)_0%,rgba(133,219,216,0.05)_35%,transparent_65%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:bg-[radial-gradient(520px_circle_at_var(--spot-x,50%)_var(--spot-y,0%),rgba(133,219,216,0.06)_0%,rgba(133,219,216,0.02)_35%,transparent_65%)];
+  }
+
+  .product-bento-soft-light {
+    @apply pointer-events-none absolute inset-0 z-0 transition-opacity duration-300 group-hover:opacity-70 motion-reduce:transition-none motion-reduce:group-hover:opacity-100;
+  }
+
+  .product-bento-link {
+    @apply absolute inset-0 z-[1] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none;
+  }
+
+  .product-bento-icon {
+    @apply flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--foreground)_6%,transparent)] transition-colors duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))];
+  }
+
+  .product-bento-arrow {
+    @apply ms-auto size-4 shrink-0 translate-y-1 text-muted-foreground opacity-0 transition-[opacity,translate] duration-300 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:transition-none rtl:-scale-x-100;
+  }
+
+  .product-bento-title {
+    @apply text-[17px] font-normal tracking-[-0.01em] text-foreground;
+  }
+
+  .product-bento-description {
+    @apply mt-2.5 min-h-10 max-w-xl text-pretty text-[13px] leading-5 text-muted-foreground;
+  }
+
+  .home-security-card {
+    @apply border-b border-border p-5 transition-colors duration-300 hover:bg-accent/15 sm:border-e sm:[&:nth-child(2n)]:border-e-0 sm:[&:nth-child(n+7)]:border-b-0 lg:[&:nth-child(2n)]:border-e lg:[&:nth-child(4n)]:border-e-0 lg:[&:nth-child(n+5)]:border-b-0;
+  }
+
+  .home-security-icon {
+    @apply flex size-7 items-center justify-center rounded-md border border-border bg-muted/40 transition-colors duration-300 group-hover:border-[color-mix(in_srgb,var(--brand-cta)_35%,var(--border))] group-hover:bg-[var(--brand-cta)]/10;
+  }
+
+  .home-stat {
+    @apply flex h-full min-w-0 flex-col justify-center rounded-xl border border-border/80 bg-card/45 px-3 py-3 transition-colors duration-300 hover:bg-accent/15 sm:px-3.5 sm:py-3.5;
+  }
+
+  .home-stat-value {
+    @apply text-[20px] leading-none tracking-tight text-foreground tabular-nums sm:text-[22px] lg:text-[24px];
+  }
+
+  .home-stat-label {
+    @apply mt-1.5 text-[10px] leading-snug text-muted-foreground sm:text-[11px];
+  }
+
+  .home-tool-link {
+    @apply flex size-9 items-center justify-center transition-transform duration-200 hover:scale-110;
+  }
+
+  .home-tool-logo {
+    @apply size-8 object-contain opacity-45 transition-opacity duration-200 group-hover:opacity-100 dark:opacity-40 dark:group-hover:opacity-100;
+  }
+}
+
 /* Home product bento tile hover */
 .product-bento-hover-light {
   z-index: 20;

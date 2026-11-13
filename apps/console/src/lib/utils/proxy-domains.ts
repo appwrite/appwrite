@@ -135,15 +135,33 @@ export function getClaimRecord(domain: string, projectId: string) {
   }
 }
 
+export type DomainClaimReason = 'pointed' | 'held' | 'organization'
+
 /**
- * Whether a rule create was refused until the project proves it owns the
- * domain with the claim record. Cloud answers 400 `rule_verification_failed`
- * for a domain that already points to Appwrite (self-hosted never does on a
- * create), and 409 `rule_claim_required` for one another project holds.
+ * Why a rule create was refused until the project proves it owns the domain
+ * with the claim record, or null when it was refused for another reason.
+ * Cloud answers 400 `rule_verification_failed` for a domain that already
+ * points to Appwrite (self-hosted never does on a create), 409
+ * `rule_claim_required` for one another project holds, and 403
+ * `domain_owned_by_different_organization` for one in a zone another
+ * organization manages.
  */
+export function getDomainClaimReason(error: unknown): DomainClaimReason | null {
+  switch (getAppwriteErrorInfo(error).type) {
+    case 'rule_verification_failed':
+      return 'pointed'
+    case 'rule_claim_required':
+      return 'held'
+    case 'domain_owned_by_different_organization':
+      return 'organization'
+    default:
+      return null
+  }
+}
+
+/** Whether a rule create was refused until the claim record is added. */
 export function isDomainClaimError(error: unknown): boolean {
-  const { type } = getAppwriteErrorInfo(error)
-  return type === 'rule_verification_failed' || type === 'rule_claim_required'
+  return getDomainClaimReason(error) !== null
 }
 
 /**
@@ -160,7 +178,8 @@ export function isCloud(): boolean {
 /**
  * Ensure apex domain exists in organization (Cloud only).
  * Call before creating proxy rules for custom domains.
- * Ignores domain_already_exists as non-fatal.
+ * Ignores domain_already_exists and domain_owned_by_different_organization
+ * as non-fatal.
  */
 export async function ensureApexDomainInOrganization(
   teamId: string,
@@ -225,6 +244,9 @@ export async function ensureApexDomainInOrganization(
     ) {
       return // Non-fatal
     }
+    // Part of this domain belongs to another organization. The rule create
+    // decides, and asks for the claim record when that organization manages it.
+    if (e?.type === 'domain_owned_by_different_organization') return
     throw err
   }
 }

@@ -112,6 +112,45 @@ final class RealtimeConsoleTailTest extends Scope
         $client->close();
     }
 
+    public function testTailEndsWhenProjectIsClaimed(): void
+    {
+        $headers = $this->getRootHeaders();
+        $teamId = $this->createOrganization($headers);
+        $destinationTeamId = $this->createOrganization($headers);
+        $projectId = $this->createOrganizationProject($headers, $teamId);
+
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($headers, $teamId, $member, ['developer']);
+
+        $client = $this->getConsoleWebsocket($member['session']);
+        $response = $this->subscribe($client, ['console.tail.' . $projectId]);
+        $this->assertTrue($response['data']['success']);
+
+        $this->createProjectUser($projectId);
+        $this->receiveUntilEvent($client, fn (array $message): bool => \in_array('console.tail', $message['data']['events'] ?? [], true));
+
+        $transfer = $this->client->call(Client::METHOD_POST, '/organization/transfers', \array_merge($headers, [
+            'x-appwrite-organization' => $teamId,
+        ]), [
+            'projectId' => $projectId,
+        ]);
+        $this->assertSame(201, $transfer['headers']['status-code']);
+
+        $claim = $this->client->call(Client::METHOD_PATCH, '/organization/transfers/' . $transfer['body']['$id'] . '/status', \array_merge($headers, [
+            'x-appwrite-organization' => $destinationTeamId,
+        ]), [
+            'secret' => $transfer['body']['secret'],
+        ]);
+        $this->assertSame(200, $claim['headers']['status-code']);
+        $this->assertSame($destinationTeamId, $claim['body']['teamId']);
+
+        $this->createProjectUser($projectId);
+
+        $this->assertTailStopped($client, 'Tail kept streaming to the previous team after the project was claimed.');
+
+        $client->close();
+    }
+
     public function testTailEndsWhenConnectionAuthenticatesAsAnotherUser(): void
     {
         $headers = $this->getRootHeaders();

@@ -4,8 +4,10 @@ namespace Appwrite\Platform\Modules\Organization\Http\Transfers\Status;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Context\Audit as AuditContext;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Organization\Http\Transfers\Action;
+use Appwrite\Screenshots\Access;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -18,6 +20,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Span\Span;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -63,6 +66,8 @@ class Update extends Action
             ->inject('targetUser')
             ->inject('authorization')
             ->inject('auditContext')
+            ->inject('queueForRealtime')
+            ->inject('getProjectDB')
             ->callback($this->action(...));
     }
 
@@ -75,6 +80,8 @@ class Update extends Action
         User $targetUser,
         Authorization $authorization,
         AuditContext $auditContext,
+        Realtime $queueForRealtime,
+        callable $getProjectDB,
     ) {
         // Taking a project in is the same move as giving one away, so the claiming
         // organization answers for it with an owner too
@@ -145,6 +152,24 @@ class Update extends Action
         }));
 
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+
+        // Ends the previous organization's tails and admin-mode connections, as a team update does
+        $queueForRealtime
+            ->setProject($project)
+            ->setEvent('projects.[projectId].update.team')
+            ->setParam('projectId', $project->getId())
+            ->setPayload([
+                '$id' => $project->getId(),
+                'teamId' => $team->getId(),
+            ])
+            ->trigger();
+
+        // The claim has committed, so a screenshot failure is recorded rather than reported as a failed claim
+        try {
+            (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
+        } catch (\Throwable $th) {
+            Span::add('screenshots.error', $th->getMessage());
+        }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

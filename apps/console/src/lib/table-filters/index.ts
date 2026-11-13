@@ -25,6 +25,7 @@ export {
   mapToQueryParam,
   compactFilterKeysEqual,
   findCompactFilterKeyInMap,
+  withFilter,
   buildListSearchParams,
   parseListSearch,
   urlFromRouterLocation,

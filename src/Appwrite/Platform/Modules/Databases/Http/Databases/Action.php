@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
-use Appwrite\Databases\ListCache;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
+use Appwrite\Utopia\Cache\ListCache;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
 use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;

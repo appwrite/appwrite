@@ -32,9 +32,11 @@ final class FakeTransport implements Pollable, Transport
     public bool $answerPings = true;
 
     /**
-     * Whether the server has closed the socket, as one in lame-duck mode does to
-     * a connection nobody is reading. Reads serve what was already sent and then
-     * raise; writes are accepted and go nowhere. The next connect() clears it.
+     * Whether the server has closed the socket: one in lame-duck mode, a
+     * restarted or evicted server, or a connection an intermediary reaped while
+     * idle. Reads serve what was already sent and then raise; writes are
+     * accepted and go nowhere, as they do into a kernel buffer, so only a read
+     * can tell. The next connect() clears it, so a reconnect is served normally.
      */
     public bool $closedByServer = false;
 

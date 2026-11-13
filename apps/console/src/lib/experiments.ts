@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: 'analytics' | 'projectEnvironments' | 'projectTransfers'
+  flag: 'analytics' | 'projectEnvironments' | 'vcsOrigin' | 'identityServers'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -35,10 +35,16 @@ export const EXPERIMENTS: readonly Experiment[] = [
     introducedAt: '2026-10-29',
   },
   {
-    flag: 'projectTransfers',
-    name: 'Project transfers',
-    description: 'Move a project to another organization.',
-    introducedAt: '2026-10-29',
+    flag: 'vcsOrigin',
+    name: 'Origin Git provider',
+    description: 'Deploy from Cursor Origin repositories.',
+    introducedAt: '2026-11-13',
+  },
+  {
+    flag: 'identityServers',
+    name: 'Identity servers',
+    description: 'LDAP directory sign-in for a project.',
+    introducedAt: '2026-11-06',
   },
 ]
 

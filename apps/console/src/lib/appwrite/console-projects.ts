@@ -1,6 +1,8 @@
+import { ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import type { Region } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { LOOPBACK_HOSTNAME } from '@/lib/utils/platform'
 
 type ListConsoleProjectsParams = {
   /** Organization / team id. Required for `/organization/projects`. */
@@ -76,18 +78,37 @@ export function listConsoleProjects(
  * Create a project via the org-scoped console Organization SDK
  * (`POST /organization/projects` with `X-Appwrite-Organization`).
  * The org header assigns the project to `teamId`; no separate team update.
+ * The project starts with a web platform for localhost, so a first web app in
+ * local development connects without a CORS error.
  */
-export function createConsoleProject(params: {
+export async function createConsoleProject(params: {
   projectId: string
   name: string
   region?: Region
   teamId: string
 }): Promise<Models.Project> {
-  return sdk.forConsole.organization(params.teamId).createProject({
-    projectId: params.projectId,
-    name: params.name,
-    ...(params.region !== undefined ? { region: params.region } : {}),
-  })
+  const project = await sdk.forConsole
+    .organization(params.teamId)
+    .createProject({
+      projectId: params.projectId,
+      name: params.name,
+      ...(params.region !== undefined ? { region: params.region } : {}),
+    })
+
+  try {
+    await sdk
+      .forProject(project.$id, project.region)
+      .project.createWebPlatform({
+        platformId: ID.unique(),
+        name: 'Web app',
+        hostname: LOOPBACK_HOSTNAME,
+      })
+  } catch (error) {
+    // The project exists either way; its apps page still offers to add one.
+    console.warn('Could not add the default web platform:', error)
+  }
+
+  return project
 }
 
 export function getConsoleProject(params: {
