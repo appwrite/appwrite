@@ -29,5 +29,9 @@ fn enabled(package: &str) -> bool {
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     let module = module.name("utopia").class::<canvas::Canvas>().class::<canvas::Font>();
     let module = if enabled("dsn") { module.class::<dsn::Dsn>() } else { module };
-    if enabled("locale") { module.class::<locale::Locale>() } else { module }
+    if enabled("locale") {
+        module.class::<locale::Locale>().request_shutdown_function(locale::request_shutdown)
+    } else {
+        module
+    }
 }

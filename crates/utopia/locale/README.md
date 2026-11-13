@@ -28,7 +28,7 @@ use utopia_locale::{Languages, Locale, Missing, Translations};
 let mut languages = Languages::new();
 languages.insert(
     "en-US",
-    Translations::from([
+    Translations::from_iter([
         ("hello".to_owned(), "Hello".to_owned()),
         ("world".to_owned(), "World".to_owned()),
     ]),
@@ -50,7 +50,7 @@ use utopia_locale::{Languages, Locale, Missing, Translations};
 let mut languages = Languages::new();
 languages.insert(
     "en-US",
-    Translations::from([(
+    Translations::from_iter([(
         "likes".to_owned(),
         "You have {{likes}} likes and {{comments}} comments.".to_owned(),
     )]),
@@ -74,12 +74,12 @@ use utopia_locale::{Languages, Locale, Missing, Translations};
 let mut languages = Languages::new();
 languages.insert(
     "en-US",
-    Translations::from([
+    Translations::from_iter([
         ("hello".to_owned(), "Hello".to_owned()),
         ("world".to_owned(), "World".to_owned()),
     ]),
 );
-languages.insert("he-IL", Translations::from([("hello".to_owned(), "שלום".to_owned())]));
+languages.insert("he-IL", Translations::from_iter([("hello".to_owned(), "שלום".to_owned())]));
 
 let mut locale = Locale::new(&languages, "he-IL")?;
 locale.set_fallback("en-US")?;
@@ -97,7 +97,7 @@ By default a key no language has is an error. Turn exceptions off to get a place
 use utopia_locale::{Languages, Locale, Missing, Translations};
 
 let mut languages = Languages::new();
-languages.insert("en-US", Translations::from([("hello".to_owned(), "Hello".to_owned())]));
+languages.insert("en-US", Translations::from_iter([("hello".to_owned(), "Hello".to_owned())]));
 languages.set_exceptions(false);
 let locale = Locale::new(&languages, "en-US")?;
 
@@ -138,9 +138,9 @@ use utopia_locale::{Languages, Locale, Missing, Translations};
 let mut languages = Languages::new();
 languages.insert(
     "en-US",
-    Translations::from([("hello".to_owned(), "Hello".to_owned()), ("bye".to_owned(), "Bye".to_owned())]),
+    Translations::from_iter([("hello".to_owned(), "Hello".to_owned()), ("bye".to_owned(), "Bye".to_owned())]),
 );
-languages.insert("he-IL", Translations::from([("hello".to_owned(), "שלום".to_owned())]));
+languages.insert("he-IL", Translations::from_iter([("hello".to_owned(), "שלום".to_owned())]));
 
 let requested = "he-IL";
 let mut locale = Locale::new(&languages, requested)?;
@@ -161,7 +161,7 @@ With exceptions on, the default, an unknown language or a key no language has fa
 use utopia_locale::{Error, Languages, Locale, Missing, Translations};
 
 let mut languages = Languages::new();
-languages.insert("en-US", Translations::from([("hello".to_owned(), "Hello".to_owned())]));
+languages.insert("en-US", Translations::from_iter([("hello".to_owned(), "Hello".to_owned())]));
 
 assert!(!languages.contains("fr-FR"));
 let error = Locale::new(&languages, "fr-FR").unwrap_err();

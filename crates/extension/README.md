@@ -25,7 +25,7 @@ implementation of them. Every other class is registered only when `_APP_EXTENSIO
 its package. Otherwise Composer loads the package's PHP class as before:
 
 ```sh
-_APP_EXTENSION_LIBRARIES=dsn   # Utopia\DSN\DSN from the extension; comma separate more
+_APP_EXTENSION_LIBRARIES=dsn,locale   # Utopia\DSN\DSN and Utopia\Locale\Locale from the extension
 ```
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
@@ -51,6 +51,33 @@ the extension:
 
 Its protected properties are getter-backed: they are computed from the parsed DSN only when PHP
 reads them, so construction stores each component once, in `utopia-dsn`'s single buffer.
+
+## Utopia\Locale\Locale
+
+Over `crates/utopia/locale` (`_APP_EXTENSION_LIBRARIES=locale`). The registered languages are the
+PHP class's static state, so they live once per process and are cleared when the request ends, as
+PHP clears static properties. `Locale::$exceptions` is still a PHP static property:
+`Locale::$exceptions = false` works unchanged, and every call reads it. Translation files are read
+through PHP's `file_exists()` and `file_get_contents()`, so Swoole's hooks, stream wrappers and
+PHP's warnings apply. `getTranslations()` builds a language's array once and returns it by
+refcount afterwards, as PHP returns `self::$language[$name]`.
+
+`crates/extension/tests/locale.php` prints a corpus of results that must be identical on both
+implementations: every Appwrite translation in every language, with placeholders; JSON files of
+every shape; every combination of default, fallback and missing key with and without
+exceptions; placeholder values of every type; the scalar arguments PHP converts; and the warnings
+each case raises. It asserts these known differences on the extension:
+
+- `setLanguageFromArray()` refuses a translation that is not a string; PHP stores it and returns it.
+- Language names and keys are read as UTF-8: other bytes become U+FFFD, in lookups and in the
+  `Key named "…" not found` message. The `{{key}}` returned for a missing key keeps the exact bytes.
+- Reading an unregistered default language raises the same `TypeError` without PHP's
+  `Undefined array key` warning before it.
+- `$default` and `$fallback` take strings: assigning another type throws, where PHP stores it.
+- `serialize()` refuses the object, as it does every class with Rust state.
+
+A warning PHP raises inside the class (`file_get_contents()` of a missing file) names the caller's
+file and line, since the class has no PHP source.
 
 ## Benchmarks
 

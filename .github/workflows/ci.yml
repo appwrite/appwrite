@@ -471,7 +471,7 @@ jobs:
             rustup component add clippy rustfmt &&
             cargo fmt --all --check &&
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
-            cargo test --locked -p php-std -p utopia-image --all-features'
+            cargo test --locked -p php-std -p utopia-image -p utopia-locale --all-features'
 
       - name: Build the image
         run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
@@ -495,6 +495,19 @@ jobs:
             _APP_EXTENSION_LIBRARIES=dsn vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/dsn/tests
             php crates/extension/tests/dsn.php > /tmp/php.jsonl
             _APP_EXTENSION_LIBRARIES=dsn php crates/extension/tests/dsn.php > /tmp/rust.jsonl
+            diff /tmp/php.jsonl /tmp/rust.jsonl'
+
+      - name: Test Locale on the extension
+        run: |
+          # Utopia\Locale\Locale is registered only when _APP_EXTENSION_LIBRARIES names locale: the
+          # package's tests must pass on it, and the parity corpus must print the same on both.
+          docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
+            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
+            set -e
+            _APP_EXTENSION_LIBRARIES=locale php -r "exit((new ReflectionClass(Utopia\\Locale\\Locale::class))->isInternal() ? 0 : 1);"
+            _APP_EXTENSION_LIBRARIES=locale vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/locale/tests
+            php crates/extension/tests/locale.php > /tmp/php.jsonl
+            _APP_EXTENSION_LIBRARIES=locale php crates/extension/tests/locale.php > /tmp/rust.jsonl
             diff /tmp/php.jsonl /tmp/rust.jsonl'
 
   build:

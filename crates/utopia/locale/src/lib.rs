@@ -51,8 +51,12 @@ pub struct GettingStarted;
 /// PHP: `Locale::DEFAULT_DYNAMIC_KEY`.
 pub const DEFAULT_DYNAMIC_KEY: &str = "[[defaultDynamicKey]]";
 
+/// The hasher of every map here: keys are looked up on each text read, and
+/// foldhash is several times faster than SipHash on them.
+type Hasher = foldhash::fast::RandomState;
+
 /// Translations of one language, in file order.
-pub type Translations = IndexMap<String, String>;
+pub type Translations = IndexMap<String, String, Hasher>;
 
 /// Why a lookup or a language registration failed.
 ///
@@ -127,7 +131,7 @@ enum Language {
 /// PHP: the static state of `Locale`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Languages {
-    languages: IndexMap<String, Language>,
+    languages: IndexMap<String, Language, Hasher>,
     exceptions: bool,
 }
 
@@ -143,7 +147,7 @@ impl Languages {
     ///
     /// PHP: exceptions are on by default, as in PHP.
     pub fn new() -> Self {
-        Self { languages: IndexMap::new(), exceptions: true }
+        Self { languages: IndexMap::default(), exceptions: true }
     }
 
     /// Whether an unknown language or a missing key or file is an error.
@@ -213,9 +217,9 @@ impl Languages {
             Ok(Value::Int(_)) => Language::Unusable("int"),
             Ok(Value::Float(_)) => Language::Unusable("float"),
             Ok(Value::Str(_)) => Language::Unusable("string"),
-            Ok(Value::Object(_)) => Language::Texts(Translations::new()),
+            Ok(Value::Object(_)) => Language::Texts(Translations::default()),
             Ok(Value::Array(array)) => {
-                let mut texts = Translations::with_capacity(array.len());
+                let mut texts = Translations::with_capacity_and_hasher(array.len(), Hasher::default());
                 for (key, value) in array.iter() {
                     let key = match key {
                         KeyRef::Int(i) => i.to_string(),
@@ -260,8 +264,8 @@ fn key_exists_error(given: &str) -> Error {
 #[derive(Debug, Clone)]
 pub struct Locale<'a> {
     languages: &'a Languages,
-    default: String,
-    fallback: Option<String>,
+    default: Cow<'a, str>,
+    fallback: Option<Cow<'a, str>>,
 }
 
 impl<'a> Locale<'a> {
@@ -271,17 +275,21 @@ impl<'a> Locale<'a> {
     /// exceptions are on.
     ///
     /// PHP: `new Locale($default)`.
-    pub fn new(languages: &'a Languages, default: &str) -> Result<Self, Error> {
+    pub fn new(languages: &'a Languages, default: &'a str) -> Result<Self, Error> {
         languages.check(default)?;
-        Ok(Self { languages, default: default.to_owned(), fallback: None })
+        Ok(Self { languages, default: Cow::Borrowed(default), fallback: None })
     }
 
     /// A locale with this default and fallback language, without checking
     /// that they are registered.
     ///
     /// PHP: assigning the public `$default` and `$fallback` properties.
-    pub fn with(languages: &'a Languages, default: String, fallback: Option<String>) -> Self {
-        Self { languages, default, fallback }
+    pub fn with(
+        languages: &'a Languages,
+        default: impl Into<Cow<'a, str>>,
+        fallback: Option<impl Into<Cow<'a, str>>>,
+    ) -> Self {
+        Self { languages, default: default.into(), fallback: fallback.map(Into::into) }
     }
 
     /// The name of the language texts are read from first.
@@ -306,7 +314,7 @@ impl<'a> Locale<'a> {
     /// PHP: `$locale->setDefault($name)`.
     pub fn set_default(&mut self, name: &str) -> Result<&mut Self, Error> {
         self.languages.check(name)?;
-        self.default = name.to_owned();
+        self.default = Cow::Owned(name.to_owned());
         Ok(self)
     }
 
@@ -318,7 +326,7 @@ impl<'a> Locale<'a> {
     /// PHP: `$locale->setFallback($name)`.
     pub fn set_fallback(&mut self, name: &str) -> Result<&mut Self, Error> {
         self.languages.check(name)?;
-        self.fallback = Some(name.to_owned());
+        self.fallback = Some(Cow::Owned(name.to_owned()));
         Ok(self)
     }
 
@@ -370,7 +378,7 @@ impl<'a> Locale<'a> {
     ///
     /// PHP: `$locale->getTranslations()`.
     pub fn translations(&self) -> Result<&'a Translations, Error> {
-        match self.languages.languages.get(&self.default) {
+        match self.languages.languages.get(self.default.as_ref()) {
             Some(Language::Texts(t)) => Ok(t),
             Some(Language::Unusable(given)) => Err(returned_error(given)),
             None => Err(returned_error("null")),
@@ -469,13 +477,13 @@ mod tests {
         let mut l = Languages::new();
         l.insert(
             "en-US",
-            Translations::from([
+            Translations::from_iter([
                 ("hello".to_owned(), "Hello".to_owned()),
                 ("world".to_owned(), "World".to_owned()),
                 ("helloPlaceholder".to_owned(), "Hello {{name}} {{surname}}!".to_owned()),
             ]),
         );
-        l.insert("he-IL", Translations::from([("hello".to_owned(), "שלום".to_owned())]));
+        l.insert("he-IL", Translations::from_iter([("hello".to_owned(), "שלום".to_owned())]));
         l
     }
 
@@ -505,7 +513,7 @@ mod tests {
         let bad = Locale::new(&l, "bad").unwrap();
         assert_eq!(bad.text("a", Missing::Key, &[]).unwrap_err().php_class(), "TypeError");
         assert!(bad.translations().unwrap_err().to_string().ends_with("null returned"));
-        let num = Locale::with(&l, "num".into(), None);
+        let num = Locale::with(&l, "num", None::<&str>);
         assert!(num.text("a", Missing::Key, &[]).unwrap_err().to_string().ends_with("int given"));
     }
 }

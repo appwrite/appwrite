@@ -9,6 +9,7 @@ repository = "https://github.com/utopia-rs/locale"
 publish.workspace = true
 
 [dependencies]
+foldhash.workspace = true
 indexmap.workspace = true
 php-std.workspace = true
 thiserror.workspace = true

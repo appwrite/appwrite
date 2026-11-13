@@ -2562,6 +2562,7 @@ dependencies = [
 name = "utopia-locale"
 version = "0.1.0"
 dependencies = [
+ "foldhash",
  "indexmap",
  "php-std",
  "thiserror 2.0.21",
