@@ -12,6 +12,7 @@ import {
   MCP_SERVER_CARD_CONTENT_TYPE,
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
+  buildArdDocument,
   buildApiCatalogDocument,
   buildMcpDocsServerCard,
   buildMcpServerCard,
@@ -34,7 +35,7 @@ const DISCOVERY_HANDLERS: Record<
   },
   [APPWRITE_ARD_PATH]: {
     contentType: ARD_CONTENT_TYPE,
-    body: () => serializeDiscoveryJson(buildAiCatalogDocument()),
+    body: () => serializeDiscoveryJson(buildArdDocument()),
   },
   [APPWRITE_AI_CATALOG_PATH]: {
     contentType: ARD_CONTENT_TYPE,

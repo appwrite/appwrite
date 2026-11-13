@@ -186,7 +186,22 @@ test.describe('markdown exports (read-only)', () => {
       expect(entry?.type).toBe('application/mcp-server-card+json')
       expect(entry?.url).toContain('/.well-known/mcp/server-card.json')
       expect(entry?.data).toBeUndefined()
+      const trust = path.endsWith('ard.json')
+        ? entry?.trustManifest?.identity
+        : entry?.trustManifests?.[0]?.contributor
+      expect(trust).toBe('https://appwrite.io')
+      expect(catalogBody.entries?.[1]?.url).toContain(
+        '/.well-known/mcp/docs/server-card.json',
+      )
     }
+
+    const docsCard = await request.get('/.well-known/mcp/docs/server-card.json')
+    expect(docsCard.status()).toBe(200)
+    const docsCardBody = await docsCard.json()
+    expect(docsCardBody.name).toBe('io.appwrite/mcp-docs')
+    expect(docsCardBody.remotes?.[0]?.url).toBe(
+      'https://mcp.appwrite.io/docs/mcp',
+    )
 
     const skills = await request.get('/.well-known/agent-skills/index.json')
     expect(skills.status()).toBe(200)
@@ -248,6 +263,13 @@ test.describe('markdown exports (read-only)', () => {
     expect(body).toContain('User-agent:')
     expect(body).toContain('Sitemap:')
     expect(body).toContain('https://appwrite.io/sitemap/news.xml')
+    expect(body).toContain('Schemamap: https://appwrite.io/schemamap.xml')
+
+    const schemamap = await request.get('/schemamap.xml')
+    expect(schemamap.status()).toBe(200)
+    expect(await schemamap.text()).toContain(
+      '<sf:contentType>structuredData/rss</sf:contentType>',
+    )
   })
 
   test('sitemap index lists section sitemaps', async ({ request }) => {

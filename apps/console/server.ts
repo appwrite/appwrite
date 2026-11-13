@@ -107,6 +107,7 @@ import {
   MCP_SERVER_CARD_CONTENT_TYPE,
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
+  buildArdDocument,
   buildMcpDocsServerCard,
   buildMcpServerCard,
   serializeDiscoveryJson,
@@ -906,7 +907,7 @@ async function initializeServer() {
           req,
           await readClientExportOrFallback(
             '.well-known/ard.json',
-            () => serializeDiscoveryJson(buildAiCatalogDocument()),
+            () => serializeDiscoveryJson(buildArdDocument()),
           ),
           ARD_CONTENT_TYPE,
         ),

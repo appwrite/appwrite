@@ -16,6 +16,7 @@ import { isFeatureGatedDocsSlugHidden } from '../src/lib/docs/feature-gated-docs
 import {
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
+  buildArdDocument,
   buildMcpDocsServerCard,
   buildMcpServerCard,
   serializeDiscoveryJson,
@@ -359,7 +360,7 @@ async function buildExportFiles(): Promise<ExportFile[]> {
     },
     {
       relativePath: '.well-known/ard.json',
-      contents: serializeDiscoveryJson(buildAiCatalogDocument(SITE_ORIGIN)),
+      contents: serializeDiscoveryJson(buildArdDocument(SITE_ORIGIN)),
     },
     {
       relativePath: '.well-known/ai-catalog.json',

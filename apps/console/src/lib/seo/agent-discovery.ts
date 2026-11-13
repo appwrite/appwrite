@@ -253,42 +253,75 @@ export function buildMcpDiscoveryDocument(
   return buildMcpServerCard(origin)
 }
 
-/** Domain AI Catalog advertising the Appwrite MCP Server Card. */
+const CATALOG_IDENTITY = 'https://appwrite.io'
+const MCP_SOURCE = 'https://github.com/appwrite/mcp'
+
+function buildCatalogEntries(origin: string) {
+  return [
+    {
+      identifier: 'urn:air:appwrite.io:mcp:appwrite',
+      displayName: 'Appwrite MCP Server',
+      type: 'application/mcp-server-card+json',
+      url: `${origin}${APPWRITE_MCP_SERVER_CARD_PATH}`,
+      description:
+        'Manage Appwrite projects, auth, databases, storage, functions, sites, and messaging from an AI agent.',
+      representativeQueries: [
+        'create a database table for my app',
+        'add email and OAuth sign-in to my app',
+        'deploy a serverless function',
+        'upload files to a storage bucket',
+      ],
+    },
+    {
+      identifier: 'urn:air:appwrite.io:mcp:appwrite-docs',
+      displayName: 'Appwrite Docs MCP Server',
+      type: 'application/mcp-server-card+json',
+      url: `${origin}${APPWRITE_MCP_DOCS_SERVER_CARD_PATH}`,
+      description:
+        'Search the Appwrite documentation without signing in. Agents that can sign in should use the Appwrite MCP Server, which includes docs search.',
+      representativeQueries: [
+        'how do I query rows in Appwrite',
+        'Appwrite OAuth sign-in setup',
+      ],
+    },
+  ]
+}
+
+const CATALOG_HOST = {
+  displayName: 'Appwrite',
+  identifier: 'did:web:appwrite.io',
+}
+
+/** Agentic Resource Discovery manifest: one `trustManifest` per entry. */
+export function buildArdDocument(origin: string = 'https://appwrite.io') {
+  return {
+    specVersion: '1.0',
+    host: CATALOG_HOST,
+    entries: buildCatalogEntries(origin).map((entry) => ({
+      ...entry,
+      trustManifest: {
+        identity: CATALOG_IDENTITY,
+        identityType: 'https',
+        provenance: [{ relation: 'publishedFrom', sourceId: MCP_SOURCE }],
+      },
+    })),
+  }
+}
+
+/** AI Catalog Standard document: a `trustManifests` array per entry. */
 export function buildAiCatalogDocument(origin: string = 'https://appwrite.io') {
   return {
     specVersion: '1.0',
-    host: {
-      displayName: 'Appwrite',
-      identifier: 'did:web:appwrite.io',
-    },
-    entries: [
-      {
-        identifier: 'urn:air:appwrite.io:mcp:appwrite',
-        displayName: 'Appwrite MCP Server',
-        type: 'application/mcp-server-card+json',
-        url: `${origin}${APPWRITE_MCP_SERVER_CARD_PATH}`,
-        description:
-          'Manage Appwrite projects, auth, databases, storage, functions, sites, and messaging from an AI agent.',
-        representativeQueries: [
-          'create a database table for my app',
-          'add email and OAuth sign-in to my app',
-          'deploy a serverless function',
-          'upload files to a storage bucket',
-        ],
-      },
-      {
-        identifier: 'urn:air:appwrite.io:mcp:appwrite-docs',
-        displayName: 'Appwrite Docs MCP Server',
-        type: 'application/mcp-server-card+json',
-        url: `${origin}${APPWRITE_MCP_DOCS_SERVER_CARD_PATH}`,
-        description:
-          'Search the Appwrite documentation without signing in. Agents that can sign in should use the Appwrite MCP Server, which includes docs search.',
-        representativeQueries: [
-          'how do I query rows in Appwrite',
-          'Appwrite OAuth sign-in setup',
-        ],
-      },
-    ],
+    host: CATALOG_HOST,
+    entries: buildCatalogEntries(origin).map((entry) => ({
+      ...entry,
+      trustManifests: [
+        {
+          contributor: CATALOG_IDENTITY,
+          provenance: [{ relation: 'publishedFrom', sourceId: MCP_SOURCE }],
+        },
+      ],
+    })),
   }
 }
 
