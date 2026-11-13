@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { isRedirect } from '@tanstack/react-router'
 import {
   CONSOLE_PROFILES,
+  getDebugProfileFeatureOverrides,
   setDebugProfileFeatureOverride,
 } from '@/lib/console-profiles'
 import { EXPERIMENTS, hasQualityLabel } from '@/lib/experiments'
@@ -49,6 +50,49 @@ describe('experiments catalog', () => {
     for (const profile of Object.values(CONSOLE_PROFILES)) {
       expect(profile.features.alerts).toBe(false)
     }
+  })
+})
+
+describe('Origin flag rename', () => {
+  const globals = globalThis as { window?: unknown; localStorage?: unknown }
+  const originalWindow = globals.window
+  const originalLocalStorage = globals.localStorage
+
+  afterEach(() => {
+    globals.window = originalWindow
+    globals.localStorage = originalLocalStorage
+  })
+
+  test('an Origin override saved under extraVcsOAuth carries over to vcsOrigin', () => {
+    // Saved before the rename: the old key, and no vcsOrigin
+    const features: Record<string, unknown> = {
+      ...CONSOLE_PROFILES.cloud.features,
+    }
+    delete features.vcsOrigin
+    const storage = new Map<string, string>([
+      [
+        'debug:consoleProfile',
+        JSON.stringify({
+          ...CONSOLE_PROFILES.cloud,
+          features: { ...features, extraVcsOAuth: true },
+        }),
+      ],
+    ])
+    const localStorage = {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => void storage.set(key, value),
+      removeItem: (key: string) => void storage.delete(key),
+    }
+    globals.localStorage = localStorage
+    globals.window = {
+      localStorage,
+      location: new URL('https://cloud.appwrite.io/console'),
+      dispatchEvent: () => true,
+    }
+
+    const overrides = getDebugProfileFeatureOverrides()
+    expect(overrides.vcsOrigin).toBe(true)
+    expect('extraVcsOAuth' in overrides).toBe(false)
   })
 })
 

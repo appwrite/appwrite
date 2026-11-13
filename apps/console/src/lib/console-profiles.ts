@@ -363,6 +363,7 @@ const REMOVED_PROFILE_FEATURE_KEYS = [
   'executionLogs',
   'extraOAuthLogin',
   'projectTransfers',
+  'extraVcsOAuth',
 ] as const
 
 function migrateStoredProfileFeatures(
@@ -372,6 +373,9 @@ function migrateStoredProfileFeatures(
     Record<string, unknown>
   if (!('agent' in next) && typeof next.aiAssistant === 'boolean') {
     next.agent = next.aiAssistant
+  }
+  if (!('vcsOrigin' in next) && typeof next.extraVcsOAuth === 'boolean') {
+    next.vcsOrigin = next.extraVcsOAuth
   }
   for (const key of REMOVED_PROFILE_FEATURE_KEYS) {
     delete next[key]
