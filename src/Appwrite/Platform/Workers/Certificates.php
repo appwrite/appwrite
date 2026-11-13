@@ -3,13 +3,14 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Bus\Events\RuleUpdated;
-use Appwrite\Bus\Events\RuleVerified;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Mail as MailMessage;
+use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
@@ -66,6 +67,7 @@ class Certificates extends Action
             ->inject('message')
             ->inject('dbForPlatform')
             ->inject('publisherForMails')
+            ->inject('publisherForNotifications')
             ->inject('queueForEvents')
             ->inject('queueForWebhooks')
             ->inject('publisherForFunctions')
@@ -73,6 +75,7 @@ class Certificates extends Action
             ->inject('publisherForCertificates')
             ->inject('certificates')
             ->inject('plan')
+            ->inject('platform')
             ->inject('authorization')
             ->inject('bus')
             ->callback($this->action(...));
@@ -82,6 +85,7 @@ class Certificates extends Action
      * @param Message $message
      * @param Database $dbForPlatform
      * @param MailPublisher $publisherForMails
+     * @param NotificationPublisher $publisherForNotifications
      * @param Event $queueForEvents
      * @param Webhook $queueForWebhooks
      * @param FunctionPublisher $publisherForFunctions
@@ -89,6 +93,7 @@ class Certificates extends Action
      * @param Certificate $publisherForCertificates
      * @param Provider $certificates
      * @param array $plan
+     * @param array $platform
      * @param ValidatorAuthorization $authorization
      * @return void
      * @throws Throwable
@@ -98,6 +103,7 @@ class Certificates extends Action
         Message $message,
         Database $dbForPlatform,
         MailPublisher $publisherForMails,
+        NotificationPublisher $publisherForNotifications,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -105,6 +111,7 @@ class Certificates extends Action
         Certificate $publisherForCertificates,
         Provider $certificates,
         array $plan,
+        array $platform,
         ValidatorAuthorization $authorization,
         Bus $bus,
     ): void {
@@ -131,7 +138,7 @@ class Certificates extends Action
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain, $skipDomainValidation);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $platform, $validationDomain, $skipDomainValidation);
                 break;
 
             default:
@@ -225,6 +232,7 @@ class Certificates extends Action
      * @param ?string $domainType
      * @param Database $dbForPlatform
      * @param MailPublisher $publisherForMails
+     * @param NotificationPublisher $publisherForNotifications
      * @param Event $queueForEvents
      * @param Webhook $queueForWebhooks
      * @param FunctionPublisher $publisherForFunctions
@@ -233,6 +241,7 @@ class Certificates extends Action
      * @param ValidatorAuthorization $authorization
      * @param bool $skipRenewCheck
      * @param array $plan
+     * @param array $platform
      * @param string|null $validationDomain
      * @param bool $skipDomainValidation DNS already passed for this rule
      * @return void
@@ -249,6 +258,7 @@ class Certificates extends Action
         ?string $domainType,
         Database $dbForPlatform,
         MailPublisher $publisherForMails,
+        NotificationPublisher $publisherForNotifications,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
@@ -258,6 +268,7 @@ class Certificates extends Action
         Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
+        array $platform = [],
         ?string $validationDomain = null,
         bool $skipDomainValidation = false
     ): void {
@@ -474,6 +485,11 @@ class Certificates extends Action
             $rule->setAttribute('certificateId', $certificate->getId());
             $rule->setAttribute('logs', $logs);
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
+
+            // A renewal was already live, so only a first issuance tells the owners
+            if (!$renewing && $rule->getAttribute('status') === RULE_STATUS_VERIFIED) {
+                $this->sendVerifiedAlert($rule, $dbForPlatform, $publisherForNotifications, $platform, $plan);
+            }
         }
     }
 
@@ -550,9 +566,6 @@ class Certificates extends Action
         Realtime $queueForRealtime,
         Bus $bus
     ): void {
-        // Read before the update, to tell a domain going live from a renewal
-        $previousStatus = $dbForPlatform->getDocument('rules', $rule->getId())->getAttribute('status', '');
-
         $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
             'status' => $rule->getAttribute('status'),
             'certificateId' => $rule->getAttribute('certificateId'),
@@ -607,11 +620,6 @@ class Certificates extends Action
             ->setSubscribers(['console', $projectId])
             ->from($queueForEvents)
             ->trigger();
-
-        // Last, so a failure to email the owners cannot hold back the events above
-        if ($previousStatus !== RULE_STATUS_VERIFIED && $rule->getAttribute('status') === RULE_STATUS_VERIFIED) {
-            $bus->dispatch(new RuleVerified($rule->getArrayCopy(), $project->getArrayCopy()));
-        }
     }
 
     /**
@@ -735,5 +743,99 @@ class Certificates extends Action
             preview: $preview,
             variables: $emailVariables,
         ));
+    }
+
+    /**
+     * Mail and notify the project owners, the same way webhook alerts do.
+     */
+    private function sendVerifiedAlert(Document $rule, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, array $platform, array $plan): void
+    {
+        $projectId = (string) $rule->getAttribute('projectId', '');
+        if ($projectId === '' || $projectId === 'console') {
+            return;
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+        if ($project->isEmpty()) {
+            return;
+        }
+
+        $memberships = $dbForPlatform->find('memberships', [
+            Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
+            Query::equal('confirm', [true]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        $userIds = [];
+        foreach ($memberships as $membership) {
+            if (\in_array('owner', $membership->getAttribute('roles', []), true)) {
+                $userIds[] = $membership->getAttribute('userId');
+            }
+        }
+
+        if (empty($userIds)) {
+            return;
+        }
+
+        $users = $dbForPlatform->find('users', [
+            Query::equal('$id', \array_values(\array_unique($userIds))),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        $projectInternalId = (string) $project->getSequence();
+        $domain = $rule->getAttribute('domain', '');
+
+        // A site or function lists its own domains; API domains are in project settings
+        $resourceId = $rule->getAttribute('deploymentResourceId', '');
+        $path = match ($resourceId === '' ? '' : $rule->getAttribute('deploymentResourceType', '')) {
+            'site' => "/projects/{$projectId}/sites/{$resourceId}/domains",
+            'function' => "/projects/{$projectId}/functions/{$resourceId}/domains",
+            default => "/projects/{$projectId}/settings/domains",
+        };
+
+        foreach ($users as $user) {
+            $userId = $user->getId();
+            $recipient = [
+                'resourceType' => RESOURCE_TYPE_USERS,
+                'resourceId' => $userId,
+                'resourceInternalId' => (string) $user->getSequence(),
+                'parentResourceType' => RESOURCE_TYPE_PROJECTS,
+                'parentResourceId' => $projectId,
+                'parentResourceInternalId' => $projectInternalId,
+            ];
+
+            $recipients = [['address' => $userId, 'channel' => NOTIFICATION_TYPE_CONSOLE] + $recipient];
+            if (!empty($user->getAttribute('email'))) {
+                $recipients[] = ['address' => $user->getAttribute('email'), 'channel' => NOTIFICATION_TYPE_EMAIL] + $recipient;
+            }
+
+            $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-domain-verified.tpl');
+            $template->setParam('{{user}}', (string) ($user->getAttribute('name', 'there') ?: 'there'));
+            $template->setParam('{{domain}}', $domain);
+            $template->setParam('{{project}}', $project->getAttribute('name'));
+            $template->setParam('{{host}}', $platform['consoleUrl'] ?? '');
+            $template->setParam('{{path}}', $path);
+
+            $publisherForNotifications->enqueue(new NotificationMessage(
+                project: $project,
+                recipients: $recipients,
+                template: MAIL_TEMPLATE_DOMAIN_VERIFIED,
+                deduplicationKey: 'rule:' . $rule->getId() . ':verified:' . $rule->getUpdatedAt(),
+                subject: 'Your domain ' . $domain . ' is live',
+                bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+                body: $template->render(),
+                preview: 'Domain "' . $domain . '" on project "' . $project->getAttribute('name') . '" is verified and live.',
+                variables: [
+                    'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+                    'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+                    'twitter' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+                    'discord' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+                    'github' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+                    'terms' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+                    'privacy' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+                    'platform' => $plan['platformName'] ?? APP_NAME,
+                ],
+            ));
+        }
     }
 }
