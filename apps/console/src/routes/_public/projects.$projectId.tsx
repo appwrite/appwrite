@@ -25,6 +25,7 @@ import { OrganizationInvoiceAuthorizeHeaderBanner } from '@/components/global/sh
 import { OrganizationPlanLimitHeaderBanner } from '@/components/global/shared/OrganizationPlanLimitHeaderBanner'
 import {
   fetchProject,
+  productionProjectQueryOptions,
   fetchOrganizationById,
   organizationPlanQueryOptions,
   organizationQueryOptions,
@@ -76,6 +77,7 @@ import {
   restoreActiveEnvironment,
   setActiveEnvironment,
 } from '@/lib/active-environment'
+import { projectEnvironmentId } from '@/lib/project-environments'
 /** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
 const DATABASE_TABLE_VIEW_TABS = new Set([
   'rows',
@@ -283,6 +285,15 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         return ensureProject()
       })
       registerProjectRegionFromProject(projectData)
+
+      // Inside an environment the project answers as the environment. The header
+      // names the project it belongs to before it, so that is resolved before
+      // the layout renders rather than popping in beside the environment's name.
+      if (projectEnvironmentId(projectData)) {
+        await context.queryClient
+          .ensureQueryData(productionProjectQueryOptions(projectId))
+          .catch(() => {})
+      }
 
       // Self-hosted usage availability is a backend capability. Resolve the
       // public Console variable before child route guards and navigation render.
