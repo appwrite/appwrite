@@ -46,6 +46,16 @@ final class ConsoleTest extends TestCase
         $this->assertSame(0, $code);
     }
 
+    public function testExecuteReadsOutputWrittenBeforeExit(): void
+    {
+        $output = '';
+        $stderr = '';
+        $code = Console::execute('seq 1 100000', '', $output, $stderr, 10);
+
+        $this->assertSame(implode("\n", range(1, 100000)) . "\n", $output);
+        $this->assertSame(0, $code);
+    }
+
     public function testCommandToArray(): void
     {
         $command = new Command('tar')
