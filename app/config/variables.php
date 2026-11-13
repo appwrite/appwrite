@@ -522,6 +522,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONNECTIONS_MAX',
+                'description' => 'Base value used to calculate database and Redis connection pool sizes. The default value is 151. Worker counts and minimum pool sizes also affect allocation; this does not set a server-wide connection limit.',
+                'introduction' => '',
+                'default' => 151,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MEMORY_LIMIT',
                 'description' => 'PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP memory_limit value, such as \'2G\', or \'-1\' for no limit. Raise it when a Realtime container holds thousands of connections. By default, set to \'512M\'.',
                 'introduction' => '2.6.2',
