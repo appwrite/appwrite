@@ -6,7 +6,9 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
-use Utopia\Image\Image;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
+use Utopia\Image\Transform;
 
 class Action extends PlatformAction
 {
@@ -29,21 +31,18 @@ class Action extends PlatformAction
             throw new Exception(Exception::AVATAR_NOT_FOUND);
         }
 
-        $output = 'png';
         $path = $set[$code]['path'];
-        $type = 'png';
 
         if (!\is_readable($path)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File not readable in ' . $path);
         }
 
-        $image = new Image(\file_get_contents($path));
-        $image->crop((int) $width, (int) $height);
-        $data = $image->output($output, $quality);
+        $data = (new Canvas((string) \file_get_contents($path), Config::getParam('storage-image-limits')))
+            ->apply(new Transform(width: $width, height: $height))
+            ->encode(Format::Png, $quality === -1 ? null : $quality);
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
-        unset($image);
     }
 }

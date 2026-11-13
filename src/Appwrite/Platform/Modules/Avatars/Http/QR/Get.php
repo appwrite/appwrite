@@ -11,7 +11,11 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-use Utopia\Image\Image;
+use Utopia\Image\Blank;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
+use Utopia\Image\Path;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -75,18 +79,18 @@ class Get extends Action
         }
 
         $scale = 15;
-        $image = Image::create($matrix->size() * $scale, $matrix->size() * $scale, '#ffffff')
-            ->path($modules, '#000000', scale: $scale);
+        $side = $matrix->size() * $scale;
+        $image = (new Canvas(new Blank($side, $side, '#ffffff')))
+            ->draw(new Path($modules, '#000000', scale: $scale))
+            ->apply(new Transform(width: $size, height: $size));
 
         if ($download) {
             $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
         }
 
-        $image->crop((int) $size, (int) $size);
-
         $response
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
-            ->send($image->output('png', 90));
+            ->send($image->encode(Format::Png, 90));
     }
 }

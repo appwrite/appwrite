@@ -140,7 +140,7 @@ RUN chmod +x /usr/local/bin/doctor && \
 
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
-# Registers Utopia\Image\Image; see crates/extension/README.md.
+# Registers Utopia\Image\Canvas; see crates/extension/README.md.
 COPY --from=extension-build /usr/local/src/target/release/libutopia.so /usr/local/lib/php/utopia.so
 RUN echo 'extension=/usr/local/lib/php/utopia.so' > /usr/local/etc/php/conf.d/utopia.ini
 
