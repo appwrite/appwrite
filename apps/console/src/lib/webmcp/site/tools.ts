@@ -258,7 +258,7 @@ export function installSiteTools(): void {
     modelContext
       .registerTool(
         {
-          name: 'open_sign_up',
+          name: 'navigate_to_sign_up',
           title: 'Open Appwrite Cloud sign-up',
           description:
             'Open the Appwrite Cloud sign-up page in the current tab so the person can create a free account.',
@@ -267,7 +267,8 @@ export function installSiteTools(): void {
             properties: {},
             additionalProperties: false,
           },
-          execute: (input, options) => call('open_sign_up', input, options),
+          execute: (input, options) =>
+            call('navigate_to_sign_up', input, options),
         },
         options,
       )

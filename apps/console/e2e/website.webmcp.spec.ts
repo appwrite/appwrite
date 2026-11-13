@@ -22,7 +22,7 @@ const READ_ONLY_TOOLS = [
   'list_changelog',
   'search_community_threads',
 ]
-const NAVIGATION_TOOLS = ['navigate_to_page', 'open_sign_up']
+const NAVIGATION_TOOLS = ['navigate_to_page', 'navigate_to_sign_up']
 
 type MarkdownPage = { url: string; markdown: string; truncated: boolean }
 
@@ -209,7 +209,7 @@ test.describe('WebMCP tools', () => {
     }
   })
 
-  test('navigate_to_page and open_sign_up move the tab on this site only', async ({
+  test('navigate_to_page and navigate_to_sign_up move the tab on this site only', async ({
     page,
   }) => {
     const offsite = await agent.call<ToolError>('navigate_to_page', {
@@ -240,7 +240,7 @@ test.describe('WebMCP tools', () => {
     // Sign-up is outside the public-site layouts: the call still answers, then
     // the tools unregister once the tab leaves.
     const signUp = await agent.call<{ navigating: boolean; url: string }>(
-      'open_sign_up',
+      'navigate_to_sign_up',
     )
     expect(signUp.url).toMatch(/\/sign-up$/)
     await expect(page).toHaveURL(/\/sign-up/)

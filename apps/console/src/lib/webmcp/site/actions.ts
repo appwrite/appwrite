@@ -193,6 +193,7 @@ export function siteHandlers(navigate: Navigate): Record<string, ToolHandler> {
       searchCommunityThreads(input as { query: string; limit?: number }),
     navigate_to_page: async (input) =>
       navigateToPage(input as { path: string }, navigate),
-    open_sign_up: async () => navigateToPage({ path: '/sign-up' }, navigate),
+    navigate_to_sign_up: async () =>
+      navigateToPage({ path: '/sign-up' }, navigate),
   }
 }
