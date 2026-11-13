@@ -184,7 +184,7 @@ export function useProjectMigrations(
   projectId: string | null | undefined,
   region?: string,
 ) {
-  const { data, isLoading, error, refetch } = useQuery(
+  const { data, isLoading, isSuccess, error, refetch } = useQuery(
     projectMigrationsQueryOptions(projectId, region),
   )
 
@@ -192,6 +192,8 @@ export function useProjectMigrations(
     migrations: data?.migrations || [],
     total: data?.total || 0,
     isLoading,
+    /** The list was read: an empty one is empty, not still loading or failed */
+    isSuccess,
     error,
     refetch,
   }

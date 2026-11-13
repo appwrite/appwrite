@@ -11,7 +11,10 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useNavigate } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2 } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
@@ -54,21 +57,23 @@ export function Migrations({
   const [selectedMigrationId, setSelectedMigrationId] = useState<string | null>(
     null,
   )
-  const { migrations, total, isLoading } = useProjectMigrations(
-    projectId,
-    region,
-  )
+  const { migrations, total, isLoading, isSuccess, error, refetch } =
+    useProjectMigrations(projectId, region)
   const detailsOpen = selectedMigrationId !== null
-  // Use hook data when available; otherwise use prefetched initialData so first paint has content
-  const effectiveMigrations =
-    migrations.length > 0 ? migrations : (initialData?.migrations ?? [])
-  const effectiveTotal =
-    migrations.length > 0 ? total : (initialData?.total ?? 0)
+  // The list once it was read, empty included; until then the prefetched
+  // initialData, so first paint has content
+  const effectiveMigrations = isSuccess
+    ? migrations
+    : (initialData?.migrations ?? [])
+  const effectiveTotal = isSuccess ? total : (initialData?.total ?? 0)
   const selectedMigration =
     effectiveMigrations.find((m) => m.$id === selectedMigrationId) ?? null
   const showLoading = isLoading && !initialData
+  // A list that could not be read is not an empty one. Showing the first-run
+  // screen for it tells someone looking for a migration that there is none.
+  const loadFailed = !!error && !isSuccess && !initialData
   const showsFirstRunEmptyState =
-    !showLoading && effectiveMigrations.length === 0
+    !showLoading && !loadFailed && effectiveMigrations.length === 0
   useEffect(() => {
     onFirstRunEmptyChange?.(showsFirstRunEmptyState)
     return () => onFirstRunEmptyChange?.(false)
@@ -135,6 +140,22 @@ export function Migrations({
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
+      ) : loadFailed ? (
+        <Alert variant="destructive" data-testid="migrations-load-failed">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t('Failed to load migrations')}</AlertTitle>
+          <AlertDescription className="text-[13px]">
+            <p>{getErrorMessage(error, t('Please try again.'))}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 h-8 text-[13px]"
+              onClick={() => void refetch()}
+            >
+              {t('Retry')}
+            </Button>
+          </AlertDescription>
+        </Alert>
       ) : showsFirstRunEmptyState ? (
         <MigrationsEmptyState
           onImport={() =>
