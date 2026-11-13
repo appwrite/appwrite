@@ -93,6 +93,8 @@ class Store
 
     private readonly RequestFactory $requestFactory;
 
+    private readonly Writer $writer;
+
     private ?string $host = null;
 
     private int $port = 8123;
@@ -118,6 +120,7 @@ class Store
         private readonly int $retention = 1_209_600,
     ) {
         $this->requestFactory = new RequestFactory();
+        $this->writer = new Writer($this->insert(...));
     }
 
     public function setup(): void
@@ -126,7 +129,7 @@ class Store
         $database = $this->identifier($this->database);
         $table = $this->table();
 
-        $this->query("CREATE DATABASE IF NOT EXISTS {$database}");
+        $this->query("CREATE DATABASE IF NOT EXISTS {$database}", selectDatabase: false);
         $this->query(<<<SQL
             CREATE TABLE IF NOT EXISTS {$table} (
                 projectId String,
@@ -244,12 +247,12 @@ class Store
             $rows[] = $this->snapshot($projectId, $execution, false);
         }
 
-        $this->insert($rows);
+        $this->writer->write($rows);
     }
 
     public function delete(string $projectId, Document $execution): void
     {
-        $this->insert([$this->snapshot($projectId, $execution, true)]);
+        $this->writer->write([$this->snapshot($projectId, $execution, true)]);
     }
 
     public function deleteProject(string $projectId): void
@@ -427,7 +430,7 @@ class Store
         ];
     }
 
-    /** @param array<array<string, mixed>> $rows */
+    /** @param list<array<string, mixed>> $rows */
     private function insert(array $rows): void
     {
         $this->insertRows($this->database() . '.' . self::TABLE, self::COLUMNS, $rows);
@@ -442,7 +445,6 @@ class Store
         $statement = (new ClickHouseBuilder())
             ->from($table)
             ->bulkInsert(Format::JSONEachRow, $rows, $columns);
-        // Async inserts wait up to 200ms for a flush that batches almost nothing for one-row snapshots.
         $url = $this->url() . '?' . \http_build_query(['query' => $statement->query, 'async_insert' => 0]);
         $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
@@ -914,14 +916,14 @@ class Store
     }
 
     /** @param array<string, mixed> $params */
-    private function query(string $sql, array $params = []): string
+    private function query(string $sql, array $params = [], bool $selectDatabase = true): string
     {
         $this->connect();
         $parts = ['query' => $sql];
         foreach ($params as $key => $value) {
             $parts['param_' . $key] = (string) $value;
         }
-        $request = $this->requestFactory->multipart(Method::POST, $this->url(), $parts, $this->headers());
+        $request = $this->requestFactory->multipart(Method::POST, $this->url(), $parts, $this->headers($selectDatabase));
 
         try {
             $response = $this->client()->sendRequest($request);
@@ -966,7 +968,7 @@ class Store
         $this->port = (int) ($dsn->getPort() ?: 8123);
         $this->database = \ltrim($dsn->getPath(), '/') ?: 'default';
         $this->username = $dsn->getUser() ?: 'default';
-        $this->password = $dsn->getPassword();
+        $this->password = $dsn->getPassword() ?? '';
         $this->secure = \strtolower((string) $dsn->getParam('secure', '')) === 'true';
 
         $this->identifier($this->database);
@@ -999,13 +1001,17 @@ class Store
     }
 
     /** @return array<string, string> */
-    private function headers(): array
+    private function headers(bool $selectDatabase = true): array
     {
-        return [
+        $headers = [
             'X-ClickHouse-User' => $this->username,
             'X-ClickHouse-Key' => $this->password,
-            'X-ClickHouse-Database' => $this->database,
         ];
+        if ($selectDatabase) {
+            $headers['X-ClickHouse-Database'] = $this->database;
+        }
+
+        return $headers;
     }
 
     private function client(): ClientInterface
