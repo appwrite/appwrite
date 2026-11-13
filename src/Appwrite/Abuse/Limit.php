@@ -125,8 +125,12 @@ final readonly class Limit
         foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
             if (! empty($value)) {
                 $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
-                // Sign in matches emails case-insensitively, so the limit must too
-                $values['param.' . $key] = $key === 'email' ? \strtolower($value) : $value;
+                // Sign in matches emails, and directories match usernames, case-insensitively, so the limit must too
+                $values['param.' . $key] = match ($key) {
+                    'email' => \strtolower($value),
+                    'username' => \strtolower(\trim($value)),
+                    default => $value,
+                };
             }
         }
 

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Auth\LDAP\Client;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
@@ -112,6 +113,107 @@ class Project extends Model
                 'description' => 'SMTP server secure protocol',
                 'default' => '',
                 'example' => 'tls',
+            ])
+
+            // Resource: LDAP
+            ->addRule('ldapEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Status for LDAP sign-in',
+                'default' => false,
+                'example' => false,
+                'array' => false
+            ])
+            ->addRule('ldapHosts', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP directory hosts, tried in order.',
+                'default' => [],
+                'example' => ['ldap.example.com'],
+                'array' => true,
+            ])
+            ->addRule('ldapPort', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'LDAP directory port.',
+                'default' => Client::PORT_LDAPS,
+                'example' => 636,
+            ])
+            ->addRule('ldapEncryption', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP transport encryption: none, ldaps or starttls.',
+                'default' => Client::ENCRYPTION_LDAPS,
+                'example' => 'ldaps',
+            ])
+            ->addRule('ldapVerification', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the LDAP directory certificate is verified.',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('ldapCertificate', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate in PEM format of the authority that signed the LDAP directory certificate, or the directory certificate itself when it is self-signed. Empty for the system trust store.',
+                'default' => '',
+                'example' => '',
+            ])
+            ->addRule('ldapTimeout', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Seconds to wait for the LDAP directory to connect and answer.',
+                'default' => Client::TIMEOUT_DEFAULT,
+                'example' => 10,
+            ])
+            ->addRule('ldapBaseDn', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP subtree the user search starts from.',
+                'default' => '',
+                'example' => 'ou=people,dc=example,dc=com',
+            ])
+            ->addRule('ldapBindDn', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP service account used to search for users, empty for anonymous search.',
+                'default' => '',
+                'example' => 'cn=appwrite,ou=services,dc=example,dc=com',
+            ])
+            ->addRule('ldapBindPassword', [
+                'type' => self::TYPE_STRING,
+                'format' => 'password',
+                'description' => 'LDAP service account password. This property is write-only and always returned empty.',
+                'default' => '',
+                'example' => 'ldap-password',
+            ])
+            ->addRule('ldapUserFilter', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP filter that finds the user signing in, with {username} where the username they enter goes.',
+                'default' => Client::USER_FILTER_DEFAULT,
+                'example' => '(uid={username})',
+            ])
+            ->addRule('ldapRequiredGroupDn', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP group a user must belong to in order to sign in, empty to allow every user.',
+                'default' => '',
+                'example' => 'cn=staff,ou=groups,dc=example,dc=com',
+            ])
+            ->addRule('ldapIdAttribute', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP attribute holding the identifier that stays the same when an entry is renamed or moved.',
+                'default' => Client::ATTRIBUTE_ID,
+                'example' => 'entryUUID',
+            ])
+            ->addRule('ldapEmailAttribute', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP attribute holding the email address.',
+                'default' => Client::ATTRIBUTE_EMAIL,
+                'example' => 'mail',
+            ])
+            ->addRule('ldapNameAttribute', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP attribute holding the display name.',
+                'default' => Client::ATTRIBUTE_NAME,
+                'example' => 'cn',
+            ])
+            ->addRule('ldapPhoneAttribute', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP attribute holding the phone number, empty when unmapped.',
+                'default' => '',
+                'example' => 'mobile',
             ])
 
             // Resource: Ping
@@ -236,6 +338,7 @@ class Project extends Model
     public function filter(Document $document): Document
     {
         $this->expandSmtpFields($document);
+        $this->expandLdapFields($document);
         $this->expandServices($document);
         $this->expandProtocols($document);
         $this->expandAuthMethods($document);
@@ -278,6 +381,40 @@ class Project extends Model
         $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
         $document->setAttribute('smtpPassword', ''); // Write-only: never expose the stored value
         $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
+    }
+
+    private function expandLdapFields(Document $document): void
+    {
+        // The flag the ldap entry in authMethods carries, read next to the configuration the way
+        // smtpEnabled is, and kept for the response formats before 2.8.0 that leave that entry out.
+        $method = Config::getParam('auth', [])['ldap'];
+        $document->setAttribute('ldapEnabled', (bool) ($document->getAttribute('auths', [])[$method['key']] ?? $method['enabled']));
+
+        if (!$document->isSet('ldap')) {
+            return;
+        }
+
+        $ldap = $document->getAttribute('ldap', []);
+
+        // The values a sign-in would use, defaults included, and the port that
+        // follows the encryption unless one was chosen.
+        $encryption = $ldap['encryption'] ?? Client::ENCRYPTION_LDAPS;
+
+        $document->setAttribute('ldapHosts', \array_values((array) ($ldap['hosts'] ?? [])));
+        $document->setAttribute('ldapPort', (int) ($ldap['port'] ?? 0) ?: Client::port($encryption));
+        $document->setAttribute('ldapEncryption', $encryption);
+        $document->setAttribute('ldapVerification', (bool) ($ldap['verification'] ?? true));
+        $document->setAttribute('ldapCertificate', $ldap['certificate'] ?? '');
+        $document->setAttribute('ldapTimeout', (int) ($ldap['timeout'] ?? 0) ?: Client::TIMEOUT_DEFAULT);
+        $document->setAttribute('ldapBaseDn', $ldap['baseDn'] ?? '');
+        $document->setAttribute('ldapBindDn', $ldap['bindDn'] ?? '');
+        $document->setAttribute('ldapBindPassword', ''); // Write-only: never expose the stored value
+        $document->setAttribute('ldapUserFilter', \trim((string) ($ldap['userFilter'] ?? '')) ?: Client::USER_FILTER_DEFAULT);
+        $document->setAttribute('ldapRequiredGroupDn', $ldap['requiredGroupDn'] ?? '');
+        $document->setAttribute('ldapIdAttribute', $ldap['idAttribute'] ?? Client::ATTRIBUTE_ID);
+        $document->setAttribute('ldapEmailAttribute', $ldap['emailAttribute'] ?? Client::ATTRIBUTE_EMAIL);
+        $document->setAttribute('ldapNameAttribute', $ldap['nameAttribute'] ?? Client::ATTRIBUTE_NAME);
+        $document->setAttribute('ldapPhoneAttribute', $ldap['phoneAttribute'] ?? '');
     }
 
     private function expandServices(Document $document): void

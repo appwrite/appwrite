@@ -13,6 +13,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\Keys\Get as GetKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\Update as UpdateKey;
 use Appwrite\Platform\Modules\Project\Http\Project\Keys\XList as ListKeys;
 use Appwrite\Platform\Modules\Project\Http\Project\Labels\Update as UpdateProjectLabels;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Tests\Create as CreateLDAPTest;
+use Appwrite\Platform\Modules\Project\Http\Project\LDAP\Update as UpdateLDAP;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Create as CreateMockPhone;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Delete as DeleteMockPhone;
 use Appwrite\Platform\Modules\Project\Http\Project\MockPhone\Get as GetMockPhone;
@@ -151,6 +153,10 @@ class Http extends Service
         // SMTP
         $this->addAction('updateProjectSMTP', UpdateSMTP::class);
         $this->addAction('createProjectSMTPTest', CreateSMTPTest::class);
+
+        // LDAP
+        $this->addAction('updateProjectLDAP', UpdateLDAP::class);
+        $this->addAction('createProjectLDAPTest', CreateLDAPTest::class);
 
         // Templates
         $this->addAction('listProjectEmailTemplates', ListTemplates::class);

@@ -75,6 +75,8 @@ export type ConsoleProfileFeatures = {
   reviews: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
+  /** Project settings › Identity servers tab: LDAP directory sign-in, with more identity servers to follow. Preview, switched on from the Previews menu or the debug menu. */
+  identityServers: boolean
   /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
   alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
@@ -145,6 +147,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   videos: 'Videos',
   reviews: 'Review',
   projectEnvironments: 'Project environments',
+  identityServers: 'Identity servers',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
@@ -201,6 +204,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       reviews: false,
       projectEnvironments: false,
+      identityServers: false,
       alerts: false,
       multiRegion: true,
       edgeNetwork: true,
@@ -246,6 +250,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       reviews: false,
       projectEnvironments: false,
+      identityServers: false,
       alerts: false,
       multiRegion: false,
       edgeNetwork: false,

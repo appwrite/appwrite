@@ -1,4 +1,10 @@
-import { FlaskConical, GitBranch, Layers, type LucideIcon } from 'lucide-react'
+import {
+  Fingerprint,
+  FlaskConical,
+  GitBranch,
+  Layers,
+  type LucideIcon,
+} from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,6 +34,7 @@ const EXPERIMENT_ICONS = {
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
   vcsOrigin: GitBranch,
+  identityServers: Fingerprint,
 } as const satisfies Record<Experiment['flag'], LucideIcon>
 
 export function ExperimentsPopover() {

@@ -493,7 +493,11 @@
         "src/Appwrite/Platform/Modules/Project/",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
-        "packages/smtp/"
+        "packages/smtp/",
+        "src/Appwrite/Auth/LDAP/",
+        "src/Appwrite/Platform/Modules/Account/Base.php",
+        "src/Appwrite/Platform/Modules/Account/Http/Account/Sessions/LDAP/",
+        "dev/openldap/"
       ]
     },
     {

@@ -774,8 +774,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   Never: 'なし',
   'New password': '新しいパスワード',
   'Next page': '次のページ',
-  'No OAuth identities linked to this user.':
-    'このユーザーに連携された OAuth ID はありません。',
+  'No identities linked to this user.':
+    'このユーザーに連携された ID はありません。',
   'No OAuth2 apps': 'OAuth2 アプリはありません',
   'Connect with': '接続先',
   'Connect with Appwrite': 'Appwrite に接続',
@@ -1339,8 +1339,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'User deleted successfully': 'ユーザーを削除しました',
   'User has connected an authenticator app for two-factor authentication.':
     'ユーザーは二要素認証用の認証アプリを接続しています。',
-  "User identities are the user's connected OAuth accounts. The user can sign in using these identities.":
-    'ユーザー ID 連携は、ユーザーが接続した OAuth アカウントです。ユーザーはこれらの ID 連携を使ってサインインできます。',
+  'Identities link this user to accounts they sign in with elsewhere, such as an OAuth2 provider or an LDAP directory.':
+    'ID 連携は、OAuth2 プロバイダーや LDAP ディレクトリなど、このユーザーが他の場所でサインインに使うアカウントとの関連付けです。',
   'User impersonation': 'ユーザーなりすまし',
   'User impersonation has been disabled for this account':
     'このアカウントのユーザーなりすましを無効にしました',
