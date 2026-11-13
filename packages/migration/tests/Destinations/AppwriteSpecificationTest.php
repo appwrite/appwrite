@@ -5,7 +5,6 @@ namespace Utopia\Migration\Tests\Destinations;
 use Appwrite\Services\Functions;
 use Appwrite\Services\Sites;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Functions\Func;
@@ -168,17 +167,6 @@ final class AppwriteSpecificationTest extends TestCase
 
     private function destination(?Functions $functions = null, ?Sites $sites = null): AppwriteDestination
     {
-        $class = new ReflectionClass(AppwriteDestination::class);
-        $destination = $class->newInstanceWithoutConstructor();
-
-        if ($functions !== null) {
-            $class->getProperty('functions')->setValue($destination, $functions);
-        }
-
-        if ($sites !== null) {
-            $class->getProperty('sites')->setValue($destination, $sites);
-        }
-
-        return $destination;
+        return new RecordingDestination(functions: $functions, sites: $sites);
     }
 }

@@ -162,12 +162,12 @@ class Appwrite extends Destination
 
     protected string $key;
 
-    private Functions $functions;
+    protected Functions $functions;
     private Messaging $messaging;
     private Project $project;
     private Proxy $proxy;
-    private Sites $sites;
-    private Storage $storage;
+    protected Sites $sites;
+    protected Storage $storage;
     private Teams $teams;
     private Users $users;
 

@@ -4,7 +4,6 @@ namespace Utopia\Migration\Tests\Destinations;
 
 use Appwrite\AppwriteException;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Storage\Bucket;
@@ -89,10 +88,6 @@ final class AppwriteBucketFileSizeTest extends TestCase
 
     private function destination(RecordingStorage $storage): AppwriteDestination
     {
-        $class = new ReflectionClass(AppwriteDestination::class);
-        $destination = $class->newInstanceWithoutConstructor();
-        $class->getProperty('storage')->setValue($destination, $storage);
-
-        return $destination;
+        return new RecordingDestination(storage: $storage);
     }
 }
