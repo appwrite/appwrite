@@ -68,16 +68,14 @@ final class ClientTest extends TestCase
         $this->assertSame($expected, $this->client()->filter($username)->toString());
     }
 
-    public static function injectionProvider(): array
+    public static function injectionProvider(): \Iterator
     {
-        return [
-            'wildcard' => ['*', '(uid=\2a)'],
-            'partial wildcard' => ['ali*', '(uid=ali\2a)'],
-            'closing the filter' => ['alice)(uid=*', '(uid=alice\29\28uid=\2a)'],
-            'backslash' => ['ali\\ce', '(uid=ali\5cce)'],
-            'null byte' => ["ali\0ce", '(uid=ali\00ce)'],
-            'already escaped' => ['\2a', '(uid=\2a)'],
-        ];
+        yield 'wildcard' => ['*', '(uid=\2a)'];
+        yield 'partial wildcard' => ['ali*', '(uid=ali\2a)'];
+        yield 'closing the filter' => ['alice)(uid=*', '(uid=alice\29\28uid=\2a)'];
+        yield 'backslash' => ['ali\\ce', '(uid=ali\5cce)'];
+        yield 'null byte' => ["ali\0ce", '(uid=ali\00ce)'];
+        yield 'already escaped' => ['\2a', '(uid=\2a)'];
     }
 
     public function testFilterRefusesUserFilterThatDoesNotParse(): void
@@ -128,23 +126,21 @@ final class ClientTest extends TestCase
         $this->client($config);
     }
 
-    public static function invalidConfigProvider(): array
+    public static function invalidConfigProvider(): \Iterator
     {
-        return [
-            'no hosts' => [['hosts' => []], 'host'],
-            'blank hosts' => [['hosts' => ['', ' ']], 'host'],
-            'too many hosts' => [['hosts' => \array_fill(0, Client::HOSTS_MAX + 1, 'ldap.example.com')], 'hosts'],
-            'bad encryption' => [['encryption' => 'ssl'], 'encryption'],
-            'port too low' => [['port' => -1], 'port'],
-            'port too high' => [['port' => 65536], 'port'],
-            'timeout too low' => [['timeout' => 0], 'timeout'],
-            'timeout too high' => [['timeout' => Client::TIMEOUT_MAX + 1], 'timeout'],
-            'no base dn' => [['baseDn' => ' '], 'base DN'],
-            'blank username attribute' => [['usernameAttribute' => ''], 'usernameAttribute'],
-            'blank id attribute' => [['idAttribute' => ''], 'idAttribute'],
-            'blank email attribute' => [['emailAttribute' => ''], 'emailAttribute'],
-            'blank name attribute' => [['nameAttribute' => ''], 'nameAttribute'],
-        ];
+        yield 'no hosts' => [['hosts' => []], 'host'];
+        yield 'blank hosts' => [['hosts' => ['', ' ']], 'host'];
+        yield 'too many hosts' => [['hosts' => \array_fill(0, Client::HOSTS_MAX + 1, 'ldap.example.com')], 'hosts'];
+        yield 'bad encryption' => [['encryption' => 'ssl'], 'encryption'];
+        yield 'port too low' => [['port' => -1], 'port'];
+        yield 'port too high' => [['port' => 65536], 'port'];
+        yield 'timeout too low' => [['timeout' => 0], 'timeout'];
+        yield 'timeout too high' => [['timeout' => Client::TIMEOUT_MAX + 1], 'timeout'];
+        yield 'no base dn' => [['baseDn' => ' '], 'base DN'];
+        yield 'blank username attribute' => [['usernameAttribute' => ''], 'usernameAttribute'];
+        yield 'blank id attribute' => [['idAttribute' => ''], 'idAttribute'];
+        yield 'blank email attribute' => [['emailAttribute' => ''], 'emailAttribute'];
+        yield 'blank name attribute' => [['nameAttribute' => ''], 'nameAttribute'];
     }
 
     public function testVerifiedTlsRefusesAddressLiterals(): void
