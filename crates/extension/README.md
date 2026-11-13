@@ -25,7 +25,7 @@ implementation of them. Every other class is registered only when `_APP_EXTENSIO
 its package. Otherwise Composer loads the package's PHP class as before:
 
 ```sh
-_APP_EXTENSION_LIBRARIES=dsn   # Utopia\DSN\DSN from the extension; comma separate more
+_APP_EXTENSION_LIBRARIES=dsn,usage   # Utopia\DSN\DSN and the usage engine from the extension
 ```
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
@@ -61,6 +61,28 @@ times one implementation; `run.py` runs it on both, alternating, and prints the 
 cargo build --release -p utopia-extension
 python3 crates/extension/bench/run.py crates/extension/bench/dsn.php . target/release/libutopia.so 5
 ```
+
+## Utopia\Usage\Engine
+
+Over `crates/utopia/usage` (`_APP_EXTENSION_LIBRARIES=usage`). Unlike the other libraries, the class
+it replaces does network I/O, so the extension does not shadow `Utopia\Usage\Adapter\ClickHouse`.
+It registers an engine, and the PHP adapter delegates to it when it exists: the engine builds the
+statements and rows and reads the responses, and the adapter still sends each request through the
+PSR client it was given. Under Swoole that client suspends the coroutine, and the Rust frame with
+it, so a worker never blocks on ClickHouse. The engine holds no lock or borrow across a request,
+which is what makes that sound.
+
+The signatures are in `packages/usage/stubs/Engine.php`. Known differences from the PHP adapter:
+
+- A request the client could not send is thrown with the client's message, without the client's
+  exception as `getPrevious()`.
+- The canonical-sample methods (`addSamples()`, `getSampleWatermark()`, `findSamples()`) still run
+  the PHP adapter's own code.
+
+`crates/extension/tests/usage.php` runs without Composer: the transport contract, the PHP adapter's
+messages for malformed rows, and twenty concurrent coroutines whose requests overlap. The package's
+own tests (`packages/usage/tests`, with the adapter's against a real ClickHouse) pass on the engine
+as they do on PHP.
 
 ## Utopia\Image\Canvas and Utopia\Image\Font
 

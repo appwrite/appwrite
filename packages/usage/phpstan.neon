@@ -3,6 +3,8 @@ includes:
 
 parameters:
     level: max
+    scanFiles:
+        - stubs/Engine.php
     paths:
         - src
         - tests

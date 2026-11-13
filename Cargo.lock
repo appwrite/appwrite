@@ -2549,10 +2549,13 @@ dependencies = [
 name = "utopia-extension"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "ext-php-rs",
  "php-std",
  "utopia-dsn",
  "utopia-image",
+ "utopia-query",
+ "utopia-usage",
 ]
 
 [[package]]
