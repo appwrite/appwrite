@@ -9,9 +9,17 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Swoole\Coroutine;
+use Swoole\Coroutine\Server;
+use Swoole\Coroutine\Server\Connection;
+use Swoole\Runtime;
+use Utopia\Client\Destinations\Anywhere;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\DNS\Lookup\Recursive;
+
+use function Swoole\Coroutine\run;
 
 /**
  * Configuration handling, the user filter and identifier rendering. Everything
@@ -240,6 +248,7 @@ final class ClientTest extends TestCase
     public static function invalidCertificateProvider(): \Iterator
     {
         $certificate = self::certificate('Halden Root CA');
+        $header = "-----BEGIN CERTIFICATE-----\n";
         $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
         \openssl_pkey_export($key, $keyPem);
 
@@ -247,7 +256,8 @@ final class ClientTest extends TestCase
         yield 'missing END line' => [\substr($certificate, 0, (int) \strpos($certificate, '-----END')), 'PEM format'];
         yield 'one complete, one cut short' => [$certificate . \substr($certificate, 0, 100), 'PEM format'];
         yield 'private key alongside' => [$certificate . $keyPem, 'PRIVATE KEY'];
-        yield 'damaged body' => [(string) \preg_replace('/^(-----BEGIN CERTIFICATE-----\n)..../', '$1AAAA', $certificate), 'could not be read'];
+        yield 'damaged body' => [$header . 'AAAA' . \substr($certificate, \strlen($header) + 4), 'could not be read'];
+        yield 'BEGIN line only' => ['-----BEGIN CERTIFICATE', 'PEM format'];
     }
 
     private static function certificate(string $commonName): string
@@ -271,6 +281,7 @@ final class ClientTest extends TestCase
         yield 'already E.164' => ['+420777123456', '+420777123456'];
         yield 'spaces' => ['+420 777 123 456', '+420777123456'];
         yield 'no-break spaces' => ["+420\u{00A0}777\u{00A0}123\u{00A0}456", '+420777123456'];
+        yield 'narrow no-break spaces' => ["+33\u{202F}1\u{202F}23\u{202F}45\u{202F}67\u{202F}89", '+33123456789'];
         yield 'brackets and dashes' => ['+1 (425) 555-0100', '+14255550100'];
         yield 'trunk prefix' => ['+44 (0)20 7946 0018', '+442079460018'];
         yield 'slash' => ['+49 30/1234567', '+49301234567'];
@@ -279,6 +290,53 @@ final class ClientTest extends TestCase
         // as written and the sign-in leaves the phone alone.
         yield 'national' => ['0777 123 456', '0777 123 456'];
         yield 'empty' => ['', ''];
+    }
+
+    /**
+     * Under Swoole's coroutine hooks an LDAPS handshake ignores the connect timeout and
+     * waits Swoole's own 60 seconds. A host that accepts the connection and then stays
+     * silent must still fail within the configured time. run() leaves every runtime hook
+     * enabled, so the test gets its own process.
+     */
+    #[RunInSeparateProcess]
+    public function testSilentHostFailsWithinTheTimeoutUnderCoroutineHooks(): void
+    {
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
+        run(function (): void {
+            $server = new Server('127.0.0.1', 0);
+            // Read whatever arrives and never answer, until the client gives up and closes.
+            $server->handle(function (Connection $connection): void {
+                while (!\in_array($connection->recv(10), ['', false], true)) {
+                    // Silent.
+                }
+            });
+            Coroutine::create(fn () => $server->start());
+
+            $client = new Client(new PublicHostname(new Anywhere(), new Recursive(['127.0.0.1'])), [
+                'hosts' => ['127.0.0.1'],
+                'port' => $server->port,
+                'encryption' => Client::ENCRYPTION_LDAPS,
+                'verification' => false,
+                'timeout' => 1,
+                'baseDn' => 'dc=example,dc=com',
+            ]);
+
+            $start = \microtime(true);
+
+            try {
+                $client->test();
+                $this->fail('A silent host was accepted.');
+            } catch (Exception $error) {
+                $this->assertSame(Exception::PROJECT_LDAP_CONFIG_INVALID, $error->getType());
+                $this->assertStringContainsString('Could not connect', $error->getMessage());
+            } finally {
+                $server->shutdown();
+            }
+
+            // Two timeouts at most: the connect and the first answer.
+            $this->assertLessThan(4, \microtime(true) - $start);
+        });
     }
 
     public function testAuthenticateRefusesEmptyCredentialsWithoutConnecting(): void

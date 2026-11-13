@@ -24,6 +24,8 @@ use FreeDSx\Ldap\Search\Filter\SubstringFilter;
 use FreeDSx\Ldap\Search\Filters;
 use FreeDSx\Socket\Exception\ConnectionException as SocketException;
 use InvalidArgumentException;
+use Swoole\Coroutine;
+use Swoole\Timer;
 
 /**
  * The directory a project authenticates users against: search for the user as the
@@ -371,15 +373,33 @@ class Client
      */
     public static function checkCertificate(string $pem): void
     {
-        \preg_match_all('/-----BEGIN ([A-Z0-9 ]+)-----.*?-----END \\1-----/s', $pem, $blocks, PREG_SET_ORDER);
+        $invalid = 'Certificate must be in PEM format: each certificate from its -----BEGIN CERTIFICATE----- line to its -----END CERTIFICATE----- line.';
+        $blocks = [];
+        $offset = 0;
 
-        if ($blocks === [] || \count($blocks) !== \substr_count($pem, '-----BEGIN ')) {
-            throw new InvalidArgumentException('Certificate must be in PEM format: each certificate from its -----BEGIN CERTIFICATE----- line to its -----END CERTIFICATE----- line.');
+        while (($begin = \strpos($pem, '-----BEGIN ', $offset)) !== false) {
+            $typeStart = $begin + \strlen('-----BEGIN ');
+            $typeEnd = \strpos($pem, '-----', $typeStart);
+            $footer = $typeEnd === false ? null : '-----END ' . \substr($pem, $typeStart, $typeEnd - $typeStart) . '-----';
+            $end = $footer === null ? false : \strpos($pem, $footer, (int) $typeEnd);
+
+            // A block cut short would otherwise run on into the next one's END line.
+            if ($footer === null || $end === false || \substr_count(\substr($pem, $begin, $end - $begin), '-----BEGIN ') !== 1) {
+                throw new InvalidArgumentException($invalid);
+            }
+
+            $end += \strlen($footer);
+            $blocks[] = [\substr($pem, $typeStart, (int) $typeEnd - $typeStart), \substr($pem, $begin, $end - $begin)];
+            $offset = $end;
         }
 
-        foreach ($blocks as $index => [$block, $type]) {
+        if ($blocks === []) {
+            throw new InvalidArgumentException($invalid);
+        }
+
+        foreach ($blocks as $index => [$type, $block]) {
             if ($type !== 'CERTIFICATE') {
-                throw new InvalidArgumentException("Certificate must only hold certificates, but block " . ($index + 1) . " is a {$type}.");
+                throw new InvalidArgumentException('Certificate must only hold certificates, but block ' . ($index + 1) . " is a {$type}.");
             }
 
             if (@\openssl_x509_read($block) === false) {
@@ -403,9 +423,9 @@ class Client
             return $value;
         }
 
-        $digits = \preg_replace(['/\\(0\\)/', '/[\\s\\x{00A0}().\\/-]/u'], '', \substr($value, 1));
+        $number = \str_replace('(0)', '', \substr($value, 1));
 
-        return '+' . ($digits ?? \substr($value, 1));
+        return '+' . \str_replace([' ', "\t", "\n", "\r", "\u{00A0}", "\u{2009}", "\u{202F}", '-', '.', '/', '(', ')'], '', $number);
     }
 
     private static function withoutDnAttributes(FilterInterface $filter): void
@@ -487,6 +507,12 @@ class Client
                 'timeout_read' => $this->timeout,
             ]);
 
+            // Under Swoole's coroutine hooks the TLS handshake of an LDAPS connection ignores
+            // the connect timeout and waits Swoole's own 60 seconds. Cancel the wait once the
+            // connect and the first answer could each have used up their timeout, so a host
+            // that accepts and then stays silent fails over like one that refuses.
+            $deadline = self::deadline(2 * $this->timeout);
+
             try {
                 if ($this->encryption === self::ENCRYPTION_STARTTLS) {
                     $client->startTls();
@@ -513,10 +539,34 @@ class Client
                 // Refused, timed out, or the TLS handshake failed: the next replica may answer.
                 $this->disconnect($client);
                 $failure = "Could not connect to LDAP host {$host}:{$this->port}. Check the host, port, encryption and certificate settings.";
+            } finally {
+                if ($deadline !== null) {
+                    Timer::clear($deadline);
+                }
             }
         }
 
         throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, $failure);
+    }
+
+    /**
+     * Cancel what the current coroutine waits on once the given time has passed, which
+     * makes a hooked socket call fail as a connection error. Outside a coroutine there is
+     * nothing to cancel, and plain PHP streams keep to their own timeouts.
+     *
+     * @return int|null The timer to clear when the work finishes in time
+     */
+    private static function deadline(int $seconds): ?int
+    {
+        $coroutine = Coroutine::getCid();
+
+        if ($coroutine < 0) {
+            return null;
+        }
+
+        $timer = Timer::after($seconds * 1000, fn () => Coroutine::cancel($coroutine));
+
+        return $timer === false ? null : $timer;
     }
 
     private function disconnect(LdapClient $client): void
@@ -549,6 +599,10 @@ class Client
             $path = \tempnam(\sys_get_temp_dir(), 'ldap-ca-');
 
             if ($path === false || \file_put_contents($path, $this->certificate) === false) {
+                if ($path !== false) {
+                    @\unlink($path);
+                }
+
                 throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, 'Could not store the certificate for the connection.');
             }
 
