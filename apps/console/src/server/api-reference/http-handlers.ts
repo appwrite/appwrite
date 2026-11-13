@@ -145,6 +145,7 @@ export async function handleReferenceOpenApiSpecRequest(
     )
     if (version !== 'cloud') return jsonResponse(spec)
     const { withCloudOAuth2 } = await import('./cloud-oauth2')
-    return jsonResponse(await withCloudOAuth2(spec))
+    // The OAuth 2.0 scopes are additive; serve the plain spec if they fail.
+    return jsonResponse(await withCloudOAuth2(spec).catch(() => spec))
   })
 }

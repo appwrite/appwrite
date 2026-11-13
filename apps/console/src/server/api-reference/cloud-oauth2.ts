@@ -11,27 +11,55 @@ const CLOUD_OAUTH2_METADATA_URL =
 
 const SCOPE_NAMESPACES = ['project', 'organization'] as const
 
+const SCOPE = /^(project|organization):[A-Za-z0-9.]+$/
+const RETRY_AFTER_MS = 5 * 60_000
+
 type AuthorizationServerMetadata = {
   authorization_endpoint: string
   token_endpoint: string
-  scopes_supported: string[]
+  scopes: string[]
 }
 
 let metadata: Promise<AuthorizationServerMetadata | null> | null = null
+let failedAt = 0
 
+function parseMetadata(body: unknown): AuthorizationServerMetadata | null {
+  const value = body as Record<string, unknown> | null
+  if (
+    typeof value?.authorization_endpoint !== 'string' ||
+    typeof value.token_endpoint !== 'string' ||
+    !Array.isArray(value.scopes_supported)
+  ) {
+    return null
+  }
+  const scopes = value.scopes_supported.filter(
+    (scope): scope is string => typeof scope === 'string' && SCOPE.test(scope),
+  )
+  return scopes.length === 0
+    ? null
+    : {
+        authorization_endpoint: value.authorization_endpoint,
+        token_endpoint: value.token_endpoint,
+        scopes,
+      }
+}
+
+/** Loaded once; a failure is remembered for RETRY_AFTER_MS so requests don't each wait on it. */
 function loadMetadata(): Promise<AuthorizationServerMetadata | null> {
+  if (!metadata && Date.now() - failedAt < RETRY_AFTER_MS) {
+    return Promise.resolve(null)
+  }
   metadata ??= fetch(CLOUD_OAUTH2_METADATA_URL, {
     signal: AbortSignal.timeout(5_000),
   })
-    .then((response) =>
-      response.ok
-        ? (response.json() as Promise<AuthorizationServerMetadata>)
-        : null,
-    )
+    .then((response) => (response.ok ? response.json() : null))
+    .then(parseMetadata)
     .catch(() => null)
     .then((loaded) => {
-      // Retry on the next request rather than caching a failure.
-      if (!loaded) metadata = null
+      if (!loaded) {
+        metadata = null
+        failedAt = Date.now()
+      }
       return loaded
     })
   return metadata
@@ -57,11 +85,7 @@ export async function withCloudOAuth2(spec: OpenApiSpec): Promise<OpenApiSpec> {
   const server = await loadMetadata()
   if (!server) return spec
 
-  const scopes = new Set(
-    server.scopes_supported.filter((scope) =>
-      SCOPE_NAMESPACES.some((namespace) => scope.startsWith(`${namespace}:`)),
-    ),
-  )
+  const scopes = new Set(server.scopes)
   const decorated = structuredClone(spec)
   decorated.components ??= {}
   // The spec type only models the scheme fields the console reads.
@@ -104,12 +128,14 @@ export async function withCloudOAuth2(spec: OpenApiSpec): Promise<OpenApiSpec> {
         security?: Array<Record<string, string[]>>
       }
       // The token replaces the session or key, not the project (or
-      // organization) the call is made in.
+      // organization) the call is made in. Calls bound to neither, such as
+      // the OAuth consent endpoints, don't accept access tokens.
       const binding = Object.fromEntries(
         Object.keys(withSecurity.security?.[0] ?? {})
           .filter((name) => name === 'Project' || name === 'Organization')
           .map((name) => [name, []]),
       )
+      if (Object.keys(binding).length === 0) continue
       withSecurity.security = [
         ...(withSecurity.security ?? []),
         ...granted.map((scope) => ({ ...binding, OAuth2: [scope] })),
