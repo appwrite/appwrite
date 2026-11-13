@@ -90,6 +90,9 @@ test.describe('markdown exports (read-only)', () => {
     const body = await response.text()
     expect(body).toMatch(/^# Appwrite\n/)
     expect(body).toContain('## MCP Server')
+    expect(body).toContain(
+      'docs MCP server at https://mcp.appwrite.io/docs/mcp',
+    )
     expect(body).toContain('## Skills')
     expect(body).toContain('## Documentation')
     expect(body).toContain('/docs/llms.txt')
