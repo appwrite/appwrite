@@ -123,7 +123,7 @@ export function setup() {
         name: 'Benchmark Admin',
     }, consoleHeaders, 'setup.account.create');
 
-    if (![201, 409].includes(account.status)) {
+    if (![201, 400].includes(account.status)) {
         failResponse(account, 'Unable to create or reuse the benchmark console account');
     }
 

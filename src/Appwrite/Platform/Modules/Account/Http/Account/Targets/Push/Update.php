@@ -146,7 +146,8 @@ class Update extends Action
         try {
             $target = $dbForProject->updateDocument('targets', $target->getId(), $changes);
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());

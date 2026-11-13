@@ -200,7 +200,8 @@ class Create extends Action
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!$identityWithMatchingUid->isEmpty()) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             if (!empty($providerEmail)) {
@@ -209,7 +210,8 @@ class Create extends Action
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
-                    throw new Exception(Exception::USER_ALREADY_EXISTS);
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 $userWithMatchingEmail = $dbForProject->find('users', [
@@ -217,7 +219,8 @@ class Create extends Action
                     Query::notEqual('$id', $user->getId()),
                 ]);
                 if (!empty($userWithMatchingEmail)) {
-                    throw new Exception(Exception::USER_ALREADY_EXISTS);
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
             }
 
@@ -557,7 +560,8 @@ class Create extends Action
 
             return [$userDoc, $newTarget];
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
     }
 
@@ -575,7 +579,8 @@ class Create extends Action
             Query::notEqual('$id', $user->getId()),
         ]);
         if (!empty($userWithMatchingEmail)) {
-            throw new Exception(Exception::USER_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $this->assertEmailPolicy($emailMetadata, $email, $canonicalize, $project, $plan);
@@ -608,7 +613,8 @@ class Create extends Action
                 Query::equal('identifier', [$email]),
             ]));
             if ($existingTarget->isEmpty() || $existingTarget->getAttribute('userInternalId') !== $user->getSequence()) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
         }
     }
@@ -669,7 +675,8 @@ class Create extends Action
                         $dbForProject->deleteDocument('users', $newUser->getId());
                     });
                 }
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
             return;
         }

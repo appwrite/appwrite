@@ -141,16 +141,6 @@ class Update extends Action
 
         $email = \strtolower($email);
 
-        // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-            Query::equal('providerEmail', [$email]),
-            Query::notEqual('userInternalId', $user->getSequence()),
-        ]);
-        if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST);
-            /** Return a generic bad request to prevent exposing existing accounts */
-        }
-
         $emailMetadata = [
             'emailCanonical' => null,
             'emailIsCanonical' => null,
@@ -189,6 +179,17 @@ class Update extends Action
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
+        // Makes sure this email is not already used in another identity.
+        // Checked after the email policies so their errors do not depend on it.
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+            Query::notEqual('userInternalId', $user->getSequence()),
+        ]);
+        if (!$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
+        }
+
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
@@ -216,7 +217,8 @@ class Update extends Action
         ]));
 
         if (!$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         try {

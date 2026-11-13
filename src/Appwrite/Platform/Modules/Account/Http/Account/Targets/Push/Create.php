@@ -124,7 +124,8 @@ class Create extends Action
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if (!$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $detector = new Detector($request->getUserAgent());
@@ -196,7 +197,8 @@ class Create extends Action
                     'providerInternalId' => $provider->getSequence(),
                 ] : [])));
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         // Anything left holds a token the client just told us it no longer uses. Expiring rather than

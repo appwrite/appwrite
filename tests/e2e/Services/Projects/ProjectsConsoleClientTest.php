@@ -7241,9 +7241,7 @@ final class ProjectsConsoleClientTest extends Scope
         );
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['userId']);
-
-        $userId = $response['body']['userId'];
+        $userId = $this->getUser()['$id'];
 
         $userEmail = $this->getUser()['email'];
 
@@ -7275,9 +7273,7 @@ final class ProjectsConsoleClientTest extends Scope
         );
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['userId']);
-
-        $userId = $response['body']['userId'];
+        $userId = $this->getUser()['$id'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
             $this->assertStringContainsString(\htmlspecialchars($url, ENT_QUOTES, 'UTF-8'), (string) ($email['html'] ?? ''));
@@ -7307,9 +7303,7 @@ final class ProjectsConsoleClientTest extends Scope
         );
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['userId']);
-
-        $userId = $response['body']['userId'];
+        $userId = $this->getUser()['$id'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url, $userId) {
             $this->assertStringContainsString($url . '?userId=' . $userId, (string) ($email['html'] ?? ''));
@@ -7339,9 +7333,7 @@ final class ProjectsConsoleClientTest extends Scope
         );
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['userId']);
-
-        $userId = $response['body']['userId'];
+        $userId = $this->getUser()['$id'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url, $userId) {
             $this->assertStringContainsString($url . '?userId=' . $userId, (string) ($email['html'] ?? ''));
@@ -7371,9 +7363,7 @@ final class ProjectsConsoleClientTest extends Scope
         );
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['userId']);
-
-        $userId = $response['body']['userId'];
+        $userId = $this->getUser()['$id'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
             $this->assertStringContainsString('INJECTED&lt;/h1&gt;', (string) ($email['html'] ?? ''));

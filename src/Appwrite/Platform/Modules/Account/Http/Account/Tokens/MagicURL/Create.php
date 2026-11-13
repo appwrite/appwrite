@@ -139,14 +139,6 @@ class Create extends Action
                 }
             }
 
-            // Makes sure this email is not already used in another identity
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
-            ]);
-            if (!$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
-            }
-
             $userId = $userId === 'unique()' ? Id::unique() : $userId;
 
             $emailMetadata = [
@@ -187,6 +179,16 @@ class Create extends Action
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
+            // Makes sure this email is not already used in another identity.
+            // Checked after the email policies so their errors do not depend on it.
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if (!$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
+            }
+
             $recipient = new Document([
                 '$id' => $userId,
                 '$permissions' => [
@@ -221,7 +223,8 @@ class Create extends Action
             try {
                 $recipient = $authorization->skip(fn () => $dbForProject->createDocument('users', $recipient));
             } catch (Duplicate) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
         }
 
