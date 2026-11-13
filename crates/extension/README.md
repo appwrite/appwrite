@@ -49,6 +49,19 @@ the extension:
 - A user, password or path that URL-decodes to bytes that are not UTF-8 (`%FF`) reads exactly
   through its getter and lossily through `var_dump()`.
 
+Its protected properties are getter-backed: they are computed from the parsed DSN only when PHP
+reads them, so construction stores each component once, in `utopia-dsn`'s single buffer.
+
+## Benchmarks
+
+Every class's PR carries a benchmark against the PHP class. `crates/extension/bench/<name>.php`
+times one implementation; `run.py` runs it on both, alternating, and prints the medians:
+
+```sh
+cargo build --release -p utopia-extension
+python3 crates/extension/bench/run.py crates/extension/bench/dsn.php . target/release/libutopia.so 5
+```
+
 ## Utopia\Image\Image
 
 Over `crates/utopia/image`, with the signatures in `packages/image/stubs/Image.php`.

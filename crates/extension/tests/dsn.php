@@ -167,6 +167,17 @@ emit('compare', outcome(fn () => [new DSN('a://x') == new DSN('b://y'), new DSN(
 emit('properties', outcome(fn () => array_map(strval(...), array_keys((array) new DSN('redis://u:p@h:1/db?q=1')))));
 emit('stringable', outcome(fn () => $original instanceof Stringable));
 
+// Every method takes and returns what DSN.php declares.
+$methods = (new ReflectionClass(DSN::class))->getMethods(ReflectionMethod::IS_PUBLIC);
+usort($methods, fn (ReflectionMethod $a, ReflectionMethod $b) => strcmp($a->getName(), $b->getName()));
+foreach ($methods as $method) {
+    $parameters = array_map(
+        fn (ReflectionParameter $p) => [(string) $p->getType(), $p->getName(), $p->isDefaultValueAvailable() ? $p->getDefaultValue() : null],
+        $method->getParameters(),
+    );
+    emit('signature ' . $method->getName(), ['value' => [(string) $method->getReturnType(), $parameters, $method->isStatic()]]);
+}
+
 // The DSN and the credentials never reach an exception's trace.
 foreach (['new' => fn () => new DSN('redis://user:SECRET@'), 'from' => fn () => DSN::from('redis', 'h:1', 'user', 'SECRET')] as $name => $run) {
     try {
