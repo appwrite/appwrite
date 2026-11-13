@@ -359,6 +359,33 @@ test.describe('markdown exports (read-only)', () => {
     expect(browser.headers()['content-type']).toMatch(/text\/html/)
   })
 
+  test('openapi.json declares OAuth 2.0 with named scopes', async ({
+    request,
+  }) => {
+    const response = await request.get('/openapi.json')
+    expect(response.status()).toBe(200)
+    const spec = await response.json()
+    const oauth2 = spec.components.securitySchemes.OAuth2
+    expect(oauth2.type).toBe('oauth2')
+    expect(oauth2.flows.authorizationCode.authorizationUrl).toMatch(
+      /\/oauth2\/console\/authorize$/,
+    )
+    expect(oauth2.flows.authorizationCode.scopes['project:rows.read']).toBe(
+      'Read rows in a project.',
+    )
+    const listRows = Object.values(spec.paths)
+      .flatMap((path) => Object.values(path as Record<string, unknown>))
+      .find(
+        (operation) =>
+          (operation as { operationId?: string }).operationId ===
+          'tablesDBListRows',
+      ) as { security: Array<Record<string, string[]>> }
+    expect(listRows.security).toContainEqual({
+      Project: [],
+      OAuth2: ['project:rows.read'],
+    })
+  })
+
   test('blog llms.txt lists posts', async ({ request }) => {
     const response = await request.get('/blog/llms.txt')
     expect(response.status()).toBe(200)

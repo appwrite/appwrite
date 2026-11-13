@@ -143,6 +143,8 @@ export async function handleReferenceOpenApiSpecRequest(
       version as ReferenceVersion,
       mode as ApiExplorerProjectPlatform,
     )
-    return jsonResponse(spec)
+    if (version !== 'cloud') return jsonResponse(spec)
+    const { withCloudOAuth2 } = await import('./cloud-oauth2')
+    return jsonResponse(await withCloudOAuth2(spec))
   })
 }
