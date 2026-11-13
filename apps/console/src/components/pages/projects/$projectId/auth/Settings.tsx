@@ -49,7 +49,7 @@ type AuthMethodPolicy = {
   label: string
 }
 
-const AUTH_METHODS: ReadonlyArray<{
+export const AUTH_METHODS: ReadonlyArray<{
   key: ProjectAuthMethodId
   label: string
   icon: LucideIcon

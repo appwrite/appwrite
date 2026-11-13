@@ -1799,4 +1799,27 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'All users must now reset their password.':
     'すべてのユーザーはパスワードのリセットが必要になりました。',
   'Failed to reset passwords': 'パスワードのリセットに失敗しました',
+  // Auth overview
+  'The Free plan includes {count} monthly active users.':
+    'Free プランには月間アクティブユーザー {count} 人が含まれます。',
+  'Upgrade for more': 'アップグレードして上限を増やす',
+  '1 social provider': 'OAuth プロバイダー 1 件',
+  '{count} social providers': 'OAuth プロバイダー {count} 件',
+  'Recent users': '最近のユーザー',
+  'Users will appear here when they sign up':
+    'ユーザーがサインアップするとここに表示されます',
+  'Last sign-up': '最終サインアップ',
+  '{enabled} of {total}': '{total} 件中 {enabled} 件',
+  '{enabled} of {total} enabled': '{total} 件中 {enabled} 件が有効',
+  'No social providers enabled': '有効な OAuth プロバイダーはありません',
+  'Configure methods': '認証方法を設定',
+  'Configure providers': 'OAuth プロバイダーを設定',
+  'Configure policies': 'ポリシーを設定',
+  'Sessions, passwords and limits': 'セッション、パスワード、上限',
+  'No active users yet': 'アクティブユーザーはまだいません',
+  "Couldn't load active users": 'アクティブユーザーを読み込めませんでした',
+  'No sign-ups yet': 'サインアップはまだありません',
+  "Couldn't load sign-ups": 'サインアップを読み込めませんでした',
+  'sign-ups': 'サインアップ',
+  second: '秒',
 }

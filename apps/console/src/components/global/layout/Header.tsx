@@ -1130,7 +1130,7 @@ export function ConsoleHeader({
                               {...analyticsAttrs('create-user')}
                               onClick={() => {
                                 navigate({
-                                  to: '/projects/$projectId/auth',
+                                  to: '/projects/$projectId/auth/users',
                                   params: { projectId },
                                   search: { create: 'user' } as Record<
                                     string,

@@ -34,6 +34,7 @@ export function ProductEmptyStateHero({
   description,
   actions,
   as: Heading = 'h2',
+  layout = 'stacked',
 }: {
   /** Desktop illustration; `icon` replaces it below `sm`. */
   visual: ReactNode
@@ -42,24 +43,49 @@ export function ProductEmptyStateHero({
   description: ReactNode
   actions?: ReactNode
   as?: 'h1' | 'h2'
+  /** `split` puts the illustration beside the text from `lg`, for wide cards. */
+  layout?: 'stacked' | 'split'
 }) {
+  const split = layout === 'split'
   return (
-    <div className="flex flex-col items-center text-center">
+    <div
+      className={cn(
+        'flex flex-col items-center text-center',
+        split && 'lg:flex-row lg:justify-center lg:gap-36 lg:text-start',
+      )}
+    >
       {visual}
-      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted text-muted-foreground sm:hidden">
-        <Icon className="h-5 w-5" />
-      </div>
-      <Heading className="mt-6 text-[24px] font-semibold tracking-tight text-foreground sm:mt-10">
-        {title}
-      </Heading>
-      <p className="mt-3 max-w-lg text-[14px] leading-relaxed text-muted-foreground">
-        {description}
-      </p>
-      {actions ? (
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
-          {actions}
+      <div
+        className={cn(
+          'flex flex-col items-center',
+          split && 'lg:max-w-md lg:items-start',
+        )}
+      >
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted text-muted-foreground sm:hidden">
+          <Icon className="h-5 w-5" />
         </div>
-      ) : null}
+        <Heading
+          className={cn(
+            'mt-6 text-[24px] font-semibold tracking-tight text-foreground sm:mt-10',
+            split && 'lg:mt-0',
+          )}
+        >
+          {title}
+        </Heading>
+        <p className="mt-3 max-w-lg text-[14px] leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+        {actions ? (
+          <div
+            className={cn(
+              'mt-7 flex flex-wrap items-center justify-center gap-2',
+              split && 'lg:justify-start',
+            )}
+          >
+            {actions}
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }

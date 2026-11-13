@@ -312,7 +312,7 @@ export function View() {
 
   const handleBack = () => {
     navigate({
-      to: '/projects/$projectId/auth',
+      to: '/projects/$projectId/auth/users',
       params: { projectId: projectId! },
     })
   }
@@ -1917,7 +1917,7 @@ function DeleteUserSection({
       onSuccess: () => {
         toast.success(`${displayName} ${t('has been deleted')}`)
         navigate({
-          to: '/projects/$projectId/auth',
+          to: '/projects/$projectId/auth/users',
           params: { projectId: projectId! },
         })
       },

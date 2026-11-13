@@ -197,7 +197,7 @@ function UsageMetricColumn({
   )
 }
 
-function DualUsageCard({
+export function DualUsageCard({
   title,
   subtitle,
   action,
@@ -219,7 +219,7 @@ function DualUsageCard({
   const loading = left.loading || right.loading
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card/50">
+    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card/50">
       <div className="flex h-16 items-center justify-between gap-3 px-6">
         <div className="min-w-0">
           <h3 className="text-[15px] font-semibold leading-5 text-foreground">
@@ -235,7 +235,7 @@ function DualUsageCard({
         </div>
       </div>
       <div className="border-t border-border" />
-      <div className="grid gap-6 px-6 py-5 sm:grid-cols-2">
+      <div className="grid flex-1 content-start gap-6 px-6 py-5 sm:grid-cols-2">
         <UsageMetricColumn {...left} />
         <UsageMetricColumn {...right} />
       </div>

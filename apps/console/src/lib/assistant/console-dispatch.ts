@@ -89,7 +89,7 @@ export function createOpenCreateHandler(
     }
     if (resource === 'user') {
       void navigate({
-        to: '/projects/$projectId/auth',
+        to: '/projects/$projectId/auth/users',
         params: { projectId: id },
         search: { create: 'user' },
       })
@@ -97,7 +97,7 @@ export function createOpenCreateHandler(
     }
     if (resource === 'team') {
       void navigate({
-        to: '/projects/$projectId/auth',
+        to: '/projects/$projectId/auth/teams',
         params: { projectId: id },
         search: { create: 'team' },
       })
