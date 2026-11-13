@@ -69,7 +69,7 @@ class Update extends Action
             ->param('timeout', null, new Nullable(new Range(1, Client::TIMEOUT_MAX)), 'Seconds to wait for the directory to connect and answer each operation. Maximum is ' . Client::TIMEOUT_MAX . ' seconds.', optional: true, example: '10')
             ->param('baseDn', null, new Nullable(new Text(512, 0)), 'Subtree the user search starts from. For example: ou=people,dc=example,dc=com', optional: true, example: 'ou=people,dc=example,dc=com')
             ->param('bindDn', null, new Nullable(new Text(512, 0)), 'Service account used to search for users. Pass an empty string if the directory allows anonymous search. For example: cn=appwrite,ou=services,dc=example,dc=com', optional: true, example: 'cn=appwrite,ou=services,dc=example,dc=com')
-            ->param('bindPassword', null, new Nullable(new PasswordFormat(new Text(256, 0))), 'Service account password. This property is stored securely and cannot be read in future (write-only). Required again when hosts, port, encryption or bindDn change.', optional: true)
+            ->param('bindPassword', null, new Nullable(new PasswordFormat(new Text(256, 0))), 'Service account password. This property is stored securely and cannot be read in future (write-only). Required again when hosts, port, encryption, tls, caCertificate or bindDn change.', optional: true)
             ->param('usernameAttribute', null, new Nullable(new Text(128)), 'Attribute the username is matched against. For example: uid, or sAMAccountName on Active Directory.', optional: true, example: 'uid')
             ->param('userFilter', null, new Nullable(new Text(1024, 0)), 'Optional LDAP filter every user must also match, combined with the username match. Pass an empty string to clear a previously set value. For example: (objectClass=inetOrgPerson)', optional: true, example: '(objectClass=inetOrgPerson)')
             ->param('idAttribute', null, new Nullable(new Text(128)), 'Attribute holding the identifier that stays the same when an entry is renamed or moved. For example: entryUUID, or objectGUID on Active Directory.', optional: true, example: 'entryUUID')
@@ -117,14 +117,18 @@ class Update extends Action
         $auths = $project->getAttribute('auths', []);
         $key = Config::getParam('auth')['ldap']['key'];
 
-        // The stored password is write-only, so it is only reused for the directory it was set for.
+        // The stored password is write-only, so it is only reused for the directory it was set
+        // for, reached and trusted the way it was then: a caller who cannot read it must not be
+        // able to send it to another server, or to this one over a connection nobody verifies.
         $storedPort = (int) ($ldap['port'] ?? 0) ?: Client::port($ldap['encryption'] ?? Client::ENCRYPTION_LDAPS);
         $serverChanged = (!\is_null($hosts) && \array_values($hosts) !== \array_values($ldap['hosts'] ?? []))
             || (!\is_null($port) && $port !== $storedPort)
             || (!\is_null($encryption) && $encryption !== ($ldap['encryption'] ?? ''))
+            || (!\is_null($tls) && $tls !== (bool) ($ldap['tls'] ?? true))
+            || (!\is_null($caCertificate) && \trim($caCertificate) !== \trim((string) ($ldap['caCertificate'] ?? '')))
             || (!\is_null($bindDn) && $bindDn !== ($ldap['bindDn'] ?? ''));
         if ($serverChanged && \is_null($bindPassword) && ($ldap['bindPassword'] ?? '') !== '') {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "bindPassword" is required when changing hosts, port, encryption or bindDn.');
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "bindPassword" is required when changing hosts, port, encryption, tls, caCertificate or bindDn.');
         }
 
         // Hosts are refused now if they point inside the network; they are resolved again when dialled.

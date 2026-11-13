@@ -197,8 +197,9 @@ trait LDAPBase
 
     public function testUpdateLDAPMovingDirectoryRequiresBindPasswordAgain(): void
     {
-        // A stored password belongs to the directory it was entered for. Pointing
-        // the connection somewhere else without re-supplying it would hand the
+        // A stored password belongs to the directory it was entered for, reached and
+        // trusted the way it was then. Pointing the connection somewhere else, or
+        // trusting another certificate, without re-supplying it would hand the
         // service credential to whatever answers at the new address.
         $response = $this->updateLDAP([
             'bindDn' => 'cn=service,dc=appwrite,dc=test',
@@ -211,6 +212,8 @@ trait LDAPBase
             ['hosts' => ['attacker.example.com']],
             ['port' => 3389],
             ['encryption' => 'none'],
+            ['tls' => false],
+            ['caCertificate' => "-----BEGIN CERTIFICATE-----\nMIIBattacker\n-----END CERTIFICATE-----"],
             ['bindDn' => 'cn=other,dc=appwrite,dc=test'],
         ] as $change) {
             $response = $this->updateLDAP($change);
@@ -219,11 +222,13 @@ trait LDAPBase
             $this->assertSame('general_argument_invalid', $response['body']['type']);
         }
 
-        // The same destination spelled out again is not a move.
+        // The same destination and trust spelled out again is not a move.
         $response = $this->updateLDAP([
             'hosts' => ['directory.appwrite.test'],
             'port' => 636,
             'encryption' => 'ldaps',
+            'tls' => true,
+            'caCertificate' => '',
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
