@@ -101,6 +101,7 @@ function project(
       { $id: 'email-password', enabled: true },
       ...(listed ? [{ $id: 'ldap', enabled }] : []),
     ],
+    ldapEnabled: enabled,
     ...ldap,
   }
 }
@@ -337,19 +338,24 @@ test.describe('identity servers (mocked API)', () => {
     })
   })
 
-  test('auth settings hides LDAP when the server leaves it out', async ({
+  test('reads LDAP from ldapEnabled when authMethods leave it out', async ({
     page,
   }) => {
     await useProfile(page, true)
-    await mockAppwriteApi(page, project(CONFIGURED, { listed: false }))
+    await mockAppwriteApi(
+      page,
+      project(CONFIGURED, { enabled: true, listed: false }),
+    )
 
     await page.goto(`/projects/${PROJECT_ID}/auth/settings`, {
       waitUntil: 'domcontentloaded',
     })
-    await expect(page.locator('#email-password')).toBeVisible({
-      timeout: 60_000,
-    })
-    await expect(page.locator('#ldap')).toHaveCount(0)
+    const ldap = page.locator('#ldap')
+    await expect(ldap).toBeVisible({ timeout: 60_000 })
+    await expect(ldap).toBeChecked()
+
+    await openIdentityServers(page)
+    await expect(page.locator('#ldap-enabled')).toBeChecked()
   })
 
   test('auth settings hides LDAP while the preview is off', async ({

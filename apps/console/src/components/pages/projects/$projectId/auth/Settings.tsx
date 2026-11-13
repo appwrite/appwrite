@@ -141,18 +141,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   )
   const passkeyReady = security.authPasskey.origins.length > 0
   const { features } = useConsoleProfile()
-  // LDAP is a preview: listed only while Identity servers, where it is configured, is on,
-  // and only when the server lists it. Response formats before 2.8.0 leave it out, and
-  // its switch would then always read off.
-  const ldapListed = Boolean(
-    projectData?.authMethods?.some(
-      (method) => method.$id === ProjectAuthMethodId.Ldap,
-    ),
-  )
+  // LDAP is a preview: listed only while Identity servers, where it is configured, is on.
   const visibleAuthMethods = AUTH_METHODS.filter(
     (method) =>
-      method.key !== ProjectAuthMethodId.Ldap ||
-      (features.identityServers && ldapListed),
+      method.key !== ProjectAuthMethodId.Ldap || features.identityServers,
   )
   // Enabling LDAP needs a directory to sign in against.
   const ldapConfigured = Boolean(

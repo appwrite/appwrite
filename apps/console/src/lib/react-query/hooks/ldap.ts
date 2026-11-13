@@ -5,11 +5,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  ProjectAuthMethodId,
-  ProjectLDAPEncryption,
-  type Models,
-} from '@appwrite.io/console'
+import { ProjectLDAPEncryption, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
 export type LdapEncryption = 'none' | 'ldaps' | 'starttls'
@@ -32,15 +28,14 @@ export function ldapEncryptionFromProject(
   return 'ldaps'
 }
 
-/** LDAP sign-in is an auth method; the rest of the configuration lives on the project. */
+/**
+ * LDAP sign-in is an auth method. `ldapEnabled` carries its flag next to the rest of the
+ * configuration, like `smtpEnabled`, also for response formats that leave ldap out of authMethods.
+ */
 export function isLdapEnabled(
   project: Models.Project | null | undefined,
 ): boolean {
-  return Boolean(
-    project?.authMethods?.some(
-      (method) => method.$id === ProjectAuthMethodId.Ldap && method.enabled,
-    ),
-  )
+  return Boolean(project?.ldapEnabled)
 }
 
 /** Fields of `project.updateLDAP`. A field left out keeps its stored value. */
