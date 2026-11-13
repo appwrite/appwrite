@@ -795,9 +795,6 @@
   "src/components/pages/projects/$projectId/overview/RequestsChart.tsx": {
     "TS6133: 'weight' is declared but its value is never read.": 1
   },
-  "src/components/pages/projects/$projectId/overview/_components/PremiumGeoOverviewBanner.tsx": {
-    "TS2339: Property 'prefs' does not exist on type '{}'.": 2
-  },
   "src/components/pages/projects/$projectId/realtime/Channels.tsx": {
     "TS2322: Type '(options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{ channels: RealtimeChannel[]; total: number; }, Error>>' is not assignable to type '() => void | Promise<void>'.": 1
   },
