@@ -162,6 +162,20 @@ class Get extends Action
             return;
         }
 
+        // Receipts are single-use too: one replayed within its five-minute
+        // life must not attach the installation again
+        $receiptId = \strval($receiptClaims['jti'] ?? '');
+        if (!empty($receiptId)) {
+            try {
+                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                    // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
+                    '$id' => 'origin-receipt-' . \substr(\hash('sha256', $receiptId), 0, 21),
+                ])));
+            } catch (Duplicate) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The installation receipt was already used. Please restart the installation from the Appwrite Console.');
+            }
+        }
+
         $projectInternalId = $project->getSequence();
 
         $installation = $dbForPlatform->findOne('installations', [
