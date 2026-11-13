@@ -3,9 +3,9 @@ import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
- * New projects start with a web app for any hostname (`*`), and the app lists
- * flag it with the recommended next step. The Appwrite API is mocked at the
- * network layer and the real console pages are asserted.
+ * New projects start with a web app for localhost, and the app lists flag a
+ * web app for any hostname (`*`) with the recommended next step. The Appwrite
+ * API is mocked at the network layer and the real console pages are asserted.
  */
 
 const NOW = '2026-11-11T09:30:00.000+00:00'
@@ -227,7 +227,7 @@ async function useSelfHosted(page: Page) {
 }
 
 test.describe('wildcard web platform (mocked API)', () => {
-  test('a new project starts with a web app for any hostname', async ({
+  test('a new project starts with a web app for localhost', async ({
     page,
   }) => {
     await useSelfHosted(page)
@@ -247,17 +247,16 @@ test.describe('wildcard web platform (mocked API)', () => {
     expect(platform.headers()['x-appwrite-project']).toBe(created.projectId)
     expect(platform.postDataJSON()).toMatchObject({
       name: 'Web app',
-      hostname: '*',
+      hostname: 'localhost',
     })
 
-    // The new project's overview lists it with the warning.
+    // The new project's overview lists it.
     await expect(page).toHaveURL(new RegExp(`/projects/${created.projectId}`), {
       timeout: 60_000,
     })
-    const warning = page.getByTestId('wildcard-platform-warning')
-    await expect(warning).toHaveCount(1, { timeout: 60_000 })
-    await warning.hover()
-    await expect(page.getByRole('tooltip')).toContainText(WARNING)
+    await expect(page.getByText('localhost', { exact: true })).toBeVisible({
+      timeout: 60_000,
+    })
   })
 
   test('the apps list flags only the wildcard app', async ({ page }) => {
