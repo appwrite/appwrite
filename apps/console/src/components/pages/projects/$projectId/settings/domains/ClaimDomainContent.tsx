@@ -1,7 +1,10 @@
 import { ExternalLink } from 'lucide-react'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
-import { getClaimRecord } from '@/lib/utils/proxy-domains'
+import {
+  getClaimRecord,
+  type DomainClaimReason,
+} from '@/lib/utils/proxy-domains'
 import {
   DNS_PROVIDERS_LINK,
   DnsRecordsTable,
@@ -13,20 +16,24 @@ interface ClaimDomainContentProps {
   domain: string
   projectId: string
   verificationError?: DomainVerificationError | null
-  /** Another project holds the domain, rather than it only pointing to Appwrite */
-  claimRequired?: boolean
+  /**
+   * Why the record is needed: the domain already points to Appwrite, another
+   * project holds it, or another organization manages its DNS
+   */
+  reason?: DomainClaimReason
 }
 
 /**
  * Ownership step for a rule create that was refused: the domain already
- * points to Appwrite or is used by another project, so the project proves it
- * is its own with a TXT record before the create is sent again.
+ * points to Appwrite, is used by another project, or is in DNS another
+ * organization manages, so the project proves it may use it with a TXT record
+ * before the create is sent again.
  */
 export function ClaimDomainContent({
   domain,
   projectId,
   verificationError,
-  claimRequired = false,
+  reason = 'pointed',
 }: ClaimDomainContentProps) {
   const t = useT()
 
@@ -45,13 +52,17 @@ export function ClaimDomainContent({
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-3">
           <p className="text-[13px] text-muted-foreground">
-            {claimRequired
+            {reason === 'organization'
               ? t(
-                  'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.',
+                  "This domain's DNS is managed by another organization. Add this TXT record to that domain's DNS, or ask that organization's owners to add it, then verify. The domain stays in that organization.",
                 )
-              : t(
-                  'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.',
-                )}
+              : reason === 'held'
+                ? t(
+                    'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.',
+                  )
+                : t(
+                    'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.',
+                  )}
           </p>
           <DnsRecordsTable
             records={[getClaimRecord(domain, projectId)]}

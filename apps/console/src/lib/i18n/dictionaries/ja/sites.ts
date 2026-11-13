@@ -237,6 +237,8 @@ export const jaSitesDictionary: Record<string, string> = {
     'このドメインはすでに Appwrite を指しています。所有者であることを証明するため、この TXT レコードを追加してから検証してください。',
   'This domain is used by another project. Add this TXT record to prove it is yours, then verify to move it here.':
     'このドメインは別のプロジェクトで使用されています。所有者であることを証明するため、この TXT レコードを追加してから検証し、このプロジェクトに移動してください。',
+  "This domain's DNS is managed by another organization. Add this TXT record to that domain's DNS, or ask that organization's owners to add it, then verify. The domain stays in that organization.":
+    'このドメインの DNS は別の組織が管理しています。そのドメインの DNS にこの TXT レコードを追加するか、その組織のオーナーに追加を依頼してから検証してください。ドメインはその組織に残ります。',
   'Invalid URL': '無効な URL',
   'Enter URL': 'URL を入力',
   'Select branch': 'Branch を選択',
