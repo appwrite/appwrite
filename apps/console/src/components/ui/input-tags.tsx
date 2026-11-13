@@ -29,6 +29,8 @@ interface InputTagsProps {
    */
   prefillRequest?: { id: number; value: string } | null
   onPrefillConsumed?: () => void
+  /** Runs before the built-in paste handling; call `preventDefault()` to handle the paste instead. */
+  onPaste?: (event: ClipboardEvent<HTMLInputElement>) => void
 }
 
 export function InputTags({
@@ -44,6 +46,7 @@ export function InputTags({
   maxTagLength,
   prefillRequest,
   onPrefillConsumed,
+  onPaste,
 }: InputTagsProps) {
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -138,6 +141,8 @@ export function InputTags({
   }
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    onPaste?.(e)
+    if (e.defaultPrevented) return
     if (!validateEmail && !splitOnComma) return
     const text = e.clipboardData.getData('text')
     const hasSeparators = validateEmail

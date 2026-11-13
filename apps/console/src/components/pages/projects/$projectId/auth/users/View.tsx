@@ -2687,7 +2687,7 @@ function IdentitiesTab({
       <EmptyState
         icon={Key}
         title={t('No identities available')}
-        description={t('No OAuth identities linked to this user.')}
+        description={t('No identities linked to this user.')}
         isEmpty={true}
         variant="card"
         iconSize="md"
@@ -2702,7 +2702,7 @@ function IdentitiesTab({
           <Info className="h-4 w-4 text-muted-foreground" />
           <p className="text-[13px] text-muted-foreground">
             {t(
-              "User identities are the user's connected OAuth accounts. The user can sign in using these identities.",
+              'Identities link this user to accounts they sign in with elsewhere, such as an OAuth2 provider or an LDAP directory.',
             )}
           </p>
         </div>

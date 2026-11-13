@@ -7,19 +7,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ProjectLDAPEncryption, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-
-export type LdapEncryption = 'none' | 'ldaps' | 'starttls'
+import type { LdapEncryption } from '@/lib/ldap'
 
 export const LDAP_HOSTS_MAX = 10
 export const LDAP_PORT_MIN = 1
 export const LDAP_PORT_MAX = 65535
 export const LDAP_TIMEOUT_MIN = 1
 export const LDAP_TIMEOUT_MAX = 30
-
-/** The port a sign-in uses when none is chosen: 636 for LDAPS, 389 otherwise. */
-export function ldapDefaultPort(encryption: LdapEncryption): number {
-  return encryption === 'ldaps' ? 636 : 389
-}
 
 export function ldapEncryptionFromProject(
   encryption: string | undefined,
@@ -40,24 +34,25 @@ export function isLdapEnabled(
 
 /** Fields of `project.updateLDAP`. A field left out keeps its stored value. */
 export type LdapUpdateData = {
+  enabled?: boolean
   hosts?: string[]
   port?: number
   encryption?: LdapEncryption
-  tls?: boolean
-  caCertificate?: string
+  verification?: boolean
+  /** PEM, one or more certificates. Empty uses the system trust store. */
+  certificate?: string
   timeout?: number
   baseDn?: string
   bindDn?: string
   /** Write-only: sent only when the user typed a new one. */
   bindPassword?: string
-  usernameAttribute?: string
+  /** Has to contain `{username}`. Empty resets it to the default. */
   userFilter?: string
+  requiredGroupDn?: string
   idAttribute?: string
   emailAttribute?: string
   nameAttribute?: string
   phoneAttribute?: string
-  requiredGroupDn?: string
-  enabled?: boolean
 }
 
 export type LdapTestData = {

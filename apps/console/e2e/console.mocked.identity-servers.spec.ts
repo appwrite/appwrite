@@ -55,33 +55,36 @@ const CONFIGURED = {
   ldapHosts: ['dc01.halden.example', 'dc02.halden.example'],
   ldapPort: 636,
   ldapEncryption: 'ldaps',
-  ldapTls: true,
-  ldapCaCertificate: '',
+  ldapVerification: true,
+  ldapCertificate: '',
   ldapTimeout: 10,
   ldapBaseDn: 'ou=people,dc=halden,dc=example',
   ldapBindDn: 'cn=appwrite,ou=services,dc=halden,dc=example',
   ldapBindPassword: '',
-  ldapUsernameAttribute: 'sAMAccountName',
-  ldapUserFilter: '(objectClass=person)',
+  ldapUserFilter: '(sAMAccountName={username})',
+  ldapRequiredGroupDn: 'cn=staff,ou=groups,dc=halden,dc=example',
   ldapIdAttribute: 'objectGUID',
   ldapEmailAttribute: 'mail',
   ldapNameAttribute: 'displayName',
   ldapPhoneAttribute: 'mobile',
-  ldapRequiredGroupDn: 'cn=staff,ou=groups,dc=halden,dc=example',
 } satisfies Partial<Models.Project>
 
+/** What the API reports for a project that never saved LDAP settings. */
 const UNCONFIGURED = {
   ...CONFIGURED,
   ldapHosts: [],
   ldapBaseDn: '',
   ldapBindDn: '',
-  ldapUsernameAttribute: 'uid',
-  ldapUserFilter: '',
+  ldapUserFilter: '(uid={username})',
+  ldapRequiredGroupDn: '',
   ldapIdAttribute: 'entryUUID',
   ldapNameAttribute: 'cn',
   ldapPhoneAttribute: '',
-  ldapRequiredGroupDn: '',
 } satisfies Partial<Models.Project>
+
+const CERTIFICATE = `-----BEGIN CERTIFICATE-----
+MIIBszCCAVmgAwIBAgIUHalden
+-----END CERTIFICATE-----`
 
 /** `listed: false` is a server on a response format before 2.8.0, which leaves ldap out of authMethods. */
 function project(
@@ -211,6 +214,39 @@ async function openIdentityServers(page: Page) {
   await expect(page.locator('#ldap-base-dn')).toBeVisible({ timeout: 60_000 })
 }
 
+/** A paste event as the browser fires it; a real clipboard is not available headless. */
+async function paste(page: Page, selector: string, text: string) {
+  await page.locator(selector).evaluate((element, value) => {
+    const clipboardData = new DataTransfer()
+    clipboardData.setData('text/plain', value)
+    element.dispatchEvent(
+      new ClipboardEvent('paste', {
+        clipboardData,
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+  }, text)
+}
+
+/** Full-page screenshot once the console's loading overlay is gone. */
+async function screenshot(page: Page, name: string) {
+  await expect(page.locator('[data-fullscreen-loader]')).toBeHidden()
+  await page.screenshot({
+    path: test.info().outputPath(name),
+    fullPage: true,
+  })
+}
+
+async function chooseEncryption(
+  page: Page,
+  name: 'None' | 'LDAPS' | 'StartTLS',
+) {
+  await page.locator('#ldap-encryption').click()
+  await page.getByRole('option', { name, exact: true }).click()
+  await expect(page.getByRole('listbox')).toBeHidden()
+}
+
 test.describe('identity servers (mocked API)', () => {
   test('shows every saved LDAP setting', async ({ page }) => {
     await useProfile(page, true)
@@ -224,7 +260,9 @@ test.describe('identity servers (mocked API)', () => {
       'placeholder',
       '636',
     )
-    await expect(page.locator('#ldap-tls')).toBeChecked()
+    await expect(page.locator('#ldap-encryption')).toHaveText('LDAPS')
+    await expect(page.locator('#ldap-verification')).toBeChecked()
+    await expect(page.locator('#ldap-certificate')).toHaveValue('')
     await expect(page.locator('#ldap-timeout')).toHaveValue('10')
     await expect(page.locator('#ldap-base-dn')).toHaveValue(
       CONFIGURED.ldapBaseDn,
@@ -233,11 +271,12 @@ test.describe('identity servers (mocked API)', () => {
       CONFIGURED.ldapBindDn,
     )
     await expect(page.locator('#ldap-bind-password')).toHaveValue('')
-    await expect(page.locator('#ldap-username-attribute')).toHaveValue(
-      'sAMAccountName',
-    )
+    await expect(page.locator('#ldap-username-attribute')).toHaveCount(0)
     await expect(page.locator('#ldap-user-filter')).toHaveValue(
-      '(objectClass=person)',
+      '(sAMAccountName={username})',
+    )
+    await expect(page.locator('#ldap-required-group-dn')).toHaveValue(
+      CONFIGURED.ldapRequiredGroupDn,
     )
     await expect(page.locator('#ldap-id-attribute')).toHaveValue('objectGUID')
     await expect(page.locator('#ldap-email-attribute')).toHaveValue('mail')
@@ -245,15 +284,14 @@ test.describe('identity servers (mocked API)', () => {
       'displayName',
     )
     await expect(page.locator('#ldap-phone-attribute')).toHaveValue('mobile')
-    await expect(page.locator('#ldap-required-group-dn')).toHaveValue(
-      CONFIGURED.ldapRequiredGroupDn,
-    )
+    await expect(
+      page.getByText(
+        'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.',
+      ),
+    ).toBeVisible()
     await expect(page.getByRole('button', { name: 'Update' })).toBeDisabled()
 
-    await page.screenshot({
-      path: test.info().outputPath('identity-servers.png'),
-      fullPage: true,
-    })
+    await screenshot(page, 'identity-servers.png')
   })
 
   test('asks for the bind password again when certificate verification changes', async ({
@@ -263,7 +301,7 @@ test.describe('identity servers (mocked API)', () => {
     const calls = await mockAppwriteApi(page, project(CONFIGURED))
     await openIdentityServers(page)
 
-    await page.locator('#ldap-tls').click()
+    await page.locator('#ldap-verification').click()
     const update = page.getByRole('button', { name: 'Update' })
     await expect(update).toBeDisabled()
     await expect(
@@ -276,8 +314,157 @@ test.describe('identity servers (mocked API)', () => {
 
     await expect.poll(() => calls.ldapUpdates.length).toBe(1)
     expect(calls.ldapUpdates[0].postDataJSON()).toEqual({
-      tls: false,
+      verification: false,
       bindPassword: 'service-secret',
+    })
+  })
+
+  test('sends the renamed certificate and user filter fields', async ({
+    page,
+  }) => {
+    await useProfile(page, true)
+    const calls = await mockAppwriteApi(page, project(CONFIGURED))
+    await openIdentityServers(page)
+
+    await page.locator('#ldap-verification').click()
+    await page.locator('#ldap-certificate').fill(CERTIFICATE)
+    await page.locator('#ldap-user-filter').fill('(mail={username})')
+    await page.locator('#ldap-bind-password').fill('service-secret')
+    await page.getByRole('button', { name: 'Update' }).click()
+
+    await expect.poll(() => calls.ldapUpdates.length).toBe(1)
+    const body = calls.ldapUpdates[0].postDataJSON()
+    expect(body).toEqual({
+      verification: false,
+      certificate: CERTIFICATE,
+      bindPassword: 'service-secret',
+      userFilter: '(mail={username})',
+    })
+    expect(body).not.toHaveProperty('usernameAttribute')
+    expect(body).not.toHaveProperty('tls')
+    expect(body).not.toHaveProperty('caCertificate')
+  })
+
+  test('hides the certificate settings without encryption and keeps them', async ({
+    page,
+  }) => {
+    await useProfile(page, true)
+    await mockAppwriteApi(page, project(CONFIGURED))
+    await openIdentityServers(page)
+
+    await page.locator('#ldap-certificate').fill(CERTIFICATE)
+    await chooseEncryption(page, 'None')
+    await expect(page.locator('#ldap-verification')).toHaveCount(0)
+    await expect(page.locator('#ldap-certificate')).toHaveCount(0)
+    await expect(page.locator('#ldap-port')).toHaveAttribute(
+      'placeholder',
+      '389',
+    )
+    await screenshot(page, 'identity-servers-none.png')
+
+    await chooseEncryption(page, 'StartTLS')
+    await expect(page.locator('#ldap-verification')).toBeChecked()
+    await expect(page.locator('#ldap-certificate')).toHaveValue(CERTIFICATE)
+  })
+
+  test('a pasted LDAP URL fills host, encryption, port and base DN', async ({
+    page,
+  }) => {
+    await useProfile(page, true)
+    await mockAppwriteApi(
+      page,
+      project({ ...UNCONFIGURED, ldapEncryption: 'none', ldapPort: 389 }),
+    )
+    await openIdentityServers(page)
+    await expect(page.locator('#ldap-encryption')).toHaveText('None')
+
+    await paste(
+      page,
+      '#ldap-hosts',
+      'ldaps://dc1.corp.example:636/dc=corp,dc=example',
+    )
+
+    await expect(
+      page.getByRole('button', { name: 'Remove dc1.corp.example' }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Remove / })).toHaveCount(1)
+    await expect(page.locator('#ldap-hosts')).toHaveValue('')
+    await expect(page.locator('#ldap-encryption')).toHaveText('LDAPS')
+    await expect(page.locator('#ldap-port')).toHaveValue('')
+    await expect(page.locator('#ldap-port')).toHaveAttribute(
+      'placeholder',
+      '636',
+    )
+    await expect(page.locator('#ldap-base-dn')).toHaveValue(
+      'dc=corp,dc=example',
+    )
+  })
+
+  test('a pasted LDAP URL offers its base DN instead of replacing one', async ({
+    page,
+  }) => {
+    await useProfile(page, true)
+    await mockAppwriteApi(page, project(CONFIGURED))
+    await openIdentityServers(page)
+
+    await paste(
+      page,
+      '#ldap-hosts',
+      'ldap://dc03.halden.example:1389/dc=halden,dc=example',
+    )
+
+    await expect(
+      page.getByRole('button', { name: 'Remove dc03.halden.example' }),
+    ).toBeVisible()
+    await expect(page.locator('#ldap-encryption')).toHaveText('None')
+    await expect(page.locator('#ldap-port')).toHaveValue('1389')
+    await expect(page.locator('#ldap-base-dn')).toHaveValue(
+      CONFIGURED.ldapBaseDn,
+    )
+    await expect(
+      page.getByText('Use dc=halden,dc=example as the base DN?'),
+    ).toBeVisible()
+
+    await page.getByRole('button', { name: 'Use', exact: true }).click()
+    await expect(page.locator('#ldap-base-dn')).toHaveValue(
+      'dc=halden,dc=example',
+    )
+    await expect(
+      page.getByText('Use dc=halden,dc=example as the base DN?'),
+    ).toHaveCount(0)
+  })
+
+  test('a user filter without {username} blocks saving', async ({ page }) => {
+    await useProfile(page, true)
+    const calls = await mockAppwriteApi(page, project(UNCONFIGURED))
+    await openIdentityServers(page)
+
+    const filter = page.locator('#ldap-user-filter')
+    const update = page.getByRole('button', { name: 'Update' })
+    await expect(filter).toHaveValue('(uid={username})')
+    await expect(filter).toHaveAttribute('placeholder', '(uid={username})')
+
+    await filter.fill('(objectClass=person)')
+    await expect(
+      page.getByText('The user filter must contain {username}.'),
+    ).toBeVisible()
+    await expect(filter).toHaveAttribute('aria-invalid', 'true')
+    await expect(update).toBeDisabled()
+
+    // Empty means the default filter, which is already saved.
+    await filter.fill('')
+    await expect(
+      page.getByText('The user filter must contain {username}.'),
+    ).toHaveCount(0)
+    await expect(update).toBeDisabled()
+
+    await filter.fill('(sAMAccountName={username})')
+    await expect(update).toBeEnabled()
+    await update.click()
+
+    await expect.poll(() => calls.ldapUpdates.length).toBe(1)
+    expect(calls.ldapUpdates[0].postDataJSON()).toEqual({
+      userFilter: '(sAMAccountName={username})',
     })
   })
 
@@ -332,10 +519,7 @@ test.describe('identity servers (mocked API)', () => {
       page.getByRole('link', { name: 'Identity servers' }),
     ).toBeVisible()
 
-    await page.screenshot({
-      path: test.info().outputPath('auth-settings.png'),
-      fullPage: true,
-    })
+    await screenshot(page, 'auth-settings.png')
   })
 
   test('reads LDAP from ldapEnabled when authMethods leave it out', async ({

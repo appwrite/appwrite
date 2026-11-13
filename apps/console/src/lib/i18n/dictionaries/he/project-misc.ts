@@ -3991,21 +3991,23 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הפעלת התחברות דרך LDAP לפרויקט הזה. ההפעלה מתחברת לספרייה כדי לאמת את התצורה, לכן הוסיפו קודם לפחות מארח אחד ו-base DN.',
   Directory: 'ספרייה',
   Hosts: 'מארחים',
-  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10.':
-    'שמות מארחים או כתובות IP של הספרייה, מנוסים לפי הסדר עד שאחד מהם עונה. לחצו Enter אחרי כל מארח, עד 10 מארחים.',
+  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10. Paste an LDAP URL to also fill in encryption, port and base DN.':
+    'שמות מארחים או כתובות IP של הספרייה, מנוסים לפי הסדר עד שאחד מהם עונה. לחצו Enter אחרי כל מארח, עד 10 מארחים. הדביקו כתובת URL של LDAP כדי למלא גם את ההצפנה, הפורט וה-base DN.',
+  'Use {dn} as the base DN?': 'להשתמש ב-{dn} בתור base DN?',
+  Use: 'שימוש',
   'Leave empty for the default: 636 for LDAPS, 389 otherwise.':
     'השאירו ריק לברירת המחדל: 636 עבור LDAPS, אחרת 389.',
   'LDAPS encrypts from the first byte, StartTLS upgrades a plain connection, None is for a trusted network only.':
     'LDAPS מצפין מהבייט הראשון, StartTLS משדרג חיבור לא מוצפן, ו"ללא" מיועד לרשת מהימנה בלבד.',
   'Verify certificate': 'אימות תעודה',
-  'Check the certificate the directory presents against the CA certificate below or the system trust store.':
-    'בדיקת התעודה שהספרייה מציגה מול תעודת ה-CA שלמטה או מול מאגר התעודות המהימנות של המערכת.',
+  "Check the directory's certificate against the certificate below, or the system trust store if it is empty.":
+    'בדיקת התעודה של הספרייה מול התעודה שלמטה, או מול מאגר התעודות המהימנות של המערכת אם השדה ריק.',
   'Timeout (seconds)': 'Timeout (שניות)',
   'Seconds to wait for the directory to connect and answer each operation, from 1 to 30.':
     'מספר השניות להמתין לחיבור לספרייה ולמענה על כל פעולה, בין 1 ל-30.',
-  'CA certificate (PEM)': 'תעודת CA (PEM)',
-  'Certificate of the authority that signed the directory certificate. Leave empty to use the system trust store.':
-    'התעודה של הרשות שחתמה על תעודת הספרייה. השאירו ריק כדי להשתמש במאגר התעודות המהימנות של המערכת.',
+  'Certificate (PEM)': 'תעודה (PEM)',
+  "Certificate of the authority that signed the directory's certificate, or the directory's own certificate if it is self-signed. Paste several to trust more than one. Leave empty to use the system trust store.":
+    'התעודה של הרשות שחתמה על תעודת הספרייה, או התעודה של הספרייה עצמה אם היא בחתימה עצמית. הדביקו כמה תעודות כדי לסמוך על יותר מאחת. השאירו ריק כדי להשתמש במאגר התעודות המהימנות של המערכת.',
   'Base DN': 'Base DN',
   'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
     'תת-העץ שממנו מתחיל חיפוש המשתמשים, למשל ou=people,dc=example,dc=com.',
@@ -4013,12 +4015,15 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Service account used to search for users. Leave empty if the directory allows anonymous search.':
     'חשבון השירות שמשמש לחיפוש משתמשים. השאירו ריק אם הספרייה מאפשרת חיפוש אנונימי.',
   'Bind password': 'סיסמת Bind',
-  'Username attribute': 'מאפיין שם משתמש',
-  'Attribute the username is matched against: uid, or sAMAccountName on Active Directory.':
-    'המאפיין שמולו מושווה שם המשתמש: uid, או sAMAccountName ב-Active Directory.',
   'User filter': 'מסנן משתמשים',
-  'Optional LDAP filter every user must also match, for example (objectClass=inetOrgPerson).':
-    'מסנן LDAP אופציונלי שכל משתמש חייב להתאים לו בנוסף, למשל (objectClass=inetOrgPerson).',
+  'Finds the person signing in. {username} is replaced with what they type.':
+    'מאתר את מי שמתחבר. {username} מוחלף במה שהוא מקליד.',
+  'The user filter must contain {username}.':
+    'מסנן המשתמשים חייב לכלול את {username}.',
+  'Sign-in rules': 'כללי התחברות',
+  'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.':
+    'משתמשים ב-Active Directory? הגדירו את מסנן המשתמשים ל-(sAMAccountName={username}) ואת מאפיין המזהה ל-objectGUID.',
+  'Attribute mapping': 'מיפוי מאפיינים',
   'ID attribute': 'מאפיין מזהה',
   'Attribute with the identifier that stays the same when an entry is renamed or moved: entryUUID, or objectGUID on Active Directory.':
     'המאפיין שמכיל את המזהה שנשאר קבוע גם כששם הרשומה משתנה או כשהיא מועברת: entryUUID, או objectGUID ב-Active Directory.',
@@ -4061,8 +4066,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'המשתמש נמצא, בדיקת הקבוצה עברה, הסיסמה התקבלה.',
   'User found, group check passed.': 'המשתמש נמצא, בדיקת הקבוצה עברה.',
   'Failed to test the LDAP connection': 'בדיקת חיבור ה-LDAP נכשלה',
-  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate verification, CA certificate or bind DN change.':
-    'נשמרת באופן מאובטח ולא מוצגת שוב. נדרשת שוב בכל שינוי של מארחים, פורט, הצפנה, אימות אישור, אישור CA או bind DN.',
+  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate settings or bind DN change.':
+    'נשמרת באופן מאובטח ולא מוצגת שוב. נדרשת שוב בכל שינוי של מארחים, פורט, הצפנה, הגדרות התעודה או bind DN.',
   'Enter the bind password again to save: the connection or certificate settings changed.':
     'הזינו שוב את סיסמת ה-bind כדי לשמור: הגדרות החיבור או האישור השתנו.',
   'Add at least one host and a base DN to enable LDAP sign-in.':

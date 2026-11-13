@@ -1,6 +1,12 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ClipboardEvent,
+  type ReactNode,
+} from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
+import { Info, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -10,14 +16,20 @@ import {
   LDAP_TIMEOUT_MAX,
   LDAP_TIMEOUT_MIN,
   isLdapEnabled,
-  ldapDefaultPort,
   ldapEncryptionFromProject,
   projectQueryOptions,
   useUpdateLDAP,
-  type LdapEncryption,
   type LdapUpdateData,
 } from '@/lib/react-query/hooks'
+import {
+  LDAP_USER_FILTER_DEFAULT,
+  isLdapUserFilterValid,
+  ldapDefaultPort,
+  ldapSettingsFromUrls,
+  type LdapEncryption,
+} from '@/lib/ldap'
 import { TestLDAPConnection } from './_components/TestLDAPConnection'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -51,27 +63,26 @@ type LdapForm = {
   /** Text, so the field can be left empty for the default port of the encryption. */
   port: string
   encryption: LdapEncryption
-  tls: boolean
-  caCertificate: string
+  verification: boolean
+  certificate: string
   timeout: number
   baseDn: string
   bindDn: string
   /** Write-only: never prefilled, sent only when typed. */
   bindPassword: string
-  usernameAttribute: string
   userFilter: string
+  requiredGroupDn: string
   idAttribute: string
   emailAttribute: string
   nameAttribute: string
   phoneAttribute: string
-  requiredGroupDn: string
 }
 
 const INPUT_CLASS_NAME =
   'h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0'
 
 /** Catalog placeholders are one line; a PEM placeholder should show real line breaks. */
-const CA_CERTIFICATE_PLACEHOLDER = `-----BEGIN CERTIFICATE-----
+const CERTIFICATE_PLACEHOLDER = `-----BEGIN CERTIFICATE-----
 MIIDdTCCAl2gAwIBAgIVAK...
 -----END CERTIFICATE-----`
 
@@ -80,19 +91,18 @@ const EMPTY_FORM: LdapForm = {
   hosts: [],
   port: '',
   encryption: 'ldaps',
-  tls: true,
-  caCertificate: '',
+  verification: true,
+  certificate: '',
   timeout: 10,
   baseDn: '',
   bindDn: '',
   bindPassword: '',
-  usernameAttribute: 'uid',
-  userFilter: '',
+  userFilter: LDAP_USER_FILTER_DEFAULT,
+  requiredGroupDn: '',
   idAttribute: 'entryUUID',
   emailAttribute: 'mail',
   nameAttribute: 'cn',
   phoneAttribute: '',
-  requiredGroupDn: '',
 }
 
 function formFromProject(project: Models.Project): LdapForm {
@@ -104,20 +114,18 @@ function formFromProject(project: Models.Project): LdapForm {
     // The project reports the port a sign-in uses; the field shows it only when it deviates from the default.
     port: port && port !== ldapDefaultPort(encryption) ? String(port) : '',
     encryption,
-    tls: project.ldapTls ?? true,
-    caCertificate: project.ldapCaCertificate ?? '',
+    verification: project.ldapVerification ?? true,
+    certificate: project.ldapCertificate ?? '',
     timeout: project.ldapTimeout || EMPTY_FORM.timeout,
     baseDn: project.ldapBaseDn ?? '',
     bindDn: project.ldapBindDn ?? '',
     bindPassword: '',
-    usernameAttribute:
-      project.ldapUsernameAttribute || EMPTY_FORM.usernameAttribute,
-    userFilter: project.ldapUserFilter ?? '',
+    userFilter: project.ldapUserFilter || EMPTY_FORM.userFilter,
+    requiredGroupDn: project.ldapRequiredGroupDn ?? '',
     idAttribute: project.ldapIdAttribute || EMPTY_FORM.idAttribute,
     emailAttribute: project.ldapEmailAttribute || EMPTY_FORM.emailAttribute,
     nameAttribute: project.ldapNameAttribute || EMPTY_FORM.nameAttribute,
     phoneAttribute: project.ldapPhoneAttribute ?? '',
-    requiredGroupDn: project.ldapRequiredGroupDn ?? '',
   }
 }
 
@@ -133,16 +141,14 @@ function portOf(form: LdapForm): number {
 }
 
 const TEXT_FIELDS = [
-  'caCertificate',
+  'certificate',
   'baseDn',
   'bindDn',
-  'usernameAttribute',
-  'userFilter',
+  'requiredGroupDn',
   'idAttribute',
   'emailAttribute',
   'nameAttribute',
   'phoneAttribute',
-  'requiredGroupDn',
 ] as const
 
 /**
@@ -154,8 +160,8 @@ const BIND_PASSWORD_GUARDED_FIELDS = [
   'hosts',
   'port',
   'encryption',
-  'tls',
-  'caCertificate',
+  'verification',
+  'certificate',
   'bindDn',
 ] as const
 
@@ -170,12 +176,17 @@ function changedFields(form: LdapForm, saved: LdapForm): LdapUpdateData {
   if (!sameHosts(form.hosts, saved.hosts)) data.hosts = form.hosts
   if (portOf(form) !== portOf(saved)) data.port = portOf(form)
   if (form.encryption !== saved.encryption) data.encryption = form.encryption
-  if (form.tls !== saved.tls) data.tls = form.tls
+  if (form.verification !== saved.verification)
+    data.verification = form.verification
   if (form.timeout !== saved.timeout) data.timeout = form.timeout
   for (const field of TEXT_FIELDS) {
     const value = form[field].trim()
-    if (value !== saved[field]) data[field] = value
+    if (value !== saved[field].trim()) data[field] = value
   }
+  // Empty stands for the default filter, which the project reports as the one in use.
+  const userFilter = form.userFilter.trim()
+  if ((userFilter || LDAP_USER_FILTER_DEFAULT) !== saved.userFilter)
+    data.userFilter = userFilter
   // Write-only: a typed password is itself a change.
   if (form.bindPassword !== '') {
     data.bindPassword = form.bindPassword
@@ -229,10 +240,13 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
     [project],
   )
   const [form, setForm] = useState<LdapForm>(() => saved ?? EMPTY_FORM)
+  // A base DN from a pasted URL, offered when the field already holds another one.
+  const [baseDnOffer, setBaseDnOffer] = useState('')
 
   // Initialize form from project data
   useEffect(() => {
     if (saved) setForm(saved)
+    setBaseDnOffer('')
   }, [saved])
 
   const patch = (changes: Partial<LdapForm>) =>
@@ -250,6 +264,32 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
           : current.port,
     }))
 
+  /** A pasted ldap:// or ldaps:// URL fills hosts, encryption, port and base DN instead of becoming a host. */
+  const handleHostsPaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    const settings = ldapSettingsFromUrls(
+      event.clipboardData.getData('text'),
+      form.encryption,
+    )
+    if (!settings) return
+    event.preventDefault()
+    const keepBaseDn = form.baseDn.trim() !== '' || settings.baseDn === ''
+    setForm((current) => ({
+      ...current,
+      hosts: [
+        ...current.hosts,
+        ...settings.hosts.filter((host) => !current.hosts.includes(host)),
+      ].slice(0, LDAP_HOSTS_MAX),
+      encryption: settings.encryption,
+      port: settings.port,
+      baseDn: keepBaseDn ? current.baseDn : settings.baseDn,
+    }))
+    setBaseDnOffer(
+      keepBaseDn && settings.baseDn !== form.baseDn.trim()
+        ? settings.baseDn
+        : '',
+    )
+  }
+
   const changes = useMemo(
     () => (saved ? changedFields(form, saved) : {}),
     [form, saved],
@@ -258,6 +298,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
   // The service account's password has to come with any change that moves or re-trusts the directory.
   const needsBindPassword =
     changesGuardedField(changes) && changes.bindPassword === undefined
+  const userFilterInvalid = !isLdapUserFilterValid(form.userFilter)
 
   const handleUpdate = async () => {
     if (
@@ -276,6 +317,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
       toast.error(t('Port must be between 1 and 65535.'))
       return
     }
+    if (userFilterInvalid) return
     try {
       await updateLDAPMutation.mutateAsync(changes)
       toast.success(
@@ -381,7 +423,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     label={t('Hosts')}
                     required
                     hint={t(
-                      'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10.',
+                      'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10. Paste an LDAP URL to also fill in encryption, port and base DN.',
                     )}
                     className="sm:col-span-2"
                   >
@@ -391,10 +433,43 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                       onChange={(hosts) =>
                         patch({ hosts: hosts.slice(0, LDAP_HOSTS_MAX) })
                       }
+                      onPaste={handleHostsPaste}
                       splitOnComma
                       placeholder="ldap.example.com"
                       disabled={isBusy}
                     />
+                    {baseDnOffer && baseDnOffer !== form.baseDn.trim() ? (
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-foreground">
+                        <span className="min-w-0 break-all">
+                          {t('Use {dn} as the base DN?').replace(
+                            '{dn}',
+                            () => baseDnOffer,
+                          )}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-[12px]"
+                          onClick={() => {
+                            patch({ baseDn: baseDnOffer })
+                            setBaseDnOffer('')
+                          }}
+                          disabled={isBusy}
+                        >
+                          {t('Use')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-[12px] text-muted-foreground"
+                          onClick={() => setBaseDnOffer('')}
+                        >
+                          {t('Dismiss')}
+                        </Button>
+                      </div>
+                    ) : null}
                   </Field>
 
                   <Field
@@ -448,22 +523,56 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     </Select>
                   </Field>
 
-                  <Field
-                    id="ldap-tls"
-                    label={t('Verify certificate')}
-                    hint={t(
-                      'Check the certificate the directory presents against the CA certificate below or the system trust store.',
-                    )}
-                  >
-                    <div className="flex h-9 items-center">
-                      <Switch
-                        id="ldap-tls"
-                        checked={form.tls}
-                        onCheckedChange={(tls) => patch({ tls })}
-                        disabled={isBusy}
-                      />
-                    </div>
-                  </Field>
+                  {/* Without encryption there is no certificate to check; the values stay for when it comes back. */}
+                  {form.encryption !== 'none' ? (
+                    <>
+                      {/* A switch row like Enabled, so it does not leave half a row empty. */}
+                      <div className="flex items-center justify-between gap-4 sm:col-span-2">
+                        <div className="flex-1">
+                          <Label
+                            htmlFor="ldap-verification"
+                            className="text-[13px] font-medium text-foreground"
+                          >
+                            {t('Verify certificate')}
+                          </Label>
+                          <p className="text-[12px] text-muted-foreground mt-0.5">
+                            {t(
+                              "Check the directory's certificate against the certificate below, or the system trust store if it is empty.",
+                            )}
+                          </p>
+                        </div>
+                        <Switch
+                          id="ldap-verification"
+                          checked={form.verification}
+                          onCheckedChange={(verification) =>
+                            patch({ verification })
+                          }
+                          disabled={isBusy}
+                        />
+                      </div>
+
+                      <Field
+                        id="ldap-certificate"
+                        label={t('Certificate (PEM)')}
+                        hint={t(
+                          "Certificate of the authority that signed the directory's certificate, or the directory's own certificate if it is self-signed. Paste several to trust more than one. Leave empty to use the system trust store.",
+                        )}
+                        className="sm:col-span-2"
+                      >
+                        <Textarea
+                          id="ldap-certificate"
+                          placeholder={CERTIFICATE_PLACEHOLDER}
+                          value={form.certificate}
+                          onChange={(e) =>
+                            patch({ certificate: e.target.value })
+                          }
+                          disabled={isBusy}
+                          spellCheck={false}
+                          className="min-h-28 border-border bg-background font-mono text-[12px] text-foreground placeholder:text-muted-foreground md:text-[12px]"
+                        />
+                      </Field>
+                    </>
+                  ) : null}
 
                   <Field
                     id="ldap-timeout"
@@ -480,25 +589,6 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                       onValueChange={(timeout) => patch({ timeout })}
                       disabled={isBusy}
                       className={INPUT_CLASS_NAME}
-                    />
-                  </Field>
-
-                  <Field
-                    id="ldap-ca-certificate"
-                    label={t('CA certificate (PEM)')}
-                    hint={t(
-                      'Certificate of the authority that signed the directory certificate. Leave empty to use the system trust store.',
-                    )}
-                    className="sm:col-span-2"
-                  >
-                    <Textarea
-                      id="ldap-ca-certificate"
-                      placeholder={CA_CERTIFICATE_PLACEHOLDER}
-                      value={form.caCertificate}
-                      onChange={(e) => patch({ caCertificate: e.target.value })}
-                      disabled={isBusy}
-                      spellCheck={false}
-                      className="min-h-28 border-border bg-background font-mono text-[12px] text-foreground placeholder:text-muted-foreground md:text-[12px]"
                     />
                   </Field>
                 </div>
@@ -553,7 +643,7 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                     label={t('Bind password')}
                     required={needsBindPassword}
                     hint={t(
-                      'Stored securely and never shown again. Required again when hosts, port, encryption, certificate verification, CA certificate or bind DN change.',
+                      'Stored securely and never shown again. Required again when hosts, port, encryption, certificate settings or bind DN change.',
                     )}
                   >
                     <Input
@@ -575,43 +665,79 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                       </p>
                     ) : null}
                   </Field>
+                </div>
+              </div>
+            </div>
 
-                  <Field
-                    id="ldap-username-attribute"
-                    label={t('Username attribute')}
-                    hint={t(
-                      'Attribute the username is matched against: uid, or sAMAccountName on Active Directory.',
+            {/* Sign-in Rules Section */}
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-[13px] font-medium text-foreground mb-3">
+                  {t('Sign-in rules')}
+                </h4>
+                <Alert role="note" className="mb-4">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="text-[13px]">
+                    {t(
+                      'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.',
                     )}
+                  </AlertDescription>
+                </Alert>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field
+                    id="ldap-user-filter"
+                    label={t('User filter')}
+                    hint={t(
+                      'Finds the person signing in. {username} is replaced with what they type.',
+                    )}
+                    className="sm:col-span-2"
                   >
                     <Input
-                      id="ldap-username-attribute"
-                      placeholder="uid"
-                      value={form.usernameAttribute}
+                      id="ldap-user-filter"
+                      placeholder={LDAP_USER_FILTER_DEFAULT}
+                      value={form.userFilter}
+                      onChange={(e) => patch({ userFilter: e.target.value })}
+                      disabled={isBusy}
+                      aria-invalid={userFilterInvalid || undefined}
+                      className={cn(INPUT_CLASS_NAME, 'font-mono')}
+                    />
+                    {userFilterInvalid ? (
+                      <p className="text-[11px] text-destructive">
+                        {t('The user filter must contain {username}.')}
+                      </p>
+                    ) : null}
+                  </Field>
+
+                  <Field
+                    id="ldap-required-group-dn"
+                    label={t('Required group DN')}
+                    hint={t(
+                      'Group a user must belong to in order to sign in, checked on every sign-in. Leave empty to allow every user the directory authenticates.',
+                    )}
+                    className="sm:col-span-2"
+                  >
+                    <Input
+                      id="ldap-required-group-dn"
+                      placeholder="cn=staff,ou=groups,dc=example,dc=com"
+                      value={form.requiredGroupDn}
                       onChange={(e) =>
-                        patch({ usernameAttribute: e.target.value })
+                        patch({ requiredGroupDn: e.target.value })
                       }
                       disabled={isBusy}
                       className={cn(INPUT_CLASS_NAME, 'font-mono')}
                     />
                   </Field>
+                </div>
+              </div>
+            </div>
 
-                  <Field
-                    id="ldap-user-filter"
-                    label={t('User filter')}
-                    hint={t(
-                      'Optional LDAP filter every user must also match, for example (objectClass=inetOrgPerson).',
-                    )}
-                  >
-                    <Input
-                      id="ldap-user-filter"
-                      placeholder="(objectClass=inetOrgPerson)"
-                      value={form.userFilter}
-                      onChange={(e) => patch({ userFilter: e.target.value })}
-                      disabled={isBusy}
-                      className={cn(INPUT_CLASS_NAME, 'font-mono')}
-                    />
-                  </Field>
-
+            {/* Attribute Mapping Section */}
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-[13px] font-medium text-foreground mb-3">
+                  {t('Attribute mapping')}
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-2">
                   <Field
                     id="ldap-id-attribute"
                     label={t('ID attribute')}
@@ -683,26 +809,6 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
                       className={cn(INPUT_CLASS_NAME, 'font-mono')}
                     />
                   </Field>
-
-                  <Field
-                    id="ldap-required-group-dn"
-                    label={t('Required group DN')}
-                    hint={t(
-                      'Group a user must belong to in order to sign in, checked on every sign-in. Leave empty to allow every user the directory authenticates.',
-                    )}
-                    className="sm:col-span-2"
-                  >
-                    <Input
-                      id="ldap-required-group-dn"
-                      placeholder="cn=staff,ou=groups,dc=example,dc=com"
-                      value={form.requiredGroupDn}
-                      onChange={(e) =>
-                        patch({ requiredGroupDn: e.target.value })
-                      }
-                      disabled={isBusy}
-                      className={cn(INPUT_CLASS_NAME, 'font-mono')}
-                    />
-                  </Field>
                 </div>
               </div>
             </div>
@@ -716,7 +822,9 @@ export function IdentityServers({ projectId }: IdentityServersProps) {
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleUpdate}
-              disabled={!hasChanges || needsBindPassword || isBusy}
+              disabled={
+                !hasChanges || needsBindPassword || userFilterInvalid || isBusy
+              }
             >
               {t('Update')}
             </Button>

@@ -4066,21 +4066,23 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このプロジェクトで LDAP サインインを有効にします。有効化時にディレクトリへ接続して設定を検証するため、先に少なくとも 1 つのホストとベース DN を追加してください。',
   Directory: 'ディレクトリ',
   Hosts: 'ホスト',
-  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10.':
-    'ディレクトリのホスト名または IP アドレス。応答があるまで順に試します。ホストごとに Enter を押してください。最大 10 件。',
+  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10. Paste an LDAP URL to also fill in encryption, port and base DN.':
+    'ディレクトリのホスト名または IP アドレス。応答があるまで順に試します。ホストごとに Enter を押してください。最大 10 件。LDAP URL を貼り付けると、暗号化、ポート、ベース DN も入力されます。',
+  'Use {dn} as the base DN?': '{dn} をベース DN として使用しますか?',
+  Use: '使用',
   'Leave empty for the default: 636 for LDAPS, 389 otherwise.':
     '空にするとデフォルトを使用します。LDAPS は 636、それ以外は 389 です。',
   'LDAPS encrypts from the first byte, StartTLS upgrades a plain connection, None is for a trusted network only.':
     'LDAPS は最初から暗号化し、StartTLS は平文接続を暗号化に切り替えます。「なし」は信頼できるネットワーク専用です。',
   'Verify certificate': '証明書を検証',
-  'Check the certificate the directory presents against the CA certificate below or the system trust store.':
-    'ディレクトリが提示する証明書を、下の CA 証明書またはシステムの信頼ストアで検証します。',
+  "Check the directory's certificate against the certificate below, or the system trust store if it is empty.":
+    'ディレクトリの証明書を下の証明書で検証します。空の場合はシステムの信頼ストアで検証します。',
   'Timeout (seconds)': 'タイムアウト (秒)',
   'Seconds to wait for the directory to connect and answer each operation, from 1 to 30.':
     'ディレクトリの接続と各操作の応答を待つ秒数。1 から 30 まで。',
-  'CA certificate (PEM)': 'CA 証明書 (PEM)',
-  'Certificate of the authority that signed the directory certificate. Leave empty to use the system trust store.':
-    'ディレクトリの証明書に署名した認証局の証明書。空にするとシステムの信頼ストアを使用します。',
+  'Certificate (PEM)': '証明書 (PEM)',
+  "Certificate of the authority that signed the directory's certificate, or the directory's own certificate if it is self-signed. Paste several to trust more than one. Leave empty to use the system trust store.":
+    'ディレクトリの証明書に署名した認証局の証明書。自己署名の場合はディレクトリの証明書そのもの。複数貼り付けると、そのすべてを信頼します。空にするとシステムの信頼ストアを使用します。',
   'Base DN': 'ベース DN',
   'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
     'ユーザー検索の起点となるサブツリー。例: ou=people,dc=example,dc=com',
@@ -4088,12 +4090,15 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Service account used to search for users. Leave empty if the directory allows anonymous search.':
     'ユーザー検索に使うサービスアカウント。ディレクトリが匿名検索を許可している場合は空にします。',
   'Bind password': 'バインドパスワード',
-  'Username attribute': 'ユーザー名属性',
-  'Attribute the username is matched against: uid, or sAMAccountName on Active Directory.':
-    'ユーザー名と照合する属性。uid、Active Directory では sAMAccountName。',
   'User filter': 'ユーザーフィルター',
-  'Optional LDAP filter every user must also match, for example (objectClass=inetOrgPerson).':
-    'すべてのユーザーが追加で一致する必要がある LDAP フィルター (任意)。例: (objectClass=inetOrgPerson)',
+  'Finds the person signing in. {username} is replaced with what they type.':
+    'サインインするユーザーを検索します。{username} は入力された内容に置き換えられます。',
+  'The user filter must contain {username}.':
+    'ユーザーフィルターには {username} を含める必要があります。',
+  'Sign-in rules': 'サインインのルール',
+  'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.':
+    'Active Directory を使用していますか? ユーザーフィルターを (sAMAccountName={username})、ID 属性を objectGUID に設定してください。',
+  'Attribute mapping': '属性のマッピング',
   'ID attribute': 'ID 属性',
   'Attribute with the identifier that stays the same when an entry is renamed or moved: entryUUID, or objectGUID on Active Directory.':
     'エントリの名前変更や移動後も変わらない識別子を保持する属性。entryUUID、Active Directory では objectGUID。',
@@ -4138,8 +4143,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'User found, group check passed.':
     'ユーザーが見つかり、グループの確認に合格しました。',
   'Failed to test the LDAP connection': 'LDAP 接続のテストに失敗しました',
-  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate verification, CA certificate or bind DN change.':
-    '安全に保存され、再表示されません。ホスト、ポート、暗号化、証明書の検証、CA 証明書、バインド DN を変更する際は再入力が必要です。',
+  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate settings or bind DN change.':
+    '安全に保存され、再表示されません。ホスト、ポート、暗号化、証明書の設定、バインド DN を変更する際は再入力が必要です。',
   'Enter the bind password again to save: the connection or certificate settings changed.':
     '保存するにはバインドパスワードを再入力してください。接続または証明書の設定が変更されています。',
   'Add at least one host and a base DN to enable LDAP sign-in.':
