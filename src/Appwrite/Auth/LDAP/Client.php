@@ -57,6 +57,12 @@ class Client
      */
     public const string RULE_IN_CHAIN = '1.2.840.113556.1.4.1941';
 
+    /** The attribute POSIX accounts keep their login name in, and posixGroup lists members by. */
+    private const string ATTRIBUTE_UID = 'uid';
+
+    /** C0 controls other than tab, line feed and carriage return: text never holds them. */
+    private const string CONTROL_CHARACTERS = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0B\x0C\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F";
+
     /** @var list<string> */
     private readonly array $hosts;
     private readonly int $port;
@@ -178,7 +184,7 @@ class Client
 
             $entry = $this->map($entries[0]);
 
-            if ($this->requiredGroupDn !== '' && !$this->isMember($client, $entry['dn'], $username)) {
+            if ($this->requiredGroupDn !== '' && !$this->isMember($client, $entries[0])) {
                 throw new Exception(Exception::USER_INVALID_CREDENTIALS);
             }
 
@@ -209,11 +215,16 @@ class Client
 
         try {
             try {
-                if ($client->read($this->baseDn, ['1.1']) === null) {
-                    throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, "Base DN {$this->baseDn} does not exist or the service account cannot read it.");
-                }
+                $base = $client->read($this->baseDn, ['1.1']);
             } catch (OperationException $error) {
                 throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, "Base DN {$this->baseDn} could not be read: " . ($error->getCodeShort() ?? $error->getMessage()) . '.', previous: $error);
+            } catch (\Throwable $error) {
+                // The socket can still drop after connecting, which FreeDSx does not declare
+                throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, "The LDAP connection was lost while reading the base DN {$this->baseDn}.", previous: $error);
+            }
+
+            if ($base === null) {
+                throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, "Base DN {$this->baseDn} does not exist or the service account cannot read it.");
             }
 
             // The user filter is only ever sent with a username, so it is parsed here as well.
@@ -235,7 +246,7 @@ class Client
 
             $entry = $this->map($entries[0]);
 
-            if ($this->requiredGroupDn !== '' && !$this->isMember($client, $entry['dn'], $username)) {
+            if ($this->requiredGroupDn !== '' && !$this->isMember($client, $entries[0])) {
                 throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, "Entry {$entry['dn']} is not a member of {$this->requiredGroupDn}.");
             }
 
@@ -316,7 +327,7 @@ class Client
             ]);
         }
 
-        if (!\mb_check_encoding($value, 'UTF-8') || \preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', $value) === 1) {
+        if (!\mb_check_encoding($value, 'UTF-8') || \strcspn($value, self::CONTROL_CHARACTERS) !== \strlen($value)) {
             return \bin2hex($value);
         }
 
@@ -372,6 +383,14 @@ class Client
                 // An empty bind DN means the directory allows anonymous search.
                 if ($this->bindDn !== '') {
                     $client->bind($this->bindDn, $this->bindPassword);
+                } elseif ($this->encryption !== self::ENCRYPTION_STARTTLS) {
+                    // FreeDSx dials on the first request, and nothing above sent one: read the root
+                    // DSE now so an unreachable host fails over here, not on the first search.
+                    try {
+                        $client->read('', ['1.1']);
+                    } catch (OperationException) {
+                        // The host answered; it only keeps its root DSE to itself.
+                    }
                 }
 
                 return $client;
@@ -443,6 +462,8 @@ class Client
             $this->emailAttribute,
             $this->nameAttribute,
             $this->phoneAttribute,
+            // POSIX groups list members by uid, see isMember()
+            $this->requiredGroupDn !== '' ? self::ATTRIBUTE_UID : '',
         ])));
 
         $search = Operations::search($this->filter($username), ...$attributes)
@@ -472,14 +493,19 @@ class Client
      *
      * @throws Exception USER_LDAP_DIRECTORY_ERROR when the group does not exist or the search fails
      */
-    private function isMember(LdapClient $client, string $userDn, string $username): bool
+    private function isMember(LdapClient $client, Entry $entry): bool
     {
         $group = $this->requiredGroupDn;
+        $userDn = $entry->getDn()->toString();
+
+        // A POSIX group's memberUid holds the user's uid exactly as their entry stores it
+        // (RFC 2307, matched case-exactly), not what they typed or their username attribute.
+        $uids = \array_map(\strval(...), $entry->get(self::ATTRIBUTE_UID)?->getValues() ?? []);
 
         $onGroup = Operations::search(Filters::or(
             Filters::equal('member', $userDn),
             Filters::equal('uniqueMember', $userDn),
-            Filters::equal('memberUid', $username),
+            ...\array_map(fn (string $uid) => Filters::equal('memberUid', $uid), $uids),
         ), '1.1')->base($group)->useBaseScope()->sizeLimit(1);
 
         $onUser = Operations::search(Filters::or(

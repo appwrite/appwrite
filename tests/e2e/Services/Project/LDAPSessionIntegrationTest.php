@@ -280,6 +280,35 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
+    public function testRequiredGroupPosixMatchesTheEntryUid(): void
+    {
+        // memberUid holds the uid the member's entry stores, compared case-exactly, so the
+        // check reads it from the entry rather than using what the user typed.
+        $this->configureDirectory([
+            'requiredGroupDn' => 'cn=appwrite-posix,ou=groups,dc=appwrite,dc=test',
+        ]);
+
+        $response = $this->signIn('ALICE', 'alicepass');
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(self::$aliceId, $response['body']['userId']);
+
+        // The same holds when users sign in with another attribute than their uid.
+        $this->configureDirectory([
+            'usernameAttribute' => 'mail',
+            'requiredGroupDn' => 'cn=appwrite-posix,ou=groups,dc=appwrite,dc=test',
+        ]);
+
+        $response = $this->signIn('alice@appwrite.test', 'alicepass');
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(self::$aliceId, $response['body']['userId']);
+
+        $response = $this->signIn('bob@appwrite.test', 'bobpass');
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
     public function testRequiredGroupMissingIsDirectoryError(): void
     {
         // A group that does not exist is a configuration error, not a failed
