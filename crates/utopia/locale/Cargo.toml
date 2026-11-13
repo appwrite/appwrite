@@ -10,8 +10,9 @@ publish.workspace = true
 
 [dependencies]
 foldhash.workspace = true
-indexmap.workspace = true
+indexmap = { workspace = true, features = ["serde"] }
 php-std.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 
 

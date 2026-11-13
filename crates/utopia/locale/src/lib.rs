@@ -210,6 +210,12 @@ impl Languages {
     ///
     /// PHP: reads `json` the way `json_decode($json, true)` does.
     pub fn insert_json(&mut self, name: impl Into<String>, json: &[u8]) -> Result<(), Error> {
+        // A JSON object of strings, as every translation file is, decodes
+        // straight into the map; anything else takes PHP's decoder.
+        if let Ok(texts) = serde_json::from_slice::<Translations>(json) {
+            self.languages.insert(name.into(), Language::Texts(texts));
+            return Ok(());
+        }
         let language = match json::decode(json, Some(true), 512, Flags::NONE) {
             Err(_) | Ok(Value::Null) => Language::Unusable("null"),
             Ok(Value::Bool(true)) => Language::Unusable("true"),
@@ -349,6 +355,16 @@ impl<'a> Locale<'a> {
         missing: Missing<'s>,
         placeholders: &[(&str, &str)],
     ) -> Result<Option<Cow<'s, str>>, Error> {
+        self.text_with(key, missing, placeholders.iter().copied())
+    }
+
+    /// [`Locale::text`], with the placeholders as any sequence of name and value pairs.
+    pub fn text_with<'s, N: AsRef<str>, V: AsRef<str>>(
+        &'s self,
+        key: &str,
+        missing: Missing<'s>,
+        placeholders: impl IntoIterator<Item = (N, V)>,
+    ) -> Result<Option<Cow<'s, str>>, Error> {
         let default = self.languages.lookup(&self.default)?.get(key);
         let fallback = match self.languages.languages.get(self.fallback.as_deref().unwrap_or("")) {
             None | Some(Language::Unusable("null")) => None,
@@ -393,9 +409,13 @@ impl<'a> Locale<'a> {
 /// placeholder, and the two buffers swap, so a text with any number of
 /// placeholders costs at most two allocations. Placeholders are found in
 /// place, without building the `{{name}}` string.
-fn replace_placeholders<'s>(mut text: Cow<'s, str>, placeholders: &[(&str, &str)]) -> Cow<'s, str> {
+fn replace_placeholders<'s, N: AsRef<str>, V: AsRef<str>>(
+    mut text: Cow<'s, str>,
+    placeholders: impl IntoIterator<Item = (N, V)>,
+) -> Cow<'s, str> {
     let mut spare = String::new();
     for (name, value) in placeholders {
+        let (name, value) = (name.as_ref(), value.as_ref());
         let width = name.len() + 4;
         let (mut copied, mut from) = (0, 0);
         let mut out = std::mem::take(&mut spare);
@@ -466,7 +486,7 @@ mod tests {
             let (n1, v1, n2, v2) = (pick(1), pick(2), pick(1), pick(2));
             let placeholders = [(n1.as_str(), v1.as_str()), (n2.as_str(), v2.as_str())];
             assert_eq!(
-                replace_placeholders(Cow::Borrowed(&text), &placeholders),
+                replace_placeholders(Cow::Borrowed(&text), placeholders),
                 str_replaced(&text, &placeholders),
                 "{text:?} {placeholders:?}"
             );

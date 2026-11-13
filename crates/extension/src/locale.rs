@@ -136,6 +136,37 @@ fn string(bytes: &[u8]) -> Zval {
     zval
 }
 
+/// A placeholder's name: its array key, read without copying a string key.
+enum Name {
+    Key(Zval),
+    Number(String),
+}
+
+impl Name {
+    fn bytes(&self) -> &[u8] {
+        match self {
+            Name::Key(key) => key.zend_str().map(ZendStr::as_bytes).unwrap_or_default(),
+            Name::Number(number) => number.as_bytes(),
+        }
+    }
+}
+
+/// The name as UTF-8; only used once [`Name::bytes`] was checked to be.
+impl AsRef<str> for Name {
+    fn as_ref(&self) -> &str {
+        std::str::from_utf8(self.bytes()).unwrap_or_default()
+    }
+}
+
+/// The placeholders in order, each name with its value.
+fn entries(fill: &ZendHashTable) -> impl Iterator<Item = (Name, &Zval)> {
+    let mut iter = fill.iter();
+    std::iter::from_fn(move || {
+        let (key, value) = iter.next_zval()?;
+        Some((key.long().map_or(Name::Key(key), |number| Name::Number(number.to_string())), value))
+    })
+}
+
 /// What `getText()` found, before its placeholders are filled.
 enum Found {
     /// The PHP string to return: there is nothing to fill.
@@ -207,6 +238,42 @@ impl Locale {
         let text = String::from_utf8_lossy(name);
         languages(|languages| utopia_locale::Locale::new(languages, &text).map(drop)).map_err(thrown)?;
         Ok(string(name))
+    }
+
+    /// `getText()` with placeholders, filled by the crate when every placeholder is
+    /// a string or an int and the key, default, names and values are UTF-8: no PHP
+    /// code runs for them, so filling before the lookup changes nothing. `None`
+    /// when that does not hold, for the byte path to take.
+    fn plain_text(&self, key: &[u8], default: Option<&PhpString<'_>>, fill: &ZendHashTable) -> PhpResult<Option<Zval>> {
+        fn value(value: &Zval) -> Option<Cow<'_, str>> {
+            if let Some(string) = value.zend_str() {
+                return std::str::from_utf8(string.as_bytes()).ok().map(Cow::Borrowed);
+            }
+            value.long().map(|long| Cow::Owned(long.to_string()))
+        }
+        let (Ok(key), Some(missing)) = (
+            std::str::from_utf8(key),
+            match default {
+                None => Some(Missing::Null),
+                Some(default) => std::str::from_utf8(default.bytes()).ok().map(Missing::Text),
+            },
+        ) else {
+            return Ok(None);
+        };
+        if !entries(fill).all(|(name, text)| std::str::from_utf8(name.bytes()).is_ok() && value(text).is_some()) {
+            return Ok(None);
+        }
+        let pairs = entries(fill).filter_map(|(name, text)| Some((name, value(text)?)));
+        let text = languages(|languages| {
+            let locale = self.view(languages);
+            locale.text_with(key, missing, pairs).map(|text| text.map(|text| string(text.as_bytes())))
+        })
+        .map_err(thrown)?;
+        Ok(Some(text.unwrap_or_else(|| {
+            let mut null = Zval::new();
+            null.set_null();
+            null
+        })))
     }
 
     /// The crate's view of this locale's languages.
@@ -331,6 +398,11 @@ impl Locale {
         placeholders: Placeholders<'_>,
     ) -> PhpResult<Option<Zval>> {
         let fill = placeholders.0.filter(|placeholders| !placeholders.is_empty());
+        if let Some(fill) = fill
+            && let Some(text) = self.plain_text(key.bytes(), default.as_ref(), fill)?
+        {
+            return Ok(Some(text));
+        }
         let key_text = String::from_utf8_lossy(key.bytes());
         let found = languages(|languages| {
             let locale = self.view(languages);
@@ -351,17 +423,12 @@ impl Locale {
             (None, Some(default), Some(_)) if dynamic(&default) => braced(key.bytes(), <[u8]>::to_vec),
             (None, Some(default), Some(_)) => default.0.into_owned(),
         };
-        for (name, value) in fill.into_iter().flat_map(ZendHashTable::iter) {
-            let name = match name {
-                ArrayKey::Long(name) => Cow::Owned(name.to_string().into_bytes()),
-                ArrayKey::String(name) => Cow::Owned(name.into_bytes()),
-                ArrayKey::Str(name) => Cow::Borrowed(name.as_bytes()),
-                ArrayKey::ZendString(name) => Cow::Borrowed(name.as_bytes()),
-            };
+        for (name, value) in fill.into_iter().flat_map(entries) {
             let Some(value) = cast(value) else {
                 return Ok(None);
             };
-            if let Cow::Owned(replaced) = braced(&name, |search| php_std::string::str_replace(search, &value, &text).0)
+            if let Cow::Owned(replaced) =
+                braced(name.bytes(), |search| php_std::string::str_replace(search, &value, &text).0)
             {
                 text = replaced;
             }
