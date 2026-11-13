@@ -83,7 +83,11 @@ const UNCONFIGURED = {
   ldapRequiredGroupDn: '',
 } satisfies Partial<Models.Project>
 
-function project(ldap: Partial<Models.Project>, ldapEnabled = false) {
+/** `listed: false` is a server on a response format before 2.8.0, which leaves ldap out of authMethods. */
+function project(
+  ldap: Partial<Models.Project>,
+  { enabled = false, listed = true } = {},
+) {
   return {
     $id: PROJECT_ID,
     $createdAt: NOW,
@@ -95,7 +99,7 @@ function project(ldap: Partial<Models.Project>, ldapEnabled = false) {
     services: [],
     authMethods: [
       { $id: 'email-password', enabled: true },
-      { $id: 'ldap', enabled: ldapEnabled },
+      ...(listed ? [{ $id: 'ldap', enabled }] : []),
     ],
     ...ldap,
   }
@@ -331,6 +335,21 @@ test.describe('identity servers (mocked API)', () => {
       path: test.info().outputPath('auth-settings.png'),
       fullPage: true,
     })
+  })
+
+  test('auth settings hides LDAP when the server leaves it out', async ({
+    page,
+  }) => {
+    await useProfile(page, true)
+    await mockAppwriteApi(page, project(CONFIGURED, { listed: false }))
+
+    await page.goto(`/projects/${PROJECT_ID}/auth/settings`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page.locator('#email-password')).toBeVisible({
+      timeout: 60_000,
+    })
+    await expect(page.locator('#ldap')).toHaveCount(0)
   })
 
   test('auth settings hides LDAP while the preview is off', async ({
