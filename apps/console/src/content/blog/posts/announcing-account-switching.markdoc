@@ -31,7 +31,7 @@ Today, we are announcing **account switching** in Appwrite Auth.
 
 # What account switching gives you
 
-- **Several accounts, one browser.** A browser or app install stays signed in to several accounts at once, with one active at a time.
+- **Several accounts on one browser.** A browser or app install stays signed in to several accounts at once, with one active at a time.
 - **One call to switch.** `updateDeviceSession` makes another account active, and every request after it runs as that account.
 - **Every sign-in method.** Email and password, OAuth2, magic URL, email OTP, phone, passkeys, anonymous, and custom tokens all add accounts the same way.
 - **No secrets to manage.** Appwrite carries session and device secrets in cookies. Your code only handles session IDs.
