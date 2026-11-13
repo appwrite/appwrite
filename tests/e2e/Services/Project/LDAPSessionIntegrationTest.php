@@ -30,8 +30,15 @@ final class LDAPSessionIntegrationTest extends Scope
 
     private const string UUID = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/';
 
-    private static string $aliceId = '';
-    private static string $aliceUid = '';
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // `paratest --functional` hands these methods to its workers in any order, and a worker
+        // keeps its statics between them. Each test gets a project of its own, so none depends
+        // on another having configured the directory or signed someone in first.
+        self::$project = [];
+    }
 
     public function testSignInDisabledByDefault(): void
     {
@@ -58,8 +65,8 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertMatchesRegularExpression(self::UUID, $response['body']['providerUid']);
         $this->assertNotEmpty($response['cookies']['a_session_' . $projectId] ?? '');
 
-        self::$aliceId = $response['body']['userId'];
-        self::$aliceUid = $response['body']['providerUid'];
+        $aliceId = $response['body']['userId'];
+        $aliceUid = $response['body']['providerUid'];
         $session = $response['cookies']['a_session_' . $projectId];
 
         // The provisioned account carries the directory's values, with the
@@ -67,7 +74,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $account = $this->client->call(Client::METHOD_GET, '/account', $this->sessionHeaders($session));
 
         $this->assertSame(200, $account['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $account['body']['$id']);
+        $this->assertSame($aliceId, $account['body']['$id']);
         $this->assertSame('alice@appwrite.test', $account['body']['email']);
         $this->assertTrue($account['body']['emailVerification']);
         $this->assertSame('Alice Smith', $account['body']['name']);
@@ -79,11 +86,11 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame(200, $identities['headers']['status-code']);
         $this->assertSame(1, $identities['body']['total']);
         $this->assertSame('ldap', $identities['body']['identities'][0]['provider']);
-        $this->assertSame(self::$aliceUid, $identities['body']['identities'][0]['providerUid']);
+        $this->assertSame($aliceUid, $identities['body']['identities'][0]['providerUid']);
         $this->assertSame('alice@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
 
         // Provisioning also made the address reachable through messaging.
-        $targets = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId . '/targets', $this->serverHeaders());
+        $targets = $this->client->call(Client::METHOD_GET, '/users/' . $aliceId . '/targets', $this->serverHeaders());
 
         $this->assertSame(200, $targets['headers']['status-code']);
         $this->assertSame(1, $targets['body']['total']);
@@ -93,15 +100,19 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testRepeatSignInReusesAccount(): void
     {
+        $alice = $this->signInAlice();
+
         $response = $this->signIn('alice', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
-        $this->assertSame(self::$aliceUid, $response['body']['providerUid']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
+        $this->assertSame($alice['providerUid'], $response['body']['providerUid']);
     }
 
     public function testSessionDuration(): void
     {
+        $this->configureDirectory();
+
         $response = $this->signIn('alice', 'alicepass', ['duration' => 60]);
 
         $this->assertSame(201, $response['headers']['status-code']);
@@ -115,6 +126,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testDirectoryPasswordIsNotALocalPassword(): void
     {
+        $this->signInAlice();
+
         // The bind is the whole exchange: no local password is ever stored, so
         // the directory credentials must not work on the email/password route.
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
@@ -128,6 +141,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testWrongPasswordIsRejected(): void
     {
+        $this->configureDirectory();
+
         $response = $this->signIn('alice', 'wrongpass');
 
         $this->assertSame(401, $response['headers']['status-code']);
@@ -136,6 +151,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testUnknownUserIsIndistinguishableFromWrongPassword(): void
     {
+        $this->configureDirectory();
+
         // Telling an unknown user apart from a wrong password would let anyone
         // probe the directory for valid usernames.
         $unknownUser = $this->signIn('ghost', 'whatever');
@@ -148,6 +165,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testEmptyPasswordIsRejected(): void
     {
+        $this->configureDirectory();
+
         // A directory accepts an empty password as an "unauthenticated bind"
         // and reports success, so it never reaches one: the parameter is refused.
         $response = $this->signIn('alice', '');
@@ -158,6 +177,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testFilterInjectionIsNotPossible(): void
     {
+        $this->configureDirectory();
+
         // The username is carried as an assertion value, so filter syntax in it
         // matches nothing instead of matching everything.
         foreach (['*', 'ali*', 'alice)(uid=*', '\\2a'] as $username) {
@@ -170,6 +191,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testAmbiguousUsernameIsRejected(): void
     {
+        $alice = $this->signInAlice();
+
         // Two entries share cn=Twin. Binding as an arbitrary one of them would
         // be a coin toss over identity, so neither is signed in.
         $this->configureDirectory([
@@ -184,7 +207,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->signIn('Alice Smith', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
     }
 
     public function testUserFilterRestrictsEntries(): void
@@ -209,11 +232,13 @@ final class LDAPSessionIntegrationTest extends Scope
 
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('project_ldap_config_invalid', $response['body']['type']);
-        $this->assertStringContainsString('(sn=Smith', $response['body']['message']);
+        $this->assertStringContainsString('(sn=Smith', (string) $response['body']['message']);
     }
 
     public function testRequiredGroupRestrictsAccounts(): void
     {
+        $alice = $this->signInAlice();
+
         // Membership recorded on the group, groupOfNames style.
         $this->configureDirectory([
             'requiredGroupDn' => 'cn=appwrite-users,ou=groups,dc=appwrite,dc=test',
@@ -229,11 +254,13 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->signIn('alice', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
     }
 
     public function testRequiredGroupMatchesDnAcrossCaseAndSpacing(): void
     {
+        $alice = $this->signInAlice();
+
         // The appwrite-users-cased group records Alice's DN with different case
         // and spacing than her entry. The directory compares the DNs, so she is
         // a member either way.
@@ -244,7 +271,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->signIn('alice', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
     }
 
     public function testRequiredGroupOfUniqueNames(): void
@@ -282,6 +309,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testRequiredGroupPosixMatchesTheEntryUid(): void
     {
+        $alice = $this->signInAlice();
+
         // memberUid holds the uid the member's entry stores, compared case-exactly, so the
         // check reads it from the entry rather than using what the user typed.
         $this->configureDirectory([
@@ -291,7 +320,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->signIn('ALICE', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
 
         // The same holds when users sign in with another attribute than their uid.
         $this->configureDirectory([
@@ -302,7 +331,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->signIn('alice@appwrite.test', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
 
         $response = $this->signIn('bob@appwrite.test', 'bobpass');
 
@@ -326,7 +355,7 @@ final class LDAPSessionIntegrationTest extends Scope
 
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('project_ldap_config_invalid', $response['body']['type']);
-        $this->assertStringContainsString('cn=missing,ou=groups,dc=appwrite,dc=test', $response['body']['message']);
+        $this->assertStringContainsString('cn=missing,ou=groups,dc=appwrite,dc=test', (string) $response['body']['message']);
     }
 
     public function testEntryWithoutEmailCreatesUserWithoutEmail(): void
@@ -349,6 +378,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testEntryWithMalformedEmailIsRejected(): void
     {
+        $this->configureDirectory();
+
         $response = $this->signIn('bademail', 'bademailpass');
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -357,6 +388,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testExistingVerifiedAccountIsAdopted(): void
     {
+        $this->configureDirectory();
+
         // An account that already owns the verified address is the same person,
         // so the directory sign-in links to it rather than creating a duplicate,
         // as an OAuth2 sign-in with an attested email does.
@@ -394,6 +427,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testBlockedUserIsRejected(): void
     {
+        $this->configureDirectory();
+
         $response = $this->signIn('dave', 'davepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
@@ -415,6 +450,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testAccountFollowsDirectory(): void
     {
+        $alice = $this->signInAlice();
+
         // The directory is the authority on who the user is: a different
         // mapping stands in for the entry changing, and each sign-in applies it.
         $this->configureDirectory([
@@ -426,9 +463,9 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->signIn('alice', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
 
-        $user = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId, $this->serverHeaders());
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'], $this->serverHeaders());
 
         $this->assertSame('Alice', $user['body']['name']);
         $this->assertSame('alice.alt@appwrite.test', $user['body']['email']);
@@ -437,7 +474,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertFalse($user['body']['phoneVerification']);
 
         // The messaging targets moved with the address and the number.
-        $targets = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId . '/targets', $this->serverHeaders());
+        $targets = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'] . '/targets', $this->serverHeaders());
 
         $identifiers = \array_column($targets['body']['targets'], 'identifier', 'providerType');
         $this->assertSame('alice.alt@appwrite.test', $identifiers['email'] ?? null);
@@ -452,13 +489,13 @@ final class LDAPSessionIntegrationTest extends Scope
 
         $this->assertSame(201, $response['headers']['status-code']);
 
-        $user = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId, $this->serverHeaders());
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'], $this->serverHeaders());
 
         $this->assertSame('Alice Smith', $user['body']['name']);
         $this->assertSame('alice@appwrite.test', $user['body']['email']);
         $this->assertSame('+15550000001', $user['body']['phone']);
 
-        $identities = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId . '/identities', $this->serverHeaders());
+        $identities = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'] . '/identities', $this->serverHeaders());
 
         $this->assertSame(1, $identities['body']['total']);
         $this->assertSame('alice@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
@@ -477,6 +514,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
         $this->assertSame(201, $other['headers']['status-code']);
 
+        $alice = $this->signInAlice();
+
         $this->configureDirectory([
             'emailAttribute' => 'description',
         ]);
@@ -484,14 +523,14 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->signIn('alice', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
 
-        $user = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId, $this->serverHeaders());
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'], $this->serverHeaders());
 
         $this->assertSame('alice@appwrite.test', $user['body']['email']);
 
         // The identity records the address the account holds, not the one it could not take.
-        $identities = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId . '/identities', $this->serverHeaders());
+        $identities = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'] . '/identities', $this->serverHeaders());
 
         $this->assertSame(1, $identities['body']['total']);
         $this->assertSame('alice@appwrite.test', $identities['body']['identities'][0]['providerEmail']);
@@ -503,7 +542,7 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testSignInJoinsAccountSwitchingDevice(): void
     {
-        $this->configureDirectory();
+        $account = $this->signInAlice();
 
         $projectId = $this->getProject()['$id'];
         $deviceKey = 'a_device_' . $projectId;
@@ -521,7 +560,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $alice = $this->signIn('alice', 'alicepass', headers: ['cookie' => $deviceKey . '=' . $deviceCookie]);
 
         $this->assertSame(201, $alice['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $alice['body']['userId']);
+        $this->assertSame($account['userId'], $alice['body']['userId']);
         $this->assertSame('Alice Smith', $alice['body']['userName']);
 
         // Joining a session rotates the device secret
@@ -540,7 +579,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $bob = $this->signIn('bob', 'bobpass', headers: ['cookie' => $sessionKey . '=' . $alice['cookies'][$sessionKey] . '; ' . $deviceKey . '=' . $deviceCookie]);
 
         $this->assertSame(201, $bob['headers']['status-code']);
-        $this->assertNotSame(self::$aliceId, $bob['body']['userId']);
+        $this->assertNotSame($account['userId'], $bob['body']['userId']);
         $this->assertSame('Bob Jones', $bob['body']['userName']);
 
         $deviceCookie = $bob['cookies'][$deviceKey];
@@ -550,15 +589,15 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertCount(2, $current['body']['sessions']);
         $this->assertSame($bob['body']['$id'], $current['body']['activeSessionId']);
 
-        $user = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId, $this->serverHeaders());
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $account['userId'], $this->serverHeaders());
 
         $this->assertSame('Alice Smith', $user['body']['name']);
         $this->assertSame('alice@appwrite.test', $user['body']['email']);
 
-        $identities = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId . '/identities', $this->serverHeaders());
+        $identities = $this->client->call(Client::METHOD_GET, '/users/' . $account['userId'] . '/identities', $this->serverHeaders());
 
         $this->assertSame(1, $identities['body']['total']);
-        $this->assertSame(self::$aliceUid, $identities['body']['identities'][0]['providerUid']);
+        $this->assertSame($account['providerUid'], $identities['body']['identities'][0]['providerUid']);
 
         $identities = $this->client->call(Client::METHOD_GET, '/users/' . $bob['body']['userId'] . '/identities', $this->serverHeaders());
 
@@ -595,6 +634,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testUserLimitApplies(): void
     {
+        $this->signInAlice();
+
         $policy = $this->client->call(Client::METHOD_PATCH, '/project/policies/user-limit', $this->serverHeaders(), [
             'total' => 1,
         ]);
@@ -672,11 +713,13 @@ final class LDAPSessionIntegrationTest extends Scope
 
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('project_ldap_config_invalid', $response['body']['type']);
-        $this->assertStringContainsString('service account', $response['body']['message']);
+        $this->assertStringContainsString('service account', (string) $response['body']['message']);
     }
 
     public function testCreateLDAPTest(): void
     {
+        $alice = $this->signInAlice();
+
         $this->configureDirectory([
             'requiredGroupDn' => 'cn=appwrite-users,ou=groups,dc=appwrite,dc=test',
         ]);
@@ -687,13 +730,13 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame(204, $response['headers']['status-code']);
 
         // The whole sign-in, without a session.
-        $before = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId . '/sessions', $this->serverHeaders());
+        $before = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'] . '/sessions', $this->serverHeaders());
 
         $response = $this->createLDAPTest(['username' => 'alice', 'password' => 'alicepass']);
 
         $this->assertSame(204, $response['headers']['status-code']);
 
-        $after = $this->client->call(Client::METHOD_GET, '/users/' . self::$aliceId . '/sessions', $this->serverHeaders());
+        $after = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'] . '/sessions', $this->serverHeaders());
 
         $this->assertSame(200, $after['headers']['status-code']);
         $this->assertSame($before['body']['total'], $after['body']['total']);
@@ -703,17 +746,17 @@ final class LDAPSessionIntegrationTest extends Scope
 
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('project_ldap_config_invalid', $response['body']['type']);
-        $this->assertStringContainsString('refused the password', $response['body']['message']);
+        $this->assertStringContainsString('refused the password', (string) $response['body']['message']);
 
         $response = $this->createLDAPTest(['username' => 'ghost']);
 
         $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('No entry', $response['body']['message']);
+        $this->assertStringContainsString('No entry', (string) $response['body']['message']);
 
         $response = $this->createLDAPTest(['username' => 'bob']);
 
         $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('not a member', $response['body']['message']);
+        $this->assertStringContainsString('not a member', (string) $response['body']['message']);
 
         // A directory nobody can reach is reported with the host that was dialled.
         $this->updateLDAP([
@@ -725,11 +768,13 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->createLDAPTest();
 
         $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('127.0.0.1:1', $response['body']['message']);
+        $this->assertStringContainsString('127.0.0.1:1', (string) $response['body']['message']);
     }
 
     public function testEncryptionLdapsWithCaCertificate(): void
     {
+        $alice = $this->signInAlice();
+
         $this->configureDirectory([
             'encryption' => 'ldaps',
             'port' => 636,
@@ -740,11 +785,13 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->signIn('alice', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
     }
 
     public function testEncryptionLdapsRequiresTrust(): void
     {
+        $this->configureDirectory();
+
         // The fixture certificate is not signed by anything in the system
         // trust store, so verification refuses it without the CA.
         $this->caCertificate();
@@ -760,7 +807,7 @@ final class LDAPSessionIntegrationTest extends Scope
 
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('project_ldap_config_invalid', $response['body']['type']);
-        $this->assertStringContainsString(self::HOST . ':636', $response['body']['message']);
+        $this->assertStringContainsString(self::HOST . ':636', (string) $response['body']['message']);
     }
 
     public function testEncryptionLdapsWithoutVerification(): void
@@ -781,6 +828,8 @@ final class LDAPSessionIntegrationTest extends Scope
 
     public function testEncryptionStartTls(): void
     {
+        $alice = $this->signInAlice();
+
         $this->configureDirectory([
             'encryption' => 'starttls',
             'port' => 389,
@@ -791,7 +840,7 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->signIn('alice', 'alicepass');
 
         $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(self::$aliceId, $response['body']['userId']);
+        $this->assertSame($alice['userId'], $response['body']['userId']);
 
         $response = $this->createLDAPTest(['username' => 'alice', 'password' => 'alicepass']);
 
@@ -853,6 +902,25 @@ final class LDAPSessionIntegrationTest extends Scope
 
         $this->assertSame(200, $response['headers']['status-code'], 'Could not configure the LDAP fixture: ' . \json_encode($response['body']));
         $this->assertSame($params['enabled'], $this->ldapEnabled($response['body']));
+    }
+
+    /**
+     * Configure the default directory and sign Alice in, provisioning her account.
+     *
+     * @return array{userId: string, providerUid: string}
+     */
+    private function signInAlice(): array
+    {
+        $this->configureDirectory();
+
+        $response = $this->signIn('alice', 'alicepass');
+
+        $this->assertSame(201, $response['headers']['status-code'], 'Could not sign Alice in: ' . \json_encode($response['body']));
+
+        return [
+            'userId' => $response['body']['userId'],
+            'providerUid' => $response['body']['providerUid'],
+        ];
     }
 
     private function updateLDAP(array $params): array
