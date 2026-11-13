@@ -491,6 +491,7 @@ jobs:
           docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
             --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
             set -e
+            _APP_EXTENSION_LIBRARIES=dsn php -r "exit((new ReflectionClass(Utopia\\DSN\\DSN::class))->isInternal() ? 0 : 1);"
             _APP_EXTENSION_LIBRARIES=dsn vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/dsn/tests
             php crates/extension/tests/dsn.php > /tmp/php.jsonl
             _APP_EXTENSION_LIBRARIES=dsn php crates/extension/tests/dsn.php > /tmp/rust.jsonl

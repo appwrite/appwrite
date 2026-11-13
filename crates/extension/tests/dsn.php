@@ -11,6 +11,12 @@ use Utopia\DSN\DSN;
 
 $internal = (new ReflectionClass(DSN::class))->isInternal();
 fwrite(STDERR, 'Utopia\\DSN\\DSN: ' . ($internal ? 'utopia extension' : 'PHP') . PHP_EOL);
+// A run meant for the extension that gets the PHP class would compare PHP with PHP and pass.
+$requested = in_array('dsn', array_map(trim(...), explode(',', getenv('_APP_EXTENSION_LIBRARIES') ?: '')), true);
+if ($internal !== $requested) {
+    fwrite(STDERR, '_APP_EXTENSION_LIBRARIES ' . ($requested ? 'names' : 'does not name') . ' dsn, but the other implementation loaded' . PHP_EOL);
+    exit(1);
+}
 ini_set('zend.exception_ignore_args', '0');
 
 /** The observable outcome of $run, with any exception reduced to its class and message. */
