@@ -249,6 +249,7 @@ function getExpandedFooterGroups(
       { label: footerCopy.expanded.learn.roadmap, href: 'https://github.com/appwrite/appwrite/projects', external: true }, // pragma: allowlist secret
       { label: footerCopy.expanded.learn.sourceCode, href: 'https://github.com/appwrite/appwrite', external: true }, // pragma: allowlist secret
       { label: footerCopy.expanded.learn.arena, href: 'https://arena.appwrite.io/', external: true }, // pragma: allowlist secret
+      { label: footerCopy.expanded.learn.mcp1, href: 'https://mcp1.com/?utm_source=appwrite&utm_medium=footer', external: true },
       { label: footerCopy.expanded.learn.techNews, href: 'https://refetch.io/', external: true },
     ],
   },

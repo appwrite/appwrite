@@ -178,6 +178,7 @@ export const jaCatalog: EnCatalog = {
           roadmap: 'ロードマップ',
           sourceCode: 'ソースコード',
           arena: 'Arena',
+          mcp1: 'MCP1',
           techNews: 'テックニュース',
         },
         programs: {

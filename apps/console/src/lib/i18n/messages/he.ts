@@ -177,6 +177,7 @@ export const heCatalog: EnCatalog = {
           roadmap: 'מפת דרכים',
           sourceCode: 'קוד מקור',
           arena: 'Arena',
+          mcp1: 'MCP1',
           techNews: 'חדשות טכנולוגיה',
         },
         programs: {

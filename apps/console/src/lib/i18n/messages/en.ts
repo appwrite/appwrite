@@ -160,6 +160,7 @@ export const enCatalog = {
           roadmap: 'Roadmap',
           sourceCode: 'Source code',
           arena: 'Arena',
+          mcp1: 'MCP1',
           techNews: 'Tech news',
         },
         programs: {
