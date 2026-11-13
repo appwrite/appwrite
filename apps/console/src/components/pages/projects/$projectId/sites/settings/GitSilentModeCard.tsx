@@ -39,7 +39,7 @@ export function GitSilentModeCard({
   const saved = {
     branch: site.providerBranch || '',
     deployments: site.providerDeployments ?? true,
-    summaries: !silent && (site.providerSummaries ?? true),
+    comments: !silent && (site.providerComments ?? true),
     statuses: !silent && (site.providerStatuses ?? true),
   }
   const [settings, setSettings] = useState(saved)
@@ -49,7 +49,7 @@ export function GitSilentModeCard({
   }, [
     saved.branch,
     saved.deployments,
-    saved.summaries,
+    saved.comments,
     saved.statuses,
     site.$id,
   ])
@@ -78,7 +78,7 @@ export function GitSilentModeCard({
   const hasChanges =
     settings.branch !== saved.branch ||
     settings.deployments !== saved.deployments ||
-    settings.summaries !== saved.summaries ||
+    settings.comments !== saved.comments ||
     settings.statuses !== saved.statuses
 
   const handleSave = () => {
@@ -87,7 +87,7 @@ export function GitSilentModeCard({
       providerSilentMode: false,
       providerBranch: settings.branch || undefined,
       providerDeployments: settings.deployments,
-      providerSummaries: settings.summaries,
+      providerComments: settings.comments,
       providerStatuses: settings.statuses,
     })
   }
@@ -103,7 +103,7 @@ export function GitSilentModeCard({
       disabledReason: '',
     },
     {
-      key: 'summaries',
+      key: 'comments',
       icon: MessageSquare,
       label: t('Post build summaries'),
       description: t(
