@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowRight, ArrowUpRight, Globe } from 'lucide-react'
+import { SpriteIcon } from '@/components/ui/sprite-icon'
 import { Fragment } from 'react'
 import { ProductAvatarsList } from '@/components/global/shared/ProductAvatarsList'
 import { useT } from '@/lib/i18n/translate'
@@ -77,11 +78,13 @@ function GroupArrow() {
       className="flex h-9 shrink-0 items-center justify-center sm:h-10"
       aria-hidden
     >
-      <ArrowRight
+      <SpriteIcon
+        icon={ArrowRight}
         className="hidden size-4 text-muted-foreground/50 sm:block"
         strokeWidth={1.5}
       />
-      <ArrowDown
+      <SpriteIcon
+        icon={ArrowDown}
         className="size-4 text-muted-foreground/50 sm:hidden"
         strokeWidth={1.5}
       />

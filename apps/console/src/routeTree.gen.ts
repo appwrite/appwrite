@@ -83,6 +83,7 @@ import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as GeneratorIndexRouteImport } from './routes/generator/index'
 import { Route as GeneratorGenerationIdRouteImport } from './routes/generator/$generationId'
 import { Route as ILinkIdRouteImport } from './routes/i.$linkId'
+import { Route as IconsSpriteDotsvgRouteImport } from './routes/icons.sprite[.]svg'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
@@ -867,6 +868,11 @@ const GeneratorGenerationIdRoute = GeneratorGenerationIdRouteImport.update({
 const ILinkIdRoute = ILinkIdRouteImport.update({
   id: '/i/$linkId',
   path: '/i/$linkId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IconsSpriteDotsvgRoute = IconsSpriteDotsvgRouteImport.update({
+  id: '/icons/sprite.svg',
+  path: '/icons/sprite.svg',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
@@ -3620,6 +3626,7 @@ export interface FileRoutesByFullPath {
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/i/$linkId': typeof ILinkIdRoute
+  '/icons/sprite.svg': typeof IconsSpriteDotsvgRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/docs/': typeof DocsIndexRoute
@@ -4105,6 +4112,7 @@ export interface FileRoutesByTo {
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/i/$linkId': typeof ILinkIdRoute
+  '/icons/sprite.svg': typeof IconsSpriteDotsvgRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/docs': typeof DocsIndexRoute
@@ -4547,6 +4555,7 @@ export interface FileRoutesById {
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/i/$linkId': typeof ILinkIdRoute
+  '/icons/sprite.svg': typeof IconsSpriteDotsvgRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/_marketing/': typeof MarketingIndexRoute
@@ -5039,6 +5048,7 @@ export interface FileRouteTypes {
     | '/domains/continue'
     | '/generator/$generationId'
     | '/i/$linkId'
+    | '/icons/sprite.svg'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/docs/'
@@ -5524,6 +5534,7 @@ export interface FileRouteTypes {
     | '/domains/continue'
     | '/generator/$generationId'
     | '/i/$linkId'
+    | '/icons/sprite.svg'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/docs'
@@ -5965,6 +5976,7 @@ export interface FileRouteTypes {
     | '/domains/continue'
     | '/generator/$generationId'
     | '/i/$linkId'
+    | '/icons/sprite.svg'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/_marketing/'
@@ -6418,6 +6430,7 @@ export interface RootRouteChildren {
   CliInstallDotshRoute: typeof CliInstallDotshRoute
   DomainsContinueRoute: typeof DomainsContinueRoute
   ILinkIdRoute: typeof ILinkIdRoute
+  IconsSpriteDotsvgRoute: typeof IconsSpriteDotsvgRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
   ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
@@ -6958,6 +6971,13 @@ declare module '@tanstack/react-router' {
       path: '/i/$linkId'
       fullPath: '/i/$linkId'
       preLoaderRoute: typeof ILinkIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/icons/sprite.svg': {
+      id: '/icons/sprite.svg'
+      path: '/icons/sprite.svg'
+      fullPath: '/icons/sprite.svg'
+      preLoaderRoute: typeof IconsSpriteDotsvgRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/llms-full/txt': {
@@ -11986,6 +12006,7 @@ const rootRouteChildren: RootRouteChildren = {
   CliInstallDotshRoute: CliInstallDotshRoute,
   DomainsContinueRoute: DomainsContinueRoute,
   ILinkIdRoute: ILinkIdRoute,
+  IconsSpriteDotsvgRoute: IconsSpriteDotsvgRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
   ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,

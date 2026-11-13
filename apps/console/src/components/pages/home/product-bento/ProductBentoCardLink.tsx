@@ -3,8 +3,7 @@
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { useT } from '@/lib/i18n/translate'
 
-const linkClassName =
-  'link-unstyled absolute inset-0 z-[1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+const linkClassName = 'link-unstyled product-bento-link'
 
 type ProductBentoCardLinkProps = {
   href: string
