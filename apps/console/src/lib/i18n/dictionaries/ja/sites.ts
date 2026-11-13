@@ -581,4 +581,37 @@ export const jaSitesDictionary: Record<string, string> = {
     'すぐに appwrite.network の URL が発行されます。その後、独自ドメインを追加できます。',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+
+  // Buy a domain from a project, function or site (BuyDomainForResourceWizard.tsx)
+  'Payment confirmed. Your domain is registered.':
+    '支払いを確認しました。ドメインが登録されました。',
+  'Connect domain': 'ドメインを接続',
+  'Assign a domain rule': 'ドメインルールを割り当て',
+  'Assign this domain to the project API. DNS is already managed by Appwrite.':
+    'このドメインをプロジェクトの API に割り当てます。DNS はすでに Appwrite で管理されています。',
+  'Assign this domain to the function. DNS is already managed by Appwrite.':
+    'このドメインを関数に割り当てます。DNS はすでに Appwrite で管理されています。',
+  'Assign this domain to the site. DNS is already managed by Appwrite.':
+    'このドメインをサイトに割り当てます。DNS はすでに Appwrite で管理されています。',
+  'Use the domain you bought, or a subdomain of it.':
+    '購入したドメイン、またはそのサブドメインを使用します。',
+  'Use the domain you bought or a subdomain of it':
+    '購入したドメインまたはそのサブドメインを使用してください',
+  'Failed to assign domain': 'ドメインの割り当てに失敗しました',
+  'Issuing certificate': '証明書の発行',
+  'Certificate is still being issued': '証明書はまだ発行中です',
+  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.':
+    'SSL 証明書を発行中です。通常、数分かかります。操作は必要ありません。',
+  'Certificate issued. Your domain is ready.':
+    '証明書が発行されました。ドメインを利用する準備ができました。',
+  'Connecting your domain': 'ドメインを接続しています',
+  'Domain registered': 'ドメインを登録しました',
+  'The name is now in your organization.': 'ドメイン名が組織に追加されました。',
+  'DNS configured': 'DNS を設定しました',
+  'Appwrite DNS is already managing this domain. No nameserver changes are required.':
+    'このドメインはすでに Appwrite DNS で管理されています。ネームサーバーの変更は不要です。',
+  'SSL certificate': 'SSL 証明書',
+  'Certificate generation can take a few minutes to complete.':
+    '証明書の発行が完了するまで数分かかる場合があります。',
+  'HTTPS is ready for this domain.': 'このドメインで HTTPS を利用できます。',
 }
