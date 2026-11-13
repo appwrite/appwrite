@@ -421,6 +421,16 @@
       ]
     },
     {
+      "name": "VCSOrigin",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/VCS/",
+        "packages/vcs/"
+      ]
+    },
+    {
       "name": "VCSGitea",
       "runner": "e2e",
       "functional": false,

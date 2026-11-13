@@ -9,7 +9,7 @@ parameters:
   bootstrapFiles:
     - app/init/constants.php
   scanFiles:
-    - packages/image/stubs/Image.php
+    - packages/image/stubs/Canvas.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:

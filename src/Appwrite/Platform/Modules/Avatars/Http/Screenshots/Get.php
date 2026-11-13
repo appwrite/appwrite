@@ -17,7 +17,9 @@ use Appwrite\Utopia\Response;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Image\Image;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -218,13 +220,10 @@ class Get extends Action
 
             if ($needsProcessing) {
                 // Process image with cropping, quality adjustment, or format conversion
-                $image = new Image($screenshot);
-
-                $image->crop($width, $height);
-
                 $output = $output ?: 'png'; // Default to PNG if not specified
-                $resizedScreenshot = $image->output($output, $quality);
-                unset($image);
+                $resizedScreenshot = (new Canvas($screenshot, Config::getParam('storage-image-limits')))
+                    ->apply(new Transform(width: $width, height: $height))
+                    ->encode(Format::from($output === 'jpeg' ? 'jpg' : $output), $quality === -1 ? null : $quality);
             } else {
                 // Return original screenshot without processing
                 $resizedScreenshot = $screenshot;

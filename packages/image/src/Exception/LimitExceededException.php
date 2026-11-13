@@ -3,7 +3,7 @@
 namespace Utopia\Image\Exception;
 
 /**
- * An image larger than the dimension or memory limits (Image::setResourceLimit()).
+ * An image larger than its canvas's dimension or memory limits (Limits).
  */
 final class LimitExceededException extends ImageException
 {

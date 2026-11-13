@@ -7,15 +7,21 @@ namespace Utopia\Image\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
+use Utopia\Image\Blank;
+use Utopia\Image\Border;
+use Utopia\Image\Canvas;
 use Utopia\Image\Exception\CorruptImageException;
 use Utopia\Image\Exception\ImageException;
 use Utopia\Image\Exception\LimitExceededException;
 use Utopia\Image\Exception\UnsupportedFormatException;
-use Utopia\Image\Image;
+use Utopia\Image\Format;
+use Utopia\Image\Gravity;
+use Utopia\Image\Point;
+use Utopia\Image\Transform;
 
 // The class under test comes from the utopia extension; CI's Extension job runs these with it loaded.
 #[RequiresPhpExtension('utopia')]
-final class ImageTest extends TestCase
+final class CanvasTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -25,22 +31,28 @@ final class ImageTest extends TestCase
     {
     }
 
-    private function requireEncoder(string $format): void
+    private function requireEncoder(Format $format): void
     {
         try {
-            Image::create(2, 2, '#ffffff')->output(strtolower($format));
+            (new Canvas(new Blank(2, 2, '#ffffff')))->encode($format, 75);
         } catch (UnsupportedFormatException $exception) {
-            self::markTestSkipped("The {$format} encoder is not usable: {$exception->getMessage()}");
+            self::markTestSkipped("The {$format->name} encoder is not usable: {$exception->getMessage()}");
         }
     }
 
-    private function requireDecoder(string $format, string $data): void
+    // Nothing is decoded before encode(), so that is what shows whether the decoder is there.
+    private function requireDecoder(Format $format, string $data): void
     {
         try {
-            new Image($data);
+            (new Canvas($data))->encode(Format::Png, 75);
         } catch (UnsupportedFormatException $exception) {
-            self::markTestSkipped("The {$format} decoder is not usable: {$exception->getMessage()}");
+            self::markTestSkipped("The {$format->name} decoder is not usable: {$exception->getMessage()}");
         }
+    }
+
+    private function save(Canvas $canvas, string $path, Format $format, int $quality): void
+    {
+        file_put_contents($path, $canvas->encode($format, $quality));
     }
 
     /**
@@ -98,7 +110,7 @@ final class ImageTest extends TestCase
     {
         // GD does not read HEIC, so that is looked at through the PNG the class makes of it.
         if ($this->format($data) === 'image/heic') {
-            $data = (new Image($data))->output('png') ?? '';
+            $data = (new Canvas($data))->encode(Format::Png, 75);
         }
         $picture = imagecreatefromstring($data);
         $this->assertInstanceOf(\GdImage::class, $picture);
@@ -225,17 +237,17 @@ final class ImageTest extends TestCase
         $this->expectException(UnsupportedFormatException::class);
         $this->expectExceptionMessage('Unsupported image format');
 
-        new Image($data);
+        new Canvas($data);
     }
 
     public function testAvifInput(): void
     {
-        $this->requireEncoder('AVIF');
+        $this->requireEncoder(Format::Avif);
 
-        $image = new Image($this->encode($this->picture(20, 10), 'avif'));
-        $image->crop(10, 10);
+        $image = new Canvas($this->encode($this->picture(20, 10), 'avif'));
+        $image = $image->apply(new Transform(width: 10, height: 10));
 
-        $output = $this->decode($image->output('png') ?? '');
+        $output = $this->decode($image->encode(Format::Png, 75));
         $this->assertSame(10, imagesx($output));
         $this->assertSame(10, imagesy($output));
     }
@@ -243,24 +255,24 @@ final class ImageTest extends TestCase
     public function testHeicInput(): void
     {
         $heic = file_get_contents(__DIR__ . '/resources/resize/100x100.heic') ?: '';
-        $this->requireDecoder('HEIC', $heic);
+        $this->requireDecoder(Format::Heic, $heic);
 
-        $image = new Image($heic);
-        $image->crop(50, 50);
+        $image = new Canvas($heic);
+        $image = $image->apply(new Transform(width: 50, height: 50));
 
-        $output = $this->decode($image->output('png') ?? '');
+        $output = $this->decode($image->encode(Format::Png, 75));
         $this->assertSame(50, imagesx($output));
         $this->assertSame(50, imagesy($output));
     }
 
     public function testJpeg(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.jpg';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -276,12 +288,12 @@ final class ImageTest extends TestCase
 
     public function testPng(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.png';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'png', 100);
+        $this->save($image, $target, Format::Png, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -297,12 +309,12 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.jpg';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -317,27 +329,27 @@ final class ImageTest extends TestCase
     }
 
     /**
-     * @return array<string, array{int, int, int, int, string, int, int}>
+     * @return array<string, array{int, int, int, int, Gravity, int, int}>
      */
     public static function skewedCrops(): array
     {
         return [
-            'landscape, 1px wide' => [6, 2, 1, 0, Image::GRAVITY_TOP_LEFT, 1, 1],
-            'landscape, 1px wide, center' => [6, 2, 1, 0, Image::GRAVITY_CENTER, 1, 1],
-            'landscape, 1px high' => [6, 2, 0, 1, Image::GRAVITY_BOTTOM_RIGHT, 3, 1],
-            'portrait, 1px high' => [2, 6, 0, 1, Image::GRAVITY_TOP_LEFT, 1, 1],
-            'portrait, 1px high, center' => [2, 6, 0, 1, Image::GRAVITY_CENTER, 1, 1],
-            'portrait, 1px wide' => [2, 6, 1, 0, Image::GRAVITY_RIGHT, 1, 3],
+            'landscape, 1px wide' => [6, 2, 1, 0, Gravity::TopLeft, 1, 1],
+            'landscape, 1px wide, center' => [6, 2, 1, 0, Gravity::Center, 1, 1],
+            'landscape, 1px high' => [6, 2, 0, 1, Gravity::BottomRight, 3, 1],
+            'portrait, 1px high' => [2, 6, 0, 1, Gravity::TopLeft, 1, 1],
+            'portrait, 1px high, center' => [2, 6, 0, 1, Gravity::Center, 1, 1],
+            'portrait, 1px wide' => [2, 6, 1, 0, Gravity::Right, 1, 3],
         ];
     }
 
     #[DataProvider('skewedCrops')]
-    public function testCropKeepsADerivedSideOfAtLeastOnePixel(int $sourceWidth, int $sourceHeight, int $width, int $height, string $gravity, int $expectedWidth, int $expectedHeight): void
+    public function testCropKeepsADerivedSideOfAtLeastOnePixel(int $sourceWidth, int $sourceHeight, int $width, int $height, Gravity $gravity, int $expectedWidth, int $expectedHeight): void
     {
-        $image = new Image($this->encode($this->picture($sourceWidth, $sourceHeight)));
-        $image->crop($width, $height, $gravity);
+        $image = new Canvas($this->encode($this->picture($sourceWidth, $sourceHeight)));
+        $image = $image->apply(new Transform(width: $width, height: $height, gravity: $gravity));
 
-        $result = $this->decode($image->output('png', 100) ?: '');
+        $result = $this->decode($image->encode(Format::Png, 100));
 
         $this->assertSame($expectedWidth, imagesx($result));
         $this->assertSame($expectedHeight, imagesy($result));
@@ -347,10 +359,10 @@ final class ImageTest extends TestCase
     {
         $source = $this->picture(6, 2, [0x008000 => [2, 0, 3, 1], 0x0000FF => [4, 0, 5, 1]]);
 
-        $image = new Image($this->encode($source));
-        $image->crop(2, 2, x: 0.75, y: 0.5);
+        $image = new Canvas($this->encode($source));
+        $image = $image->apply(new Transform(width: 2, height: 2, focus: new Point(0.75, 0.5)));
 
-        $result = $this->decode($image->output('png', 100) ?: '');
+        $result = $this->decode($image->encode(Format::Png, 100));
         $color = $this->color($result, 1, 1);
 
         $this->assertGreaterThan($color['r'], $color['b']);
@@ -359,26 +371,27 @@ final class ImageTest extends TestCase
 
     public function testCropFocalRejectsCoordinatesOutsideTheImage(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
 
         $this->expectException(\InvalidArgumentException::class);
-        $image->crop(100, 100, x: 1.1, y: 0.5);
+        $image->apply(new Transform(width: 100, height: 100, focus: new Point(1.1, 0.5)));
     }
 
     public function testCropFocalRejectsNonFiniteCoordinates(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
 
         $this->expectException(\InvalidArgumentException::class);
-        $image->crop(100, 100, x: NAN, y: 0.5);
+        $image->apply(new Transform(width: 100, height: 100, focus: new Point(NAN, 0.5)));
     }
 
     public function testCropFocalRequiresBothCoordinates(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
 
-        $this->expectException(\InvalidArgumentException::class);
-        $image->crop(100, 100, x: 0.5);
+        // A focal point is one value now, so half of one is refused by PHP before the class sees it.
+        $this->expectException(\ArgumentCountError::class);
+        $image->apply(new Transform(width: 100, height: 100, focus: new Point(x: 0.5))); // @phpstan-ignore argument.missing
     }
 
     public function testCropFocalPreservesAnimatedFramesAndDelay(): void
@@ -388,12 +401,11 @@ final class ImageTest extends TestCase
             $frames[] = $this->picture(6, 2, [$color => [4, 0, 5, 1]]);
         }
 
-        $image = new Image($this->animatedGif($frames, 30));
-        $image->crop(2, 2, x: 0.75, y: 0.5);
+        $image = new Canvas($this->animatedGif($frames, 30));
+        $image = $image->apply(new Transform(width: 2, height: 2, focus: new Point(0.75, 0.5)));
 
-        $outputBlob = $image->output('gif', 100);
+        $outputBlob = $image->encode(Format::Gif, 100);
         $this->assertNotFalse($outputBlob);
-        $this->assertNotNull($outputBlob);
 
         $frames = $this->frames($outputBlob);
         $this->assertCount(2, $frames);
@@ -412,13 +424,13 @@ final class ImageTest extends TestCase
 
     public function testCropGravityNw(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/NW.jpg';
         $original = __DIR__ . '/resources/resize/NW.jpg';
 
-        $image->crop(50, 200, Image::GRAVITY_TOP_LEFT);
+        $image = $image->apply(new Transform(width: 50, height: 200, gravity: Gravity::TopLeft));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -439,13 +451,13 @@ final class ImageTest extends TestCase
 
     public function testCropGravityN(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
         $target = __DIR__ . '/N.gif';
         $original = __DIR__ . '/resources/resize/N.gif';
 
-        $image->crop(100, 50, Image::GRAVITY_TOP);
+        $image = $image->apply(new Transform(width: 100, height: 50, gravity: Gravity::Top));
 
-        $image->save($target, 'gif', 100);
+        $this->save($image, $target, Format::Gif, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -466,13 +478,13 @@ final class ImageTest extends TestCase
 
     public function testCropGravityNe(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/NE.jpg';
         $original = __DIR__ . '/resources/resize/NE.jpg';
 
-        $image->crop(50, 200, Image::GRAVITY_TOP_RIGHT);
+        $image = $image->apply(new Transform(width: 50, height: 200, gravity: Gravity::TopRight));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -493,13 +505,13 @@ final class ImageTest extends TestCase
 
     public function testCropGravitySw(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/SW.jpg';
         $original = __DIR__ . '/resources/resize/SW.jpg';
 
-        $image->crop(50, 200, Image::GRAVITY_BOTTOM_LEFT);
+        $image = $image->apply(new Transform(width: 50, height: 200, gravity: Gravity::BottomLeft));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -520,13 +532,13 @@ final class ImageTest extends TestCase
 
     public function testCropGravityS(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
         $target = __DIR__ . '/S.gif';
         $original = __DIR__ . '/resources/resize/S.gif';
 
-        $image->crop(100, 50, Image::GRAVITY_BOTTOM);
+        $image = $image->apply(new Transform(width: 100, height: 50, gravity: Gravity::Bottom));
 
-        $image->save($target, 'gif', 100);
+        $this->save($image, $target, Format::Gif, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -547,13 +559,13 @@ final class ImageTest extends TestCase
 
     public function testCropGravitySe(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/SE.jpg';
         $original = __DIR__ . '/resources/resize/SE.jpg';
 
-        $image->crop(50, 200, Image::GRAVITY_BOTTOM_RIGHT);
+        $image = $image->apply(new Transform(width: 50, height: 200, gravity: Gravity::BottomRight));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -574,13 +586,13 @@ final class ImageTest extends TestCase
 
     public function testCropGravityC(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/C.jpg';
         $original = __DIR__ . '/resources/resize/C.jpg';
 
-        $image->crop(150, 200, Image::GRAVITY_CENTER);
+        $image = $image->apply(new Transform(width: 150, height: 200, gravity: Gravity::Center));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -601,13 +613,13 @@ final class ImageTest extends TestCase
 
     public function testCropGravityW(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
         $target = __DIR__ . '/W.gif';
         $original = __DIR__ . '/resources/resize/W.gif';
 
-        $image->crop(50, 100, Image::GRAVITY_LEFT);
+        $image = $image->apply(new Transform(width: 50, height: 100, gravity: Gravity::Left));
 
-        $image->save($target, 'gif', 100);
+        $this->save($image, $target, Format::Gif, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -628,13 +640,13 @@ final class ImageTest extends TestCase
 
     public function testCropGravityE(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/E.jpg';
         $original = __DIR__ . '/resources/resize/E.jpg';
 
-        $image->crop(50, 200, Image::GRAVITY_RIGHT);
+        $image = $image->apply(new Transform(width: 50, height: 200, gravity: Gravity::Right));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -657,52 +669,52 @@ final class ImageTest extends TestCase
     {
         $source = $this->picture(2, 4, [0x0000FF => [0, 2, 1, 3]]);
 
-        $image = new Image($this->encode($source));
-        $image->crop(4, 2, Image::GRAVITY_TOP);
+        $image = new Canvas($this->encode($source));
+        $image = $image->apply(new Transform(width: 4, height: 2, gravity: Gravity::Top));
 
-        $result = $this->decode($image->output('png', 100) ?: '');
+        $result = $this->decode($image->encode(Format::Png, 100));
         $color = $this->color($result, 2, 1);
 
         $this->assertGreaterThan($color['b'], $color['r']);
     }
 
     /**
-     * @return \Iterator<string, array{string, bool, string}>
+     * @return \Iterator<string, array{Gravity, bool, string}>
      */
     public static function gravityProvider(): \Iterator
     {
-        yield 'horizontal top-left' => [Image::GRAVITY_TOP_LEFT, true, 'r'];
-        yield 'horizontal top' => [Image::GRAVITY_TOP, true, 'g'];
-        yield 'horizontal top-right' => [Image::GRAVITY_TOP_RIGHT, true, 'b'];
-        yield 'horizontal left' => [Image::GRAVITY_LEFT, true, 'r'];
-        yield 'horizontal center' => [Image::GRAVITY_CENTER, true, 'g'];
-        yield 'horizontal right' => [Image::GRAVITY_RIGHT, true, 'b'];
-        yield 'horizontal bottom-left' => [Image::GRAVITY_BOTTOM_LEFT, true, 'r'];
-        yield 'horizontal bottom' => [Image::GRAVITY_BOTTOM, true, 'g'];
-        yield 'horizontal bottom-right' => [Image::GRAVITY_BOTTOM_RIGHT, true, 'b'];
-        yield 'vertical top-left' => [Image::GRAVITY_TOP_LEFT, false, 'r'];
-        yield 'vertical top' => [Image::GRAVITY_TOP, false, 'r'];
-        yield 'vertical top-right' => [Image::GRAVITY_TOP_RIGHT, false, 'r'];
-        yield 'vertical left' => [Image::GRAVITY_LEFT, false, 'g'];
-        yield 'vertical center' => [Image::GRAVITY_CENTER, false, 'g'];
-        yield 'vertical right' => [Image::GRAVITY_RIGHT, false, 'g'];
-        yield 'vertical bottom-left' => [Image::GRAVITY_BOTTOM_LEFT, false, 'b'];
-        yield 'vertical bottom' => [Image::GRAVITY_BOTTOM, false, 'b'];
-        yield 'vertical bottom-right' => [Image::GRAVITY_BOTTOM_RIGHT, false, 'b'];
+        yield 'horizontal top-left' => [Gravity::TopLeft, true, 'r'];
+        yield 'horizontal top' => [Gravity::Top, true, 'g'];
+        yield 'horizontal top-right' => [Gravity::TopRight, true, 'b'];
+        yield 'horizontal left' => [Gravity::Left, true, 'r'];
+        yield 'horizontal center' => [Gravity::Center, true, 'g'];
+        yield 'horizontal right' => [Gravity::Right, true, 'b'];
+        yield 'horizontal bottom-left' => [Gravity::BottomLeft, true, 'r'];
+        yield 'horizontal bottom' => [Gravity::Bottom, true, 'g'];
+        yield 'horizontal bottom-right' => [Gravity::BottomRight, true, 'b'];
+        yield 'vertical top-left' => [Gravity::TopLeft, false, 'r'];
+        yield 'vertical top' => [Gravity::Top, false, 'r'];
+        yield 'vertical top-right' => [Gravity::TopRight, false, 'r'];
+        yield 'vertical left' => [Gravity::Left, false, 'g'];
+        yield 'vertical center' => [Gravity::Center, false, 'g'];
+        yield 'vertical right' => [Gravity::Right, false, 'g'];
+        yield 'vertical bottom-left' => [Gravity::BottomLeft, false, 'b'];
+        yield 'vertical bottom' => [Gravity::Bottom, false, 'b'];
+        yield 'vertical bottom-right' => [Gravity::BottomRight, false, 'b'];
     }
 
     #[DataProvider('gravityProvider')]
-    public function testCropGravityPositions(string $gravity, bool $horizontal, string $expectedChannel): void
+    public function testCropGravityPositions(Gravity $gravity, bool $horizontal, string $expectedChannel): void
     {
         $source = $this->picture($horizontal ? 6 : 2, $horizontal ? 2 : 6, [
             0x008000 => [$horizontal ? 2 : 0, $horizontal ? 0 : 2, $horizontal ? 3 : 1, $horizontal ? 1 : 3],
             0x0000FF => [$horizontal ? 4 : 0, $horizontal ? 0 : 4, $horizontal ? 5 : 1, $horizontal ? 1 : 5],
         ]);
 
-        $image = new Image($this->encode($source));
-        $image->crop(2, 2, $gravity);
+        $image = new Canvas($this->encode($source));
+        $image = $image->apply(new Transform(width: 2, height: 2, gravity: $gravity));
 
-        $result = $this->decode($image->output('png', 100) ?: '');
+        $result = $this->decode($image->encode(Format::Png, 100));
         $color = $this->color($result, 1, 1);
 
         $this->assertSame(2, imagesx($result));
@@ -719,12 +731,12 @@ final class ImageTest extends TestCase
 
     public function testCrop100x400(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x400.jpg';
 
-        $image->crop(100, 400);
+        $image = $image->apply(new Transform(width: 100, height: 400));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -740,12 +752,12 @@ final class ImageTest extends TestCase
 
     public function testCrop400x100(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/400x100.jpg';
 
-        $image->crop(400, 100);
+        $image = $image->apply(new Transform(width: 400, height: 100));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -761,12 +773,12 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100Webp(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.webp';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'webp', 100);
+        $this->save($image, $target, Format::Webp, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -783,13 +795,13 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100WebpQuality30(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100-q30.webp';
         $original = __DIR__ . '/resources/resize/100x100-q30.webp';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'webp', 30);
+        $this->save($image, $target, Format::Webp, 30);
 
         $this->assertIsReadable($target);
         $this->assertGreaterThan(500, filesize($target));
@@ -813,13 +825,12 @@ final class ImageTest extends TestCase
 
     public function testWebpBlobOutput(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $blob = $image->output('webp', 75);
+        $blob = $image->encode(Format::Webp, 75);
 
-        $this->assertIsString($blob);
         $this->assertNotEmpty($blob);
         $this->assertSame('RIFF', substr($blob, 0, 4));
         $this->assertSame('WEBP', substr($blob, 8, 4));
@@ -832,12 +843,10 @@ final class ImageTest extends TestCase
 
     public function testRepeatedOutputAppliesExifRotationOnce(): void
     {
-        $image = new Image($this->jpegWithExifOrientation(6));
+        $image = new Canvas($this->jpegWithExifOrientation(6));
 
-        $firstBlob = $image->output('png', 100);
-        $secondBlob = $image->output('png', 100);
-        $this->assertIsString($firstBlob);
-        $this->assertIsString($secondBlob);
+        $firstBlob = $image->encode(Format::Png, 100);
+        $secondBlob = $image->encode(Format::Png, 100);
 
         $first = $this->decode($firstBlob);
         $second = $this->decode($secondBlob);
@@ -850,14 +859,13 @@ final class ImageTest extends TestCase
 
     public function testSavePreservesImageForSubsequentExports(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/reusable.jpg';
 
         try {
-            $image->save($target, 'jpg', 75);
-            $blob = $image->output('png', 75);
+            $this->save($image, $target, Format::Jpeg, 75);
+            $blob = $image->encode(Format::Png, 75);
 
-            $this->assertIsString($blob);
             $this->assertNotEmpty($blob);
 
             $probe = $this->decode($blob);
@@ -879,8 +887,8 @@ final class ImageTest extends TestCase
 
         try {
             $this->assertTrue(chdir($directory));
-            $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
-            $this->assertNull($image->save('0', 'jpg', 75));
+            $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+            $this->assertNotFalse(file_put_contents('0', $image->encode(Format::Jpeg, 75)));
             $this->assertFileExists($target);
             $this->assertNotEmpty(file_get_contents($target));
         } finally {
@@ -894,12 +902,12 @@ final class ImageTest extends TestCase
 
     public function testWebpFromWebpInput(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.webp') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/resize/100x100.webp') ?: '');
         $target = __DIR__ . '/roundtrip.webp';
 
-        $image->crop(50, 50);
+        $image = $image->apply(new Transform(width: 50, height: 50));
 
-        $image->save($target, 'webp', 75);
+        $this->save($image, $target, Format::Webp, 75);
 
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
@@ -914,14 +922,14 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100Avif(): void
     {
-        $this->requireEncoder('AVIF');
+        $this->requireEncoder(Format::Avif);
 
-        $image = new Image(file_get_contents(filename: __DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(filename: __DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.avif';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'avif', 100);
+        $this->save($image, $target, Format::Avif, 100);
 
         $this->assertIsReadable($target);
         // AVIF file size can vary based on encoder version and settings
@@ -941,14 +949,14 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100AvifQuality30(): void
     {
-        $this->requireEncoder('AVIF');
+        $this->requireEncoder(Format::Avif);
 
-        $image = new Image(file_get_contents(filename: __DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(filename: __DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100-q30.avif';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'avif', 30);
+        $this->save($image, $target, Format::Avif, 30);
 
         $this->assertIsReadable($target);
         $this->assertLessThan(1419, filesize($target));
@@ -965,15 +973,15 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100Heic(): void
     {
-        $this->requireEncoder('HEIC');
+        $this->requireEncoder(Format::Heic);
 
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.heic';
         $original = __DIR__ . '/resources/resize/100x100.heic';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'heic', 100);
+        $this->save($image, $target, Format::Heic, 100);
 
         $this->assertIsReadable($target);
         $this->assertGreaterThan(500, filesize($target));
@@ -997,15 +1005,15 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100HeicQuality30(): void
     {
-        $this->requireEncoder('HEIC');
+        $this->requireEncoder(Format::Heic);
 
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100-q30.heic';
         $original = __DIR__ . '/resources/resize/100x100.heic';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'heic', 30);
+        $this->save($image, $target, Format::Heic, 30);
 
         $this->assertIsReadable($target);
         $this->assertGreaterThan(500, filesize($target));
@@ -1029,13 +1037,13 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100Png(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100.png';
         $original = __DIR__ . '/resources/resize/100x100.png';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'png', 100);
+        $this->save($image, $target, Format::Png, 100);
 
         $this->assertIsReadable($target);
         $this->assertGreaterThan(15000, filesize($target));
@@ -1054,13 +1062,13 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100PngQuality30(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100-q30.jpg';
         $original = __DIR__ . '/resources/resize/100x100-q30.jpg';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'jpg', 10);
+        $this->save($image, $target, Format::Jpeg, 10);
 
         $this->assertIsReadable($target);
         $this->assertGreaterThan(500, filesize($target));
@@ -1079,13 +1087,13 @@ final class ImageTest extends TestCase
 
     public function testCrop100x100Gif(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-3.gif') ?: '');
         $target = __DIR__ . '/100x100.gif';
         $original = __DIR__ . '/resources/resize/100x100.gif';
 
-        $image->crop(100, 100);
+        $image = $image->apply(new Transform(width: 100, height: 100));
 
-        $image->save($target, 'gif', 100);
+        $this->save($image, $target, Format::Gif, 100);
 
         $this->assertIsReadable($target);
         $this->assertGreaterThan(400000, filesize($target));
@@ -1103,13 +1111,13 @@ final class ImageTest extends TestCase
 
     public function testBorder5Red(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/border_5_red.jpg';
         $original = __DIR__ . '/resources/resize/border_5_red.jpg';
 
-        $image->setBorder(5, '#ff0000');
+        $image = $image->apply(new Transform(border: new Border(5, '#ff0000')));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertEquals(mime_content_type($target), mime_content_type($original));
@@ -1123,13 +1131,13 @@ final class ImageTest extends TestCase
 
     public function testRotate45(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/rotate_45.jpg';
         $original = __DIR__ . '/resources/resize/rotate_45.jpg';
 
-        $image->setRotation(45);
+        $image = $image->apply(new Transform(rotation: 45));
 
-        $image->save($target, 'jpg', 100);
+        $this->save($image, $target, Format::Jpeg, 100);
 
         $this->assertIsReadable($target);
         $this->assertEquals(mime_content_type($target), mime_content_type($original));
@@ -1145,13 +1153,13 @@ final class ImageTest extends TestCase
 
     public function testOpacity02(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/opacity_0.2.png';
         $original = __DIR__ . '/resources/resize/opacity_0.2.png';
 
-        $image->setOpacity(0.2);
+        $image = $image->apply(new Transform(opacity: 0.2));
 
-        $image->save($target, 'png', 100);
+        $this->save($image, $target, Format::Png, 100);
 
         $this->assertIsReadable($target);
         $this->assertEquals(mime_content_type($target), mime_content_type($original));
@@ -1165,13 +1173,13 @@ final class ImageTest extends TestCase
 
     public function testBorderRadius500(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/border_radius_500.png';
         $original = __DIR__ . '/resources/resize/border_radius_500.png';
 
-        $image->setBorderRadius(500);
+        $image = $image->apply(new Transform(radius: 500));
 
-        $image->save($target, 'png', 100);
+        $this->save($image, $target, Format::Png, 100);
 
         $this->assertIsReadable($target);
         $this->assertEquals(mime_content_type($target), mime_content_type($original));
@@ -1185,14 +1193,14 @@ final class ImageTest extends TestCase
 
     public function testCrop100Op05(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100_OP_0.5.png';
         $original = __DIR__ . '/resources/resize/100x100_OP_0.5.png';
 
-        $image->crop(100, 100);
-        $image->setOpacity(0.5);
+        $image = $image->apply(new Transform(width: 100, height: 100));
+        $image = $image->apply(new Transform(opacity: 0.5));
 
-        $image->save($target, 'png', 100);
+        $this->save($image, $target, Format::Png, 100);
 
         $this->assertIsReadable($target);
         $this->assertEquals(mime_content_type($target), mime_content_type($original));
@@ -1208,14 +1216,14 @@ final class ImageTest extends TestCase
 
     public function testCrop100BR50(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
         $target = __DIR__ . '/100x100_BR_50.png';
         $original = __DIR__ . '/resources/resize/100x100_BR_50.png';
 
-        $image->crop(100, 100);
-        $image->setOpacity(0.5);
+        $image = $image->apply(new Transform(width: 100, height: 100));
+        $image = $image->apply(new Transform(opacity: 0.5));
 
-        $image->save($target, 'png', 100);
+        $this->save($image, $target, Format::Png, 100);
 
         $this->assertIsReadable($target);
         $this->assertEquals(mime_content_type($target), mime_content_type($original));
@@ -1229,12 +1237,12 @@ final class ImageTest extends TestCase
 
     public function testGifSmallLastFrame(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/last-frame-1px.gif') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/last-frame-1px.gif') ?: '');
         $target = __DIR__ . '/last-frame-1px-output.gif';
 
-        $image->crop(0, 0);
+        $image = $image->apply(new Transform(width: 0, height: 0));
 
-        $image->save($target, 'gif', 100);
+        $this->save($image, $target, Format::Gif, 100);
 
         $this->assertIsReadable($target);
         $this->assertFileExists($target);
@@ -1255,11 +1263,11 @@ final class ImageTest extends TestCase
     public function testCropAnimatedWebpPreservesFrames(): void
     {
         $source = __DIR__ . '/resources/disk-a/anim-delta.webp';
-        $image = new Image(file_get_contents($source) ?: '');
+        $image = new Canvas(file_get_contents($source) ?: '');
         $target = __DIR__ . '/anim-delta-32x32.webp';
 
-        $image->crop(32, 32);
-        $image->save($target, 'webp', 100);
+        $image = $image->apply(new Transform(width: 32, height: 32));
+        $this->save($image, $target, Format::Webp, 100);
 
         $this->assertFileExists($target);
         $this->assertNotEmpty(file_get_contents($target));
@@ -1299,11 +1307,10 @@ final class ImageTest extends TestCase
         $red = $this->picture(40, 40);
         $blue = $this->picture(40, 40, [0x0000FF => [0, 0, 39, 39]]);
 
-        $image = new Image($this->animatedGif([$red, $red, $blue], 40));
-        $image->crop(20, 20);
-        $outputBlob = $image->output('webp', 100);
+        $image = new Canvas($this->animatedGif([$red, $red, $blue], 40));
+        $image = $image->apply(new Transform(width: 20, height: 20));
+        $outputBlob = $image->encode(Format::Webp, 100);
         $this->assertNotFalse($outputBlob);
-        $this->assertNotNull($outputBlob);
 
         $frames = $this->frames($outputBlob);
 
@@ -1320,36 +1327,45 @@ final class ImageTest extends TestCase
     {
         $png = file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '';
 
+        // The header is whole, so the damage shows when the pixels are read.
+        $image = new Canvas(substr($png, 0, 200));
+        $this->assertSame([100, 100], [$image->width, $image->height]);
+
         $this->expectException(CorruptImageException::class);
         $this->expectExceptionMessage('Corrupt or truncated image');
 
-        new Image(substr($png, 0, 200));
+        $image->encode(Format::Png);
     }
 
-    public function testUnknownOutputTypeThrows(): void
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function unknownOutputTypes(): array
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+        return ['bmp' => ['bmp']];
+    }
 
-        $this->expectException(UnsupportedFormatException::class);
-        $this->expectExceptionMessage('Unsupported output format: bmp');
-
-        $image->output('bmp');
+    #[DataProvider('unknownOutputTypes')]
+    public function testUnknownOutputTypeIsNotAFormat(string $type): void
+    {
+        $this->assertNull(Format::tryFrom($type));
     }
 
     public function testDimensionsOverTheLimitThrow(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
 
+        // A target past the limits is refused when it is asked for, before anything is decoded.
         $this->expectException(LimitExceededException::class);
         $this->expectExceptionMessage('Image exceeds the size or memory limits');
 
-        $image->crop(60000, 10);
+        $image->apply(new Transform(width: 60000, height: 10));
     }
 
     public function testEveryImageFailureIsAnImageException(): void
     {
         try {
-            new Image('not an image');
+            new Canvas('not an image');
             $this->fail('Expected an ImageException');
         } catch (ImageException $exception) {
             $this->assertInstanceOf(UnsupportedFormatException::class, $exception);
@@ -1357,24 +1373,24 @@ final class ImageTest extends TestCase
     }
 
     /**
-     * @return array<string, array{\Closure(Image): mixed, string}>
+     * @return array<string, array{\Closure(Canvas): mixed, string}>
      */
     public static function invalidArguments(): array
     {
         return [
-            'negative width' => [fn (Image $image) => $image->crop(-1, 10), 'Width and height must not be negative'],
-            'negative height at a gravity' => [fn (Image $image) => $image->crop(10, -1, Image::GRAVITY_TOP), 'Width and height must not be negative'],
-            'negative border' => [fn (Image $image) => $image->setBorder(-1, '#ff0000'), 'Border width must not be negative'],
-            'negative radius' => [fn (Image $image) => $image->setBorderRadius(-1), 'Corner radius must not be negative'],
-            'unknown border colour' => [fn (Image $image) => $image->setBorder(2, 'no-such-colour'), 'Invalid color: no-such-colour'],
-            'unknown background colour' => [fn (Image $image) => $image->setBackground('no-such-colour'), 'Invalid color: no-such-colour'],
+            'negative width' => [fn (Canvas $image) => $image->apply(new Transform(width: -1, height: 10)), 'Width and height must not be negative'],
+            'negative height at a gravity' => [fn (Canvas $image) => $image->apply(new Transform(width: 10, height: -1, gravity: Gravity::Top)), 'Width and height must not be negative'],
+            'negative border' => [fn (Canvas $image) => $image->apply(new Transform(border: new Border(-1, '#ff0000'))), 'Border width must be positive'],
+            'negative radius' => [fn (Canvas $image) => $image->apply(new Transform(radius: -1)), 'Corner radius must not be negative'],
+            'unknown border colour' => [fn (Canvas $image) => $image->apply(new Transform(border: new Border(2, 'no-such-colour'))), 'Invalid color: no-such-colour'],
+            'unknown background colour' => [fn (Canvas $image) => $image->apply(new Transform(background: 'no-such-colour')), 'Invalid color: no-such-colour'],
         ];
     }
 
     #[DataProvider('invalidArguments')]
     public function testInvalidArgumentsThrow(\Closure $call, string $message): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/resize/100x100.png') ?: '');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
@@ -1384,10 +1400,10 @@ final class ImageTest extends TestCase
 
     public function testRoundedCornersAfterABackgroundAreTransparent(): void
     {
-        $image = new Image(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
-        $image->crop(256, 256)->setBackground('#336699')->setBorder(6, '#ff0000')->setBorderRadius(40);
+        $image = new Canvas(file_get_contents(__DIR__ . '/resources/disk-a/kitten-1.jpg') ?: '');
+        $image = $image->apply(new Transform(width: 256, height: 256, background: '#336699', border: new Border(6, '#ff0000'), radius: 40));
 
-        $output = $this->decode($image->output('png') ?? '');
+        $output = $this->decode($image->encode(Format::Png, 75));
 
         // Flattening leaves an alpha channel, so the corner is cut away, and the border is stroked.
         $this->assertGreaterThanOrEqual(126, $this->color($output, 1, 1)['a']);
@@ -1397,17 +1413,17 @@ final class ImageTest extends TestCase
     }
 
     /**
-     * @return array<string, array{string, string}>
+     * @return array<string, array{Format, Gravity}>
      */
     public static function rotatedOutputs(): array
     {
         return [
-            'jpg, centre' => ['jpg', Image::GRAVITY_CENTER],
-            'jpg, gravity' => ['jpg', Image::GRAVITY_TOP_LEFT],
-            'webp, gravity' => ['webp', Image::GRAVITY_TOP_LEFT],
-            'png, gravity' => ['png', Image::GRAVITY_TOP_LEFT],
-            'avif, centre' => ['avif', Image::GRAVITY_CENTER],
-            'avif, gravity' => ['avif', Image::GRAVITY_TOP_LEFT],
+            'jpg, centre' => [Format::Jpeg, Gravity::Center],
+            'jpg, gravity' => [Format::Jpeg, Gravity::TopLeft],
+            'webp, gravity' => [Format::Webp, Gravity::TopLeft],
+            'png, gravity' => [Format::Png, Gravity::TopLeft],
+            'avif, centre' => [Format::Avif, Gravity::Center],
+            'avif, gravity' => [Format::Avif, Gravity::TopLeft],
         ];
     }
 
@@ -1415,20 +1431,20 @@ final class ImageTest extends TestCase
      * The EXIF rotation is applied to the pixels, so the output must not ask a viewer for it again.
      */
     #[DataProvider('rotatedOutputs')]
-    public function testARotatedSourceIsTurnedOnce(string $type, string $gravity): void
+    public function testARotatedSourceIsTurnedOnce(Format $format, Gravity $gravity): void
     {
-        if ($type === 'avif') {
-            $this->requireEncoder('AVIF');
+        if ($format === Format::Avif) {
+            $this->requireEncoder(Format::Avif);
         }
 
         // 20x10, tagged as needing a quarter turn: upright it is 10x20.
-        $image = new Image($this->jpegWithExifOrientation(6));
-        $image->crop(20, 10, $gravity);
+        $image = new Canvas($this->jpegWithExifOrientation(6));
+        $image = $image->apply(new Transform(width: 20, height: 10, gravity: $gravity));
 
-        $blob = $image->output($type, 90) ?? '';
+        $blob = $image->encode($format, 90);
         $output = $this->decode($blob);
 
         $this->assertSame([10, 20], [imagesx($output), imagesy($output)]);
-        $this->assertSame(1, (new Image($blob))->getOrientation());
+        $this->assertSame(1, (new Canvas($blob))->orientation);
     }
 }
