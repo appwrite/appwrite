@@ -131,7 +131,7 @@ impl FromZval<'_> for PhpInt {
         if let Some(bool) = zval.bool() {
             return Some(Self(i64::from(bool)));
         }
-        let float = |f: f64| (f.is_finite() && f >= i64::MIN as f64 && f < i64::MAX as f64).then(|| Self(f as i64));
+        let float = |f: f64| (f.is_finite() && f >= i64::MIN as f64 && f < i64::MAX as f64).then_some(Self(f as i64));
         if let Some(double) = zval.double() {
             return float(double);
         }
