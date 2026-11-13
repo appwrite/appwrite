@@ -2044,7 +2044,7 @@
             "deploymentRetention",
             "interval",
             "description",
-            "providerSummaries",
+            "providerComments",
             "providerDeployments",
             "providerStatuses"
         ],
@@ -2191,7 +2191,7 @@
             "deploymentRetention",
             "interval",
             "description",
-            "providerSummaries",
+            "providerComments",
             "providerDeployments",
             "providerStatuses"
         ],
@@ -3685,7 +3685,7 @@
             "deploymentRetention",
             "scopes",
             "description",
-            "providerSummaries",
+            "providerComments",
             "providerDeployments",
             "providerStatuses"
         ],
@@ -3824,7 +3824,7 @@
             "deploymentRetention",
             "scopes",
             "description",
-            "providerSummaries",
+            "providerComments",
             "providerDeployments",
             "providerStatuses"
         ],
@@ -6289,7 +6289,7 @@
             "deploymentRetention",
             "interval",
             "description",
-            "providerSummaries",
+            "providerComments",
             "providerDeployments",
             "providerStatuses"
         ],
@@ -6426,7 +6426,7 @@
             "deploymentRetention",
             "interval",
             "description",
-            "providerSummaries",
+            "providerComments",
             "providerDeployments",
             "providerStatuses"
         ],
@@ -7848,7 +7848,7 @@
             "deploymentRetention",
             "scopes",
             "description",
-            "providerSummaries",
+            "providerComments",
             "providerDeployments",
             "providerStatuses"
         ],
@@ -7977,7 +7977,7 @@
             "deploymentRetention",
             "scopes",
             "description",
-            "providerSummaries",
+            "providerComments",
             "providerDeployments",
             "providerStatuses"
         ],

@@ -322,7 +322,7 @@ class V25 extends Migration
                 case 'functions':
                 case 'sites':
                     if ($collectionType === 'projects') {
-                        $attributes = ['providerBranches', 'providerPaths', 'description', 'providerSummaries', 'providerDeployments', 'providerStatuses'];
+                        $attributes = ['providerBranches', 'providerPaths', 'description', 'providerComments', 'providerDeployments', 'providerStatuses'];
                         if ($id === 'sites') {
                             $attributes[] = 'scopes';
                         }

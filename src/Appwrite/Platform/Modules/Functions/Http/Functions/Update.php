@@ -112,7 +112,7 @@ class Update extends Base
             ->param('deploymentRetention', null, new Nullable(new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION)), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('interval', null, new Nullable(new Range(0, Database::MAX_INT)), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule. When omitted, the current interval is kept unless schedule is set.', true)
             ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the function.', true)
-            ->param('providerSummaries', null, new Nullable(new Boolean()), 'Post a build summary on pull requests for the repo linked to the function. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
+            ->param('providerComments', null, new Nullable(new Boolean()), 'Post a build summary on pull requests for the repo linked to the function. Commit statuses are still reported when disabled. Ignored in silent mode.', true)
             ->param('providerDeployments', null, new Nullable(new Boolean()), 'Deploy every push that matches the branch and path rules for the repo linked to the function. When disabled, deploy manually.', true)
             ->param('providerStatuses', null, new Nullable(new Boolean()), 'Report the build status on each commit for the repo linked to the function. Ignored in silent mode.', true)
             ->inject('request')
@@ -159,7 +159,7 @@ class Update extends Base
         ?int $deploymentRetention,
         ?int $interval,
         ?string $description,
-        ?bool $providerSummaries,
+        ?bool $providerComments,
         ?bool $providerDeployments,
         ?bool $providerStatuses,
         Request $request,
@@ -378,7 +378,7 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'providerSummaries' => $providerSummaries ?? $function->getAttribute('providerSummaries', true),
+            'providerComments' => $providerComments ?? $function->getAttribute('providerComments', true),
             'providerDeployments' => $providerDeployments ?? $function->getAttribute('providerDeployments', true),
             'providerStatuses' => $providerStatuses ?? $function->getAttribute('providerStatuses', true),
             'providerBranches' => $providerBranches ?? $function->getAttribute('providerBranches', []),

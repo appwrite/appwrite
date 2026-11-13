@@ -195,7 +195,7 @@ class Func extends Model
                 'default' => false,
                 'example' => false,
             ])
-            ->addRule('providerSummaries', [
+            ->addRule('providerComments', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether a build summary is posted on pull requests. Commit statuses are still reported when disabled.',
                 'default' => true,
