@@ -129,6 +129,15 @@ export const AUTH_METHODS: ReadonlyArray<{
   },
 ]
 
+/** The auth methods to list. LDAP is a preview: it is listed only while Identity servers, where it is configured, is on. */
+export function useVisibleAuthMethods(): typeof AUTH_METHODS {
+  const { features } = useConsoleProfile()
+  return AUTH_METHODS.filter(
+    (method) =>
+      method.key !== ProjectAuthMethodId.Ldap || features.identityServers,
+  )
+}
+
 export function AuthSettings({ projectId }: AuthSettingsProps) {
   const t = useT()
   const queryClient = useQueryClient()
@@ -140,12 +149,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
     projectData?.region,
   )
   const passkeyReady = security.authPasskey.origins.length > 0
-  const { features } = useConsoleProfile()
-  // LDAP is a preview: listed only while Identity servers, where it is configured, is on.
-  const visibleAuthMethods = AUTH_METHODS.filter(
-    (method) =>
-      method.key !== ProjectAuthMethodId.Ldap || features.identityServers,
-  )
+  const visibleAuthMethods = useVisibleAuthMethods()
   // Enabling LDAP needs a directory to sign in against.
   const ldapConfigured = Boolean(
     projectData?.ldapHosts?.length && projectData?.ldapBaseDn,
