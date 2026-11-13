@@ -487,12 +487,7 @@ final class Connection
                 break;
             }
 
-            try {
-                $received = $this->receive($remaining, headerTimeout: min($remaining, self::TICK_READ_TIMEOUT));
-            } catch (ConnectionException $error) {
-                $this->recycleDeadConnection(false);
-                throw $error;
-            }
+            $received = $this->receive($remaining, headerTimeout: min($remaining, self::TICK_READ_TIMEOUT));
             if ($received === null) {
                 break;
             }
