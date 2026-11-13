@@ -6,9 +6,7 @@
  * (fs-based content), so the served and prebuilt files always match.
  */
 
-import {
-  MCP_SERVER_URL,
-} from '@/lib/config/mcp'
+import { MCP_DOCS_SERVER_URL, MCP_SERVER_URL } from '@/lib/config/mcp'
 import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
 import { getAllDocsSectionNavs } from '@/lib/docs/navigation/section-navs'
 import { isDocsNavGroup } from '@/lib/docs/navigation'
@@ -275,8 +273,7 @@ export function buildAppwriteLlmsTxt(
   const sections: LlmsSection[] = [
     {
       heading: 'MCP Server',
-      intro:
-        'One remote server at https://mcp.appwrite.io. Add it to Cursor, Claude, Codex, ChatGPT, and other MCP clients so the agent can call the Appwrite API and search the docs. Server name: appwrite.',
+      intro: `One remote server at ${MCP_SERVER_URL}. Add it to Cursor, Claude, Codex, ChatGPT, and other MCP clients so the agent can call the Appwrite API and search the docs. Server name: appwrite. To search the docs without signing in, use the docs MCP server at ${MCP_DOCS_SERVER_URL}.`,
       links: [
         {
           title: 'Agent setup',
