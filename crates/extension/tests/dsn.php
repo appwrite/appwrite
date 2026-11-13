@@ -158,6 +158,49 @@ foreach ($from as $parts) {
 // Positional and named arguments, and getParam's default.
 emit('from positional', outcome(fn () => (string) DSN::from('redis', 'cache', 'u', 'p', 6379, 'db', ['a' => 'b'])));
 emit('getParam default', outcome(fn () => (new DSN('redis://h?a=1'))->getParam('b')));
+emit('getParam binary key', outcome(fn () => bin2hex((new DSN('redis://h?%ff=1&=2'))->getParam("\xff"))));
+
+// DSN.php has no strict_types: PHP converts scalar arguments, and Cloud relies on it
+// (getParam('connectTimeout', 1.0) took down staging when the binding refused it).
+$stringable = new class () {
+    public function __toString(): string
+    {
+        return 'redis://h:1';
+    }
+};
+$weak = [
+    'getParam float default' => fn () => (new DSN('redis://h'))->getParam('x', 1.0),
+    'getParam fractional default' => fn () => (new DSN('redis://h'))->getParam('x', 0.1),
+    'getParam huge default' => fn () => (new DSN('redis://h'))->getParam('x', 1e20),
+    'getParam int default' => fn () => (new DSN('redis://h'))->getParam('x', 5),
+    'getParam bool defaults' => fn () => [(new DSN('redis://h'))->getParam('x', true), (new DSN('redis://h'))->getParam('x', false)],
+    'getParam null default' => fn () => (new DSN('redis://h'))->getParam('x', null),
+    'getParam array default' => fn () => (new DSN('redis://h'))->getParam('x', []),
+    'getParam int key' => fn () => (new DSN('redis://h?5=a'))->getParam(5),
+    'new Stringable' => fn () => (string) new DSN($stringable),
+    'new throwing Stringable' => fn () => new DSN(new class () {
+        public function __toString(): string
+        {
+            throw new LogicException('unprintable');
+        }
+    }),
+    'new int' => fn () => (string) new DSN(5),
+    'new null' => fn () => (string) new DSN(null),
+    'new object' => fn () => (string) new DSN(new stdClass()),
+    'from numeric string port' => fn () => [(string) DSN::from('s3', 'h', port: '9000'), (string) DSN::from('s3', 'h', port: ' 9000 ')],
+    'from float port' => fn () => (string) DSN::from('s3', 'h', port: 9000.0),
+    'from non-numeric port' => fn () => (string) DSN::from('s3', 'h', port: '9000abc'),
+    'from bool and null port' => fn () => [(string) DSN::from('s3', 'h', port: true), (string) DSN::from('s3', 'h', port: null)],
+    'from int user and path' => fn () => (string) DSN::from('s3', 'h', user: 7, path: 3),
+];
+foreach ($weak as $name => $run) {
+    // A TypeError's message names the caller's file and line in PHP, so only its class is compared.
+    $result = outcome($run);
+    if (($result['throws'] ?? null) === TypeError::class) {
+        unset($result['message']);
+    }
+    emit('weak ' . $name, $result);
+}
 
 // A clone reads the same, compares equal and is not the same object.
 $original = new DSN('redis://u:p@h:1/db?a=1');

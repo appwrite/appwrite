@@ -518,13 +518,13 @@ impl Dsn {
     /// echo $dsn->getParam('from'), "\n";          // +15550100
     /// var_dump($dsn->getParam('region'));         // string(0) ""
     /// ```
-    pub fn param(&self, key: &str) -> Result<Option<&[u8]>, Error> {
+    pub fn param(&self, key: impl AsRef<[u8]>) -> Result<Option<&[u8]>, Error> {
         let query = match self.query() {
             None | Some("" | "0") => return Ok(None),
             Some(q) => q,
         };
         let params = self.params.get_or_init(|| parse_str(query.as_bytes()));
-        match params.get_str(key) {
+        match params.get_ref(php_std::types::KeyRef::normalize(key.as_ref())) {
             None => Ok(None),
             Some(Value::Str(value)) => Ok(Some(value)),
             Some(_) => {
@@ -551,7 +551,7 @@ impl Dsn {
     /// $dsn = new DSN('s3://key:secret@s3.amazonaws.com/backups');
     /// echo $dsn->getParam('region', 'us-east-1'), "\n"; // us-east-1
     /// ```
-    pub fn param_or<'a>(&'a self, key: &str, default: &'a [u8]) -> Result<&'a [u8], Error> {
+    pub fn param_or<'a>(&'a self, key: impl AsRef<[u8]>, default: &'a [u8]) -> Result<&'a [u8], Error> {
         Ok(self.param(key)?.unwrap_or(default))
     }
 }
@@ -664,6 +664,7 @@ mod tests {
         assert_eq!(d.path(), b"database");
         assert_eq!(d.param("timezone").unwrap(), Some(&b"UTC"[..]));
         assert_eq!(d.param_or("region", b"us-east-1").unwrap(), b"us-east-1");
+        assert_eq!(Dsn::parse("s://h?%ff=1&=2").unwrap().param(b"\xff").unwrap(), Some(&b"1"[..]));
         let d = Dsn::parse("sms://user:sl%2Fsh%2B%24%40no%3Aher@localhost").unwrap();
         assert_eq!(d.password(), Some(&b"sl/sh+$@no:her"[..]));
         assert_eq!(d.path(), b"");
