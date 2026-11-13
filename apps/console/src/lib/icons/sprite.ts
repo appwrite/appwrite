@@ -66,4 +66,9 @@ export const spriteIcons = new Map(
   icons.map((icon) => [getSpriteId(icon), icon]),
 )
 
-export const SPRITE_URL = '/icons/sprite.svg'
+/** Versioned by the symbol ids, so a deploy that changes the icon set never reads a cached sprite missing a symbol. */
+export const SPRITE_URL = `/icons/sprite.svg?v=${[...spriteIcons.keys()]
+  .join(',')
+  .split('')
+  .reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 7)
+  .toString(36)}`

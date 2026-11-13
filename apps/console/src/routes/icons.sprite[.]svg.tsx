@@ -29,7 +29,7 @@ export const Route = createFileRoute('/icons/sprite.svg')({
         new Response(getSprite(), {
           headers: {
             'Content-Type': 'image/svg+xml',
-            'Cache-Control': 'public, max-age=3600',
+            'Cache-Control': 'public, max-age=86400',
           },
         }),
     },
