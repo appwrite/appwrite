@@ -2,7 +2,7 @@
 # Certificates for the OpenLDAP fixture: a private CA and a server certificate
 # it signed, valid for the hostnames the tests and a developer dial. Run before
 # starting the openldap service; the files are mounted into it, and the CA is
-# what LDAPSessionIntegrationTest passes as caCertificate.
+# what LDAPSessionIntegrationTest passes as certificate.
 #
 #   ./dev/openldap/certs.sh
 #   docker compose --profile openldap up -d --wait openldap

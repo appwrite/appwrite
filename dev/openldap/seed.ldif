@@ -15,8 +15,9 @@ objectClass: organizationalUnit
 ou: groups
 
 # In every group, so a required group admits her. The description holds a
-# second address and the phones two formats, so a different attribute mapping
-# can stand in for the entry changing.
+# second address and the phones three formats (E.164, national, international
+# written for people), so a different attribute mapping can stand in for the
+# entry changing.
 dn: uid=alice,ou=people,dc=appwrite,dc=test
 objectClass: inetOrgPerson
 uid: alice
@@ -27,6 +28,7 @@ mail: alice@appwrite.test
 description: alice.alt@appwrite.test
 mobile: +15550000001
 telephoneNumber: 555-0002
+homePhone: +1 (555) 000-0003
 userPassword: alicepass
 
 # Valid credentials but in no group, so a required group refuses him.

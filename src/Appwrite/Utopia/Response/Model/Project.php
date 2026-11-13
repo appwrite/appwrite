@@ -133,31 +133,31 @@ class Project extends Model
             ->addRule('ldapPort', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'LDAP directory port.',
-                'default' => 0,
+                'default' => Client::PORT_LDAPS,
                 'example' => 636,
             ])
             ->addRule('ldapEncryption', [
                 'type' => self::TYPE_STRING,
                 'description' => 'LDAP transport encryption: none, ldaps or starttls.',
-                'default' => '',
+                'default' => Client::ENCRYPTION_LDAPS,
                 'example' => 'ldaps',
             ])
-            ->addRule('ldapTls', [
+            ->addRule('ldapVerification', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether the LDAP directory certificate is verified.',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('ldapCaCertificate', [
+            ->addRule('ldapCertificate', [
                 'type' => self::TYPE_STRING,
-                'description' => 'CA certificate in PEM format that signed the LDAP directory certificate, empty for the system trust store.',
+                'description' => 'Certificate in PEM format of the authority that signed the LDAP directory certificate, or the directory certificate itself when it is self-signed. Empty for the system trust store.',
                 'default' => '',
                 'example' => '',
             ])
             ->addRule('ldapTimeout', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Seconds to wait for the LDAP directory to connect and answer.',
-                'default' => 0,
+                'default' => Client::TIMEOUT_DEFAULT,
                 'example' => 10,
             ])
             ->addRule('ldapBaseDn', [
@@ -179,34 +179,34 @@ class Project extends Model
                 'default' => '',
                 'example' => 'ldap-password',
             ])
-            ->addRule('ldapUsernameAttribute', [
-                'type' => self::TYPE_STRING,
-                'description' => 'LDAP attribute the username is matched against.',
-                'default' => '',
-                'example' => 'uid',
-            ])
             ->addRule('ldapUserFilter', [
                 'type' => self::TYPE_STRING,
-                'description' => 'LDAP filter every user must also match.',
+                'description' => 'LDAP filter that finds the user signing in, with {username} where the username they enter goes.',
+                'default' => Client::USER_FILTER_DEFAULT,
+                'example' => '(uid={username})',
+            ])
+            ->addRule('ldapRequiredGroupDn', [
+                'type' => self::TYPE_STRING,
+                'description' => 'LDAP group a user must belong to in order to sign in, empty to allow every user.',
                 'default' => '',
-                'example' => '(objectClass=inetOrgPerson)',
+                'example' => 'cn=staff,ou=groups,dc=example,dc=com',
             ])
             ->addRule('ldapIdAttribute', [
                 'type' => self::TYPE_STRING,
                 'description' => 'LDAP attribute holding the identifier that stays the same when an entry is renamed or moved.',
-                'default' => '',
+                'default' => Client::ATTRIBUTE_ID,
                 'example' => 'entryUUID',
             ])
             ->addRule('ldapEmailAttribute', [
                 'type' => self::TYPE_STRING,
                 'description' => 'LDAP attribute holding the email address.',
-                'default' => '',
+                'default' => Client::ATTRIBUTE_EMAIL,
                 'example' => 'mail',
             ])
             ->addRule('ldapNameAttribute', [
                 'type' => self::TYPE_STRING,
                 'description' => 'LDAP attribute holding the display name.',
-                'default' => '',
+                'default' => Client::ATTRIBUTE_NAME,
                 'example' => 'cn',
             ])
             ->addRule('ldapPhoneAttribute', [
@@ -214,12 +214,6 @@ class Project extends Model
                 'description' => 'LDAP attribute holding the phone number, empty when unmapped.',
                 'default' => '',
                 'example' => 'mobile',
-            ])
-            ->addRule('ldapRequiredGroupDn', [
-                'type' => self::TYPE_STRING,
-                'description' => 'LDAP group a user must belong to in order to sign in, empty to allow every user.',
-                'default' => '',
-                'example' => 'cn=staff,ou=groups,dc=example,dc=com',
             ])
 
             // Resource: Ping
@@ -409,19 +403,18 @@ class Project extends Model
         $document->setAttribute('ldapHosts', \array_values((array) ($ldap['hosts'] ?? [])));
         $document->setAttribute('ldapPort', (int) ($ldap['port'] ?? 0) ?: Client::port($encryption));
         $document->setAttribute('ldapEncryption', $encryption);
-        $document->setAttribute('ldapTls', (bool) ($ldap['tls'] ?? true));
-        $document->setAttribute('ldapCaCertificate', $ldap['caCertificate'] ?? '');
+        $document->setAttribute('ldapVerification', (bool) ($ldap['verification'] ?? true));
+        $document->setAttribute('ldapCertificate', $ldap['certificate'] ?? '');
         $document->setAttribute('ldapTimeout', (int) ($ldap['timeout'] ?? 0) ?: Client::TIMEOUT_DEFAULT);
         $document->setAttribute('ldapBaseDn', $ldap['baseDn'] ?? '');
         $document->setAttribute('ldapBindDn', $ldap['bindDn'] ?? '');
         $document->setAttribute('ldapBindPassword', ''); // Write-only: never expose the stored value
-        $document->setAttribute('ldapUsernameAttribute', $ldap['usernameAttribute'] ?? Client::ATTRIBUTE_USERNAME);
-        $document->setAttribute('ldapUserFilter', $ldap['userFilter'] ?? '');
+        $document->setAttribute('ldapUserFilter', \trim((string) ($ldap['userFilter'] ?? '')) ?: Client::USER_FILTER_DEFAULT);
+        $document->setAttribute('ldapRequiredGroupDn', $ldap['requiredGroupDn'] ?? '');
         $document->setAttribute('ldapIdAttribute', $ldap['idAttribute'] ?? Client::ATTRIBUTE_ID);
         $document->setAttribute('ldapEmailAttribute', $ldap['emailAttribute'] ?? Client::ATTRIBUTE_EMAIL);
         $document->setAttribute('ldapNameAttribute', $ldap['nameAttribute'] ?? Client::ATTRIBUTE_NAME);
         $document->setAttribute('ldapPhoneAttribute', $ldap['phoneAttribute'] ?? '');
-        $document->setAttribute('ldapRequiredGroupDn', $ldap['requiredGroupDn'] ?? '');
     }
 
     private function expandServices(Document $document): void

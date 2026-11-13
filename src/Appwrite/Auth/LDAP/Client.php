@@ -12,10 +12,15 @@ use FreeDSx\Ldap\Exception\OperationException;
 use FreeDSx\Ldap\LdapClient;
 use FreeDSx\Ldap\Operation\ResultCode;
 use FreeDSx\Ldap\Operations;
+use FreeDSx\Ldap\Search\Filter\ApproximateFilter;
+use FreeDSx\Ldap\Search\Filter\EqualityFilter;
 use FreeDSx\Ldap\Search\Filter\FilterContainerInterface;
 use FreeDSx\Ldap\Search\Filter\FilterInterface;
+use FreeDSx\Ldap\Search\Filter\GreaterThanOrEqualFilter;
+use FreeDSx\Ldap\Search\Filter\LessThanOrEqualFilter;
 use FreeDSx\Ldap\Search\Filter\MatchingRuleFilter;
 use FreeDSx\Ldap\Search\Filter\NotFilter;
+use FreeDSx\Ldap\Search\Filter\SubstringFilter;
 use FreeDSx\Ldap\Search\Filters;
 use FreeDSx\Socket\Exception\ConnectionException as SocketException;
 use InvalidArgumentException;
@@ -45,10 +50,13 @@ class Client
     public const int TIMEOUT_MAX = 30;
     public const int HOSTS_MAX = 10;
 
-    public const string ATTRIBUTE_USERNAME = 'uid';
     public const string ATTRIBUTE_ID = 'entryUUID';
     public const string ATTRIBUTE_EMAIL = 'mail';
     public const string ATTRIBUTE_NAME = 'cn';
+
+    /** Where the username a person types goes in the user filter. */
+    public const string USERNAME_PLACEHOLDER = '{username}';
+    public const string USER_FILTER_DEFAULT = '(uid={username})';
 
     /**
      * Active Directory's LDAP_MATCHING_RULE_IN_CHAIN: matches a group through any
@@ -67,13 +75,12 @@ class Client
     private readonly array $hosts;
     private readonly int $port;
     private readonly string $encryption;
-    private readonly bool $tls;
-    private readonly string $caCertificate;
+    private readonly bool $verification;
+    private readonly string $certificate;
     private readonly int $timeout;
     private readonly string $baseDn;
     private readonly string $bindDn;
     private readonly string $bindPassword;
-    private readonly string $usernameAttribute;
     private readonly string $userFilter;
     private readonly string $idAttribute;
     private readonly string $emailAttribute;
@@ -81,7 +88,7 @@ class Client
     private readonly string $phoneAttribute;
     private readonly string $requiredGroupDn;
 
-    private ?string $caFile = null;
+    private ?string $certificateFile = null;
 
     /**
      * @param PublicHostname $hostname Resolves each host and refuses private addresses; the connection dials the address it returned
@@ -121,7 +128,7 @@ class Client
             throw new InvalidArgumentException('LDAP base DN is required.');
         }
 
-        foreach (['usernameAttribute' => self::ATTRIBUTE_USERNAME, 'idAttribute' => self::ATTRIBUTE_ID, 'emailAttribute' => self::ATTRIBUTE_EMAIL, 'nameAttribute' => self::ATTRIBUTE_NAME] as $key => $default) {
+        foreach (['idAttribute' => self::ATTRIBUTE_ID, 'emailAttribute' => self::ATTRIBUTE_EMAIL, 'nameAttribute' => self::ATTRIBUTE_NAME] as $key => $default) {
             if (\trim((string) ($config[$key] ?? $default)) === '') {
                 throw new InvalidArgumentException('LDAP ' . $key . ' is required.');
             }
@@ -130,14 +137,13 @@ class Client
         $this->hosts = $hosts;
         $this->port = $port;
         $this->encryption = $encryption;
-        $this->tls = (bool) ($config['tls'] ?? true);
-        $this->caCertificate = \trim((string) ($config['caCertificate'] ?? ''));
+        $this->verification = (bool) ($config['verification'] ?? true);
+        $this->certificate = \trim((string) ($config['certificate'] ?? ''));
         $this->timeout = $timeout;
         $this->baseDn = $baseDn;
         $this->bindDn = \trim((string) ($config['bindDn'] ?? ''));
         $this->bindPassword = (string) ($config['bindPassword'] ?? '');
-        $this->usernameAttribute = \trim((string) ($config['usernameAttribute'] ?? self::ATTRIBUTE_USERNAME));
-        $this->userFilter = \trim((string) ($config['userFilter'] ?? ''));
+        $this->userFilter = \trim((string) ($config['userFilter'] ?? '')) ?: self::USER_FILTER_DEFAULT;
         $this->idAttribute = \trim((string) ($config['idAttribute'] ?? self::ATTRIBUTE_ID));
         $this->emailAttribute = \trim((string) ($config['emailAttribute'] ?? self::ATTRIBUTE_EMAIL));
         $this->nameAttribute = \trim((string) ($config['nameAttribute'] ?? self::ATTRIBUTE_NAME));
@@ -237,11 +243,11 @@ class Client
             $entries = $this->find($client, $username);
 
             if (\count($entries) === 0) {
-                throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, "No entry under {$this->baseDn} has {$this->usernameAttribute} equal to the username" . ($this->userFilter !== '' ? " and matches the user filter {$this->userFilter}." : '.'));
+                throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, "No entry under {$this->baseDn} matches the user filter {$this->userFilter} for this username.");
             }
 
             if (\count($entries) > 1) {
-                throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, "More than one entry under {$this->baseDn} has {$this->usernameAttribute} equal to the username. Use a user filter or a different username attribute.");
+                throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, "More than one entry under {$this->baseDn} matches the user filter {$this->userFilter} for this username. Narrow the user filter so it finds one person.");
             }
 
             $entry = $this->map($entries[0]);
@@ -265,35 +271,141 @@ class Client
     }
 
     /**
-     * The filter that finds a user: the username attribute equal to the username, and the
-     * configured user filter when there is one. The username is carried as a typed
-     * assertion value, so it needs no escaping and cannot change the filter's shape.
+     * The filter that finds a user: the configured user filter with the username in place
+     * of every {username} in its values. The filter is parsed before the username goes in,
+     * and the username is carried as a typed assertion value, so it needs no escaping and
+     * cannot change the filter's shape: a typed `*` or `)(` stays literal text.
      *
-     * @throws Exception USER_LDAP_DIRECTORY_ERROR when the configured user filter does not parse
+     * @throws Exception USER_LDAP_DIRECTORY_ERROR when the user filter does not parse or has no {username}
      */
     public function filter(string $username): FilterInterface
     {
-        $filter = Filters::equal($this->usernameAttribute, $username);
-
-        if ($this->userFilter === '') {
-            return $filter;
-        }
-
         try {
-            $userFilter = Filters::raw($this->userFilter);
+            return self::userFilter($this->userFilter, $username);
+        } catch (InvalidArgumentException $error) {
+            throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, $error->getMessage(), previous: $error);
+        }
+    }
+
+    /**
+     * Check a user filter before it is stored: it must parse, and {username} must appear
+     * in at least one of its values, or every sign-in would look up the same entries.
+     *
+     * @throws InvalidArgumentException naming what is wrong
+     */
+    public static function checkUserFilter(string $filter): void
+    {
+        self::userFilter($filter, '');
+    }
+
+    /**
+     * @throws InvalidArgumentException when the filter does not parse or has no {username} in a value
+     */
+    private static function userFilter(string $template, string $username): FilterInterface
+    {
+        try {
+            $filter = Filters::raw($template);
         } catch (FilterParseException $error) {
-            throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, "User filter {$this->userFilter} is not a valid LDAP filter.", previous: $error);
+            throw new InvalidArgumentException("User filter {$template} is not a valid LDAP filter.", previous: $error);
         }
 
         // FreeDSx 0.9 reads every extensible match as a DN match (`isset` on an empty
         // optional capture), which would turn the common Active Directory filter
         // (userAccountControl:1.2.840.113556.1.4.803:=2) into one the server rejects.
         // Unless the filter asks for DN matching somewhere, none of its nodes may.
-        if (\stripos($this->userFilter, ':dn:') === false) {
-            self::withoutDnAttributes($userFilter);
+        if (\stripos($template, ':dn:') === false) {
+            self::withoutDnAttributes($filter);
         }
 
-        return Filters::and($filter, $userFilter);
+        if (self::substitute($filter, $username) === 0) {
+            throw new InvalidArgumentException("User filter {$template} must contain " . self::USERNAME_PLACEHOLDER . ' where the username goes, for example ' . self::USER_FILTER_DEFAULT . '.');
+        }
+
+        return $filter;
+    }
+
+    /**
+     * Put the username in place of every {username} in the filter's assertion values, and
+     * count the places. Attribute names and matching rules are left alone.
+     */
+    private static function substitute(FilterInterface $filter, string $username): int
+    {
+        $count = 0;
+
+        if ($filter instanceof EqualityFilter || $filter instanceof ApproximateFilter || $filter instanceof GreaterThanOrEqualFilter || $filter instanceof LessThanOrEqualFilter || $filter instanceof MatchingRuleFilter) {
+            $filter->setValue(self::replace($filter->getValue(), $username, $count));
+        } elseif ($filter instanceof SubstringFilter) {
+            $startsWith = $filter->getStartsWith();
+            $endsWith = $filter->getEndsWith();
+            $filter->setStartsWith($startsWith === null ? null : self::replace($startsWith, $username, $count));
+            $filter->setEndsWith($endsWith === null ? null : self::replace($endsWith, $username, $count));
+            // A loop rather than array_map: an arrow function would count into a copy.
+            $contains = [];
+            foreach ($filter->getContains() as $part) {
+                $contains[] = self::replace($part, $username, $count);
+            }
+            $filter->setContains(...$contains);
+        } elseif ($filter instanceof NotFilter) {
+            $count += self::substitute($filter->get(), $username);
+        } elseif ($filter instanceof FilterContainerInterface) {
+            foreach ($filter->get() as $child) {
+                $count += self::substitute($child, $username);
+            }
+        }
+
+        return $count;
+    }
+
+    private static function replace(string $value, string $username, int &$count): string
+    {
+        $count += \substr_count($value, self::USERNAME_PLACEHOLDER);
+
+        return \str_replace(self::USERNAME_PLACEHOLDER, $username, $value);
+    }
+
+    /**
+     * Check a certificate before it is stored: one or more PEM certificates, each of which
+     * reads, and no other PEM block, such as a private key pasted along with them.
+     *
+     * @throws InvalidArgumentException naming what is wrong
+     */
+    public static function checkCertificate(string $pem): void
+    {
+        \preg_match_all('/-----BEGIN ([A-Z0-9 ]+)-----.*?-----END \\1-----/s', $pem, $blocks, PREG_SET_ORDER);
+
+        if ($blocks === [] || \count($blocks) !== \substr_count($pem, '-----BEGIN ')) {
+            throw new InvalidArgumentException('Certificate must be in PEM format: each certificate from its -----BEGIN CERTIFICATE----- line to its -----END CERTIFICATE----- line.');
+        }
+
+        foreach ($blocks as $index => [$block, $type]) {
+            if ($type !== 'CERTIFICATE') {
+                throw new InvalidArgumentException("Certificate must only hold certificates, but block " . ($index + 1) . " is a {$type}.");
+            }
+
+            if (@\openssl_x509_read($block) === false) {
+                while (\openssl_error_string() !== false) {
+                    // Drain OpenSSL's error queue so the next call starts clean.
+                }
+
+                throw new InvalidArgumentException('Certificate ' . ($index + 1) . ' could not be read. Paste the whole PEM block, including the BEGIN and END lines.');
+            }
+        }
+    }
+
+    /**
+     * A phone number the way E.164 writes it, when the directory wrote it for people: an
+     * international number loses its spaces, dashes, dots, slashes and brackets, and the
+     * trunk prefix some countries show as (0). Anything else is returned as it is.
+     */
+    public static function phone(string $value): string
+    {
+        if (!\str_starts_with($value, '+')) {
+            return $value;
+        }
+
+        $digits = \preg_replace(['/\\(0\\)/', '/[\\s\\x{00A0}().\\/-]/u'], '', \substr($value, 1));
+
+        return '+' . ($digits ?? \substr($value, 1));
     }
 
     private static function withoutDnAttributes(FilterInterface $filter): void
@@ -351,7 +463,7 @@ class Client
         foreach ($this->hosts as $host) {
             // The certificate is checked against the name it was issued to; an address
             // literal has no name to check, so verification cannot succeed.
-            if ($this->tls && $this->encryption !== self::ENCRYPTION_NONE && \filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            if ($this->verification && $this->encryption !== self::ENCRYPTION_NONE && \filter_var($host, FILTER_VALIDATE_IP) !== false) {
                 $failure = "LDAP host {$host} is an IP address, which cannot be checked against a certificate. Use the hostname on the directory's certificate, or turn certificate verification off.";
                 continue;
             }
@@ -368,8 +480,8 @@ class Client
                 'port' => $this->port,
                 'base_dn' => $this->baseDn,
                 'use_ssl' => $this->encryption === self::ENCRYPTION_LDAPS,
-                'ssl_validate_cert' => $this->tls,
-                'ssl_ca_cert' => $this->caFile(),
+                'ssl_validate_cert' => $this->verification,
+                'ssl_ca_cert' => $this->certificateFile(),
                 'ssl_peer_name' => $host,
                 'timeout_connect' => $this->timeout,
                 'timeout_read' => $this->timeout,
@@ -417,34 +529,34 @@ class Client
             // The connection is being dropped either way.
         }
 
-        if ($this->caFile !== null) {
-            @\unlink($this->caFile);
-            $this->caFile = null;
+        if ($this->certificateFile !== null) {
+            @\unlink($this->certificateFile);
+            $this->certificateFile = null;
         }
     }
 
     /**
-     * The CA certificate as a file, which is how the stream layer takes it, or null for
-     * the system trust store. Removed again when the connection closes.
+     * The certificate as a file, which is how the stream layer takes it, or null for the
+     * system trust store. Removed again when the connection closes.
      */
-    private function caFile(): ?string
+    private function certificateFile(): ?string
     {
-        if ($this->caCertificate === '' || !$this->tls) {
+        if ($this->certificate === '' || !$this->verification) {
             return null;
         }
 
-        if ($this->caFile === null) {
+        if ($this->certificateFile === null) {
             $path = \tempnam(\sys_get_temp_dir(), 'ldap-ca-');
 
-            if ($path === false || \file_put_contents($path, $this->caCertificate) === false) {
-                throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, 'Could not store the CA certificate for the connection.');
+            if ($path === false || \file_put_contents($path, $this->certificate) === false) {
+                throw new Exception(Exception::USER_LDAP_DIRECTORY_ERROR, 'Could not store the certificate for the connection.');
             }
 
             \chmod($path, 0600);
-            $this->caFile = $path;
+            $this->certificateFile = $path;
         }
 
-        return $this->caFile;
+        return $this->certificateFile;
     }
 
     /**
@@ -578,7 +690,7 @@ class Client
             'dn' => $entry->getDn()->toString(),
             'email' => \strtolower($value($this->emailAttribute)),
             'name' => $value($this->nameAttribute),
-            'phone' => $value($this->phoneAttribute),
+            'phone' => self::phone($value($this->phoneAttribute)),
         ];
     }
 }

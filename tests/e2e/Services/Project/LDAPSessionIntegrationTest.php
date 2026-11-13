@@ -197,7 +197,7 @@ final class LDAPSessionIntegrationTest extends Scope
         // Two entries share cn=Twin. Binding as an arbitrary one of them would
         // be a coin toss over identity, so neither is signed in.
         $this->configureDirectory([
-            'usernameAttribute' => 'cn',
+            'userFilter' => '(cn={username})',
         ]);
 
         $response = $this->signIn('Twin', 'twinpass');
@@ -214,7 +214,7 @@ final class LDAPSessionIntegrationTest extends Scope
     public function testUserFilterRestrictsEntries(): void
     {
         $this->configureDirectory([
-            'userFilter' => '(sn=Smith)',
+            'userFilter' => '(&(uid={username})(sn=Smith))',
         ]);
 
         $response = $this->signIn('alice', 'alicepass');
@@ -226,14 +226,50 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame(401, $response['headers']['status-code']);
         $this->assertSame('user_invalid_credentials', $response['body']['type']);
 
-        // A filter that does not parse cannot be enabled.
+        // A filter that does not parse is refused when it is saved.
         $response = $this->updateLDAP([
-            'userFilter' => '(sn=Smith',
+            'userFilter' => '(&(uid={username})(sn=Smith)',
         ]);
 
         $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('(&(uid={username})(sn=Smith)', (string) $response['body']['message']);
+    }
+
+    public function testUserFilterAcceptsUsernameOrEmail(): void
+    {
+        $alice = $this->signInAlice();
+
+        $this->configureDirectory([
+            'userFilter' => '(|(uid={username})(mail={username}))',
+        ]);
+
+        foreach (['alice', 'alice@appwrite.test'] as $username) {
+            $response = $this->signIn($username, 'alicepass');
+
+            $this->assertSame(201, $response['headers']['status-code'], 'Username: ' . $username);
+            $this->assertSame($alice['userId'], $response['body']['userId'], 'Username: ' . $username);
+        }
+    }
+
+    public function testUserFilterMatchingTwoEntriesIsRefused(): void
+    {
+        // A filter that finds more than one person never signs in either of them, and
+        // the test explains why.
+        $this->configureDirectory([
+            'userFilter' => '(|(uid={username})(objectClass=inetOrgPerson))',
+        ]);
+
+        $response = $this->signIn('alice', 'alicepass');
+
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_credentials', $response['body']['type']);
+
+        $response = $this->createLDAPTest(['username' => 'alice', 'password' => 'alicepass']);
+
+        $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('project_ldap_config_invalid', $response['body']['type']);
-        $this->assertStringContainsString('(sn=Smith', (string) $response['body']['message']);
+        $this->assertStringContainsString('More than one entry', (string) $response['body']['message']);
     }
 
     public function testRequiredGroupRestrictsAccounts(): void
@@ -325,7 +361,7 @@ final class LDAPSessionIntegrationTest extends Scope
 
         // The same holds when users sign in with another attribute than their uid.
         $this->configureDirectory([
-            'usernameAttribute' => 'mail',
+            'userFilter' => '(mail={username})',
             'requiredGroupDn' => 'cn=appwrite-posix,ou=groups,dc=appwrite,dc=test',
         ]);
 
@@ -495,6 +531,20 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertSame('Alice Smith', $user['body']['name']);
         $this->assertSame('alice@appwrite.test', $user['body']['email']);
         $this->assertSame('+15550000001', $user['body']['phone']);
+
+        // An international number written for people, with spaces and brackets, is
+        // written the way E.164 expects it.
+        $this->configureDirectory([
+            'phoneAttribute' => 'homePhone',
+        ]);
+
+        $response = $this->signIn('alice', 'alicepass');
+
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $alice['userId'], $this->serverHeaders());
+
+        $this->assertSame('+15550000003', $user['body']['phone']);
 
         $identities = $this->identitiesOf($alice['userId']);
 
@@ -775,15 +825,15 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->assertStringContainsString('127.0.0.1:1', (string) $response['body']['message']);
     }
 
-    public function testEncryptionLdapsWithCaCertificate(): void
+    public function testEncryptionLdapsWithCertificate(): void
     {
         $alice = $this->signInAlice();
 
         $this->configureDirectory([
             'encryption' => 'ldaps',
             'port' => 636,
-            'tls' => true,
-            'caCertificate' => $this->caCertificate(),
+            'verification' => true,
+            'certificate' => $this->caCertificate(),
         ]);
 
         $response = $this->signIn('alice', 'alicepass');
@@ -803,8 +853,8 @@ final class LDAPSessionIntegrationTest extends Scope
         $response = $this->updateLDAP([
             'encryption' => 'ldaps',
             'port' => 636,
-            'tls' => true,
-            'caCertificate' => '',
+            'verification' => true,
+            'certificate' => '',
             'bindPassword' => self::BIND_PASSWORD,
             'enabled' => true,
         ]);
@@ -821,8 +871,8 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->configureDirectory([
             'encryption' => 'ldaps',
             'port' => 636,
-            'tls' => false,
-            'caCertificate' => '',
+            'verification' => false,
+            'certificate' => '',
         ]);
 
         $response = $this->signIn('alice', 'alicepass');
@@ -837,8 +887,8 @@ final class LDAPSessionIntegrationTest extends Scope
         $this->configureDirectory([
             'encryption' => 'starttls',
             'port' => 389,
-            'tls' => true,
-            'caCertificate' => $this->caCertificate(),
+            'verification' => true,
+            'certificate' => $this->caCertificate(),
         ]);
 
         $response = $this->signIn('alice', 'alicepass');
@@ -883,23 +933,22 @@ final class LDAPSessionIntegrationTest extends Scope
     private function configureDirectory(array $overrides = []): void
     {
         $params = \array_merge([
+            'enabled' => true,
             'hosts' => [self::HOST],
             'port' => 389,
             'encryption' => 'none',
-            'tls' => true,
-            'caCertificate' => '',
+            'verification' => true,
+            'certificate' => '',
             'timeout' => 10,
             'baseDn' => self::BASE_DN,
             'bindDn' => self::BIND_DN,
             'bindPassword' => self::BIND_PASSWORD,
-            'usernameAttribute' => 'uid',
             'userFilter' => '',
+            'requiredGroupDn' => '',
             'idAttribute' => 'entryUUID',
             'emailAttribute' => 'mail',
             'nameAttribute' => 'cn',
             'phoneAttribute' => '',
-            'requiredGroupDn' => '',
-            'enabled' => true,
         ], $overrides);
 
         $response = $this->updateLDAP($params);

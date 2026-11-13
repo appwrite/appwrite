@@ -3164,23 +3164,22 @@
             "description"
         ],
         "project.updateLDAP": [
+            "enabled",
             "hosts",
             "port",
             "encryption",
-            "tls",
-            "caCertificate",
+            "verification",
+            "certificate",
             "timeout",
             "baseDn",
             "bindDn",
             "bindPassword",
-            "usernameAttribute",
             "userFilter",
+            "requiredGroupDn",
             "idAttribute",
             "emailAttribute",
             "nameAttribute",
-            "phoneAttribute",
-            "requiredGroupDn",
-            "enabled"
+            "phoneAttribute"
         ],
         "project.updateLabels": [
             "labels"
@@ -7373,23 +7372,22 @@
             "description"
         ],
         "project.updateLDAP": [
+            "enabled",
             "hosts",
             "port",
             "encryption",
-            "tls",
-            "caCertificate",
+            "verification",
+            "certificate",
             "timeout",
             "baseDn",
             "bindDn",
             "bindPassword",
-            "usernameAttribute",
             "userFilter",
+            "requiredGroupDn",
             "idAttribute",
             "emailAttribute",
             "nameAttribute",
-            "phoneAttribute",
-            "requiredGroupDn",
-            "enabled"
+            "phoneAttribute"
         ],
         "project.updateLabels": [
             "labels"

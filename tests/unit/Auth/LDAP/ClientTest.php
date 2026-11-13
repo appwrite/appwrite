@@ -39,24 +39,24 @@ final class ClientTest extends TestCase
         $this->assertInstanceOf(Client::class, $client);
     }
 
-    public function testFilterCombinesUsernameAndUserFilter(): void
+    #[DataProvider('userFilterProvider')]
+    public function testFilterPutsUsernameInTheUserFilter(string $userFilter, string $expected): void
     {
-        $client = $this->client([
-            'usernameAttribute' => 'sAMAccountName',
-            'userFilter' => '(&(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))',
-        ]);
+        $this->assertSame($expected, $this->client(['userFilter' => $userFilter])->filter('alice')->toString());
+    }
 
-        $this->assertSame(
-            '(&(sAMAccountName=alice)(&(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2))))',
-            $client->filter('alice')->toString()
-        );
-
+    public static function userFilterProvider(): \Iterator
+    {
+        yield 'empty means the default' => ['', '(uid=alice)'];
+        yield 'Active Directory' => [
+            '(&(objectClass=user)(sAMAccountName={username})(!(userAccountControl:1.2.840.113556.1.4.803:=2)))',
+            '(&(objectClass=user)(sAMAccountName=alice)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))',
+        ];
+        yield 'username or email' => ['(|(uid={username})(mail={username}))', '(|(uid=alice)(mail=alice))'];
+        yield 'part of a value' => ['(mail={username}@example.com)', '(mail=alice@example.com)'];
+        yield 'inside a substring' => ['(cn=*{username}*)', '(cn=*alice*)'];
         // A DN match asked for explicitly is kept.
-        $client = $this->client([
-            'userFilter' => '(ou:dn:=people)',
-        ]);
-
-        $this->assertSame('(&(uid=alice)(ou:dn:=people))', $client->filter('alice')->toString());
+        yield 'DN match' => ['(&(uid={username})(ou:dn:=people))', '(&(uid=alice)(ou:dn:=people))'];
     }
 
     #[DataProvider('injectionProvider')]
@@ -76,6 +76,14 @@ final class ClientTest extends TestCase
         yield 'backslash' => ['ali\\ce', '(uid=ali\5cce)'];
         yield 'null byte' => ["ali\0ce", '(uid=ali\00ce)'];
         yield 'already escaped' => ['\2a', '(uid=\2a)'];
+        yield 'the placeholder itself' => ['{username}', '(uid={username})'];
+    }
+
+    public function testFilterCarriesUsernameAsValueInsideSubstrings(): void
+    {
+        $client = $this->client(['userFilter' => '(cn=*{username}*)']);
+
+        $this->assertSame('(cn=*\2a\29\28*)', $client->filter('*)(')->toString());
     }
 
     public function testFilterRefusesUserFilterThatDoesNotParse(): void
@@ -93,6 +101,51 @@ final class ClientTest extends TestCase
             $this->assertSame(Exception::USER_LDAP_DIRECTORY_ERROR, $error->getType());
             throw $error;
         }
+    }
+
+    public function testFilterRefusesUserFilterWithoutPlaceholder(): void
+    {
+        // Written around the API's check: without {username} every sign-in would look up
+        // the same entries.
+        $client = $this->client([
+            'userFilter' => '(objectClass=inetOrgPerson)',
+        ]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('{username}');
+
+        try {
+            $client->filter('alice');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::USER_LDAP_DIRECTORY_ERROR, $error->getType());
+            throw $error;
+        }
+    }
+
+    #[DataProvider('checkUserFilterProvider')]
+    public function testCheckUserFilter(string $userFilter, ?string $error): void
+    {
+        if ($error !== null) {
+            $this->expectException(InvalidArgumentException::class);
+            $this->expectExceptionMessage($error);
+        }
+
+        Client::checkUserFilter($userFilter);
+
+        if ($error === null) {
+            $this->addToAssertionCount(1);
+        }
+    }
+
+    public static function checkUserFilterProvider(): \Iterator
+    {
+        yield 'default' => [Client::USER_FILTER_DEFAULT, null];
+        yield 'username or email' => ['(|(uid={username})(mail={username}))', null];
+        yield 'substring' => ['(cn=*{username}*)', null];
+        yield 'does not parse' => ['(objectClass=person', 'not a valid LDAP filter'];
+        yield 'no placeholder' => ['(objectClass=person)', 'must contain {username}'];
+        yield 'placeholder as attribute name only' => ['({username}=alice)', 'must contain {username}'];
+        yield 'placeholder in another case' => ['(uid={USERNAME})', 'must contain {username}'];
     }
 
     public function testIdentifierRendersObjectGuidLikeActiveDirectory(): void
@@ -137,13 +190,12 @@ final class ClientTest extends TestCase
         yield 'timeout too low' => [['timeout' => 0], 'timeout'];
         yield 'timeout too high' => [['timeout' => Client::TIMEOUT_MAX + 1], 'timeout'];
         yield 'no base dn' => [['baseDn' => ' '], 'base DN'];
-        yield 'blank username attribute' => [['usernameAttribute' => ''], 'usernameAttribute'];
         yield 'blank id attribute' => [['idAttribute' => ''], 'idAttribute'];
         yield 'blank email attribute' => [['emailAttribute' => ''], 'emailAttribute'];
         yield 'blank name attribute' => [['nameAttribute' => ''], 'nameAttribute'];
     }
 
-    public function testVerifiedTlsRefusesAddressLiterals(): void
+    public function testVerificationRefusesAddressLiterals(): void
     {
         // Nothing listens on loopback, so a refusal naming the certificate rather than
         // the connection proves the host was turned away before dialling.
@@ -151,7 +203,7 @@ final class ClientTest extends TestCase
             'hosts' => ['127.0.0.1'],
             'port' => 1,
             'encryption' => 'ldaps',
-            'tls' => true,
+            'verification' => true,
         ]);
 
         try {
@@ -161,6 +213,72 @@ final class ClientTest extends TestCase
             $this->assertSame(Exception::PROJECT_LDAP_CONFIG_INVALID, $error->getType());
             $this->assertStringContainsString('IP address', $error->getMessage());
         }
+    }
+
+    public function testCheckCertificateAcceptsOneOrMoreCertificates(): void
+    {
+        $first = self::certificate('Halden Root CA');
+        $second = self::certificate('Halden Issuing CA');
+
+        Client::checkCertificate($first);
+        Client::checkCertificate($first . $second);
+        // openssl prints a subject and issuer line above each certificate in a bundle
+        Client::checkCertificate("subject=CN = Halden Root CA\nissuer=CN = Halden Root CA\n" . $first . "\n\n" . $second);
+
+        $this->addToAssertionCount(1);
+    }
+
+    #[DataProvider('invalidCertificateProvider')]
+    public function testCheckCertificateRefuses(string $pem, string $error): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage($error);
+
+        Client::checkCertificate($pem);
+    }
+
+    public static function invalidCertificateProvider(): \Iterator
+    {
+        $certificate = self::certificate('Halden Root CA');
+        $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        \openssl_pkey_export($key, $keyPem);
+
+        yield 'not PEM' => ['MIIBkTCB+wIJAKHBfpegPjMCMA0GCSqGSIb3DQEBBQUAMBExDzANBgNVBAMMBnVu', 'PEM format'];
+        yield 'missing END line' => [\substr($certificate, 0, (int) \strpos($certificate, '-----END')), 'PEM format'];
+        yield 'one complete, one cut short' => [$certificate . \substr($certificate, 0, 100), 'PEM format'];
+        yield 'private key alongside' => [$certificate . $keyPem, 'PRIVATE KEY'];
+        yield 'damaged body' => [(string) \preg_replace('/^(-----BEGIN CERTIFICATE-----\n)..../', '$1AAAA', $certificate), 'could not be read'];
+    }
+
+    private static function certificate(string $commonName): string
+    {
+        $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        $csr = \openssl_csr_new(['commonName' => $commonName], $key, ['digest_alg' => 'sha256']);
+        $certificate = \openssl_csr_sign($csr, null, $key, 1, ['digest_alg' => 'sha256']);
+        \openssl_x509_export($certificate, $pem);
+
+        return $pem;
+    }
+
+    #[DataProvider('phoneProvider')]
+    public function testPhoneWritesInternationalNumbersAsE164(string $phone, string $expected): void
+    {
+        $this->assertSame($expected, Client::phone($phone));
+    }
+
+    public static function phoneProvider(): \Iterator
+    {
+        yield 'already E.164' => ['+420777123456', '+420777123456'];
+        yield 'spaces' => ['+420 777 123 456', '+420777123456'];
+        yield 'no-break spaces' => ["+420\u{00A0}777\u{00A0}123\u{00A0}456", '+420777123456'];
+        yield 'brackets and dashes' => ['+1 (425) 555-0100', '+14255550100'];
+        yield 'trunk prefix' => ['+44 (0)20 7946 0018', '+442079460018'];
+        yield 'slash' => ['+49 30/1234567', '+49301234567'];
+        yield 'dots' => ['+33.1.23.45.67.89', '+33123456789'];
+        // Without a country code there is no telling which country it is in, so it stays
+        // as written and the sign-in leaves the phone alone.
+        yield 'national' => ['0777 123 456', '0777 123 456'];
+        yield 'empty' => ['', ''];
     }
 
     public function testAuthenticateRefusesEmptyCredentialsWithoutConnecting(): void

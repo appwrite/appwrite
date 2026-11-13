@@ -21,23 +21,22 @@ trait LDAPBase
     protected function resetProjectLDAP(): void
     {
         $this->updateLDAP([
+            'enabled' => false,
             'hosts' => ['directory.appwrite.test'],
             'port' => 636,
             'encryption' => 'ldaps',
-            'tls' => true,
-            'caCertificate' => '',
+            'verification' => true,
+            'certificate' => '',
             'timeout' => 10,
             'baseDn' => 'dc=appwrite,dc=test',
             'bindDn' => '',
             'bindPassword' => '',
-            'usernameAttribute' => 'uid',
             'userFilter' => '',
+            'requiredGroupDn' => '',
             'idAttribute' => 'entryUUID',
             'emailAttribute' => 'mail',
             'nameAttribute' => 'cn',
             'phoneAttribute' => '',
-            'requiredGroupDn' => '',
-            'enabled' => false,
         ]);
     }
 
@@ -45,23 +44,24 @@ trait LDAPBase
 
     public function testUpdateLDAP(): void
     {
+        $certificate = self::certificate('Appwrite Test CA');
+
         $response = $this->updateLDAP([
             'hosts' => ['directory.appwrite.test', 'directory2.appwrite.test'],
             'port' => 3389,
             'encryption' => 'starttls',
-            'tls' => false,
-            'caCertificate' => "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----",
+            'verification' => false,
+            'certificate' => $certificate,
             'timeout' => 5,
             'baseDn' => 'ou=people,dc=appwrite,dc=test',
             'bindDn' => 'cn=service,dc=appwrite,dc=test',
             'bindPassword' => 'servicepass',
-            'usernameAttribute' => 'sAMAccountName',
-            'userFilter' => '(objectClass=person)',
+            'userFilter' => '(&(objectClass=person)(sAMAccountName={username}))',
+            'requiredGroupDn' => 'cn=staff,ou=groups,dc=appwrite,dc=test',
             'idAttribute' => 'objectGUID',
             'emailAttribute' => 'userPrincipalName',
             'nameAttribute' => 'displayName',
             'phoneAttribute' => 'mobile',
-            'requiredGroupDn' => 'cn=staff,ou=groups,dc=appwrite,dc=test',
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -69,18 +69,17 @@ trait LDAPBase
         $this->assertSame(['directory.appwrite.test', 'directory2.appwrite.test'], $response['body']['ldapHosts']);
         $this->assertSame(3389, $response['body']['ldapPort']);
         $this->assertSame('starttls', $response['body']['ldapEncryption']);
-        $this->assertSame(false, $response['body']['ldapTls']);
-        $this->assertSame("-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----", $response['body']['ldapCaCertificate']);
+        $this->assertSame(false, $response['body']['ldapVerification']);
+        $this->assertSame($certificate, $response['body']['ldapCertificate']);
         $this->assertSame(5, $response['body']['ldapTimeout']);
         $this->assertSame('ou=people,dc=appwrite,dc=test', $response['body']['ldapBaseDn']);
         $this->assertSame('cn=service,dc=appwrite,dc=test', $response['body']['ldapBindDn']);
-        $this->assertSame('sAMAccountName', $response['body']['ldapUsernameAttribute']);
-        $this->assertSame('(objectClass=person)', $response['body']['ldapUserFilter']);
+        $this->assertSame('(&(objectClass=person)(sAMAccountName={username}))', $response['body']['ldapUserFilter']);
+        $this->assertSame('cn=staff,ou=groups,dc=appwrite,dc=test', $response['body']['ldapRequiredGroupDn']);
         $this->assertSame('objectGUID', $response['body']['ldapIdAttribute']);
         $this->assertSame('userPrincipalName', $response['body']['ldapEmailAttribute']);
         $this->assertSame('displayName', $response['body']['ldapNameAttribute']);
         $this->assertSame('mobile', $response['body']['ldapPhoneAttribute']);
-        $this->assertSame('cn=staff,ou=groups,dc=appwrite,dc=test', $response['body']['ldapRequiredGroupDn']);
 
         // Storing a configuration is not enabling it.
         $this->assertSame(false, $this->ldapEnabled($response['body']));
@@ -88,7 +87,7 @@ trait LDAPBase
         // The same values are read back from the project.
         $project = $this->getProjectDocument();
         $this->assertSame(['directory.appwrite.test', 'directory2.appwrite.test'], $project['ldapHosts']);
-        $this->assertSame('sAMAccountName', $project['ldapUsernameAttribute']);
+        $this->assertSame('(&(objectClass=person)(sAMAccountName={username}))', $project['ldapUserFilter']);
         $this->assertSame(false, $this->ldapEnabled($project));
     }
 
@@ -106,17 +105,16 @@ trait LDAPBase
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(636, $response['body']['ldapPort']);
         $this->assertSame('ldaps', $response['body']['ldapEncryption']);
-        $this->assertSame(true, $response['body']['ldapTls']);
-        $this->assertSame('', $response['body']['ldapCaCertificate']);
+        $this->assertSame(true, $response['body']['ldapVerification']);
+        $this->assertSame('', $response['body']['ldapCertificate']);
         $this->assertSame(10, $response['body']['ldapTimeout']);
         $this->assertSame('', $response['body']['ldapBindDn']);
-        $this->assertSame('uid', $response['body']['ldapUsernameAttribute']);
-        $this->assertSame('', $response['body']['ldapUserFilter']);
+        $this->assertSame('(uid={username})', $response['body']['ldapUserFilter']);
+        $this->assertSame('', $response['body']['ldapRequiredGroupDn']);
         $this->assertSame('entryUUID', $response['body']['ldapIdAttribute']);
         $this->assertSame('mail', $response['body']['ldapEmailAttribute']);
         $this->assertSame('cn', $response['body']['ldapNameAttribute']);
         $this->assertSame('', $response['body']['ldapPhoneAttribute']);
-        $this->assertSame('', $response['body']['ldapRequiredGroupDn']);
         $this->assertSame(false, $this->ldapEnabled($response['body']));
 
         $response = $this->updateLDAP([
@@ -155,28 +153,29 @@ trait LDAPBase
     public function testUpdateLDAPClearsOptionalValues(): void
     {
         $response = $this->updateLDAP([
-            'userFilter' => '(objectClass=person)',
-            'phoneAttribute' => 'mobile',
+            'certificate' => self::certificate('Appwrite Test CA'),
+            'userFilter' => '(&(objectClass=person)(uid={username}))',
             'requiredGroupDn' => 'cn=staff,ou=groups,dc=appwrite,dc=test',
-            'caCertificate' => "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----",
+            'phoneAttribute' => 'mobile',
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('(&(objectClass=person)(uid={username}))', $response['body']['ldapUserFilter']);
         $this->assertSame('mobile', $response['body']['ldapPhoneAttribute']);
 
-        // An empty string clears, where null would keep.
+        // An empty string clears, where null would keep. A cleared user filter is the default.
         $response = $this->updateLDAP([
+            'certificate' => '',
             'userFilter' => '',
-            'phoneAttribute' => '',
             'requiredGroupDn' => '',
-            'caCertificate' => '',
+            'phoneAttribute' => '',
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame('', $response['body']['ldapUserFilter']);
-        $this->assertSame('', $response['body']['ldapPhoneAttribute']);
+        $this->assertSame('', $response['body']['ldapCertificate']);
+        $this->assertSame('(uid={username})', $response['body']['ldapUserFilter']);
         $this->assertSame('', $response['body']['ldapRequiredGroupDn']);
-        $this->assertSame('', $response['body']['ldapCaCertificate']);
+        $this->assertSame('', $response['body']['ldapPhoneAttribute']);
     }
 
     public function testUpdateLDAPBindPasswordIsWriteOnly(): void
@@ -212,14 +211,15 @@ trait LDAPBase
             ['hosts' => ['attacker.example.com']],
             ['port' => 3389],
             ['encryption' => 'none'],
-            ['tls' => false],
-            ['caCertificate' => "-----BEGIN CERTIFICATE-----\nMIIBattacker\n-----END CERTIFICATE-----"],
+            ['verification' => false],
+            ['certificate' => self::certificate('Attacker CA')],
             ['bindDn' => 'cn=other,dc=appwrite,dc=test'],
         ] as $change) {
             $response = $this->updateLDAP($change);
 
-            $this->assertSame(400, $response['headers']['status-code'], 'Expected refusal for: ' . \json_encode($change));
+            $this->assertSame(400, $response['headers']['status-code'], 'Expected refusal for: ' . \json_encode(\array_keys($change)));
             $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString('bindPassword', $response['body']['message']);
         }
 
         // The same destination and trust spelled out again is not a move.
@@ -227,8 +227,8 @@ trait LDAPBase
             'hosts' => ['directory.appwrite.test'],
             'port' => 636,
             'encryption' => 'ldaps',
-            'tls' => true,
-            'caCertificate' => '',
+            'verification' => true,
+            'certificate' => '',
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);
@@ -266,19 +266,18 @@ trait LDAPBase
             'ldapHosts',
             'ldapPort',
             'ldapEncryption',
-            'ldapTls',
-            'ldapCaCertificate',
+            'ldapVerification',
+            'ldapCertificate',
             'ldapTimeout',
             'ldapBaseDn',
             'ldapBindDn',
             'ldapBindPassword',
-            'ldapUsernameAttribute',
             'ldapUserFilter',
+            'ldapRequiredGroupDn',
             'ldapIdAttribute',
             'ldapEmailAttribute',
             'ldapNameAttribute',
             'ldapPhoneAttribute',
-            'ldapRequiredGroupDn',
         ] as $key) {
             $this->assertArrayHasKey($key, $response['body']);
         }
@@ -286,7 +285,7 @@ trait LDAPBase
         $this->assertIsBool($response['body']['ldapEnabled']);
         $this->assertIsArray($response['body']['ldapHosts']);
         $this->assertIsInt($response['body']['ldapPort']);
-        $this->assertIsBool($response['body']['ldapTls']);
+        $this->assertIsBool($response['body']['ldapVerification']);
         $this->assertIsInt($response['body']['ldapTimeout']);
     }
 
@@ -449,7 +448,7 @@ trait LDAPBase
         // A host inside the network is refused at write time: the service
         // credential must not be sent to, and the error message must not
         // describe, anything Appwrite can reach but the caller cannot.
-        foreach (['10.0.0.1', '192.168.1.10', '169.254.169.254'] as $host) {
+        foreach (['10.0.0.1', '192.168.1.10', '169.254.169.254', 'fd00::1', '[::1]'] as $host) {
             $response = $this->updateLDAP([
                 'hosts' => [$host],
             ]);
@@ -473,17 +472,80 @@ trait LDAPBase
             ['encryption' => 'tls'],
             ['timeout' => 0],
             ['timeout' => 31],
-            ['usernameAttribute' => ''],
+            ['hosts' => ['[directory.appwrite.test]']],
+            ['hosts' => ['[2606:4700:4700::1111]:636']],
             ['idAttribute' => ''],
             ['emailAttribute' => ''],
             ['nameAttribute' => ''],
-            ['tls' => 'yes'],
+            ['verification' => 'yes'],
+            ['certificate' => "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----"],
+            ['certificate' => 'not a certificate'],
+            ['userFilter' => '(uid={username}'],
+            ['userFilter' => '(objectClass=person)'],
         ] as $params) {
             $response = $this->updateLDAP($params);
 
             $this->assertSame(400, $response['headers']['status-code'], 'Expected refusal for: ' . \json_encode($params));
             $this->assertSame('general_argument_invalid', $response['body']['type']);
         }
+    }
+
+    public function testUpdateLDAPAcceptsIPv6Hosts(): void
+    {
+        // An IPv6 address works with or without the brackets URLs put around it, and is
+        // stored without them.
+        $response = $this->updateLDAP([
+            'hosts' => ['2606:4700:4700::1111', '[2001:4860:4860::8888]'],
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['2606:4700:4700::1111', '2001:4860:4860::8888'], $response['body']['ldapHosts']);
+    }
+
+    public function testUpdateLDAPUserFilterNeedsUsernamePlaceholder(): void
+    {
+        // Without {username} every sign-in would look up the same entries.
+        $response = $this->updateLDAP([
+            'userFilter' => '(objectClass=inetOrgPerson)',
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('{username}', $response['body']['message']);
+        $this->assertSame('(uid={username})', $this->getProjectDocument()['ldapUserFilter']);
+
+        $response = $this->updateLDAP([
+            'userFilter' => '(|(uid={username})(mail={username}))',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('(|(uid={username})(mail={username}))', $response['body']['ldapUserFilter']);
+    }
+
+    public function testUpdateLDAPCertificateAcceptsSeveral(): void
+    {
+        // Several certificates can be trusted at once, such as a root and an
+        // intermediate, or the old and the new authority during a rotation.
+        $certificates = self::certificate('Appwrite Root CA') . self::certificate('Appwrite Issuing CA');
+
+        $response = $this->updateLDAP([
+            'certificate' => $certificates,
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($certificates, $response['body']['ldapCertificate']);
+
+        // A private key pasted along with them is refused rather than stored.
+        $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        \openssl_pkey_export($key, $keyPem);
+
+        $response = $this->updateLDAP([
+            'certificate' => $certificates . $keyPem,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertSame($certificates, $this->getProjectDocument()['ldapCertificate']);
     }
 
     // Create LDAP test tests
@@ -530,6 +592,19 @@ trait LDAPBase
     }
 
     // Helpers
+
+    /**
+     * A self-signed certificate in PEM format, as a directory's own authority would issue.
+     */
+    protected static function certificate(string $commonName): string
+    {
+        $key = \openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        $csr = \openssl_csr_new(['commonName' => $commonName], $key, ['digest_alg' => 'sha256']);
+        $certificate = \openssl_csr_sign($csr, null, $key, 1, ['digest_alg' => 'sha256']);
+        \openssl_x509_export($certificate, $pem);
+
+        return $pem;
+    }
 
     protected function updateLDAP(array $params, bool $authenticated = true, ?array $project = null): array
     {
