@@ -61,7 +61,9 @@ export function frameworkHasStaticAdapter(
 }
 
 /**
- * Defaults when creating a site (prefer static adapter when available).
+ * Defaults when creating a site. The adapter is only set when the framework
+ * has a single one; otherwise it stays empty and the first build detects ssr or
+ * static from its output, since pinning static makes an SSR build serve 404s.
  */
 export function getFrameworkCreateDefaults(
   framework: Models.Framework | undefined,
@@ -75,19 +77,18 @@ export function getFrameworkCreateDefaults(
       buildCommand: 'npm run build',
       outputDirectory: '.output',
       fallbackFile: '',
-      adapter: 'static',
+      adapter: '',
       buildRuntime: 'node-22',
     }
   }
-  const adapter =
-    framework.adapters.find((a) => a.key === 'static') ?? framework.adapters[0]
+  const adapter = framework.adapters[0]
   const fields = getFrameworkAdapterBuildFields(adapter)
   return {
     ...fields,
     installCommand: fields.installCommand || 'npm install',
     buildCommand: fields.buildCommand || 'npm run build',
     outputDirectory: fields.outputDirectory || '.output',
-    adapter: adapter.key,
+    adapter: framework.adapters.length === 1 ? adapter.key : '',
     buildRuntime: framework.buildRuntime || 'node-22',
   }
 }
