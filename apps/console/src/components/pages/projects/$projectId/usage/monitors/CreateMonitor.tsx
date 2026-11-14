@@ -17,6 +17,16 @@ import {
 import { useCreateMonitor, useProject } from '@/lib/react-query/hooks'
 import { getErrorMessage, isPlanLimitError } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
+import { PROBE_TYPES } from '@/lib/alerts/probes'
+import type { ProbeType } from '@/lib/appwrite/monitors'
+import {
+  MonitorTypePicker,
+  ProbeFields,
+  emptyProbeForm,
+  probeFormError,
+  probeInputFromForm,
+  type ProbeForm,
+} from './ProbeFields'
 import {
   RuleFields,
   emptyRuleForm,
@@ -31,6 +41,8 @@ interface CreateAlertProps {
   projectId: string
   /** Fields a template or a usage page fills in before the form opens. */
   initial?: Partial<RuleForm>
+  /** What the new monitor checks when the form opens; usage by default. */
+  initialType?: 'usage' | ProbeType
 }
 
 export function CreateMonitor({
@@ -38,18 +50,41 @@ export function CreateMonitor({
   onOpenChange,
   projectId,
   initial,
+  initialType = 'usage',
 }: CreateAlertProps) {
   const t = useT()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const createMutation = useCreateMonitor(projectId)
+  const [type, setType] = useState<'usage' | ProbeType>(initialType)
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
+  const [probe, setProbe] = useState<ProbeForm>(() => emptyProbeForm('http'))
 
   useEffect(() => {
-    if (open) setForm({ ...emptyRuleForm(), ...initial })
-  }, [open, initial])
+    if (!open) return
+    setType(initialType)
+    setForm({ ...emptyRuleForm(), ...initial })
+    setProbe(emptyProbeForm(initialType === 'usage' ? 'http' : initialType))
+  }, [open, initial, initialType])
 
-  const error = ruleFormError(form, t)
+  const handleTypeChange = (next: 'usage' | ProbeType) => {
+    setType(next)
+    // Notification settings carry over; the target starts over for the new type.
+    if (next !== 'usage') {
+      setProbe((current) => ({
+        ...emptyProbeForm(next),
+        name: current.name,
+        notify: current.notify,
+        severity: current.severity,
+        cooldown: current.cooldown,
+        interval: current.interval,
+        timeout: current.timeout,
+      }))
+    }
+  }
+
+  const error =
+    type === 'usage' ? ruleFormError(form, t) : probeFormError(probe, t)
   const isPending = createMutation.isPending
 
   const handleOpenChange = (next: boolean) => {
@@ -59,7 +94,11 @@ export function CreateMonitor({
   const handleCreate = (event: React.FormEvent) => {
     event.preventDefault()
     if (error) return
-    createMutation.mutate(monitorInputFromForm(form, t), {
+    const input =
+      type === 'usage'
+        ? monitorInputFromForm(form, t)
+        : probeInputFromForm(probe)
+    createMutation.mutate(input, {
       onSuccess: () => {
         toast.success(t('Monitor has been created'))
         onOpenChange(false)
@@ -89,9 +128,14 @@ export function CreateMonitor({
           <DialogHeader className="px-6 pt-6 pb-4 text-start">
             <DialogTitle>{t('Create monitor')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              {t(
-                'Get notified when a usage metric crosses a threshold, and again when it recovers.',
-              )}
+              {type === 'usage'
+                ? t(
+                    'Get notified when a usage metric crosses a threshold, and again when it recovers.',
+                  )
+                : t(
+                    PROBE_TYPES.find((entry) => entry.value === type)
+                      ?.description ?? '',
+                  )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -99,15 +143,30 @@ export function CreateMonitor({
             onSubmit={handleCreate}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-              <RuleFields
-                projectId={projectId}
-                form={form}
-                onChange={(changes) =>
-                  setForm((current) => ({ ...current, ...changes }))
-                }
+            <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 py-5">
+              <MonitorTypePicker
+                value={type}
+                onChange={handleTypeChange}
                 disabled={isPending}
               />
+              {type === 'usage' ? (
+                <RuleFields
+                  projectId={projectId}
+                  form={form}
+                  onChange={(changes) =>
+                    setForm((current) => ({ ...current, ...changes }))
+                  }
+                  disabled={isPending}
+                />
+              ) : (
+                <ProbeFields
+                  form={probe}
+                  onChange={(changes) =>
+                    setProbe((current) => ({ ...current, ...changes }))
+                  }
+                  disabled={isPending}
+                />
+              )}
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button

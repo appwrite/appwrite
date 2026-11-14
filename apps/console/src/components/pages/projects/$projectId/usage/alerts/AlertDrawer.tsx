@@ -6,19 +6,15 @@ import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
 import type { Alert } from '@/lib/appwrite/monitors'
-import {
-  RESOURCE_TYPES,
-  formatLength,
-  formatMetricValue,
-  thresholdRatio,
-} from '@/lib/alerts/metrics'
+import { RESOURCE_TYPES, formatLength } from '@/lib/alerts/metrics'
+import { PROBE_TYPES } from '@/lib/alerts/probes'
 import { useT } from '@/lib/i18n/translate'
 import { useUpdateAlert } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { StatusPill } from '../monitors/StatusPill'
 import { alertLength } from '@/lib/alerts/timeline'
-import { alertCondition } from './AlertHistory'
+import { alertCondition, alertRatio, formatAlertValue } from './AlertHistory'
 
 function Stat({
   label,
@@ -196,9 +192,11 @@ export function AlertDrawer({
 }: AlertDrawerProps) {
   const t = useT()
   const firing = alert?.status === 'firing'
-  const ratio = alert ? thresholdRatio({ ...alert, value: alert.peak }) : null
-  const scope =
-    !alert || alert.resourceType === 'project'
+  const ratio = alert ? alertRatio(alert) : null
+  const probe = PROBE_TYPES.find((entry) => entry.value === alert?.type)
+  const scope = probe
+    ? t('{type} check').replace('{type}', probe.label)
+    : !alert || alert.resourceType === 'project'
       ? t('Project')
       : `${t(RESOURCE_TYPES.find((type) => type.value === alert.resourceType)?.label ?? alert.resourceType)} · ${alert.resourceId}`
 
@@ -216,9 +214,17 @@ export function AlertDrawer({
           <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
             <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
               <Stat
-                label={firing ? t('Latest reading') : t('Peak')}
-                value={formatMetricValue(
-                  alert.metric,
+                label={
+                  probe
+                    ? firing
+                      ? t('Latest latency')
+                      : t('Peak latency')
+                    : firing
+                      ? t('Latest reading')
+                      : t('Peak')
+                }
+                value={formatAlertValue(
+                  alert,
                   firing ? alert.value : alert.peak,
                 )}
                 note={
@@ -249,13 +255,17 @@ export function AlertDrawer({
             />
 
             <dl className="grid grid-cols-[120px_minmax(0,1fr)] gap-y-2 text-[13px]">
-              <dt className="text-muted-foreground">{t('Condition')}</dt>
+              <dt className="text-muted-foreground">
+                {probe ? t('Result') : t('Condition')}
+              </dt>
               <dd className="text-foreground">{alertCondition(alert, t)}</dd>
               <dt className="text-muted-foreground">{t('Watches')}</dt>
               <dd className="truncate text-foreground">{scope}</dd>
-              <dt className="text-muted-foreground">{t('Peak')}</dt>
+              <dt className="text-muted-foreground">
+                {probe ? t('Peak latency') : t('Peak')}
+              </dt>
               <dd className="text-foreground">
-                {formatMetricValue(alert.metric, alert.peak)}
+                {formatAlertValue(alert, alert.peak)}
               </dd>
             </dl>
 
@@ -286,7 +296,9 @@ export function AlertDrawer({
                   </Step>
                 ) : (
                   <Step tone="muted" title={t('Waiting for recovery')}>
-                    {t("Resolves when the monitor's rules stop holding.")}
+                    {probe
+                      ? t('Resolves when a check passes again.')
+                      : t("Resolves when the monitor's rules stop holding.")}
                   </Step>
                 )}
               </ol>

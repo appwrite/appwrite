@@ -12,8 +12,11 @@ import {
   suggestThreshold,
   toBytes,
 } from '@/lib/alerts/metrics'
+import { PROBE_TYPES } from '@/lib/alerts/probes'
+import type { ProbeType } from '@/lib/appwrite/monitors'
 import { useT } from '@/lib/i18n/translate'
 import { PRESETS, type AlertPreset } from './presets'
+import { MONITOR_TYPES } from './ProbeFields'
 import { useRuleSeries } from './RuleChart'
 
 const WEEK = 7 * 86400
@@ -163,12 +166,15 @@ export function MonitorsEmptyState({
   projectId,
   onCreate,
   onPreset,
+  onProbe,
   createDisabled = false,
   createDisabledTooltip,
 }: {
   projectId: string
   onCreate: () => void
   onPreset: (preset: AlertPreset) => void
+  /** Opens the create form on a probe monitor of this type. */
+  onProbe: (type: ProbeType) => void
   createDisabled?: boolean
   createDisabledTooltip?: string
 }) {
@@ -206,6 +212,39 @@ export function MonitorsEmptyState({
               onPick={onPreset}
             />
           ))}
+        </div>
+      </div>
+      <div className="mt-8">
+        <p className="mb-3 text-[12px] font-medium text-muted-foreground">
+          {t('Check that your endpoints respond')}
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {PROBE_TYPES.map((probe) => {
+            const Icon =
+              MONITOR_TYPES.find((entry) => entry.value === probe.value)
+                ?.icon ?? Bell
+            return (
+              <button
+                key={probe.value}
+                type="button"
+                disabled={createDisabled}
+                onClick={() => onProbe(probe.value)}
+                className="group flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 text-start transition-colors hover:border-foreground/20 hover:bg-accent/40 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-medium text-foreground">
+                    {t('{type} monitor').replace('{type}', probe.label)}
+                  </span>
+                  <span className="mt-0.5 block text-[12px] text-muted-foreground">
+                    {t(probe.description)}
+                  </span>
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
     </div>
