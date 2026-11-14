@@ -168,7 +168,7 @@ export function ZeroAgentVisual() {
   const send = (ide: IDEConfig) => {
     const deeplink = generateAIChatDeeplink(
       ide,
-      `${shown}. ${ZERO_AGENT_PROMPT}`,
+      `${request.trim() || t(zeroAgents.examples[0].request)}. ${ZERO_AGENT_PROMPT}`,
     )
     if (deeplink) openAIChatDeeplink(deeplink)
   }
