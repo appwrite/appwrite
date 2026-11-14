@@ -69,7 +69,7 @@ export function useConsoleVariables(region?: string) {
     // yet, so the verify screen explains the MX record is unavailable.
     smtpTarget: (vars as unknown as Record<string, string | undefined>)
       ?._APP_DOMAIN_TARGET_SMTP,
-    // Cloud zone for function testing email addresses (Cloud-only variable).
+    // Cloud zone for function email domains, `{label}.{zone}` (Cloud-only).
     emailDomain: (vars as unknown as Record<string, string | undefined>)
       ?._APP_DOMAIN_EMAIL,
     computeSizeLimit: vars?._APP_COMPUTE_SIZE_LIMIT,

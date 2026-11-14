@@ -1,16 +1,20 @@
 /**
  * Add SMTP (inbound email) domain wizard.
  *
- * Mirrors AddDomainWizard but creates an SMTP rule verified by MX + TXT
- * records instead of HTTP CNAME / redirect behaviour.
+ * Mirrors AddDomainWizard but creates an SMTP rule. Two kinds: a label under
+ * the Appwrite email zone (`{label}.appwrite.email`), suggested from the
+ * function name with a random part and verified on create, or a custom
+ * domain verified by MX + TXT records instead of HTTP CNAME / redirect
+ * behaviour.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { DomainInput } from '@/components/global/shared/DomainInput'
 import { DomainTypeCard } from './DomainTypeCard'
 import {
   VerifySmtpDomainContent,
@@ -34,14 +38,28 @@ import {
 } from '@/lib/utils/proxy-domains'
 import {
   isFunctionEmailEnabled,
+  suggestFunctionEmailLabel,
   type FunctionWithEmail,
 } from '@/lib/function-email'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import type { SmtpProxyRule } from '@/lib/function-smtp-domain'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isCloudProfile } from '@/lib/console-profiles'
+import { cn } from '@/lib/utils'
+
+type EmailDomainKind = 'appwrite' | 'custom'
+
+function kindOption(selected: boolean) {
+  return cn(
+    'text-start rounded-lg border p-4 transition-all cursor-pointer',
+    selected
+      ? 'border-foreground bg-primary/5'
+      : 'border-border hover:border-muted-foreground/50',
+  )
+}
 
 export function AddSmtpDomainWizard() {
   const t = useT()
@@ -55,6 +73,24 @@ export function AddSmtpDomainWizard() {
   const createMutation = useCreateSmtpDomainRule(projectId)
   const verifyMutation = useVerifyDomain(projectId, project?.region)
   const deleteMutation = useDeleteDomain(projectId, project?.region)
+
+  const { emailDomain } = useConsoleVariables(project?.region)
+  const [kind, setKind] = useState<EmailDomainKind>('appwrite')
+  // Without an email zone in this region only custom domains are possible.
+  const effectiveKind: EmailDomainKind = emailDomain ? kind : 'custom'
+  const suggestion = useMemo(
+    () =>
+      emailDomain
+        ? `${suggestFunctionEmailLabel(func?.name)}.${emailDomain}`
+        : '',
+    [emailDomain, func?.name],
+  )
+  const [appwriteDomain, setAppwriteDomain] = useState('')
+  const [appwriteDomainValid, setAppwriteDomainValid] = useState(false)
+  useEffect(() => {
+    if (appwriteDomain === '' && suggestion !== '')
+      setAppwriteDomain(suggestion)
+  }, [appwriteDomain, suggestion])
 
   const [domain, setDomain] = useState('')
   const [error, setError] = useState('')
@@ -115,6 +151,15 @@ export function AddSmtpDomainWizard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isPending) return
+    if (effectiveKind === 'appwrite') {
+      if (!emailEnabled || !appwriteDomainValid) return
+      try {
+        await createRule(appwriteDomain)
+      } catch (err) {
+        toast.error(getErrorMessage(err, t('Failed to add email domain')))
+      }
+      return
+    }
     const d = domain.trim().toLowerCase()
     setError('')
     if (!d) {
@@ -279,7 +324,13 @@ export function AddSmtpDomainWizard() {
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isPending || !domain.trim() || !emailEnabled}
+            disabled={
+              isPending ||
+              !emailEnabled ||
+              (effectiveKind === 'appwrite'
+                ? !appwriteDomainValid
+                : !domain.trim())
+            }
           >
             {t('Add')}
           </Button>
@@ -309,30 +360,86 @@ export function AddSmtpDomainWizard() {
             </h3>
           </div>
           <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            <Label htmlFor="email-domain" className="text-[12px] font-medium">
-              {t('Domain name')}
-            </Label>
-            <Input
-              id="email-domain"
-              autoFocus
-              placeholder="mail.example.com"
-              value={domain}
-              onChange={(e) => {
-                setDomain(e.target.value)
-                setError('')
-              }}
-              className={`font-mono mt-1.5 ${error ? 'border-destructive' : ''}`}
-              disabled={createMutation.isPending || !emailEnabled}
-            />
-            {error ? (
-              <p className="text-[11px] text-destructive mt-1">{error}</p>
+          <div className="px-6 py-4 space-y-4">
+            {emailDomain ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setKind('appwrite')}
+                  disabled={createMutation.isPending}
+                  className={kindOption(effectiveKind === 'appwrite')}
+                >
+                  <div className="text-[13px] font-semibold">
+                    {t('Appwrite domain')}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {t('Ready right away, no DNS records needed')}
+                  </p>
+                  <code className="mt-2 block text-[11px] text-muted-foreground font-mono truncate">
+                    *.{emailDomain}
+                  </code>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKind('custom')}
+                  disabled={createMutation.isPending}
+                  className={kindOption(effectiveKind === 'custom')}
+                >
+                  <div className="text-[13px] font-semibold">
+                    {t('Custom domain')}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {t('Use your own domain, verified with DNS records')}
+                  </p>
+                </button>
+              </div>
+            ) : null}
+            {effectiveKind === 'appwrite' ? (
+              <div className="space-y-1">
+                <DomainInput
+                  value={appwriteDomain}
+                  onChange={setAppwriteDomain}
+                  onValidChange={setAppwriteDomainValid}
+                  baseDomain={emailDomain ?? ''}
+                  placeholder="my-function"
+                  disabled={createMutation.isPending || !emailEnabled}
+                />
+                <p className="text-[12px] text-muted-foreground">
+                  {t(
+                    'Mail sent to any address at this domain runs the function.',
+                  )}
+                </p>
+              </div>
             ) : (
-              <p className="text-[12px] text-muted-foreground mt-2">
-                {t(
-                  'Use a domain or subdomain that receives no other mail, since its MX record will point to Appwrite.',
+              <div>
+                <Label
+                  htmlFor="email-domain"
+                  className="text-[12px] font-medium"
+                >
+                  {t('Domain name')}
+                </Label>
+                <Input
+                  id="email-domain"
+                  autoFocus
+                  placeholder="mail.example.com"
+                  value={domain}
+                  onChange={(e) => {
+                    setDomain(e.target.value)
+                    setError('')
+                  }}
+                  className={`font-mono mt-1.5 ${error ? 'border-destructive' : ''}`}
+                  disabled={createMutation.isPending || !emailEnabled}
+                />
+                {error ? (
+                  <p className="text-[11px] text-destructive mt-1">{error}</p>
+                ) : (
+                  <p className="text-[12px] text-muted-foreground mt-2">
+                    {t(
+                      'Use a domain or subdomain that receives no other mail, since its MX record will point to Appwrite.',
+                    )}
+                  </p>
                 )}
-              </p>
+              </div>
             )}
           </div>
         </div>
