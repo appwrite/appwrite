@@ -31,6 +31,7 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TransferRouteImport } from './routes/transfer'
+import { Route as ApiAskRouteImport } from './routes/_api/ask'
 import { Route as ApiChangelogDotjsonRouteImport } from './routes/_api/changelog[.]json'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as ApiOpenapiDotjsonRouteImport } from './routes/_api/openapi[.]json'
@@ -608,6 +609,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const TransferRoute = TransferRouteImport.update({
   id: '/transfer',
   path: '/transfer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAskRoute = ApiAskRouteImport.update({
+  id: '/_api/ask',
+  path: '/ask',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChangelogDotjsonRoute = ApiChangelogDotjsonRouteImport.update({
@@ -3590,6 +3596,7 @@ export interface FileRoutesByFullPath {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/ask': typeof ApiAskRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
   '/hello': typeof ApiHelloRoute
   '/openapi.json': typeof ApiOpenapiDotjsonRoute
@@ -4080,6 +4087,7 @@ export interface FileRoutesByTo {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/ask': typeof ApiAskRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
   '/hello': typeof ApiHelloRoute
   '/openapi.json': typeof ApiOpenapiDotjsonRoute
@@ -4523,6 +4531,7 @@ export interface FileRoutesById {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/_api/ask': typeof ApiAskRoute
   '/_api/changelog.json': typeof ApiChangelogDotjsonRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_api/openapi.json': typeof ApiOpenapiDotjsonRoute
@@ -5018,6 +5027,7 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/ask'
     | '/changelog.json'
     | '/hello'
     | '/openapi.json'
@@ -5508,6 +5518,7 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/ask'
     | '/changelog.json'
     | '/hello'
     | '/openapi.json'
@@ -5950,6 +5961,7 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/_api/ask'
     | '/_api/changelog.json'
     | '/_api/hello'
     | '/_api/openapi.json'
@@ -6447,6 +6459,7 @@ export interface RootRouteChildren {
   SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TransferRoute: typeof TransferRoute
+  ApiAskRoute: typeof ApiAskRoute
   ApiChangelogDotjsonRoute: typeof ApiChangelogDotjsonRoute
   ApiHelloRoute: typeof ApiHelloRoute
   ApiOpenapiDotjsonRoute: typeof ApiOpenapiDotjsonRoute
@@ -6633,6 +6646,13 @@ declare module '@tanstack/react-router' {
       path: '/transfer'
       fullPath: '/transfer'
       preLoaderRoute: typeof TransferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/ask': {
+      id: '/_api/ask'
+      path: '/ask'
+      fullPath: '/ask'
+      preLoaderRoute: typeof ApiAskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/changelog.json': {
@@ -12041,6 +12061,7 @@ const rootRouteChildren: RootRouteChildren = {
   SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TransferRoute: TransferRoute,
+  ApiAskRoute: ApiAskRoute,
   ApiChangelogDotjsonRoute: ApiChangelogDotjsonRoute,
   ApiHelloRoute: ApiHelloRoute,
   ApiOpenapiDotjsonRoute: ApiOpenapiDotjsonRoute,
