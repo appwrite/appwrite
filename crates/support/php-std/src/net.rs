@@ -8,9 +8,6 @@
 //! PHP's address functions call the C library; the dev image is Alpine, so
 //! these are ports of musl's `inet_pton`/`inet_ntop` (`src/network/`), whose
 //! IPv6 formatting differs from glibc's in which zero run it compresses.
-//!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `net.*`).
 
 use std::fmt;
 

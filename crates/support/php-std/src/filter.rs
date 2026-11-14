@@ -42,9 +42,6 @@
 //!
 //! Not supported (an [`Error`] with class `Unsupported`): the WHATWG URL
 //! parser (`Uri\WhatWg\Url`) for `FILTER_VALIDATE_URL`.
-//!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `filter.*`).
 
 use std::borrow::Cow;
 use std::fmt;

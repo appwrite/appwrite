@@ -1,8 +1,5 @@
 # Utopia DSN
 
-> [!IMPORTANT]
-> This repository is a read-only mirror of [`crates/utopia/dsn`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/dsn) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
-
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
 Data source names (connection strings), parsed into scheme, credentials, host, port, path and options.
@@ -13,7 +10,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 
 ```toml
 [dependencies]
-utopia-dsn = { git = "https://github.com/utopia-rs/dsn" }
+utopia-dsn = { git = "https://github.com/appwrite/appwrite" }
 ```
 
 A DSN (data source name) puts everything needed to reach a service in one string: `scheme://user:password@host:port/path?query`. Applications read them from configuration so a database, cache or provider can change without code changes. This guide covers the common tasks.
@@ -123,27 +120,11 @@ cargo fmt --all --check
 
 ### Compare with PHP
 
-Replay the results PHP recorded for every case against Rust, without PHP:
+The utopia PHP extension serves this crate as `Utopia\DSN\DSN`. Its parity corpus, `crates/extension/tests/dsn.php`, must print the same on PHP's class and on the extension; `crates/extension/tests/run.sh` checks it in the development image. To time both implementations:
 
 ```bash
-COMPAT_LIB=dsn cargo test -p compat
+python3 crates/extension/bench/run.py crates/extension/bench/dsn.php . target/release/libutopia.so 5
 ```
-
-Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
-
-```bash
-bin/compat run dsn
-bin/compat fuzz dsn
-bin/compat check dsn
-```
-
-### Benchmark
-
-```bash
-bin/compat bench dsn
-```
-
-This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/dsn/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/dsn/bench.json). Run it on a quiet machine, one library at a time.
 
 ## License
 

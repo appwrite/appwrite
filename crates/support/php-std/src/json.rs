@@ -1,9 +1,6 @@
 //! `json_encode`, `json_decode`, `json_validate`, `json_last_error` and
 //! `json_last_error_msg`, as PHP 8.5's `ext/json` implements them.
 //!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `json.*`).
-//!
 //! | PHP | Rust |
 //! |---|---|
 //! | `json_encode($v, $flags, $depth)` | [`encode`] ([`Value`]) |

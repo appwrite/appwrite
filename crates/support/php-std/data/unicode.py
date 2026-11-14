@@ -5,8 +5,7 @@
 <unicode_data.h> is php-src `ext/mbstring/unicode_data.h` at the PHP version
 the compat tester runs (tag php-8.5.11). Extracted: the lower case table
 (`_uccase_lower_table`, sorted by code point), `_uccase_extra_table`, and the
-`UC_CASED` and `UC_CASE_IGNORABLE` ranges of `_ucprop_ranges`. After
-regenerating, re-run `bin/compat fuzz php-std --op mb.strtolower`.
+`UC_CASED` and `UC_CASE_IGNORABLE` ranges of `_ucprop_ranges`.
 """
 import re
 import sys
