@@ -1,4 +1,10 @@
 import { Globe, Lock, Network, Plus, ShieldCheck } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   ProductEmptyStateCreateButton,
   ProductEmptyStateDocsButton,
@@ -89,12 +95,16 @@ function DomainsVisual() {
 
 export function DomainsEmptyState({
   onAdd,
+  onBuy,
   addDisabled = false,
   addDisabledTooltip,
+  buyDisabledTooltip,
 }: {
   onAdd: () => void
+  onBuy?: () => void
   addDisabled?: boolean
   addDisabledTooltip?: string
+  buyDisabledTooltip?: string
 }) {
   const t = useT()
   return (
@@ -115,11 +125,48 @@ export function DomainsEmptyState({
             >
               {t('Add domain')}
             </ProductEmptyStateCreateButton>
+            {onBuy ? (
+              <EmptyStateBuyButton
+                onClick={onBuy}
+                disabledTooltip={buyDisabledTooltip}
+              />
+            ) : null}
             <ProductEmptyStateDocsButton path="/docs/products/network/custom-domains" />
           </>
         }
       />
       <ProductEmptyStateSteps steps={STEPS} />
     </div>
+  )
+}
+
+function EmptyStateBuyButton({
+  onClick,
+  disabledTooltip,
+}: {
+  onClick: () => void
+  disabledTooltip?: string
+}) {
+  const t = useT()
+  const button = (
+    <Button
+      variant="outline"
+      className="h-9 text-[13px]"
+      onClick={onClick}
+      disabled={!!disabledTooltip}
+    >
+      {t('Buy domain')}
+    </Button>
+  )
+  if (!disabledTooltip) return button
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span tabIndex={0}>{button}</span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs text-[12px]">
+        {disabledTooltip}
+      </TooltipContent>
+    </Tooltip>
   )
 }

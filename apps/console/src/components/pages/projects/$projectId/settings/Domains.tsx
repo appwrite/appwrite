@@ -3,7 +3,12 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   useProjectDomains,
   useProject,
-  useOrganizationDomains} from '@/lib/react-query/hooks'
+  useOrganizationDomains,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import { canBuyOrTransferOrgDomain } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useOrganizationDomainsPlanLimit } from '@/components/pages/organizations/$orgId/domains/_components/useOrganizationDomainsPlanLimit'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -73,6 +78,14 @@ export function Domains({
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showBuy = canBuyOrTransferOrgDomain(access, features)
+  const { isAtLimit: isDomainLimitReached, limit: domainsLimit } =
+    useOrganizationDomainsPlanLimit(project?.teamId)
+  const buyDisabledTooltip = isDomainLimitReached
+    ? `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`
+    : undefined
 
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
@@ -160,8 +173,18 @@ export function Domains({
               params: { projectId },
             })
           }
+          onBuy={
+            showBuy
+              ? () =>
+                  navigate({
+                    to: '/projects/$projectId/settings/domains/buy',
+                    params: { projectId },
+                  })
+              : undefined
+          }
           addDisabled={createDisabled}
           addDisabledTooltip={createDisabledTooltip}
+          buyDisabledTooltip={buyDisabledTooltip}
         />
       ) : rules.length === 0 ? (
         <EmptyState icon={ExternalLink} hasFilters variant="card" />

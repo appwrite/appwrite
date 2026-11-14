@@ -614,4 +614,37 @@ export const heSitesDictionary: Record<string, string> = {
     'פרסו אתר עובד בכמה קליקים, ואז התאימו אותו לצרכים שלכם.',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
+
+  // Buy a domain from a project, function or site (BuyDomainForResourceWizard.tsx)
+  'Payment confirmed. Your domain is registered.':
+    'התשלום אושר. הדומיין שלכם נרשם.',
+  'Connect domain': 'חיבור דומיין',
+  'Assign a domain rule': 'שיוך כלל דומיין',
+  'Assign this domain to the project API. DNS is already managed by Appwrite.':
+    'שייכו את הדומיין הזה ל-API של הפרויקט. ה-DNS כבר מנוהל על ידי Appwrite.',
+  'Assign this domain to the function. DNS is already managed by Appwrite.':
+    'שייכו את הדומיין הזה לפונקציה. ה-DNS כבר מנוהל על ידי Appwrite.',
+  'Assign this domain to the site. DNS is already managed by Appwrite.':
+    'שייכו את הדומיין הזה לאתר. ה-DNS כבר מנוהל על ידי Appwrite.',
+  'Use the domain you bought, or a subdomain of it.':
+    'השתמשו בדומיין שרכשתם, או בתת-דומיין שלו.',
+  'Use the domain you bought or a subdomain of it':
+    'השתמשו בדומיין שרכשתם או בתת-דומיין שלו',
+  'Failed to assign domain': 'שיוך הדומיין נכשל',
+  'Issuing certificate': 'הנפקת תעודה',
+  'Certificate is still being issued': 'התעודה עדיין בתהליך הנפקה',
+  'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.':
+    'תעודת ה-SSL בתהליך הנפקה. זה נמשך בדרך כלל כמה דקות, ואין צורך לעשות דבר.',
+  'Certificate issued. Your domain is ready.':
+    'התעודה הונפקה. הדומיין שלכם מוכן.',
+  'Connecting your domain': 'מחברים את הדומיין שלכם',
+  'Domain registered': 'הדומיין נרשם',
+  'The name is now in your organization.': 'שם הדומיין נמצא עכשיו בארגון שלכם.',
+  'DNS configured': 'ה-DNS הוגדר',
+  'Appwrite DNS is already managing this domain. No nameserver changes are required.':
+    'Appwrite DNS כבר מנהל את הדומיין הזה. אין צורך לשנות שרתי שמות.',
+  'SSL certificate': 'תעודת SSL',
+  'Certificate generation can take a few minutes to complete.':
+    'הנפקת התעודה עשויה להימשך כמה דקות.',
+  'HTTPS is ready for this domain.': 'HTTPS מוכן עבור הדומיין הזה.',
 }
