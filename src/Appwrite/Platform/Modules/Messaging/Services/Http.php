@@ -16,6 +16,8 @@ use Appwrite\Platform\Modules\Messaging\Http\Providers\Apns\Create as CreateApns
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Apns\Update as UpdateApnsProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Appwrite\Create as CreateAppwriteProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Appwrite\Update as UpdateAppwriteProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Create as CreateBirdProvider;
+use Appwrite\Platform\Modules\Messaging\Http\Providers\Bird\Update as UpdateBirdProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Delete as DeleteProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Fcm\Create as CreateFcmProvider;
 use Appwrite\Platform\Modules\Messaging\Http\Providers\Fcm\Update as UpdateFcmProvider;
@@ -79,6 +81,8 @@ class Http extends Service
         $this->addAction('updateTwilioProvider', UpdateTwilioProvider::class);
         $this->addAction('createVonageProvider', CreateVonageProvider::class);
         $this->addAction('updateVonageProvider', UpdateVonageProvider::class);
+        $this->addAction('createBirdProvider', CreateBirdProvider::class);
+        $this->addAction('updateBirdProvider', UpdateBirdProvider::class);
         $this->addAction('createFcmProvider', CreateFcmProvider::class);
         $this->addAction('updateFcmProvider', UpdateFcmProvider::class);
         $this->addAction('createApnsProvider', CreateApnsProvider::class);

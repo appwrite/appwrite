@@ -109,6 +109,12 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
+            'bird' => [
+                'providerId' => Id::unique(),
+                'name' => 'Bird1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'fcm' => [
                 'providerId' => Id::unique(),
                 'name' => 'FCM1',
@@ -204,6 +210,10 @@ trait MessagingBase
                 'name' => 'Vonage2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
+            ],
+            'bird' => [
+                'name' => 'Bird2',
+                'apiKey' => 'my-apikey',
             ],
             'fcm' => [
                 'name' => 'FCM2',
@@ -822,6 +832,12 @@ trait MessagingBase
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
+            'bird' => [
+                'providerId' => Id::unique(),
+                'name' => 'Bird1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'fcm' => [
                 'providerId' => Id::unique(),
                 'name' => 'FCM1',
@@ -1209,6 +1225,10 @@ trait MessagingBase
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
+            'bird' => [
+                'name' => 'Bird2',
+                'apiKey' => 'my-apikey',
+            ],
             'fcm' => [
                 'name' => 'FCM2',
                 'serviceAccountJSON' => [
@@ -1489,6 +1509,30 @@ trait MessagingBase
 
         // Enable provider with no serviceAccountJSON
         $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/fcm/' . $response['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Create new Bird provider with no credentials
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/bird', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'BirdNoCreds',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertFalse($response['body']['enabled']);
+
+        // Enable Bird provider with no credentials
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/bird/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
