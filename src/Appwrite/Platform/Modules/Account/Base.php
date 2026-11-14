@@ -36,11 +36,95 @@ use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 
 abstract class Base extends Action
 {
     protected const OAUTH_DEFAULT_SUCCESS = '/auth/oauth2/success';
     protected const OAUTH_DEFAULT_FAILURE = '/auth/oauth2/failure';
+
+    /**
+     * Resolve the effective public request scheme (`http` or `https`).
+     *
+     * When `_APP_OPTIONS_FORCE_HTTPS` is `'enabled'`, HTTPS is forced regardless
+     * of the internal hop protocol; otherwise the incoming request/proxy scheme
+     * (`Request::getProtocol()`, including trusted `x-forwarded-proto`) is honoured.
+     */
+    public static function resolveRequestProtocol(Request $request, ?string $forceHttps = null): string
+    {
+        $forceHttps ??= System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled');
+        if ($forceHttps === 'enabled') {
+            return 'https';
+        }
+
+        return match (\strtolower(\trim($request->getProtocol()))) {
+            'https', 'wss' => 'https',
+            default => 'http',
+        };
+    }
+
+    /**
+     * Build a scheme + host (+ optional non-default port) origin URL for the incoming request.
+     */
+    public static function resolveRequestOrigin(Request $request, ?string $forceHttps = null): string
+    {
+        $protocol = self::resolveRequestProtocol($request, $forceHttps);
+        $origin = $protocol . '://' . $request->getHostname();
+
+        return self::appendNonDefaultPort($origin, $protocol, $request->getPort());
+    }
+
+    /**
+     * Resolve the Console base URL for default OAuth2 and magic-URL redirects.
+     *
+     * An explicit `_APP_CONSOLE_URL` carries its own scheme and port and is returned
+     * untouched. Derived URLs track the effective request protocol and append any
+     * non-default request port while omitting empty or standard ports.
+     *
+     * @param array<string, mixed> $platform
+     */
+    public static function resolveConsoleRedirectBase(
+        Request $request,
+        array $platform,
+        ?string $forceHttps = null,
+        ?string $explicitConsoleUrl = null,
+    ): string {
+        $redirectBase = \rtrim((string) ($platform['consoleUrl'] ?? ''), '/');
+        if ($redirectBase === '') {
+            return self::resolveRequestOrigin($request, $forceHttps);
+        }
+
+        $explicitConsoleUrl ??= System::getEnv('_APP_CONSOLE_URL', '');
+        if (!empty($explicitConsoleUrl)) {
+            return $redirectBase;
+        }
+
+        $protocol = self::resolveRequestProtocol($request, $forceHttps);
+        $lowerRedirectBase = \strtolower($redirectBase);
+        if (\str_starts_with($lowerRedirectBase, 'https://')) {
+            $redirectBase = $protocol . '://' . \substr($redirectBase, 8);
+        } elseif (\str_starts_with($lowerRedirectBase, 'http://')) {
+            $redirectBase = $protocol . '://' . \substr($redirectBase, 7);
+        }
+
+        if (\parse_url($redirectBase, PHP_URL_PORT) !== null) {
+            return $redirectBase;
+        }
+
+        return self::appendNonDefaultPort($redirectBase, $protocol, $request->getPort());
+    }
+
+    private static function appendNonDefaultPort(string $origin, string $protocol, string $port): string
+    {
+        $port = \trim($port);
+        $defaultPort = $protocol === 'https' ? '443' : '80';
+
+        if ($port !== '' && \ctype_digit($port) && $port !== $defaultPort) {
+            return $origin . ':' . $port;
+        }
+
+        return $origin;
+    }
 
     protected function createSession(string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime, ?Document $authDevice, DeletePublisher $publisherForDeletes): void
     {

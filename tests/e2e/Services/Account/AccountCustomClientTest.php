@@ -3145,12 +3145,12 @@ final class AccountCustomClientTest extends Scope
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
@@ -3208,12 +3208,12 @@ final class AccountCustomClientTest extends Scope
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
 
@@ -3398,11 +3398,11 @@ final class AccountCustomClientTest extends Scope
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
@@ -3472,11 +3472,11 @@ final class AccountCustomClientTest extends Scope
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/callback/mock/' . $this->getProject()['$id'] . '?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
+        $this->assertStringStartsWith('http://appwrite/v1/account/sessions/oauth2/mock/redirect?code=', $response['headers']['location']);
 
         $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], ['cookie' => $startCookies], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);

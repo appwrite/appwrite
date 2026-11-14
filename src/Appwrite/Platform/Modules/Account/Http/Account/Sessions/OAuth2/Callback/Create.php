@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback;
 
 use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Account\Base;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -53,14 +53,7 @@ class Create extends Action
         Request $request,
         Response $response,
     ): void {
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $port = $request->getPort();
-        $callbackBase = $protocol . '://' . $request->getHostname();
-        if ($protocol === 'https' && $port !== '443') {
-            $callbackBase .= ':' . $port;
-        } elseif ($protocol === 'http' && $port !== '80') {
-            $callbackBase .= ':' . $port;
-        }
+        $callbackBase = Base::resolveRequestOrigin($request);
 
         $params = $request->getParams();
         $params['project'] = $projectId;
