@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Embeddings\Text;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action as CreateDocumentAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -71,7 +72,7 @@ class Create extends CreateDocumentAction
                     ]
                 )
             ])
-            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'], example: '["Appwrite helps developers build applications.","Find documents with semantic search."]')
+            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0, requireNonBlank: true), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'], example: '["Appwrite helps developers build applications.","Find documents with semantic search."]')
             ->param('model', AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, new WhiteList([AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, AppwriteAdapter::MODEL_ALL_MINILM]), 'The embedding model to use for generating vector embeddings.', true, enum: new Enum(name: 'EmbeddingModel'))
             ->inject('response')
             ->inject('project')
@@ -89,6 +90,7 @@ class Create extends CreateDocumentAction
         $totalDuration = 0;
         $totalTokens = 0;
         $totalErrors = 0;
+        $failure = null;
 
         foreach (array_chunk($texts, APP_EMBEDDING_BATCH_LIMIT) as $batch) {
             try {
@@ -100,6 +102,7 @@ class Create extends CreateDocumentAction
                     $results[] = $this->embeddingResult($model, $dimension, $vector);
                 }
             } catch (\Exception $e) {
+                $failure = $e;
                 $totalErrors += \count($batch);
                 Span::add('embedding.model', $model);
                 Span::add('warning.message', $e->getMessage());
@@ -113,6 +116,11 @@ class Create extends CreateDocumentAction
         }
 
         Span::add('embedding.errors', $totalErrors);
+        if ($totalErrors > 0 && $totalErrors === \count($texts)) {
+            throw new Exception(Exception::GENERAL_EMBEDDING_UNAVAILABLE, previous: $failure);
+        }
+
+        $embedded = \count($texts) - $totalErrors;
 
         $embeddings = new Document([
             'embeddings' => $results,
@@ -124,7 +132,7 @@ class Create extends CreateDocumentAction
             ->dynamic($embeddings, $this->getBulkResponseModel());
 
         $usage
-            ->addMetric(METRIC_EMBEDDINGS_TEXT, \count($texts))
+            ->addMetric(METRIC_EMBEDDINGS_TEXT, $embedded)
             ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT), \count($texts))
             ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS, $totalTokens)
             ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS), $totalTokens)

@@ -96,6 +96,7 @@ Platform errors are not related to an individual product, but can occur across t
 | 503  | general_phone_disabled | Phone provider is not configured. Please check the `_APP_SMS_PROVIDER` environment variable of your Appwrite server. |
 | 503  | general_pwned_passwords_unavailable | The breached password service could not be reached, so the password could not be verified. Please try again later. |
 | 503  | general_cache_unavailable | The cache could not confirm the request's changes, so they may or may not have been applied. Read the affected resources back before retrying. |
+| 503  | general_embedding_unavailable | The embedding service could not generate embeddings for this request. Please try again later. |
 
 ## Authentication errors {% #authentication-errors %}
 Errors found when using Appwrite Authentication.
