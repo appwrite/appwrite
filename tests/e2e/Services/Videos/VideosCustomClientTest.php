@@ -447,7 +447,7 @@ final class VideosCustomClientTest extends Scope
 
     /**
      * Profiles are project configuration, managed under the project API.
-     * A session holding `videos.write` does not receive `project.profiles.*`.
+     * A session holding `videos.write` does not receive `project.videos.profiles.*`.
      */
     public function testSessionCannotManageProfiles(): void
     {

@@ -36,7 +36,7 @@ class Update extends Base
             ->httpAlias('/v1/projects/:projectId/videos/profiles/:profileId')
             ->desc('Update video profile')
             ->groups(['api', 'project'])
-            ->label('scope', 'project.profiles.write')
+            ->label('scope', 'project.videos.profiles.write')
             ->label('event', 'projects.[projectId].profiles.[profileId].update')
             ->label('audits.event', 'project.video-profile.update')
             ->label('audits.resource', 'project.video-profile/{request.profileId}')

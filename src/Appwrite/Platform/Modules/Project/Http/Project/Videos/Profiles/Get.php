@@ -31,7 +31,7 @@ class Get extends Base
             ->httpAlias('/v1/projects/:projectId/videos/profiles/:profileId')
             ->desc('Get video profile')
             ->groups(['api', 'project'])
-            ->label('scope', 'project.profiles.read')
+            ->label('scope', 'project.videos.profiles.read')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'profiles',

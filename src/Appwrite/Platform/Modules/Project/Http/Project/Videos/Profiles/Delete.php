@@ -34,7 +34,7 @@ class Delete extends Base
             ->httpAlias('/v1/projects/:projectId/videos/profiles/:profileId')
             ->desc('Delete video profile')
             ->groups(['api', 'project'])
-            ->label('scope', 'project.profiles.write')
+            ->label('scope', 'project.videos.profiles.write')
             ->label('event', 'projects.[projectId].profiles.[profileId].delete')
             ->label('audits.event', 'project.video-profile.delete')
             ->label('audits.resource', 'project.video-profile/{request.profileId}')

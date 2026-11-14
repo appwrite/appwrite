@@ -38,7 +38,7 @@ class Create extends Base
             ->httpAlias('/v1/projects/:projectId/videos/profiles')
             ->desc('Create video profile')
             ->groups(['api', 'project'])
-            ->label('scope', 'project.profiles.write')
+            ->label('scope', 'project.videos.profiles.write')
             ->label('event', 'projects.[projectId].profiles.[profileId].create')
             ->label('audits.event', 'project.video-profile.create')
             ->label('audits.resource', 'project.video-profile/{response.$id}')
