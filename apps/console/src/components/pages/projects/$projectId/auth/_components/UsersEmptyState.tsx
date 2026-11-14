@@ -143,6 +143,7 @@ export function UsersEmptyState({
   createDisabled = false,
   createDisabledTooltip,
   showSecuritySettings = false,
+  variant = 'page',
 }: {
   projectId: string
   onCreate?: () => void
@@ -150,6 +151,11 @@ export function UsersEmptyState({
   createDisabledTooltip?: string
   /** Links the setup items to auth settings, OAuth providers, and policies. */
   showSecuritySettings?: boolean
+  /**
+   * `card` fits inside an overview card: the illustration sits beside the
+   * text and the setup list is left out, since the overview shows those settings.
+   */
+  variant?: 'page' | 'card'
 }) {
   const t = useT()
   const { features } = useConsoleProfile()
@@ -186,8 +192,15 @@ export function UsersEmptyState({
   ]
 
   return (
-    <div className="mx-auto w-full max-w-4xl py-10 sm:py-14">
+    <div
+      className={
+        variant === 'card'
+          ? 'w-full py-8 sm:py-12'
+          : 'mx-auto w-full max-w-4xl py-10 sm:py-14'
+      }
+    >
       <ProductEmptyStateHero
+        layout={variant === 'card' ? 'split' : 'stacked'}
         visual={<SignInVisual />}
         icon={Users}
         title={t('Create your first user')}
@@ -211,46 +224,48 @@ export function UsersEmptyState({
           </>
         }
       />
-      <ul className="mx-auto mt-12 max-w-xl divide-y divide-border overflow-hidden rounded-xl border border-border bg-card/50 sm:mt-14">
-        {items.map(({ icon: Icon, title, description, link }) => {
-          const content = (
-            <>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground transition-colors group-hover:text-foreground">
-                <Icon className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[14px] font-medium text-foreground">
-                  {t(title)}
+      {variant === 'page' ? (
+        <ul className="mx-auto mt-12 max-w-xl divide-y divide-border overflow-hidden rounded-xl border border-border bg-card/50 sm:mt-14">
+          {items.map(({ icon: Icon, title, description, link }) => {
+            const content = (
+              <>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground transition-colors group-hover:text-foreground">
+                  <Icon className="h-4 w-4" />
                 </span>
-                <span className="mt-0.5 block text-[13px] leading-relaxed text-muted-foreground">
-                  {t(description)}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-medium text-foreground">
+                    {t(title)}
+                  </span>
+                  <span className="mt-0.5 block text-[13px] leading-relaxed text-muted-foreground">
+                    {t(description)}
+                  </span>
                 </span>
-              </span>
-              {link ? (
-                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
-              ) : null}
-            </>
-          )
-          const rowClassName = 'flex items-center gap-4 px-5 py-4 text-start'
-          return (
-            <li key={title}>
-              {link ? (
-                <Link
-                  {...link}
-                  className={cn(
-                    rowClassName,
-                    'group transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none',
-                  )}
-                >
-                  {content}
-                </Link>
-              ) : (
-                <div className={rowClassName}>{content}</div>
-              )}
-            </li>
-          )
-        })}
-      </ul>
+                {link ? (
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+                ) : null}
+              </>
+            )
+            const rowClassName = 'flex items-center gap-4 px-5 py-4 text-start'
+            return (
+              <li key={title}>
+                {link ? (
+                  <Link
+                    {...link}
+                    className={cn(
+                      rowClassName,
+                      'group transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none',
+                    )}
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div className={rowClassName}>{content}</div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      ) : null}
     </div>
   )
 }

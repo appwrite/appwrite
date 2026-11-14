@@ -5,7 +5,6 @@ namespace Utopia\Migration\Tests\Destinations;
 use Appwrite\AppwriteException;
 use Appwrite\Services\Functions;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Functions\Func;
@@ -58,10 +57,6 @@ final class AppwriteFunctionIntervalTest extends TestCase
 
     private function destination(Functions $functions): AppwriteDestination
     {
-        $class = new ReflectionClass(AppwriteDestination::class);
-        $destination = $class->newInstanceWithoutConstructor();
-        $class->getProperty('functions')->setValue($destination, $functions);
-
-        return $destination;
+        return new RecordingDestination(functions: $functions);
     }
 }

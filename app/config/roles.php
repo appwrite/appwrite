@@ -91,6 +91,7 @@ $admins = [
     'project.profiles.write',
     'project.oauth2.read',
     'project.oauth2.write',
+    'project.ldap.write',
     'templates.read',
     'templates.write',
     'projects.write',

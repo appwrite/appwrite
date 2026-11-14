@@ -78,6 +78,7 @@ import {
   getMarketingPrerenderHtmlFile,
 } from './src/lib/marketing/marketing-build-paths.ts'
 import { getInitPrerenderHtmlFile } from './src/lib/init/init-prerender-paths.ts'
+import { markdownTwinPage } from './src/lib/seo/markdown-twins.ts'
 import { isThreadsRoutePath } from './src/lib/threads/prerender-paths.ts'
 import {
   isLegacyConsolePath,
@@ -100,11 +101,14 @@ import {
   APPWRITE_ARD_PATH,
   ARD_CONTENT_TYPE,
   APPWRITE_AGENT_SKILLS_DISCOVERY_PATH,
+  APPWRITE_MCP_DOCS_SERVER_CARD_PATH,
   APPWRITE_MCP_SERVER_CARD_PATH,
   DISCOVERY_CORS_HEADERS,
   MCP_SERVER_CARD_CONTENT_TYPE,
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
+  buildArdDocument,
+  buildMcpDocsServerCard,
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from './src/lib/seo/agent-discovery.ts'
@@ -302,14 +306,17 @@ function isServerTrackedExportFile(relativePath: string): boolean {
     normalized === 'docs.md' ||
     normalized === 'setup.md' ||
     normalized === 'blog.md' ||
+    normalized === 'blog/llms.txt' ||
     normalized === 'changelog.md' ||
     normalized === 'integrations.md' ||
     normalized === 'robots.txt' ||
     normalized === 'sitemap.xml' ||
     normalized === '.well-known/mcp/server-card.json' ||
+    normalized === '.well-known/mcp/docs/server-card.json' ||
     normalized === '.well-known/ard.json' ||
     normalized === '.well-known/ai-catalog.json' ||
-    normalized === '.well-known/agent-skills/index.json'
+    normalized === '.well-known/agent-skills/index.json' ||
+    markdownTwinPage(`/${normalized}`) !== null
   )
 }
 
@@ -886,12 +893,21 @@ async function initializeServer() {
           ),
           MCP_SERVER_CARD_CONTENT_TYPE,
         ),
+      [APPWRITE_MCP_DOCS_SERVER_CARD_PATH]: async (req: Request) =>
+        discoveryExportResponse(
+          req,
+          await readClientExportOrFallback(
+            '.well-known/mcp/docs/server-card.json',
+            () => serializeDiscoveryJson(buildMcpDocsServerCard()),
+          ),
+          MCP_SERVER_CARD_CONTENT_TYPE,
+        ),
       [APPWRITE_ARD_PATH]: async (req: Request) =>
         discoveryExportResponse(
           req,
           await readClientExportOrFallback(
             '.well-known/ard.json',
-            () => serializeDiscoveryJson(buildAiCatalogDocument()),
+            () => serializeDiscoveryJson(buildArdDocument()),
           ),
           ARD_CONTENT_TYPE,
         ),

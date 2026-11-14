@@ -1,13 +1,14 @@
 /**
  * Progress of an environment's copy from its project: the Appwrite to Appwrite
  * migration created with the environment. Same card as CSV imports. Picks a copy
- * still under way back up after a reload, and refreshes the environment's data
- * once the copy completes.
+ * still under way back up after a reload, and one that failed, which leaves the
+ * environment without what it was meant to hold, until that is dismissed.
+ * Refreshes the environment's data once the copy completes.
  */
 
 import { useEffect, useMemo, useRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, CheckCircle2, Loader2, X } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
@@ -19,13 +20,15 @@ import {
 import {
   useEnvironmentCopyMigrations,
   useLatestEnvironmentCopyMigration,
+  useProductionProject,
   useProject,
 } from '@/lib/react-query/hooks'
-import { LONG_STALE_TIME } from '@/lib/react-query/hooks/constants'
-import { getConsoleProject } from '@/lib/appwrite/console-projects'
 import {
   migrationProgress,
   projectEnvironmentId,
+  readDismissedFailedCopies,
+  rememberDismissedFailedCopy,
+  showsCopyAfterReload,
 } from '@/lib/project-environments'
 import { useT } from '@/lib/i18n/translate'
 
@@ -119,30 +122,24 @@ export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
   const queryClient = useQueryClient()
   const { projectData } = useProject(projectId)
   const environmentId = projectEnvironmentId(projectData)
-  // The project itself, read on its own routes: the copy's source
-  const { data: parent } = useQuery({
-    queryKey: ['project', 'console', projectId, projectData?.teamId],
-    queryFn: () =>
-      getConsoleProject({
-        projectId,
-        organizationId: projectData!.teamId,
-      }),
-    enabled: !!environmentId && !!projectData?.teamId,
-    staleTime: LONG_STALE_TIME,
-    retry: false,
-  })
+  // The project itself, outside the environment: the copy's source
+  const { project: parent } = useProductionProject(
+    environmentId ? projectId : undefined,
+  )
   const { sessionCopyIds, dismissedCopyIds, addCopyId, dismissCopy } =
     useSessionMigrations(projectId)
 
-  // Only an environment has a copy to show. A reload mid-copy lost the session
-  // IDs, so the latest copy is looked up once and tracked again while under way.
+  // Only an environment has a copy to show. A reload lost the session IDs, so
+  // the latest copy is looked up once and tracked again while under way, or
+  // when it failed: the page that announced the failure is gone, and without
+  // the card nothing on a fresh load says the environment is incomplete.
   const latest = useLatestEnvironmentCopyMigration(
     projectId,
     !!environmentId && sessionCopyIds.length === 0,
   )
 
   useEffect(() => {
-    if (latest && IN_PROGRESS_COPY_STATUSES.includes(latest.status)) {
+    if (latest && showsCopyAfterReload(latest, readDismissedFailedCopies())) {
       addCopyId(projectId, latest.$id)
     }
   }, [latest, projectId, addCopyId])
@@ -188,7 +185,12 @@ export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
           migration={migration}
           projectId={projectId}
           sourceName={sourceName}
-          onDismiss={() => dismissCopy(projectId, migration.$id)}
+          onDismiss={() => {
+            if (migration.status === 'failed') {
+              rememberDismissedFailedCopy(migration.$id)
+            }
+            dismissCopy(projectId, migration.$id)
+          }}
         />
       ))}
     </div>

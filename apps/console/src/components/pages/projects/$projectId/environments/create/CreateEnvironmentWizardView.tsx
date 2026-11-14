@@ -4,14 +4,18 @@
  * empty or as a copy. The ID follows the name until it is typed, and is
  * generated when left blank. A copy's progress card follows the environment,
  * so the wizard does not wait. Cloud only, behind the projectEnvironments
- * feature like the switcher that opens this.
+ * feature like the switcher that opens this. Environments are offered on Pro
+ * and above: on Free and Start the page shows what an environment is and leads
+ * to the upgrade instead of creating one.
  */
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { AppwriteException } from '@appwrite.io/console'
-import { Box, Copy } from 'lucide-react'
+import { AlertCircle, Box, Copy } from 'lucide-react'
 import { toast } from 'sonner'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,17 +29,22 @@ import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   PROJECT_NAME_MAX_LENGTH,
   useCreateProjectEnvironment,
+  useOrganizationPlan,
   useProject,
   useProjectEnvironments,
 } from '@/lib/react-query/hooks'
 import {
   defaultProjectEnvironmentCopySelection,
   projectEnvironmentCopyResources,
+  projectEnvironmentsAllowance,
   suggestProjectEnvironmentId,
   suggestProjectEnvironmentName,
   type ProjectEnvironmentCopyGroupId,
   type ProjectEnvironmentCopySelection,
+  type ProjectEnvironmentsAllowance,
 } from '@/lib/project-environments'
+import { analyticsAttrs } from '@/lib/analytics-actions'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
@@ -91,14 +100,28 @@ export function CreateEnvironmentWizardView({
   const nameSuggested = useRef(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
-  const { environments, isLoading: isLoadingEnvironments } =
-    useProjectEnvironments(projectId, region)
+  const {
+    environments,
+    total: environmentCount,
+    isLoading: isLoadingEnvironments,
+    error: environmentsError,
+  } = useProjectEnvironments(projectId, region)
   const createEnvironmentMutation = useCreateProjectEnvironment(
     projectId,
     region,
   )
   const isCreating = createEnvironmentMutation.isPending
   const isCopy = startFrom === 'project'
+
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const allowance = projectEnvironmentsAllowance(
+    plan,
+    isLoadingEnvironments || environmentsError ? undefined : environmentCount,
+  )
+  // Shown, not usable: the notice above the form says why and what lifts it
+  const isBlocked =
+    allowance.status === 'not-offered' || allowance.status === 'at-limit'
+  const isFormDisabled = isCreating || isBlocked
 
   // Environments are created from production: opened inside an environment, this
   // page leaves it once, on entry. It does not react to the active environment
@@ -146,6 +169,7 @@ export function CreateEnvironmentWizardView({
     (environment) => environment.$id === trimmedId,
   )
   const canCreate =
+    !isBlocked &&
     trimmedName.length > 0 &&
     trimmedName.length <= PROJECT_NAME_MAX_LENGTH &&
     isValidProjectId(trimmedId) &&
@@ -224,7 +248,14 @@ export function CreateEnvironmentWizardView({
 
   return (
     <WizardLayout
-      title={t('Create environment')}
+      title={
+        <>
+          {t('Create environment')}
+          <Badge variant="outline" className="px-1.5 py-0 text-[11px]">
+            {t('Beta')}
+          </Badge>
+        </>
+      }
       fullscreen
       useSidebar={false}
       constrainWidth
@@ -256,6 +287,15 @@ export function CreateEnvironmentWizardView({
         onSubmit={(event) => void handleCreate(event)}
         className="w-full space-y-8"
       >
+        <EnvironmentsPlanNotice
+          allowance={allowance}
+          orgId={project?.teamId}
+          planName={resolveOrganizationPlanDisplayLabel({
+            planName: plan?.name ?? null,
+            planId: plan?.$id,
+          })}
+        />
+
         <section className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="environment-name">
@@ -280,7 +320,7 @@ export function CreateEnvironmentWizardView({
                   if (idError) setIdError(undefined)
                 }
               }}
-              disabled={isCreating}
+              disabled={isFormDisabled}
               maxLength={PROJECT_NAME_MAX_LENGTH}
               className={nameError ? 'border-destructive' : ''}
             />
@@ -301,7 +341,7 @@ export function CreateEnvironmentWizardView({
                 setEnvironmentId(event.target.value)
                 if (idError) setIdError(undefined)
               }}
-              disabled={isCreating}
+              disabled={isFormDisabled}
               maxLength={PROJECT_ID_MAX_LENGTH}
               spellCheck={false}
               autoCapitalize="off"
@@ -337,7 +377,7 @@ export function CreateEnvironmentWizardView({
               description={t(
                 'Nothing is copied from the project. You handle the scaffolding.',
               )}
-              disabled={isCreating}
+              disabled={isFormDisabled}
               onSelect={() => setStartFrom('empty')}
             />
             <StartFromCard
@@ -347,7 +387,7 @@ export function CreateEnvironmentWizardView({
               description={t(
                 'Structure and settings are cloned, data only where you ask for it.',
               )}
-              disabled={isCreating}
+              disabled={isFormDisabled}
               onSelect={() => setStartFrom('project')}
             />
           </div>
@@ -359,7 +399,7 @@ export function CreateEnvironmentWizardView({
             onGroupChange={setGroup}
             onSelectionChange={setSelection}
             isCopyEmpty={isCopyEmpty}
-            disabled={isCreating}
+            disabled={isFormDisabled}
           />
         ) : null}
       </form>
@@ -403,5 +443,77 @@ function StartFromCard({
         </p>
       </div>
     </button>
+  )
+}
+
+/**
+ * Why no environment can be created here: the plan offers none, which the
+ * upgrade lifts, or the project has as many as its plan allows, which no other
+ * plan raises, so it points at deleting one rather than at an upgrade.
+ */
+function EnvironmentsPlanNotice({
+  allowance,
+  orgId,
+  planName,
+}: {
+  allowance: ProjectEnvironmentsAllowance
+  orgId: string | undefined
+  planName: string
+}) {
+  const t = useT()
+
+  if (allowance.status !== 'not-offered' && allowance.status !== 'at-limit') {
+    return null
+  }
+
+  const canUpgrade =
+    allowance.status === 'not-offered' &&
+    !!orgId &&
+    getActiveProfileFeatures().billing
+
+  return (
+    <Alert className="border-amber-500/30 bg-amber-500/5">
+      <AlertCircle className="h-4 w-4 text-amber-500" />
+      <div className="flex flex-1 items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+            {allowance.status === 'not-offered'
+              ? t('Project environments are available on Pro')
+              : `${t("You've reached the limit of")} ${allowance.limit} ${t('environments')}`}
+          </AlertTitle>
+          <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+            {allowance.status === 'not-offered' ? (
+              <>
+                {t('Your plan')} ({planName}){' '}
+                {t(
+                  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.',
+                )}
+              </>
+            ) : (
+              <>
+                {t('Your plan')} ({planName}) {t('includes up to')}{' '}
+                {allowance.limit} {t('environments per project.')}{' '}
+                {t('Delete an environment to create another.')}
+              </>
+            )}
+          </AlertDescription>
+        </div>
+        {canUpgrade ? (
+          <Button
+            asChild
+            size="sm"
+            className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
+          >
+            <Link
+              to="/upgrade"
+              search={{ orgId }}
+              {...analyticsAttrs('upgrade-clicked')}
+            >
+              {t('Upgrade')}
+            </Link>
+          </Button>
+        ) : null}
+      </div>
+    </Alert>
   )
 }

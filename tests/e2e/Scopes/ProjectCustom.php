@@ -99,6 +99,7 @@ trait ProjectCustom
                     'platforms.write',
                     'policies.write',
                     'project.oauth2.write',
+                    'project.ldap.write',
                     'templates.write',
                     'teams.read',
                     'teams.write',

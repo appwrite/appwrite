@@ -55,6 +55,7 @@ class Key extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Secret key.',
                 'default' => '',
                 'example' => '919c2d18fb5d4...a2ae413da83346ad2',

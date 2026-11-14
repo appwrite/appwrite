@@ -58,6 +58,31 @@ final class V25Test extends TestCase
         $this->assertNull($result->getAttribute('parentResourceInternalId'));
     }
 
+    /**
+     * Monitors and alerts from 2.7 get the severity column with null in it, not its default.
+     */
+    public function testGivesMonitorsAndAlertsWithoutASeverityWarning(): void
+    {
+        $migration = new class () extends V25 {
+            public function __construct()
+            {
+            }
+
+            public function migrate(Document $document): Document
+            {
+                return $this->migrateDocument($document);
+            }
+        };
+
+        foreach (['monitors', 'monitorAlerts'] as $collection) {
+            $missing = $migration->migrate(new Document(['$id' => 'old', '$collection' => $collection, 'severity' => null]));
+            $this->assertSame('warning', $missing->getAttribute('severity'), $collection);
+
+            $critical = $migration->migrate(new Document(['$id' => 'set', '$collection' => $collection, 'severity' => 'critical']));
+            $this->assertSame('critical', $critical->getAttribute('severity'), $collection);
+        }
+    }
+
     public function testRerunResolvesMissingInternalIdsIdempotently(): void
     {
         $migration = new class () extends V25 {

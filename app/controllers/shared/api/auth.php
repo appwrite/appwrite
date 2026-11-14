@@ -117,6 +117,12 @@ Http::init()
                 }
                 break;
 
+            case 'ldap':
+                if (($auths[Config::getParam('auth')['ldap']['key']] ?? false) !== true) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'LDAP authentication is disabled for this project');
+                }
+                break;
+
             default:
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
         }

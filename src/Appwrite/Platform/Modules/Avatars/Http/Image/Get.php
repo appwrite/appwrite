@@ -13,7 +13,11 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Client;
-use Utopia\Image\Image;
+use Utopia\Config\Config;
+use Utopia\Image\Canvas;
+use Utopia\Image\Exception\ImageException;
+use Utopia\Image\Format;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Method as RequestMethod;
@@ -67,12 +71,6 @@ class Get extends Action
     public function action(string $url, int $width, int $height, Response $response, Client $clientForAvatars)
     {
         $quality = 80;
-        $output = 'png';
-        $type = 'png';
-
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
 
         try {
             $res = $clientForAvatars->sendRequest((new RequestFactory())->createRequest(RequestMethod::GET, $url));
@@ -85,18 +83,16 @@ class Get extends Action
         }
 
         try {
-            $image = new Image((string) $res->getBody());
-        } catch (\Exception) {
+            $data = (new Canvas((string) $res->getBody(), Config::getParam('storage-image-limits')))
+                ->apply(new Transform(width: $width, height: $height))
+                ->encode(Format::Png, $quality);
+        } catch (ImageException) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
-
-        $image->crop((int) $width, (int) $height);
-        $data = $image->output($output, $quality);
 
         $response
             ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
             ->setContentType('image/png')
             ->file($data);
-        unset($image);
     }
 }

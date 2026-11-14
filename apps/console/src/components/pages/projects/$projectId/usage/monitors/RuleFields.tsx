@@ -1,6 +1,15 @@
 import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Check, ChevronDown } from 'lucide-react'
+import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
+import {
+  BellRing,
+  Check,
+  ChevronDown,
+  CircleX,
+  Info,
+  TriangleAlert,
+  type LucideIcon,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
@@ -13,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import {
   bucketsQueryOptions,
   databasesQueryOptions,
@@ -27,6 +35,7 @@ import {
   type AlertMetric,
   type AlertResourceType,
   type MonitorInput,
+  type MonitorSeverity,
   type ParsedMonitor,
 } from '@/lib/appwrite/monitors'
 import {
@@ -61,7 +70,7 @@ export type RuleForm = {
   window: number
   cooldown: number
   notify: string[]
-  critical: boolean
+  severity: MonitorSeverity
 }
 
 const RESOURCE_PICKER_LIMIT = 100
@@ -78,7 +87,7 @@ export function emptyRuleForm(): RuleForm {
     window: 3600,
     cooldown: 3600,
     notify: ['owner'],
-    critical: false,
+    severity: 'warning',
   }
 }
 
@@ -100,9 +109,61 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
     window: rule.window,
     cooldown: rule.cooldown,
     notify: rule.notify,
-    critical: rule.critical,
+    severity: rule.severity,
   }
 }
+
+/**
+ * The levels a monitor can take, least urgent first, with what each one changes. The
+ * colors follow the console's status badges, so a level reads the same everywhere.
+ */
+export const SEVERITIES: {
+  value: MonitorSeverity
+  label: string
+  hint: string
+  icon: LucideIcon
+  /** The icon's color, always shown. */
+  tone: string
+  /** The chip once selected. */
+  selected: string
+}[] = [
+  {
+    value: 'info',
+    label: 'Info',
+    hint: 'Worth knowing about. Nothing needs doing yet.',
+    icon: Info,
+    tone: 'text-blue-600 dark:text-blue-400',
+    selected:
+      'border-blue-500/60 bg-blue-500/10 text-blue-700 ring-blue-500/60 dark:text-blue-300',
+  },
+  {
+    value: 'warning',
+    label: 'Warning',
+    hint: 'Look into it soon, before it becomes a problem.',
+    icon: TriangleAlert,
+    tone: 'text-amber-600 dark:text-amber-400',
+    selected:
+      'border-amber-500/60 bg-amber-500/10 text-amber-700 ring-amber-500/60 dark:text-amber-300',
+  },
+  {
+    value: 'error',
+    label: 'Error',
+    hint: 'Something is broken and needs fixing.',
+    icon: CircleX,
+    tone: 'text-orange-600 dark:text-orange-400',
+    selected:
+      'border-orange-500/60 bg-orange-500/10 text-orange-700 ring-orange-500/60 dark:text-orange-300',
+  },
+  {
+    value: 'critical',
+    label: 'Critical',
+    hint: "Rings on your phone even when it's on silent or in Do Not Disturb.",
+    icon: BellRing,
+    tone: 'text-red-600 dark:text-red-400',
+    selected:
+      'border-red-500/60 bg-red-500/10 text-red-700 ring-red-500/60 dark:text-red-300',
+  },
+]
 
 /** Organization roles the form offers to notify; the server validates `notify` against its own list. */
 export const NOTIFY_ROLES = ['owner', 'developer']
@@ -173,7 +234,7 @@ export function monitorInputFromForm(
     window: metricDefinition(form.metric).counter ? form.window : undefined,
     cooldown: form.cooldown,
     notify: form.notify,
-    critical: form.critical,
+    severity: form.severity,
   }
 }
 
@@ -651,26 +712,43 @@ export function RuleFields({
                 'Project webhooks and functions can also listen to its alert events.',
               )}
         </p>
-        <div className="mt-4 flex items-start justify-between gap-4 rounded-xl border border-border p-4">
-          <div>
-            <Label
-              htmlFor="alert-critical"
-              className="text-[13px] font-semibold"
-            >
-              {t('Critical')}
-            </Label>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
-              {t(
-                "Rings on your phone even when it's on silent or in Do Not Disturb.",
-              )}
-            </p>
-          </div>
-          <Switch
-            id="alert-critical"
-            checked={form.critical}
-            onCheckedChange={(critical) => onChange({ critical })}
+        <div className="mt-4">
+          <Label id="alert-severity" className="text-[13px] font-semibold">
+            {t('Severity')}
+          </Label>
+          {/* Radix gives the group one tab stop and moves the selection with the arrow keys. */}
+          <RadioGroupPrimitive.Root
+            aria-labelledby="alert-severity"
+            value={form.severity}
+            onValueChange={(severity) =>
+              onChange({ severity: severity as MonitorSeverity })
+            }
             disabled={disabled}
-          />
+            orientation="horizontal"
+            className="mt-2 flex flex-wrap gap-2"
+          >
+            {SEVERITIES.map(({ value, label, icon: Icon, tone, ...level }) => (
+              <RadioGroupPrimitive.Item
+                key={value}
+                value={value}
+                className={cn(
+                  'inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60',
+                  form.severity === value
+                    ? cn('font-medium ring-1 ring-inset', level.selected)
+                    : 'border-border text-muted-foreground hover:bg-accent/40',
+                )}
+              >
+                <Icon aria-hidden className={cn('h-3.5 w-3.5', tone)} />
+                {t(label)}
+              </RadioGroupPrimitive.Item>
+            ))}
+          </RadioGroupPrimitive.Root>
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            {t(
+              SEVERITIES.find(({ value }) => value === form.severity)?.hint ??
+                '',
+            )}
+          </p>
         </div>
       </section>
 

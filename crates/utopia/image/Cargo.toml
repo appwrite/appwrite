@@ -29,8 +29,10 @@ kamadak-exif.workspace = true
 libheif-rs = { workspace = true, optional = true }
 php-std.workspace = true
 png.workspace = true
+skrifa = "0.50.0"
 thiserror.workspace = true
 webp = { workspace = true, optional = true }
+zeno = "0.3"
 
 [package.metadata.utopia]
 category = "utilities"

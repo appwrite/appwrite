@@ -1,4 +1,5 @@
 import { CheckCircle2 } from 'lucide-react'
+import { SpriteIcon } from '@/components/ui/sprite-icon'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n/translate'
@@ -35,9 +36,9 @@ export function NetworkSection() {
                 key={label}
                 className="flex items-center gap-1.5 text-[13px] font-medium text-foreground"
               >
-                <CheckCircle2
+                <SpriteIcon
+                  icon={CheckCircle2}
                   className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
-                  aria-hidden
                 />
                 {t(label)}
               </li>

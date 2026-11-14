@@ -751,6 +751,11 @@ return function (Container $context): void {
          */
         $authorization->setStatus(true);
 
+        // Turning the policy off retires the devices created before it too
+        if (($project->getAttribute('auths', [])['accountDevices'] ?? true) === false) {
+            return null;
+        }
+
         $key = $project->getDeviceKey();
 
         $store = new Store();

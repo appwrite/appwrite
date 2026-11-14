@@ -14,6 +14,7 @@ import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AlternativeToDotmdRouteImport } from './routes/alternative-to[.]md'
+import { Route as AuthDotmdRouteImport } from './routes/auth[.]md'
 import { Route as BlogDotmdRouteImport } from './routes/blog[.]md'
 import { Route as ChangelogDotmdRouteImport } from './routes/changelog[.]md'
 import { Route as DiscordRouteImport } from './routes/discord'
@@ -30,9 +31,11 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SetupDotmdRouteImport } from './routes/setup[.]md'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TransferRouteImport } from './routes/transfer'
+import { Route as ApiAskRouteImport } from './routes/_api/ask'
 import { Route as ApiChangelogDotjsonRouteImport } from './routes/_api/changelog[.]json'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as ApiOpenapiDotjsonRouteImport } from './routes/_api/openapi[.]json'
+import { Route as ApiSchemamapDotxmlRouteImport } from './routes/_api/schemamap[.]xml'
 import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as AuthMfaRouteImport } from './routes/_auth/mfa'
 import { Route as AuthRecoveryRouteImport } from './routes/_auth/recovery'
@@ -71,6 +74,7 @@ import { Route as PublicInitRouteImport } from './routes/_public/init'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
 import { Route as PublicSalesRouteImport } from './routes/_public/sales'
 import { Route as PublicUpgradeRouteImport } from './routes/_public/upgrade'
+import { Route as BlogLlmsDottxtRouteImport } from './routes/blog.llms[.]txt'
 import { Route as CliInstallDotps1RouteImport } from './routes/cli.install[.]ps1'
 import { Route as CliInstallDotshRouteImport } from './routes/cli.install[.]sh'
 import { Route as DocsIndexRouteImport } from './routes/docs/index'
@@ -81,6 +85,7 @@ import { Route as DomainsContinueRouteImport } from './routes/domains.continue'
 import { Route as GeneratorIndexRouteImport } from './routes/generator/index'
 import { Route as GeneratorGenerationIdRouteImport } from './routes/generator/$generationId'
 import { Route as ILinkIdRouteImport } from './routes/i.$linkId'
+import { Route as IconsSpriteDotsvgRouteImport } from './routes/icons.sprite[.]svg'
 import { Route as LlmsFullTxtRouteImport } from './routes/llms-full.txt'
 import { Route as LlmsTxtRouteImport } from './routes/llms.txt'
 import { Route as ApiBlogRssDotxmlRouteImport } from './routes/_api/blog/rss[.]xml'
@@ -262,6 +267,7 @@ import { Route as PublicProjectsProjectIdReviewsRepositoriesRouteImport } from '
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
 import { Route as PublicProjectsProjectIdSettingsFirewallRouteImport } from './routes/_public/projects.$projectId.settings.firewall'
+import { Route as PublicProjectsProjectIdSettingsIdentityServersRouteImport } from './routes/_public/projects.$projectId.settings.identity-servers'
 import { Route as PublicProjectsProjectIdSettingsMigrationsRouteImport } from './routes/_public/projects.$projectId.settings.migrations'
 import { Route as PublicProjectsProjectIdSettingsSmtpRouteImport } from './routes/_public/projects.$projectId.settings.smtp'
 import { Route as PublicProjectsProjectIdSettingsVariablesRouteImport } from './routes/_public/projects.$projectId.settings.variables'
@@ -313,6 +319,7 @@ import { Route as PublicProjectsProjectIdAuthPoliciesRealtimeRouteImport } from 
 import { Route as PublicProjectsProjectIdAuthPoliciesSessionsRouteImport } from './routes/_public/projects.$projectId.auth.policies.sessions'
 import { Route as PublicProjectsProjectIdAuthPoliciesUsersRouteImport } from './routes/_public/projects.$projectId.auth.policies.users'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId'
+import { Route as PublicProjectsProjectIdAuthUsersIndexRouteImport } from './routes/_public/projects.$projectId.auth.users.index'
 import { Route as PublicProjectsProjectIdAuthUsersUserIdRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId'
 import { Route as PublicProjectsProjectIdDatabasesDbKindDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$dbKind.$databaseId'
 import { Route as PublicProjectsProjectIdDatabasesMysqlDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.mysql.$databaseId'
@@ -519,6 +526,11 @@ const AlternativeToDotmdRoute = AlternativeToDotmdRouteImport.update({
   path: '/alternative-to.md',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthDotmdRoute = AuthDotmdRouteImport.update({
+  id: '/auth.md',
+  path: '/auth.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogDotmdRoute = BlogDotmdRouteImport.update({
   id: '/blog.md',
   path: '/blog.md',
@@ -599,6 +611,11 @@ const TransferRoute = TransferRouteImport.update({
   path: '/transfer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAskRoute = ApiAskRouteImport.update({
+  id: '/_api/ask',
+  path: '/ask',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChangelogDotjsonRoute = ApiChangelogDotjsonRouteImport.update({
   id: '/_api/changelog.json',
   path: '/changelog.json',
@@ -612,6 +629,11 @@ const ApiHelloRoute = ApiHelloRouteImport.update({
 const ApiOpenapiDotjsonRoute = ApiOpenapiDotjsonRouteImport.update({
   id: '/_api/openapi.json',
   path: '/openapi.json',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSchemamapDotxmlRoute = ApiSchemamapDotxmlRouteImport.update({
+  id: '/_api/schemamap.xml',
+  path: '/schemamap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthJoinRoute = AuthJoinRouteImport.update({
@@ -806,6 +828,11 @@ const PublicUpgradeRoute = PublicUpgradeRouteImport.update({
   path: '/upgrade',
   getParentRoute: () => PublicRoute,
 } as any)
+const BlogLlmsDottxtRoute = BlogLlmsDottxtRouteImport.update({
+  id: '/blog/llms.txt',
+  path: '/blog/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CliInstallDotps1Route = CliInstallDotps1RouteImport.update({
   id: '/cli/install.ps1',
   path: '/cli/install.ps1',
@@ -854,6 +881,11 @@ const GeneratorGenerationIdRoute = GeneratorGenerationIdRouteImport.update({
 const ILinkIdRoute = ILinkIdRouteImport.update({
   id: '/i/$linkId',
   path: '/i/$linkId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IconsSpriteDotsvgRoute = IconsSpriteDotsvgRouteImport.update({
+  id: '/icons/sprite.svg',
+  path: '/icons/sprite.svg',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LlmsFullTxtRoute = LlmsFullTxtRouteImport.update({
@@ -1890,6 +1922,12 @@ const PublicProjectsProjectIdSettingsFirewallRoute =
     path: '/firewall',
     getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
   } as any)
+const PublicProjectsProjectIdSettingsIdentityServersRoute =
+  PublicProjectsProjectIdSettingsIdentityServersRouteImport.update({
+    id: '/identity-servers',
+    path: '/identity-servers',
+    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+  } as any)
 const PublicProjectsProjectIdSettingsMigrationsRoute =
   PublicProjectsProjectIdSettingsMigrationsRouteImport.update({
     id: '/migrations',
@@ -2195,6 +2233,12 @@ const PublicProjectsProjectIdAuthTeamsTeamIdRoute =
     id: '/$teamId',
     path: '/$teamId',
     getParentRoute: () => PublicProjectsProjectIdAuthTeamsRoute,
+  } as any)
+const PublicProjectsProjectIdAuthUsersIndexRoute =
+  PublicProjectsProjectIdAuthUsersIndexRouteImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => PublicProjectsProjectIdAuthRoute,
   } as any)
 const PublicProjectsProjectIdAuthUsersUserIdRoute =
   PublicProjectsProjectIdAuthUsersUserIdRouteImport.update({
@@ -3535,6 +3579,7 @@ const PublicProjectsProjectIdDatabasesPostgresDatabaseIdTablesTableIdSettingsRou
 export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
   '/alternative-to.md': typeof AlternativeToDotmdRoute
+  '/auth.md': typeof AuthDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -3551,9 +3596,11 @@ export interface FileRoutesByFullPath {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/ask': typeof ApiAskRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
   '/hello': typeof ApiHelloRoute
   '/openapi.json': typeof ApiOpenapiDotjsonRoute
+  '/schemamap.xml': typeof ApiSchemamapDotxmlRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
   '/recovery': typeof AuthRecoveryRoute
@@ -3591,6 +3638,7 @@ export interface FileRoutesByFullPath {
   '/reset': typeof PublicResetRoute
   '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/blog/llms.txt': typeof BlogLlmsDottxtRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
   '/docs/$': typeof DocsSplatRoute
@@ -3599,6 +3647,7 @@ export interface FileRoutesByFullPath {
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/i/$linkId': typeof ILinkIdRoute
+  '/icons/sprite.svg': typeof IconsSpriteDotsvgRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/docs/': typeof DocsIndexRoute
@@ -3770,6 +3819,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
+  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
   '/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -3874,6 +3924,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/analytics/$propertyId/': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
+  '/projects/$projectId/auth/users/': typeof PublicProjectsProjectIdAuthUsersIndexRoute
   '/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4021,6 +4072,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof MarketingIndexRoute
   '/alternative-to.md': typeof AlternativeToDotmdRoute
+  '/auth.md': typeof AuthDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -4035,9 +4087,11 @@ export interface FileRoutesByTo {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/ask': typeof ApiAskRoute
   '/changelog.json': typeof ApiChangelogDotjsonRoute
   '/hello': typeof ApiHelloRoute
   '/openapi.json': typeof ApiOpenapiDotjsonRoute
+  '/schemamap.xml': typeof ApiSchemamapDotxmlRoute
   '/join': typeof AuthJoinRoute
   '/mfa': typeof AuthMfaRoute
   '/recovery': typeof AuthRecoveryRoute
@@ -4073,6 +4127,7 @@ export interface FileRoutesByTo {
   '/reset': typeof PublicResetRoute
   '/sales': typeof PublicSalesRoute
   '/upgrade': typeof PublicUpgradeRoute
+  '/blog/llms.txt': typeof BlogLlmsDottxtRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
   '/docs/$': typeof DocsSplatRoute
@@ -4081,6 +4136,7 @@ export interface FileRoutesByTo {
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/i/$linkId': typeof ILinkIdRoute
+  '/icons/sprite.svg': typeof IconsSpriteDotsvgRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/docs': typeof DocsIndexRoute
@@ -4223,6 +4279,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/reviews/$reviewId': typeof PublicProjectsProjectIdReviewsReviewIdRoute
   '/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
+  '/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
@@ -4311,6 +4368,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/organizations/$orgId/marketplace/$appId': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/projects/$projectId/analytics/$propertyId': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
+  '/projects/$projectId/auth/users': typeof PublicProjectsProjectIdAuthUsersIndexRoute
   '/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/projects/$projectId/messaging/$messageId': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4456,6 +4514,7 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/alternative-to.md': typeof AlternativeToDotmdRoute
+  '/auth.md': typeof AuthDotmdRoute
   '/blog.md': typeof BlogDotmdRoute
   '/changelog.md': typeof ChangelogDotmdRoute
   '/discord': typeof DiscordRoute
@@ -4472,9 +4531,11 @@ export interface FileRoutesById {
   '/setup.md': typeof SetupDotmdRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/transfer': typeof TransferRoute
+  '/_api/ask': typeof ApiAskRoute
   '/_api/changelog.json': typeof ApiChangelogDotjsonRoute
   '/_api/hello': typeof ApiHelloRoute
   '/_api/openapi.json': typeof ApiOpenapiDotjsonRoute
+  '/_api/schemamap.xml': typeof ApiSchemamapDotxmlRoute
   '/_auth/join': typeof AuthJoinRoute
   '/_auth/mfa': typeof AuthMfaRoute
   '/_auth/recovery': typeof AuthRecoveryRoute
@@ -4512,6 +4573,7 @@ export interface FileRoutesById {
   '/_public/reset': typeof PublicResetRoute
   '/_public/sales': typeof PublicSalesRoute
   '/_public/upgrade': typeof PublicUpgradeRoute
+  '/blog/llms.txt': typeof BlogLlmsDottxtRoute
   '/cli/install.ps1': typeof CliInstallDotps1Route
   '/cli/install.sh': typeof CliInstallDotshRoute
   '/docs/$': typeof DocsSplatRoute
@@ -4520,6 +4582,7 @@ export interface FileRoutesById {
   '/domains/continue': typeof DomainsContinueRoute
   '/generator/$generationId': typeof GeneratorGenerationIdRoute
   '/i/$linkId': typeof ILinkIdRoute
+  '/icons/sprite.svg': typeof IconsSpriteDotsvgRoute
   '/llms-full/txt': typeof LlmsFullTxtRoute
   '/llms/txt': typeof LlmsTxtRoute
   '/_marketing/': typeof MarketingIndexRoute
@@ -4692,6 +4755,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/reviews/repositories': typeof PublicProjectsProjectIdReviewsRepositoriesRoute
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/firewall': typeof PublicProjectsProjectIdSettingsFirewallRoute
+  '/_public/projects/$projectId/settings/identity-servers': typeof PublicProjectsProjectIdSettingsIdentityServersRoute
   '/_public/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/_public/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/_public/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -4796,6 +4860,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/domains/$domainId/': typeof PublicOrganizationsOrgIdDomainsDomainIdIndexRoute
   '/_public/organizations/$orgId/marketplace/$appId/': typeof PublicOrganizationsOrgIdMarketplaceAppIdIndexRoute
   '/_public/projects/$projectId/analytics/$propertyId/': typeof PublicProjectsProjectIdAnalyticsPropertyIdIndexRoute
+  '/_public/projects/$projectId/auth/users/': typeof PublicProjectsProjectIdAuthUsersIndexRoute
   '/_public/projects/$projectId/functions/$functionId/': typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
   '/_public/projects/$projectId/functions/create/': typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   '/_public/projects/$projectId/messaging/$messageId/': typeof PublicProjectsProjectIdMessagingMessageIdIndexRoute
@@ -4945,6 +5010,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/alternative-to.md'
+    | '/auth.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -4961,9 +5027,11 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/ask'
     | '/changelog.json'
     | '/hello'
     | '/openapi.json'
+    | '/schemamap.xml'
     | '/join'
     | '/mfa'
     | '/recovery'
@@ -5001,6 +5069,7 @@ export interface FileRouteTypes {
     | '/reset'
     | '/sales'
     | '/upgrade'
+    | '/blog/llms.txt'
     | '/cli/install.ps1'
     | '/cli/install.sh'
     | '/docs/$'
@@ -5009,6 +5078,7 @@ export interface FileRouteTypes {
     | '/domains/continue'
     | '/generator/$generationId'
     | '/i/$linkId'
+    | '/icons/sprite.svg'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/docs/'
@@ -5180,6 +5250,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/domains'
     | '/projects/$projectId/settings/firewall'
+    | '/projects/$projectId/settings/identity-servers'
     | '/projects/$projectId/settings/migrations'
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/variables'
@@ -5284,6 +5355,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/domains/$domainId/'
     | '/organizations/$orgId/marketplace/$appId/'
     | '/projects/$projectId/analytics/$propertyId/'
+    | '/projects/$projectId/auth/users/'
     | '/projects/$projectId/functions/$functionId/'
     | '/projects/$projectId/functions/create/'
     | '/projects/$projectId/messaging/$messageId/'
@@ -5431,6 +5503,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/alternative-to.md'
+    | '/auth.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5445,9 +5518,11 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/ask'
     | '/changelog.json'
     | '/hello'
     | '/openapi.json'
+    | '/schemamap.xml'
     | '/join'
     | '/mfa'
     | '/recovery'
@@ -5483,6 +5558,7 @@ export interface FileRouteTypes {
     | '/reset'
     | '/sales'
     | '/upgrade'
+    | '/blog/llms.txt'
     | '/cli/install.ps1'
     | '/cli/install.sh'
     | '/docs/$'
@@ -5491,6 +5567,7 @@ export interface FileRouteTypes {
     | '/domains/continue'
     | '/generator/$generationId'
     | '/i/$linkId'
+    | '/icons/sprite.svg'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/docs'
@@ -5633,6 +5710,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/reviews/$reviewId'
     | '/projects/$projectId/reviews/repositories'
     | '/projects/$projectId/settings/firewall'
+    | '/projects/$projectId/settings/identity-servers'
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
@@ -5721,6 +5799,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/domains/$domainId'
     | '/organizations/$orgId/marketplace/$appId'
     | '/projects/$projectId/analytics/$propertyId'
+    | '/projects/$projectId/auth/users'
     | '/projects/$projectId/functions/$functionId'
     | '/projects/$projectId/functions/create'
     | '/projects/$projectId/messaging/$messageId'
@@ -5865,6 +5944,7 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/_public'
     | '/alternative-to.md'
+    | '/auth.md'
     | '/blog.md'
     | '/changelog.md'
     | '/discord'
@@ -5881,9 +5961,11 @@ export interface FileRouteTypes {
     | '/setup.md'
     | '/sitemap.xml'
     | '/transfer'
+    | '/_api/ask'
     | '/_api/changelog.json'
     | '/_api/hello'
     | '/_api/openapi.json'
+    | '/_api/schemamap.xml'
     | '/_auth/join'
     | '/_auth/mfa'
     | '/_auth/recovery'
@@ -5921,6 +6003,7 @@ export interface FileRouteTypes {
     | '/_public/reset'
     | '/_public/sales'
     | '/_public/upgrade'
+    | '/blog/llms.txt'
     | '/cli/install.ps1'
     | '/cli/install.sh'
     | '/docs/$'
@@ -5929,6 +6012,7 @@ export interface FileRouteTypes {
     | '/domains/continue'
     | '/generator/$generationId'
     | '/i/$linkId'
+    | '/icons/sprite.svg'
     | '/llms-full/txt'
     | '/llms/txt'
     | '/_marketing/'
@@ -6101,6 +6185,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/reviews/repositories'
     | '/_public/projects/$projectId/settings/domains'
     | '/_public/projects/$projectId/settings/firewall'
+    | '/_public/projects/$projectId/settings/identity-servers'
     | '/_public/projects/$projectId/settings/migrations'
     | '/_public/projects/$projectId/settings/smtp'
     | '/_public/projects/$projectId/settings/variables'
@@ -6205,6 +6290,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/domains/$domainId/'
     | '/_public/organizations/$orgId/marketplace/$appId/'
     | '/_public/projects/$projectId/analytics/$propertyId/'
+    | '/_public/projects/$projectId/auth/users/'
     | '/_public/projects/$projectId/functions/$functionId/'
     | '/_public/projects/$projectId/functions/create/'
     | '/_public/projects/$projectId/messaging/$messageId/'
@@ -6356,6 +6442,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
   AlternativeToDotmdRoute: typeof AlternativeToDotmdRoute
+  AuthDotmdRoute: typeof AuthDotmdRoute
   BlogDotmdRoute: typeof BlogDotmdRoute
   ChangelogDotmdRoute: typeof ChangelogDotmdRoute
   DiscordRoute: typeof DiscordRoute
@@ -6372,13 +6459,17 @@ export interface RootRouteChildren {
   SetupDotmdRoute: typeof SetupDotmdRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TransferRoute: typeof TransferRoute
+  ApiAskRoute: typeof ApiAskRoute
   ApiChangelogDotjsonRoute: typeof ApiChangelogDotjsonRoute
   ApiHelloRoute: typeof ApiHelloRoute
   ApiOpenapiDotjsonRoute: typeof ApiOpenapiDotjsonRoute
+  ApiSchemamapDotxmlRoute: typeof ApiSchemamapDotxmlRoute
+  BlogLlmsDottxtRoute: typeof BlogLlmsDottxtRoute
   CliInstallDotps1Route: typeof CliInstallDotps1Route
   CliInstallDotshRoute: typeof CliInstallDotshRoute
   DomainsContinueRoute: typeof DomainsContinueRoute
   ILinkIdRoute: typeof ILinkIdRoute
+  IconsSpriteDotsvgRoute: typeof IconsSpriteDotsvgRoute
   LlmsFullTxtRoute: typeof LlmsFullTxtRoute
   LlmsTxtRoute: typeof LlmsTxtRoute
   ApiBlogRssDotxmlRoute: typeof ApiBlogRssDotxmlRoute
@@ -6436,6 +6527,13 @@ declare module '@tanstack/react-router' {
       path: '/alternative-to.md'
       fullPath: '/alternative-to.md'
       preLoaderRoute: typeof AlternativeToDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth.md': {
+      id: '/auth.md'
+      path: '/auth.md'
+      fullPath: '/auth.md'
+      preLoaderRoute: typeof AuthDotmdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog.md': {
@@ -6550,6 +6648,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TransferRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_api/ask': {
+      id: '/_api/ask'
+      path: '/ask'
+      fullPath: '/ask'
+      preLoaderRoute: typeof ApiAskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_api/changelog.json': {
       id: '/_api/changelog.json'
       path: '/changelog.json'
@@ -6569,6 +6674,13 @@ declare module '@tanstack/react-router' {
       path: '/openapi.json'
       fullPath: '/openapi.json'
       preLoaderRoute: typeof ApiOpenapiDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/schemamap.xml': {
+      id: '/_api/schemamap.xml'
+      path: '/schemamap.xml'
+      fullPath: '/schemamap.xml'
+      preLoaderRoute: typeof ApiSchemamapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/join': {
@@ -6837,6 +6949,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicUpgradeRouteImport
       parentRoute: typeof PublicRoute
     }
+    '/blog/llms.txt': {
+      id: '/blog/llms.txt'
+      path: '/blog/llms.txt'
+      fullPath: '/blog/llms.txt'
+      preLoaderRoute: typeof BlogLlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cli/install.ps1': {
       id: '/cli/install.ps1'
       path: '/cli/install.ps1'
@@ -6905,6 +7024,13 @@ declare module '@tanstack/react-router' {
       path: '/i/$linkId'
       fullPath: '/i/$linkId'
       preLoaderRoute: typeof ILinkIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/icons/sprite.svg': {
+      id: '/icons/sprite.svg'
+      path: '/icons/sprite.svg'
+      fullPath: '/icons/sprite.svg'
+      preLoaderRoute: typeof IconsSpriteDotsvgRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/llms-full/txt': {
@@ -8174,6 +8300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdSettingsFirewallRouteImport
       parentRoute: typeof PublicProjectsProjectIdSettingsRoute
     }
+    '/_public/projects/$projectId/settings/identity-servers': {
+      id: '/_public/projects/$projectId/settings/identity-servers'
+      path: '/identity-servers'
+      fullPath: '/projects/$projectId/settings/identity-servers'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    }
     '/_public/projects/$projectId/settings/migrations': {
       id: '/_public/projects/$projectId/settings/migrations'
       path: '/migrations'
@@ -8530,6 +8663,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/auth/teams/$teamId'
       preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthTeamsRoute
+    }
+    '/_public/projects/$projectId/auth/users/': {
+      id: '/_public/projects/$projectId/auth/users/'
+      path: '/users'
+      fullPath: '/projects/$projectId/auth/users/'
+      preLoaderRoute: typeof PublicProjectsProjectIdAuthUsersIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdAuthRoute
     }
     '/_public/projects/$projectId/auth/users/$userId': {
       id: '/_public/projects/$projectId/auth/users/$userId'
@@ -10463,6 +10603,7 @@ interface PublicProjectsProjectIdAuthRouteChildren {
   PublicProjectsProjectIdAuthTemplatesRoute: typeof PublicProjectsProjectIdAuthTemplatesRoute
   PublicProjectsProjectIdAuthIndexRoute: typeof PublicProjectsProjectIdAuthIndexRoute
   PublicProjectsProjectIdAuthUsersUserIdRoute: typeof PublicProjectsProjectIdAuthUsersUserIdRouteWithChildren
+  PublicProjectsProjectIdAuthUsersIndexRoute: typeof PublicProjectsProjectIdAuthUsersIndexRoute
 }
 
 const PublicProjectsProjectIdAuthRouteChildren: PublicProjectsProjectIdAuthRouteChildren =
@@ -10485,6 +10626,8 @@ const PublicProjectsProjectIdAuthRouteChildren: PublicProjectsProjectIdAuthRoute
       PublicProjectsProjectIdAuthIndexRoute,
     PublicProjectsProjectIdAuthUsersUserIdRoute:
       PublicProjectsProjectIdAuthUsersUserIdRouteWithChildren,
+    PublicProjectsProjectIdAuthUsersIndexRoute:
+      PublicProjectsProjectIdAuthUsersIndexRoute,
   }
 
 const PublicProjectsProjectIdAuthRouteWithChildren =
@@ -11314,6 +11457,7 @@ const PublicProjectsProjectIdSettingsMigrationsRouteWithChildren =
 interface PublicProjectsProjectIdSettingsRouteChildren {
   PublicProjectsProjectIdSettingsDomainsRoute: typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   PublicProjectsProjectIdSettingsFirewallRoute: typeof PublicProjectsProjectIdSettingsFirewallRoute
+  PublicProjectsProjectIdSettingsIdentityServersRoute: typeof PublicProjectsProjectIdSettingsIdentityServersRoute
   PublicProjectsProjectIdSettingsMigrationsRoute: typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   PublicProjectsProjectIdSettingsSmtpRoute: typeof PublicProjectsProjectIdSettingsSmtpRoute
   PublicProjectsProjectIdSettingsVariablesRoute: typeof PublicProjectsProjectIdSettingsVariablesRoute
@@ -11327,6 +11471,8 @@ const PublicProjectsProjectIdSettingsRouteChildren: PublicProjectsProjectIdSetti
       PublicProjectsProjectIdSettingsDomainsRouteWithChildren,
     PublicProjectsProjectIdSettingsFirewallRoute:
       PublicProjectsProjectIdSettingsFirewallRoute,
+    PublicProjectsProjectIdSettingsIdentityServersRoute:
+      PublicProjectsProjectIdSettingsIdentityServersRoute,
     PublicProjectsProjectIdSettingsMigrationsRoute:
       PublicProjectsProjectIdSettingsMigrationsRouteWithChildren,
     PublicProjectsProjectIdSettingsSmtpRoute:
@@ -11898,6 +12044,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
   AlternativeToDotmdRoute: AlternativeToDotmdRoute,
+  AuthDotmdRoute: AuthDotmdRoute,
   BlogDotmdRoute: BlogDotmdRoute,
   ChangelogDotmdRoute: ChangelogDotmdRoute,
   DiscordRoute: DiscordRoute,
@@ -11914,13 +12061,17 @@ const rootRouteChildren: RootRouteChildren = {
   SetupDotmdRoute: SetupDotmdRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TransferRoute: TransferRoute,
+  ApiAskRoute: ApiAskRoute,
   ApiChangelogDotjsonRoute: ApiChangelogDotjsonRoute,
   ApiHelloRoute: ApiHelloRoute,
   ApiOpenapiDotjsonRoute: ApiOpenapiDotjsonRoute,
+  ApiSchemamapDotxmlRoute: ApiSchemamapDotxmlRoute,
+  BlogLlmsDottxtRoute: BlogLlmsDottxtRoute,
   CliInstallDotps1Route: CliInstallDotps1Route,
   CliInstallDotshRoute: CliInstallDotshRoute,
   DomainsContinueRoute: DomainsContinueRoute,
   ILinkIdRoute: ILinkIdRoute,
+  IconsSpriteDotsvgRoute: IconsSpriteDotsvgRoute,
   LlmsFullTxtRoute: LlmsFullTxtRoute,
   LlmsTxtRoute: LlmsTxtRoute,
   ApiBlogRssDotxmlRoute: ApiBlogRssDotxmlRoute,

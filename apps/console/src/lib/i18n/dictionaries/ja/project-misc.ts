@@ -713,6 +713,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Models and tools': 'モデルとツール',
   'Calls by model and by tool': 'モデル別・ツール別の呼び出し数',
   'No calls in this range': 'この期間の呼び出しはありません',
+  'Installs and push': 'インストールとプッシュ',
+  'Installs, updates and push notifications from the tracking SDK':
+    '計測 SDK によるインストール、アップデート、プッシュ通知',
+  'No installs tracked yet': 'まだインストールは計測されていません',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    '最新の計測 SDK をアプリに追加すると、インストール、アップデート、プッシュ通知を計測できます。',
+  'Add the tracking SDK': '計測 SDK を追加',
+  Installs: 'インストール',
+  Updates: 'アップデート',
+  'Push received': 'プッシュ受信',
+  'Push opened': 'プッシュ開封',
+  'Push opened by message': 'メッセージ別のプッシュ開封',
+  'No opened pushes with a message ID in this range':
+    'この期間にメッセージ ID 付きで開封されたプッシュはありません',
   'Values of the props sent with your events':
     'イベントと一緒に送信された props の値',
   'No event props in this range': 'この期間にイベントの props はありません',
@@ -2002,7 +2016,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to rotate secret': 'シークレットのローテーションに失敗しました',
   'Failed to send test email': 'テストメールの送信に失敗しました',
   'Failed to start migration': '移行の開始に失敗しました',
-  'Failed to transfer project': 'プロジェクトの転送に失敗しました',
   'Failed to update SMTP settings': 'SMTP 設定の更新に失敗しました',
   'Failed to update project name': 'プロジェクト名の更新に失敗しました',
   'Failed to update protocol': 'プロトコルの更新に失敗しました',
@@ -2144,8 +2157,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Search migrations...': 'マイグレーションを検索...',
   'Search webhooks...': 'Webhook を検索...',
   'Secure protocol': 'セキュアプロトコル',
-  'Select a different organization to transfer to.':
-    '転送先の別の組織を選択してください。',
   'Select at least one event': '少なくとも 1 つのイベントを選択',
   'Select at least one resource': '少なくとも 1 つのリソースを選択',
   'Select destination': '転送先を選択',
@@ -2204,12 +2215,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。',
   'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
     'このシークレットは、Webhook 作成またはシークレットローテーション後に 1 回のみ表示されます。今すぐコピーしてください。',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
-    'このプロジェクトを転送するには、現在の組織と転送先組織の両方のメンバーである必要があります。以下で転送先を選択してください。',
   'Transfer between organizations': '組織間の転送',
   'Transfer project': 'プロジェクトの転送',
-  'Transfer this project to the selected organization':
-    'このプロジェクトを選択した組織に転送',
   'URL is required': 'URL は必須です',
   'Update webhook': 'Webhook の更新',
   'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
@@ -2238,10 +2245,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'インポート中に既存の ID を持つ行に遭遇した場合。',
   'When enabled, all emails will be sent through your configured SMTP server.':
     '有効にすると、すべてのメールは設定した SMTP サーバー経由で送信されます。',
-  'You do not have any organizations you can transfer this project to.':
-    'このプロジェクトを転送できる組織がありません。',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
-    'このプロジェクトを転送できる組織がありません。転送するには、別の組織を作成または参加してください。',
   'an A or AAAA record': 'A または AAAA レコード',
   'and all its databases, functions, and files? This action cannot be undone.':
     'とそのすべてのデータベース、Functions、ファイル? この操作は元に戻せません。',
@@ -3453,6 +3456,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project environment': 'プロジェクト環境',
   'Switch to production': '本番に切り替え',
   'Environment ID': '環境 ID',
+  // Environments by plan: Pro and above, and the cap per project
+  'Project environments are available on Pro':
+    'プロジェクト環境は Pro プランで利用できます',
+  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
+    'にはプロジェクト環境が含まれていません。アップグレードすると、各プロジェクトに staging や preview などの環境を作成でき、それぞれが独自のリソースとユーザーを持ちます。',
+  environments: '個の環境',
+  'environments per project.': '個の環境をプロジェクトごとに作成できます。',
+  'Delete an environment to create another.':
+    '別の環境を作成するには、環境を 1 つ削除してください。',
+  // Settings of an environment: its name, its ID, and deleting it
+  'Environment name has been updated': '環境名を更新しました',
+  'Failed to update environment name': '環境名の更新に失敗しました',
+  "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.":
+    'この環境には、プロジェクトの API エンドポイントとプロジェクト ID に加え、本番と区別するための環境 ID を使用してアクセスします。', // pragma: allowlist secret
+  'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.':
+    'この環境をリソースとユーザーごと完全に削除します。この環境が属するプロジェクトと他の環境には影響しません。この操作は元に戻せません。',
+  Environment: '環境',
+  'Project:': 'プロジェクト:',
+  'Failed to load migrations': 'マイグレーションの読み込みに失敗しました',
+  'Failed to refresh migrations': 'マイグレーションの更新に失敗しました',
+  'The list below may be out of date.': '以下の一覧は最新でない可能性があります。',
   'An environment with this ID already exists in this project.':
     'この ID の環境はこのプロジェクトに既に存在します。',
   'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
@@ -3947,6 +3971,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Critical: '重要',
   "Rings on your phone even when it's on silent or in Do Not Disturb.":
     'スマートフォンがサイレントやおやすみモードでも鳴ります。',
+  Severity: '重大度',
+  Warning: '警告',
+  'Worth knowing about. Nothing needs doing yet.': '知っておくべき情報です。まだ対応は不要です。',
+  'Look into it soon, before it becomes a problem.': '問題になる前に、早めに確認してください。',
+  'Something is broken and needs fixing.': '何かが壊れていて、修正が必要です。',
   'Critical. Rings on phones even on silent.':
     '重要。サイレントでもスマートフォンが鳴ります。',
   'Rings on phones even on silent': 'サイレントでもスマートフォンが鳴ります',
@@ -4047,4 +4076,100 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Send email, SMS, and push notifications to your users.':
     'ユーザーにメール、SMS、プッシュ通知を送信します。',
   'Auto-deploy on every push': 'push のたびに自動デプロイ',
+  // Identity servers (LDAP)
+  'Identity servers': 'ID サーバー',
+  LDAP: 'LDAP',
+  'Connect the identity systems your organization already runs so people can sign in with the accounts they have.':
+    '組織がすでに運用している ID システムを接続し、既存のアカウントでサインインできるようにします。',
+  'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
+    'Active Directory や OpenLDAP などの LDAP ディレクトリの認証情報でユーザーがサインインできるようにします。',
+  'Turn on LDAP sign-in for this project. Enabling connects to the directory to validate the configuration, so add at least one host and a base DN first.':
+    'このプロジェクトで LDAP サインインを有効にします。有効化時にディレクトリへ接続して設定を検証するため、先に少なくとも 1 つのホストとベース DN を追加してください。',
+  Directory: 'ディレクトリ',
+  Hosts: 'ホスト',
+  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10. Paste an LDAP URL to also fill in encryption, port and base DN.':
+    'ディレクトリのホスト名または IP アドレス。応答があるまで順に試します。ホストごとに Enter を押してください。最大 10 件。LDAP URL を貼り付けると、暗号化、ポート、ベース DN も入力されます。',
+  'Use {dn} as the base DN?': '{dn} をベース DN として使用しますか?',
+  Use: '使用',
+  'Leave empty for the default: 636 for LDAPS, 389 otherwise.':
+    '空にするとデフォルトを使用します。LDAPS は 636、それ以外は 389 です。',
+  'LDAPS encrypts from the first byte, StartTLS upgrades a plain connection, None is for a trusted network only.':
+    'LDAPS は最初から暗号化し、StartTLS は平文接続を暗号化に切り替えます。「なし」は信頼できるネットワーク専用です。',
+  'Verify certificate': '証明書を検証',
+  "Check the directory's certificate against the certificate below, or the system trust store if it is empty.":
+    'ディレクトリの証明書を下の証明書で検証します。空の場合はシステムの信頼ストアで検証します。',
+  'Timeout (seconds)': 'タイムアウト (秒)',
+  'Seconds to wait for the directory to connect and answer each operation, from 1 to 30.':
+    'ディレクトリの接続と各操作の応答を待つ秒数。1 から 30 まで。',
+  'Certificate (PEM)': '証明書 (PEM)',
+  "Certificate of the authority that signed the directory's certificate, or the directory's own certificate if it is self-signed. Paste several to trust more than one. Leave empty to use the system trust store.":
+    'ディレクトリの証明書に署名した認証局の証明書。自己署名の場合はディレクトリの証明書そのもの。複数貼り付けると、そのすべてを信頼します。空にするとシステムの信頼ストアを使用します。',
+  'Base DN': 'ベース DN',
+  'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
+    'ユーザー検索の起点となるサブツリー。例: ou=people,dc=example,dc=com',
+  'Bind DN': 'バインド DN',
+  'Service account used to search for users. Leave empty if the directory allows anonymous search.':
+    'ユーザー検索に使うサービスアカウント。ディレクトリが匿名検索を許可している場合は空にします。',
+  'Bind password': 'バインドパスワード',
+  'User filter': 'ユーザーフィルター',
+  'Finds the person signing in. {username} is replaced with what they type.':
+    'サインインするユーザーを検索します。{username} は入力された内容に置き換えられます。',
+  'The user filter must contain {username}.':
+    'ユーザーフィルターには {username} を含める必要があります。',
+  'Sign-in rules': 'サインインのルール',
+  'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.':
+    'Active Directory を使用していますか? ユーザーフィルターを (sAMAccountName={username})、ID 属性を objectGUID に設定してください。',
+  'Attribute mapping': '属性のマッピング',
+  'ID attribute': 'ID 属性',
+  'Attribute with the identifier that stays the same when an entry is renamed or moved: entryUUID, or objectGUID on Active Directory.':
+    'エントリの名前変更や移動後も変わらない識別子を保持する属性。entryUUID、Active Directory では objectGUID。',
+  'Email attribute': 'メール属性',
+  'Attribute holding the email address, usually mail.':
+    'メールアドレスを保持する属性。通常は mail。',
+  'Name attribute': '名前属性',
+  'Attribute holding the display name: cn, or displayName on Active Directory.':
+    '表示名を保持する属性。cn、Active Directory では displayName。',
+  'Phone attribute': '電話番号属性',
+  'Attribute holding the phone number in E.164 format, for example mobile. Leave empty to skip phone numbers.':
+    'E.164 形式の電話番号を保持する属性。例: mobile。空にすると電話番号は取り込みません。',
+  'Required group DN': '必須グループ DN',
+  'Group a user must belong to in order to sign in, checked on every sign-in. Leave empty to allow every user the directory authenticates.':
+    'サインインに必要な所属グループ。サインインのたびに確認します。空にするとディレクトリで認証されたすべてのユーザーを許可します。',
+  'Port must be between 1 and 65535.':
+    'ポートは 1 から 65535 の範囲で指定してください。',
+  'LDAP settings have been updated.': 'LDAP 設定を更新しました。',
+  'LDAP sign-in has been enabled.': 'LDAP サインインを有効にしました。',
+  'LDAP sign-in has been disabled.': 'LDAP サインインを無効にしました。',
+  'Failed to update LDAP settings': 'LDAP 設定の更新に失敗しました',
+  'Test connection': '接続をテスト',
+  'Update the configuration with at least one host and a base DN before testing the connection.':
+    '接続をテストする前に、少なくとも 1 つのホストとベース DN を設定して更新してください。',
+  'Test LDAP connection': 'LDAP 接続のテスト',
+  'Checks the configuration saved on this project: it connects to the directory, binds as the service account and reads the base DN.':
+    'このプロジェクトに保存された設定を確認します。ディレクトリに接続し、サービスアカウントでバインドして、ベース DN を読み取ります。',
+  'Unsaved changes in the form are not included: update first to test them.':
+    'フォームの未保存の変更は含まれません。テストするには先に更新してください。',
+  'Username (optional)': 'ユーザー名 (任意)',
+  'Also looks this user up and checks the required group.':
+    'このユーザーを検索し、必須グループも確認します。',
+  'Password (optional)': 'パスワード (任意)',
+  'Also verifies the password of that user.':
+    'そのユーザーのパスワードも検証します。',
+  'Run test': 'テストを実行',
+  'Testing the connection…': '接続をテストしています…',
+  'Connection, service account and base DN look good.':
+    '接続、サービスアカウント、ベース DN に問題はありません。',
+  'User found, group check passed, password accepted.':
+    'ユーザーが見つかり、グループの確認に合格し、パスワードが受け入れられました。',
+  'User found, group check passed.':
+    'ユーザーが見つかり、グループの確認に合格しました。',
+  'Failed to test the LDAP connection': 'LDAP 接続のテストに失敗しました',
+  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate settings or bind DN change.':
+    '安全に保存され、再表示されません。ホスト、ポート、暗号化、証明書の設定、バインド DN を変更する際は再入力が必要です。',
+  'Enter the bind password again to save: the connection or certificate settings changed.':
+    '保存するにはバインドパスワードを再入力してください。接続または証明書の設定が変更されています。',
+  'Add at least one host and a base DN to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、少なくとも 1 つのホストとベース DN を追加してください。',
+  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
+    'LDAP サインインを有効にするには、[設定] > [ID サーバー] で少なくとも 1 つのホストとベース DN を追加してください。',
 }

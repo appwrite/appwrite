@@ -263,6 +263,18 @@ installSetProjectWithHeader(clientConsole)
 installSetProjectWithHeader(clientProject)
 
 /**
+ * One SDK per place a project request can act: an endpoint, a project and the
+ * environment of it, or none for the project itself. Callers hold what
+ * `sdk.forProject` returns across awaits (create then deploy, a chunked upload,
+ * a bulk loop) while other queries ask for another project, or for the project
+ * itself from inside one of its environments. One client retargeted on every
+ * call sent the held handle's next request wherever the last caller pointed
+ * it, which from inside an environment is production. Each handle has its own
+ * client instead, and keeps acting where it was obtained.
+ */
+const projectSdks = new Map<string, ProjectSdkRaw>()
+
+/**
  * An environment of a project is reached with the project's ID in
  * `X-Appwrite-Project` and the environment's ID in `X-Appwrite-Environment`;
  * it has no project ID of its own. Set on the client, so service methods and
@@ -302,7 +314,9 @@ if (typeof window !== 'undefined') {
     const language = getActiveLanguage()
     if (clientConsole.config.locale !== language) {
       clientConsole.setLocale(language)
-      clientProject.setLocale(language)
+      for (const client of projectClients()) {
+        client.setLocale(language)
+      }
     }
   })
 }
@@ -321,6 +335,8 @@ if (typeof window !== 'undefined') {
     const base = getApiEndpoint()
     clientConsole.setEndpoint(base)
     clientProject.setEndpoint(base)
+    // Handles are kept per endpoint; the next call builds one for the new base
+    projectSdks.clear()
     resetFingerprintServerTimeCache()
     void scheduleConsoleFingerprintServerTimeSync()
   })
@@ -385,7 +401,7 @@ function applyImpersonateUserIdToClient(client: Client, userId: string) {
 export function applyConsoleImpersonateUserId(targetUserId: string) {
   const id = String(targetUserId ?? '').trim()
   if (!id) return
-  for (const client of [clientConsole, clientProject]) {
+  for (const client of [clientConsole, ...projectClients()]) {
     clearImpersonationHeaders(client)
     applyImpersonateUserIdToClient(client, id)
   }
@@ -393,7 +409,7 @@ export function applyConsoleImpersonateUserId(targetUserId: string) {
 
 /** Remove impersonation headers from console and project clients. */
 export function clearConsoleImpersonateUser() {
-  for (const client of [clientConsole, clientProject]) {
+  for (const client of [clientConsole, ...projectClients()]) {
     clearImpersonationHeaders(client)
   }
 }
@@ -438,7 +454,9 @@ export function clearConsoleSessionLocally(): void {
     }
   }
   resetAuthOnClient(clientConsole)
-  resetAuthOnClient(clientProject)
+  for (const client of projectClients()) {
+    resetAuthOnClient(client)
+  }
 
   const cookieName = `a_session_${CONSOLE_SDK_PROJECT_ID}`
   const expired = 'Thu, 01 Jan 1970 00:00:00 GMT'
@@ -531,8 +549,8 @@ export function createRegionalConsoleRealtime(projectId: string): Realtime {
   return new Realtime(c)
 }
 
-// Create Project SDK instance (raw), then wrap for slow-call reporting
-const sdkForProjectRaw = {
+// Create a Project SDK instance (raw) on a client, wrapped below for slow-call reporting
+const createProjectSdkRaw = (clientProject: Client) => ({
   client: clientProject,
   account: new Account(clientProject),
   activities: new Activities(clientProject),
@@ -568,12 +586,49 @@ const sdkForProjectRaw = {
   usage: new Usage(clientProject),
   videos: new Videos(clientProject),
   webhooks: new Webhooks(clientProject),
+})
+
+type ProjectSdkRaw = ReturnType<typeof createProjectSdkRaw>
+
+/**
+ * Every client project requests go out on: the shared one, which carries the
+ * state they all start from (admin mode, locale, impersonation) and backs
+ * project realtime, and each handle's own. State that changes after a handle
+ * was created is applied to all of them.
+ */
+function projectClients(): Client[] {
+  return [
+    clientProject,
+    ...Array.from(projectSdks.values(), (projectSdk) => projectSdk.client),
+  ]
 }
 
-const sdkForProject = wrapServiceObject(
-  sdkForProjectRaw as Record<string, unknown>,
-  'forProject',
-) as typeof sdkForProjectRaw
+function projectSdkFor(
+  endpoint: string,
+  projectId: string,
+  environmentId: string | null,
+): ProjectSdkRaw {
+  // A project ID and an environment ID are held to a-z, 0-9 and hyphen
+  const key = [endpoint, projectId, environmentId ?? ''].join('|')
+
+  let projectSdk = projectSdks.get(key)
+  if (!projectSdk) {
+    const client = new Client()
+    installSetProjectWithHeader(client)
+    Object.assign(client.config, clientProject.config)
+    Object.assign(client.headers, clientProject.headers)
+    client.setEndpoint(endpoint).setProject(projectId)
+    applyEnvironmentHeader(client, environmentId)
+
+    projectSdk = wrapServiceObject(
+      createProjectSdkRaw(client) as Record<string, unknown>,
+      'forProject',
+    ) as ProjectSdkRaw
+    projectSdks.set(key, projectSdk)
+  }
+
+  return projectSdk
+}
 
 const consoleSdkRawBase = createConsoleSdkRaw(clientConsole)
 registerConsoleAccountGet(
@@ -639,21 +694,22 @@ export const sdk = {
   ) {
     const effectiveRegion = region ?? projectRegions.get(projectId)
     const projectEndpoint = getApiEndpoint(effectiveRegion)
+    const environmentId =
+      options.environment === undefined
+        ? getActiveEnvironmentId(projectId)
+        : options.environment || null
 
+    // The shared client still follows the last call: project realtime reads its
+    // project from it. No request made through a handle goes out on it.
     if (projectEndpoint !== clientProject.config.endpoint) {
       clientProject.setEndpoint(projectEndpoint)
     }
     if (projectId !== clientProject.config.project) {
       clientProject.setProject(projectId)
     }
-    applyEnvironmentHeader(
-      clientProject,
-      options.environment === undefined
-        ? getActiveEnvironmentId(projectId)
-        : options.environment,
-    )
+    applyEnvironmentHeader(clientProject, environmentId)
 
-    return sdkForProject
+    return projectSdkFor(projectEndpoint, projectId, environmentId)
   },
 
   /**
@@ -680,4 +736,4 @@ export const sdk = {
 
 // Export types for TypeScript
 export type ConsoleSdk = ReturnType<typeof createConsoleSdkRaw>
-export type ProjectSdk = typeof sdkForProject
+export type ProjectSdk = ProjectSdkRaw

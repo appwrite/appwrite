@@ -18,8 +18,7 @@ pub enum Error {
     /// reported. PHP: `Utopia\Image\Exception\CorruptImageException`.
     #[error("Corrupt or truncated image")]
     Corrupt(String),
-    /// An image larger than the dimension or memory limits
-    /// ([`set_resource_limit`](crate::set_resource_limit)).
+    /// An image larger than its canvas's [`Limits`](crate::Limits).
     /// PHP: `Utopia\Image\Exception\LimitExceededException`.
     #[error("Image exceeds the size or memory limits")]
     LimitExceeded,

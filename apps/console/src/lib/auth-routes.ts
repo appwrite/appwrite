@@ -20,11 +20,11 @@ export function isAuthTeamDetailPath(pathname: string): boolean {
   )
 }
 
-/** True for `/projects/:id/auth` (users list index). */
+/** True for `/projects/:id/auth/users` (users list). */
 export function isAuthUsersIndexPath(
   pathname: string,
   projectId: string | undefined,
 ): boolean {
   if (!projectId) return false
-  return pathname.replace(/\/$/, '') === `/projects/${projectId}/auth`
+  return pathname.replace(/\/$/, '') === `/projects/${projectId}/auth/users`
 }

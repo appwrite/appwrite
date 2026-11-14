@@ -2,16 +2,14 @@
 
 namespace Appwrite\Screenshots;
 
-use Appwrite\Permission;
-use Appwrite\Role;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 
 /**
- * A site deployment's screenshots are files in the console's `screenshots` bucket, readable only by the team that
- * owns the project. That team changes when the project moves, so the files are granted to it again.
+ * A site deployment's screenshots are files in the console's `screenshots` bucket, readable only by whoever may read
+ * the project. That changes when the project moves to another team, so the files are granted to it again.
  */
 final readonly class Access
 {
@@ -25,12 +23,12 @@ final readonly class Access
     }
 
     /**
-     * Make every screenshot of the project's site deployments readable by the team that owns the project now, and
-     * by no other. The team is read from the primary, and again at the end: a move that lands while this runs makes
+     * Make every screenshot of the project's site deployments readable by whoever may read the project now, and by
+     * no other. The project is read from the primary, and again at the end: a move that lands while this runs makes
      * it start over, so it never leaves the files with a team the project has already left.
      *
-     * @param bool $commit False only counts the files still granted to another team
-     * @return int The number of files that were granted to another team
+     * @param bool $commit False only counts the files not yet granted that way
+     * @return int The number of files that were granted another way
      */
     public function grant(Database $dbForProject, Document $project, bool $commit = true): int
     {
@@ -41,13 +39,11 @@ final readonly class Access
         }
 
         do {
-            $teamId = $this->team($project);
-            if ($teamId === '') {
-                return 0;
-            }
+            // A project nobody may read leaves its screenshots readable by nobody
+            $permissions = self::permissions($this->project($project));
 
             // A generator reads lazily, so the whole walk runs inside the skip
-            $count = $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $bucket, $teamId, $commit): int {
+            $count = $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $bucket, $permissions, $commit): int {
                 $count = 0;
                 $ids = [];
                 foreach ($dbForProject->cursor('deployments', [
@@ -57,18 +53,18 @@ final readonly class Access
                     \array_push($ids, ...$this->files($deployment));
 
                     if (\count($ids) >= APP_DATABASE_QUERY_MAX_VALUES) {
-                        $count += $this->update($bucket, $teamId, $ids, $commit);
+                        $count += $this->update($bucket, $permissions, $ids, $commit);
                         $ids = [];
                     }
                 }
 
                 if ($ids !== []) {
-                    $count += $this->update($bucket, $teamId, $ids, $commit);
+                    $count += $this->update($bucket, $permissions, $ids, $commit);
                 }
 
                 return $count;
             });
-        } while ($commit && $this->team($project) !== $teamId);
+        } while ($commit && self::permissions($this->project($project)) !== $permissions);
 
         return $count;
     }
@@ -79,13 +75,31 @@ final readonly class Access
     }
 
     /**
-     * The project's team as the primary holds it, past any cache or replica still serving the one before a move.
+     * The read permissions a screenshot of the project carries: those of the project itself, so a member whose role
+     * is limited to another project cannot read it.
+     *
+     * @return list<string>
      */
-    private function team(Document $project): string
+    public static function permissions(Document $project): array
+    {
+        if ($project->getAttribute('teamId', '') === '') {
+            return [];
+        }
+
+        return \array_values(\array_filter(
+            $project->getPermissions(),
+            fn (string $permission): bool => \str_starts_with($permission, PermissionType::Read->value . '('),
+        ));
+    }
+
+    /**
+     * The project as the primary holds it, past any cache or replica still serving the one before a move.
+     */
+    private function project(Document $project): Document
     {
         return $this->dbForPlatform->getAuthorization()->skip(
-            fn (): Document => $this->dbForPlatform->getDocument('projects', $project->getId(), [Query::select(['teamId'])], forUpdate: true)
-        )->getAttribute('teamId', '');
+            fn (): Document => $this->dbForPlatform->getDocument('projects', $project->getId(), [Query::select(['teamId', '$permissions'])], forUpdate: true)
+        );
     }
 
     /**
@@ -105,12 +119,12 @@ final readonly class Access
     }
 
     /**
+     * @param list<string> $permissions
      * @param list<string> $ids
      */
-    private function update(Document $bucket, string $teamId, array $ids, bool $commit): int
+    private function update(Document $bucket, array $permissions, array $ids, bool $commit): int
     {
         $collection = 'bucket_' . $bucket->getSequence();
-        $permissions = [Permission::read(Role::team(Id::custom($teamId)))];
 
         return $this->dbForPlatform->getAuthorization()->skip(function () use ($collection, $permissions, $ids, $commit): int {
             $stale = [];

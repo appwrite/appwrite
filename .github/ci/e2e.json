@@ -26,6 +26,7 @@
       "Cargo.lock",
       ".cargo/",
       "rustfmt.toml",
+      "packages/dsn/",
       "packages/image/",
       "Dockerfile",
       ".dockerignore"
@@ -440,6 +441,16 @@
       ]
     },
     {
+      "name": "VCSOrigin",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/VCS/",
+        "packages/vcs/"
+      ]
+    },
+    {
       "name": "VCSGitea",
       "runner": "e2e",
       "functional": false,
@@ -502,7 +513,11 @@
         "src/Appwrite/Platform/Modules/Project/",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
-        "packages/smtp/"
+        "packages/smtp/",
+        "src/Appwrite/Auth/LDAP/",
+        "src/Appwrite/Platform/Modules/Account/Base.php",
+        "src/Appwrite/Platform/Modules/Account/Http/Account/Sessions/LDAP/",
+        "dev/openldap/"
       ]
     },
     {

@@ -12,6 +12,7 @@ import { pageTitle } from '@/lib/utils/page-title'
 const DEFAULT_PAGE = 1
 
 const authTeamsSearchSchema = listSearchSchema.extend({
+  create: z.string().optional().catch(undefined),
   teamsSearch: z.string().optional().catch(undefined),
   teamsQuery: z.string().optional().catch(undefined),
   teamsPage: z.coerce.number().int().min(1).optional().catch(undefined),

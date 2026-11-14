@@ -204,10 +204,42 @@ final class SitesConsoleClientTest extends Scope
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame($teamId, $response['body']['teamId']);
 
+        $projectId = $this->getProject()['$id'];
         foreach ($files as $fileId) {
             $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
             $this->assertSame(200, $file['headers']['status-code']);
-            $this->assertSame([Permission::read(Role::team($teamId))], $file['body']['$permissions']);
+            $this->assertReadableAsProject($teamId, $projectId, $file['body']['$permissions']);
+        }
+
+        /**
+         * Test for SUCCESS - claiming a transfer link moves the screenshots too
+         */
+        $claimer = $this->createTeamFixture($console, [
+            'teamId' => Id::unique(),
+            'name' => 'Screenshots Claiming Team',
+        ]);
+        $this->assertSame(200, $claimer['headers']['status-code']);
+        $claimerId = $claimer['body']['$id'];
+
+        $transfer = $this->client->call(Client::METHOD_POST, '/organization/transfers', array_merge($console, [
+            'x-appwrite-organization' => $teamId,
+        ]), [
+            'projectId' => $this->getProject()['$id'],
+        ]);
+        $this->assertSame(201, $transfer['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/organization/transfers/' . $transfer['body']['$id'] . '/status', array_merge($console, [
+            'x-appwrite-organization' => $claimerId,
+        ]), [
+            'secret' => $transfer['body']['secret'],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($claimerId, $response['body']['teamId']);
+
+        foreach ($files as $fileId) {
+            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
+            $this->assertSame(200, $file['headers']['status-code']);
+            $this->assertReadableAsProject($claimerId, $projectId, $file['body']['$permissions']);
         }
 
         $this->cleanupSite($siteId);
@@ -307,6 +339,26 @@ final class SitesConsoleClientTest extends Scope
         } while (\microtime(true) < $deadline);
 
         $this->cleanupSite($siteId);
+    }
+
+    /**
+     * Readable as the project is: by the team's and the project's owners and developers, and by no other team or
+     * project. The roles are the project's own, so a platform with more project roles adds those too.
+     *
+     * @param array<string> $permissions
+     */
+    private function assertReadableAsProject(string $teamId, string $projectId, array $permissions): void
+    {
+        foreach (['owner', 'developer', "project-{$projectId}-owner", "project-{$projectId}-developer"] as $role) {
+            $this->assertContains(Permission::read(Role::team($teamId, $role)), $permissions);
+        }
+
+        foreach ($permissions as $permission) {
+            $this->assertStringStartsWith('read("team:' . $teamId . '/', $permission);
+            if (\str_contains($permission, '/project-')) {
+                $this->assertStringContainsString("/project-{$projectId}-", $permission);
+            }
+        }
     }
 
     private function getScreenshot(string $screenshotId): array

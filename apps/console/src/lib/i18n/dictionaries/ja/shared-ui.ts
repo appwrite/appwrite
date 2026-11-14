@@ -1387,9 +1387,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Project environments': 'プロジェクト環境',
   'Switch or clone staging and production.':
     'ステージングと本番を切り替え、複製します。',
-  'Project transfers': 'プロジェクトの転送',
-  'Move a project to another organization.':
-    'プロジェクトを別の組織へ移します。',
+  'Origin Git provider': 'Origin Git プロバイダー',
+  'Deploy from Cursor Origin repositories.':
+    'Cursor Origin のリポジトリからデプロイします。',
+  'LDAP directory sign-in for a project.':
+    'プロジェクトへの LDAP ディレクトリ サインイン。',
   'Repository not available': 'リポジトリを利用できません',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
@@ -1403,4 +1405,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No thanks': 'いいえ、結構です',
   'One-time ask, promise. May your builds be ever green.':
     'お願いするのは今回だけ、約束します。あなたのビルドがいつもグリーンでありますように。',
+  'Settings · Identity servers': '設定 · ID サーバー',
+  'LDAP directory sign-in': 'LDAP ディレクトリでのサインイン',
 }

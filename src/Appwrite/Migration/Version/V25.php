@@ -2,6 +2,7 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Alert\Severity;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Migration\Migration;
 use Exception;
@@ -81,6 +82,12 @@ class V25 extends Migration
                             $this->createAttributeFromCollection($this->dbForProject, $id, 'prefs');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create attribute \"prefs\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'ldap');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"ldap\" in collection {$id}: {$th->getMessage()}");
                         }
 
                         try {
@@ -580,8 +587,8 @@ class V25 extends Migration
                 case 'monitorAlerts':
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
-                    // Created before monitors could be critical, or alerts acknowledged.
-                    $attributes = $id === 'monitorAlerts' ? ['critical', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] : ['critical'];
+                    // Created before monitors had a severity, or alerts were acknowledged.
+                    $attributes = $id === 'monitorAlerts' ? ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] : ['severity'];
                     foreach ($attributes as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
@@ -717,6 +724,15 @@ class V25 extends Migration
 
     protected function migrateDocument(Document $document): Document
     {
+        // A column added to existing rows leaves them null, not at its default.
+        if (\in_array($document->getCollection(), ['monitors', 'monitorAlerts'], true)) {
+            if (empty($document->getAttribute('severity'))) {
+                $document->setAttribute('severity', Severity::Warning->value);
+            }
+
+            return $document;
+        }
+
         if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
             $retired = ['devKeys.read', 'devKeys.write', 'assistant.read'];
             $scopes = $document->getAttribute('scopes', []);

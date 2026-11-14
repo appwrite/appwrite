@@ -34,6 +34,11 @@
         "account.createJWT": [
             "duration"
         ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
+            "duration"
+        ],
         "account.createMFAAuthenticator": [
             "type"
         ],
@@ -1037,6 +1042,11 @@
             "name"
         ],
         "account.createJWT": [
+            "duration"
+        ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
             "duration"
         ],
         "account.createMFAAuthenticator": [
@@ -2965,7 +2975,7 @@
             "cooldown",
             "enabled",
             "notify",
-            "critical"
+            "severity"
         ],
         "monitors.delete": [
             "monitorId"
@@ -2985,7 +2995,7 @@
             "cooldown",
             "enabled",
             "notify",
-            "critical"
+            "severity"
         ],
         "notifications.list": [
             "queries",
@@ -3119,6 +3129,10 @@
             "expire",
             "description"
         ],
+        "project.createLDAPTest": [
+            "username",
+            "password"
+        ],
         "project.createLinuxPlatform": [
             "platformId",
             "name",
@@ -3163,6 +3177,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -3279,6 +3294,24 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "project.updateLDAP": [
+            "enabled",
+            "hosts",
+            "port",
+            "encryption",
+            "verification",
+            "certificate",
+            "timeout",
+            "baseDn",
+            "bindDn",
+            "bindPassword",
+            "userFilter",
+            "requiredGroupDn",
+            "idAttribute",
+            "emailAttribute",
+            "nameAttribute",
+            "phoneAttribute"
         ],
         "project.updateLabels": [
             "labels"
@@ -3459,6 +3492,11 @@
             "tenant",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
@@ -5433,6 +5471,11 @@
             "accessTokenExpiry",
             "name"
         ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
+            "duration"
+        ],
         "account.createMFAAuthenticator": [
             "type"
         ],
@@ -7322,7 +7365,7 @@
             "cooldown",
             "enabled",
             "notify",
-            "critical"
+            "severity"
         ],
         "monitors.delete": [
             "monitorId"
@@ -7342,7 +7385,7 @@
             "cooldown",
             "enabled",
             "notify",
-            "critical"
+            "severity"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",
@@ -7434,6 +7477,10 @@
             "scopes",
             "duration"
         ],
+        "project.createLDAPTest": [
+            "username",
+            "password"
+        ],
         "project.createLinuxPlatform": [
             "platformId",
             "name",
@@ -7478,6 +7525,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -7594,6 +7642,24 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "project.updateLDAP": [
+            "enabled",
+            "hosts",
+            "port",
+            "encryption",
+            "verification",
+            "certificate",
+            "timeout",
+            "baseDn",
+            "bindDn",
+            "bindPassword",
+            "userFilter",
+            "requiredGroupDn",
+            "idAttribute",
+            "emailAttribute",
+            "nameAttribute",
+            "phoneAttribute"
         ],
         "project.updateLabels": [
             "labels"
@@ -7774,6 +7840,11 @@
             "tenant",
             "enabled",
             "prompt"
+        ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
         ],
         "project.updateOAuth2Notion": [
             "oauthClientId",

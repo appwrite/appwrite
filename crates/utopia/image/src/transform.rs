@@ -9,12 +9,19 @@ use image::{Rgba, RgbaImage};
 
 use crate::color::Color;
 use crate::error::{Error, Result};
-use crate::frame::{Format, Frame, Page};
-use crate::options::check_dimensions;
+use crate::frame::{self, Format, Frame, Page};
+use crate::options::{canvas_bytes, check_dimensions, check_pixels};
+
+/// Fails unless a `width` x `height` replacement fits the limits alongside `src`, which
+/// stays alive until its replacement is complete.
+fn check_replacement(src: &RgbaImage, width: u64, height: u64) -> Result<()> {
+    check_dimensions(width, height)?;
+    check_pixels(canvas_bytes(src.width().into(), src.height().into()).saturating_add(canvas_bytes(width, height)))
+}
 
 /// Resamples `src` to `width` x `height` with `filter`.
 fn resample(src: &RgbaImage, width: u32, height: u32, filter: FilterType, alpha: bool) -> Result<RgbaImage> {
-    check_dimensions(width.into(), height.into())?;
+    check_replacement(src, width.into(), height.into())?;
     if width == 0 || height == 0 {
         return Err(Error::process("zero image size"));
     }
@@ -75,6 +82,21 @@ pub(crate) fn crop(frame: &mut Frame, width: u32, height: u32, x: i64, y: i64) {
     frame.page.y = y0;
 }
 
+/// The canvas [`crop_thumbnail`] resamples a `frame_width` x `frame_height`
+/// frame to before it crops the centre out: the one covering `width` x
+/// `height`. What the crop of a whole animation has to budget for alongside
+/// the frames themselves.
+pub(crate) fn cover(width: u32, height: u32, frame_width: u32, frame_height: u32) -> (i64, i64) {
+    let ratio_x = f64::from(width) / f64::from(frame_width);
+    let ratio_y = f64::from(height) / f64::from(frame_height);
+    let round = |v: f64| -> i64 { if v >= 0.0 { (v + 0.5).floor() as i64 } else { (v - 0.5).ceil() as i64 } };
+    if ratio_x > ratio_y {
+        (i64::from(width), round(ratio_x * f64::from(frame_height)))
+    } else {
+        (round(ratio_y * f64::from(frame_width)), i64::from(height))
+    }
+}
+
 /// Imagick's `cropThumbnailImage()`: scale to cover `width` x `height`, then
 /// crop the centre.
 pub(crate) fn crop_thumbnail(frame: &mut Frame, width: u32, height: u32) -> Result<()> {
@@ -82,14 +104,7 @@ pub(crate) fn crop_thumbnail(frame: &mut Frame, width: u32, height: u32) -> Resu
     if (ow, oh) == (width, height) {
         return Ok(());
     }
-    let ratio_x = f64::from(width) / f64::from(ow);
-    let ratio_y = f64::from(height) / f64::from(oh);
-    let round = |v: f64| -> i64 { if v >= 0.0 { (v + 0.5).floor() as i64 } else { (v - 0.5).ceil() as i64 } };
-    let (new_w, new_h) = if ratio_x > ratio_y {
-        (i64::from(width), round(ratio_x * f64::from(oh)))
-    } else {
-        (round(ratio_y * f64::from(ow)), i64::from(height))
-    };
+    let (new_w, new_h) = cover(width, height, ow, oh);
     if new_w <= 0 || new_h <= 0 {
         return Err(Error::process("zero image size"));
     }
@@ -111,7 +126,7 @@ pub(crate) fn crop_thumbnail(frame: &mut Frame, width: u32, height: u32) -> Resu
 /// `Imagick::borderImage($color, $width, $width)`.
 pub(crate) fn border(frame: &mut Frame, width: u32, color: Color) -> Result<()> {
     let (w, h) = (u64::from(frame.width()) + 2 * u64::from(width), u64::from(frame.height()) + 2 * u64::from(width));
-    check_dimensions(w, h)?;
+    check_replacement(&frame.pixels, w, h)?;
     let mut canvas = RgbaImage::from_pixel(w as u32, h as u32, Rgba(color.0));
     for (x, y, px) in frame.pixels.enumerate_pixels() {
         let dst = canvas.get_pixel_mut(x + width, y + width);
@@ -290,12 +305,20 @@ pub(crate) fn rotate(frame: &mut Frame, degrees: f64) -> Result<()> {
     let shear_y = angle.to_radians().sin();
     let page = frame.page;
     if shear_x.abs() < 1e-12 && shear_y.abs() < 1e-12 {
-        frame.pixels = match rotations {
-            1 => image::imageops::rotate90(&frame.pixels),
-            2 => image::imageops::rotate180(&frame.pixels),
-            3 => image::imageops::rotate270(&frame.pixels),
+        // A quarter turn swaps the sides, and the two limits may differ; its replacement is
+        // held alongside the source. A half turn is done in place.
+        match rotations {
+            1 | 3 => {
+                check_replacement(&frame.pixels, frame.height().into(), frame.width().into())?;
+                frame.pixels = if rotations == 1 {
+                    image::imageops::rotate90(&frame.pixels)
+                } else {
+                    image::imageops::rotate270(&frame.pixels)
+                };
+            }
+            2 => image::imageops::rotate180_in_place(&mut frame.pixels),
             _ => return Ok(()),
-        };
+        }
         let (w, h) = (i64::from(frame.width()), i64::from(frame.height()));
         let (pw, ph) = (i64::from(page.width), i64::from(page.height));
         // ImageMagick's IntegralRotateImage turns the page with the pixels.
@@ -322,7 +345,7 @@ pub(crate) fn rotate(frame: &mut Frame, degrees: f64) -> Result<()> {
     let gy = (min_y - 0.5).floor();
     let out_w = (max_x - gx + 0.5).ceil();
     let out_h = (max_y - gy + 0.5).ceil();
-    check_dimensions(out_w as u64, out_h as u64)?;
+    check_replacement(&frame.pixels, out_w as u64, out_h as u64)?;
     let (out_w, out_h) = (out_w as u32, out_h as u32);
     let src = &frame.pixels;
     let mut out = RgbaImage::new(out_w, out_h);
@@ -393,6 +416,9 @@ pub(crate) fn flatten(frames: &[Frame]) -> Result<Frame> {
     let width = if first.page.width == 0 { first.width() } else { first.page.width };
     let height = if first.page.height == 0 { first.height() } else { first.page.height };
     check_dimensions(width.into(), height.into())?;
+    // Every frame stays alive while the canvas is composited, so the whole
+    // image is charged, not the canvas alone.
+    check_pixels(frame::retained(frames).saturating_add(canvas_bytes(width.into(), height.into())))?;
     let background = first.background;
     let mut canvas = RgbaImage::from_pixel(width, height, Rgba(background.0));
     for frame in frames {

@@ -58,6 +58,7 @@
         "policies.write",
         "presences.read",
         "presences.write",
+        "project.ldap.write",
         "project.oauth2.read",
         "project.oauth2.write",
         "project.policies.read",

@@ -33,7 +33,9 @@ export function ProductEmptyStateHero({
   title,
   description,
   actions,
+  children,
   as: Heading = 'h2',
+  layout = 'stacked',
 }: {
   /** Desktop illustration; `icon` replaces it below `sm`. */
   visual: ReactNode
@@ -41,25 +43,79 @@ export function ProductEmptyStateHero({
   title: ReactNode
   description: ReactNode
   actions?: ReactNode
+  /** Rendered under the actions. */
+  children?: ReactNode
   as?: 'h1' | 'h2'
+  /**
+   * `split` puts the illustration beside the text from `lg`, for wide cards.
+   * `columns` sets the text and illustration in two columns once the
+   * container has room for both, and stacks them centered when it has not.
+   */
+  layout?: 'stacked' | 'split' | 'columns'
 }) {
-  return (
-    <div className="flex flex-col items-center text-center">
-      {visual}
+  const split = layout === 'split'
+  const columns = layout === 'columns'
+  const text = (
+    <div
+      className={cn(
+        'flex flex-col items-center',
+        split && 'lg:max-w-md lg:items-start',
+        columns && 'w-full @4xl:items-start',
+      )}
+    >
       <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted text-muted-foreground sm:hidden">
         <Icon className="h-5 w-5" />
       </div>
-      <Heading className="mt-6 text-[24px] font-semibold tracking-tight text-foreground sm:mt-10">
+      <Heading
+        className={cn(
+          'mt-6 text-[24px] font-semibold tracking-tight text-foreground sm:mt-10',
+          split && 'lg:mt-0',
+          columns && '@4xl:mt-0 @4xl:text-[28px] @4xl:leading-tight',
+        )}
+      >
         {title}
       </Heading>
       <p className="mt-3 max-w-lg text-[14px] leading-relaxed text-muted-foreground">
         {description}
       </p>
       {actions ? (
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
+        <div
+          className={cn(
+            'mt-7 flex flex-wrap items-center justify-center gap-2',
+            split && 'lg:justify-start',
+            columns && '@4xl:justify-start',
+          )}
+        >
           {actions}
         </div>
       ) : null}
+      {children}
+    </div>
+  )
+
+  if (columns) {
+    return (
+      <div className="@container">
+        <div className="flex flex-col items-center text-center @4xl:grid @4xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] @4xl:gap-12 @4xl:text-start">
+          {/* The end padding holds the illustration's dot grid, which bleeds past it. */}
+          <div className="w-full max-w-md @4xl:order-last @4xl:max-w-none @4xl:pe-16">
+            {visual}
+          </div>
+          {text}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center text-center',
+        split && 'lg:flex-row lg:justify-center lg:gap-36 lg:text-start',
+      )}
+    >
+      {visual}
+      {text}
     </div>
   )
 }

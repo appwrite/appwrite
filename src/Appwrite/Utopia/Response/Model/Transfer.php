@@ -90,6 +90,7 @@ class Transfer extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Secret the recipient uses to claim the resource. Only returned to the sender.',
                 'default' => '',
                 'example' => '919c2d18fb5d4...a2ae413da83346ad2',

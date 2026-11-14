@@ -111,7 +111,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.7.1';
+const APP_VERSION_STABLE = '2.7.2';
 const APP_READINESS_MARKER = '/tmp/.appwrite-ready';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -240,6 +240,7 @@ const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
 const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
 const SESSION_PROVIDER_PHONE = 'phone';
 const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+const SESSION_PROVIDER_LDAP = 'ldap';
 const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
 const SESSION_PROVIDER_PASSKEY = 'passkey';
@@ -389,6 +390,7 @@ const ALERT_UNSUBSCRIBE_TTL = 60 * 60 * 24 * 90; // An alert email's unsubscribe
 const MAIL_TEMPLATE_ALERT = 'alert';
 const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
 const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
+const MAIL_TEMPLATE_DOMAIN_VERIFIED = 'domain-verified';
 const MAIL_TEMPLATE_INVITATION = 'invitation';
 const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
 const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
@@ -683,4 +685,5 @@ const MIGRATION_STALL_TIMEOUT = 60 * 60; // 1 hour
 
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',
+    '[skip appwrite]',
 ];

@@ -11,7 +11,7 @@ class Monitors extends Base
         'resourceId',
         'metric',
         'enabled',
-        'critical',
+        'severity',
         'status',
         'evaluatedAt',
         'triggeredAt',

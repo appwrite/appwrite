@@ -473,18 +473,29 @@ jobs:
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
             cargo test --locked -p php-std -p utopia-image --all-features'
 
-      - name: Build the image with the extension
-        run: >-
-          docker build --target development --tag appwrite-utopia
-          --build-arg UTOPIA_EXTENSION=true --build-arg TESTING=true .
+      - name: Build the image
+        run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
 
       - name: Test packages with the extension loaded
         run: |
           docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
             --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
             php --ri utopia &&
-            php crates/extension/tests/image.php &&
+            php crates/extension/tests/canvas.php &&
             vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests'
+
+      - name: Test DSN on the extension
+        run: |
+          # Utopia\DSN\DSN is registered only when _APP_EXTENSION_LIBRARIES names dsn: the package's
+          # tests must pass on it, and the parity corpus must print the same on both implementations.
+          docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
+            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
+            set -e
+            _APP_EXTENSION_LIBRARIES=dsn php -r "exit((new ReflectionClass(Utopia\\DSN\\DSN::class))->isInternal() ? 0 : 1);"
+            _APP_EXTENSION_LIBRARIES=dsn vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/dsn/tests
+            php crates/extension/tests/dsn.php > /tmp/php.jsonl
+            _APP_EXTENSION_LIBRARIES=dsn php crates/extension/tests/dsn.php > /tmp/rust.jsonl
+            diff /tmp/php.jsonl /tmp/rust.jsonl'
 
   build:
     name: Build
@@ -782,6 +793,11 @@ jobs:
             COMPOSE_PROFILES="${COMPOSE_PROFILES},gitea"
           fi
 
+          # OpenLDAP runs alongside Appwrite only where the Project suite signs in against it.
+          if [ "$SERVICE" = "Project" ]; then
+            COMPOSE_PROFILES="${COMPOSE_PROFILES},openldap"
+          fi
+
           # The embedding container is resource-heavy and off by default, so start it and
           # enable the API only for the suites that exercise the embeddings routes.
           if [ "$EMBEDDING" = "true" ]; then
@@ -809,6 +825,17 @@ jobs:
           echo "::add-mask::$CLIENT_SECRET"
           echo "_APP_VCS_GITEA_CLIENT_ID=$(echo "$CREDS" | jq -r .client_id)" >> $GITHUB_ENV
           echo "_APP_VCS_GITEA_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
+
+      # The seeder is a one-shot container, so it runs here explicitly rather
+      # than through COMPOSE_PROFILES, where `up --wait` would treat its exit
+      # as a failure. The certificates come first so the directory serves them.
+      - name: Provision OpenLDAP
+        if: matrix.service.name == 'Project'
+        timeout-minutes: 5
+        run: |
+          ./dev/openldap/certs.sh
+          docker compose up -d --wait openldap
+          docker compose --profile openldap-seed run --rm openldap-seed
 
       - name: Load and Start Appwrite
         timeout-minutes: 5

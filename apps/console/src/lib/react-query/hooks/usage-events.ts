@@ -3491,7 +3491,7 @@ export function refetchProjectRealtimeUsageQueries(
   })
 }
 
-function authMauChartQueryOptions(
+export function authMauChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,
@@ -3575,7 +3575,7 @@ function authOtpChartQueryOptions(
   })
 }
 
-function authSignupsChartQueryOptions(
+export function authSignupsChartQueryOptions(
   projectId: string | null | undefined,
   dateRange: DateRange | undefined,
   interval: UsageChartInterval = DEFAULT_USAGE_CHART_INTERVAL,

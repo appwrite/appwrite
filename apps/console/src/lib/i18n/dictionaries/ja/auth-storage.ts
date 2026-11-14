@@ -774,8 +774,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   Never: 'なし',
   'New password': '新しいパスワード',
   'Next page': '次のページ',
-  'No OAuth identities linked to this user.':
-    'このユーザーに連携された OAuth ID はありません。',
+  'No identities linked to this user.':
+    'このユーザーに連携された ID はありません。',
   'No OAuth2 apps': 'OAuth2 アプリはありません',
   'Connect with': '接続先',
   'Connect with Appwrite': 'Appwrite に接続',
@@ -1339,8 +1339,8 @@ export const jaAuthStorageDictionary: Record<string, string> = {
   'User deleted successfully': 'ユーザーを削除しました',
   'User has connected an authenticator app for two-factor authentication.':
     'ユーザーは二要素認証用の認証アプリを接続しています。',
-  "User identities are the user's connected OAuth accounts. The user can sign in using these identities.":
-    'ユーザー ID 連携は、ユーザーが接続した OAuth アカウントです。ユーザーはこれらの ID 連携を使ってサインインできます。',
+  'Identities link this user to accounts they sign in with elsewhere, such as an OAuth2 provider or an LDAP directory.':
+    'ID 連携は、OAuth2 プロバイダーや LDAP ディレクトリなど、このユーザーが他の場所でサインインに使うアカウントとの関連付けです。',
   'User impersonation': 'ユーザーなりすまし',
   'User impersonation has been disabled for this account':
     'このアカウントのユーザーなりすましを無効にしました',
@@ -1785,4 +1785,41 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     'リアルタイムのゲスト拒否ポリシーを更新しました',
   'Failed to update deny realtime guests policy':
     'リアルタイムのゲスト拒否ポリシーの更新に失敗しました',
+
+  // Project-wide security actions (force sign out, force password reset)
+  'Security actions': 'セキュリティ操作',
+  'Apply an action to every user in the project at once, for example when responding to a security incident.':
+    'プロジェクト内のすべてのユーザーに一括で操作を適用します。セキュリティインシデントへの対応時などに使用します。',
+  'Force password reset': '強制パスワードリセット',
+  'Require every user to set a new password before they can sign in with email and password again. Existing sessions stay active, and users without a password are not affected.':
+    'メールとパスワードで再度サインインする前に、すべてのユーザーに新しいパスワードの設定を求めます。既存のセッションは有効なままで、パスワードを持たないユーザーには影響しません。',
+  'Reset all passwords': 'すべてのパスワードをリセット',
+  'Every user will have to set a new password through password recovery before they can sign in with email and password again. Existing sessions stay active, so sign out all users as well if sessions may be compromised. This action cannot be undone.':
+    'すべてのユーザーは、メールとパスワードで再度サインインする前に、パスワードリカバリーで新しいパスワードを設定する必要があります。既存のセッションは有効なままのため、セッションが侵害されている可能性がある場合は、すべてのユーザーのサインアウトもあわせて実行してください。この操作は元に戻せません。',
+  'All users must now reset their password.':
+    'すべてのユーザーはパスワードのリセットが必要になりました。',
+  'Failed to reset passwords': 'パスワードのリセットに失敗しました',
+  // Auth overview
+  'The Free plan includes {count} monthly active users.':
+    'Free プランには月間アクティブユーザー {count} 人が含まれます。',
+  'Upgrade for more': 'アップグレードして上限を増やす',
+  '1 social provider': 'OAuth プロバイダー 1 件',
+  '{count} social providers': 'OAuth プロバイダー {count} 件',
+  'Recent users': '最近のユーザー',
+  'Users will appear here when they sign up':
+    'ユーザーがサインアップするとここに表示されます',
+  'Last sign-up': '最終サインアップ',
+  '{enabled} of {total}': '{total} 件中 {enabled} 件',
+  '{enabled} of {total} enabled': '{total} 件中 {enabled} 件が有効',
+  'No social providers enabled': '有効な OAuth プロバイダーはありません',
+  'Configure methods': '認証方法を設定',
+  'Configure providers': 'OAuth プロバイダーを設定',
+  'Configure policies': 'ポリシーを設定',
+  'Sessions, passwords and limits': 'セッション、パスワード、上限',
+  'No active users yet': 'アクティブユーザーはまだいません',
+  "Couldn't load active users": 'アクティブユーザーを読み込めませんでした',
+  'No sign-ups yet': 'サインアップはまだありません',
+  "Couldn't load sign-ups": 'サインアップを読み込めませんでした',
+  'sign-ups': 'サインアップ',
+  second: '秒',
 }

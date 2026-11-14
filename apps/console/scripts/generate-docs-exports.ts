@@ -4,6 +4,7 @@
  * Sitemaps are generated via generate:sitemap.
  * Run manually when docs change: bun run generate:docs-exports
  */
+import { createHash } from 'node:crypto'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
@@ -15,6 +16,8 @@ import { isFeatureGatedDocsSlugHidden } from '../src/lib/docs/feature-gated-docs
 import {
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
+  buildArdDocument,
+  buildMcpDocsServerCard,
   buildMcpServerCard,
   serializeDiscoveryJson,
 } from '../src/lib/seo/agent-discovery'
@@ -37,6 +40,9 @@ import {
 import type { LlmsContentMeta } from '../src/lib/seo/llms'
 import { buildForAgentsMarkdown } from '../src/lib/for-agents/content'
 import { buildPricingMarkdown } from '../src/lib/pricing/markdown'
+import { buildAuthMarkdown } from '../src/lib/seo/auth-markdown'
+import { MARKDOWN_TWIN_PAGES } from '../src/lib/seo/markdown-twins'
+import { pageHtmlToMarkdown } from '../src/lib/seo/page-markdown'
 import { getProductionRobotsTxt } from '../src/lib/seo/robots'
 import { markdocToMarkdown } from '../src/lib/seo/markdoc-to-markdown'
 import { generateAgentSetupMarkdown } from '../src/lib/seo/agent-setup'
@@ -239,6 +245,46 @@ async function generateLlmsFullTxt(): Promise<string> {
 
 type ExportFile = { relativePath: string; contents: string }
 
+async function fetchOk(url: string, accept?: string): Promise<Response> {
+  const response = await fetch(url, accept ? { headers: { Accept: accept } } : {})
+  if (!response.ok) throw new Error(`${url} returned ${response.status}`)
+  return response
+}
+
+/** Skills index pinned to the current appwrite/skills commit, with sha256 digests of each SKILL.md. */
+async function buildAgentSkillsIndex(): Promise<string> {
+  const document = buildAgentSkillsDiscoveryDocument()
+  let commit: string
+  try {
+    commit = (
+      await (
+        await fetchOk(
+          'https://api.github.com/repos/appwrite/skills/commits/main',
+          'application/vnd.github.sha',
+        )
+      ).text()
+    ).trim()
+  } catch (error) {
+    console.warn(`Agent skills index published without digests: ${String(error)}`)
+    return serializeDiscoveryJson(document)
+  }
+
+  const skills = await Promise.all(
+    document.skills.map(async (skill) => {
+      const url = skill.url.replace('/skills/main/', `/skills/${commit}/`)
+      try {
+        const bytes = await (await fetchOk(url)).arrayBuffer()
+        const digest = createHash('sha256').update(new Uint8Array(bytes)).digest('hex')
+        return { ...skill, url, digest: `sha256:${digest}` }
+      } catch (error) {
+        console.warn(`Skill ${skill.name} published without a digest: ${String(error)}`)
+        return skill
+      }
+    }),
+  )
+  return serializeDiscoveryJson({ ...document, skills })
+}
+
 async function buildExportFiles(): Promise<ExportFile[]> {
   const { blog, changelog, integrations } = await collectContentMeta()
   const alternatives = getAllAlternativeLlmsMeta()
@@ -288,6 +334,10 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: buildBlogMarkdownIndex(blog, SITE_ORIGIN),
     },
     {
+      relativePath: 'blog/llms.txt',
+      contents: buildBlogMarkdownIndex(blog, SITE_ORIGIN),
+    },
+    {
       relativePath: 'changelog.md',
       contents: buildChangelogMarkdownIndex(changelog, SITE_ORIGIN),
     },
@@ -305,8 +355,12 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: serializeDiscoveryJson(buildMcpServerCard(SITE_ORIGIN)),
     },
     {
+      relativePath: '.well-known/mcp/docs/server-card.json',
+      contents: serializeDiscoveryJson(buildMcpDocsServerCard(SITE_ORIGIN)),
+    },
+    {
       relativePath: '.well-known/ard.json',
-      contents: serializeDiscoveryJson(buildAiCatalogDocument(SITE_ORIGIN)),
+      contents: serializeDiscoveryJson(buildArdDocument(SITE_ORIGIN)),
     },
     {
       relativePath: '.well-known/ai-catalog.json',
@@ -314,7 +368,7 @@ async function buildExportFiles(): Promise<ExportFile[]> {
     },
     {
       relativePath: '.well-known/agent-skills/index.json',
-      contents: serializeDiscoveryJson(buildAgentSkillsDiscoveryDocument()),
+      contents: await buildAgentSkillsIndex(),
     },
     {
       relativePath: 'for-agents.md',
@@ -325,10 +379,32 @@ async function buildExportFiles(): Promise<ExportFile[]> {
       contents: buildPricingMarkdown(SITE_ORIGIN),
     },
     {
+      relativePath: 'auth.md',
+      contents: buildAuthMarkdown(SITE_ORIGIN),
+    },
+    {
       relativePath: 'robots.txt',
       contents: getProductionRobotsTxt(),
     },
   ]
+}
+
+async function buildMarkdownTwins(clientDir: string): Promise<ExportFile[]> {
+  const twins: ExportFile[] = []
+  for (const page of MARKDOWN_TWIN_PAGES) {
+    const segment = page.slice(1)
+    const html = join(clientDir, `${segment}.html`)
+    if (!existsSync(html)) continue
+    twins.push({
+      relativePath: `${segment}.md`,
+      contents: pageHtmlToMarkdown(
+        await readFile(html, 'utf-8'),
+        SITE_ORIGIN,
+        page,
+      ),
+    })
+  }
+  return twins
 }
 
 async function writeExports(outputDir: string, files: ExportFile[]) {
@@ -354,6 +430,11 @@ async function main() {
   if (existsSync(clientDir)) outputDirs.push(clientDir)
 
   await Promise.all(outputDirs.map((dir) => writeExports(dir, files)))
+
+  // Twins of prerendered marketing pages exist only once vite has built the HTML.
+  const twins = await buildMarkdownTwins(clientDir)
+  await writeExports(clientDir, twins)
+  files.push(...twins)
 
   console.log(
     `Generated ${files.map((file) => file.relativePath).join(', ')}`,

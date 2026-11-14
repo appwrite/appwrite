@@ -1,5 +1,63 @@
 # Change Log
 
+## 28.12.1
+
+* Fixed: `terminal` lists organizations on Cloud
+* Fixed: output masks every response field the API marks as a password
+
+## 28.12.0
+
+* Breaking: `push` no longer deletes databases, tables or columns missing from the config; pass `--prune`
+* Breaking: `--force` no longer approves deletions or column recreations; only `--prune` does
+* Added: `--prune` on `push`, `push all`, `push table` and `push collection`, showing row counts and backup coverage first
+* Added: `--prune` without a terminal requires `--reason`
+* Added: `appwrite terminal`, an interactive interface for browsing a project
+* Added: `account create-device`, `get-device`, `delete-device` and `update-device-session`
+* Added: `project update-account-devices-policy`
+* Fixed: `push table` no longer deletes databases before a later step fails
+* Fixed: a second value after a list flag explains how to repeat the flag
+* Fixed: `push settings` only lists keys the config changes
+* Updated: built against Go SDK `v7.18.0`
+
+## 28.11.0
+
+* Added: `init project` lists the closest Cloud region first, and picks it when there is no terminal
+* Added: `--region` on `init project`
+* Added: project environments, through `--environment-id` on `init project` and `client`, and `APPWRITE_ENVIRONMENT_ID`
+* Added: `--reason` and `APPWRITE_REASON` to record why a command ran on its audit logs
+* Added: `project get-prefs` and `update-prefs`
+* Added: `project update-o-auth-2-vipps` and `update-o-auth-2-vipps-sandbox`
+* Added: `proxy update-function-rule`, `update-redirect-rule` and `update-site-rule`
+* Added: `--schedule` on `waf` rule create and update commands
+* Added: analytics property `--type` and `--identify-users`, event `--interactive`, metrics `--prop-key`
+* Fixed: sites get a default Cloud domain when pushed with an API key
+* Updated: built against Go SDK `v7.17.0`, which sends response format `2.7.1`
+
+## 28.10.2
+
+* Fixed: `logout` revokes the server session on endpoints trusted as self-signed
+* Fixed: chunked uploads print the finished file, not an earlier chunk's progress
+
+## 28.10.1
+
+* Fixed: `init apns` suggests a Notification Service Extension only when an Appwrite push provider is enabled
+* Fixed: `init apns` no longer asks to enable an Appwrite push provider that APNs alone does not need
+
+## 28.10.0
+
+* Breaking: removed `migrations get-appwrite-report`, which the Go SDK no longer provides
+* Added: `project delete-sessions` to sign out every user in the project
+* Added: `project update-deny-realtime-guests-policy`
+* Added: `--resources` on `project create-environment` to choose what the environment copies
+* Fixed: an API key is no longer carried to a newly configured endpoint
+* Fixed: self-signed certificate trust stays with the server it was granted for, including trust saved by older CLI versions, and `login` reuses the trust saved for its endpoint
+* Fixed: `appwrite run` binds the local runtime to loopback only
+* Fixed: the shell installer downloads into a private temporary directory
+* Fixed: `login --switch` is only suggested for signed-in sessions
+* Fixed: path parameters are percent-encoded as one segment; `.` and `..` are refused
+* Updated: built against Go SDK `v7.16.0`, which sends response format `2.6.2`
+* Updated: password hash examples for `users create-argon-2-user`, `create-bcrypt-user` and `create-ph-pass-user` use valid hashes
+
 ## 28.9.0
 
 * Added: `migrations` commands for provider reports, imports, exports, retries, and migration management

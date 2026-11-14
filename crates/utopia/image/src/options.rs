@@ -2,7 +2,6 @@
 //! and resource limits.
 
 use std::str::FromStr;
-use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::error::{Error, Result};
 
@@ -206,107 +205,74 @@ impl FromStr for OutputFormat {
     }
 }
 
-/// A resource ImageMagick limits.
+/// What one image may cost: its largest width and height in pixels, and how
+/// many bytes of decoded pixels it may hold at once.
 ///
-/// PHP: the `$type` of `Image::setResourceLimit()`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Resource {
-    /// `area`: pixels of one image held in memory.
-    Area,
-    /// `disk`: bytes of pixel cache on disk.
-    Disk,
-    /// `file`: open pixel cache files.
-    File,
-    /// `map`: bytes of memory-mapped pixel cache.
-    Map,
-    /// `memory`: bytes of pixel cache in memory.
-    Memory,
-    /// `thread`: worker threads.
-    Thread,
+/// The defaults are conservative (16,000 pixels a side, 512 MiB of pixels); a
+/// caller that wants more says so. There is no "unlimited".
+///
+/// PHP: `Utopia\Image\Limits`.
+///
+/// ```
+/// use utopia_image::Limits;
+///
+/// let limits = Limits { width: 4_000, ..Limits::default() };
+/// assert_eq!(limits.height, 16_000);
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Limits {
+    /// The largest width of any image held, decoded or produced.
+    pub width: u64,
+    /// The largest height of any image held, decoded or produced.
+    pub height: u64,
+    /// Bytes of decoded pixels held at once (four a pixel, every frame).
+    pub memory: u64,
 }
 
-impl Resource {
-    /// The resource named like PHP's `$type` (`area`, `disk`, ...).
-    pub fn from_name(name: &str) -> Option<Resource> {
-        Some(match name {
-            "area" => Resource::Area,
-            "disk" => Resource::Disk,
-            "file" => Resource::File,
-            "map" => Resource::Map,
-            "memory" => Resource::Memory,
-            "thread" => Resource::Thread,
-            _ => return None,
-        })
-    }
-
-    fn slot(self) -> &'static AtomicU64 {
-        static LIMITS: [AtomicU64; 6] = [
-            AtomicU64::new(512_000_000),
-            AtomicU64::new(4_294_967_296),
-            AtomicU64::new(768),
-            AtomicU64::new(536_870_912),
-            AtomicU64::new(268_435_456),
-            AtomicU64::new(1),
-        ];
-        &LIMITS[self as usize]
-    }
-
-    /// The current limit (ImageMagick's defaults in Appwrite's image until set).
-    pub fn limit(self) -> u64 {
-        self.slot().load(Ordering::Relaxed)
+impl Default for Limits {
+    fn default() -> Self {
+        Limits { width: 16_000, height: 16_000, memory: 512 * 1024 * 1024 }
     }
 }
 
-/// Sets a process-wide resource limit.
-///
-/// Rust keeps every frame in memory and resizes on the calling thread, so the
-/// limits are recorded for callers to read back (to bound concurrency, say)
-/// rather than switching pixels to a disk cache as ImageMagick does. A negative
-/// value is stored as zero.
-///
-/// PHP: `Image::setResourceLimit($type, $value)`.
-///
-/// ```
-/// use utopia_image::{Resource, set_resource_limit};
-///
-/// set_resource_limit(Resource::Memory, 64 * 1024 * 1024);
-/// assert_eq!(Resource::Memory.limit(), 64 * 1024 * 1024);
-/// ```
-///
-/// ```php
-/// use Utopia\Image\Image;
-///
-/// Image::setResourceLimit('memory', 64 * 1024 * 1024);
-/// echo \Imagick::getResourceLimit(\Imagick::RESOURCETYPE_MEMORY), "\n";
-/// ```
-pub fn set_resource_limit(resource: Resource, value: i64) {
-    resource.slot().store(value.max(0) as u64, Ordering::Relaxed);
+thread_local! {
+    /// The limits of the canvas being worked on. Every operation runs to
+    /// completion on the calling thread, so the decoders and transforms read
+    /// them from here rather than each taking them as an argument.
+    static ACTIVE: std::cell::Cell<Limits> = std::cell::Cell::new(Limits::default());
 }
 
-/// The largest width or height of an image (ImageMagick's `width` and `height`
-/// policy in Appwrite's image).
-pub const MAX_DIMENSION: u64 = 50_000;
+impl Limits {
+    /// Runs `work` under these limits, restoring the previous ones after, also when `work`
+    /// panics: the extension turns a panic into a PHP error and the worker carries on.
+    pub(crate) fn scope<T>(self, work: impl FnOnce() -> T) -> T {
+        struct Restore(Limits);
+        impl Drop for Restore {
+            fn drop(&mut self) {
+                ACTIVE.set(self.0);
+            }
+        }
+        let _restore = Restore(ACTIVE.replace(self));
+        work()
+    }
+
+    fn active() -> Limits {
+        ACTIVE.get()
+    }
+}
 
 /// Bytes of RGBA pixels held for one canvas of `width` x `height`.
 pub(crate) fn canvas_bytes(width: u64, height: u64) -> u64 {
     width.saturating_mul(height).saturating_mul(4)
 }
 
-/// How many bytes of pixels one image may hold: the `memory` and `map`
-/// resource limits together (768 MiB by default).
-///
-/// PHP: ImageMagick keeps a pixel cache in memory, then memory-mapped, then
-/// on disk (up to the `disk` limit, 4 GiB in Appwrite's image) before it
-/// fails. Pixels here live only in memory, so the in-memory limits are the
-/// whole budget: an image past them fails here although ImageMagick would
-/// spill it to disk.
+/// How many bytes of pixels the image being worked on may hold.
 pub(crate) fn pixel_budget() -> u64 {
-    Resource::Memory.limit().saturating_add(Resource::Map.limit())
+    Limits::active().memory
 }
 
-/// Fails when holding `bytes` more of pixels would pass [`pixel_budget`], as
-/// ImageMagick's pixel cache does. Called with the size a decoder announces,
-/// before its buffers are allocated.
+/// Fails when holding `bytes` more of pixels would pass [`pixel_budget`].
+/// Called with the size a decoder announces, before its buffers are allocated.
 pub(crate) fn check_pixels(bytes: u64) -> Result<()> {
     if bytes > pixel_budget() {
         return Err(Error::LimitExceeded);
@@ -314,11 +280,26 @@ pub(crate) fn check_pixels(bytes: u64) -> Result<()> {
     Ok(())
 }
 
-/// Fails like ImageMagick's pixel cache when a dimension passes the limit,
-/// or when one canvas of this size would pass the pixel budget.
+/// Fails when a dimension passes its limit, or when one canvas of this size
+/// would pass the pixel budget.
 pub(crate) fn check_dimensions(width: u64, height: u64) -> Result<()> {
-    if width > MAX_DIMENSION || height > MAX_DIMENSION {
+    let limits = Limits::active();
+    if width > limits.width || height > limits.height {
         return Err(Error::LimitExceeded);
     }
     check_pixels(canvas_bytes(width, height))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_panic_inside_a_scope_restores_the_limits() {
+        let narrow = Limits { width: 1, height: 1, memory: 4 };
+        let panicked = std::panic::catch_unwind(|| narrow.scope(|| panic!("a codec panicked")));
+        assert!(panicked.is_err());
+        assert_eq!(Limits::active(), Limits::default());
+        assert!(check_dimensions(100, 100).is_ok());
+    }
 }

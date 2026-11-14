@@ -101,6 +101,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "advanced/billing/project-transfers",
+    "title": "Project transfers",
+    "description": "Move an Appwrite Cloud project to another organization, directly or with a single-use transfer link that an owner of the other organization claims.",
+    "layout": "article",
+    "readingTimeMinutes": 6
+  },
+  {
     "slug": "advanced/billing/refund-policy",
     "title": "Refund policy",
     "description": "Learn about Appwrite's refund policy for services, including eligibility criteria and the request process.",
@@ -3964,7 +3971,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
       },
       {
         "question": "Is there more than one Appwrite MCP server?",
-        "answer": "No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers."
+        "answer": "No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers. Only an agent that cannot sign in should use https://mcp.appwrite.io/docs/mcp, which serves the same docs search without the API."
       }
     ]
   },

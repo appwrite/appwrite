@@ -754,6 +754,8 @@ Http::init()
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && ! $rolesSource->isPrivileged($roles);
 
             $key = $request->cacheIdentifier();
+            // `auto` params resolved from the Accept header: the response varies by Accept
+            $negotiated = ! empty($request->getNegotiatedParams());
             Span::add('storage.cache.key', $key);
             $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             [$cache, $fallback] = $responseCache($key);
@@ -837,6 +839,7 @@ Http::init()
                             fileSecurity: $fileSecurity,
                             cacheLog: $cacheLog,
                             route: $route,
+                            negotiated: $negotiated,
                         ));
                     }
                 } elseif ($type === 'video') {
@@ -867,9 +870,16 @@ Http::init()
 
                 // The action that sets Vary never runs on a hit. Repeat the
                 // route's cache.vary headers so a private cache does not reuse
-                // negotiated bytes for a different Accept.
+                // negotiated bytes for a different Accept. Negotiated `auto`
+                // params vary on Accept even when the route lists no headers.
                 $vary = $route->getLabel('cache.vary', []);
-                if (\is_array($vary) && $vary !== []) {
+                if (! \is_array($vary)) {
+                    $vary = [];
+                }
+                if ($negotiated && ! \in_array('accept', \array_map('strtolower', $vary), true)) {
+                    $vary[] = 'accept';
+                }
+                if ($vary !== []) {
                     $response->addHeader('Vary', \implode(', ', \array_map(
                         static fn (string $header): string => \ucwords($header, '-'),
                         $vary

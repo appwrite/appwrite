@@ -6,6 +6,8 @@
 
 export const MCP_SERVER_NAME = 'appwrite'
 export const MCP_SERVER_URL = 'https://mcp.appwrite.io'
+/** Public docs-only MCP server: `appwrite_search_docs`, no sign-in. */
+export const MCP_DOCS_SERVER_URL = `${MCP_SERVER_URL}/docs/mcp`
 export const MCP_API_KEY_PLACEHOLDER = 'YOUR_API_KEY'
 export const MCP_SELF_HOSTED_DOCS_URL =
   'https://github.com/appwrite/mcp/blob/main/docs/self-hosted.md'

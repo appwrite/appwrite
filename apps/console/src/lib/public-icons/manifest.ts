@@ -128,6 +128,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'mqtt.svg',
   'msg91.svg',
   'mysql.svg',
+  'naver.svg',
   'neo4j.svg',
   'neon.svg',
   'nestjs.svg',
