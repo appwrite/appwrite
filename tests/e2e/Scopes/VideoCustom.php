@@ -804,6 +804,27 @@ trait VideoCustom
     }
 
     /**
+     * True when this process shares the videos worker's scratch mount.
+     *
+     * Compose mounts videos-tmp into the API container. On Kubernetes it is an
+     * emptyDir on the videos pod only; the image still creates the directory
+     * here, so is_dir is true even though the worker's files are elsewhere.
+     */
+    public function sharesVideoScratch(): bool
+    {
+        $root = \defined('APP_STORAGE_VIDEOS_TMP') ? \rtrim(APP_STORAGE_VIDEOS_TMP, '/') : '/storage/videos-tmp';
+        $rootStat = @\stat($root);
+        $parentStat = @\stat(\dirname($root));
+
+        // The image creates this directory, so is_dir is true on the API pod
+        // even when the worker's emptyDir is another filesystem. A shared
+        // Compose volume is a mount and has a different device than its parent.
+        return $rootStat !== false
+            && $parentStat !== false
+            && $rootStat['dev'] !== $parentStat['dev'];
+    }
+
+    /**
      * Job folders for a video: `{stamp}~{projectId}~{videoId}~…` under jobs/.
      *
      * @return list<string>

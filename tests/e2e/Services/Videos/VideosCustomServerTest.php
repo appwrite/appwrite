@@ -1004,10 +1004,9 @@ final class VideosCustomServerTest extends Scope
         $videoId = $this->createReadyVideo(['$id' => $uploaded['$id'], 'bucketId' => $bucketId])['$id'];
         $renditionId = $this->createRendition($videoId, 'hls');
 
-        // Compose mounts this directory into the API container. On Kubernetes
-        // it is an emptyDir on the videos pod, so this process cannot see it.
-        $scratchRoot = \defined('APP_STORAGE_VIDEOS_TMP') ? APP_STORAGE_VIDEOS_TMP : '/storage/videos-tmp';
-        $seesScratch = \is_dir($scratchRoot);
+        // Folder checks need the Compose volume. On Kubernetes, scratch is an
+        // emptyDir on the videos pod and this process cannot see it.
+        $seesScratch = $this->sharesVideoScratch();
 
         $observed = 0;
         $copies = [];
@@ -1477,14 +1476,21 @@ final class VideosCustomServerTest extends Scope
         // worker; maintenance must remove only the aborted rendition folder.
         // Planting first closes the race where a scheduled sweep parks the row
         // between timeTravel and mkdir and then skips cleanup (updated === 0).
-        $jobsRoot = $this->tmpJobsRoot();
-        if (!\is_dir($jobsRoot)) {
-            $this->assertTrue(\mkdir($jobsRoot, 0755, true), 'Failed creating videos-tmp/jobs');
+        // On Kubernetes the deletes worker does not mount scratch, so planting
+        // here would only assert against this process's empty image directory.
+        $sharesScratch = $this->sharesVideoScratch();
+        $staleJob = '';
+        $freshJob = '';
+        if ($sharesScratch) {
+            $jobsRoot = $this->tmpJobsRoot();
+            if (!\is_dir($jobsRoot)) {
+                $this->assertTrue(\mkdir($jobsRoot, 0755, true), 'Failed creating videos-tmp/jobs');
+            }
+            $staleJob = $jobsRoot . '/202001010000~' . $projectId . '~' . $videoId . '~rendition-' . $staleId;
+            $freshJob = $jobsRoot . '/202001010000~' . $projectId . '~' . $videoId . '~rendition-' . $freshId;
+            $this->assertTrue(\mkdir($staleJob . '/out', 0755, true), 'Failed creating stale scratch folder');
+            $this->assertTrue(\mkdir($freshJob . '/out', 0755, true), 'Failed creating fresh scratch folder');
         }
-        $staleJob = $jobsRoot . '/202001010000~' . $projectId . '~' . $videoId . '~rendition-' . $staleId;
-        $freshJob = $jobsRoot . '/202001010000~' . $projectId . '~' . $videoId . '~rendition-' . $freshId;
-        $this->assertTrue(\mkdir($staleJob . '/out', 0755, true), 'Failed creating stale scratch folder');
-        $this->assertTrue(\mkdir($freshJob . '/out', 0755, true), 'Failed creating fresh scratch folder');
 
         // Seed after encode finishes so a racing worker cannot clobber the park.
         $this->timeTravelRendition($projectId, $staleId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
@@ -1501,7 +1507,7 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId, $staleJob, $freshJob) {
+        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId, $sharesScratch, $staleJob, $freshJob) {
             $stale = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $staleId, $this->headers());
             $this->assertEquals(200, $stale['headers']['status-code']);
             $this->assertEquals('aborted', $stale['body']['status']);
@@ -1516,8 +1522,10 @@ final class VideosCustomServerTest extends Scope
             $this->assertEquals(200, $ready['headers']['status-code']);
             $this->assertEquals('ready', $ready['body']['status']);
 
-            $this->assertDirectoryDoesNotExist($staleJob);
-            $this->assertDirectoryExists($freshJob);
+            if ($sharesScratch) {
+                $this->assertDirectoryDoesNotExist($staleJob);
+                $this->assertDirectoryExists($freshJob);
+            }
         }, 30000);
 
         if (\is_dir($freshJob)) {
