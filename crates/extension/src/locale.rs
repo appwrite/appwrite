@@ -197,7 +197,7 @@ impl ext_php_rs::convert::StubLiteral for Placeholders<'_> {
 }
 
 /// A property value of any type, shared by refcount.
-pub struct Value(Zval);
+pub struct Value(pub Zval);
 
 impl ext_php_rs::convert::IntoZval for Value {
     const TYPE: ext_php_rs::flags::DataType = ext_php_rs::flags::DataType::Mixed;

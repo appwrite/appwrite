@@ -471,7 +471,7 @@ jobs:
             rustup component add clippy rustfmt &&
             cargo fmt --all --check &&
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
-            cargo test --locked -p php-std -p utopia-image -p utopia-locale --all-features'
+            cargo test --locked -p php-std -p utopia-image -p utopia-locale -p utopia-user-agent --all-features'
 
       - name: Build the image
         run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
@@ -508,6 +508,19 @@ jobs:
             _APP_EXTENSION_LIBRARIES=locale vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/locale/tests
             php crates/extension/tests/locale.php > /tmp/php.jsonl
             _APP_EXTENSION_LIBRARIES=locale php crates/extension/tests/locale.php > /tmp/rust.jsonl
+            diff /tmp/php.jsonl /tmp/rust.jsonl'
+
+      - name: Test UserAgent on the extension
+        run: |
+          # Utopia\UserAgent\UserAgent is registered only when _APP_EXTENSION_LIBRARIES names user-agent:
+          # the package's tests must pass on it, and the parity corpus must print the same on both.
+          docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
+            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
+            set -e
+            _APP_EXTENSION_LIBRARIES=user-agent php -r "exit((new ReflectionClass(Utopia\\UserAgent\\UserAgent::class))->isInternal() ? 0 : 1);"
+            _APP_EXTENSION_LIBRARIES=user-agent vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/user-agent/tests
+            php crates/extension/tests/user-agent.php > /tmp/php.jsonl
+            _APP_EXTENSION_LIBRARIES=user-agent php crates/extension/tests/user-agent.php > /tmp/rust.jsonl
             diff /tmp/php.jsonl /tmp/rust.jsonl'
 
   build:
