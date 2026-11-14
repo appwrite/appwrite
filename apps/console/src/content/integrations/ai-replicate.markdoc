@@ -1,0 +1,73 @@
+---
+layout: integration
+title: Generate text, images, and audio with Replicate
+description: Run open-source text, image, and music models on Replicate from an Appwrite Function
+date: 2026-11-09
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/ai-replicate/cover.avif
+category: ai
+product:
+    vendor: Replicate
+    description: "Replicate runs open-source machine learning models in the cloud behind a simple API, billed by usage."
+platform:
+    - 'Cloud'
+---
+
+[Replicate](https://replicate.com/) runs open-source machine learning models in the cloud. You call a model by name through its API and pay for the compute the prediction uses, without managing GPUs yourself.
+
+# How does the integration work?
+
+The **Generate with Replicate** function template puts three Replicate models behind one Appwrite Function. Send it a prompt and an output type, and it runs the matching model:
+
+| `type` | Model | Settings in the template |
+| --- | --- | --- |
+| `text` | `meta/llama-2-70b-chat` | Up to 512 new tokens |
+| `image` | `stability-ai/sdxl` | 512 x 512 pixels, with a negative prompt |
+| `audio` | `meta/musicgen` | 30 seconds of audio |
+
+`GET /` serves a demo form, and `POST /` returns `{"ok": true, "response": ..., "type": ...}`, where `response` is the generated text, or the URL of the generated image or audio file. Your Replicate token stays in the function, so your app can call it directly.
+
+# Prerequisites
+
+- A [Replicate account](https://replicate.com/) with billing set up. Replicate charges for the compute each prediction uses.
+
+# How to implement
+
+To implement the Replicate integration, there are several steps you must complete:
+
+## Step 1: Create a Replicate API token
+
+Open the [API tokens page](https://replicate.com/account/api-tokens) in your Replicate account and create a token. Tokens start with `r8_`.
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) if you haven't already. In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **Generate with Replicate**, and click **Create from template**. Under **Template variables**, set `REPLICATE_API_TOKEN` to your token.
+
+Choose **Connect your repository** to clone the template into a Git repository you can edit later, for example to swap models, or **Connect later** to deploy it right away. Then click **Create and deploy**.
+
+## Step 3: Generate content
+
+Copy the function's domain from the **Domains** tab and open it in your browser to use the demo form, or send a request:
+
+```bash
+curl -X POST https://<FUNCTION_DOMAIN> \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Write a haiku about Mondays", "type": "text"}'
+```
+
+Change `type` to `image` or `audio` to run the other models. A missing `prompt` or an unknown `type` returns a `400` error.
+
+Requests to a function's domain are [synchronous executions](/docs/products/functions/execute#synchronous-executions), which stop after 30 seconds. Slower predictions, such as generating music, can run past that limit, so test each output type you plan to use.
+
+The template allows anyone to execute the function, so anyone who finds its domain can run Replicate models with your token. Before you use it in a public app, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
+# Read more about Replicate and Appwrite Functions
+
+If you would like to learn more about Replicate and Appwrite Functions, we have some resources that you should visit:
+
+- [Replicate documentation](https://replicate.com/docs)
+- [Integrate Replicate into an Appwrite Function step by step](/docs/products/ai/integrations/replicate)
+- [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
+- [Generate with Replicate template source](https://github.com/appwrite/templates/tree/1.2.0/node/generate-with-replicate)

@@ -1,0 +1,76 @@
+---
+layout: integration
+title: OAuth with Box
+description: Authenticate users with an existing Box account
+date: 2026-11-09
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-box/cover.avif
+category: auth
+product:
+    vendor: Box
+    description: 'Box is a cloud content management platform for storing, sharing, and collaborating on files.'
+platform:
+    - 'Cloud'
+---
+
+[Box](https://www.box.com/) is a cloud content management platform that businesses use to store, share, and collaborate on files, with controls for security, compliance, and workflows around that content.
+
+# How does the integration work?
+
+You can use the Box OAuth adapter in Appwrite Auth to let users sign in with their Box account. This fits apps built around Box content, such as document portals and internal tools, where users already have a Box login. The session stores Box's access token as `providerAccessToken`, so your server can call the Box API on the user's behalf.
+
+Appwrite reads the user's name, login email, and avatar from Box. Box doesn't report whether the email is verified, so Appwrite stores it as unverified. If another user in your project already has that email, Appwrite redirects to your failure URL instead of signing the user in. To connect Box to that account, have the user sign in first and then start the OAuth flow from the browser, which links Box as a new [identity](/docs/products/auth/identities).
+
+# How to implement
+
+To implement the Box OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an app in the Box Developer Console
+
+Log in to the [Box Developer Console](https://app.box.com/developers/console), select **New App**, choose **User** as the app type, and create the app. The **User** type uses OAuth 2.0 user authentication, which is what Appwrite needs, and it can't be changed later.
+
+On the app's **Configuration** page, save the **Client ID** and **Client Secret** for later use. You'll add the **OAuth 2.0 Redirect URI** after you configure Appwrite in the next step.
+
+Review the **Application Scopes** on the same page. Appwrite doesn't request specific scopes, so Box grants the access token every scope selected there. Select the scopes your server needs if it calls the Box API with the user's token.
+
+## Step 2: Add Box OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Box** under the **OAuth2 Providers** section.
+
+Paste the app's credentials into the **Client ID** and **Client Secret** fields, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the form. It looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/box/<PROJECT_ID>`, but always copy the exact value from the Console. In the Box Developer Console, paste it into the **OAuth 2.0 Redirect URI** section of your app's **Configuration** page and save. Box matches the redirect URI exactly.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Box` value. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Box,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about Box and Appwrite Auth
+
+If you would like to learn more about Box and Appwrite Auth, we have some resources that you should visit:
+
+- [Set up OAuth 2.0 with Box](https://developer.box.com/guides/authentication/oauth2/oauth2-setup)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Understanding OAuth and OpenID Connect](/blog/post/oauth-openid)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

@@ -1,0 +1,74 @@
+---
+layout: integration
+title: OAuth with Autodesk
+description: Authenticate users with an existing Autodesk account
+date: 2026-11-09
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-autodesk/cover.avif
+category: auth
+product:
+    vendor: Autodesk
+    description: 'Autodesk makes design, engineering, and construction software, and Autodesk Platform Services provides APIs for Autodesk accounts and data.'
+platform:
+    - 'Cloud'
+---
+
+[Autodesk](https://www.autodesk.com/) makes design, engineering, and construction software, including AutoCAD, Revit, and Fusion. [Autodesk Platform Services](https://aps.autodesk.com/) (APS) is its developer platform, with APIs for Autodesk accounts and the models and files people keep in Autodesk products.
+
+# How does the integration work?
+
+You can use the Autodesk OAuth adapter in Appwrite Auth to let users sign in with their Autodesk account. This fits apps for designers, engineers, and construction teams who already use Autodesk products, such as project portals and web companions for desktop plugins. The session stores Autodesk's access token as `providerAccessToken`, so your server can call APS APIs on the user's behalf.
+
+Appwrite requests the `user-profile:read` scope and reads the user's Autodesk ID, username, email, and profile picture from the APS User Profile API. It marks the email as verified only when Autodesk reports `emailVerified` as `true`. To call other APS APIs with the user's token, pass the scopes they need, such as `data:read`, in the `scopes` parameter when you create the session.
+
+# How to implement
+
+To implement the Autodesk OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create an app in Autodesk Platform Services
+
+Sign in to [Autodesk Platform Services](https://aps.autodesk.com/), open your developer hub, and go to the **Applications** page. Click **Create application**, enter a name, choose **Traditional Web App**, and click **Create**. This application type runs on a server and keeps a client secret, which Appwrite uses to exchange the sign-in code for tokens.
+
+Save the app's **Client ID** and **Client Secret** for later use. You'll add the callback URL after you configure Appwrite in the next step.
+
+## Step 2: Add Autodesk OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Autodesk** under the **OAuth2 Providers** section.
+
+Paste the app's credentials into the **Client ID** and **Client Secret** fields, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the form. It looks like `https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/autodesk/<PROJECT_ID>`, but always copy the exact value from the Console. In your APS app's settings, paste it into the **Callback URL** field and click **Save changes**. Autodesk rejects sign-in requests whose callback URL doesn't match the one you registered.
+
+## Step 3: Test the provider
+
+Start a session from your app with the `OAuthProvider.Autodesk` value. With the Web SDK:
+
+```js
+import { Client, Account, OAuthProvider } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+account.createOAuth2Session({
+    provider: OAuthProvider.Autodesk,
+    success: 'https://example.com/success',
+    failure: 'https://example.com/failed',
+});
+```
+
+Add your app's domain as a web platform in your Appwrite project so Appwrite accepts the `success` and `failure` URLs. Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow for other platforms and for server-side sign-in.
+
+# Read more about Autodesk and Appwrite Auth
+
+If you would like to learn more about Autodesk and Appwrite Auth, we have some resources that you should visit:
+
+- [APS authentication overview](https://aps.autodesk.com/en/docs/oauth/v2/developers_guide/overview/)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Read the OAuth 2 profile and provider token](/docs/products/auth/oauth2#profile)
+- [Link multiple sign-in methods with identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)
