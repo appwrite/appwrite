@@ -296,6 +296,11 @@ test.describe('markdown exports (read-only)', () => {
 
     const empty = await request.post('/ask', { data: { query: { text: '' } } })
     expect((await empty.json()).error.code).toBe('INVALID_QUERY')
+
+    const oversized = await request.post('/ask', {
+      data: { query: { text: 'auth '.repeat(101) } },
+    })
+    expect((await oversized.json()).error.code).toBe('INVALID_QUERY')
   })
 
   test('sitemap index lists section sitemaps', async ({ request }) => {
