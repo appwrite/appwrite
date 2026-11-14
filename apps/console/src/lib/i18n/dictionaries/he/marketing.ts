@@ -1745,8 +1745,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'נוצרה הטבלה messages',
   'Deployed the site':
     'האתר נפרס',
-  'Owner link':
-    'קישור הבעלים',
+  'Site link':
+    'קישור לאתר',
   'An hour to build. A day to claim it':
     'שעה לבנות. יום לתבוע בעלות',
   'Every service, from minute zero':
@@ -1767,8 +1767,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'כל הרשאות הפרויקט',
   'Give this to a human':
     'להעביר לבן אדם',
-  'Opens your domains until claimed':
-    'פותח את הדומיינים שלכם עד תביעת הבעלות',
+  'Opens preview domains until claimed':
+    'פותח את דומייני התצוגה המקדימה עד תביעת הבעלות',
   'End of the build hour':
     'סוף שעת הבנייה',
   'Claim deadline':
@@ -1787,12 +1787,12 @@ export const heMarketingDictionary: Record<string, string> = {
     'הפרויקט מושהה וקריאות API מחזירות zero_expired, אבל שום דבר לא נמחק. מאותו רגע יש לכם 24 שעות לתבוע עליו בעלות דרך הקישור שקיבלתם. פרויקטים שלא נתבעה עליהם בעלות נמחקים יחד עם הנתונים שלהם.',
   'What do I keep when I claim it?':
     'מה נשמר אחרי תביעת הבעלות?',
-  'All of it. The project keeps its ID, API key, data, files and deployments, and moves into an organization you own. Its site and function domains open to everyone.':
-    'הכול. הפרויקט שומר על המזהה, מפתח ה-API, הנתונים, הקבצים והפריסות שלו, ועובר לארגון שבבעלותכם. הדומיינים של האתרים והפונקציות שלו נפתחים לכולם.',
+  'All of it. The project keeps its ID, API key, data, files and deployments, and moves into an organization you own. Its site and function domains drop the Zero banner.':
+    'הכול. הפרויקט שומר על המזהה, מפתח ה-API, הנתונים, הקבצים והפריסות שלו, ועובר לארגון שבבעלותכם. הדומיינים של האתרים והפונקציות שלו מוצגים בלי באנר ה-Zero.',
   'Who can open my site or function domain?':
     'מי יכול לפתוח את הדומיין של האתר או הפונקציה שלי?',
-  'Only you, until you claim the project. Open a domain\'s owner link once in your browser, or send the accessToken in the X-Appwrite-Zero-Token header from an agent. npx appwrite zero status lists the owner link for each domain. After you claim it, the domains are public.':
-    'רק אתם, עד שתתבעו בעלות על הפרויקט. פתחו פעם אחת בדפדפן את קישור הבעלים של הדומיין, או שלחו מסוכן את ה-accessToken בכותרת X-Appwrite-Zero-Token. הפקודה npx appwrite zero status מציגה את קישור הבעלים של כל דומיין. אחרי תביעת הבעלות, הדומיינים ציבוריים.',
+  'Anyone. Until you claim the project, its site and function domains show a Powered by Appwrite Zero banner with the time left and a Claim button. Deployment preview domains open only for you: open a preview\'s owner link once in your browser, or send the accessToken in the X-Appwrite-Zero-Token header from an agent.':
+    'כל אחד. עד שתתבעו בעלות על הפרויקט, הדומיינים של האתרים והפונקציות שלו מציגים באנר Powered by Appwrite Zero עם הזמן שנותר וכפתור לתביעת בעלות. דומייני תצוגה מקדימה של פריסות נפתחים רק לכם: פתחו פעם אחת בדפדפן את קישור הבעלים של התצוגה המקדימה, או שלחו מסוכן את ה-accessToken בכותרת X-Appwrite-Zero-Token.',
   'What is limited before I claim it?':
     'מה מוגבל לפני תביעת הבעלות?',
   'One project, 500 function executions and 20 deployments an hour, and no messaging. You cannot create other projects or organizations from it. Everything else follows the Free plan.':
@@ -1859,8 +1859,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'הופעלה התחברות עם אימייל',
   'Created the tables it needs':
     'נוצרו הטבלאות הנדרשות',
-  'It is live. Open the owner link once to see it, then claim the project to keep it.':
-    'זה באוויר. פתחו פעם אחת את קישור הבעלים כדי לראות, ואז תבעו בעלות על הפרויקט כדי לשמור עליו.',
+  'It is live. Open the site link to see it, then claim the project to keep it.':
+    'זה באוויר. פתחו את הקישור לאתר כדי לראות, ואז תבעו בעלות על הפרויקט כדי לשמור עליו.',
   'Send it to':
     'שליחה אל',
   '60 minutes':
@@ -1871,8 +1871,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'אחר כך הוא מושהה. קריאות API מחזירות zero_expired ושום דבר לא נמחק.',
   'After 25 hours, a project nobody claimed is deleted with its data.':
     'אחרי 25 שעות, פרויקט שאף אחד לא תבע עליו בעלות נמחק יחד עם הנתונים שלו.',
-  'Claim it any time in those 25 hours, even during the build hour. Same project, same ID, same API key, now without an expiry, and its domains open to everyone.':
-    'אפשר לתבוע בעלות בכל רגע במהלך 25 השעות האלה, גם בשעת הבנייה. אותו פרויקט, אותו מזהה, אותו מפתח API, עכשיו בלי תאריך תפוגה, והדומיינים שלו נפתחים לכולם.',
+  'Claim it any time in those 25 hours, even during the build hour. Same project, same ID, same API key, now without an expiry, and its domains drop the Zero banner.':
+    'אפשר לתבוע בעלות בכל רגע במהלך 25 השעות האלה, גם בשעת הבנייה. אותו פרויקט, אותו מזהה, אותו מפתח API, עכשיו בלי תאריך תפוגה, והדומיינים שלו מוצגים בלי באנר ה-Zero.',
   'The times are for a project you start now, in your time zone.':
     'השעות מחושבות לפרויקט שתתחילו עכשיו, באזור הזמן שלכם.',
   'Before you claim it':
@@ -1889,8 +1889,8 @@ export const heMarketingDictionary: Record<string, string> = {
     'קוד בכל runtime',
   '500 runs an hour':
     '500 הרצות בשעה',
-  'A frontend on a real domain, private until claimed':
-    'frontend על דומיין אמיתי, פרטי עד לתביעת הבעלות',
+  'A frontend on a real domain, with a Zero banner until claimed':
+    'frontend על דומיין אמיתי, עם באנר של Zero עד לתביעת הבעלות',
   '20 deploys an hour':
     '20 פריסות בשעה',
   'Subscriptions over WebSockets':

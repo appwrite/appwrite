@@ -29,7 +29,7 @@ export const zeroHero = {
   ] satisfies MarketingStatItem[],
 } as const
 
-export const ZERO_AGENT_PROMPT = `Use Appwrite Zero for the backend. Run \`${ZERO_COMMAND}\` to get a real Appwrite project with no account. The project works for ${ZERO_BUILD_MINUTES} minutes, and the output has the endpoint, the project ID and a claim link. Build there, then send me the owner link for the site and the claim link so I can keep the project.`
+export const ZERO_AGENT_PROMPT = `Use Appwrite Zero for the backend. Run \`${ZERO_COMMAND}\` to get a real Appwrite project with no account. The project works for ${ZERO_BUILD_MINUTES} minutes, and the output has the endpoint, the project ID and a claim link. Build there, then send me the site link and the claim link so I can keep the project.`
 
 /** Local coding agents that can run the command and accept a prefilled prompt. */
 export const ZERO_AGENT_IDE_IDS = [
@@ -101,7 +101,7 @@ export const zeroAgents = {
   created: { label: 'Created a Zero project', detail: ZERO_COMMAND },
   deployed: { label: 'Deployed the site', detail: 'npx appwrite push sites' },
   reply:
-    'It is live. Open the owner link once to see it, then claim the project to keep it.',
+    'It is live. Open the site link to see it, then claim the project to keep it.',
   claimLink: 'cloud.appwrite.io/transfer?transferId=6721f0c5…',
 } as const
 
@@ -130,7 +130,7 @@ export const zeroLifecycle = {
     },
   ],
   claim:
-    'Claim it any time in those 25 hours, even during the build hour. Same project, same ID, same API key, now without an expiry, and its domains open to everyone.',
+    'Claim it any time in those 25 hours, even during the build hour. Same project, same ID, same API key, now without an expiry, and its domains drop the Zero banner.',
 } as const
 
 export type ZeroService = {
@@ -178,7 +178,7 @@ export const zeroServiceItems: ZeroService[] = [
   },
   {
     id: 'sites',
-    detail: 'A frontend on a real domain, private until claimed',
+    detail: 'A frontend on a real domain, with a Zero banner until claimed',
     limit: '20 deploys an hour',
   },
   {
@@ -305,7 +305,7 @@ export const zeroResponse: ReadonlyArray<{
   {
     key: 'accessToken',
     value: '9b2e47d1…',
-    note: 'Opens your domains until claimed',
+    note: 'Opens preview domains until claimed',
   },
   {
     key: 'expiresAt',
@@ -338,12 +338,12 @@ export const zeroFaqItems: MarketingFaqItem[] = [
   {
     question: 'What do I keep when I claim it?',
     answer:
-      'All of it. The project keeps its ID, API key, data, files and deployments, and moves into an organization you own. Its site and function domains open to everyone.',
+      'All of it. The project keeps its ID, API key, data, files and deployments, and moves into an organization you own. Its site and function domains drop the Zero banner.',
   },
   {
     question: 'Who can open my site or function domain?',
     answer:
-      "Only you, until you claim the project. Open a domain's owner link once in your browser, or send the accessToken in the X-Appwrite-Zero-Token header from an agent. npx appwrite zero status lists the owner link for each domain. After you claim it, the domains are public.",
+      "Anyone. Until you claim the project, its site and function domains show a Powered by Appwrite Zero banner with the time left and a Claim button. Deployment preview domains open only for you: open a preview's owner link once in your browser, or send the accessToken in the X-Appwrite-Zero-Token header from an agent.",
   },
   {
     question: 'What is limited before I claim it?',

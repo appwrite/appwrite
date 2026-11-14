@@ -1589,8 +1589,8 @@ export const jaMarketingDictionary: Record<string, string> = {
     'messages テーブルを作成しました',
   'Deployed the site':
     'サイトをデプロイしました',
-  'Owner link':
-    'オーナーリンク',
+  'Site link':
+    'サイトのリンク',
   'An hour to build. A day to claim it':
     'ビルドに 1 時間。引き継ぎに 1 日',
   'Every service, from minute zero':
@@ -1611,8 +1611,8 @@ export const jaMarketingDictionary: Record<string, string> = {
     'プロジェクトの全スコープ',
   'Give this to a human':
     'これは人間に渡す',
-  'Opens your domains until claimed':
-    '引き継ぐまでドメインを開くトークン',
+  'Opens preview domains until claimed':
+    '引き継ぐまでプレビュードメインを開くトークン',
   'End of the build hour':
     'ビルド時間の終了',
   'Claim deadline':
@@ -1631,12 +1631,12 @@ export const jaMarketingDictionary: Record<string, string> = {
     'プロジェクトは一時停止し、API 呼び出しは zero_expired を返しますが、何も削除されません。そこから 24 時間以内に、受け取ったリンクから引き継げます。引き継がれなかったプロジェクトはデータごと削除されます。',
   'What do I keep when I claim it?':
     '引き継ぐと何が残りますか？',
-  'All of it. The project keeps its ID, API key, data, files and deployments, and moves into an organization you own. Its site and function domains open to everyone.':
-    'すべてです。プロジェクトの ID、API キー、データ、ファイル、デプロイはそのままで、あなたがオーナーの組織に移動します。サイトと Functions のドメインは誰でも開けるようになります。',
+  'All of it. The project keeps its ID, API key, data, files and deployments, and moves into an organization you own. Its site and function domains drop the Zero banner.':
+    'すべてです。プロジェクトの ID、API キー、データ、ファイル、デプロイはそのままで、あなたがオーナーの組織に移動します。サイトと Functions のドメインから Zero のバナーが外れます。',
   'Who can open my site or function domain?':
     'サイトや Functions のドメインは誰が開けますか？',
-  'Only you, until you claim the project. Open a domain\'s owner link once in your browser, or send the accessToken in the X-Appwrite-Zero-Token header from an agent. npx appwrite zero status lists the owner link for each domain. After you claim it, the domains are public.':
-    'プロジェクトを引き継ぐまでは、あなただけです。ドメインのオーナーリンクをブラウザで一度開くか、エージェントから accessToken を X-Appwrite-Zero-Token ヘッダーで送信してください。npx appwrite zero status で各ドメインのオーナーリンクを確認できます。引き継いだ後はドメインが公開されます。',
+  'Anyone. Until you claim the project, its site and function domains show a Powered by Appwrite Zero banner with the time left and a Claim button. Deployment preview domains open only for you: open a preview\'s owner link once in your browser, or send the accessToken in the X-Appwrite-Zero-Token header from an agent.':
+    '誰でも開けます。プロジェクトを引き継ぐまで、サイトと Functions のドメインには残り時間と引き継ぎボタンを表示する Powered by Appwrite Zero のバナーが付きます。デプロイのプレビュードメインはあなただけが開けます。プレビューのオーナーリンクをブラウザで一度開くか、エージェントから accessToken を X-Appwrite-Zero-Token ヘッダーで送信してください。',
   'What is limited before I claim it?':
     '引き継ぐ前は何が制限されますか？',
   'One project, 500 function executions and 20 deployments an hour, and no messaging. You cannot create other projects or organizations from it. Everything else follows the Free plan.':
@@ -1703,8 +1703,8 @@ export const jaMarketingDictionary: Record<string, string> = {
     'メールでのサインインを有効にしました',
   'Created the tables it needs':
     '必要なテーブルを作成しました',
-  'It is live. Open the owner link once to see it, then claim the project to keep it.':
-    '公開しました。まずオーナーリンクを一度開いて確認し、その後プロジェクトを引き継いで残してください。',
+  'It is live. Open the site link to see it, then claim the project to keep it.':
+    '公開しました。サイトのリンクを開いて確認し、その後プロジェクトを引き継いで残してください。',
   'Send it to':
     '送信先',
   '60 minutes':
@@ -1715,8 +1715,8 @@ export const jaMarketingDictionary: Record<string, string> = {
     '次に一時停止します。API 呼び出しは zero_expired を返しますが、何も削除されません。',
   'After 25 hours, a project nobody claimed is deleted with its data.':
     '25 時間が過ぎても引き継がれなかったプロジェクトは、データごと削除されます。',
-  'Claim it any time in those 25 hours, even during the build hour. Same project, same ID, same API key, now without an expiry, and its domains open to everyone.':
-    'この 25 時間のうちなら、ビルド時間中でもいつでも引き継げます。プロジェクトも ID も API キーもそのままで有効期限がなくなり、ドメインは誰でも開けるようになります。',
+  'Claim it any time in those 25 hours, even during the build hour. Same project, same ID, same API key, now without an expiry, and its domains drop the Zero banner.':
+    'この 25 時間のうちなら、ビルド時間中でもいつでも引き継げます。プロジェクトも ID も API キーもそのままで有効期限がなくなり、ドメインから Zero のバナーが外れます。',
   'The times are for a project you start now, in your time zone.':
     '時刻は、今すぐ始めた場合のプロジェクトをあなたのタイムゾーンで表示しています。',
   'Before you claim it':
@@ -1733,8 +1733,8 @@ export const jaMarketingDictionary: Record<string, string> = {
     '任意のランタイムで動くコード',
   '500 runs an hour':
     '1 時間あたり 500 回の実行',
-  'A frontend on a real domain, private until claimed':
-    '本物のドメインで動くフロントエンド。引き継ぐまでは非公開',
+  'A frontend on a real domain, with a Zero banner until claimed':
+    '本物のドメインで動くフロントエンド。引き継ぐまでは Zero のバナー付き',
   '20 deploys an hour':
     '1 時間あたり 20 回のデプロイ',
   'Subscriptions over WebSockets':

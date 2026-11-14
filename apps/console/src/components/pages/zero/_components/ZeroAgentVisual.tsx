@@ -54,9 +54,9 @@ function ZeroAgentSession({
   ]
   const links = [
     {
-      id: 'owner',
-      label: t('Owner link'),
-      url: `${middle.site}-6721f.appwrite.network/__appwrite/zero?token=…`,
+      id: 'site',
+      label: t('Site link'),
+      url: `${middle.site}-6721f.appwrite.network`,
       icon: Eye,
     },
     {
