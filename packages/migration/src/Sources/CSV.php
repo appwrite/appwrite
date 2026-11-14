@@ -217,18 +217,18 @@ class CSV extends Source
             }
         }
 
-        $arrayKeys = [
-            '$permissions' => true,
+        $schema = [
+            '$permissions' => ['type' => '$permissions', 'array' => true, 'manyToMany' => false, 'format' => '', 'size' => 0, 'elements' => [], 'min' => null, 'max' => null],
         ];
-        $columnTypes = [];
         $requiredColumns = [];
-        $manyToManyKeys = [];
 
         foreach ($columns as $column) {
+            if (!($column instanceof \ArrayAccess || \is_array($column)) || !\is_string($column['key'] ?? null) || !\is_string($column['type'] ?? null)) {
+                continue;
+            }
+
             $key = $column['key'];
             $type = $column['type'];
-            $isArray = $column['array'] ?? false;
-            $isRequired = $column['required'] ?? false;
             $relationSide = $column['side'] ?? '';
             $relationType = $column['relationType'] ?? '';
 
@@ -239,157 +239,60 @@ class CSV extends Source
                 continue;
             }
 
-            $columnTypes[$key] = $type;
-            if ($isRequired) {
+            if ($column['required'] ?? false) {
                 $requiredColumns[$key] = true;
             }
 
-            if (
-                $type === Column::TYPE_RELATIONSHIP &&
-                $relationType === RelationshipType::ManyToMany->value &&
-                $relationSide === RelationshipSide::Parent->value
-            ) {
-                $manyToManyKeys[$key] = true;
-            }
+            $options = \is_array($column['formatOptions'] ?? null) ? $column['formatOptions'] : [];
+            $format = $column['format'] ?? '';
+            $size = $column['size'] ?? 0;
+            $elements = $options['elements'] ?? [];
+            $min = $options['min'] ?? null;
+            $max = $options['max'] ?? null;
 
-            if ($isArray && $type !== Column::TYPE_RELATIONSHIP) {
-                $arrayKeys[$key] = true;
-            }
+            $schema[$key] = [
+                'type' => $type,
+                'array' => ($column['array'] ?? false) && $type !== Column::TYPE_RELATIONSHIP,
+                'manyToMany' => $type === Column::TYPE_RELATIONSHIP
+                    && $relationType === RelationshipType::ManyToMany->value
+                    && $relationSide === RelationshipSide::Parent->value,
+                'format' => \is_string($format) ? $format : '',
+                'size' => \is_int($size) ? $size : 0,
+                'elements' => \is_array($elements) ? $elements : [],
+                'min' => \is_int($min) || \is_float($min) ? $min : null,
+                'max' => \is_int($max) || \is_float($max) ? $max : null,
+            ];
         }
 
-        $this->withCsvStream(function ($stream, $delimiter) use ($columnTypes, $databaseType, $requiredColumns, $manyToManyKeys, $arrayKeys, $tablePayload, $batchSize) {
-            $headers = \fgetcsv($stream, 0, $delimiter, '"', '"');
-
-            if (!\is_array($headers) || \count($headers) === 0) {
+        $this->withCsvStream(function ($stream, $delimiter) use ($schema, $databaseType, $requiredColumns, $tablePayload, $batchSize) {
+            $headers = $this->readHeaders($stream, $delimiter);
+            if ($headers === null) {
                 return;
             }
 
-            $this->validateCSVHeaders($headers, $columnTypes, $requiredColumns);
+            $this->validateCSVHeaders($headers, \array_diff_key($schema, ['$permissions' => true]), $requiredColumns);
+
+            // Check every row before any is written, so one bad row cannot leave the table half imported
+            foreach ($this->readRows($stream, $delimiter, $headers, $schema) as $_) {
+            }
+
+            \rewind($stream);
+            $this->readHeaders($stream, $delimiter);
 
             $buffer = [];
 
-            while (($row = \fgetcsv($stream, 0, $delimiter, '"', '"')) !== false) {
-                if (\count($row) !== \count($headers)) {
-                    throw new \Exception('CSV row does not match the number of header columns.', Exception::CODE_VALIDATION);
-                }
-
-                $data = \array_combine($headers, $row);
-                if ($data === false) {
-                    continue;
-                }
-
-                $parsedData = $data;
-
-                foreach ($data as $key => $value) {
-                    $parsedValue = \trim($value);
-                    $type = $columnTypes[$key] ?? null;
-
-                    if (!isset($type) && $key !== '$permissions') {
-                        // Skip unknown columns
-                        continue;
-                    }
-
-                    if (isset($manyToManyKeys[$key])) {
-                        if ($parsedValue === '') {
-                            $parsedData[$key] = [];
-                        } else {
-                            // Split on commas, trim whitespace, drop empty tokens, and reindex
-                            $ids = \explode(',', $parsedValue);
-                            $ids = \array_map(\trim(...), $ids);
-                            $ids = \array_filter($ids, static fn ($id) => $id !== '');
-                            $parsedData[$key] = \array_values($ids);
-                        }
-                        continue;
-                    }
-
-                    if (isset($arrayKeys[$key])) {
-                        if ($parsedValue === '') {
-                            $parsedData[$key] = [];
-                        } else {
-                            // Try to decode as JSON first
-                            $arrayValues = \json_decode($parsedValue, true);
-
-                            // If JSON decode fails, fall back to comma-separated parsing
-                            if (\json_last_error() !== JSON_ERROR_NONE) {
-                                // Remove empty strings from comma-separated parsing
-                                $arrayValues = \str_getcsv($parsedValue, ',', '"', '"');
-                                $arrayValues = \array_map(\trim(...), $arrayValues);
-                                $arrayValues = \array_filter($arrayValues, fn ($item) => $item !== '');
-                                $arrayValues = \array_values($arrayValues); // Re-index array
-                            }
-
-                            if (!\is_array($arrayValues)) {
-                                throw new \Exception("Invalid array format for column '$key': $parsedValue", Exception::CODE_VALIDATION);
-                            }
-
-                            $parsedData[$key] = array_map(function ($item) use ($type) {
-                                return match ($type) {
-                                    Column::TYPE_INTEGER,Column::TYPE_BIG_INT => is_numeric($item) ? (int)$item : null,
-                                    Column::TYPE_FLOAT => is_numeric($item) ? (float)$item : null,
-                                    Column::TYPE_BOOLEAN => filter_var($item, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
-                                    default => $item,
-                                };
-                            }, $arrayValues);
-                        }
-                        continue;
-                    }
-
-                    // Undo the quote CSV exports prefix to formula-like values
-                    $unquoted = \ltrim($parsedValue, "'");
-                    if ($unquoted !== $parsedValue && $unquoted !== '' && \str_contains("=+-@\t\r", $unquoted[0])) {
-                        $parsedValue = \substr($parsedValue, 1);
-                    }
-
-                    /**
-                     * Parsing logic for best compatibility with spec and 3rd party tools.
-                     * - 'null' unquoted literal is converted to null.
-                     * - missing strings stay empty strings for best compatibility.
-                     * - missing numbers, booleans, and datetime's are converted to null.
-                     * - other values are parsed as per their type.
-                     */
-
-                    $parsedData[$key] = match ($parsedValue) {
-                        'null' => null, // 'null' string is converted to null
-                        '' => match ($type) {
-                            Column::TYPE_INTEGER,
-                            Column::TYPE_BIG_INT,
-                            Column::TYPE_FLOAT,
-                            Column::TYPE_BOOLEAN,
-                            Column::TYPE_DATETIME,
-                            Column::TYPE_RELATIONSHIP => null, // primitive types default to null
-                            default => '', // but empty string stays empty string for compatibility
-                        },
-                        default => match ($type) {
-                            Column::TYPE_INTEGER, Column::TYPE_BIG_INT => \is_numeric($parsedValue) ? (int)$parsedValue : null,
-                            Column::TYPE_FLOAT => \is_numeric($parsedValue) ? (float)$parsedValue : null,
-                            Column::TYPE_BOOLEAN => \filter_var(
-                                $parsedValue,
-                                filter: FILTER_VALIDATE_BOOLEAN,
-                                options: FILTER_NULL_ON_FAILURE
-                            ),
-                            Column::TYPE_POINT,
-                            Column::TYPE_LINE,
-                            Column::TYPE_POLYGON,
-                            Column::TYPE_VECTOR,
-                            Column::TYPE_OBJECT => \is_string($parsedValue) ? json_decode($parsedValue, true) : null,
-                            default => $parsedValue,
-                        },
-                    };
-                }
-
+            foreach ($this->readRows($stream, $delimiter, $headers, $schema) as $parsedData) {
                 $rowId = $parsedData['$id'] ?? 'unique()';
                 $permissions = $parsedData['$permissions'] ?? [];
 
                 unset($parsedData['$id'], $parsedData['$permissions']);
 
-                $row = Appwrite::getRecord($databaseType, [
+                $buffer[] = Appwrite::getRecord($databaseType, [
                     'id' => $rowId,
                     'table' => $tablePayload,
                     'data' => $parsedData,
                     'permissions' => $permissions
                 ]);
-
-                $buffer[] = $row;
 
                 if (\count($buffer) === $batchSize) {
                     $this->callback($buffer);
@@ -401,6 +304,294 @@ class CSV extends Source
                 $this->callback($buffer);
             }
         });
+    }
+
+    /**
+     * @return array<string>|null
+     */
+    private function readHeaders(mixed $stream, string $delimiter): ?array
+    {
+        $cells = $this->readLine($stream, $delimiter);
+        if ($cells === null) {
+            return null;
+        }
+
+        $headers = \array_map(static fn (array $cell) => $cell[0], $cells);
+
+        // Excel's "CSV UTF-8" starts with a byte order mark
+        if (\str_starts_with($headers[0], "\xEF\xBB\xBF")) {
+            $headers[0] = \substr($headers[0], 3);
+        }
+
+        return $headers;
+    }
+
+    /**
+     * Parse the rows after the header, throwing on the first value its column cannot hold.
+     *
+     * @param array<string> $headers
+     * @param array<string, array{type: string, array: bool, manyToMany: bool, format: string, size: int, elements: array<mixed>, min: int|float|null, max: int|float|null}> $schema
+     * @return \Generator<array<string, mixed>>
+     * @throws \Exception
+     */
+    private function readRows(mixed $stream, string $delimiter, array $headers, array $schema): \Generator
+    {
+        $line = 1;
+
+        while (($cells = $this->readLine($stream, $delimiter)) !== null) {
+            $line++;
+
+            if (\count($cells) !== \count($headers)) {
+                throw new \Exception("CSV row does not match the number of header columns: row $line.", Exception::CODE_VALIDATION);
+            }
+
+            $parsedData = [];
+
+            foreach ($headers as $index => $key) {
+                [$value, $quoted] = $cells[$index];
+
+                if (!\mb_check_encoding($value, 'UTF-8')) {
+                    throw new \Exception("CSV row $line is not valid UTF-8.", Exception::CODE_VALIDATION);
+                }
+
+                $column = $schema[$key] ?? null;
+
+                if ($column === null) {
+                    // Internal columns pass through, unknown columns are skipped
+                    if (\in_array($key, ['$id', '$createdAt', '$updatedAt'], true)) {
+                        $parsedData[$key] = $value;
+                    }
+                    continue;
+                }
+
+                $parsedData[$key] = $this->parseCell($value, $quoted, $column, $key, $line);
+            }
+
+            yield $parsedData;
+        }
+    }
+
+    /**
+     * Read one CSV record, which may span lines inside quotes.
+     *
+     * @return array<array{string, bool}>|null cells as [value, quoted]
+     */
+    private function readLine(mixed $stream, string $delimiter): ?array
+    {
+        do {
+            $cells = $this->readRecord($stream, $delimiter);
+        } while ($cells === []);
+
+        return $cells;
+    }
+
+    /**
+     * @return array<array{string, bool}>|null cells as [value, quoted], empty for a blank line
+     */
+    private function readRecord(mixed $stream, string $delimiter): ?array
+    {
+        if (!\is_resource($stream)) {
+            return null;
+        }
+
+        $line = \fgets($stream);
+        if ($line === false) {
+            return null;
+        }
+
+        $cells = [];
+        $value = '';
+        $quoted = false;
+        $inQuotes = false;
+        $position = 0;
+
+        while (true) {
+            $length = \strlen($line);
+
+            while ($position < $length) {
+                $char = $line[$position++];
+
+                if ($inQuotes) {
+                    if ($char !== '"') {
+                        $value .= $char;
+                    } elseif ($position < $length && $line[$position] === '"') {
+                        $value .= '"';
+                        $position++;
+                    } else {
+                        $inQuotes = false;
+                    }
+                    continue;
+                }
+
+                if ($char === $delimiter) {
+                    $cells[] = [$value, $quoted];
+                    $value = '';
+                    $quoted = false;
+                } elseif ($char === '"' && !$quoted && \trim($value) === '') {
+                    // Whitespace before the opening quote is not part of the value
+                    $value = '';
+                    $quoted = true;
+                    $inQuotes = true;
+                } elseif ($char === "\n" || $char === "\r") {
+                    break;
+                } else {
+                    $value .= $char;
+                }
+            }
+
+            if (!$inQuotes) {
+                break;
+            }
+
+            $next = \fgets($stream);
+            if ($next === false) {
+                break;
+            }
+
+            $line = $next;
+            $position = 0;
+        }
+
+        $cells[] = [$value, $quoted];
+
+        // Skip blank lines
+        if (\count($cells) === 1 && !$quoted && \trim($value) === '') {
+            return [];
+        }
+
+        return $cells;
+    }
+
+    /**
+     * Parsing logic for best compatibility with spec and 3rd party tools.
+     * - an unquoted 'null' is null, a quoted "null" is the string.
+     * - unquoted values are trimmed, quoted values are kept as written.
+     * - empty strings stay empty strings for plain text columns, and are null for every other type.
+     * - other values must parse for their column, or the import fails with the row number.
+     *
+     * @param array{type: string, array: bool, manyToMany: bool, format: string, size: int, elements: array<mixed>, min: int|float|null, max: int|float|null} $column
+     * @throws \Exception
+     */
+    private function parseCell(string $value, bool $quoted, array $column, string $key, int $line): mixed
+    {
+        if (!$quoted) {
+            $value = \trim($value);
+
+            if ($value === 'null') {
+                return null;
+            }
+        }
+
+        if ($column['manyToMany']) {
+            // Split on commas, trim whitespace, drop empty tokens, and reindex
+            $ids = \array_map(\trim(...), \explode(',', $value));
+            return \array_values(\array_filter($ids, static fn ($id) => $id !== ''));
+        }
+
+        if ($column['array']) {
+            if (\trim($value) === '') {
+                return [];
+            }
+
+            // Try to decode as JSON first, fall back to comma-separated values
+            $items = \json_decode($value, true);
+            if (\json_last_error() !== JSON_ERROR_NONE) {
+                $items = \array_map(\trim(...), \str_getcsv($value, ',', '"', '"'));
+                $items = \array_values(\array_filter($items, static fn ($item) => $item !== ''));
+            }
+
+            if (!\is_array($items) || !\array_is_list($items)) {
+                throw new \Exception("CSV row $line: invalid array for column '$key': $value", Exception::CODE_VALIDATION);
+            }
+
+            return \array_map(
+                fn ($item) => $this->parseValue(\is_scalar($item) ? \trim((string) $item) : null, $column, $key, $line),
+                $items
+            );
+        }
+
+        // Undo the quote CSV exports prefix to formula-like values
+        $unquoted = \ltrim($value, "'");
+        if ($unquoted !== $value && $unquoted !== '' && \str_contains("=+-@\t\r", $unquoted[0])) {
+            $value = \substr($value, 1);
+        }
+
+        if ($value === '') {
+            $plain = \in_array($column['type'], [Column::TYPE_STRING, Column::TYPE_VARCHAR, Column::TYPE_TEXT, Column::TYPE_MEDIUMTEXT, Column::TYPE_LONGTEXT], true);
+            return $plain && $column['format'] === '' ? '' : null;
+        }
+
+        return $this->parseValue($value, $column, $key, $line);
+    }
+
+    /**
+     * Parse a non-empty value for its column type, rejecting values the column cannot hold
+     * instead of storing null or a truncated cast.
+     *
+     * @param array{type: string, array: bool, manyToMany: bool, format: string, size: int, elements: array<mixed>, min: int|float|null, max: int|float|null} $column
+     * @throws \Exception
+     */
+    private function parseValue(?string $value, array $column, string $key, int $line): mixed
+    {
+        $type = $column['type'];
+
+        $parsed = $value === null ? null : match ($type) {
+            Column::TYPE_INTEGER, Column::TYPE_BIG_INT => \filter_var($value, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE),
+            Column::TYPE_FLOAT => \is_numeric($value) ? (float) $value : null,
+            Column::TYPE_BOOLEAN => \filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+            Column::TYPE_DATETIME => $this->isDatetime($value) ? $value : null,
+            Column::TYPE_POINT,
+            Column::TYPE_LINE,
+            Column::TYPE_POLYGON,
+            Column::TYPE_VECTOR,
+            Column::TYPE_OBJECT => \json_decode($value, true),
+            default => $this->isFormatted($value, $column) ? $value : null,
+        };
+
+        if (\is_int($parsed) || \is_float($parsed)) {
+            if (($column['min'] !== null && $parsed < $column['min']) || ($column['max'] !== null && $parsed > $column['max'])) {
+                $parsed = null;
+            }
+        }
+
+        if (\is_string($parsed) && $column['size'] > 0 && \mb_strlen($parsed) > $column['size']) {
+            throw new \Exception("CSV row $line: value for column '$key' is longer than {$column['size']} characters.", Exception::CODE_VALIDATION);
+        }
+
+        if ($parsed === null) {
+            throw new \Exception("CSV row $line: invalid $type value for column '$key': $value", Exception::CODE_VALIDATION);
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * Absolute dates only: relative words like 'yesterday' and out-of-range dates like 31.02 are rejected.
+     */
+    private function isDatetime(string $value): bool
+    {
+        $parsed = \date_parse($value);
+
+        return $parsed['error_count'] === 0
+            && $parsed['warning_count'] === 0
+            && !isset($parsed['relative'])
+            && $parsed['year'] !== false
+            && $parsed['month'] !== false
+            && $parsed['day'] !== false;
+    }
+
+    /**
+     * @param array{type: string, array: bool, manyToMany: bool, format: string, size: int, elements: array<mixed>, min: int|float|null, max: int|float|null} $column
+     */
+    private function isFormatted(string $value, array $column): bool
+    {
+        return match ($column['format']) {
+            'enum' => \in_array($value, $column['elements'], true),
+            'email' => \filter_var($value, FILTER_VALIDATE_EMAIL) !== false,
+            'url' => \filter_var($value, FILTER_VALIDATE_URL) !== false,
+            'ip' => \filter_var($value, FILTER_VALIDATE_IP) !== false,
+            default => true,
+        };
     }
 
     /**
