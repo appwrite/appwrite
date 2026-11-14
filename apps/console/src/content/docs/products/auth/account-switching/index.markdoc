@@ -1,0 +1,293 @@
+---
+layout: article
+title: Account switching
+description: Let users stay signed in to several accounts in one browser or app and switch between them with Appwrite Auth devices, without signing out and back in.
+---
+
+Account switching lets one browser or app install stay signed in to several accounts at once and switch which one is active. A user can keep a personal and a work account signed in side by side and move between them without signing out and back in.
+
+Account switching is different from [identities](/docs/products/auth/identities). Identities link several sign-in methods to one account. Account switching keeps separate accounts, each with its own session.
+
+# How account switching works {% #how-it-works %}
+
+Account switching is built on **devices**. A device belongs to one browser or app install. It holds the sessions of every account signed in there and tracks which session is active. Appwrite keeps the device secret in its own cookie, next to the session cookie.
+
+The active session's secret stays in the usual session cookie, so every other Appwrite call keeps working as before. Your app reads data, uploads files, and subscribes to realtime events as the active account, with no extra parameters.
+
+- **Sessions join automatically.** Once a device exists, every new session joins it and becomes the active one. This works for every sign-in method, including email and password, OAuth2, magic URL, email OTP, phone, passkeys, anonymous, and custom tokens.
+- **The current session comes along.** If the user is already signed in when you create the device, their session joins it, so the account they're using is switchable right away.
+- **One session per account.** A device holds at most one session for each user. Signing in again as an account the device already holds replaces that account's old session.
+- **No sign-in conflict.** Without a device, creating a session while one is active fails with `user_session_already_exists`. With a device, the new session joins it instead.
+- **The device expires with its sessions.** A device lasts as long as the newest session it holds.
+
+# Enable account switching {% #enable %}
+
+Account switching is turned on by default for every project. To change it:
+
+1. Open your project in the Appwrite Console.
+2. Navigate to **Auth** > **Policies** > **Sessions**.
+3. In the **Account switching** card, turn **Allow account switching** on or off.
+4. Click **Update**.
+
+{% only_dark %}
+![Account switching card in the Appwrite Console](/images/docs/auth/account-switching/dark/account-switching.avif)
+{% /only_dark %}
+{% only_light %}
+![Account switching card in the Appwrite Console](/images/docs/auth/account-switching/account-switching.avif)
+{% /only_light %}
+
+When account switching is off, browsers and apps can't create new devices, so each one is limited to a single active session. You can also change the policy with the Project service's `updateAccountDevicesPolicy` method, using an API key.
+
+# Create a device {% #create-device %}
+
+Create a device when your app starts. If the browser or app already has a valid device, Appwrite returns the existing one instead of an error, so it's safe to call on every launch.
+
+{% multicode %}
+```client-web
+import { Client, Account } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+await account.createDevice();
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final account = Account(client);
+
+await account.createDevice();
+```
+
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let account = Account(client)
+
+_ = try await account.createDevice()
+```
+
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val account = Account(client)
+
+account.createDevice()
+```
+{% /multicode %}
+
+# Add an account {% #add-account %}
+
+To add another account, show your sign-in screen again and create a session with any sign-in method. You don't need to sign the current account out first. The new session joins the device and becomes active.
+
+{% multicode %}
+```client-web
+// The first account is signed in and active
+await account.createEmailPasswordSession({
+    email: 'personal@example.com',
+    password: '<PASSWORD>'
+});
+
+// The second account joins the device and becomes the active one
+await account.createEmailPasswordSession({
+    email: 'work@example.com',
+    password: '<PASSWORD>'
+});
+```
+
+```client-flutter
+// The first account is signed in and active
+await account.createEmailPasswordSession(
+  email: 'personal@example.com',
+  password: '<PASSWORD>',
+);
+
+// The second account joins the device and becomes the active one
+await account.createEmailPasswordSession(
+  email: 'work@example.com',
+  password: '<PASSWORD>',
+);
+```
+
+```client-apple
+// The first account is signed in and active
+_ = try await account.createEmailPasswordSession(
+    email: "personal@example.com",
+    password: "<PASSWORD>"
+)
+
+// The second account joins the device and becomes the active one
+_ = try await account.createEmailPasswordSession(
+    email: "work@example.com",
+    password: "<PASSWORD>"
+)
+```
+
+```client-android-kotlin
+// The first account is signed in and active
+account.createEmailPasswordSession(
+    email = "personal@example.com",
+    password = "<PASSWORD>",
+)
+
+// The second account joins the device and becomes the active one
+account.createEmailPasswordSession(
+    email = "work@example.com",
+    password = "<PASSWORD>",
+)
+```
+{% /multicode %}
+
+# List signed-in accounts {% #list-accounts %}
+
+Get the device to build an account picker. Use the string `current` to reference the device of the current browser or app. The device's `sessions` list holds one session per signed-in account, each with the `userId` and `userName` it belongs to, and `activeSessionId` tells you which one is active.
+
+{% multicode %}
+```client-web
+const device = await account.getDevice({ deviceId: 'current' });
+
+for (const session of device.sessions) {
+    const active = session.$id === device.activeSessionId;
+    console.log(session.userName, session.userId, active ? '(active)' : '');
+}
+```
+
+```client-flutter
+final device = await account.getDevice(deviceId: 'current');
+
+for (final session in device.sessions) {
+  final active = session.$id == device.activeSessionId;
+  print('${session.userName} ${session.userId} ${active ? '(active)' : ''}');
+}
+```
+
+```client-apple
+let device = try await account.getDevice(deviceId: "current")
+
+for session in device.sessions {
+    let active = session.id == device.activeSessionId
+    print(session.userName, session.userId, active ? "(active)" : "")
+}
+```
+
+```client-android-kotlin
+val device = account.getDevice(deviceId = "current")
+
+for (session in device.sessions) {
+    val active = session.id == device.activeSessionId
+    println("${session.userName} ${session.userId} ${if (active) "(active)" else ""}")
+}
+```
+{% /multicode %}
+
+# Switch the active account {% #switch-account %}
+
+Pass the ID of one of the device's sessions to make that account active. Appwrite writes the session's secret to the session cookie, so the next request runs as the account you switched to. Fetch the user again with `account.get()` and reset any state that belongs to the previous account, such as cached data and realtime subscriptions.
+
+{% multicode %}
+```client-web
+await account.updateDeviceSession({
+    deviceId: 'current',
+    sessionId: '<SESSION_ID>'
+});
+
+const user = await account.get();
+```
+
+```client-flutter
+await account.updateDeviceSession(
+  deviceId: 'current',
+  sessionId: '<SESSION_ID>',
+);
+
+final user = await account.get();
+```
+
+```client-apple
+_ = try await account.updateDeviceSession(
+    deviceId: "current",
+    sessionId: "<SESSION_ID>"
+)
+
+let user = try await account.get()
+```
+
+```client-android-kotlin
+account.updateDeviceSession(
+    deviceId = "current",
+    sessionId = "<SESSION_ID>",
+)
+
+val user = account.get()
+```
+{% /multicode %}
+
+Switching to a session the device doesn't hold fails with `user_device_session_not_found`. Calling a device method before the browser or app has a device fails with `user_device_not_found`.
+
+Every switch fires the `users.[userId].sessions.[sessionId].update` event, so [webhooks](/docs/apis/webhooks) and [functions](/docs/products/functions) can react to it.
+
+# Sign out {% #sign-out %}
+
+To sign out the active account, delete the current session as usual. The other accounts stay signed in, and the device is left with no active account until you switch to another one. Show your account picker at this point.
+
+To sign out of every account at once, delete the device. Appwrite deletes every session it holds and clears both the device and session cookies.
+
+{% multicode %}
+```client-web
+// Sign out the active account only
+await account.deleteSession({ sessionId: 'current' });
+
+// Sign out of every account on this device
+await account.deleteDevice({ deviceId: 'current' });
+```
+
+```client-flutter
+// Sign out the active account only
+await account.deleteSession(sessionId: 'current');
+
+// Sign out of every account on this device
+await account.deleteDevice(deviceId: 'current');
+```
+
+```client-apple
+// Sign out the active account only
+_ = try await account.deleteSession(sessionId: "current")
+
+// Sign out of every account on this device
+_ = try await account.deleteDevice(deviceId: "current")
+```
+
+```client-android-kotlin
+// Sign out the active account only
+account.deleteSession(sessionId = "current")
+
+// Sign out of every account on this device
+account.deleteDevice(deviceId = "current")
+```
+{% /multicode %}
+
+To sign out an account that isn't active, switch to it first, then delete the current session.
+
+# Security considerations {% #security %}
+
+- **Switching rotates the session secret.** Session secrets are stored hashed, so Appwrite can't put the old secret back in a cookie. Each switch issues a new secret for the chosen session, and any other copy of that session's secret stops working. Don't share a session between devices.
+- **Joining rotates the device secret.** Every session that joins a device rotates the device secret and reissues the device cookie. The cookie handles this for you. If your app keeps the device secret itself, replace it from each session response.
+- **Session limits still apply.** Each account counts its device session toward the project's [session limit](/docs/products/auth/security#session-limits).
+- **Force sign out covers devices.** [Signing out all users](/docs/products/auth/security#force-sign-out-all-users) invalidates every session a device holds.

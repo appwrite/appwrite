@@ -125,6 +125,8 @@ Errors found when using Appwrite Authentication.
 | 404  | user_not_found | User with the requested ID could not be found. |
 | 404  | user_session_not_found | The current user session could not be found. |
 | 404  | user_identity_not_found | The identity could not be found. Please sign in with OAuth provider to create identity first. |
+| 404  | user_device_not_found | The requested account switching device could not be found. Create one with the create device endpoint first. |
+| 404  | user_device_session_not_found | The requested session is not held by this account switching device. |
 | 404  | team_not_found | Team with the requested ID could not be found. |
 | 404  | team_invite_not_found | The requested team invitation could not be found. |
 | 404  | team_membership_mismatch | The membership ID does not belong to the team ID. |
