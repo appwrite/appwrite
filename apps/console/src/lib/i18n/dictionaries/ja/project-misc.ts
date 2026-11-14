@@ -3943,8 +3943,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Acknowledged with an API key': 'API キーで確認済み',
   'Failed to acknowledge the alert': 'アラートを確認済みにできませんでした',
   'Failed to undo the acknowledgement': '確認済みを取り消せませんでした',
-  'Let your team know someone is on it. It keeps firing until usage recovers.':
-    '誰かが対応中であることをチームに知らせます。使用量が回復するまでアラートは発生し続けます。',
+  'Let your team know someone is on it. It keeps firing until its monitor recovers.':
+    '誰かが対応中であることをチームに知らせます。モニターが回復するまでアラートは発生し続けます。',
   'Nobody has acknowledged this alert':
     'このアラートはまだ誰も確認していません',
   "You don't have permission to manage monitors.":

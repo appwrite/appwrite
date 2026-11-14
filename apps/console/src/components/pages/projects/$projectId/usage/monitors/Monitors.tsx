@@ -710,7 +710,7 @@ function MonitorState({
     </span>
   )
   return (
-    <div className="w-[72px] shrink-0 text-end sm:w-32">
+    <div className="w-[72px] shrink-0 text-end sm:w-44">
       {state === 'firing' && monitor.alertId ? (
         <Link
           to="/projects/$projectId/usage/alerts"

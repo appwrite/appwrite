@@ -128,7 +128,7 @@ function Acknowledgement({
             </p>
             <p className="text-[12px] text-muted-foreground">
               {t(
-                'Let your team know someone is on it. It keeps firing until usage recovers.',
+                'Let your team know someone is on it. It keeps firing until its monitor recovers.',
               )}
             </p>
           </>
