@@ -79,7 +79,7 @@ export function View() {
                 'Deployment and branch previews get a generated URL on a shared Appwrite domain.',
               keywords: ['preview', 'domain', 'branch', 'custom', 'enterprise'],
             },
-            node: <PreviewDomainCard projectId={projectId} />,
+            node: <PreviewDomainCard projectId={projectId} kind="sites" />,
           },
         ]
       : []),

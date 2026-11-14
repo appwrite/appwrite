@@ -2,7 +2,8 @@
  * Preview Domain Card Component
  *
  * Shows the shared domain deployment and branch previews are served from
- * (`_APP_DOMAIN_SITES`) and offers a custom preview domain through sales.
+ * (`_APP_DOMAIN_SITES` or `_APP_DOMAIN_FUNCTIONS`) and offers a custom preview
+ * domain through sales.
  */
 
 import { Button } from '@/components/ui/button'
@@ -12,13 +13,14 @@ import { useT } from '@/lib/i18n/translate'
 
 interface PreviewDomainCardProps {
   projectId: string | null | undefined
+  kind: 'sites' | 'functions'
 }
 
-export function PreviewDomainCard({ projectId }: PreviewDomainCardProps) {
+export function PreviewDomainCard({ projectId, kind }: PreviewDomainCardProps) {
   const t = useT()
   const { project } = useProject(projectId ?? undefined)
-  const { sitesDomain } = useConsoleVariables(project?.region)
-  const previewDomain = sitesDomain || 'appwrite.network'
+  const { sitesDomain, functionsDomain } = useConsoleVariables(project?.region)
+  const previewDomain = kind === 'sites' ? sitesDomain : functionsDomain
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -39,12 +41,14 @@ export function PreviewDomainCard({ projectId }: PreviewDomainCardProps) {
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-3">
-        <p className="text-[13px] text-muted-foreground">
-          {t('Current preview domain:')}{' '}
-          <code className="ms-1.5 rounded bg-muted px-1.5 py-0.5 font-mono text-[12px] text-foreground">
-            *.{previewDomain}
-          </code>
-        </p>
+        {previewDomain && (
+          <p className="text-[13px] text-muted-foreground">
+            {t('Current preview domain:')}{' '}
+            <code className="ms-1.5 rounded bg-muted px-1.5 py-0.5 font-mono text-[12px] text-foreground">
+              *.{previewDomain}
+            </code>
+          </p>
+        )}
         <p className="text-[13px] text-muted-foreground">
           {t(
             'Serve previews from a domain you own so every preview link matches your brand. Custom preview domains are available on Enterprise plans.',
