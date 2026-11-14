@@ -884,6 +884,119 @@
             "permissions",
             "transactionId"
         ],
+        "videos.create": [
+            "bucketId",
+            "fileId",
+            "name",
+            "permissions"
+        ],
+        "videos.createCaption": [
+            "videoId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
+        ],
+        "videos.createRendition": [
+            "videoId",
+            "profileId",
+            "output"
+        ],
+        "videos.delete": [
+            "videoId"
+        ],
+        "videos.deleteCaption": [
+            "videoId",
+            "captionId"
+        ],
+        "videos.deleteRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.get": [
+            "videoId"
+        ],
+        "videos.getCaptionManifest": [
+            "videoId",
+            "output",
+            "captionId"
+        ],
+        "videos.getCaptionSegment": [
+            "videoId",
+            "output",
+            "captionId",
+            "segmentId"
+        ],
+        "videos.getCmafDashManifest": [
+            "videoId"
+        ],
+        "videos.getCmafHlsManifest": [
+            "videoId"
+        ],
+        "videos.getCmafStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getDashManifest": [
+            "videoId"
+        ],
+        "videos.getHlsManifest": [
+            "videoId"
+        ],
+        "videos.getRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.getSegment": [
+            "videoId",
+            "output",
+            "renditionId",
+            "segmentId"
+        ],
+        "videos.getStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getThumbnail": [
+            "videoId",
+            "thumbnailId",
+            "width",
+            "height",
+            "output"
+        ],
+        "videos.getTimelines": [
+            "videoId"
+        ],
+        "videos.list": [
+            "queries",
+            "total"
+        ],
+        "videos.listCaptions": [
+            "videoId"
+        ],
+        "videos.listCodecs": [],
+        "videos.listRenditions": [
+            "videoId",
+            "output",
+            "status"
+        ],
+        "videos.update": [
+            "videoId",
+            "name",
+            "permissions"
+        ],
+        "videos.updateCaption": [
+            "videoId",
+            "captionId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
+        ],
         "account.createDevice": [],
         "account.getDevice": [
             "deviceId"
@@ -3039,6 +3152,14 @@
             "secret",
             "description"
         ],
+        "project.createVideoProfile": [
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height",
+            "codec"
+        ],
         "project.createWebPlatform": [
             "platformId",
             "name",
@@ -3064,6 +3185,9 @@
         "project.deleteVariable": [
             "variableId"
         ],
+        "project.deleteVideoProfile": [
+            "profileId"
+        ],
         "project.get": [],
         "project.getEmailTemplate": [
             "templateId",
@@ -3087,6 +3211,9 @@
         "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
+        ],
+        "project.getVideoProfile": [
+            "profileId"
         ],
         "project.listEmailTemplates": [
             "queries",
@@ -3114,6 +3241,11 @@
         ],
         "project.listVariables": [
             "queries",
+            "total"
+        ],
+        "project.listVideoProfiles": [
+            "queries",
+            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -3571,6 +3703,14 @@
             "value",
             "secret",
             "description"
+        ],
+        "project.updateVideoProfile": [
+            "profileId",
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height"
         ],
         "project.updateWebPlatform": [
             "platformId",
@@ -5133,6 +5273,119 @@
             "collectionId",
             "documents",
             "transactionId"
+        ],
+        "videos.create": [
+            "bucketId",
+            "fileId",
+            "name",
+            "permissions"
+        ],
+        "videos.createCaption": [
+            "videoId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
+        ],
+        "videos.createRendition": [
+            "videoId",
+            "profileId",
+            "output"
+        ],
+        "videos.delete": [
+            "videoId"
+        ],
+        "videos.deleteCaption": [
+            "videoId",
+            "captionId"
+        ],
+        "videos.deleteRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.get": [
+            "videoId"
+        ],
+        "videos.getCaptionManifest": [
+            "videoId",
+            "output",
+            "captionId"
+        ],
+        "videos.getCaptionSegment": [
+            "videoId",
+            "output",
+            "captionId",
+            "segmentId"
+        ],
+        "videos.getCmafDashManifest": [
+            "videoId"
+        ],
+        "videos.getCmafHlsManifest": [
+            "videoId"
+        ],
+        "videos.getCmafStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getDashManifest": [
+            "videoId"
+        ],
+        "videos.getHlsManifest": [
+            "videoId"
+        ],
+        "videos.getRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.getSegment": [
+            "videoId",
+            "output",
+            "renditionId",
+            "segmentId"
+        ],
+        "videos.getStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getThumbnail": [
+            "videoId",
+            "thumbnailId",
+            "width",
+            "height",
+            "output"
+        ],
+        "videos.getTimelines": [
+            "videoId"
+        ],
+        "videos.list": [
+            "queries",
+            "total"
+        ],
+        "videos.listCaptions": [
+            "videoId"
+        ],
+        "videos.listCodecs": [],
+        "videos.listRenditions": [
+            "videoId",
+            "output",
+            "status"
+        ],
+        "videos.update": [
+            "videoId",
+            "name",
+            "permissions"
+        ],
+        "videos.updateCaption": [
+            "videoId",
+            "captionId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
         ],
         "webhooks.create": [
             "webhookId",
@@ -7247,6 +7500,14 @@
             "secret",
             "description"
         ],
+        "project.createVideoProfile": [
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height",
+            "codec"
+        ],
         "project.createWebPlatform": [
             "platformId",
             "name",
@@ -7272,6 +7533,9 @@
         "project.deleteVariable": [
             "variableId"
         ],
+        "project.deleteVideoProfile": [
+            "profileId"
+        ],
         "project.get": [],
         "project.getEmailTemplate": [
             "templateId",
@@ -7295,6 +7559,9 @@
         "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
+        ],
+        "project.getVideoProfile": [
+            "profileId"
         ],
         "project.listEmailTemplates": [
             "queries",
@@ -7322,6 +7589,11 @@
         ],
         "project.listVariables": [
             "queries",
+            "total"
+        ],
+        "project.listVideoProfiles": [
+            "queries",
+            "codec",
             "total"
         ],
         "project.updateAndroidPlatform": [
@@ -7779,6 +8051,14 @@
             "value",
             "secret",
             "description"
+        ],
+        "project.updateVideoProfile": [
+            "profileId",
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height"
         ],
         "project.updateWebPlatform": [
             "platformId",
@@ -9219,6 +9499,119 @@
             "collectionId",
             "documents",
             "transactionId"
+        ],
+        "videos.create": [
+            "bucketId",
+            "fileId",
+            "name",
+            "permissions"
+        ],
+        "videos.createCaption": [
+            "videoId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
+        ],
+        "videos.createRendition": [
+            "videoId",
+            "profileId",
+            "output"
+        ],
+        "videos.delete": [
+            "videoId"
+        ],
+        "videos.deleteCaption": [
+            "videoId",
+            "captionId"
+        ],
+        "videos.deleteRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.get": [
+            "videoId"
+        ],
+        "videos.getCaptionManifest": [
+            "videoId",
+            "output",
+            "captionId"
+        ],
+        "videos.getCaptionSegment": [
+            "videoId",
+            "output",
+            "captionId",
+            "segmentId"
+        ],
+        "videos.getCmafDashManifest": [
+            "videoId"
+        ],
+        "videos.getCmafHlsManifest": [
+            "videoId"
+        ],
+        "videos.getCmafStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getDashManifest": [
+            "videoId"
+        ],
+        "videos.getHlsManifest": [
+            "videoId"
+        ],
+        "videos.getRendition": [
+            "videoId",
+            "renditionId"
+        ],
+        "videos.getSegment": [
+            "videoId",
+            "output",
+            "renditionId",
+            "segmentId"
+        ],
+        "videos.getStreamManifest": [
+            "videoId",
+            "renditionId",
+            "streamId"
+        ],
+        "videos.getThumbnail": [
+            "videoId",
+            "thumbnailId",
+            "width",
+            "height",
+            "output"
+        ],
+        "videos.getTimelines": [
+            "videoId"
+        ],
+        "videos.list": [
+            "queries",
+            "total"
+        ],
+        "videos.listCaptions": [
+            "videoId"
+        ],
+        "videos.listCodecs": [],
+        "videos.listRenditions": [
+            "videoId",
+            "output",
+            "status"
+        ],
+        "videos.update": [
+            "videoId",
+            "name",
+            "permissions"
+        ],
+        "videos.updateCaption": [
+            "videoId",
+            "captionId",
+            "bucketId",
+            "fileId",
+            "name",
+            "code",
+            "default"
         ],
         "webhooks.create": [
             "webhookId",

@@ -94,6 +94,56 @@ final class S3Test extends S3Base
     }
 
     /**
+     * Fetches a URL with nothing but curl, the way ffmpeg would: no credentials
+     * of its own, and an optional byte range.
+     *
+     * @return array{int, string}
+     */
+    private function fetch(string $url, ?string $range = null): array
+    {
+        $curl = curl_init($url);
+        curl_setopt_array($curl, [\CURLOPT_RETURNTRANSFER => true, \CURLOPT_TIMEOUT => 30]);
+        if ($range !== null) {
+            curl_setopt($curl, \CURLOPT_HTTPHEADER, ['Range: bytes=' . $range]);
+        }
+        $body = (string) curl_exec($curl);
+
+        return [curl_getinfo($curl, \CURLINFO_RESPONSE_CODE), $body];
+    }
+
+    /**
+     * The service itself must accept the signature, for a whole object and for
+     * a byte range, on either addressing style; a tampered one must not pass.
+     */
+    #[DataProvider('addressing')]
+    public function testAPresignedUrlReadsTheObjectWithoutCredentials(bool $pathStyle): void
+    {
+        $root = 'presign/' . bin2hex(random_bytes(8));
+        $device = $pathStyle ? $this->pathStyle($root) : $this->virtualHosted("{$this->bucket}/{$root}");
+        $path = $device->getPath('video.bin');
+        $body = random_bytes(4096);
+        $device->write($path, new Stream($body), 'application/octet-stream');
+
+        try {
+            $url = $device->getPresignedUrl($path, 60);
+
+            [$status, $whole] = $this->fetch($url);
+            $this->assertSame(200, $status);
+            $this->assertSame($body, $whole);
+
+            [$status, $slice] = $this->fetch($url, '1000-1999');
+            $this->assertSame(206, $status);
+            $this->assertSame(substr($body, 1000, 1000), $slice);
+
+            $tampered = substr($url, 0, -1) . (str_ends_with($url, '0') ? '1' : '0');
+            [$status] = $this->fetch($tampered);
+            $this->assertSame(403, $status);
+        } finally {
+            $device->delete($path);
+        }
+    }
+
+    /**
      * Every path listed under the prefix, paging until each wanted path has been seen.
      *
      * @param  array<string>  $wanted

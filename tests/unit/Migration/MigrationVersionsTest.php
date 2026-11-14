@@ -44,6 +44,21 @@ final class MigrationVersionsTest extends TestCase
         if (!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
             $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
         }
+
+        // 2.6.x and 2.7.x stay on V25. That migration creates the 2.7
+        // collections and the video collections. Class existence does not
+        // catch a swap onto another class.
+        $this->assertSame(
+            [
+                '2.4.0' => 'V25',
+                '2.5.0' => 'V25',
+                '2.6.0' => 'V25',
+                '2.6.1' => 'V25',
+                '2.6.2' => 'V25',
+                '2.7.0' => 'V25',
+            ],
+            \array_intersect_key(Migration::$versions, \array_flip(['2.4.0', '2.5.0', '2.6.0', '2.6.1', '2.6.2', '2.7.0']))
+        );
     }
 
     public function testV24CreatesAlertsCollectionForConsoleProject(): void
@@ -432,5 +447,116 @@ final class MigrationVersionsTest extends TestCase
         $user = $authorization->skip(fn () => $database->getDocument('users', 'legacy-user'));
 
         $this->assertSame('legacyuser@example.com', $user->getAttribute('emailCanonical'));
+    }
+
+    /**
+     * The 2.6.x/2.7.0 upgrade path creates the video collections from V25, so
+     * the shared-tables rule holds there too: the metadata row belongs to no
+     * tenant, and a second project on the host sees the collections. The
+     * created schema keeps retained size and the job failure reason.
+     */
+    public function testV25SharedTablesCreateGlobalVideoCollections(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25Shared')
+            ->setNamespace('migration_videos_shared_v25_' . \uniqid())
+            ->setSharedTables(true)
+            ->setTenant(null);
+        $database->create();
+
+        $migrate = function (string $tenant) use ($database, $authorization): void {
+            // Only the collection pass matters here; the document passes read
+            // collections a fresh schema does not have.
+            $migration = new class () extends V25 {
+                #[\Override]
+                public function forEachDocument(callable $callback): void
+                {
+                }
+
+                #[\Override]
+                protected function documentsIterator(string $collection, array $queries = []): \Generator
+                {
+                    yield from [];
+                }
+            };
+            $database->setTenant($tenant);
+            $migration->setProject(
+                new Document(['$id' => 'project-' . $tenant, '$sequence' => $tenant]),
+                $database,
+                $database,
+                $authorization,
+            );
+
+            \ob_start();
+            try {
+                $migration->execute();
+            } finally {
+                \ob_end_clean();
+            }
+        };
+
+        $collections = [
+            'videos',
+            'videosTimelines',
+            'videosRenditions',
+            'videosRenditionsSegments',
+            'videosProfiles',
+            'videosCaptions',
+            'videosCaptionsSegments',
+        ];
+
+        $migrate('tenant-a');
+
+        foreach ($collections as $collectionId) {
+            $metadata = $database->withTenant(null, fn () => $database->getDocument(Database::METADATA, $collectionId));
+            $this->assertFalse($metadata->isEmpty(), "Expected metadata for \"{$collectionId}\" to exist");
+            $this->assertNull($metadata->getTenant(), "Expected \"{$collectionId}\" metadata to be global");
+        }
+
+        $attributeIds = function (string $collectionId) use ($database): array {
+            $ids = [];
+            foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
+                $ids[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+            }
+
+            return $ids;
+        };
+
+        foreach (['videosRenditions', 'videosCaptions', 'videosTimelines'] as $collectionId) {
+            $this->assertContains('size', $attributeIds($collectionId), "Expected \"{$collectionId}\" to store retained bytes");
+        }
+
+        $reasons = [
+            'videos' => ['timelineStatus', 'timelineError'],
+            'videosRenditions' => ['error'],
+            'videosCaptions' => ['error'],
+        ];
+        foreach ($reasons as $collectionId => $expected) {
+            $ids = $attributeIds($collectionId);
+            foreach ($expected as $attributeId) {
+                $this->assertContains($attributeId, $ids, "Expected \"{$collectionId}\" to carry the job failure reason");
+            }
+        }
+
+        $timelineAttributeIds = $attributeIds('videosTimelines');
+        $this->assertNotContains('second', $timelineAttributeIds);
+        $this->assertNotContains('type', $timelineAttributeIds);
+
+        $migrate('tenant-b');
+
+        foreach ($collections as $collectionId) {
+            $this->assertFalse(
+                $database->getCollection($collectionId)->isEmpty(),
+                "Expected collection \"{$collectionId}\" to exist for tenant-b"
+            );
+            $metadata = $database->withTenant(null, fn () => $database->getDocument(Database::METADATA, $collectionId));
+            $this->assertFalse($metadata->isEmpty(), "Expected metadata for \"{$collectionId}\" to exist");
+            $this->assertNull($metadata->getTenant(), "Expected \"{$collectionId}\" metadata to stay global");
+        }
     }
 }
