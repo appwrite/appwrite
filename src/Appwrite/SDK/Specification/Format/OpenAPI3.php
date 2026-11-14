@@ -676,7 +676,9 @@ class OpenAPI3 extends Format
 
                 $openEnum = false;
                 if ($class === \Utopia\Validator\AnyOf::class) {
-                    $validators = $validator->getValidators();
+                    // A nullable union lists the validators of the union it wraps.
+                    $union = $param['validator'] instanceof Nullable ? $param['validator']->getValidator() : $param['validator'];
+                    $validators = $union->getValidators();
                     $validator = $validators[0];
                     $class = \get_class($validator);
 
