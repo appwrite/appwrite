@@ -24,6 +24,7 @@ publish = false
 php-std = { path = "crates/support/php-std" }
 utopia-dsn = { path = "crates/utopia/dsn" }
 utopia-image = { path = "crates/utopia/image", default-features = false }
+utopia-locale = { path = "crates/utopia/locale" }
 
 # #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
 # credentials out of exception traces: the PR's commit, which GitHub serves from the upstream

@@ -2,16 +2,16 @@
 //! method takes and returns what it returns. The DSN and its credentials are
 //! `#[\SensitiveParameter]`, as in PHP, so exception traces never hold them.
 
-use std::borrow::Cow;
-
 use ext_php_rs::convert::{FromZval, IntoZval, StubLiteral};
 use ext_php_rs::exception::PhpException;
 use ext_php_rs::flags::DataType;
 use ext_php_rs::prelude::*;
-use ext_php_rs::types::{ArrayKey, ZendCallable, ZendHashTable, ZendStr, Zval};
+use ext_php_rs::types::{ArrayKey, ZendHashTable, Zval};
 use ext_php_rs::zend::{ClassEntry, ce};
 use php_std::value::{Number, numeric_bytes_ex};
 use utopia_dsn::Error;
+
+use crate::string::{Bytes, PhpString};
 
 /// What PHP throws for a DSN `parse_url` cannot split. Rust reads the DSN as
 /// UTF-8, so a DSN of other bytes is refused with it too.
@@ -36,10 +36,6 @@ impl Dsn {
     }
 }
 
-/// A PHP string made straight from bytes: one allocation, where `Binary` copies
-/// into a `Vec` first.
-pub struct Bytes<'a>(&'a [u8]);
-
 /// What `getParam()` returns: the parameter's bytes, or the caller's default.
 pub enum Param<'a> {
     Found(&'a [u8]),
@@ -55,63 +51,6 @@ impl IntoZval for Param<'_> {
             Param::Found(bytes) => Bytes(bytes).set_zval(zv, persistent),
             Param::Default(default) => Bytes(&default).set_zval(zv, persistent),
         }
-    }
-}
-
-impl IntoZval for Bytes<'_> {
-    const TYPE: DataType = DataType::String;
-    const NULLABLE: bool = false;
-
-    fn set_zval(self, zv: &mut Zval, persistent: bool) -> ext_php_rs::error::Result<()> {
-        zv.set_zend_string(ZendStr::new(self.0, persistent));
-        Ok(())
-    }
-}
-
-/// A `string` parameter of `DSN.php`, which has no `strict_types`, so PHP
-/// converts scalars: ints, floats and bools become strings (floats through
-/// `strval()`, so `precision` applies) and a `Stringable` object its
-/// `__toString()`. `null`, arrays and other objects are a `TypeError`.
-pub struct PhpString<'a>(Cow<'a, [u8]>);
-
-impl<'a> FromZval<'a> for PhpString<'a> {
-    const TYPE: DataType = DataType::String;
-
-    fn from_zval(zval: &'a Zval) -> Option<Self> {
-        if let Some(string) = zval.zend_str() {
-            return Some(Self(Cow::Borrowed(string.as_bytes())));
-        }
-        if let Some(long) = zval.long() {
-            return Some(Self(Cow::Owned(long.to_string().into_bytes())));
-        }
-        if let Some(bool) = zval.bool() {
-            return Some(Self(Cow::Borrowed(if bool { b"1" } else { b"" })));
-        }
-        let stringable = zval.object().is_some_and(|object| object.instance_of(ce::stringable()));
-        if zval.double().is_none() && !stringable {
-            return None;
-        }
-        let converted = ZendCallable::try_from_name("strval").ok()?.try_call(vec![zval]).ok()?;
-        converted.zend_str().map(|string| Self(Cow::Owned(string.as_bytes().to_vec())))
-    }
-}
-
-impl PhpString<'_> {
-    fn bytes(&self) -> &[u8] {
-        &self.0
-    }
-}
-
-/// A string default, such as `getParam()`'s `$default = ''`.
-impl<'a> From<&'a str> for PhpString<'a> {
-    fn from(default: &'a str) -> Self {
-        Self(Cow::Borrowed(default.as_bytes()))
-    }
-}
-
-impl StubLiteral for PhpString<'_> {
-    fn stub_literal(&self) -> String {
-        String::from_utf8_lossy(&self.0).as_ref().stub_literal()
     }
 }
 

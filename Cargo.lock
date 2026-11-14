@@ -1094,6 +1094,8 @@ checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
 dependencies = [
  "equivalent",
  "hashbrown",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -2533,9 +2535,11 @@ name = "utopia-extension"
 version = "0.1.0"
 dependencies = [
  "ext-php-rs",
+ "foldhash",
  "php-std",
  "utopia-dsn",
  "utopia-image",
+ "utopia-locale",
 ]
 
 [[package]]
@@ -2555,6 +2559,17 @@ dependencies = [
  "thiserror 2.0.21",
  "webp",
  "zeno",
+]
+
+[[package]]
+name = "utopia-locale"
+version = "0.1.0"
+dependencies = [
+ "foldhash",
+ "indexmap",
+ "php-std",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
