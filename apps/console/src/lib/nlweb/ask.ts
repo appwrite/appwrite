@@ -45,30 +45,22 @@ function event(name: string, data: unknown): string {
 }
 
 function stream(results: unknown[] | Failure): Response {
-  const meta = {
-    response_type: 'answer',
-    response_format: RESPONSE_FORMAT,
-    version: NLWEB_VERSION,
-  }
+  const meta = Array.isArray(results)
+    ? {
+        response_type: 'answer',
+        response_format: RESPONSE_FORMAT,
+        version: NLWEB_VERSION,
+      }
+    : { response_type: 'failure', version: NLWEB_VERSION }
   const events = [event('start', { _meta: { ...meta, streaming: true } })]
   if (Array.isArray(results)) {
     results.forEach((item, index) =>
       events.push(event('result', { index, item })),
     )
-    events.push(event('complete', { _meta: meta }))
   } else {
-    events.push(
-      event('error', {
-        _meta: { response_type: 'failure', version: NLWEB_VERSION },
-        error: results,
-      }),
-    )
-    events.push(
-      event('complete', {
-        _meta: { response_type: 'failure', version: NLWEB_VERSION },
-      }),
-    )
+    events.push(event('error', { _meta: meta, error: results }))
   }
+  events.push(event('complete', { _meta: meta }))
   return new Response(events.join(''), {
     headers: { ...HEADERS, 'Content-Type': 'text/event-stream; charset=utf-8' },
   })
