@@ -2814,12 +2814,12 @@ final class VideosCustomServerTest extends Scope
             $this->assertEquals(200, $response['headers']['status-code'], $case['type']);
             $this->assertEquals($case['type'], $response['headers']['content-type'] ?? '', $case['type']);
 
-            $image = new \Imagick();
-            $image->readImageBlob($response['body']);
-            $this->assertSame($case['type'], 'image/' . \strtolower($image->getImageFormat()), $case['type']);
+            $image = \getimagesizefromstring($response['body']);
+            $this->assertIsArray($image, $case['type']);
+            $this->assertSame($case['type'], $image['mime'], $case['type']);
             if (isset($case['width'], $case['height'])) {
-                $this->assertSame($case['width'], $image->getImageWidth(), $case['type']);
-                $this->assertSame($case['height'], $image->getImageHeight(), $case['type']);
+                $this->assertSame($case['width'], $image[0], $case['type']);
+                $this->assertSame($case['height'], $image[1], $case['type']);
             }
         }
 
