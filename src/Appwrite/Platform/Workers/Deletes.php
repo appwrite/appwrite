@@ -302,7 +302,7 @@ class Deletes extends Action
                         $this->deleteFunction($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForBuilds, $certificates, $document, $project, $executor, $bus, $executionStore);
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus);
+                        $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus, $locks);
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project, $mqtt, $queueForRealtime, $publisherForUsage);
@@ -2026,12 +2026,52 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Executor $executor, Bus $bus): void
+    private function deleteDeployment(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFunctions, Device $deviceForSites, Device $deviceForBuilds, Device $deviceForFiles, Document $document, Provider $certificates, Document $project, Executor $executor, Bus $bus, ?callable $locks): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $deploymentId = $document->getId();
         $deploymentInternalId = $document->getSequence();
+
+        /**
+         * Repoint the resource's latest deployment, under the same lock as the delete endpoints
+         */
+        $collection = $document->getAttribute('resourceType');
+        $resourceId = $document->getAttribute('resourceId');
+        $repoint = function () use ($dbForProject, $collection, $resourceId, $deploymentId) {
+            // Builds refresh the latest deployment without this lock. The request timestamp makes the write
+            // conflict when one did so after this read, so a newer deployment is not rolled back.
+            for ($attempt = 0; $attempt < 3; $attempt++) {
+                $resource = $dbForProject->getDocument($collection, $resourceId);
+                if ($resource->getAttribute('latestDeploymentId') !== $deploymentId) {
+                    return;
+                }
+
+                $latestDeployment = $dbForProject->findOne('deployments', [
+                    Query::equal('resourceType', [$collection]),
+                    Query::equal('resourceInternalId', [$resource->getSequence()]),
+                    Query::orderDesc('$createdAt'),
+                ]);
+
+                try {
+                    $dbForProject->withRequestTimestamp(new \DateTime($resource->getUpdatedAt()), fn () => $dbForProject->updateDocument($collection, $resourceId, new Document([
+                        'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
+                        'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                        'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                        'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+                    ])));
+                    return;
+                } catch (Conflict) {
+                    // Re-check which deployment is latest now.
+                }
+            }
+        };
+
+        if (\is_null($locks)) {
+            $repoint();
+        } else {
+            $locks($collection . ':deployments:' . $projectId . ':' . $resourceId, 30, $repoint, 10.0);
+        }
 
         /**
          * Delete deployment files

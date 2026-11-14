@@ -152,6 +152,22 @@ final class SitesConsoleClientTest extends Scope
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
 
+        $previewId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-themed'),
+            'activate' => '0'
+        ]);
+
+        $this->assertEventually(function () use ($siteId, $previewId) {
+            $preview = $this->getDeployment($siteId, $previewId);
+            $this->assertNotEmpty($preview['body']['screenshotLight']);
+        });
+
+        // The worker saves the preview's screenshots before it would write the site, and nothing observable follows, so give that write time to land.
+        \sleep(1);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
+
         $this->cleanupSite($siteId);
     }
 
@@ -379,23 +395,23 @@ final class SitesConsoleClientTest extends Scope
         ]);
         $this->assertNotEmpty($siteId);
 
-        $deploymentIdInactive = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactive);
-
-        $deploymentIdInactiveOld = $this->setupDeployment($siteId, [
-            'code' => $this->packageSite('static'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactiveOld);
-
         $deploymentIdActive = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('static'),
             'activate' => true
         ]);
         $this->assertNotEmpty($deploymentIdActive);
+
+        $deploymentIdInactive = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => '0'
+        ]);
+        $this->assertNotEmpty($deploymentIdInactive);
+
+        $deploymentIdInactiveOld = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => '0'
+        ]);
+        $this->assertNotEmpty($deploymentIdInactiveOld);
 
         $stdout = '';
         $stderr = '';
@@ -424,6 +440,9 @@ final class SitesConsoleClientTest extends Scope
             $expected = [$deploymentIdInactive, $deploymentIdActive];
             \sort($expected);
             $this->assertSame($expected, $ids, 'only the deployment past the requested retention is retired');
+
+            $site = $this->getSite($siteId);
+            $this->assertSame($deploymentIdInactive, $site['body']['latestDeploymentId']);
         });
 
         $this->cleanupSite($siteId);
