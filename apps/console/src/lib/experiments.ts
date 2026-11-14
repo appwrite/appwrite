@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: keyof ConsoleProfileFeatures
+  flag: 'analytics' | 'projectEnvironments' | 'vcsOrigin' | 'identityServers'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -25,23 +25,26 @@ export const EXPERIMENTS: readonly Experiment[] = [
   {
     flag: 'analytics',
     name: 'Appwrite Analytics',
-    description:
-      'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.',
+    description: 'Visitor, page, and campaign tracking.',
     introducedAt: '2026-10-23',
   },
   {
     flag: 'projectEnvironments',
     name: 'Project environments',
-    description:
-      'Switch between environments of a project, such as staging and production, and create one as a copy of the project.',
+    description: 'Switch or clone staging and production.',
     introducedAt: '2026-10-29',
   },
   {
-    flag: 'projectTransfers',
-    name: 'Project transfers',
-    description:
-      'Move a project to one of your organizations, or hand it off with a link that another organization claims.',
-    introducedAt: '2026-10-29',
+    flag: 'vcsOrigin',
+    name: 'Origin Git provider',
+    description: 'Deploy from Cursor Origin repositories.',
+    introducedAt: '2026-11-13',
+  },
+  {
+    flag: 'identityServers',
+    name: 'Identity servers',
+    description: 'LDAP directory sign-in for a project.',
+    introducedAt: '2026-11-06',
   },
 ]
 

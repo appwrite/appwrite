@@ -320,7 +320,23 @@ trait StorageBase
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
-        $this->assertContains($largeFile['body']['signature'], $this->getChunkedFileSignatures(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'))); // should validate that the file is not encrypted
+        $this->assertContains($largeFile['body']['signature'], $this->getChunkedFileSignatures(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'))); // describes the original bytes, not the encrypted ones
+        $this->assertTrue($largeFile['body']['encryption']);
+
+        // Encrypted above 20 MB: the full file and a range across the first chunk boundary come back as uploaded.
+        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket2['body']['$id'] . '/files/' . $largeFile['body']['$id'] . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame(\md5_file($source), \md5($download['body']));
+
+        $boundary = $chunkSize - 10;
+        $range = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket2['body']['$id'] . '/files/' . $largeFile['body']['$id'] . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $boundary . '-' . ($boundary + 19),
+        ], $this->getHeaders()));
+        $this->assertSame(206, $range['headers']['status-code']);
+        $this->assertSame(\substr(\file_get_contents($source), $boundary, 20), $range['body']);
 
         /**
          * Failure
@@ -762,7 +778,7 @@ trait StorageBase
         $source = __DIR__ . '/../../../resources/disk-a/large-file.mp4';
         $size = \filesize($source);
 
-        // Both are skipped above the buffer, so every chunk reports none/false.
+        // Compression is skipped above the buffer. Encryption is not, and is reported once the last chunk is in.
         $this->assertGreaterThan(APP_STORAGE_READ_BUFFER, $size);
         $chunkSize = 5 * 1024 * 1024;
         $handle = @\fopen($source, 'rb');
@@ -786,12 +802,12 @@ trait StorageBase
             ]);
             $this->assertNotEmpty($chunked['body']['$id']);
             $this->assertSame('none', $chunked['body']['compression']);
-            $this->assertFalse($chunked['body']['encryption']);
             $id = $chunked['body']['$id'];
             $counter++;
         }
         \fclose($handle);
         $this->assertEquals(201, $chunked['headers']['status-code']);
+        $this->assertTrue($chunked['body']['encryption']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
             'content-type' => 'application/json',
@@ -1009,13 +1025,12 @@ trait StorageBase
         $this->assertEquals('image/png', $file3['headers']['content-type']);
         $this->assertNotEmpty($file3['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($file3['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+        $image = \getimagesizefromstring($file3['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
 
         $file4 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -1032,13 +1047,12 @@ trait StorageBase
         $this->assertEquals('image/jpeg', $file4['headers']['content-type']);
         $this->assertNotEmpty($file4['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($file4['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
+        $image = \getimagesizefromstring($file4['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.jpg');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('JPEG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/jpeg', $image['mime']);
 
         $file5 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
@@ -1199,13 +1213,12 @@ trait StorageBase
         $this->assertEquals('image/png', $file7['headers']['content-type']);
         $this->assertNotEmpty($file7['body']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($file7['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+        $image = \getimagesizefromstring($file7['body']);
+        $original = \getimagesize(__DIR__ . '/../../../resources/logo-after.png');
 
-        $this->assertSame($image->getImageWidth(), $original->getImageWidth());
-        $this->assertSame($image->getImageHeight(), $original->getImageHeight());
-        $this->assertSame('PNG', $image->getImageFormat());
+        $this->assertSame($image[0], $original[0]);
+        $this->assertSame($image[1], $original[1]);
+        $this->assertSame('image/png', $image['mime']);
 
         /**
          * Test large files decompress successfully
@@ -1299,10 +1312,9 @@ trait StorageBase
         $this->assertSame(200, $preview['headers']['status-code']);
         $this->assertSame('image/png', $preview['headers']['content-type']);
 
-        $image = new \Imagick();
-        $image->readImageBlob($preview['body']);
-        $this->assertSame(1, $image->getImageWidth());
-        $this->assertSame(1, $image->getImageHeight());
+        $image = \getimagesizefromstring($preview['body']);
+        $this->assertSame(1, $image[0]);
+        $this->assertSame(1, $image[1]);
     }
 
     public function testFileViewSvgIsNotExecutable(): void
@@ -1519,8 +1531,7 @@ trait StorageBase
         $this->assertEquals('image/png', $file3['headers']['content-type']);
         $this->assertNotEmpty($file3['body']);
 
-        $imageBefore = new \Imagick();
-        $imageBefore->readImageBlob($file3['body']);
+        $imageBefore = $this->getImagePixels($file3['body']);
 
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
@@ -1572,10 +1583,7 @@ trait StorageBase
             $this->assertEquals('image/png', $file3['headers']['content-type']);
             $this->assertNotEmpty($file3['body']);
 
-            $imageAfter = new \Imagick();
-            $imageAfter->readImageBlob($file3['body']);
-
-            $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+            $this->assertFalse($imageBefore === $this->getImagePixels($file3['body']), 'The preview is still the deleted file\'s.');
         }, 10_000, 500);
     }
 
@@ -1770,6 +1778,75 @@ trait StorageBase
         $this->assertEquals(200, $preview['headers']['status-code']);
         $this->assertEquals('image/avif', $preview['headers']['content-type']);
         $this->assertNotEmpty($preview['body']);
+    }
+
+    public function testFilePreviewAutoOutput(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $path = '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview';
+        $params = [
+            'width' => 120,
+            'height' => 60,
+            'output' => 'auto',
+        ];
+        $headers = fn (string $accept) => array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => $accept,
+        ], $this->getHeaders());
+
+        /**
+         * Test for SUCCESS
+         */
+        $avif = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif,image/webp,image/apng,image/*,*/*;q=0.8'), $params);
+        $this->assertEquals(200, $avif['headers']['status-code']);
+        $this->assertEquals('image/avif', $avif['headers']['content-type']);
+        $this->assertEquals('Accept', $avif['headers']['vary']);
+        $this->assertNotEmpty($avif['body']);
+
+        $webp = $this->client->call(Client::METHOD_GET, $path, $headers('image/webp,*/*'), $params);
+        $this->assertEquals(200, $webp['headers']['status-code']);
+        $this->assertEquals('image/webp', $webp['headers']['content-type']);
+        $this->assertEquals('Accept', $webp['headers']['vary']);
+
+        // AVIF refused with q=0 and only wildcards otherwise: keep the original format
+        $original = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif;q=0,image/*,*/*'), $params);
+        $this->assertEquals(200, $original['headers']['status-code']);
+        $this->assertEquals('image/png', $original['headers']['content-type']);
+        $this->assertEquals('Accept', $original['headers']['vary']);
+
+        // Cached entries are keyed by the negotiated format, never served across Accept headers
+        $this->assertEventually(function () use ($path, $headers, $params) {
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif,image/webp'), $params);
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/avif', $cached['headers']['content-type']);
+            $this->assertEquals('Accept', $cached['headers']['vary']);
+
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/webp'), $params);
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/webp', $cached['headers']['content-type']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif'), [
+            'output' => 'automatic',
+        ]);
+        $this->assertEquals(400, $invalid['headers']['status-code']);
     }
 
     public function testFilePreview(): void

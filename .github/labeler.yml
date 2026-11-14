@@ -1,26 +1,29 @@
+# Patterns match the issue title only, as whole words, ignoring case.
+# Matching the body or bare substrings applied most labels to every issue.
+
 # Fixes and upgrades for the Appwrite Auth / Users / Teams services.
 "product / auth":
-  - "(auth|session|login|logout|register|2fa|mfa|users|teams|memberships|invite|oauth|oauth2|sso|jwt)"
+  - '/\b(auth|authentication|sessions?|login|logout|2fa|mfa|users?|teams?|memberships?|invites?|oauth\w*|sso|saml|jwts?|passkeys?|passwords?)\b/i'
 
 # Fixes and upgrades for the Appwrite Realtime API.
 "api / realtime":
-  - "(realtime|subscribe|websockets)"
+  - '/\b(realtime|websockets?)\b/i'
 
 # Console, UI and UX issues
 "product / console":
-  - "(console)"
+  - '/\b(console)\b/i'
 
 # Fixes and upgrades for the Appwrite Storage.
 "product / storage":
-  - "(storage|bucket|file|image|preview|download)"
+  - '/\b(storage|buckets?|files?|image previews?|file previews?)\b/i'
 
 # Fixes and upgrades for the Appwrite Database.
 "product / databases":
-  - "(database|collection|tables|attribute|column|document|row|query|queries|indexes|search|filter|sort|pagination)"
+  - '/\b(databases?|dbs?|collections?|tables?|tablesdb|documentsdb|vectorsdb|attributes?|columns?|documents?|rows?|quer(y|ies)|indexes|postgres(ql)?|mariadb|mongodb|mysql|pagination)\b/i'
 
 # Fixes and upgrades for the Appwrite Functions.
 "product / functions":
-  - "(function|runtime|deployment|execution|trigger|cron|schedule)"
+  - '/\b(functions?|runtimes?|deployments?|executions?|cron)\b/i'
 
 # Fixes and upgrades for the Appwrite Docs.
 # "product / docs":
@@ -28,11 +31,11 @@
 
 # Fixes and upgrades for the Appwrite Migrations.
 "product / migrations":
-  - "(migrate|migration)"
+  - '/\b(migrate|migrations?)\b/i'
 
 # Fixes and upgrades for the Appwrite Messaging.
 "product / messaging":
-  - "(messaging|email|sms|push|provider|topic|target|notification)"
+  - '/\b(messaging|emails?|sms|push notifications?|smtp|apns|fcm|topics?|subscribers?)\b/i'
 
 # Fixes and upgrades for the Appwrite Platform.
 # "product / platform":
@@ -40,7 +43,7 @@
 
 # Fixes and upgrades for database relationships
 "feature / relationships":
-  - "(relationship)"
+  - '/\b(relationships?)\b/i'
 
 # Issues found only on Appwrite Cloud
 # "product / cloud":
@@ -48,32 +51,32 @@
 
 # Fixes and upgrades for the Appwrite VCS.
 "product / vcs":
-  - "(repo|push|vcs|repository)"
+  - '/\b(vcs|github|gitlab|bitbucket|gitea|git repositor(y|ies))\b/i'
 
 # Fixes and upgrades for the Appwrite GraphQL API.
 "api / graphql":
-  - "(graphql|gql|mutation)"
+  - '/\b(graphql|gql)\b/i'
 
 # Fixes and upgrades for the Appwrite Domains.
 "product / domains":
-  - "(domain|dns|ssl|certificate)"
+  - '/\b(domains?|dns|ssl|certificates?)\b/i'
 
 # Fixes and upgrades for the Appwrite Locale.
 "product / locale":
-  - "(locale|i18n|internationalization|localization|l10n|translation|timezone|country)"
+  - '/\b(locale|i18n|internationalization|localization|l10n|translations?|timezones?)\b/i'
 
 # Fixes and upgrades for the Appwrite Avatars.
 "product / avatars":
-  - "(avatar|initial|flag|icon)"
+  - '/\b(avatars?)\b/i'
 
 # Fixes and upgrades for Appwrite Sites.
 "product / sites":
-  - "(site|web|hosting|domain|ssl|certificate|nextjs|nuxt|react|angular|vue|svelte|astro)"
+  - '/\b(sites?|hosting|nextjs|next\.js|nuxt|sveltekit|astro)\b/i'
 
 # Fixes and upgrades for the Appwrite CLI.
 "sdk / cli":
-  - "(cli|command line)"
+  - '/\b(cli|command line)\b/i'
 
 # Issues only found when self-hosting Appwrite
 "product / self-hosted":
-  - "(self-host|self host)"
+  - '/\b(self[- ]host(ed|ing)?)\b/i'

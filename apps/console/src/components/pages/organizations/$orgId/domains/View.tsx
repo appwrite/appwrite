@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { cn } from '@/lib/utils'
 import { Globe, Search, Plus, ShoppingCart, ArrowLeftRight } from 'lucide-react'
 import {
   useOrganizationDomains,
@@ -712,7 +713,15 @@ export function View() {
                           {
                             label: t('Nameservers'),
                             value: (
-                              <span className="text-[11px] font-medium text-muted-foreground">
+                              <span
+                                className={cn(
+                                  'text-[11px] font-medium',
+                                  domain.nameservers?.toLowerCase() ===
+                                    'appwrite'
+                                    ? 'text-green-600 dark:text-green-500'
+                                    : 'text-yellow-600 dark:text-yellow-500',
+                                )}
+                              >
                                 {domain.nameservers || t('3rd party')}
                               </span>
                             ),

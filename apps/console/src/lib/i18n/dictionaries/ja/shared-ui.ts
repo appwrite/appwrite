@@ -552,7 +552,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No organizations found': '組織が見つかりません',
   'Light theme': 'ライトテーマ',
   'Dark theme': 'ダークテーマ',
-  'System theme': 'システムテーマ',
   // Refresh toasts (default label)
   'data refreshed successfully': 'データを更新しました',
   'Failed to refresh data': 'データの更新に失敗しました',
@@ -564,7 +563,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Focus search': '検索にフォーカス',
   'Set theme to light': 'ライトテーマに設定',
   'Set theme to dark': 'ダークテーマに設定',
-  'Set theme to system': 'システムテーマに設定',
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'ターミナルの表示を切り替え',
   'Enter full screen': '全画面表示',
@@ -717,7 +715,28 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Settings · Migrations': '設定 · マイグレーション',
   'Import data from other backends': '他のバックエンドからデータをインポート',
   'Settings · SMTP': '設定 · SMTP',
-  'Security · Firewall rules': 'セキュリティ · ファイアウォールルール',
+  'Settings · Firewall': '設定 · ファイアウォール',
+  'Firewall has moved': 'ファイアウォールの場所が変わりました',
+  'Firewall rules now sit next to what they protect: a Firewall tab on each function and site, and one in project settings for the API.':
+    'ファイアウォールのルールは、保護する対象のそばに移りました。各関数とサイトの「ファイアウォール」タブと、API 用のプロジェクト設定のタブです。',
+  'Got it': '了解',
+  'Open API firewall': 'API のファイアウォールを開く',
+  // Function and site overview cards, filter chips
+  '1 rule': '1 件のルール',
+  '{count} rules': '{count} 件のルール',
+  'vs previous 24 hours': '前の 24 時間と比較',
+  'No blocked traffic yet': 'ブロックされたトラフィックはまだありません',
+  'Denied requests will show up here.':
+    '拒否されたリクエストはここに表示されます。',
+  '24 hours ago': '24 時間前',
+  'No requests yet': 'リクエストはまだありません',
+  'No bandwidth yet': '帯域幅の使用はまだありません',
+  Humans: '人間',
+  Bots: 'ボット',
+  only: 'のみ',
+  On: 'オン',
+  SSR: 'SSR',
+  Static: '静的',
   // Command center: project settings card entries
   'Settings · Project name': '設定 · プロジェクト名',
   'Rename your project': 'プロジェクト名を変更',
@@ -1165,6 +1184,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   File: 'ファイル',
   Filters: 'フィルター',
   'Filtered by': '絞り込み',
+  'Change operator': '演算子を変更',
+  'Change value': '値を変更',
   Function: '関数',
   Functions: '関数',
   Impersonate: 'なりすまし',
@@ -1313,6 +1334,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
     'Appwrite 2.0 が本日 Product Hunt でローンチ',
   'Appwrite 2.0 on Product Hunt': 'Product Hunt の Appwrite 2.0',
   'Share your take': 'フィードバックを送る',
+  'Just launched': '新登場',
+  'MCP1 by Appwrite: one URL for every MCP server':
+    'Appwrite の MCP1：すべての MCP サーバーを 1 つの URL で',
+  'MCP1 by Appwrite is live': 'Appwrite の MCP1 が登場',
+  'Try MCP1': 'MCP1 を試す',
   'Created by': '作成者',
   'Authorized resources': '認可済みリソース',
   'No scopes granted': '付与されたスコープはありません',
@@ -1353,22 +1379,32 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
   Previews: 'プレビュー',
-  'Features the quality team can try before they launch. Choices stay in this browser.':
-    '公開前に品質チームが試せる機能です。選択内容はこのブラウザに保存されます。',
+  'Early access. Saved in this browser.':
+    '早期アクセスです。このブラウザに保存されます。',
   'Appwrite Analytics': 'Appwrite Analytics',
-  'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
-    'コンソールにアナリティクスを表示し、プロジェクト内の訪問者、ページ、参照元、キャンペーン、カスタムイベントを計測します。',
+  'Visitor, page, and campaign tracking.':
+    '訪問者、ページ、キャンペーンを計測します。',
   'Project environments': 'プロジェクト環境',
-  'Switch between environments of a project, such as staging and production, and create one as a copy of the project.':
-    'ステージングや本番など、プロジェクトの環境を切り替え、プロジェクトのコピーとして環境を作成します。',
-  'Project transfers': 'プロジェクトの転送',
-  'Transfer a project with a link that another organization claims, in place of moving it to one of your organizations.':
-    '自分の組織へ移動する代わりに、別の組織が受け取るリンクでプロジェクトを転送します。',
-  Introduced: '追加日',
+  'Switch or clone staging and production.':
+    'ステージングと本番を切り替え、複製します。',
+  'Origin Git provider': 'Origin Git プロバイダー',
+  'Deploy from Cursor Origin repositories.':
+    'Cursor Origin のリポジトリからデプロイします。',
+  'LDAP directory sign-in for a project.':
+    'プロジェクトへの LDAP ディレクトリ サインイン。',
   'Repository not available': 'リポジトリを利用できません',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
   // Halloween caution tape
   Caution: '注意',
   'Spooky zone': '恐怖ゾーン',
+  // GitHub star wizard
+  'Enjoying Appwrite?': 'Appwriteを楽しんでいますか？',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwriteはオープンソースで、オープンに開発されています。スターを付けると、より多くの開発者がAppwriteを見つけやすくなります。',
+  'No thanks': 'いいえ、結構です',
+  'One-time ask, promise. May your builds be ever green.':
+    'お願いするのは今回だけ、約束します。あなたのビルドがいつもグリーンでありますように。',
+  'Settings · Identity servers': '設定 · ID サーバー',
+  'LDAP directory sign-in': 'LDAP ディレクトリでのサインイン',
 }

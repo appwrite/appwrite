@@ -6,20 +6,32 @@
  * @see https://github.com/modelcontextprotocol/experimental-ext-server-card
  */
 
-import { MCP_SERVER_NAME, MCP_SERVER_URL } from '../config/mcp.ts'
+import {
+  MCP_DOCS_SERVER_URL,
+  MCP_SERVER_NAME,
+  MCP_SERVER_URL,
+} from '../config/mcp.ts'
 
 /** SEP-1649 well-known Server Card location. */
-export const APPWRITE_MCP_SERVER_CARD_PATH =
-  '/.well-known/mcp/server-card.json'
+export const APPWRITE_MCP_SERVER_CARD_PATH = '/.well-known/mcp/server-card.json'
+/** Card for the public docs-only MCP server, listed in the catalog. */
+export const APPWRITE_MCP_DOCS_SERVER_CARD_PATH =
+  '/.well-known/mcp/docs/server-card.json'
 
 /**
- * Domain-level AI Catalog (current discovery flow). Points clients at the
+ * Agentic Resource Discovery (ARD v0.91) manifest. Points clients at the
  * Server Card URL rather than inlining the card.
  */
+export const APPWRITE_ARD_PATH = '/.well-known/ard.json'
+/** Pre-ARD path, still probed by scanners. */
 export const APPWRITE_AI_CATALOG_PATH = '/.well-known/ai-catalog.json'
 
 /** @deprecated Prefer {@link APPWRITE_MCP_SERVER_CARD_PATH}. */
 export const APPWRITE_MCP_DISCOVERY_PATH = APPWRITE_MCP_SERVER_CARD_PATH
+
+/** RFC 9727 API catalog. */
+export const APPWRITE_API_CATALOG_PATH = '/.well-known/api-catalog'
+export const APPWRITE_OPENAPI_PATH = '/openapi.json'
 
 export const APPWRITE_AGENT_SKILLS_DISCOVERY_PATH =
   '/.well-known/agent-skills/index.json'
@@ -38,11 +50,13 @@ export const MCP_SERVER_CARD_SCHEMA =
 
 /** Reverse-DNS server name (exactly one `/`). */
 export const APPWRITE_MCP_SERVER_CARD_NAME = 'io.appwrite/mcp'
+export const APPWRITE_MCP_DOCS_SERVER_CARD_NAME = 'io.appwrite/mcp-docs'
 
 export const MCP_SERVER_CARD_CONTENT_TYPE =
   'application/mcp-server-card+json; charset=utf-8'
-export const AI_CATALOG_CONTENT_TYPE =
-  'application/ai-catalog+json; charset=utf-8'
+export const API_CATALOG_CONTENT_TYPE =
+  'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"'
+export const ARD_CONTENT_TYPE = 'application/json; charset=utf-8'
 
 /** CORS headers required by MCP Server Card / AI Catalog discovery. */
 export const DISCOVERY_CORS_HEADERS = {
@@ -57,6 +71,7 @@ export type AgentSkillDiscoveryEntry = {
   type: 'skill-md'
   description: string
   url: string
+  digest?: string
 }
 
 /**
@@ -153,6 +168,13 @@ export function buildMcpServerCard(origin: string = 'https://appwrite.io') {
     $schema: MCP_SERVER_CARD_SCHEMA,
     name: APPWRITE_MCP_SERVER_CARD_NAME,
     title: 'Appwrite',
+    icons: [
+      {
+        src: `${origin}/apple-touch-icon.png`,
+        mimeType: 'image/png',
+        sizes: ['180x180'],
+      },
+    ],
     description:
       'Backend API for auth, databases, storage, functions, messaging, and hosting.',
     version: '1.0.0',
@@ -194,20 +216,133 @@ export function buildMcpServerCard(origin: string = 'https://appwrite.io') {
   }
 }
 
+/** MCP Server Card for the public docs-only server (no sign-in). */
+export function buildMcpDocsServerCard(origin: string = 'https://appwrite.io') {
+  return {
+    $schema: MCP_SERVER_CARD_SCHEMA,
+    name: APPWRITE_MCP_DOCS_SERVER_CARD_NAME,
+    title: 'Appwrite Docs',
+    icons: [
+      {
+        src: `${origin}/apple-touch-icon.png`,
+        mimeType: 'image/png',
+        sizes: ['180x180'],
+      },
+    ],
+    description:
+      'Search the Appwrite documentation. No sign-in; use it only when an agent cannot sign in.',
+    version: '1.0.0',
+    websiteUrl: `${origin}${APPWRITE_MCP_DOCS_PATH}`,
+    repository: {
+      url: 'https://github.com/appwrite/mcp',
+      source: 'github',
+    },
+    remotes: [
+      {
+        type: 'streamable-http' as const,
+        url: MCP_DOCS_SERVER_URL,
+      },
+    ],
+  }
+}
+
 /** @deprecated Use {@link buildMcpServerCard}. */
-export function buildMcpDiscoveryDocument(origin: string = 'https://appwrite.io') {
+export function buildMcpDiscoveryDocument(
+  origin: string = 'https://appwrite.io',
+) {
   return buildMcpServerCard(origin)
 }
 
-/** Domain AI Catalog advertising the Appwrite MCP Server Card. */
+const CATALOG_IDENTITY = 'https://appwrite.io'
+const MCP_SOURCE = 'https://github.com/appwrite/mcp'
+
+function buildCatalogEntries(origin: string) {
+  return [
+    {
+      identifier: 'urn:air:appwrite.io:mcp:appwrite',
+      displayName: 'Appwrite MCP Server',
+      type: 'application/mcp-server-card+json',
+      url: `${origin}${APPWRITE_MCP_SERVER_CARD_PATH}`,
+      description:
+        'Manage Appwrite projects, auth, databases, storage, functions, sites, and messaging from an AI agent.',
+      representativeQueries: [
+        'create a database table for my app',
+        'add email and OAuth sign-in to my app',
+        'deploy a serverless function',
+        'upload files to a storage bucket',
+      ],
+    },
+    {
+      identifier: 'urn:air:appwrite.io:mcp:appwrite-docs',
+      displayName: 'Appwrite Docs MCP Server',
+      type: 'application/mcp-server-card+json',
+      url: `${origin}${APPWRITE_MCP_DOCS_SERVER_CARD_PATH}`,
+      description:
+        'Search the Appwrite documentation without signing in. Agents that can sign in should use the Appwrite MCP Server, which includes docs search.',
+      representativeQueries: [
+        'how do I query rows in Appwrite',
+        'Appwrite OAuth sign-in setup',
+      ],
+    },
+  ]
+}
+
+const CATALOG_HOST = {
+  displayName: 'Appwrite',
+  identifier: 'did:web:appwrite.io',
+}
+
+/** Agentic Resource Discovery manifest: one `trustManifest` per entry. */
+export function buildArdDocument(origin: string = 'https://appwrite.io') {
+  return {
+    specVersion: '1.0',
+    host: CATALOG_HOST,
+    entries: buildCatalogEntries(origin).map((entry) => ({
+      ...entry,
+      trustManifest: {
+        identity: CATALOG_IDENTITY,
+        identityType: 'https',
+        provenance: [{ relation: 'publishedFrom', sourceId: MCP_SOURCE }],
+      },
+    })),
+  }
+}
+
+/** AI Catalog Standard document: a `trustManifests` array per entry. */
 export function buildAiCatalogDocument(origin: string = 'https://appwrite.io') {
   return {
     specVersion: '1.0',
-    entries: [
+    host: CATALOG_HOST,
+    entries: buildCatalogEntries(origin).map((entry) => ({
+      ...entry,
+      trustManifests: [
+        {
+          contributor: CATALOG_IDENTITY,
+          provenance: [{ relation: 'publishedFrom', sourceId: MCP_SOURCE }],
+        },
+      ],
+    })),
+  }
+}
+
+/** RFC 9727 Linkset pointing at the REST API, its OpenAPI spec and docs. */
+export function buildApiCatalogDocument(
+  origin: string = 'https://appwrite.io',
+) {
+  return {
+    linkset: [
       {
-        identifier: 'urn:air:appwrite.io:mcp:appwrite',
-        type: 'application/mcp-server-card+json',
-        url: `${origin}${APPWRITE_MCP_SERVER_CARD_PATH}`,
+        anchor: 'https://cloud.appwrite.io/v1',
+        'service-desc': [
+          {
+            href: `${origin}${APPWRITE_OPENAPI_PATH}`,
+            type: 'application/json',
+          },
+        ],
+        'service-doc': [
+          { href: `${origin}/docs/apis/rest`, type: 'text/html' },
+        ],
+        item: [{ href: 'https://cloud.appwrite.io/v1' }],
       },
     ],
   }

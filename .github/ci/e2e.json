@@ -20,7 +20,23 @@
       ".github/PULL_REQUEST_TEMPLATE",
       "LICENSE"
     ],
+    "extension": [
+      "crates/",
+      "Cargo.toml",
+      "Cargo.lock",
+      ".cargo/",
+      "rustfmt.toml",
+      "packages/dsn/",
+      "packages/image/",
+      "Dockerfile",
+      ".dockerignore"
+    ],
     "checks": [
+      "crates/",
+      "Cargo.toml",
+      "Cargo.lock",
+      ".cargo/",
+      "rustfmt.toml",
       ".github/",
       "docs/",
       "tests/unit/",
@@ -52,7 +68,6 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Network/Validator/Origin.php",
         "src/Appwrite/Network/Validator/Redirect.php",
         "src/Appwrite/Auth/OAuth2",
@@ -146,8 +161,7 @@
       "functional": false,
       "processes": null,
       "paths": [
-        "app/controllers/api/graphql.php",
-        "app/controllers/api/account.php",
+        "src/Appwrite/Platform/Modules/GraphQL/",
         "src/Appwrite/Platform/Modules/Account/",
         "src/Appwrite/Platform/Modules/Avatars/",
         "src/Appwrite/Platform/Modules/Databases/",
@@ -180,6 +194,35 @@
       "paths": ["src/Appwrite/Platform/Modules/Advisor/"]
     },
     {
+      "name": "Reviews",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Reviews/",
+        "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Event/Message/Review.php",
+        "src/Appwrite/Event/Publisher/Review.php",
+        "packages/vcs/"
+      ]
+    },
+    {
+      "name": "Alerts",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "documentsdb": true,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Alerts/",
+        "src/Appwrite/Alert/",
+        "src/Appwrite/Schedule/Source/Alerts.php",
+        "src/Appwrite/Platform/Tasks/ScheduleAlerts.php",
+        "src/Appwrite/Platform/Workers/Notifications.php",
+        "app/config/alerts.php",
+        "app/config/locale/templates/email-alert.tpl"
+      ]
+    },
+    {
       "name": "Locale",
       "runner": "e2e",
       "functional": true,
@@ -194,7 +237,6 @@
       "documentsdb": true,
       "paths": [
         "src/Appwrite/Platform/Modules/Projects/",
-        "app/controllers/api/projects.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Workers/Certificates.php",
@@ -222,7 +264,6 @@
         "app/realtime.php",
         "src/Appwrite/Realtime/",
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
@@ -346,7 +387,6 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Webhooks/",
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
@@ -372,6 +412,16 @@
     },
     {
       "name": "VCSEntire",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/VCS/",
+        "packages/vcs/"
+      ]
+    },
+    {
+      "name": "VCSOrigin",
       "runner": "e2e",
       "functional": false,
       "processes": null,
@@ -443,7 +493,11 @@
         "src/Appwrite/Platform/Modules/Project/",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
-        "packages/smtp/"
+        "packages/smtp/",
+        "src/Appwrite/Auth/LDAP/",
+        "src/Appwrite/Platform/Modules/Account/Base.php",
+        "src/Appwrite/Platform/Modules/Account/Http/Account/Sessions/LDAP/",
+        "dev/openldap/"
       ]
     },
     {
@@ -476,6 +530,7 @@
       "processes": 1,
       "paths": [
         "app/mqtt.php",
+        "app/init/mqtt/",
         "src/Appwrite/Mqtt/",
         "src/Appwrite/Messaging/Adapter/Mqtt.php",
         "src/Appwrite/Messaging/Adapter/Push/",
@@ -524,6 +579,20 @@
       "wait": "executor",
       "storage_device": "s3",
       "services": ["Functions", "Project", "Storage"]
+    },
+    {
+      "label": "Response Cache",
+      "group": "responseCache",
+      "path": "/usr/src/code/tests/e2e/Services/Storage",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "s3",
+      "wait": "",
+      "storage_cache_percent": "50",
+      "worker_per_core": "1",
+      "services": [
+        "Storage"
+      ]
     },
     {
       "label": "Usage Outage",

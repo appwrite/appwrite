@@ -587,4 +587,159 @@ return [
             Index::key(key: '_key_captionInternalId', attributes: ['captionInternalId']),
         ],
     ],
+
+    // Code reviews of a repository's pull requests. Appwrite queues them; the review service
+    // (appwrite/hansi) runs them and reports progress and results back.
+    'reviews' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviews'),
+        'name' => 'Reviews',
+        'attributes' => [
+            // The `repositories` row (platform database) that turned reviews on.
+            Attribute::string(key: 'repositoryId', required: true),
+            Attribute::string(key: 'repositoryInternalId', required: true),
+            Attribute::string(key: 'providerRepositoryId', required: true),
+            Attribute::string(key: 'providerRepositoryOwner'),
+            Attribute::string(key: 'providerRepositoryName'),
+            Attribute::string(key: 'providerPullRequestId', required: true),
+            // The head the review was queued for, replaced by the head it actually reviews. Empty
+            // for a mention until it starts: it reviews whatever the head is then.
+            Attribute::string(key: 'providerCommitHash', size: 64),
+            Attribute::string(key: 'providerBaseCommitHash', size: 64),
+            // opened, synchronize, retry or mention.
+            Attribute::string(key: 'trigger', size: 32, required: true),
+            Attribute::string(key: 'providerCommentId'),
+            // queued, processing, completed, skipped, failed or superseded (a newer review of the
+            // pull request was queued before this one started).
+            Attribute::string(key: 'status', size: 16, required: true),
+            Attribute::string(key: 'verdict', size: 32),
+            Attribute::string(key: 'tier', size: 8),
+            Attribute::string(key: 'tierReason', size: 2048),
+            Attribute::text(key: 'summary', size: 65535),
+            // What each changed file does, as [{path, change}].
+            Attribute::string(key: 'walkthrough', size: 65535, default: [], filters: [Filter::Json]),
+            // Why a review was skipped or failed, shown to the project's users.
+            Attribute::string(key: 'reason', size: 2048),
+            Attribute::string(key: 'providerReviewId'),
+            Attribute::datetime(key: 'startedAt'),
+            Attribute::datetime(key: 'completedAt'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_repository_pullRequest_status', attributes: ['repositoryInternalId', 'providerPullRequestId', 'status']),
+            // Public filters go by the repository's public id, not its internal one.
+            Index::key(key: '_key_repositoryId_pullRequest', attributes: ['repositoryId', 'providerPullRequestId']),
+            Index::key(key: '_key_status', attributes: ['status']),
+        ],
+    ],
+
+    'reviewFindings' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewFindings'),
+        'name' => 'Review Findings',
+        'attributes' => [
+            Attribute::string(key: 'reviewId', required: true),
+            Attribute::string(key: 'reviewInternalId', required: true),
+            Attribute::string(key: 'path', size: 2048, required: true),
+            Attribute::integer(key: 'startLine', signed: false, required: true),
+            Attribute::integer(key: 'endLine', signed: false, required: true),
+            Attribute::string(key: 'severity', size: 16, required: true),
+            Attribute::string(key: 'category', size: 64, required: true),
+            Attribute::string(key: 'title', size: 1024, required: true),
+            Attribute::text(key: 'body', size: 65535, required: true),
+            // A replacement for the lines, offered as a GitHub suggestion.
+            Attribute::text(key: 'suggestion', size: 65535),
+            // posted (open on the pull request), dropped (never posted), resolved (fixed by a later
+            // commit) or dismissed (settled in its thread or by a maintainer).
+            Attribute::string(key: 'status', size: 16, default: 'posted'),
+            // Why it was dropped, resolved or dismissed.
+            Attribute::string(key: 'dropReason', size: 2048),
+            // The comment the finding was posted as, the root of its thread. Empty when it was
+            // listed in the review body instead.
+            Attribute::string(key: 'providerCommentId'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+        ],
+    ],
+
+    // Team preferences the reviewer was asked to remember in a conversation, per repository.
+    'reviewLearnings' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewLearnings'),
+        'name' => 'Review Learnings',
+        'attributes' => [
+            Attribute::string(key: 'repositoryId', required: true),
+            Attribute::string(key: 'repositoryInternalId', required: true),
+            Attribute::text(key: 'body', size: 65535, required: true),
+            // GitHub login of who asked, and the comment they asked in.
+            Attribute::string(key: 'author', required: true),
+            Attribute::string(key: 'sourceUrl', size: 2048),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_repositoryInternalId', attributes: ['repositoryInternalId']),
+        ],
+    ],
+
+    // The agent's trace, step by step, for following a review live.
+    'reviewEvents' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewEvents'),
+        'name' => 'Review Events',
+        'attributes' => [
+            Attribute::string(key: 'reviewId', required: true),
+            Attribute::string(key: 'reviewInternalId', required: true),
+            Attribute::string(key: 'type', size: 64, required: true),
+            Attribute::datetime(key: 'time', required: true),
+            Attribute::string(key: 'data', size: 65535, default: new stdClass(), filters: [Filter::Json]),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_reviewInternalId', attributes: ['reviewInternalId']),
+        ],
+    ],
+
+    // Comments the review service was asked to answer, one row per GitHub comment: the row's
+    // $id is chat-<commentId>, so a redelivered webhook cannot queue a second answer.
+    'reviewChats' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewChats'),
+        'name' => 'Review Chats',
+        'attributes' => [
+            Attribute::string(key: 'repositoryId', required: true),
+            Attribute::string(key: 'repositoryInternalId', required: true),
+            Attribute::string(key: 'providerPullRequestId', required: true),
+            Attribute::string(key: 'providerCommentId', required: true),
+            // issue (the pull request conversation) or review (a review thread).
+            Attribute::string(key: 'kind', size: 16, required: true),
+            Attribute::string(key: 'author', required: true),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_repositoryInternalId_pullRequest', attributes: ['repositoryInternalId', 'providerPullRequestId']),
+        ],
+    ],
+
+    // One row per model call, for metering what a review or a chat answer cost.
+    'reviewUsage' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('reviewUsage'),
+        'name' => 'Review Usage',
+        'attributes' => [
+            // reviews or reviewChats.
+            Attribute::string(key: 'resourceType', size: 32, required: true),
+            Attribute::string(key: 'resourceId', required: true),
+            Attribute::string(key: 'resourceInternalId', required: true),
+            // review, verify, subagent, chat, ...
+            Attribute::string(key: 'role', size: 32, required: true),
+            Attribute::string(key: 'provider', size: 64, required: true),
+            Attribute::string(key: 'model', size: 128, required: true),
+            Attribute::integer(key: 'inputTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            Attribute::integer(key: 'outputTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            Attribute::integer(key: 'cachedInputTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            Attribute::integer(key: 'reasoningTokens', width: IntegerWidth::Bits64, signed: false, default: 0),
+            // Milliseconds.
+            Attribute::integer(key: 'duration', width: IntegerWidth::Bits64, signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
+        ],
+    ],
 ];

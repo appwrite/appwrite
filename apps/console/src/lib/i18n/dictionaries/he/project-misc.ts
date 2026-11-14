@@ -330,6 +330,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You don't have permission to update firewall settings.":
     'אין לכם הרשאה לעדכן הגדרות חומת אש.',
   'No firewall rules': 'אין כללי חומת אש',
+  'Configure rules': 'הגדרת כללים',
+  'Rules that apply to this site appear here.':
+    'הכללים שחלים על האתר הזה יופיעו כאן.',
+  'Rules that apply to this function appear here.':
+    'הכללים שחלים על הפונקציה הזו יופיעו כאן.',
   'No API firewall rules': 'אין כללי חומת אש ל-API',
   'No function firewall rules': 'אין כללי חומת אש לפונקציות',
   'No site firewall rules': 'אין כללי חומת אש לאתרים',
@@ -776,6 +781,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Upgrade: 'שדרוג',
   'Open activity details': 'פתיחת פרטי פעילות',
   'View event': 'הצגת אירוע',
+  Reason: 'סיבה',
   Deleted: 'נמחק',
   Executed: 'הורץ',
   Uploaded: 'הועלה',
@@ -992,6 +998,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Clear: 'ניקוי',
   Apply: 'החלה',
   Compare: 'השוואה',
+  vs: 'לעומת',
   'No comparison': 'ללא השוואה',
   'Show only current period': 'הצגת התקופה הנוכחית בלבד',
   'Previous period': 'תקופה קודמת',
@@ -1053,10 +1060,52 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קבעו אם הנכס הזה מקבל אירועים.',
   'Tracking enabled': 'המעקב הופעל',
   'Tracking disabled': 'המעקב הושבת',
+  'Browser versions': 'גרסאות דפדפן',
+  'OS versions': 'גרסאות מערכת הפעלה',
+  'Versions': 'גרסאות',
+  'Browser version': 'גרסת דפדפן',
+  'OS version': 'גרסת מערכת הפעלה',
+  'Identified users, ranked by visitors':
+    'משתמשים מזוהים, לפי מספר המבקרים',
+  'No identified users in this range':
+    'אין משתמשים מזוהים בטווח הזה',
+  'Event properties': 'מאפייני אירועים',
+  'Models and tools': 'מודלים וכלים',
+  'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
+  'No calls in this range': 'אין קריאות בטווח הזה',
+  'Installs and push': 'התקנות והתראות פוש',
+  'Installs, updates and push notifications from the tracking SDK':
+    'התקנות, עדכונים והתראות פוש מ-SDK המעקב',
+  'No installs tracked yet': 'עדיין לא נמדדו התקנות',
+  'Add the latest tracking SDK to your app to count installs, updates and push notifications.':
+    'הוסיפו לאפליקציה את גרסת SDK המעקב העדכנית כדי לספור התקנות, עדכונים והתראות פוש.',
+  'Add the tracking SDK': 'הוספת SDK המעקב',
+  Installs: 'התקנות',
+  Updates: 'עדכונים',
+  'Push received': 'התראות פוש שהתקבלו',
+  'Push opened': 'התראות פוש שנפתחו',
+  'Push opened by message': 'התראות פוש שנפתחו לפי הודעה',
+  'No opened pushes with a message ID in this range':
+    'אין בטווח הזה התראות פוש שנפתחו עם מזהה הודעה',
+  'Values of the props sent with your events':
+    'ערכי ה-props שנשלחו עם האירועים',
+  'No event props in this range': 'אין props של אירועים בטווח הזה',
+  'Not available with this filter': 'לא זמין עם המסנן הזה',
+  'User identification': 'זיהוי משתמשים',
+  'Identify signed-in users': 'זיהוי משתמשים מחוברים',
+  'User identification enabled': 'זיהוי המשתמשים הופעל',
+  'User identification disabled': 'זיהוי המשתמשים הושבת',
+  'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.':
+    'משתמשים מזוהים ייחודיים. נספרים רק אירועים שכוללים מזהה משתמש; מבקרים אנונימיים אינם נכללים.',
+  "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.":
+    'תיעוד מזהה המשתמש המחובר באירועים שנשלחים מסשן לקוח, כדי לספור ולפלח תנועה לפי משתמש. מבקרים אנונימיים אינם מושפעים. המזהים הם מזהי המשתמשים של הפרויקט, לעולם לא כתובות אימייל או שמות. יש להפעיל זאת רק אם מדיניות הפרטיות מכסה קישור של נתוני אנליטיקס לחשבונות משתמשים.',
   'Tracking is enabled': 'המעקב פעיל',
-  'Primary domain being tracked. Optional for native apps.':
-    'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',
+  'Primary domain being tracked. May be empty for mobile and agent properties.':
+    'הדומיין הראשי שנמצא במעקב. יכול להישאר ריק בנכסים של מובייל וסוכנים.',
   'Domain updated': 'הדומיין עודכן',
+  'Type updated': 'הסוג עודכן',
+  'Only changes which panels the dashboard shows.':
+    'משנה רק אילו חלוניות מוצגות בלוח הבקרה.',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     'מקורות שמורשים לשלוח אירועי מעקב. השתמשו ב-* כדי לאפשר את כל המקורות.',
   'https://example.com': 'https://example.com',
@@ -1133,8 +1182,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Exit pages': 'דפי יציאה',
   'Where visitors came from': 'מהיכן הגיעו המבקרים',
   'Most visited paths': 'הנתיבים הנצפים ביותר',
+  Screens: 'מסכים',
+  'Most viewed screens': 'המסכים הנצפים ביותר',
   'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
+  'What visitors are using': 'במה המבקרים משתמשים',
   'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
   'AI agents and crawlers': 'סוכני AI וסורקים',
   Agents: 'סוכנים',
@@ -1161,6 +1213,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'iOS, Android, web ודסקטופ מבסיס קוד אחד.',
   'Any language, straight against the HTTP API.':
     'כל שפה, ישירות מול ה-API של HTTP.',
+  'Websites and browser apps.': 'אתרים ואפליקציות דפדפן.',
+  'iOS and Android apps.': 'אפליקציות iOS ו-Android.',
+  'AI agents and backend services, over the API.':
+    'סוכני AI ושירותי צד שרת, דרך ה-API.',
+  'Decides which panels the dashboard shows. You can change it later in settings.':
+    'קובע אילו חלוניות יוצגו בלוח הבקרה. אפשר לשנות זאת בהמשך בהגדרות.',
+  'The site you are tracking. Page paths in reports link to it.':
+    'האתר שבמעקב. נתיבי הדפים בדוחות מקשרים אליו.',
   'Install the SDK': 'התקנת ה-SDK',
   'Initialize tracking': 'אתחול המעקב',
   'Turn on automatic tracking': 'הפעלת מעקב אוטומטי',
@@ -1370,6 +1430,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'for development (no port or protocol). Add a separate platform for each origin (e.g. localhost and production).':
     'לפיתוח (ללא פורט או פרוטוקול). הוסיפו פלטפורמה נפרדת לכל מקור (למשל localhost וסביבת ייצור).',
   'Troubleshoot CORS errors': 'פתרון שגיאות CORS',
+  "Any website can send requests to this project. Before going live, replace * with your app's domain, like app.example.com.":
+    'כל אתר יכול לשלוח בקשות לפרויקט הזה. לפני העלייה לאוויר, החליפו את * בדומיין של האפליקציה שלכם, למשל app.example.com.',
   'Bundle ID': 'מזהה Bundle',
   'Application ID': 'מזהה אפליקציה',
   'Package identifier': 'מזהה חבילה',
@@ -1894,6 +1956,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Use a date range longer than this interval.':
     'השתמשו בטווח תאריכים ארוך מהמרווח הזה.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
+  'This interval is larger than the selected date range.':
+    'המרווח הזה גדול מטווח התאריכים שנבחר.',
   Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
   'Copy API endpoint': 'העתקת נקודת קצה של API',
@@ -2370,8 +2434,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'All project protocols will be enabled.': 'כל הפרוטוקולים של הפרויקט יופעלו.',
   'All protocols for': 'כל הפרוטוקולים עבור',
   'All services for': 'כל השירותים עבור',
-  'Are you sure you want to delete this domain? This action cannot be undone.':
-    'האם אתם בטוחים שברצונכם למחוק את הדומיין הזה? לא ניתן לבטל פעולה זו.',
   'Are you sure you want to disable all protocols? This will disable client access over those protocols until they are re-enabled.':
     'האם אתם בטוחים שברצונכם להשבית את כל הפרוטוקולים? הדבר יחסום גישת לקוח דרך פרוטוקולים אלה עד שיופעלו מחדש.',
   'Are you sure you want to disconnect this git installation?':
@@ -2458,7 +2520,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to rotate secret': 'החלפת הסוד נכשלה',
   'Failed to send test email': 'שליחת אימייל הבדיקה נכשלה',
   'Failed to start migration': 'התחלת המיגרציה נכשלה',
-  'Failed to transfer project': 'העברת הפרויקט נכשלה',
   'Failed to update SMTP settings': 'עדכון הגדרות ה-SMTP נכשל',
   'Failed to update project name': 'עדכון שם הפרויקט נכשל',
   'Failed to update protocol': 'עדכון הפרוטוקול נכשל',
@@ -2594,7 +2655,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Search migrations...': 'חיפוש מיגרציות...',
   'Search webhooks...': 'חיפוש webhooks...',
   'Secure protocol': 'פרוטוקול מאובטח',
-  'Select a different organization to transfer to.': 'בחרו ארגון אחר להעברה.',
   'Select at least one event': 'בחרו לפחות אירוע אחד',
   'Select at least one resource': 'בחרו לפחות משאב אחד',
   'Select destination': 'בחירת יעד',
@@ -2652,12 +2712,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד.',
   'This secret is only shown once after webhook creation or secret rotation. Copy it now.':
     'הסוד הזה מוצג פעם אחת בלבד לאחר יצירת ה-webhook או החלפת הסוד. העתיקו אותו עכשיו.',
-  'To transfer this project, you must be a member of both the current and target organization. Select a destination below.':
-    'כדי להעביר את הפרויקט, עליכם להיות חברים גם בארגון הנוכחי וגם בארגון היעד. בחרו יעד למטה.',
   'Transfer between organizations': 'העברה בין ארגונים',
   'Transfer project': 'העברת פרויקט',
-  'Transfer this project to the selected organization':
-    'העברת הפרויקט לארגון שנבחר',
   'URL is required': 'נדרשת כתובת URL',
   'Update webhook': 'עדכון webhook',
   'Use a service account JSON key. In Firebase Console: Project Settings → Service Accounts → Create service account, then add keys and create a new JSON key. Required roles: Firebase Viewer (Database and Storage), Identity Toolkit Viewer (users).':
@@ -2685,10 +2741,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'כאשר במהלך הייבוא נמצאת שורה עם מזהה קיים.',
   'When enabled, all emails will be sent through your configured SMTP server.':
     'כאשר האפשרות מופעלת, כל האימיילים יישלחו דרך שרת ה-SMTP שהגדרתם.',
-  'You do not have any organizations you can transfer this project to.':
-    'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה.',
-  'You do not have any organizations you can transfer this project to. Create or join another organization to transfer.':
-    'אין לכם ארגונים שאליהם ניתן להעביר את הפרויקט הזה. צרו ארגון אחר או הצטרפו אליו כדי להעביר.',
   'an A or AAAA record': 'רשומת A או AAAA',
   'and all its databases, functions, and files? This action cannot be undone.':
     'ואת כל מסדי הנתונים, הפונקציות והקבצים שלו? לא ניתן לבטל פעולה זו.',
@@ -3337,10 +3389,47 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to update environment order': 'עדכון סדר הסביבות נכשל',
   'Project environment': 'סביבת פרויקט',
   'Switch to production': 'מעבר לפרודקשן',
+  'Environment ID': 'מזהה סביבה',
+  // Environments by plan: Pro and above, and the cap per project
+  'Project environments are available on Pro':
+    'סביבות פרויקט זמינות בתוכנית Pro',
+  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.':
+    'אינה כוללת סביבות פרויקט. שדרגו כדי לתת לכל פרויקט סביבות כמו staging ו-preview, עם משאבים ומשתמשים משלהן.',
+  environments: 'סביבות',
+  'environments per project.': 'סביבות לכל פרויקט.',
+  'Delete an environment to create another.':
+    'מחקו סביבה כדי ליצור סביבה אחרת.',
+  // Settings of an environment: its name, its ID, and deleting it
+  'Environment name has been updated': 'שם הסביבה עודכן',
+  'Failed to update environment name': 'עדכון שם הסביבה נכשל',
+  "Access this environment with the project's API Endpoint and Project ID, and the Environment ID that tells it apart from production.":
+    'הגישה לסביבה הזו היא באמצעות נקודת הקצה של ה-API ומזהה הפרויקט של הפרויקט, יחד עם מזהה הסביבה שמבדיל אותה מפרודקשן.', // pragma: allowlist secret
+  'Permanently delete this environment with its resources and users. The project it belongs to and its other environments are not affected. This action cannot be undone.':
+    'מחיקה לצמיתות של הסביבה הזו, עם המשאבים והמשתמשים שלה. הפרויקט שאליו היא שייכת והסביבות האחרות שלו אינם מושפעים. לא ניתן לבטל פעולה זו.',
+  Environment: 'סביבה',
+  'Project:': 'פרויקט:',
+  'Failed to load migrations': 'טעינת המיגרציות נכשלה',
+  'Failed to refresh migrations': 'רענון המיגרציות נכשל',
+  'The list below may be out of date.': 'ייתכן שהרשימה שלהלן אינה עדכנית.',
+  'An environment with this ID already exists in this project.':
+    'סביבה עם המזהה הזה כבר קיימת בפרויקט.',
+  'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
+    'השתמשו באותיות קטנות, ספרות ומקפים, והתחילו באות או בספרה.',
+  'What your apps pass as the environment next to the project ID, so pick one you can type: staging, preview, qa.':
+    'מה שהאפליקציות שלכם מעבירות כסביבה לצד מזהה הפרויקט, אז בחרו משהו שנוח להקליד: staging, preview, qa.',
+  'Connect to this environment': 'התחברות לסביבה הזו',
+  'Same endpoint and project ID as production. The environment ID is what tells them apart.':
+    'אותו endpoint ואותו מזהה פרויקט כמו בפרודקשן. מזהה הסביבה הוא מה שמבדיל ביניהם.',
   'Changes here do not affect production.':
     'שינויים כאן לא משפיעים על פרודקשן.',
   'Name the environment and choose where it starts.':
     'תנו שם לסביבה ובחרו מאיפה היא מתחילה.',
+  'An environment is a separate project. Copying keeps the IDs of what it brings over.':
+    'סביבה היא פרויקט נפרד. בהעתקה נשמרים המזהים של מה שמועתק.',
+  'Structure and settings are cloned, data only where you ask for it.':
+    'מבנה והגדרות משובטים. נתונים רק היכן שתבקשו.',
+  'Structure is selected by default. Include data only where you need it.':
+    'המבנה מסומן כברירת מחדל. כללו נתונים רק היכן שצריך.',
   'Pick what to copy from the project.': 'בחרו מה להעתיק מהפרויקט.',
   'Point your app at the new environment.':
     'כוונו את האפליקציה שלכם לסביבה החדשה.',
@@ -3568,8 +3657,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קישורים שעדיין לא מומשו. לא ניתן לממש קישורים שפג תוקפם. מחקו קישור כדי שיפסיק לפעול מוקדם יותר.',
   'The project already belongs to this organization.':
     'הפרויקט כבר שייך לארגון זה.',
-  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
-    'רק חברי ארגון שהתפקיד שלהם מאפשר לנהל פרויקטים יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
+  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'רק בעלים של הארגון יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
   'No permission': 'אין הרשאה',
   "You don't have permission to transfer projects in this organization.":
     'אין לכם הרשאה להעביר פרויקטים בארגון זה.',
@@ -3595,8 +3684,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   // Environment copy at creation, its progress card, and backups in environments
   'Start from': 'נקודת התחלה',
   'Empty environment': 'סביבה ריקה',
-  'Nothing is copied from the project.': 'דבר לא מועתק מהפרויקט.',
-  'Copy of the project': 'עותק של הפרויקט',
+  'Nothing is copied from the project. You handle the scaffolding.':
+    'דבר לא מועתק מהפרויקט. אתם מטפלים במבנה.',
+  'Clone of the project': 'שכפול של הפרויקט',
   'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
     'המבנה וההגדרות מועתקים, והנתונים רק היכן שתבקשו זאת. ההעתקה מתבצעת לאחר יצירת הסביבה ושומרת על המזהים של מה שהיא מעתיקה.',
   'What to copy': 'מה להעתיק',
@@ -3629,4 +3719,380 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Backup policies and archives are managed on the project this environment belongs to.':
     'מדיניות הגיבוי והארכיונים מנוהלים בפרויקט שהסביבה הזו שייכת אליו.',
   'Open the project': 'פתיחת הפרויקט',
+  // Alert rules
+  '5 minutes': '5 דקות',
+  '6 hours': '6 שעות',
+  Cooldown: 'זמן המתנה בין התראות',
+  'Database storage': 'אחסון מסדי נתונים',
+  'Egress spike': 'קפיצה בתעבורה יוצאת',
+  'Enter a threshold of 0 or more.': 'הזינו סף של 0 ומעלה.',
+  Firing: 'פעילה',
+  'Greater than': 'גדול מ-',
+  'Greater than or equal': 'גדול או שווה ל-',
+  'Inbound bandwidth': 'תעבורה נכנסת',
+  'Know when usage crosses a line': 'דעו מתי השימוש חוצה את הגבול',
+  'Last value': 'ערך אחרון',
+  'Less than': 'קטן מ-',
+  'Less than or equal': 'קטן או שווה ל-',
+  Metric: 'מדד',
+  OK: 'תקין',
+  'Outbound bandwidth': 'תעבורה יוצאת',
+  'Read IOPS': 'IOPS קריאה',
+  'Select resource': 'בחירת משאב',
+  'Select the resource to watch.': 'בחרו את המשאב למעקב.',
+  'No data': 'אין נתונים',
+  'No usage recorded to compare yet': 'עדיין לא נרשם שימוש להשוואה',
+  'This project has no buckets yet.': 'בפרויקט הזה עדיין אין באקטים.',
+  'This project has no databases of this type yet.':
+    'בפרויקט הזה עדיין אין מסדי נתונים מהסוג הזה.',
+  'Execution GB-hours': 'שעות GB של הרצות',
+  'Files, databases and deployments grow past 50 GB.':
+    'קבצים, מסדי נתונים ופריסות גדלים מעבר ל-50 GB.',
+  'Messages failed': 'הודעות שנכשלו', // pragma: allowlist secret
+  'More than 10 webhook deliveries fail in an hour.':
+    'יותר מ-10 שליחות Webhook נכשלות בתוך שעה.',
+  'SMS messages sent': 'הודעות SMS שנשלחו', // pragma: allowlist secret
+  'This project has no functions yet.': 'בפרויקט הזה עדיין אין פונקציות.',
+  'This project has no sites yet.': 'בפרויקט הזה עדיין אין אתרים.',
+  'Webhook events failed': 'אירועי Webhook שנכשלו',
+  'Webhook events sent': 'אירועי Webhook שנשלחו',
+  'Webhook failures': 'כשלים ב-Webhook',
+  Window: 'חלון זמן',
+  'Write IOPS': 'IOPS כתיבה',
+  'Get notified when a usage metric crosses a threshold, and again when it recovers.':
+    'קבלו התראה כשמדד שימוש חוצה סף, ושוב כשהוא חוזר לתקין.',
+  'Could not load resources.': 'לא ניתן לטעון את המשאבים.',
+  Comparator: 'השוואה',
+  Console: 'קונסולה',
+  'Could not load usage history.': 'לא ניתן לטעון את היסטוריית השימוש.',
+  'Counted over the window and compared at every check.':
+    'נספר לאורך החלון ומושווה בכל בדיקה.',
+  'Get notified when usage crosses a threshold, and again when it recovers.':
+    'קבלו התראה כשהשימוש חוצה סף, ושוב כשהוא חוזר לשגרה.',
+  'Last checked': 'בדיקה אחרונה',
+  'Last fired': 'הפעלה אחרונה',
+  Monitoring: 'ניטור',
+  'More than a million database reads in an hour.':
+    'יותר ממיליון קריאות ממסד הנתונים בשעה.',
+  'No history is available for this metric yet.':
+    'עדיין אין היסטוריה למדד הזה.',
+  'Not checked yet': 'עדיין לא נבדק',
+  Notify: 'הודעה',
+  'Outbound bandwidth above 10 GB in an hour.': 'רוחב פס יוצא מעל 10 GB בשעה.',
+  'Paused rules are not checked and never notify.':
+    'כללים מושהים אינם נבדקים ואינם שולחים התראות.',
+  'Project owners': 'בעלי הפרויקט',
+  'Read surge': 'זינוק בקריאות',
+  'Select a resource to see its history.':
+    'בחרו משאב כדי לראות את ההיסטוריה שלו.',
+  'The latest reading is compared at every check.':
+    'הקריאה האחרונה מושווית בכל בדיקה.',
+  'The whole project': 'הפרויקט כולו',
+  Threshold: 'סף',
+  When: 'כאשר',
+  'Would have fired once in the {range}.': 'היה מופעל פעם אחת ב{range}.',
+  'Would have fired {count} times in the {range}.':
+    'היה מופעל {count} פעמים ב{range}.',
+  'Would not have fired in the {range}.': 'לא היה מופעל ב{range}.',
+  is: 'הוא',
+  'last 12 hours': '12 השעות האחרונות',
+  'last 24 hours': '24 השעות האחרונות',
+  'last 30 days': '30 הימים האחרונים',
+  'last 7 days': '7 הימים האחרונים',
+  on: 'עבור',
+  'the whole project': 'הפרויקט כולו',
+  within: 'בתוך',
+  'Waiting for the first check': 'ממתין לבדיקה הראשונה',
+  peak: 'שיא',
+  '{count} sent': '{count} נשלחו',
+  ongoing: 'פעיל',
+  'Would not have fired in the {range}': 'לא היה מופעל ב{range}',
+  'Would have fired {count}× in the {range}':
+    'היה מופעל {count} פעמים ב{range}',
+  'History range': 'טווח היסטוריה',
+  'Name, cooldown': 'שם, השהיה',
+  'Firing since': 'מופעל מאז',
+  Checked: 'נבדק',
+  '{ratio} the {threshold} threshold': '{ratio} מסף {threshold}',
+  'Threshold {threshold}': 'סף {threshold}',
+  Notifies: 'מודיע ל',
+  'at most once per {cooldown}': 'לכל היותר פעם ב{cooldown}',
+  'Peak hour': 'שעת שיא',
+  'Suggested from your last 7 days of usage':
+    'הצעות לפי השימוש ב-7 הימים האחרונים',
+  'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
+    'נשלח כשהשימוש הנוסף מגיע לכל סף. הם עוקבים אחר מגבלת התקציב וההתראות למעלה.',
+  'Cap reached': 'הגיע למגבלה',
+  '{percent}% of {budget}': '{percent}% מתוך {budget}',
+  'Managed by budget': 'מנוהל לפי התקציב',
+  'Last sent': 'נשלח לאחרונה',
+  'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
+    'מוניטור מעלה התראה כשהכללים שלו מתקיימים, וסוגר אותה כשהשימוש חוזר לשגרה.',
+  Alert: 'התראה',
+  'Alert not found': 'ההתראה לא נמצאה',
+  'Budget monitors': 'מוניטורים של תקציב',
+  'Checks run every few minutes, so this monitor is not being evaluated.':
+    'הבדיקות רצות כל כמה דקות, ולכן המוניטור הזה לא נבדק.',
+  'Create monitor': 'יצירת מוניטור',
+  'Delete monitor': 'מחיקת מוניטור',
+  'Every time a monitor fired: when, how far over its threshold, and when it recovered.':
+    'כל פעם שמוניטור הופעל: מתי, בכמה חרג מהסף ומתי חזר לשגרה.',
+  'Failed to create monitor': 'יצירת המוניטור נכשלה',
+  'Failed to delete monitor': 'מחיקת המוניטור נכשלה',
+  'Failed to update monitor': 'עדכון המוניטור נכשל',
+  'Filter alerts': 'סינון התראות',
+  'Filter monitors': 'סינון מוניטורים',
+  'Fired for': 'משך ההפעלה',
+  'Firing for': 'מופעל כבר',
+  'Latest reading': 'הקריאה האחרונה',
+  'Monitor has been created': 'המוניטור נוצר',
+  'Monitor has been deleted': 'המוניטור נמחק',
+  'Monitor has been paused': 'המוניטור הושהה',
+  'Monitor has been resumed': 'המוניטור חודש',
+  'Monitor has been updated': 'המוניטור עודכן',
+  'Monitor not found': 'המוניטור לא נמצא',
+  Monitors: 'מוניטורים',
+  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
+    'מוניטורים עוקבים אחר השימוש בפרויקט ומתריעים כשמדד חוצה את הסף שהגדרתם.',
+  'No alerts yet': 'אין עדיין התראות',
+  Ongoing: 'מתמשך',
+  Peak: 'שיא',
+  Resolved: 'נסגרה',
+  "Resolves when the monitor's rules stop holding.":
+    'נסגרת כשהכללים של המוניטור מפסיקים להתקיים.',
+  'Search monitors...': 'חיפוש מוניטורים...',
+  'Started firing': 'התחיל לפעול',
+  'Still firing': 'עדיין פעיל',
+  'View monitor': 'הצגת המוניטור',
+  'View monitors': 'הצגת המוניטורים',
+  'Waiting for recovery': 'ממתין לחזרה לשגרה',
+  Watches: 'עוקב אחר',
+  Acknowledge: 'אישור טיפול',
+  'Acknowledged by {name}': 'בטיפול של {name}',
+  'Acknowledged by a member': 'בטיפול של חבר צוות',
+  'Acknowledged with an API key': 'אושר באמצעות מפתח API',
+  'Failed to acknowledge the alert': 'אישור הטיפול בהתראה נכשל',
+  'Failed to undo the acknowledgement': 'ביטול אישור הטיפול נכשל',
+  'Let your team know someone is on it. It keeps firing until usage recovers.':
+    'כך הצוות יודע שמישהו מטפל בזה. ההתראה תמשיך לפעול עד שהשימוש יחזור לשגרה.',
+  'Nobody has acknowledged this alert': 'אף אחד עדיין לא אישר טיפול בהתראה הזו',
+  "You don't have permission to manage monitors.":
+    'אין לכם הרשאה לנהל מוניטורים.',
+  'between two alerts from this monitor.': 'בין שתי התראות מהמוניטור הזה.',
+  'the threshold': 'הסף',
+  '{count} notifications sent, one per cooldown':
+    'נשלחו {count} התראות, אחת לכל תקופת המתנה',
+  'Its alerts stay in the history.': 'ההתראות שלו נשארות בהיסטוריה.',
+  'Send alerts to a webhook': 'שליחת התראות ל-Webhook',
+  Owners: 'בעלים',
+  Editors: 'עורכים',
+  Analysts: 'אנליסטים',
+  'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.':
+    'חברים בתפקידים האלה מקבלים אימייל והתראה ב-Console כשהמוניטור מופעל, ושוב כשהוא נפתר.',
+  'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.':
+    'אף אחד לא מקבל אימייל או התראה. ההתראות עדיין מפעילות את האירועים שלהן עבור Webhooks ופונקציות של הפרויקט.',
+  'Project webhooks and functions can also listen to its alert events.':
+    'גם Webhooks ופונקציות של הפרויקט יכולים להאזין לאירועי ההתראות שלו.',
+  'Nobody, only its events': 'אף אחד, רק האירועים שלו',
+  Critical: 'קריטי',
+  "Rings on your phone even when it's on silent or in Do Not Disturb.":
+    "מצלצל בטלפון גם כשהוא במצב שקט או ב'נא לא להפריע'.",
+  Severity: 'חומרה',
+  Warning: 'אזהרה',
+  'Worth knowing about. Nothing needs doing yet.':
+    'כדאי לדעת. עדיין אין צורך לעשות דבר.',
+  'Look into it soon, before it becomes a problem.':
+    'כדאי לבדוק בקרוב, לפני שזה יהפוך לבעיה.',
+  'Something is broken and needs fixing.': 'משהו לא עובד וצריך תיקון.',
+  'Critical. Rings on phones even on silent.':
+    'קריטי. מצלצל בטלפונים גם במצב שקט.',
+  'Rings on phones even on silent': 'מצלצל בטלפונים גם במצב שקט',
+  'Notifies nobody': 'לא מתריע לאף אחד',
+  'Notifies nobody. Its alerts only fire their events.':
+    'לא מתריע לאף אחד. ההתראות שלו רק מפעילות את האירועים שלהן.',
+  'Each monitor emails and notifies the organization roles it names. Every alert is also a project event your own systems can receive.':
+    'כל מוניטור שולח אימייל והתראה לתפקידים בארגון שהוא מגדיר. כל התראה היא גם אירוע של הפרויקט שהמערכות שלכם יכולות לקבל.',
+  'Unsubscribe from alert emails': 'ביטול הרשמה לאימיילי התראות',
+  'This monitor was deleted.': 'המוניטור הזה נמחק.',
+  'Stop emails for this monitor': 'הפסקת אימיילים עבור המוניטור הזה',
+  'Emails for this monitor are stopped.': 'האימיילים עבור המוניטור הזה הופסקו.',
+  'Stop all usage alert emails': 'הפסקת כל אימיילי ההתראות על שימוש',
+  'Stop all alert emails of this kind': 'הפסקת כל אימיילי ההתראה מהסוג הזה',
+  'All usage alert emails are stopped.': 'כל אימיילי ההתראות על שימוש הופסקו.',
+  'All alert emails of this kind are stopped.':
+    'כל אימיילי ההתראה מהסוג הזה הופסקו.',
+  'This link is invalid or has expired': 'הקישור הזה אינו תקף או שפג תוקפו',
+  'Open the Unsubscribe link in a more recent alert email.':
+    'פתחו את קישור ביטול ההרשמה באימייל התראה עדכני יותר.',
+  "You'll still see these alerts in console notifications.":
+    'ההתראות האלה עדיין יופיעו בהתראות ב-Console.',
+  'Saving...': 'שומר...',
+  // Firewall rule schedules
+  'Times are in your local time zone:': 'השעות לפי אזור הזמן המקומי שלכם:',
+  'Times follow the time zone this schedule was created in:':
+    'השעות לפי אזור הזמן שבו נוצר התזמון:',
+  'Your local time zone:': 'אזור הזמן המקומי שלכם:',
+  'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
+    'לכלל הזה יש תזמון שגרסה זו של הקונסולה לא יכולה להציג. הוא נשמר אלא אם תסירו אותו או תגדירו תזמון חדש.',
+  'Remove schedule': 'הסרת התזמון',
+  'The schedule will be removed when you save.': 'התזמון יוסר כשתשמרו.',
+  'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
+    'החלת הכלל רק בימים או בשעות מסוימים. כשהאפשרות כבויה, הכלל פעיל תמיד.',
+  Repeat: 'חזרה',
+  'Selected days every week': 'ימים נבחרים בכל שבוע',
+  'Selected days every other week': 'ימים נבחרים כל שבועיים',
+  'Weekends (Sat and Sun)': 'סופי שבוע (שבת וראשון)',
+  'Every few days': 'כל כמה ימים',
+  'Days of the week': 'ימים בשבוע',
+  'Select at least one day.': 'בחרו לפחות יום אחד.',
+  'Repeat every (days)': 'חזרה כל (ימים)',
+  'Starting on': 'תאריך התחלה',
+  'The week of this date is the first active week.':
+    'השבוע של התאריך הזה הוא השבוע הפעיל הראשון.',
+  'The first active day. The rule is never active before it.':
+    'היום הפעיל הראשון. לפניו הכלל אינו פעיל.',
+  'All day': 'כל היום',
+  'Start and end times must differ. Turn on All day for the whole day.':
+    'שעת ההתחלה ושעת הסיום חייבות להיות שונות. לכל היום, הפעילו את "כל היום".',
+  'This window crosses midnight: it starts on each selected day and ends the next morning.':
+    'חלון הזמן חוצה את חצות: הוא מתחיל בכל יום נבחר ומסתיים למחרת בבוקר.',
+
+  // Project dashboard: resources, apps and API keys
+  'Your resources': 'המשאבים שלכם',
+  'View all databases': 'צפייה בכל מסדי הנתונים',
+  'View all sites': 'צפייה בכל האתרים',
+  'Files up to': 'קבצים עד',
+  'View all functions': 'צפייה בכל הפונקציות',
+  'View all buckets': 'צפייה בכל הבאקטים',
+  'View all users': 'צפייה בכל המשתמשים',
+  'View all topics': 'צפייה בכל הנושאים',
+  'View all API keys': 'צפייה בכל מפתחות ה-API',
+  'Failed to load sites': 'טעינת האתרים נכשלה',
+  'Failed to load functions': 'טעינת הפונקציות נכשלה',
+  'Failed to load buckets': 'טעינת הבאקטים נכשלה',
+  'Failed to load users': 'טעינת המשתמשים נכשלה',
+  'Failed to load topics': 'טעינת הנושאים נכשלה',
+  'Store, query, and sync your app data with a managed database.':
+    'אחסון, שאילתות וסנכרון של נתוני האפליקציה שלכם במסד נתונים מנוהל.',
+  'Run backend code on HTTP requests, events, or a schedule.':
+    'הריצו קוד צד שרת בתגובה לבקשות HTTP, לאירועים או לפי תזמון.',
+  'Keep data apart by environment, customer, or workload.':
+    'הפרידו נתונים לפי סביבה, לקוח או עומס עבודה.',
+  'Deploy another app, a landing page, or your docs.':
+    'פרסו אפליקציה נוספת, דף נחיתה או את התיעוד שלכם.',
+  'Add a webhook, a scheduled job, or an event handler.':
+    'הוסיפו Webhook, משימה מתוזמנת או טיפול באירועים.',
+  'Group files with their own permissions and limits.':
+    'קבצו קבצים עם הרשאות ומגבלות משלהם.',
+  'Add a user by hand, or let people sign up from your app.':
+    'הוסיפו משתמש ידנית, או אפשרו הרשמה מהאפליקציה שלכם.',
+  'Group subscribers to message them all at once.':
+    'קבצו מנויים כדי לשלוח הודעה לכולם בבת אחת.',
+  'Add each web, mobile, or desktop app that calls this project.':
+    'הוסיפו כל אפליקציית Web, מובייל או דסקטופ שפונה לפרויקט הזה.',
+  'Give your servers and scripts scoped access to this project.':
+    'העניקו לשרתים ולסקריפטים שלכם גישה לפרויקט הזה עם הרשאות מוגדרות.',
+  'Use a key per server or environment, with only the scopes it needs.':
+    'השתמשו במפתח נפרד לכל שרת או סביבה, עם ההרשאות הנחוצות בלבד.',
+  'Upload and serve files with permissions, encryption, and image previews.':
+    'העלו והגישו קבצים עם הרשאות, הצפנה ותצוגות מקדימות לתמונות.',
+  'Sign users in with email, OAuth providers, phone, or passkeys.':
+    'אפשרו למשתמשים להתחבר עם אימייל, ספקי OAuth, טלפון או מפתחות גישה.',
+  'Send email, SMS, and push notifications to your users.':
+    'שלחו למשתמשים שלכם אימיילים, הודעות SMS והתראות פוש.',
+  'Auto-deploy on every push': 'פריסה אוטומטית בכל push',
+  // Identity servers (LDAP)
+  'Identity servers': 'שרתי זהויות',
+  LDAP: 'LDAP',
+  'Connect the identity systems your organization already runs so people can sign in with the accounts they have.':
+    'חברו את מערכות הזהויות שהארגון שלכם כבר מפעיל, כדי שמשתמשים יוכלו להתחבר עם החשבונות שכבר יש להם.',
+  'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
+    'אפשרו למשתמשים להתחבר עם פרטי האימות של ספריית ה-LDAP שלכם, כמו Active Directory או OpenLDAP.',
+  'Turn on LDAP sign-in for this project. Enabling connects to the directory to validate the configuration, so add at least one host and a base DN first.':
+    'הפעלת התחברות דרך LDAP לפרויקט הזה. ההפעלה מתחברת לספרייה כדי לאמת את התצורה, לכן הוסיפו קודם לפחות מארח אחד ו-base DN.',
+  Directory: 'ספרייה',
+  Hosts: 'מארחים',
+  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10. Paste an LDAP URL to also fill in encryption, port and base DN.':
+    'שמות מארחים או כתובות IP של הספרייה, מנוסים לפי הסדר עד שאחד מהם עונה. לחצו Enter אחרי כל מארח, עד 10 מארחים. הדביקו כתובת URL של LDAP כדי למלא גם את ההצפנה, הפורט וה-base DN.',
+  'Use {dn} as the base DN?': 'להשתמש ב-{dn} בתור base DN?',
+  Use: 'שימוש',
+  'Leave empty for the default: 636 for LDAPS, 389 otherwise.':
+    'השאירו ריק לברירת המחדל: 636 עבור LDAPS, אחרת 389.',
+  'LDAPS encrypts from the first byte, StartTLS upgrades a plain connection, None is for a trusted network only.':
+    'LDAPS מצפין מהבייט הראשון, StartTLS משדרג חיבור לא מוצפן, ו"ללא" מיועד לרשת מהימנה בלבד.',
+  'Verify certificate': 'אימות תעודה',
+  "Check the directory's certificate against the certificate below, or the system trust store if it is empty.":
+    'בדיקת התעודה של הספרייה מול התעודה שלמטה, או מול מאגר התעודות המהימנות של המערכת אם השדה ריק.',
+  'Timeout (seconds)': 'Timeout (שניות)',
+  'Seconds to wait for the directory to connect and answer each operation, from 1 to 30.':
+    'מספר השניות להמתין לחיבור לספרייה ולמענה על כל פעולה, בין 1 ל-30.',
+  'Certificate (PEM)': 'תעודה (PEM)',
+  "Certificate of the authority that signed the directory's certificate, or the directory's own certificate if it is self-signed. Paste several to trust more than one. Leave empty to use the system trust store.":
+    'התעודה של הרשות שחתמה על תעודת הספרייה, או התעודה של הספרייה עצמה אם היא בחתימה עצמית. הדביקו כמה תעודות כדי לסמוך על יותר מאחת. השאירו ריק כדי להשתמש במאגר התעודות המהימנות של המערכת.',
+  'Base DN': 'Base DN',
+  'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
+    'תת-העץ שממנו מתחיל חיפוש המשתמשים, למשל ou=people,dc=example,dc=com.',
+  'Bind DN': 'Bind DN',
+  'Service account used to search for users. Leave empty if the directory allows anonymous search.':
+    'חשבון השירות שמשמש לחיפוש משתמשים. השאירו ריק אם הספרייה מאפשרת חיפוש אנונימי.',
+  'Bind password': 'סיסמת Bind',
+  'User filter': 'מסנן משתמשים',
+  'Finds the person signing in. {username} is replaced with what they type.':
+    'מאתר את מי שמתחבר. {username} מוחלף במה שהוא מקליד.',
+  'The user filter must contain {username}.':
+    'מסנן המשתמשים חייב לכלול את {username}.',
+  'Sign-in rules': 'כללי התחברות',
+  'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.':
+    'משתמשים ב-Active Directory? הגדירו את מסנן המשתמשים ל-(sAMAccountName={username}) ואת מאפיין המזהה ל-objectGUID.',
+  'Attribute mapping': 'מיפוי מאפיינים',
+  'ID attribute': 'מאפיין מזהה',
+  'Attribute with the identifier that stays the same when an entry is renamed or moved: entryUUID, or objectGUID on Active Directory.':
+    'המאפיין שמכיל את המזהה שנשאר קבוע גם כששם הרשומה משתנה או כשהיא מועברת: entryUUID, או objectGUID ב-Active Directory.',
+  'Email attribute': 'מאפיין אימייל',
+  'Attribute holding the email address, usually mail.':
+    'המאפיין שמכיל את כתובת האימייל, בדרך כלל mail.',
+  'Name attribute': 'מאפיין שם',
+  'Attribute holding the display name: cn, or displayName on Active Directory.':
+    'המאפיין שמכיל את שם התצוגה: cn, או displayName ב-Active Directory.',
+  'Phone attribute': 'מאפיין טלפון',
+  'Attribute holding the phone number in E.164 format, for example mobile. Leave empty to skip phone numbers.':
+    'המאפיין שמכיל את מספר הטלפון בפורמט E.164, למשל mobile. השאירו ריק כדי לדלג על מספרי טלפון.',
+  'Required group DN': 'DN של קבוצה נדרשת',
+  'Group a user must belong to in order to sign in, checked on every sign-in. Leave empty to allow every user the directory authenticates.':
+    'קבוצה שמשתמש חייב להשתייך אליה כדי להתחבר, נבדקת בכל התחברות. השאירו ריק כדי לאפשר כניסה לכל משתמש שהספרייה מאמתת.',
+  'Port must be between 1 and 65535.': 'הפורט חייב להיות בין 1 ל-65535.',
+  'LDAP settings have been updated.': 'הגדרות ה-LDAP עודכנו.',
+  'LDAP sign-in has been enabled.': 'ההתחברות דרך LDAP הופעלה.',
+  'LDAP sign-in has been disabled.': 'ההתחברות דרך LDAP הושבתה.',
+  'Failed to update LDAP settings': 'עדכון הגדרות ה-LDAP נכשל',
+  'Test connection': 'בדיקת חיבור',
+  'Update the configuration with at least one host and a base DN before testing the connection.':
+    'עדכנו את התצורה עם לפחות מארח אחד ו-base DN לפני בדיקת החיבור.',
+  'Test LDAP connection': 'בדיקת חיבור LDAP',
+  'Checks the configuration saved on this project: it connects to the directory, binds as the service account and reads the base DN.':
+    'בודק את התצורה השמורה בפרויקט הזה: מתחבר לספרייה, מבצע bind כחשבון השירות וקורא את ה-base DN.',
+  'Unsaved changes in the form are not included: update first to test them.':
+    'שינויים שלא נשמרו בטופס לא נכללים: עדכנו קודם כדי לבדוק אותם.',
+  'Username (optional)': 'שם משתמש (אופציונלי)',
+  'Also looks this user up and checks the required group.':
+    'בנוסף מאתר את המשתמש הזה ובודק את הקבוצה הנדרשת.',
+  'Password (optional)': 'סיסמה (אופציונלי)',
+  'Also verifies the password of that user.':
+    'בנוסף מאמת את הסיסמה של אותו משתמש.',
+  'Run test': 'הרצת בדיקה',
+  'Testing the connection…': 'בודק את החיבור…',
+  'Connection, service account and base DN look good.':
+    'החיבור, חשבון השירות וה-base DN תקינים.',
+  'User found, group check passed, password accepted.':
+    'המשתמש נמצא, בדיקת הקבוצה עברה, הסיסמה התקבלה.',
+  'User found, group check passed.': 'המשתמש נמצא, בדיקת הקבוצה עברה.',
+  'Failed to test the LDAP connection': 'בדיקת חיבור ה-LDAP נכשלה',
+  'Stored securely and never shown again. Required again when hosts, port, encryption, certificate settings or bind DN change.':
+    'נשמרת באופן מאובטח ולא מוצגת שוב. נדרשת שוב בכל שינוי של מארחים, פורט, הצפנה, הגדרות התעודה או bind DN.',
+  'Enter the bind password again to save: the connection or certificate settings changed.':
+    'הזינו שוב את סיסמת ה-bind כדי לשמור: הגדרות החיבור או האישור השתנו.',
+  'Add at least one host and a base DN to enable LDAP sign-in.':
+    'הוסיפו לפחות מארח אחד ו-base DN כדי להפעיל התחברות דרך LDAP.',
+  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.':
+    'הוסיפו לפחות מארח אחד ו-base DN תחת הגדרות > שרתי זהויות כדי להפעיל התחברות דרך LDAP.',
 }

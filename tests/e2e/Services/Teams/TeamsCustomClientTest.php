@@ -252,6 +252,146 @@ final class TeamsCustomClientTest extends Scope
         $this->assertEquals(401, $login['headers']['status-code']);
     }
 
+    public function testUpdateMembershipStatusKeepsMFAInForce(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('MFA Invites');
+        $email = \uniqid() . 'mfa-invite@localhost.test';
+        $password = 'password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $serverHeaders = \array_merge($headers, ['x-appwrite-key' => $this->getProject()['apiKey']]);
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => 'unique()',
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+        $userId = $account['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $ownerHeaders = \array_merge($headers, ['cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId]]);
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $ownerHeaders);
+        $this->assertSame(200, $authenticator['headers']['status-code']);
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        if ($totp->expiresIn() <= 5) {
+            \sleep($totp->expiresIn() + 1);
+        }
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $ownerHeaders, [
+            'otp' => $totp->now(),
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $ownerHeaders, ['mfa' => true]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $params = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html']);
+
+        // The invite proves the inbox only: signed out, it neither joins the account a second factor guards nor discards that factor
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertSame(401, $confirmation['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $confirmation['body']['type']);
+
+        $pending = $this->client->call(Client::METHOD_GET, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'], $serverHeaders);
+        $this->assertSame(200, $pending['headers']['status-code']);
+        $this->assertFalse($pending['body']['confirm']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $serverHeaders);
+        $this->assertTrue($user['body']['mfa']);
+        $this->assertFalse($user['body']['emailVerification']);
+        $factors = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/factors', $serverHeaders);
+        $this->assertTrue($factors['body']['totp']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $ownerHeaders);
+        $this->assertSame(200, $account['headers']['status-code']);
+
+        // Signed in with every factor, the invite is accepted
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $ownerHeaders, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertSame(200, $confirmation['headers']['status-code']);
+        $this->assertTrue($confirmation['body']['confirm']);
+
+        // A verified address does not stand in for the second factor either
+        $verified = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $serverHeaders, [
+            'emailVerification' => true,
+        ]);
+        $this->assertSame(200, $verified['headers']['status-code']);
+
+        $team = $this->createTeamHelper('MFA Invites Verified');
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $params = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email, function (array $message) use ($team) {
+            $this->assertSame($team['teamUid'], $this->extractQueryParamsFromEmailLink($message['html'])['teamId']);
+        })['html']);
+
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertSame(401, $confirmation['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $confirmation['body']['type']);
+
+        // With an email and a phone on file an invite proves neither, so it is refused too
+        $phone = $this->client->call(Client::METHOD_PATCH, '/account/phone', $ownerHeaders, [
+            'phone' => '+1202' . \random_int(1000000, 9999999),
+            'password' => $password,
+        ]);
+        $this->assertSame(200, $phone['headers']['status-code']);
+
+        $team = $this->createTeamHelper('MFA Invites Both Addresses');
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $params = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email, function (array $message) use ($team) {
+            $this->assertSame($team['teamUid'], $this->extractQueryParamsFromEmailLink($message['html'])['teamId']);
+        })['html']);
+
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertSame(401, $confirmation['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $confirmation['body']['type']);
+    }
+
     public function testUpdateMembershipStatusByPhoneRevokesUnverifiedAccountCredentials(): void
     {
         $projectId = $this->getProject()['$id'];

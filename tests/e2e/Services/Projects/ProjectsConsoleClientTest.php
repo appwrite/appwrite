@@ -2590,7 +2590,7 @@ final class ProjectsConsoleClientTest extends Scope
         $id = $response['body']['$id'];
 
         $auth = require(__DIR__ . '/../../../../app/config/auth.php');
-        unset($auth['passkey']); // Not exposed in these older response formats
+        unset($auth['passkey'], $auth['ldap']); // Not exposed in these older response formats
         $originalEmail = uniqid() . 'user@localhost.test';
         $originalPassword = 'password';
         $originalName = 'User Name';
@@ -2616,6 +2616,40 @@ final class ProjectsConsoleClientTest extends Scope
         ]);
 
         $session = $response['cookies']['a_session_' . $id];
+
+        // LDAP is hidden from older response formats, whose SDKs reject auth
+        // method IDs outside their enum, and disabled on a fresh project: with
+        // no directory configured it cannot authenticate anyone.
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('authLDAP', $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $ldap = \array_values(\array_filter($response['body']['authMethods'], fn ($method) => $method['$id'] === 'ldap'));
+        $this->assertCount(1, $ldap);
+        $this->assertEquals(false, $ldap[0]['enabled']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'username' => 'user',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(501, $response['headers']['status-code']);
+        $this->assertEquals('user_auth_method_unsupported', $response['body']['type']);
 
         /**
          * Test for SUCCESS
@@ -2715,6 +2749,30 @@ final class ProjectsConsoleClientTest extends Scope
         ]));
 
         $this->assertEquals(501, $response['headers']['status-code']);
+
+        // LDAP cannot be switched on through the generic auth method endpoint
+        // until a directory is configured: nothing could sign anyone in.
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/ldap', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('project_ldap_config_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/ldap', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'username' => 'user',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(501, $response['headers']['status-code']);
+        $this->assertEquals('user_auth_method_unsupported', $response['body']['type']);
 
         // Cleanup
 

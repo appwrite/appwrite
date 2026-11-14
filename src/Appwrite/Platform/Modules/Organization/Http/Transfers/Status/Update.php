@@ -2,12 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Organization\Http\Transfers\Status;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Context\Audit as AuditContext;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Organization\Http\Transfers\Action;
+use Appwrite\Screenshots\Access;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -16,6 +20,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Span\Span;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -37,8 +42,7 @@ class Update extends Action
             ->label('scope', 'projects.write')
             ->label('audits.event', 'transfer.update')
             ->label('audits.resource', 'project/{response.$id}')
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'ip:{ip},url:{url}')
+            ->label('abuse', [Limit::attempts(['ip', 'url'], 10)])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'transfers',
@@ -59,8 +63,11 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('team')
+            ->inject('targetUser')
             ->inject('authorization')
             ->inject('auditContext')
+            ->inject('queueForRealtime')
+            ->inject('getProjectDB')
             ->callback($this->action(...));
     }
 
@@ -70,9 +77,18 @@ class Update extends Action
         Response $response,
         Database $dbForPlatform,
         Document $team,
+        User $targetUser,
         Authorization $authorization,
         AuditContext $auditContext,
+        Realtime $queueForRealtime,
+        callable $getProjectDB,
     ) {
+        // Taking a project in is the same move as giving one away, so the claiming
+        // organization answers for it with an owner too
+        if (!$targetUser->isOwner($dbForPlatform, $team->getSequence() ?? '')) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Claiming a project requires the owner role on the organization claiming it.');
+        }
+
         $transfer = $authorization->skip(fn () => $dbForPlatform->getDocument('transfers', $transferId));
 
         if ($transfer->isEmpty() || $transfer->getAttribute('resourceType') !== 'projects') {
@@ -136,6 +152,24 @@ class Update extends Action
         }));
 
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+
+        // Ends the previous organization's tails and admin-mode connections, as a team update does
+        $queueForRealtime
+            ->setProject($project)
+            ->setEvent('projects.[projectId].update.team')
+            ->setParam('projectId', $project->getId())
+            ->setPayload([
+                '$id' => $project->getId(),
+                'teamId' => $team->getId(),
+            ])
+            ->trigger();
+
+        // The claim has committed, so a screenshot failure is recorded rather than reported as a failed claim
+        try {
+            (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
+        } catch (\Throwable $th) {
+            Span::add('screenshots.error', $th->getMessage());
+        }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

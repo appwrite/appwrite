@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -52,8 +53,7 @@ class Update extends Action
             ->label('audits.event', 'membership.update')
             ->label('audits.resource', 'team/{request.teamId}')
             ->label('audits.userId', '{request.userId}')
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'ip:{ip},url:{url}')
+            ->label('abuse', [Limit::attempts(['ip', 'url'], 10)])
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'memberships',
@@ -164,9 +164,10 @@ class Update extends Action
         }
 
         $claimed = null;
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session, &$claimed) {
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, $mqtt, &$session, &$claimed) {
             $claimed = null; // A retried attempt starts over
             // Lock the user first, as an address change does, so a voided invite cannot slip through
+            /** @var User $user */
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
             // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
@@ -180,10 +181,6 @@ class Update extends Action
                 throw new Exception(Exception::TEAM_INVALID_SECRET);
             }
 
-            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
-
-            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
-
             // The invite proves the address it was sent to, and only one address on file tells which that was
             $hasEmail = !empty($user->getAttribute('email'));
             $hasPhone = !empty($user->getAttribute('phone'));
@@ -193,10 +190,19 @@ class Update extends Action
                 default => null,
             };
 
-            // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in
+            // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in.
+            // MFA in force is left alone: an address, verified or not, never stands in for a second factor, so the holder signs in to accept
+            $guarded = !$hasSession && $user->getMinimumFactors() > 1;
+            if ($guarded) {
+                throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
+            }
+
+            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
+
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
             if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
                 $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
-                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven, $mqtt));
                 $claimed = $user;
             }
 

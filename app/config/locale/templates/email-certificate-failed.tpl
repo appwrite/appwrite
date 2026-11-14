@@ -19,4 +19,4 @@
     <li>Manually re-trigger a certificate generation from the Appwrite Console</li>
 </ol>
 
-<p>The existing certificate will remain valid for 30 days from the initial failure. It is highly recommended to investigate this issue; failing to do so will lead to security vulnerabilities.</p>
+<p>{{expiry}} It is highly recommended to investigate this issue; failing to do so will lead to security vulnerabilities.</p>

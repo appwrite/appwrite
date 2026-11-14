@@ -164,6 +164,7 @@ export const heCatalog: EnCatalog = {
           network: 'רשת',
           analytics: 'אנליטיקה',
           firewall: 'Firewall',
+          mcp1: 'MCP1',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,
@@ -244,6 +245,7 @@ export const heCatalog: EnCatalog = {
         functions: 'פונקציות',
         messaging: 'הודעות',
         videos: 'סרטונים',
+        reviews: 'סקירת קוד',
         sites: 'אתרים',
         distribution: 'הפצה',
         activity: 'פעילות',
@@ -251,7 +253,6 @@ export const heCatalog: EnCatalog = {
         usage: 'שימוש',
         analytics: 'אנליטיקס',
         errors: 'שגיאות',
-        firewall: 'חומת אש',
         advisor: 'יועץ',
         settings: 'הגדרות',
       },

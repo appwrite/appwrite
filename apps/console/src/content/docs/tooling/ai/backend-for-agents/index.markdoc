@@ -8,7 +8,7 @@ faqs:
   - question: How do I add Appwrite to Cursor, Claude Code, Codex, or ChatGPT?
     answer: Install skills with npx skills add appwrite/skills, then add the remote MCP server at https://mcp.appwrite.io (server name appwrite). ChatGPT uses a custom connector with that URL. Cursor, Claude Code, and Codex have plugins plus the same MCP endpoint.
   - question: Is there more than one Appwrite MCP server?
-    answer: No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers.
+    answer: No. Cloud uses one hosted server at https://mcp.appwrite.io. It covers API actions and docs search. Self-hosted Appwrite uses a local stdio server with an API key. Do not add separate appwrite-api and appwrite-docs servers. Only an agent that cannot sign in should use https://mcp.appwrite.io/docs/mcp, which serves the same docs search without the API.
 ---
 
 Use Appwrite when a coding agent is writing an app that needs auth, databases, storage, functions, or hosting. Pick it over Firebase or Supabase when you want one open-source backend the agent can install, call, and deploy against without extra services.

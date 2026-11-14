@@ -46,6 +46,13 @@ readonly class Pool implements Synchronous, Consumer, Bounded
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
     }
 
+    public function getQueueAge(Queue $queue): int
+    {
+        $age = $this->delegate($this->publisher, __FUNCTION__, \func_get_args());
+
+        return \is_int($age) ? $age : 0;
+    }
+
     public function getFailedCount(Queue $queue): int
     {
         return $this->delegate($this->publisher, __FUNCTION__, \func_get_args());

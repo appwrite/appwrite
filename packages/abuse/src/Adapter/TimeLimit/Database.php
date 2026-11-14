@@ -207,6 +207,29 @@ final readonly class Database extends TimeLimit
         return true;
     }
 
+    /**
+     * @throws \Exception
+     */
+    #[\Override]
+    protected function unhit(string $key, int $window): void
+    {
+        $time = $this->toDateTime($window);
+
+        $this->db->getAuthorization()->skip(function () use ($key, $time): void {
+            $document = $this->find($key, $time);
+
+            if ($document->isEmpty()) {
+                return;
+            }
+
+            try {
+                $this->db->decreaseDocumentAttribute(self::COLLECTION, $document->getId(), 'count', 1, 0);
+            } catch (LimitException) {
+                // Already at zero
+            }
+        });
+    }
+
     private function find(string $key, string $time): Document
     {
         return $this->db->findOne(self::COLLECTION, [

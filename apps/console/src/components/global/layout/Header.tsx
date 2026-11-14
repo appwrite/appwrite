@@ -105,6 +105,7 @@ import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
+import { ConsoleAccountSwitcherDialog } from '@/components/global/shared/ConsoleAccountSwitcherDialog'
 import { ImpersonateConsoleUserDialog } from '@/components/global/shared/ImpersonateConsoleUserDialog'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
@@ -140,6 +141,9 @@ import {
 } from '@/components/pages/marketing/MarketingSolutionsNavMenu'
 import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
 import { useI18n } from '@/lib/i18n'
+import { useT } from '@/lib/i18n/translate'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
+import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 
 type MarketingHeaderNavItem = {
   label: string
@@ -443,6 +447,7 @@ export function ConsoleHeader({
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false)
+  const [switchAccountDialogOpen, setSwitchAccountDialogOpen] = useState(false)
   const projectConnectDialog = useProjectConnectDialog()
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
@@ -539,7 +544,10 @@ export function ConsoleHeader({
   const showNotifications =
     features.notifications && !showMarketingNav && !preLaunch
   const showConnectAndCreate = canShowConnectSection(access, features)
-  const canCreateProjectFlag = canCreateProject(access, features)
+  const t = useT()
+  const zeroAccount = useIsZeroAccount()
+  const canCreateProjectFlag =
+    canCreateProject(access, features) && !zeroAccount
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
   const canCreateUserFlag = canCreateUser(access, features)
   const canCreateBucketFlag = canCreateBucket(access, features)
@@ -971,7 +979,13 @@ export function ConsoleHeader({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{headerCopy.permissions.createProjects}</p>
+                            <p>
+                              {zeroAccount
+                                ? t(
+                                    'Claim this project to create more projects',
+                                  )
+                                : headerCopy.permissions.createProjects}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -1000,7 +1014,23 @@ export function ConsoleHeader({
                           <span>{headerCopy.createMenu.newProject}</span>
                         </DropdownMenuItem>
                       )}
-                      {supportsMultiTenancy && (
+                      {supportsMultiTenancy && zeroAccount && (
+                        <ClaimToUnlock
+                          locked
+                          reason={t(
+                            'Claim this project to create organizations',
+                          )}
+                        >
+                          <DropdownMenuItem
+                            disabled
+                            className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                          >
+                            <Building2 className="h-4 w-4" />
+                            <span>{headerCopy.createMenu.newOrganization}</span>
+                          </DropdownMenuItem>
+                        </ClaimToUnlock>
+                      )}
+                      {supportsMultiTenancy && !zeroAccount && (
                         <DropdownMenuItem
                           {...analyticsAttrs('create-organization')}
                           onClick={() => {
@@ -1100,7 +1130,7 @@ export function ConsoleHeader({
                               {...analyticsAttrs('create-user')}
                               onClick={() => {
                                 navigate({
-                                  to: '/projects/$projectId/auth',
+                                  to: '/projects/$projectId/auth/users',
                                   params: { projectId },
                                   search: { create: 'user' } as Record<
                                     string,
@@ -2059,6 +2089,18 @@ export function ConsoleHeader({
                         <Eye className="h-4 w-4" />
                         <span>{headerCopy.accountMenu.impersonate}</span>
                       </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        className={ACCOUNT_MENU_ITEM_CLASS}
+                        onSelect={() => {
+                          window.setTimeout(() => {
+                            setSwitchAccountDialogOpen(true)
+                          }, 0)
+                        }}
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>{t('Switch account')}</span>
+                      </DropdownMenuItem>
                     </>
                   )}
 
@@ -2080,6 +2122,10 @@ export function ConsoleHeader({
               <ImpersonateConsoleUserDialog
                 open={impersonateDialogOpen}
                 onOpenChange={setImpersonateDialogOpen}
+              />
+              <ConsoleAccountSwitcherDialog
+                open={switchAccountDialogOpen}
+                onOpenChange={setSwitchAccountDialogOpen}
               />
             </>
           )}

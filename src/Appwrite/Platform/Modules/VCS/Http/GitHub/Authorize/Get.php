@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -32,7 +33,7 @@ class Get extends Action
             ->setHttpPath('/v1/vcs/github/authorize')
             ->desc('Create GitHub app installation')
             ->groups(['api', 'vcs'])
-            ->label('scope', 'vcs.read')
+            ->label('scope', 'vcs.write')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->label('sdk', new Method(
                 namespace: 'vcs',
@@ -68,10 +69,10 @@ class Get extends Action
         array $platform,
         User $user
     ) {
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        $signingKey = EncryptionKey::current();
 
         if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
         }
 
         // The callback endpoint is public, so it verifies this signature and

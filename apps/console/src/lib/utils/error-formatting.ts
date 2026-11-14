@@ -266,6 +266,7 @@ const RESOURCE_NOT_FOUND_TITLES: Record<string, string> = {
   provider_not_found: 'Provider not found',
   topic_not_found: 'Topic not found',
   subscriber_not_found: 'Subscriber not found',
+  domain_not_found: 'Domain not found',
 }
 
 /**
@@ -407,6 +408,17 @@ export function formatError(
       }
     }
 
+    // A plan's resource cap is a 403 too, but upgrading lifts it: say so instead of a permission error.
+    if (isPlanLimitError(error)) {
+      return {
+        title: translate('Plan limit reached'),
+        message: translate(
+          message || "You've reached the limit for this resource on your plan",
+        ),
+        isUserFriendly: true,
+      }
+    }
+
     // Check for permission/authorization errors (401)
     // For auth failures (e.g. login with wrong credentials), the API often returns a specific message
     // like "Invalid credentials" - use it when present and user-friendly; otherwise use generic message.
@@ -519,7 +531,7 @@ export function formatError(
       const apiMessageLooksUseful =
         message.length > 0 &&
         message.length <= 200 &&
-        !message.includes('at ') &&
+        !message.includes('\n    at ') &&
         (lowerMessage.includes('timed out') ||
           lowerMessage.includes('timeout') ||
           lowerMessage.includes('index') ||
@@ -538,7 +550,7 @@ export function formatError(
     // For other Error objects, check if message is user-friendly
     // If it's a technical error (contains stack trace indicators, etc.), use fallback
     const isTechnicalError =
-      message.includes('at ') ||
+      message.includes('\n    at ') ||
       message.includes('Error:') ||
       message.includes('TypeError') ||
       message.includes('ReferenceError') ||
@@ -581,6 +593,22 @@ export function formatError(
     message: translate(fallbackMessage),
     isUserFriendly: true,
   }
+}
+
+/** Error types the API answers with when the organization's plan caps a resource. */
+const PLAN_LIMIT_ERROR_TYPES = new Set([
+  'additional_resource_not_allowed',
+  'billing_additional_resource_not_allowed',
+])
+
+/** Whether the API refused a create because the plan's limit for the resource is reached. */
+export function isPlanLimitError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'type' in error &&
+    PLAN_LIMIT_ERROR_TYPES.has(String((error as { type?: unknown }).type))
+  )
 }
 
 /**

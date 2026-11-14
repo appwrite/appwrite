@@ -6,10 +6,7 @@
  * (fs-based content), so the served and prebuilt files always match.
  */
 
-import {
-  MCP_SELF_HOSTED_DOCS_URL,
-  MCP_SERVER_URL,
-} from '@/lib/config/mcp'
+import { MCP_DOCS_SERVER_URL, MCP_SERVER_URL } from '@/lib/config/mcp'
 import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
 import { getAllDocsSectionNavs } from '@/lib/docs/navigation/section-navs'
 import { isDocsNavGroup } from '@/lib/docs/navigation'
@@ -19,7 +16,7 @@ import {
   APPWRITE_AGENT_SKILLS_DISCOVERY_PATH,
   APPWRITE_AGENT_SKILLS_INSTALL,
   APPWRITE_AGENT_SKILLS_REPO,
-  APPWRITE_AI_CATALOG_PATH,
+  APPWRITE_ARD_PATH,
   APPWRITE_MCP_DOCS_PATH,
   APPWRITE_MCP_SERVER_CARD_PATH,
 } from './agent-discovery'
@@ -28,7 +25,7 @@ export const LLMS_TXT_PATH = '/llms.txt'
 export const LLMS_FULL_TXT_PATH = '/llms-full.txt'
 export const DOCS_LLMS_TXT_PATH = '/docs/llms.txt'
 export const DOCS_MD_PATH = '/docs.md'
-export const BLOG_MD_PATH = '/blog.md'
+export const BLOG_LLMS_TXT_PATH = '/blog/llms.txt'
 export const CHANGELOG_MD_PATH = '/changelog.md'
 export const INTEGRATIONS_MD_PATH = '/integrations.md'
 export const ALTERNATIVES_MD_PATH = '/alternative-to.md'
@@ -183,7 +180,7 @@ export function buildProductsLlmsSection(origin: string): LlmsSection {
     links: [
       {
         title: 'Pricing',
-        url: `${origin}/pricing`,
+        url: `${origin}/pricing.md`,
         description: 'Appwrite Cloud plans and pricing.',
       },
       {
@@ -276,8 +273,7 @@ export function buildAppwriteLlmsTxt(
   const sections: LlmsSection[] = [
     {
       heading: 'MCP Server',
-      intro:
-        'One remote server at https://mcp.appwrite.io. Add it to Cursor, Claude, Codex, ChatGPT, and other MCP clients so the agent can call the Appwrite API and search the docs. Server name: appwrite.',
+      intro: `One remote server at ${MCP_SERVER_URL}. Add it to Cursor, Claude, Codex, ChatGPT, and other MCP clients so the agent can call the Appwrite API and search the docs. Server name: appwrite. Add only this server; an agent that cannot sign in can search the docs through the docs MCP server at ${MCP_DOCS_SERVER_URL}.`,
       links: [
         {
           title: 'Agent setup',
@@ -298,31 +294,26 @@ export function buildAppwriteLlmsTxt(
             'Connect the Appwrite MCP server as a ChatGPT connector or App.',
         },
         {
-          title: 'Remote MCP Server',
-          url: MCP_SERVER_URL,
-          description: 'Hosted streamable HTTP MCP endpoint.',
-        },
-        {
           title: 'Self-hosted MCP Server',
-          url: MCP_SELF_HOSTED_DOCS_URL,
+          url: `${origin}/docs/advanced/self-hosting/mcp.md`,
           description: 'Run the MCP server locally with uvx and a project API key.',
         },
         {
           title: 'MCP Server Card',
           url: `${origin}${APPWRITE_MCP_SERVER_CARD_PATH}`,
           description:
-            'SEP-1649 MCP Server Card for pre-connection discovery (/.well-known/mcp/server-card.json).',
+            'SEP-2127 MCP Server Card for pre-connection discovery (/.well-known/mcp/server-card.json).',
         },
         {
-          title: 'AI Catalog',
-          url: `${origin}${APPWRITE_AI_CATALOG_PATH}`,
+          title: 'Agentic Resource Discovery',
+          url: `${origin}${APPWRITE_ARD_PATH}`,
           description:
-            'Domain AI Catalog listing Appwrite MCP Server Cards (/.well-known/ai-catalog.json).',
+            'ARD manifest listing Appwrite MCP Server Cards (/.well-known/ard.json).',
         },
         {
           title: 'MCP documentation',
           url: `${origin}${APPWRITE_MCP_DOCS_PATH}.md`,
-          description: 'Setup guide for the Appwrite MCP server.',
+          description: `Setup guide for the hosted MCP server at ${MCP_SERVER_URL} (streamable HTTP, OAuth sign-in).`,
         },
       ],
     },
@@ -417,8 +408,8 @@ export function buildAppwriteLlmsTxt(
         'Articles on product updates and developer guides. The index enumerates every post. Append `.md` to any post URL for the raw Markdown source.',
       links: [
         {
-          title: 'Blog index (Markdown)',
-          url: `${origin}${BLOG_MD_PATH}`,
+          title: 'Blog llms.txt',
+          url: `${origin}${BLOG_LLMS_TXT_PATH}`,
           description: 'Flat list of every public blog post.',
         },
         ...(blogExample

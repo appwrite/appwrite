@@ -3,6 +3,7 @@ import type { DateRange } from 'react-day-picker'
 import { differenceInHours } from 'date-fns'
 import { AlertTriangle, Download } from 'lucide-react'
 import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
+import { propertyType } from '@/lib/analytics-wizard/property-types'
 import { Button } from '@/components/ui/button'
 import { InstallTrackingDialog } from '../_components/InstallTrackingDialog'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
@@ -11,7 +12,7 @@ import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { UsageChartIntervalToggle } from '../../overview/UsageChartIntervalToggle'
 import { useT } from '@/lib/i18n/translate'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import {
   ANALYTICS_CHART_INTERVALS,
   analyticsRangeKey,
@@ -50,13 +51,19 @@ import {
   usePropertyTabs,
 } from '../_components/PropertyHeader'
 import { ExportMenu } from '../_components/ExportMenu'
+import { InstallsPushPanel } from '../_components/InstallsPushPanel'
 import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
   BotsPanel,
+  EventPropertiesPanel,
   LocationsPanel,
+  ModelsPanel,
   PagesPanel,
   TechnologyPanel,
   TrafficSourcesPanel,
+  UsersPanel,
+  useModelTabs,
+  useShowUsersPanel,
 } from '../_components/DimensionPanels'
 import { EventsPanel } from '../_components/EventsPanel'
 import { TrafficSplit } from '../_components/TrafficSplit'
@@ -67,7 +74,7 @@ import {
   type AnalyticsFiltersContextValue,
 } from '../_components/analytics-filters-context'
 import {
-  ANALYTICS_FILTER_COLUMNS,
+  analyticsFilterColumns,
   analyticsFiltersFromMap,
   equalFilterEntry,
   trafficKindFilterEntry,
@@ -78,6 +85,7 @@ import {
 import {
   mapToQueryParam,
   queryParamToMap,
+  withFilter,
   type FilterMap,
 } from '@/lib/table-filters'
 
@@ -102,6 +110,45 @@ interface ViewProps {
 const HOURLY_DEFAULT_MAX_HOURS = 72
 
 type DateSelection = { dateRange: DateRange; presetId: string | null }
+
+type DimensionPanel =
+  | 'sources'
+  | 'split'
+  | 'pages'
+  | 'locations'
+  | 'technology'
+  | 'bots'
+  | 'users'
+  | 'eventProps'
+  | 'models'
+  | 'installs'
+
+// Overview, custom events, users and event properties apply to every type. Mobile
+// apps have no referrers or crawlers; agents only send their own events.
+const PANELS_BY_TYPE: Record<
+  AnalyticsPropertyType,
+  ReadonlySet<DimensionPanel>
+> = {
+  [AnalyticsPropertyType.Web]: new Set([
+    'sources',
+    'split',
+    'pages',
+    'locations',
+    'technology',
+    'bots',
+    'users',
+    'eventProps',
+  ]),
+  [AnalyticsPropertyType.Mobile]: new Set([
+    'installs',
+    'pages',
+    'locations',
+    'technology',
+    'users',
+    'eventProps',
+  ]),
+  [AnalyticsPropertyType.Agent]: new Set(['models', 'users', 'eventProps']),
+}
 
 function defaultIntervalForRange(dateRange: DateRange): AnalyticsChartInterval {
   if (!dateRange.from || !dateRange.to) return DEFAULT_ANALYTICS_CHART_INTERVAL
@@ -143,6 +190,7 @@ export function View({
     [filterQuery],
   )
   const filters = useMemo(() => analyticsFiltersFromMap(filterMap), [filterMap])
+  const filterColumns = useMemo(() => analyticsFilterColumns(filters), [filters])
 
   const commitFilterMap = useCallback(
     (next: FilterMap) => {
@@ -216,10 +264,7 @@ export function View({
         commitFilterMap(next)
       },
       onApplyFilter: (key, queryStr, replaceKey) => {
-        const next = new Map(filterMap)
-        if (replaceKey) next.delete(replaceKey)
-        next.set(key, queryStr)
-        commitFilterMap(next)
+        commitFilterMap(withFilter(filterMap, key, queryStr, replaceKey))
       },
       onRemoveFilter: (key) => {
         const next = new Map(filterMap)
@@ -283,6 +328,28 @@ export function View({
   const range = useMemo(
     () => toAnalyticsRange(dateRange) ?? getDefaultAnalyticsRange(),
     [dateRange],
+  )
+  // A sideways trackpad or touch swipe over the chart brush, tab bars or
+  // tables would otherwise fire the browser's swipe-back navigation.
+  useEffect(() => {
+    const root = document.documentElement
+    const previous = root.style.overscrollBehaviorX
+    root.style.overscrollBehaviorX = 'none'
+    return () => {
+      root.style.overscrollBehaviorX = previous
+    }
+  }, [])
+
+  const showUsersPanel = useShowUsersPanel(
+    { projectId, propertyId, range },
+    filters,
+  )
+  const resolvedType = propertyType(property)
+  const panels = PANELS_BY_TYPE[resolvedType]
+  const modelTabs = useModelTabs(
+    { projectId, propertyId, range },
+    filters,
+    panels.has('models'),
   )
 
   // Hourly buckets are capped at 31 days and daily buckets need more than a
@@ -431,6 +498,14 @@ export function View({
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
 
+  const breakdownCount = [...panels].filter(
+    (panel) =>
+      panel !== 'users' &&
+      panel !== 'eventProps' &&
+      panel !== 'models' &&
+      panel !== 'installs',
+  ).length
+
   if (!property && !propertyLoading) {
     return (
       <div className="flex flex-col">
@@ -483,7 +558,7 @@ export function View({
               <FiltersPopover
                 open={filtersOpen}
                 onOpenChange={setFiltersOpen}
-                columns={ANALYTICS_FILTER_COLUMNS}
+                columns={filterColumns}
                 filterMap={filterMap}
                 onRemoveFilter={filtersContext.onRemoveFilter}
                 onClearAll={filtersContext.onClearAllFilters}
@@ -587,6 +662,8 @@ export function View({
               compareMode={compareMode}
               comparisonRange={comparisonRange}
               onRefresh={handleRefresh}
+              showUsers={showUsersPanel}
+              type={resolvedType}
             />
 
             <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6">
@@ -594,40 +671,105 @@ export function View({
                 of its visible tab, and every card has a fixed body height
                 so switching tabs never shifts the grid. */}
               <div className="grid gap-4 lg:grid-cols-2">
+                {panels.has('installs') ? (
+                  <div className="lg:col-span-2">
+                    <InstallsPushPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      interval={resolvedInterval}
+                      onOpenSetup={() => setInstallOpen(true)}
+                    />
+                  </div>
+                ) : null}
                 {/* Channels, referrers and UTM campaigns in one card. */}
-                <TrafficSourcesPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
+                {panels.has('sources') ? (
+                  <TrafficSourcesPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
                 {/* Humans vs bots, stretched to the sources card's height. */}
-                <TrafficSplit
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                  comparisonRange={comparisonRange}
-                  compareLabel={t(compareModeLabel(compareMode))}
-                />
-                <PagesPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
-                <LocationsPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
-                <TechnologyPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
-                <BotsPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
+                {panels.has('split') ? (
+                  <TrafficSplit
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                    comparisonRange={comparisonRange}
+                    compareLabel={t(compareModeLabel(compareMode))}
+                  />
+                ) : null}
+                {panels.has('pages') ? (
+                  <PagesPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                    screens={resolvedType === AnalyticsPropertyType.Mobile}
+                  />
+                ) : null}
+                {panels.has('locations') ? (
+                  <LocationsPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
+                {panels.has('technology') ? (
+                  // With an odd panel count (mobile) it would sit alone on its row.
+                  <div
+                    className={
+                      breakdownCount % 2 === 1 ? 'lg:col-span-2' : 'contents'
+                    }
+                  >
+                    <TechnologyPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      type={resolvedType}
+                    />
+                  </div>
+                ) : null}
+                {panels.has('bots') ? (
+                  <BotsPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
+                {panels.has('models') && modelTabs.length > 0 ? (
+                  <div className="lg:col-span-2">
+                    <ModelsPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                      tabs={modelTabs}
+                    />
+                  </div>
+                ) : null}
+                {panels.has('users') && showUsersPanel ? (
+                  <UsersPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
+                {panels.has('eventProps') ? (
+                  // Full width when it has no Users card beside it.
+                  <div
+                    className={
+                      panels.has('users') && showUsersPanel
+                        ? undefined
+                        : 'lg:col-span-2'
+                    }
+                  >
+                    <EventPropertiesPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                  </div>
+                ) : null}
                 {/* Custom events close the page at full width: it's the card
                   most specific to the product, and its empty state carries
                   the how-to CTA. */}

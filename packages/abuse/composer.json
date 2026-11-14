@@ -38,7 +38,7 @@
         "utopia-php/database": "^8.3.4",
         "utopia-php/pools": "^2.0",
         "utopia-php/psr7": "^0.2.1",
-        "appwrite/appwrite": "^27.1"
+        "appwrite/appwrite": "^32.2.0"
     },
     "require-dev": {
         "phpbench/phpbench": "1.*"

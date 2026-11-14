@@ -4,6 +4,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { SpriteIcon } from '@/components/ui/sprite-icon'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
@@ -22,12 +23,6 @@ type ProductAvatarsListProps = {
   className?: string
   ariaLabel?: string
 }
-
-const avatarClassName = cn(
-  'flex size-9 items-center justify-center rounded-full border border-muted-foreground/6 bg-muted-foreground/[0.025] shadow-none backdrop-blur-sm transition-[border-color,opacity,transform] duration-300 dark:bg-muted/10',
-  'ring-1 ring-background',
-  'hover:z-10 hover:scale-105 hover:border-muted-foreground/10 hover:bg-muted-foreground/[0.04] sm:size-10',
-)
 
 const iconClassName = 'size-4 text-muted-foreground/70 sm:size-[17px]'
 
@@ -58,7 +53,7 @@ export function ProductAvatarsList({
             )}
           />
         ) : Icon ? (
-          <Icon className={iconClassName} strokeWidth={1.5} aria-hidden />
+          <SpriteIcon icon={Icon} className={iconClassName} strokeWidth={1.5} />
         ) : null
 
         return (
@@ -72,14 +67,14 @@ export function ProductAvatarsList({
                 {item.href ? (
                   <MarketingSiteLink
                     href={item.href}
-                    className={cn(avatarClassName, 'cursor-pointer')}
+                    className={'product-avatar cursor-pointer'}
                     aria-label={t(item.name)}
                   >
                     {avatarContent}
                   </MarketingSiteLink>
                 ) : (
                   <div
-                    className={cn(avatarClassName, 'cursor-default')}
+                    className={'product-avatar cursor-default'}
                     aria-label={t(item.name)}
                   >
                     {avatarContent}

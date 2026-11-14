@@ -1,0 +1,69 @@
+---
+layout: integration
+title: OAuth with Webflow
+description: Authenticate users with their Webflow account and work with their sites
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-webflow/cover.avif
+category: auth
+product:
+    vendor: Webflow
+    description: "Webflow is a visual website builder with a CMS, hosting, and a Data API for apps that work with Webflow sites."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+Webflow is a visual website builder with a CMS, hosting, and a [Data API](https://developers.webflow.com/data/reference/oauth-app). Developers build Webflow Apps that work with a site owner's sites, collections, and forms. If you're building for Webflow site owners, Sign in with Webflow gives your app the user and a Webflow API token in one step.
+
+# How does the integration work?
+
+You can use the Webflow OAuth adapter in Appwrite Auth to sign users in with their Webflow account. The session stores Webflow's access token as `providerAccessToken`, so your server can call the Webflow Data API on the user's behalf.
+
+Appwrite requests the `authorized_user:read` scope and stores the user's name and email address. To work with the user's sites, request more scopes, such as `sites:read`, in the `scopes` parameter. Webflow doesn't issue refresh tokens, so Appwrite can't refresh the Webflow token for you.
+
+Webflow doesn't report whether the email address is verified, so Appwrite stores it as unverified. If another user in your project already has the same address, Appwrite redirects to your failure URL instead of signing in to that account. To connect Webflow to an existing account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Webflow as a new [identity](/docs/products/auth/identities).
+
+{% info title="Self-hosted availability" %}
+Sign in with Webflow is available on Appwrite Cloud and in self-hosted Appwrite 2.4 and later.
+{% /info %}
+
+# How to implement
+
+To implement the Webflow OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create a Webflow App
+
+First, open your Webflow workspace settings, go to **Apps & Integrations** > **App Development**, and create an app with the **Data Client** building block. Give it the `authorized_user:read` scope, plus any scope you plan to request later, such as `sites:read`. An authorization can't request scopes beyond the ones configured on the app.
+
+Save the app's **Client ID** and **Client Secret** for later use. Only workspace administrators can view the client secret. You will set the redirect URI in the next step.
+
+## Step 2: Add the Webflow OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Webflow** under the **OAuth2 Providers** section.
+
+Enter the **Client ID** and **Client Secret** you saved from Webflow, turn the provider on, and click **Update**. Appwrite checks the credentials with Webflow when you turn the provider on and shows an error if they're invalid.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/webflow/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in **App Development**, find your app, click **Edit App**, open **Building Blocks**, and enter this URI as the redirect URI.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Webflow` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about Webflow and Appwrite Auth
+
+If you would like to learn more about Webflow and Appwrite Auth, we have some resources that you should visit:
+
+- [Webflow OAuth apps](https://developers.webflow.com/data/reference/oauth-app)
+- [Announcing six new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)
