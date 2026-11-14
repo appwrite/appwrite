@@ -8,6 +8,8 @@ const ORIGIN = 'https://appwrite.io'
 const RESULT_LIMIT = 5
 // Search cost grows with every query token, so oversized questions are refused.
 const TEXT_LIMIT = 500
+// A question never needs more than a few kilobytes of JSON around it.
+const BODY_LIMIT = 16 * 1024
 
 const HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -194,9 +196,17 @@ function buildReply(text: string, contextId: string, version: Version) {
 
 /** Answers A2A JSON-RPC requests (v1.0, plus 0.3 for clients without an A2A-Version header). */
 export async function answerA2a(request: Request): Promise<Response> {
+  const length = Number(request.headers.get('content-length') ?? 0)
+  if (length > BODY_LIMIT) {
+    return failure(null, { code: -32600, message: 'Request body too large' })
+  }
   let body: RpcRequest
   try {
-    body = (await request.json()) as RpcRequest
+    const raw = await request.text()
+    if (raw.length > BODY_LIMIT) {
+      return failure(null, { code: -32600, message: 'Request body too large' })
+    }
+    body = JSON.parse(raw) as RpcRequest
   } catch {
     return failure(null, { code: -32700, message: 'Invalid JSON payload' })
   }
