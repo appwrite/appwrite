@@ -16,7 +16,12 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Image\Image;
+use Utopia\Image\Canvas;
+use Utopia\Image\Exception\ImageException;
+use Utopia\Image\Exception\LimitExceededException;
+use Utopia\Image\Format;
+use Utopia\Image\Gravity;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -94,10 +99,6 @@ class Get extends Base
         Authorization $authorization,
         Device $deviceForVideos
     ): void {
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
         $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
         $thumbnail = $authorization->skip(fn () => $dbForProject->getDocument('videosTimelines', $thumbnailId));
@@ -132,11 +133,21 @@ class Get extends Base
 
         $source = (string) $deviceForVideos->read($path);
 
-        $image = new Image($source);
-        if ($width > 0 || $height > 0) {
-            $image->crop($width, $height, Image::GRAVITY_CENTER);
+        try {
+            $image = new Canvas($source, Config::getParam('storage-image-limits'));
+            if ($width > 0 || $height > 0) {
+                $image = $image->apply(new Transform(
+                    width: $width,
+                    height: $height,
+                    gravity: Gravity::Center,
+                ));
+            }
+            $source = $image->encode(Format::from($output === 'jpeg' ? 'jpg' : $output), 100);
+        } catch (LimitExceededException $e) {
+            throw new Exception(Exception::STORAGE_IMAGE_RESOLUTION_EXCEEDED, $e->getMessage(), previous: $e);
+        } catch (ImageException $e) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage(), previous: $e);
         }
-        $source = (string) $image->output($output, 100);
 
         $response
             ->setContentType($outputs[$output])
