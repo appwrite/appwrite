@@ -4,6 +4,8 @@ export const NLWEB_VERSION = '0.55'
 
 const RESPONSE_FORMAT = 'conversational_search'
 const RESULT_LIMIT = 10
+// Search cost grows with every query token, so oversized queries are refused.
+const TEXT_LIMIT = 500
 
 const HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -91,6 +93,11 @@ export async function answerAsk(request: Request): Promise<Response> {
   let results: unknown[] | Failure
   if (!text) {
     results = failure('INVALID_QUERY', 'query.text is required.')
+  } else if (text.length > TEXT_LIMIT) {
+    results = failure(
+      'INVALID_QUERY',
+      `query.text must be at most ${TEXT_LIMIT} characters.`,
+    )
   } else if (format !== undefined && format !== RESPONSE_FORMAT) {
     results = failure(
       'UNSUPPORTED_FORMAT',
