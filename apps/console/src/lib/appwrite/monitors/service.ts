@@ -550,6 +550,14 @@ export class Monitors {
         apiPayload[key] = value
       }
     }
+    // The server's object params refuse an empty JSON object, so no headers go as an empty list.
+    if (
+      apiPayload.headers !== null &&
+      typeof apiPayload.headers === 'object' &&
+      Object.keys(apiPayload.headers).length === 0
+    ) {
+      apiPayload.headers = []
+    }
     const uri = new URL(this.client.config.endpoint + apiPath)
 
     const apiHeaders: { [header: string]: string } = {
