@@ -667,6 +667,112 @@ trait TransactionsBase
         $this->assertEquals('failed', $failed['body']['status']);
     }
 
+    public function testCommitMultipleCreatesWithSameRelationship(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported');
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'TransactionSharedRelationshipDB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collections = [];
+        foreach (['parents', 'children'] as $name) {
+            $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+                $this->getContainerIdParam() => Id::unique(),
+                'name' => $name,
+                'permissions' => [
+                    Permission::create(Role::any()),
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertEquals(201, $collection['headers']['status-code']);
+            $collections[$name] = $collection['body']['$id'];
+        }
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collections['parents'], 'string', null), $headers, [
+                'key' => 'name',
+                'size' => 256,
+                'required' => false,
+            ]);
+            $this->waitForAllAttributes($databaseId, $collections['parents']);
+        }
+
+        $relationship = $this->client->call(
+            Client::METHOD_POST,
+            $this->getSchemaUrl($databaseId, $collections['children']) . '/relationship',
+            $headers,
+            [
+                $this->getRelatedIdParam() => $collections['parents'],
+                'type' => 'manyToOne',
+                'twoWay' => false,
+                'key' => 'parent',
+            ]
+        );
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $collections['children']);
+
+        // Create parent document outside transaction
+        $parentId = Id::unique();
+        $parent = $this->client->call(
+            Client::METHOD_POST,
+            $this->getRecordUrl($databaseId, $collections['parents']),
+            $headers,
+            [
+                $this->getRecordIdParam() => $parentId,
+                'data' => ['name' => 'parent'],
+            ]
+        );
+        $this->assertEquals(201, $parent['headers']['status-code']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Stage two creates linking to the same parent document
+        $operation = $this->client->call(
+            Client::METHOD_POST,
+            $this->getTransactionUrl($transactionId) . '/operations',
+            $headers,
+            [
+                'operations' => [
+                    [
+                        'databaseId' => $databaseId,
+                        $this->getContainerIdParam() => $collections['children'],
+                        'action' => 'create',
+                        $this->getRecordIdParam() => Id::unique(),
+                        'data' => ['parent' => $parentId],
+                    ],
+                    [
+                        'databaseId' => $databaseId,
+                        $this->getContainerIdParam() => $collections['children'],
+                        'action' => 'create',
+                        $this->getRecordIdParam() => Id::unique(),
+                        'data' => ['parent' => $parentId],
+                    ],
+                ],
+            ]
+        );
+        $this->assertEquals(201, $operation['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertEquals(200, $commit['headers']['status-code']);
+        $this->assertEquals('committed', $commit['body']['status']);
+    }
+
     /**
      * Test rolling back a transaction
      */
