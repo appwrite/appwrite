@@ -272,6 +272,32 @@ test.describe('markdown exports (read-only)', () => {
     )
   })
 
+  test('NLWeb /ask answers from the docs search index', async ({ request }) => {
+    const answer = await request.post('/ask', {
+      data: { query: { text: 'oauth login' } },
+    })
+    expect(answer.status()).toBe(200)
+    const body = await answer.json()
+    expect(body._meta).toMatchObject({
+      response_type: 'answer',
+      version: '0.55',
+    })
+    expect(body.results[0]).toMatchObject({ '@type': 'TechArticle' })
+    expect(body.results[0].url).toContain('/docs/')
+
+    const streamed = await request.post('/ask', {
+      data: { query: { text: 'deploy function' }, prefer: { streaming: true } },
+    })
+    expect(streamed.headers()['content-type']).toMatch(/text\/event-stream/)
+    const events = await streamed.text()
+    expect(events).toMatch(/^event: start\n/)
+    expect(events).toContain('event: result\n')
+    expect(events).toContain('event: complete\n')
+
+    const empty = await request.post('/ask', { data: { query: { text: '' } } })
+    expect((await empty.json()).error.code).toBe('INVALID_QUERY')
+  })
+
   test('sitemap index lists section sitemaps', async ({ request }) => {
     const response = await request.get('/sitemap.xml')
 
