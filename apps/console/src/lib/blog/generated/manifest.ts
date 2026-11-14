@@ -31,6 +31,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "customer-story-dentalrx",
+    "href": "/blog/post/customer-story-dentalrx",
+    "title": "How DentalRx replaced Firebase and Algolia with Appwrite for 6,000+ users",
+    "description": "Learn how pharmacist Nickolas Steel moved DentalRx from Firebase and Algolia to Postgres on Appwrite to run a free drug reference for 6,000+ dental users.",
+    "date": "2026-11-12",
+    "lastUpdated": "2026-11-12",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "customer-stories",
+    "featured": false,
+    "cover": "/images/blog/customer-story-dentalrx/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-otp-token-email-header",
     "href": "/blog/post/announcing-otp-token-email-header",
     "title": "Announcing origin-bound OTP-Token headers in Appwrite Auth",
