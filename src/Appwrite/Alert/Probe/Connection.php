@@ -40,11 +40,11 @@ final class Connection
         $client->set($connection->settings());
 
         if (!$client->connect($address, $port, $connection->remaining())) {
-            $code = (int) $client->errCode;
+            $errno = (int) $client->errCode;
             throw new Failure(match (true) {
-                $code === SOCKET_ECONNREFUSED => Result::ConnectRefused,
-                $code === SOCKET_ETIMEDOUT || $connection->remaining() <= 0.001 => Result::ConnectTimeout,
-                $tls && !\in_array($code, [SOCKET_ENETUNREACH, SOCKET_EHOSTUNREACH, SOCKET_ECONNRESET], true) => Result::TlsFailed,
+                $errno === SOCKET_ECONNREFUSED => Result::ConnectRefused,
+                $errno === SOCKET_ETIMEDOUT || $connection->remaining() <= 0.001 => Result::ConnectTimeout,
+                $tls && !\in_array($errno, [SOCKET_ENETUNREACH, SOCKET_EHOSTUNREACH, SOCKET_ECONNRESET], true) => Result::TlsFailed,
                 default => Result::ConnectFailed,
             });
         }

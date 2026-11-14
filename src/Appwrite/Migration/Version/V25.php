@@ -600,8 +600,8 @@ class V25 extends Migration
                         }
                     }
                     // Usage monitors only, so a probe monitor and its alerts leave them empty.
-                    foreach (['metric', 'comparator', 'threshold'] as $attribute) {
-                        $this->dbForProject->updateAttribute($id, $attribute, new AttributeUpdate(required: false));
+                    foreach (['metric' => '', 'comparator' => '', 'threshold' => 0.0] as $attribute => $default) {
+                        $this->dbForProject->updateAttribute($id, $attribute, new AttributeUpdate(required: false, default: $default));
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;

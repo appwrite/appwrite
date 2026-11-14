@@ -103,34 +103,34 @@ final readonly class SMTP implements Probe
      */
     private function reply(Connection $connection, ?int $last): array
     {
-        $code = null;
+        $replyCode = null;
         $lines = [];
 
         for ($count = 0; $count < self::LINES; $count++) {
             try {
                 $line = $connection->line(self::LINE);
             } catch (\LengthException) {
-                throw new Failure(Result::SmtpRejected, $code ?? $last);
+                throw new Failure(Result::SmtpRejected, $replyCode ?? $last);
             }
 
             $prefix = \substr($line, 0, 3);
-            if (\strlen($prefix) !== 3 || !\ctype_digit($prefix) || ($code !== null && (int) $prefix !== $code)) {
-                throw new Failure(Result::SmtpRejected, $code ?? $last);
+            if (\strlen($prefix) !== 3 || !\ctype_digit($prefix) || ($replyCode !== null && (int) $prefix !== $replyCode)) {
+                throw new Failure(Result::SmtpRejected, $replyCode ?? $last);
             }
 
-            $code = (int) $prefix;
+            $replyCode = (int) $prefix;
             $lines[] = \substr($line, 4);
 
             if (($line[3] ?? ' ') !== '-') {
-                if ($code < 200 || $code > 299) {
-                    throw new Failure(Result::SmtpRejected, $code);
+                if ($replyCode < 200 || $replyCode > 299) {
+                    throw new Failure(Result::SmtpRejected, $replyCode);
                 }
 
-                return [$code, $lines];
+                return [$replyCode, $lines];
             }
         }
 
-        throw new Failure(Result::SmtpRejected, $code);
+        throw new Failure(Result::SmtpRejected, $replyCode);
     }
 
     /**
