@@ -26,9 +26,6 @@
 //! the 32 KiB–192 KiB JIT stack, through `pcre2_jit_match()` when no UTF-8
 //! check is needed and `pcre2_match()` otherwise, and an empty match is
 //! retried with `PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED`, as PHP does.
-//!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `pcre.*`).
 
 use std::collections::{HashMap, VecDeque};
 use std::fmt;

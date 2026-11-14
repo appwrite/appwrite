@@ -11,9 +11,6 @@
 //! | PHP | Rust |
 //! |---|---|
 //! | `fnmatch($pattern, $filename)` (no flags) | [`fnmatch`] |
-//!
-//! Checked against the real function by `bin/compat fuzz php-std`
-//! (operation `glob.fnmatch`).
 
 mod classes;
 
