@@ -6793,6 +6793,265 @@ trait MigrationsBase
     }
 
     /**
+     * Import DocumentsDB documents from CSV
+     */
+    public function testImportDocumentsdbCSV(): void
+    {
+        $databaseId = null;
+        $collectionId = null;
+        $bucketId = null;
+
+        try {
+            $database = $this->client->call(Client::METHOD_POST, '/documentsdb', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'databaseId' => Id::unique(),
+                'name' => 'DocumentsDB CSV Import DB',
+            ]);
+
+            $this->assertEquals(201, $database['headers']['status-code']);
+            $databaseId = $database['body']['$id'];
+
+            $collectionId = null;
+            $this->assertEventually(function () use ($databaseId, &$collectionId) {
+                $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], [
+                    'collectionId' => Id::unique(),
+                    'name' => 'DocumentsDB CSV Import Collection',
+                    'documentSecurity' => true,
+                ]);
+
+                $this->assertEquals(201, $collection['headers']['status-code']);
+                $collectionId = $collection['body']['$id'];
+            });
+
+            $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'bucketId' => Id::unique(),
+                'name' => 'DocumentsDB CSV Bucket',
+                'maximumFileSize' => 2000000,
+                'allowedFileExtensions' => ['csv'],
+            ]);
+
+            $this->assertEquals(201, $bucket['headers']['status-code']);
+            $bucketId = $bucket['body']['$id'];
+
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/documentsdb-documents.csv'), 'text/csv', 'documentsdb-documents.csv'),
+            ]);
+
+            $this->assertEquals(201, $file['headers']['status-code']);
+            $fileId = $file['body']['$id'];
+
+            $migration = $this->performCsvMigration([
+                'fileId' => $fileId,
+                'bucketId' => $bucketId,
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
+            ]);
+
+            $this->assertEquals(202, $migration['headers']['status-code']);
+
+            $this->assertEventually(function () use ($migration) {
+                $migrationId = $migration['body']['$id'];
+                $status = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+
+                $this->assertEquals(200, $status['headers']['status-code']);
+                $this->assertEquals('finished', $status['body']['stage']);
+                $this->assertEquals('completed', $status['body']['status']);
+                $this->assertContains(Resource::TYPE_DOCUMENT, $status['body']['resources']);
+                $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $status['body']['statusCounters']);
+                $this->assertEquals(2, $status['body']['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
+
+                return true;
+            }, 60_000, 500);
+
+            $documents = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'queries' => [
+                    Query::limit(10)->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $documents['headers']['status-code']);
+            $this->assertEquals(2, $documents['body']['total']);
+
+            $titles = array_map(fn ($doc) => $doc['title'] ?? null, $documents['body']['documents']);
+            $this->assertContains('Docs Alpha', $titles);
+            $this->assertContains('Docs Beta', $titles);
+        } finally {
+            if ($bucketId) {
+                $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            if ($databaseId) {
+                $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $databaseId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Export DocumentsDB documents to CSV
+     */
+    #[Retry(count: 1)]
+    public function testExportDocumentsdbCSV(): void
+    {
+        $databaseId = null;
+
+        try {
+            $database = $this->client->call(Client::METHOD_POST, '/documentsdb', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'databaseId' => Id::unique(),
+                'name' => 'DocumentsDB CSV Export DB',
+            ]);
+
+            $this->assertEquals(201, $database['headers']['status-code']);
+            $databaseId = $database['body']['$id'];
+
+            $collectionId = null;
+            $this->assertEventually(function () use ($databaseId, &$collectionId) {
+                $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], [
+                    'collectionId' => Id::unique(),
+                    'name' => 'DocumentsDB CSV Export Collection',
+                    'documentSecurity' => true,
+                ]);
+
+                $this->assertEquals(201, $collection['headers']['status-code']);
+                $collectionId = $collection['body']['$id'];
+            });
+
+            $documentsPayload = [
+                [
+                    'documentId' => Id::unique(),
+                    'data' => [
+                        'title' => 'Docs Sample One',
+                        'category' => 'alpha',
+                    ],
+                ],
+                [
+                    'documentId' => Id::unique(),
+                    'data' => [
+                        'title' => 'Docs Sample Two',
+                        'tag' => 'schemaless-extra',
+                    ],
+                ],
+            ];
+
+            foreach ($documentsPayload as $payload) {
+                $response = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], $payload);
+
+                $this->assertEquals(201, $response['headers']['status-code']);
+            }
+
+            $filename = 'documentsdb-export-' . Id::unique();
+            $migration = $this->client->call(Client::METHOD_POST, '/migrations/csv/exports', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
+                'filename' => $filename,
+                'columns' => [],
+                'queries' => [],
+                'delimiter' => ',',
+                'enclosure' => '"',
+                'escape' => '\\',
+                'header' => true,
+                'notify' => true,
+            ]);
+
+            $this->assertEquals(202, $migration['headers']['status-code']);
+
+            $migrationId = $migration['body']['$id'];
+            $this->assertEventually(function () use ($migrationId) {
+                $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals('finished', $response['body']['stage']);
+                $this->assertEquals('completed', $response['body']['status']);
+
+                return true;
+            }, 30_000, 500);
+
+            $this->assertEventually(function () {
+                $email = $this->getLastEmail(1, function (array $email) {
+                    $this->assertEquals('Your CSV export is ready', $email['subject']);
+                });
+                $this->assertNotEmpty($email);
+                $this->assertEquals('Your CSV export is ready', $email['subject']);
+                \preg_match('/href="([^"]*\/storage\/buckets\/[^"]*\/push[^"]*)"/', $email['html'], $matches);
+                $this->assertNotEmpty($matches[1], 'Download URL not found in email');
+                $downloadUrl = html_entity_decode($matches[1]);
+                $components = \parse_url($downloadUrl);
+                $this->assertNotEmpty($components);
+                \parse_str($components['query'] ?? '', $queryParams);
+                $this->assertArrayHasKey('jwt', $queryParams);
+                $this->assertArrayHasKey('project', $queryParams);
+
+                $path = \str_replace('/v1', '', $components['path']);
+                $downloadResponse = $this->client->call(Client::METHOD_GET, $path . '?project=' . $queryParams['project'] . '&jwt=' . $queryParams['jwt']);
+                $this->assertEquals(200, $downloadResponse['headers']['status-code']);
+
+                $csvData = $downloadResponse['body'];
+                $this->assertStringContainsString('Docs Sample One', $csvData);
+                $this->assertStringContainsString('Docs Sample Two', $csvData);
+                $this->assertStringContainsString('schemaless-extra', $csvData);
+            }, 30_000, 500);
+        } finally {
+            if ($databaseId) {
+                $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $databaseId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+        }
+    }
+
+    /**
     * DocumentsDB (schemaless)
     */
     public function testAppwriteMigrationDocumentsDBDatabase(): array
