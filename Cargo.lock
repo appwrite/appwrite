@@ -2540,6 +2540,7 @@ dependencies = [
  "utopia-dsn",
  "utopia-image",
  "utopia-locale",
+ "utopia-user-agent",
 ]
 
 [[package]]
@@ -2570,6 +2571,15 @@ dependencies = [
  "php-std",
  "serde_json",
  "thiserror 2.0.21",
+]
+
+[[package]]
+name = "utopia-user-agent"
+version = "0.1.0"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "php-std",
 ]
 
 [[package]]
