@@ -1,4 +1,5 @@
 import { createMiddleware } from '@tanstack/react-start'
+import { A2A_AGENT_CARD_PATH, buildAgentCard } from '@/lib/a2a/agent'
 import {
   APPWRITE_AI_CATALOG_PATH,
   APPWRITE_ARD_PATH,
@@ -40,6 +41,10 @@ const DISCOVERY_HANDLERS: Record<
   [APPWRITE_AI_CATALOG_PATH]: {
     contentType: ARD_CONTENT_TYPE,
     body: () => serializeDiscoveryJson(buildAiCatalogDocument()),
+  },
+  [A2A_AGENT_CARD_PATH]: {
+    contentType: 'application/json; charset=utf-8',
+    body: () => serializeDiscoveryJson(buildAgentCard()),
   },
   [APPWRITE_API_CATALOG_PATH]: {
     contentType: API_CATALOG_CONTENT_TYPE,
