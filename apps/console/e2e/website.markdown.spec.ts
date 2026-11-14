@@ -123,12 +123,12 @@ test.describe('markdown exports (read-only)', () => {
     expect(index.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
   })
 
-  test('setup.md serves MCP install instructions', async ({ request }) => {
+  test('setup.md serves the setup and build guide', async ({ request }) => {
     const response = await request.get('/setup.md')
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toMatch(MARKDOWN_CONTENT_TYPE)
     const body = await response.text()
-    expect(body).toMatch(/^# Set yourself up to work with Appwrite\n/)
+    expect(body).toMatch(/^# Set up Appwrite and build with it\n/)
     expect(body).toContain('https://mcp.appwrite.io')
     expect(body).toContain('/setup.md')
   })

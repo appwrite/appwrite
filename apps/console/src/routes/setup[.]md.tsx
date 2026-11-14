@@ -4,7 +4,7 @@ import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
 import { generateAgentSetupMarkdown } from '@/lib/seo/agent-setup'
 import { trackServerPageview } from '@/lib/server-analytics'
 
-/** Agent-facing MCP setup guide. Fetches from coding agents are server-tracked. */
+/** Agent-facing setup and build guide. Fetches from coding agents are server-tracked. */
 export const Route = createFileRoute('/setup.md')({
   staticData: MARKETING_PAGE_ROUTE_STATIC_DATA,
   ssr: true,
