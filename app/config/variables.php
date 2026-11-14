@@ -920,6 +920,33 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_QUEUE_REAP_AFTER',
+                'description' => 'Time in seconds after which stranded jobs from crashed or stopped workers are reaped and redelivered by the Redis queue broker. Default value is 300 seconds (5 minutes).',
+                'introduction' => '2.8.0',
+                'default' => '300',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_QUEUE_REAP_MAX_ATTEMPTS',
+                'description' => 'Maximum number of recovery reap attempts before a stranded job is moved to the dead-letter queue. When empty or unset, stranded jobs are requeued unbounded.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_QUEUE_REAP_MAX_AGE',
+                'description' => 'Maximum age in seconds for a stranded job to be redelivered. Jobs published longer ago than this limit are moved to the dead-letter queue. Must exceed _APP_QUEUE_REAP_AFTER. When empty or unset, no age limit is enforced.',
+                'introduction' => '2.8.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
