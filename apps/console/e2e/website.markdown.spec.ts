@@ -303,6 +303,46 @@ test.describe('markdown exports (read-only)', () => {
     expect((await oversized.json()).error.code).toBe('INVALID_QUERY')
   })
 
+  test('A2A agent card points at a working docs agent', async ({ request }) => {
+    const card = await request.get('/.well-known/agent-card.json')
+    expect(card.status()).toBe(200)
+    const body = await card.json()
+    expect(body).toMatchObject({ name: 'Appwrite Docs', version: '1.0.0' })
+    expect(body.supportedInterfaces[0]).toMatchObject({
+      protocolBinding: 'JSONRPC',
+      protocolVersion: '1.0',
+    })
+
+    const send = await request.post('/a2a', {
+      headers: { 'A2A-Version': '1.0' },
+      data: {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'SendMessage',
+        params: {
+          message: {
+            messageId: 'e2e',
+            role: 'ROLE_USER',
+            parts: [{ text: 'oauth login' }],
+          },
+        },
+      },
+    })
+    const reply = (await send.json()).result.message
+    expect(reply.role).toBe('ROLE_AGENT')
+    expect(reply.parts[0].text).toContain('/docs/')
+
+    const legacy = await request.post('/a2a', {
+      data: {
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'tasks/get',
+        params: { id: 'missing' },
+      },
+    })
+    expect((await legacy.json()).error.code).toBe(-32001)
+  })
+
   test('sitemap index lists section sitemaps', async ({ request }) => {
     const response = await request.get('/sitemap.xml')
 
