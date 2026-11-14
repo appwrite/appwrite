@@ -629,6 +629,10 @@ const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
 
 // Monitor types, the kind of check a monitor runs; see `types` in app/config/alerts.php
 const MONITOR_TYPE_USAGE = 'usage';
+const MONITOR_TYPE_HTTP = 'http';
+const MONITOR_TYPE_DNS = 'dns';
+const MONITOR_TYPE_TCP = 'tcp';
+const MONITOR_TYPE_SMTP = 'smtp';
 
 // Usage monitors read usage this many seconds old or older, so events still in
 // flight are not missed: StatsUsage writes a batch 5 seconds after it opens and

@@ -18,7 +18,7 @@ use Utopia\Database\Validator\Authorization;
 
 /**
  * What the monitor and alert routes share: looking them up in the project, and
- * creating and updating a usage monitor against the registry in
+ * creating and updating usage and probe monitors against the registry in
  * `app/config/alerts.php`. Each monitor type's routes only declare their params.
  */
 class Base extends Action
@@ -169,6 +169,143 @@ class Base extends Action
         }
 
         $response->dynamic($monitor, Response::MODEL_MONITOR);
+    }
+
+    /**
+     * Creates a monitor that checks a target itself, from its type's target
+     * attributes. It belongs to the project, which it is scoped to.
+     *
+     * @param array<string, mixed> $target the type's target attributes, such as `url` and `method`
+     * @param array<string> $notify
+     */
+    protected function createProbeMonitor(
+        string $type,
+        string $monitorId,
+        string $name,
+        array $target,
+        int $interval,
+        int $timeout,
+        int $cooldown,
+        bool $enabled,
+        array $notify,
+        Severity $severity,
+        Response $response,
+        Document $project,
+        Database $dbForPlatform,
+        Authorization $authorization,
+    ): void {
+        $this->assertTimeout($timeout, $interval);
+
+        $monitorId = $monitorId === 'unique()' ? Id::unique() : $monitorId;
+
+        $monitor = new Document([
+            '$id' => $monitorId,
+            '$permissions' => [],
+            'name' => $name,
+            'teamId' => (string) $project->getAttribute('teamId', ''),
+            'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
+            'projectId' => $project->getId(),
+            'projectInternalId' => (string) $project->getSequence(),
+            'region' => (string) $project->getAttribute('region', ''),
+            'type' => $type,
+            'resourceType' => 'project',
+            'resourceId' => $project->getId(),
+            'resourceInternalId' => (string) $project->getSequence(),
+            ...$target,
+            'interval' => $interval,
+            'timeout' => $timeout,
+            'cooldown' => $cooldown,
+            'notify' => \array_values(\array_unique($notify)),
+            'severity' => $severity->value,
+            'enabled' => $enabled,
+            'status' => Status::Ok->value,
+            'search' => $this->search($monitorId, $name, (string) ($target['url'] ?? $target['domain'] ?? $target['host'] ?? ''), $type, ''),
+        ]);
+
+        try {
+            $monitor = $authorization->skip(fn () => $dbForPlatform->createDocument('monitors', $monitor));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::MONITOR_ALREADY_EXISTS);
+        }
+
+        (new Schedules($dbForPlatform))->write($monitor);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($monitor, Response::MODEL_MONITOR);
+    }
+
+    /**
+     * Changes only what is passed, as `updateMonitor()` does for usage monitors.
+     *
+     * @param array<string, mixed> $target the target attributes passed, each null when not
+     * @param array<string>|null $notify
+     */
+    protected function updateProbeMonitor(
+        string $type,
+        string $monitorId,
+        ?string $name,
+        array $target,
+        ?int $interval,
+        ?int $timeout,
+        ?int $cooldown,
+        ?bool $enabled,
+        ?array $notify,
+        ?Severity $severity,
+        Response $response,
+        Document $project,
+        Database $dbForPlatform,
+        Authorization $authorization,
+    ): void {
+        $monitor = $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId);
+
+        if ($monitor->getAttribute('type') !== $type) {
+            throw new Exception(Exception::MONITOR_TYPE_MISMATCH, "Monitor '{$monitorId}' is a {$monitor->getAttribute('type')} monitor, not a {$type} monitor.");
+        }
+
+        $this->assertTimeout($timeout ?? (int) $monitor->getAttribute('timeout'), $interval ?? (int) $monitor->getAttribute('interval'));
+
+        $changes = new Document();
+        foreach ([
+            ...$target,
+            'name' => $name,
+            'interval' => $interval,
+            'timeout' => $timeout,
+            'cooldown' => $cooldown,
+            'enabled' => $enabled,
+            'notify' => $notify === null ? null : \array_values(\array_unique($notify)),
+            'severity' => $severity?->value,
+        ] as $key => $value) {
+            if ($value !== null) {
+                $changes->setAttribute($key, $value);
+            }
+        }
+
+        if (!$changes->isEmpty()) {
+            $merged = \array_merge($monitor->getArrayCopy(), $changes->getArrayCopy());
+            $changes->setAttribute('search', $this->search(
+                $monitor->getId(),
+                (string) $merged['name'],
+                (string) (($merged['url'] ?? '') ?: (($merged['domain'] ?? '') ?: ($merged['host'] ?? ''))),
+                $type,
+                '',
+            ));
+
+            $monitor = $authorization->skip(fn () => $dbForPlatform->updateDocument('monitors', $monitor->getId(), $changes));
+            (new Schedules($dbForPlatform))->write($monitor);
+        }
+
+        $response->dynamic($monitor, Response::MODEL_MONITOR);
+    }
+
+    /**
+     * A check that outlasts its interval would still be running when the next one starts.
+     */
+    private function assertTimeout(int $timeout, int $interval): void
+    {
+        if ($timeout > $interval) {
+            throw new Exception(Exception::MONITOR_TARGET_INVALID, "The timeout ({$timeout} seconds) must not be longer than the interval ({$interval} seconds).");
+        }
     }
 
     /**

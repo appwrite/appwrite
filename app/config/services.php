@@ -228,7 +228,7 @@ return [
     'monitors' => [
         'key' => 'monitors',
         'name' => 'Monitors',
-        'subtitle' => 'The Monitors service watches your project\'s usage and raises an alert when a monitor\'s rules hold, announced by email, in the console or to a webhook.',
+        'subtitle' => 'The Monitors service watches your project\'s usage and checks your HTTP, DNS, TCP and SMTP endpoints, and raises an alert when a monitor\'s rules hold or a check fails, announced by email, in the console or to a webhook.',
         'description' => '',
         'controller' => '', // Uses modules
         'sdk' => true,

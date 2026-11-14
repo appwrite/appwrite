@@ -589,13 +589,19 @@ class V25 extends Migration
                 case 'monitorAlerts':
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
-                    // Created before monitors had a severity, or alerts were acknowledged.
-                    $attributes = $id === 'monitorAlerts' ? ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName'] : ['severity'];
+                    // Created before monitors had a severity, alerts were acknowledged, or monitors probed targets.
+                    $attributes = $id === 'monitorAlerts'
+                        ? ['severity', 'acknowledgedAt', 'acknowledgedBy', 'acknowledgedByName', 'result']
+                        : ['severity', 'interval', 'timeout', 'url', 'method', 'headers', 'body', 'statusCodes', 'certificateDays', 'domain', 'record', 'resolver', 'answer', 'host', 'port', 'tlsMode', 'result', 'latency', 'code', 'certificateExpiresAt'];
                     foreach ($attributes as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Duplicate) {
                         }
+                    }
+                    // Usage monitors only, so a probe monitor and its alerts leave them empty.
+                    foreach (['metric', 'comparator', 'threshold'] as $attribute) {
+                        $this->dbForProject->updateAttribute($id, $attribute, new AttributeUpdate(required: false));
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;

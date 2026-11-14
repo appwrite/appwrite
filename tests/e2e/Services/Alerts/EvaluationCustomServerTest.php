@@ -276,6 +276,100 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertCount(2, $this->pushes($device['token'], 'alert:' . $firing['alertId']));
     }
 
+    public function testProbeMonitorsOpenAndResolveTheirAlerts(): void
+    {
+        // Targets in the test stack: the request catcher answers HTTP on 5000, maildev SMTP on 1025.
+        $failing = [
+            'http' => [['url' => 'http://request-catcher-webhook:5000/probe', 'statusCodes' => [418]], 'status_mismatch', ['statusCodes' => [200]]],
+            'dns' => [['domain' => 'request-catcher-webhook', 'record' => 'A', 'answer' => '192.0.2.1'], 'answer_mismatch', ['answer' => '']],
+            'tcp' => [['host' => 'maildev', 'port' => 1], 'connect_refused', ['port' => 1025]],
+            'smtp' => [['host' => 'maildev', 'port' => 1, 'tlsMode' => 'none'], 'connect_refused', ['port' => 1025]],
+        ];
+
+        $monitors = [];
+        foreach ($failing as $type => [$target]) {
+            $created = $this->client->call(Client::METHOD_POST, '/monitors/' . $type, $this->headers(), [
+                'monitorId' => 'unique()',
+                'name' => \strtoupper($type) . ' probe ' . \uniqid(),
+                'interval' => 2,
+                'timeout' => 2,
+                ...$target,
+            ]);
+            $this->assertSame(201, $created['headers']['status-code'], $type . ': ' . \json_encode($created['body']));
+            $monitors[$type] = $created['body']['$id'];
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ($failing as $type => [, $result, $fix]) {
+            $firing = $this->waitForStatus($monitors[$type], 'firing');
+            $this->assertSame($result, $firing['result'], $type);
+            $this->assertIsInt($firing['latency'], $type);
+            $this->assertNotNull($firing['evaluatedAt'], $type);
+
+            $alert = $this->getAlert($firing['alertId']);
+            $this->assertSame('firing', $alert['status'], $type);
+            $this->assertSame($type, $alert['type'], $type);
+            $this->assertSame($result, $alert['result'], $type);
+            $this->assertNull($alert['metric'], $type);
+            $this->assertNull($alert['comparator'], $type);
+
+            if ($type === 'http') {
+                // The request catcher answered; it was the status that did not match.
+                $this->assertSame(200, $firing['code']);
+            }
+
+            $updated = $this->client->call(Client::METHOD_PUT, '/monitors/' . $type . '/' . $monitors[$type], $this->headers(), $fix);
+            $this->assertSame(200, $updated['headers']['status-code'], $type);
+        }
+
+        foreach ($monitors as $type => $monitorId) {
+            $passing = $this->waitForStatus($monitorId, 'ok');
+            $this->assertSame('ok', $passing['result'], $type);
+            $this->assertSame('', $passing['alertId'], $type);
+
+            $alerts = $this->listAlerts([Query::equal('monitorId', [$monitorId])->toString()])['alerts'];
+            $this->assertCount(1, $alerts, $type);
+            $this->assertSame('resolved', $alerts[0]['status'], $type);
+            $this->assertNotNull($alerts[0]['resolvedAt'], $type);
+        }
+
+        $this->assertSame(250, $this->getMonitorBody($monitors['smtp'])['code']);
+        $this->assertSame(0, $this->getMonitorBody($monitors['dns'])['code']);
+    }
+
+    public function testProbeMonitorsRefuseDeniedNetworks(): void
+    {
+        // The test stack denies 192.0.2.0/24 through _APP_MONITORS_DENIED_NETWORKS.
+        $targets = [
+            'http' => ['url' => 'http://192.0.2.10/'],
+            'dns' => ['domain' => 'example.com', 'resolver' => '192.0.2.53'],
+            'tcp' => ['host' => '192.0.2.10', 'port' => 80],
+            'smtp' => ['host' => '192.0.2.10', 'port' => 25],
+        ];
+
+        foreach ($targets as $type => $target) {
+            $created = $this->client->call(Client::METHOD_POST, '/monitors/' . $type, $this->headers(), [
+                'monitorId' => 'unique()',
+                'name' => 'Denied ' . $type . ' ' . \uniqid(),
+                'interval' => 5,
+                'timeout' => 5,
+                ...$target,
+            ]);
+            $this->assertSame(201, $created['headers']['status-code'], $type);
+
+            /**
+             * Test for FAILURE
+             */
+            $firing = $this->waitForStatus($created['body']['$id'], 'firing');
+            $this->assertSame('target_denied', $firing['result'], $type);
+            // Refused before dialling, where an unreachable TEST-NET address would time out.
+            $this->assertLessThan(1000, $firing['latency'], $type);
+            $this->assertSame('target_denied', $this->getAlert($firing['alertId'])['result'], $type);
+        }
+    }
+
     public function testPushesReachEveryDeviceAsTheirOwnersPrefsSay(): void
     {
         $teamId = $this->teamId();

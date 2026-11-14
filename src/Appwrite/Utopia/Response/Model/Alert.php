@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Alert\Comparator;
+use Appwrite\Alert\Probe\Result;
 use Appwrite\Alert\Severity;
 use Appwrite\Alert\State;
 use Appwrite\Utopia\Response;
@@ -107,16 +108,18 @@ class Alert extends Model
             ])
             ->addRule('metric', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Metric the alert fired on.',
-                'default' => $metrics[0] ?? '',
+                'description' => 'Metric the alert fired on. Null for a probe monitor\'s alert.',
+                'default' => null,
+                'required' => false,
                 'example' => 'network.outbound',
                 'enum' => $metrics,
                 'enumSDKName' => 'AlertMetric',
             ])
             ->addRule('comparator', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'How the metric was compared with the threshold.',
-                'default' => Comparator::GreaterThan->value,
+                'description' => 'How the metric was compared with the threshold. Null for a probe monitor\'s alert.',
+                'default' => null,
+                'required' => false,
                 'example' => Comparator::GreaterThan->value,
                 'enum' => Comparator::values(),
                 'enumSDKName' => 'AlertComparator',
@@ -127,9 +130,18 @@ class Alert extends Model
                 'default' => 0,
                 'example' => 5000000,
             ])
+            ->addRule('result', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'What the failing check of a probe monitor found when the alert opened, such as `connect_refused`. Null for a usage monitor\'s alert.',
+                'default' => null,
+                'required' => false,
+                'example' => Result::ConnectRefused->value,
+                'enum' => Result::values(),
+                'enumSDKName' => 'AlertResult',
+            ])
             ->addRule('value', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Latest reading while the alert fired.',
+                'description' => 'Latest reading while the alert fired: the metric\'s value, or a probe\'s latency in milliseconds.',
                 'default' => 0,
                 'example' => 7250000,
             ])
@@ -185,6 +197,12 @@ class Alert extends Model
     public function filter(Document $document): Document
     {
         $document->setAttribute('critical', $document->getAttribute('severity') === Severity::Critical->value);
+        // Probe monitors' alerts compare no metric.
+        foreach (['metric', 'comparator', 'result'] as $attribute) {
+            if ($document->getAttribute($attribute) === '') {
+                $document->setAttribute($attribute, null);
+            }
+        }
 
         return $document;
     }

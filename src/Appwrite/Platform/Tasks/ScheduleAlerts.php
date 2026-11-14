@@ -7,6 +7,7 @@ use Appwrite\Event\Publisher\Alert as AlertPublisher;
 use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Schedule\Occurrence;
@@ -67,11 +68,12 @@ class ScheduleAlerts extends Action
     }
 
     /**
-     * Seconds between two evaluations of each rule in one page of its
-     * schedules, keyed by schedule ID. Every rule shares `_APP_ALERTS_INTERVAL`;
-     * an edition that sets the interval per organization overrides this and
-     * looks up the organizations of the page's projects (`projectInternalId`),
-     * which follow a project across transfers.
+     * Seconds between two evaluations of each monitor in one page of its
+     * schedules, keyed by schedule ID. A probe monitor runs on its own
+     * `interval`; the rest share `_APP_ALERTS_INTERVAL`. An edition that sets
+     * the interval per organization overrides this and looks up the
+     * organizations of the page's projects (`projectInternalId`), which follow
+     * a project across transfers.
      *
      * @param list<Document> $schedules
      * @return array<string, int>
@@ -80,9 +82,22 @@ class ScheduleAlerts extends Action
     {
         $interval = $this->interval();
 
+        $own = [];
+        $sequences = \array_values(\array_unique(\array_map(fn (Document $schedule) => (string) $schedule->getAttribute('resourceInternalId'), $schedules)));
+        if ($sequences !== []) {
+            $monitors = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->find('monitors', [
+                Query::equal('$sequence', $sequences),
+                Query::greaterThan('interval', 0),
+                Query::limit(\count($sequences)),
+            ]));
+            foreach ($monitors as $monitor) {
+                $own[(string) $monitor->getSequence()] = (int) $monitor->getAttribute('interval');
+            }
+        }
+
         $intervals = [];
         foreach ($schedules as $schedule) {
-            $intervals[$schedule->getId()] = $interval;
+            $intervals[$schedule->getId()] = $own[(string) $schedule->getAttribute('resourceInternalId')] ?? $interval;
         }
 
         return $intervals;
