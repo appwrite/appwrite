@@ -22,6 +22,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 
 class Create extends Action
 {
@@ -65,6 +66,7 @@ class Create extends Action
         ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
         ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'File unique ID.', false, ['dbForProject'])
         ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Token expiry date', true)
+        ->param('maxUses', null, new Nullable(new Range(1, PHP_INT_MAX)), 'Maximum number of times token can be used.', true, example: 1)
         ->inject('response')
         ->inject('user')
         ->inject('dbForProject')
@@ -73,7 +75,7 @@ class Create extends Action
         ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $bucketId, string $fileId, ?string $expire, ?int $maxUses, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
     {
         /**
          * @var Document $bucket
@@ -100,6 +102,8 @@ class Create extends Action
             'resourceInternalId' => $bucket->getSequence() . ':' . $file->getSequence(),
             'resourceType' => TOKENS_RESOURCE_TYPE_FILES,
             'expire' => $expire,
+            'maxUses' => $maxUses,
+            'uses' => 0,
         ]));
 
         $queueForEvents
