@@ -86,10 +86,17 @@ function inspect(string $value): array
     ];
 }
 
-// Every rule of the list PHP ships, as a suffix, under a name, and under a subdomain.
-$list = require __DIR__ . '/../../../packages/domains/data/data.php';
+// Every rule of the list PHP ships and of the list the crate embeds, as a suffix, under a name,
+// and under a subdomain: a rule on one list and not the other answers differently.
+$list = array_map(strval(...), array_keys(require __DIR__ . '/../../../packages/domains/data/data.php'));
+foreach (file(__DIR__ . '/../../utopia/domains/data/public-suffix-list.txt', FILE_IGNORE_NEW_LINES) as $line) {
+    [$section, $rule] = explode("\t", $line, 2) + [1 => ''];
+    if ($section !== '#' && $rule !== '') {
+        $list[] = $rule;
+    }
+}
 $rules = 0;
-foreach (array_keys($list) as $rule) {
+foreach (array_values(array_unique($list)) as $rule) {
     $rule = (string) $rule;
     $base = match (true) {
         str_starts_with($rule, '!') => substr($rule, 1),
