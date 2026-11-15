@@ -25,7 +25,7 @@ implementation of them. Every other class is registered only when `_APP_EXTENSIO
 its package. Otherwise Composer loads the package's PHP class as before:
 
 ```sh
-_APP_EXTENSION_LIBRARIES=dsn,locale,user-agent   # Utopia\DSN\DSN, Utopia\Locale\Locale and Utopia\UserAgent\UserAgent from the extension
+_APP_EXTENSION_LIBRARIES=dsn,locale,user-agent,domains   # Utopia\DSN\DSN, Utopia\Locale\Locale, Utopia\UserAgent\UserAgent and Utopia\Domains\Domain from the extension
 ```
 
 The extension reads it once, when PHP loads the module, so changing it takes a restart and no
@@ -105,6 +105,29 @@ not UTF-8, 100 KB inputs) and seeded mutations of all of them, read through ever
   `ArgumentCountError` with ext-php-rs's message.
 - `isset()` on a private property from outside the class is `true`.
 - `serialize()` refuses the object, as it does every class with Rust state.
+
+## Utopia\Domains\Domain
+
+Over `crates/utopia/domains` (`_APP_EXTENSION_LIBRARIES=domains`), the Public Suffix List parser of
+`packages/domains`. The registrars make network calls, so they and the validators stay PHP. The
+crate embeds the list as `crates/utopia/domains/data/public-suffix-list.txt`, exported from the PHP
+package's `data/data.php`, so both read the same rules. PHP fills the class's protected properties as
+its getters run (`getTLD()` sets `$TLD`, a matching `getSuffix()` sets `$suffix` and `$rule`), and the
+binding shows the same properties, so `==`, `var_dump()` and `(array)` see what they see in PHP.
+
+`crates/extension/tests/domains.php` prints a corpus of results that must be identical on both
+implementations: every rule of `data.php` as a suffix, under a name, under a subdomain and in upper
+case, so a list refreshed on one side and not the other fails it; hostnames Appwrite and Cloud parse;
+edge cases (empty and dotted names, `0`, IDN and punycode, IPs, ports, bytes that are not UTF-8,
+URLs); the properties after each getter and after every getter in reverse; the scalar arguments PHP
+converts; and `==`, clone, `var_dump()`, reflection and a subclass. It asserts one known difference on
+the extension:
+
+- The exception for a URL (`http://`, `https://`) holding bytes that are not UTF-8 shows them as
+  U+FFFD; PHP's message keeps the bytes.
+
+Cloning an instance of a PHP subclass is not tested: it hits the ext-php-rs bug in
+extphprs/ext-php-rs#837. Nothing in Appwrite or Cloud subclasses `Domain`.
 
 ## Benchmarks
 
