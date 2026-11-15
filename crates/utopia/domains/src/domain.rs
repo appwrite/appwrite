@@ -97,8 +97,15 @@ impl PublicSuffixList {
     }
 
     /// The embedded list ([`Self::EMBEDDED`]), parsed.
+    ///
+    /// # Panics
+    ///
+    /// When the embedded list does not parse, which the crate's tests rule out.
     pub fn embedded() -> Self {
-        Self::parse(Self::EMBEDDED).unwrap_or_default()
+        match Self::parse(Self::EMBEDDED) {
+            Ok(list) => list,
+            Err(error) => panic!("the embedded Public Suffix List does not parse: {error}"),
+        }
     }
 
     /// Installs the process-wide list used by [`Domain::new`]. The first list
@@ -407,6 +414,15 @@ impl<'l> Domain<'l> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn embedded_list_parses_whole() {
+        let list = PublicSuffixList::parse(PublicSuffixList::EMBEDDED).expect("the embedded list parses");
+        let rules =
+            PublicSuffixList::EMBEDDED.lines().filter(|line| !line.is_empty() && !line.starts_with("#\t")).count();
+        assert_eq!(list.len(), rules);
+        assert!(rules > 9000, "the embedded list has {rules} rules");
+    }
 
     fn list() -> PublicSuffixList {
         PublicSuffixList::parse("#\tit's\nICANN\tcom\nICANN\tco.uk\nICANN\t*.ck\nICANN\t!www.ck\nPRIVATE\tgithub.io\n")
