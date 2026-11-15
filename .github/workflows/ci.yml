@@ -809,15 +809,13 @@ jobs:
       # The seeder is a one-shot container, so it runs here explicitly rather
       # than through COMPOSE_PROFILES, where `up --wait` would treat its exit
       # as a failure. The certificates come first so the directory serves them.
-      # Its profile is added to COMPOSE_PROFILES, because `--profile` replaces
-      # them and drops the database the appwrite services depend on.
       - name: Provision OpenLDAP
         if: matrix.service.name == 'Project'
         timeout-minutes: 5
         run: |
           ./dev/openldap/certs.sh
           docker compose up -d --wait openldap
-          COMPOSE_PROFILES="${COMPOSE_PROFILES},openldap-seed" docker compose run --rm openldap-seed
+          docker compose --profile openldap-seed run --rm openldap-seed
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
