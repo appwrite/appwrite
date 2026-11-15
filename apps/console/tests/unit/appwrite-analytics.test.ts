@@ -1,11 +1,16 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from 'bun:test'
 import * as actualSdk from '@appwrite.io/console'
+import {
+  resetCookieConsentStateForTests,
+  setCookieConsentState,
+} from '@/lib/cookie-consent/consent-state'
 import * as actualRuntimeConfig from '@/lib/runtime-config'
 
 const realSdk = { ...actualSdk }
 const realRuntimeConfig = { ...actualRuntimeConfig }
 
 const calls: string[] = []
+let failImport = false
 let config = {
   appwriteAnalyticsEndpoint: '',
   appwriteAnalyticsProjectId: '',
@@ -23,6 +28,7 @@ mock.module('@/lib/runtime-config', () => ({
 mock.module('@appwrite.io/console', () => ({
   Client: class {
     setEndpoint(value: string) {
+      if (failImport) throw new Error('chunk load failed')
       calls.push(`endpoint:${value}`)
       return this
     }
@@ -75,10 +81,17 @@ describe('appwrite analytics', () => {
     stopAppwriteAnalytics()
     await flush()
     calls.length = 0
+    failImport = false
     Object.assign(globalThis, { window: globalThis })
+    setCookieConsentState({
+      resolved: true,
+      bannerRequired: true,
+      analyticsGranted: true,
+    })
   })
 
   afterAll(() => {
+    resetCookieConsentStateForTests()
     if (!hadWindow) Reflect.deleteProperty(globalThis, 'window')
     mock.module('@/lib/runtime-config', () => realRuntimeConfig)
     mock.module('@appwrite.io/console', () => realSdk)
@@ -135,5 +148,38 @@ describe('appwrite analytics', () => {
     stopAppwriteAnalytics()
     await flush()
     expect(calls.at(-1)).toBe('stop')
+  })
+
+  test('does not start once consent is withdrawn', async () => {
+    config = {
+      appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
+      appwriteAnalyticsProjectId: 'site',
+      appwriteAnalyticsPropertyId: 'web',
+    }
+    setCookieConsentState({
+      resolved: true,
+      bannerRequired: true,
+      analyticsGranted: false,
+    })
+    startAppwriteAnalytics()
+    await flush()
+    expect(calls).toEqual([])
+  })
+
+  test('a failed load is retried on the next start', async () => {
+    config = {
+      appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
+      appwriteAnalyticsProjectId: 'site',
+      appwriteAnalyticsPropertyId: 'web',
+    }
+    failImport = true
+    startAppwriteAnalytics()
+    await flush()
+    expect(calls).toEqual([])
+
+    failImport = false
+    startAppwriteAnalytics()
+    await flush()
+    expect(calls.at(-1)).toBe('downloads')
   })
 })
