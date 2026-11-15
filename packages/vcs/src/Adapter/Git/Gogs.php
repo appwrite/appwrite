@@ -301,7 +301,7 @@ class Gogs extends Gitea
         // Gogs ignores sha param — verify branch exists first
         $branches = $this->listBranches($owner, $repositoryName);
         if (!\in_array($branch, $branches, true)) {
-            throw new Exception("Branch '{$branch}' not found");
+            throw new RepositoryNotFound("Branch not found: {$branch}");
         }
 
         return parent::getLatestCommit($owner, $repositoryName, $branch);

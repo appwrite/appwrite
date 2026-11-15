@@ -791,6 +791,9 @@ class Bitbucket extends Git
 
         $responseHeaders = $response['headers'] ?? [];
         $statusCode = $responseHeaders['status-code'] ?? 0;
+        if ($statusCode === 404) {
+            throw new RepositoryNotFound("Branch not found: {$branch}");
+        }
         if ($statusCode >= 400) {
             throw new Exception("Failed to get latest commit: HTTP {$statusCode}", $statusCode);
         }

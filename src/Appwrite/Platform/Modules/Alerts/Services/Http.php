@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Alerts\Services;
 
 use Appwrite\Platform\Modules\Alerts\Http\Alerts\Get as GetAlert;
+use Appwrite\Platform\Modules\Alerts\Http\Alerts\Update as UpdateAlert;
 use Appwrite\Platform\Modules\Alerts\Http\Alerts\XList as ListAlerts;
 use Appwrite\Platform\Modules\Alerts\Http\Init;
 use Appwrite\Platform\Modules\Alerts\Http\Monitors\Delete as DeleteMonitor;
@@ -28,5 +29,6 @@ class Http extends Service
 
         $this->addAction('listAlerts', ListAlerts::class);
         $this->addAction('getAlert', GetAlert::class);
+        $this->addAction('updateAlert', UpdateAlert::class);
     }
 }

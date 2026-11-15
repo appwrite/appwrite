@@ -13,8 +13,8 @@ use Tests\Unit\Presences\Mock\ConflictingMemory;
 use Tests\Unit\Presences\Mock\FailingDeleteMemory;
 use Tests\Unit\Presences\Mock\FailingRealtime;
 use Tests\Unit\Presences\Mock\RecordingRealtime;
-use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Adapter\None as NoCache;
+use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
@@ -26,6 +26,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Queue;
+use Utopia\System\System;
 
 final class StateTest extends TestCase
 {
@@ -293,12 +294,29 @@ final class StateTest extends TestCase
         $this->assertSame([], $queueForRealtime->triggered);
     }
 
+    public function testListCacheFillAfterAPermissionPurgeIsNotServed(): void
+    {
+        $this->database = $this->presenceDatabase(new ConflictingMemory(), $this->listCache());
+        $state = new State();
+
+        // A list request reads the presence while it is still readable, a permission change then
+        // narrows it and purges the cached pages, and only now does the request cache what it read.
+        $version = $state->getListCacheVersion($this->database);
+        $state->purgeListCache($this->database);
+        $state->setListCacheField($this->database, ['any'], [], State::LIST_CACHE_FIELD_PRESENCES, [['$id' => 'revoked']], $version);
+
+        $this->assertEmpty(
+            $state->getListCacheField($this->database, ['any'], [], State::LIST_CACHE_FIELD_PRESENCES, 3600, $state->getListCacheVersion($this->database)),
+            'A list read taken before a permission change was served after the purge that followed it',
+        );
+    }
+
     public function testDeleteOrphanedPurgesPresenceListCache(): void
     {
-        $this->database = $this->presenceDatabase(new ConflictingMemory(), new Cache(new MemoryCache()));
+        $this->database = $this->presenceDatabase(new ConflictingMemory(), $this->listCache());
         $this->presence('orphan', 'realtime', 'host-a');
         $state = new State();
-        $state->setListCacheField($this->database, ['any'], [], 'documents', ['cached']);
+        $state->setListCacheField($this->database, ['any'], [], 'documents', ['cached'], $state->getListCacheVersion($this->database));
 
         $state->deleteOrphaned(
             $this->database,
@@ -310,15 +328,15 @@ final class StateTest extends TestCase
             new RecordingRealtime(),
         );
 
-        $this->assertEmpty($state->getListCacheField($this->database, ['any'], [], 'documents', 3600));
+        $this->assertEmpty($state->getListCacheField($this->database, ['any'], [], 'documents', 3600, $state->getListCacheVersion($this->database)));
     }
 
     public function testDeleteOrphanedWithNothingToDeleteKeepsPresenceListCache(): void
     {
-        $this->database = $this->presenceDatabase(new ConflictingMemory(), new Cache(new MemoryCache()));
+        $this->database = $this->presenceDatabase(new ConflictingMemory(), $this->listCache());
         $this->presence('other-host', 'realtime', 'host-b');
         $state = new State();
-        $state->setListCacheField($this->database, ['any'], [], 'documents', ['cached']);
+        $state->setListCacheField($this->database, ['any'], [], 'documents', ['cached'], $state->getListCacheVersion($this->database));
 
         $state->deleteOrphaned(
             $this->database,
@@ -330,7 +348,7 @@ final class StateTest extends TestCase
             new RecordingRealtime(),
         );
 
-        $this->assertSame(['cached'], $state->getListCacheField($this->database, ['any'], [], 'documents', 3600));
+        $this->assertSame(['cached'], $state->getListCacheField($this->database, ['any'], [], 'documents', 3600, $state->getListCacheVersion($this->database)));
     }
 
     public function testDeleteOrphanedSkipsProjectWithoutPresences(): void
@@ -588,6 +606,23 @@ final class StateTest extends TestCase
             $userId,
             $sequence,
         );
+    }
+
+    /**
+     * A Redis-backed cache, as only a cache that can write several fields in one call stores list
+     * responses -- the in-memory adapter has no batch support and silently keeps nothing.
+     */
+    private function listCache(): Cache
+    {
+        $redis = new \Redis();
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
+
+        $password = System::getEnv('_APP_REDIS_PASS', '');
+        if ($password !== '') {
+            $redis->auth(\array_filter([System::getEnv('_APP_REDIS_USER', ''), $password]));
+        }
+
+        return new Cache(new RedisCache($redis));
     }
 
     private function presenceDatabase(Memory $adapter, ?Cache $cache = null): Database

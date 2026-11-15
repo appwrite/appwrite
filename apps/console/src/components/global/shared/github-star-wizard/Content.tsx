@@ -344,7 +344,10 @@ export function GithubStarWizardContent({
             event.preventDefault()
             skipButtonRef.current?.focus({ preventScroll: true })
           }}
-          className="fixed inset-0 z-[100] flex h-dvh w-full flex-col overflow-y-auto bg-background text-foreground outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 duration-500"
+          // No entrance fade: an opacity animation on this full-viewport layer
+          // can stall partway (seen in Firefox), leaving the console showing
+          // through a half-transparent takeover. The backdrop has the motion.
+          className="fixed inset-0 z-[100] flex h-dvh w-full flex-col overflow-y-auto bg-background text-foreground outline-none"
         >
           <div
             className="pointer-events-none absolute inset-0 overflow-hidden"

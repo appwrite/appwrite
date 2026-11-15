@@ -165,6 +165,7 @@ export const jaCatalog: EnCatalog = {
           network: 'Network',
           analytics: 'アナリティクス',
           firewall: 'Firewall',
+          mcp1: 'MCP1',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,
@@ -253,7 +254,6 @@ export const jaCatalog: EnCatalog = {
         usage: '使用量',
         analytics: 'アナリティクス',
         errors: 'エラー',
-        firewall: 'Firewall',
         advisor: 'Advisor',
         settings: '設定',
       },

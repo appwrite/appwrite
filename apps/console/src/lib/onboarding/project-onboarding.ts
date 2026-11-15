@@ -210,7 +210,7 @@ const GROUP_AUTH: OnboardingProductGroupDef = {
       hint: 'Register, import, or invite someone so Auth is in use.',
       cta: 'Add user',
       ctaDone: 'Manage users',
-      to: '/projects/$projectId/auth',
+      to: '/projects/$projectId/auth/users',
       debug:
         'Done when any of `users.create`, `account.create`, or `account.createAnonymousSession` is completed or skipped.',
       sdkKeys: ['users.create', 'account.create', 'account.createAnonymousSession'],
@@ -221,7 +221,7 @@ const GROUP_AUTH: OnboardingProductGroupDef = {
       hint: 'Group users and assign roles for access control.',
       cta: 'Create team',
       ctaDone: 'Manage teams',
-      to: '/projects/$projectId/auth',
+      to: '/projects/$projectId/auth/teams',
       debug: 'Done when `teams.create` is completed or skipped.',
       sdkKeys: ['teams.create'],
     },

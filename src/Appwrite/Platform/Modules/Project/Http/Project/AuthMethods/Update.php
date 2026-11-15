@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\AuthMethods;
 
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -75,6 +76,11 @@ class Update extends Action
     ): void {
         $auth = Config::getParam('auth')[$methodId] ?? [];
         $authKey = $auth['key'] ?? '';
+
+        // LDAP needs a directory to sign anyone in; updateLDAP is where one is configured and checked.
+        if ($methodId === 'ldap' && $enabled && (empty($project->getAttribute('ldap', [])['hosts'] ?? []) || empty($project->getAttribute('ldap', [])['baseDn'] ?? ''))) {
+            throw new Exception(Exception::PROJECT_LDAP_CONFIG_INVALID, 'Configure LDAP hosts and base DN before enabling LDAP.');
+        }
 
         $auths = $project->getAttribute('auths', []);
         $auths[$authKey] = $enabled;

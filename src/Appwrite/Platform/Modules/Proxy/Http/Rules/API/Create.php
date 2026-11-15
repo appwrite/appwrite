@@ -59,7 +59,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->label('abuse', [Limit::attempts(['userId', 'url'], 10, seconds: 60)])
+            ->label('abuse', [Limit::attempts(['projectId', 'userId', 'url'], 10, seconds: 60)])
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->inject('response')
             ->inject('project')

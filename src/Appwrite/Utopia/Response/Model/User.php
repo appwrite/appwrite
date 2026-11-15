@@ -37,6 +37,7 @@ class User extends Model
             ])
             ->addRule('password', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Hashed user password.',
                 'required' => false,
                 'default' => '',

@@ -188,6 +188,7 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
     'instagram.svg',
     'tiktok.svg',
     'kakao.svg',
+    'naver.svg',
     'reddit.svg',
     'medium.svg',
     'product-hunt.svg',

@@ -51,12 +51,6 @@ Server-rendered sites stream their responses. Each chunk your site writes reache
 
 On self-hosted Appwrite, streaming is on by default. Set `_APP_COMPUTE_STREAMING` to `disabled` to send each response only once it is complete.
 
-On Cloud, a connection that sends no data for 60 seconds is closed. If your stream can go quiet for that long, such as a server-sent events endpoint waiting for updates, send a heartbeat every 30 seconds or so. For server-sent events, a comment line works:
-
-```js
-const heartbeat = setInterval(() => controller.enqueue(new TextEncoder().encode(': ping\n\n')), 30_000);
-```
-
 # Resource limits {% #resource-limits %}
 
 Under **Settings** - **Resource limits**, you can set **build** and **runtime** specifications independently. The build spec applies while dependencies are installed and your site is built for deployment; the runtime spec applies when your site serves traffic, including server-side rendering (SSR). Both use the same CPU and memory tiers on Cloud.

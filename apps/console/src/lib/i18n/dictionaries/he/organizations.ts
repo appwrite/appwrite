@@ -173,6 +173,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   // pragma: allowlist secret
   'Auto renewal is available for domains registered with Appwrite.':
     'חידוש אוטומטי זמין לדומיינים שנרשמו דרך Appwrite.', // pragma: allowlist secret
+  'Registered with another registrar': 'רשום אצל רשם אחר',
+  'Renew this domain with its current registrar.':
+    'חדשו את הדומיין אצל הרשם הנוכחי שלו.',
   'Available balance': 'יתרה זמינה',
   'Available credits': 'קרדיטים זמינים',
   Avatars: 'אווטארים',

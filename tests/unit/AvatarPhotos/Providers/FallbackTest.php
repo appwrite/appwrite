@@ -46,13 +46,12 @@ final class FallbackTest extends TestCase
     }
 
     /**
-     * ImageMagick's security policy can forbid decoding SVG altogether, so
-     * the mark has to be drawn with primitives rather than rasterised from
-     * the markup.
+     * The mark is drawn as a filled path, so a bare surface means it was
+     * never drawn.
      */
     public function testGetDrawsPersonMark(): void
     {
-        $colors = $this->colors($this->get(100, 100));
+        $colors = \array_merge(...$this->pixels($this->get(100, 100)));
 
         $this->assertContains(self::SURFACE, $colors);
         $this->assertContains(self::FIGURE, $colors, 'The fallback carries no person mark — it rendered as a bare surface.');
@@ -63,13 +62,10 @@ final class FallbackTest extends TestCase
      */
     public function testGetDrawsOnNeutralSurface(): void
     {
-        $image = new \Imagick();
-        $image->readImageBlob($this->get(100, 100));
+        $pixels = $this->pixels($this->get(100, 100));
 
         foreach ([[2, 2], [97, 2], [2, 97], [97, 97]] as [$x, $y]) {
-            $color = $image->getImagePixelColor($x, $y)->getColor();
-
-            $this->assertSame(self::SURFACE, [$color['r'], $color['g'], $color['b']], "Pixel at {$x},{$y} is not the neutral surface.");
+            $this->assertSame(self::SURFACE, $pixels[$y][$x], "Pixel at {$x},{$y} is not the neutral surface.");
         }
     }
 
@@ -83,42 +79,39 @@ final class FallbackTest extends TestCase
     #[DataProvider('provideSizes')]
     public function testGetSizesTheAvatar(int $width, int $height, int $expectedWidth, int $expectedHeight): void
     {
-        $image = new \Imagick();
-        $image->readImageBlob($this->get($width, $height));
+        $pixels = $this->pixels($this->get($width, $height));
 
-        $this->assertSame($expectedWidth, $image->getImageWidth());
-        $this->assertSame($expectedHeight, $image->getImageHeight());
+        $this->assertCount($expectedHeight, $pixels);
+        $this->assertCount($expectedWidth, $pixels[0]);
 
         // A mark squeezed off a non-square canvas would leave a bare surface
-        $this->assertContains(self::FIGURE, $this->colors($image->getImageBlob()));
+        $this->assertContains(self::FIGURE, \array_merge(...$pixels));
     }
 
     private function get(int $width, int $height): string
     {
-        if (!\extension_loaded('imagick')) {
-            $this->markTestSkipped('Imagick is required to draw the fallback.');
-        }
-
         return (string) (new Fallback())->get(new Document(), $width, $height, 'g');
     }
 
     /**
-     * Every colour present in the image, as [r, g, b] triplets.
+     * The image decoded by GD: rows of [r, g, b] triplets, indexed [y][x].
      *
-     * @return array<array<int>>
+     * @return array<array<array<int>>>
      */
-    private function colors(string $blob): array
+    private function pixels(string $blob): array
     {
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image, 'The fallback is not a decodable image.');
 
-        $colors = [];
+        $pixels = [];
 
-        foreach ($image->getImageHistogram() as $pixel) {
-            $color = $pixel->getColor();
-            $colors[] = [$color['r'], $color['g'], $color['b']];
+        for ($y = 0; $y < \imagesy($image); $y++) {
+            for ($x = 0; $x < \imagesx($image); $x++) {
+                $color = \imagecolorsforindex($image, \imagecolorat($image, $x, $y));
+                $pixels[$y][$x] = [$color['red'], $color['green'], $color['blue']];
+            }
         }
 
-        return $colors;
+        return $pixels;
     }
 }

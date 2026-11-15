@@ -55,7 +55,6 @@ import {
   Globe,
   Plug,
   Activity,
-  Shield,
   ScanSearch,
   Package,
   FileText,
@@ -125,7 +124,6 @@ interface SidebarCopy {
     usage: string
     analytics: string
     errors: string
-    firewall: string
     advisor: string
     settings: string
   }
@@ -281,12 +279,6 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
       label: sidebarCopy.sections.protect,
       items: [
         {
-          id: 'firewall',
-          label: sidebarCopy.items.firewall,
-          icon: Shield,
-          path: `/projects/${projectId}/firewall`,
-        },
-        {
           id: 'reviews',
           label: sidebarCopy.items.reviews,
           icon: GitPullRequest,
@@ -338,7 +330,7 @@ export function ConsoleSidebar({
   const { collapsed, setCollapsed } = useSidebarCollapsed(accountWithPrefs)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
-  const { features, isCloud } = useConsoleProfile()
+  const { features } = useConsoleProfile()
   const { project, projectData } = useProject(projectId)
   const { reviewsEnabled } = useConsoleVariables(project?.region)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
@@ -361,8 +353,6 @@ export function ConsoleSidebar({
             return features.usageStats && canSeeUsageNav(access, features)
           if (item.id === 'activity')
             return features.activity && canSeeActivityNav(access, features)
-          if (item.id === 'firewall')
-            return isCloud && canSeeProjectNavItem(access, features, item.id)
           if (item.id === 'analytics')
             return (
               features.analytics &&
@@ -392,7 +382,6 @@ export function ConsoleSidebar({
     features,
     access,
     sidebarCopy,
-    isCloud,
     showProjectAgents,
     reviewsEnabled,
   ])
