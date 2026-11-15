@@ -197,6 +197,11 @@ class Update extends Action
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
 
+            // With both an email and a phone on file the invite cannot tell which one it proved, so the holder signs in to accept
+            if (!$hasSession && $verification === null) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Sign in to accept this invitation.');
+            }
+
             $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
 
             $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
@@ -209,11 +214,6 @@ class Update extends Action
             if ($verification !== null) {
                 $targetUser->setAttribute($verification, true);
                 $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
-            }
-
-            // The session counts only the channel the invite proved; when that is unknown the user signs in instead
-            if ($verification === null) {
-                $session = null;
             }
 
             if ($session !== null) {

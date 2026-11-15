@@ -183,6 +183,76 @@ final class TeamsCustomClientTest extends Scope
         $this->assertFalse($account['body']['phoneVerification']);
     }
 
+    public function testUpdateMembershipStatusSignedOutRefusesAccountWithEmailAndPhone(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('Dual Contact Invites');
+        $email = \uniqid() . 'dual-invite@localhost.test';
+        $password = 'password';
+        $phone = '+1202' . \random_int(1000000, 9999999);
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => 'unique()',
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId];
+
+        $account = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]), [
+            'phone' => $phone,
+            'password' => $password,
+        ]);
+        $this->assertEquals(200, $account['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $params = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html']);
+
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertEquals(401, $confirmation['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_GET, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'], \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $membership['headers']['status-code']);
+        $this->assertFalse($membership['body']['confirm']);
+
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]), [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+        $this->assertTrue($confirmation['body']['confirm']);
+    }
+
     public function testUpdateMembershipStatusRevokesUnverifiedAccountCredentials(): void
     {
         $projectId = $this->getProject()['$id'];
