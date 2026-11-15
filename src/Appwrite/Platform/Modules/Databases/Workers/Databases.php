@@ -12,8 +12,10 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
+use Utopia\Database\Exception\Schema;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
@@ -244,6 +246,12 @@ class Databases extends Action
                     $relatedAttribute->getId(),
                     $relatedAttribute->setAttribute('status', 'failed')
                 );
+            }
+
+            if ($this->isRejection($e)) {
+                Span::add('database.attribute.rejected', $e->getMessage());
+
+                return;
             }
 
             throw $e;
@@ -484,6 +492,12 @@ class Databases extends Action
                 $index->setAttribute('status', 'failed')
             );
 
+            if ($this->isRejection($e)) {
+                Span::add('database.index.rejected', $e->getMessage());
+
+                return;
+            }
+
             throw $e;
         } finally {
             $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collectionId);
@@ -560,6 +574,18 @@ class Databases extends Action
      * @return void
      * @throws Exception
      */
+    /**
+     * Whether the database refused the attribute or index the customer asked for, rather than
+     * failing to build it: a definition that breaks the schema rules (row width, index length,
+     * relationship) or one that conflicts with what exists (a unique index over duplicate rows).
+     * The failed status and its error are the job's result; failing the job as well would
+     * report the customer's request as a worker fault.
+     */
+    private function isRejection(\Throwable $e): bool
+    {
+        return $e instanceof Schema || $e instanceof Duplicate;
+    }
+
     protected function deleteDatabase(Document $database, Database $dbForProject, Database $dbForDatabases): void
     {
         $this->deleteByGroup('database_' . $database->getSequence(), [], $dbForProject, function ($collection) use ($database, $dbForProject, $dbForDatabases) {
