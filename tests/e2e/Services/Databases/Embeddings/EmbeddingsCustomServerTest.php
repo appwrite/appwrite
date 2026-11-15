@@ -73,7 +73,7 @@ final class EmbeddingsCustomServerTest extends Scope
         // CI loads only nomic-embed-text, so every text sent to all-minilm fails.
         $response = $this->createTextEmbeddings(['hello'], ['model' => 'all-minilm']);
 
-        if ($response['headers']['status-code'] === 200) {
+        if ($response['headers']['status-code'] === 200 && !empty($response['body']['embeddings'][0]['embedding'])) {
             $this->markTestSkipped('all-minilm is loaded on this stack, so no model fails.');
         }
 
