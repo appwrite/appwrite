@@ -1,0 +1,21 @@
+---
+layout: changelog
+title: "Sign users in with Vipps MobilePay in Appwrite Auth"
+date: 2026-11-11
+cover: /images/blog/announcing-vipps-mobilepay-login/cover.avif
+tags: auth, integrations
+---
+
+Appwrite Auth now supports [Vipps MobilePay](/integrations/oauth-vipps-mobilepay) as an OAuth2 login provider. Users in Norway and Sweden sign in with the Vipps app, and users in Denmark and Finland with MobilePay, through one provider.
+
+There are two providers. **Vipps MobilePay** (`OAuthProvider.Vipps`) uses the production environment, and **Vipps MobilePay Sandbox** (`OAuthProvider.VippsSandbox`) uses the Vipps MobilePay test environment, so you can build and test with a test sales unit before your production keys arrive. Appwrite stores the user's name and email, and marks the email as verified only when Vipps MobilePay reports it as verified.
+
+Enable either provider in the Console under **Auth** > **Social providers** with the `client_id` and `client_secret` from your sales unit. Both are live on Appwrite Cloud and ship in the next self-hosted release.
+
+{% arrow_link href="/blog/post/announcing-vipps-mobilepay-login" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/integrations/oauth-vipps-mobilepay" %}
+Set up Vipps MobilePay login
+{% /arrow_link %}

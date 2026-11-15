@@ -192,6 +192,12 @@ export function useProjectMigrations(
     migrations: data?.migrations || [],
     total: data?.total || 0,
     isLoading,
+    /**
+     * The list was read at least once: an empty one is empty, not still loading.
+     * A refetch that fails keeps the list it last read, so this stays true and
+     * `error` says the list may be out of date.
+     */
+    hasData: data !== undefined,
     error,
     refetch,
   }

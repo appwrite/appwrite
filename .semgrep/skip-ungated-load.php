@@ -45,6 +45,10 @@ $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userI
 // ok: php.appwrite.skip-ungated-load
 $session = $authorization->skip(fn () => $dbForProject->find('sessions', []));
 
+// Account switching device: secret-gated lookup by cookie-provided id, like sessions.
+// ok: php.appwrite.skip-ungated-load
+$device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
+
 // Generated / variable table name.
 // ok: php.appwrite.skip-ungated-load
 $resource = $authorization->skip(fn () => $dbForProject->getDocument($collection, $resourceId));

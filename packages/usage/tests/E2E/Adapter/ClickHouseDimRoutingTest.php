@@ -99,7 +99,7 @@ class ClickHouseDimRoutingTest extends ClickHouseTestCase
             "'{$time}'",
             "'1'",
         ];
-        foreach (['path', 'method', 'status', 'service', 'country'] as $tag) {
+        foreach (['path', 'method', 'status', 'service', 'country', 'resourceType'] as $tag) {
             if (isset($tags[$tag])) {
                 $cols[] = $tag;
                 $vals[] = "'" . addslashes($tags[$tag]) . "'";
@@ -148,6 +148,68 @@ class ClickHouseDimRoutingTest extends ClickHouseTestCase
 
         $this->assertSame($this->rawTotal($start, $end), $this->totalOf($rolled));
         $this->assertProjectionUsed($queryId, $expectedProjection);
+    }
+
+    public function testBillingWindowUsesResourceTypeProjectionWithoutAMetricFilter(): void
+    {
+        $start = $this->hourAligned('-7 days');
+        $end = $this->hourAligned('-2 days');
+        $this->seedHistoricalRow('billing.events', 10, $start, ['resourceType' => 'bucket']);
+        $this->seedHistoricalRow('billing.events', -2, $start, ['resourceType' => 'bucket']);
+        $this->seedHistoricalRow('billing.events', 40, $start, ['resourceType' => 'site']);
+        $this->seedHistoricalRow('billing.compute', 7, $start, ['resourceType' => 'function']);
+        $this->seedHistoricalRow('billing.events', 999, $end, ['resourceType' => 'bucket']);
+
+        $queryId = bin2hex(random_bytes(8));
+        $this->adapter->setNextQueryId($queryId);
+        $rows = $this->usage->find('1', [
+            Query::greaterThanEqual('time', $start),
+            Query::lessThan('time', $end),
+            UsageQuery::groupBy('resourceType'),
+            Query::limit(10000),
+        ], Usage::TYPE_EVENT);
+        $totals = [];
+        foreach ($rows as $row) {
+            $metric = $row->getAttribute('metric');
+            $resourceType = $row->getAttribute('resourceType');
+            $this->assertIsString($metric);
+            if ($resourceType !== null) {
+                $this->assertIsString($resourceType);
+            }
+            $totals[$metric][$resourceType ?? ''] = (int) $row->getValue();
+        }
+
+        $this->assertSame(8, $totals['billing.events']['bucket']);
+        $this->assertSame(40, $totals['billing.events']['site']);
+        $this->assertSame(7, $totals['billing.compute']['function']);
+        $this->assertSame(100, $totals[$this->metric]['']);
+        $this->assertCount(3, $totals);
+        $this->assertProjectionUsed($queryId, 'p_by_resourceType');
+    }
+
+    public function testMaterializingResourceTypeProjectionPreservesExistingTotals(): void
+    {
+        $events = $this->resolveTableName($this->adapter, 'getEventsTableName');
+        $database = $this->databaseName($this->adapter);
+        $this->queryRaw($this->adapter, "ALTER TABLE `{$database}`.`{$events}` DROP PROJECTION p_by_resourceType");
+        $this->usage->setup(); // Attaches the definition, but not historical parts.
+        $queries = [
+            Query::greaterThanEqual('time', $this->hourAligned('-7 days')),
+            Query::lessThan('time', $this->hourAligned('-2 days')),
+            UsageQuery::groupBy('resourceType'),
+        ];
+        $beforeId = bin2hex(random_bytes(8));
+        $this->adapter->setNextQueryId($beforeId);
+        $before = $this->usage->find('1', $queries, Usage::TYPE_EVENT);
+        $this->assertSame(100, $this->totalOf($before));
+        $this->assertNoProjectionUsed($beforeId);
+
+        $this->queryRaw($this->adapter, "ALTER TABLE `{$database}`.`{$events}` MATERIALIZE PROJECTION p_by_resourceType SETTINGS mutations_sync = 2");
+        $afterId = bin2hex(random_bytes(8));
+        $this->adapter->setNextQueryId($afterId);
+        $after = $this->usage->find('1', $queries, Usage::TYPE_EVENT);
+        $this->assertSame(100, $this->totalOf($after));
+        $this->assertProjectionUsed($afterId, 'p_by_resourceType');
     }
 
     public function testMultiDimNotInAnyProjectionFallsBackToTable(): void

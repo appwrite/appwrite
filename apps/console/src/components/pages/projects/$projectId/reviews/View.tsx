@@ -13,10 +13,10 @@ import {
   useReviews,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { AddRepository } from './_components/AddRepository'
-import { RepositoriesTable } from './_components/RepositoriesTable'
+import { Repositories } from './_components/Repositories'
 import { ReviewsTable } from './_components/ReviewsTable'
 
 export function View() {
@@ -61,10 +61,11 @@ export function View() {
     }
   }, [isFetching, requestedPage, displayedPage])
 
-  const { repositories, isLoading: repositoriesLoading } =
+  const { total: repositoriesTotal, isLoading: repositoriesLoading } =
     useReviewRepositories(projectId)
 
-  const [addOpen, setAddOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 300)
 
   const tabs: Tab[] = useMemo(
     () => [
@@ -77,32 +78,29 @@ export function View() {
       {
         id: 'repositories',
         label: t('Repositories'),
-        count: repositories.length,
+        count: repositoriesTotal,
         to: '/projects/$projectId/reviews/repositories',
         params: { projectId },
       },
     ],
-    [projectId, repositories.length, t],
+    [projectId, repositoriesTotal, t],
   )
 
-  const addButton = (
-    <Button
-      size="sm"
-      className="h-9 text-[13px]"
-      disabled={!canWrite}
-      title={writeTooltip}
-      onClick={() => setAddOpen(true)}
-    >
-      {t('Add repository')}
-    </Button>
-  )
+  const showRepositories = () =>
+    navigate({
+      to: '/projects/$projectId/reviews/repositories',
+      params: { projectId },
+    })
 
   // Past reviews stay listed after the last repository is removed, so the intro
-  // only shows while there is nothing to list.
+  // only shows while there is nothing to list. The repositories tab is where
+  // repositories are added, so it never shows the intro.
   const noRepositories =
+    activeTab === 'reviews' &&
     !repositoriesLoading &&
-    repositories.length === 0 &&
-    (activeTab === 'repositories' || (!reviewsLoading && total === 0))
+    repositoriesTotal === 0 &&
+    !reviewsLoading &&
+    total === 0
 
   return (
     <div className="flex flex-col">
@@ -112,10 +110,18 @@ export function View() {
         activeTab={activeTab}
         fullWidthBorder
         hideToolbar={noRepositories}
-        createLabel={t('Add repository')}
-        onCreate={() => setAddOpen(true)}
-        createDisabled={!canWrite}
-        createDisabledTooltip={writeTooltip}
+        {...(activeTab === 'repositories'
+          ? {
+              searchPlaceholder: t('Search GitHub repositories...'),
+              searchValue: search,
+              onSearchChange: setSearch,
+            }
+          : {
+              createLabel: t('Add repository'),
+              onCreate: showRepositories,
+              createDisabled: !canWrite,
+              createDisabledTooltip: writeTooltip,
+            })}
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
@@ -127,13 +133,23 @@ export function View() {
             description={t(
               'Add a GitHub repository and every pull request gets a review with findings, a verdict, and a merge confidence grade. Mention the app in a comment to ask it anything.',
             )}
-            action={addButton}
+            action={
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={!canWrite}
+                title={writeTooltip}
+                onClick={showRepositories}
+              >
+                {t('Choose repositories')}
+              </Button>
+            }
           />
         ) : activeTab === 'repositories' ? (
-          <RepositoriesTable
+          <Repositories
             projectId={projectId}
-            repositories={repositories}
             canWrite={canWrite}
+            search={debouncedSearch.trim()}
           />
         ) : reviews.length > 0 ? (
           <>
@@ -165,12 +181,7 @@ export function View() {
                 variant="outline"
                 size="sm"
                 className="h-9 text-[13px]"
-                onClick={() =>
-                  navigate({
-                    to: '/projects/$projectId/reviews/repositories',
-                    params: { projectId },
-                  })
-                }
+                onClick={showRepositories}
               >
                 {t('View repositories')}
               </Button>
@@ -178,12 +189,6 @@ export function View() {
           />
         )}
       </div>
-
-      <AddRepository
-        projectId={projectId}
-        open={addOpen}
-        onOpenChange={setAddOpen}
-      />
     </div>
   )
 }

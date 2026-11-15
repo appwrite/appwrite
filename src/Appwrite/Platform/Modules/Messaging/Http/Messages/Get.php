@@ -6,10 +6,10 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
 class Get extends Action
@@ -46,10 +46,11 @@ class Get extends Action
             ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Message ID.', false, ['dbForProject'])
             ->inject('dbForProject')
             ->inject('response')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, Database $dbForProject, Response $response)
+    public function action(string $messageId, Database $dbForProject, Response $response, Request $request)
     {
         $message = $dbForProject->getDocument('messages', $messageId);
 
@@ -57,6 +58,6 @@ class Get extends Action
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        $response->dynamic($message, Response::MODEL_MESSAGE);
+        $response->dynamic($this->redactImageUrl($message, $request), Response::MODEL_MESSAGE);
     }
 }

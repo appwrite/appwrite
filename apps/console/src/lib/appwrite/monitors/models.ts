@@ -1,69 +1,64 @@
 /**
- * Monitor and alert models: the generated `Models.Monitor` and `Models.Alert`,
- * with the enums the console matches on read as string unions. Editions add
- * metrics, resource types and monitor types this spec does not enumerate, and
- * the console renders those too, so the unions carry them alongside.
+ * Monitor and alert models: the generated `Api.Monitor` and `Api.Alert`, with the
+ * enums the console matches on read as string unions. The enums already carry the
+ * edition-only metrics, resource types and `budget` monitors, so the unions are
+ * exactly their values.
  */
 
+import type * as Api from './api'
 import type {
   AlertComparator as Comparator,
   AlertMetric as Metric,
   AlertStatus as Status,
-  Models,
   MonitorResourceType,
+  MonitorSeverity as Level,
   MonitorStatus as State,
   MonitorType as Kind,
-} from '@appwrite.io/console'
+} from './api'
 
-export type AlertMetric =
-  | `${Metric}`
-  | 'dedicatedDatabases.cpu'
-  | 'dedicatedDatabases.memory'
-  | 'dedicatedDatabases.storage'
-  | 'dedicatedDatabases.connections'
-  | 'dedicatedDatabases.qps'
-  | 'dedicatedDatabases.iopsRead'
-  | 'dedicatedDatabases.iopsWrite'
+export type AlertMetric = `${Metric}`
 
-export type AlertResourceType =
-  | `${MonitorResourceType}`
-  | 'dedicatedDatabase'
-  | 'organization'
+export type AlertResourceType = `${MonitorResourceType}`
 
 export type AlertComparator = `${Comparator}`
 
 /** `budget` monitors live on organization routes, where an edition has them. */
-export type MonitorType = `${Kind}` | 'budget'
+export type MonitorType = `${Kind}`
+
+/** How urgent a monitor's alerts are; only `critical` changes how a push is delivered. */
+export type MonitorSeverity = `${Level}`
 
 export type MonitorStatus = `${State}`
 
 export type AlertStatus = `${Status}`
 
 export type Monitor = Omit<
-  Models.Monitor,
-  'type' | 'resourceType' | 'status'
+  Api.Monitor,
+  'type' | 'resourceType' | 'status' | 'severity'
 > & {
   type: MonitorType
   resourceType: AlertResourceType
   status: MonitorStatus
+  severity: MonitorSeverity
 }
 
-export type MonitorList = Omit<Models.MonitorList, 'monitors'> & {
+export type MonitorList = Omit<Api.MonitorList, 'monitors'> & {
   monitors: Monitor[]
 }
 
 export type Alert = Omit<
-  Models.Alert,
-  'type' | 'resourceType' | 'status' | 'metric' | 'comparator'
+  Api.Alert,
+  'type' | 'resourceType' | 'status' | 'metric' | 'comparator' | 'severity'
 > & {
   type: MonitorType
   resourceType: AlertResourceType
   status: AlertStatus
+  severity: MonitorSeverity
   metric: AlertMetric
   comparator: AlertComparator
 }
 
-export type AlertList = Omit<Models.AlertList, 'alerts'> & {
+export type AlertList = Omit<Api.AlertList, 'alerts'> & {
   alerts: Alert[]
 }
 
@@ -77,7 +72,7 @@ export type MonitorInput = {
   cooldown?: number
   /** Organization roles emailed and notified in the console; none relies on the alert events alone. */
   notify?: string[]
-  /** Push alerts ring through silent and Do Not Disturb on devices that allow critical alerts. */
-  critical?: boolean
+  /** Critical pushes ring through silent and Do Not Disturb on devices that allow critical alerts. */
+  severity?: MonitorSeverity
   enabled?: boolean
 }

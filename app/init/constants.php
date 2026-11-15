@@ -35,7 +35,6 @@ const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
-const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
 const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels elements can there be in API parameter that expects array value
@@ -112,7 +111,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.7.1';
+const APP_VERSION_STABLE = '2.7.2';
 const APP_READINESS_MARKER = '/tmp/.appwrite-ready';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -239,6 +238,7 @@ const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
 const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
 const SESSION_PROVIDER_PHONE = 'phone';
 const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+const SESSION_PROVIDER_LDAP = 'ldap';
 const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
 const SESSION_PROVIDER_PASSKEY = 'passkey';
@@ -383,6 +383,7 @@ const ALERT_UNSUBSCRIBE_TTL = 60 * 60 * 24 * 90; // An alert email's unsubscribe
 const MAIL_TEMPLATE_ALERT = 'alert';
 const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
 const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
+const MAIL_TEMPLATE_DOMAIN_VERIFIED = 'domain-verified';
 const MAIL_TEMPLATE_INVITATION = 'invitation';
 const MAIL_TEMPLATE_MAGIC_URL = 'magic-url';
 const MAIL_TEMPLATE_MFA_CHALLENGE = 'mfa-challenge';
@@ -452,6 +453,15 @@ const METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION = 'embeddings.text.totalDuration';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingModel}.totalDuration';
 const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
 const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
+const METRIC_REVIEWS = 'reviews'; // Completed code reviews, the billed unit
+const METRIC_REVIEWS_FAILED = 'reviews.failed';
+const METRIC_REVIEWS_CHATS = 'reviews.chats'; // Comments the review service answered
+const METRIC_REVIEWS_TOKENS_INPUT = 'reviews.tokens.input'; // Model tokens behind reviews and chat answers
+const METRIC_REVIEWS_TOKENS_OUTPUT = 'reviews.tokens.output';
+const METRIC_REVIEWS_TOKENS_CACHED_INPUT = 'reviews.tokens.cachedInput';
+const METRIC_REVIEWS_TOKENS_REASONING = 'reviews.tokens.reasoning';
+const METRIC_REVIEWS_MODEL_TOKENS_INPUT = 'reviews.tokens.{model}.input';
+const METRIC_REVIEWS_MODEL_TOKENS_OUTPUT = 'reviews.tokens.{model}.output';
 
 const METRIC_BUCKETS = 'buckets';
 const METRIC_STORAGE = 'storage';
@@ -521,6 +531,12 @@ const REALTIME_CONCURRENCY_INTERVAL = '5m';
 // forward and never recomputed, so a delta arriving after its bucket was
 // sampled is lost for good.
 const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
+
+// Default for _APP_REALTIME_BOOT_TIMEOUT: longest a presence write waits at boot for the self-hosted cleanup.
+const REALTIME_BOOT_TIMEOUT_SECONDS = 30;
+
+// A realtime process whose heartbeat (every 5s) is older than this counts as gone.
+const REALTIME_HEARTBEAT_WINDOW_SECONDS = 60;
 
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
@@ -655,4 +671,5 @@ const MIGRATION_STALL_TIMEOUT = 60 * 60; // 1 hour
 
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',
+    '[skip appwrite]',
 ];

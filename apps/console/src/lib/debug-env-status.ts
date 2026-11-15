@@ -112,9 +112,9 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Override the project environments switcher (Cloud only)',
   },
   {
-    key: 'VITE_CONSOLE_EXTRA_VCS_OAUTH',
+    key: 'VITE_CONSOLE_VCS_ORIGIN',
     group: 'Runtime',
-    description: 'Override extra Git VCS OAuth connect (Origin)',
+    description: 'Override Origin on Git connect',
   },
   {
     key: 'VITE_CONSOLE_PRE_LAUNCH',
@@ -262,7 +262,7 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_CONSOLE_SCREENSHOT_MODE: isNonEmpty(config.screenshotMode),
     VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
     VITE_CONSOLE_PROJECT_ENVIRONMENTS: isNonEmpty(config.projectEnvironments),
-    VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),
+    VITE_CONSOLE_VCS_ORIGIN: isNonEmpty(config.vcsOrigin),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),
   }
 }

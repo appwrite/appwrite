@@ -10,7 +10,7 @@ use Appwrite\Auth\OAuth2;
 
 class Vipps extends OAuth2
 {
-    private string $endpoint = 'https://api.vipps.no';
+    protected string $endpoint = 'https://api.vipps.no';
 
     /**
      * @var array

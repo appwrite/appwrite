@@ -7,7 +7,7 @@ use Appwrite\Utopia\Response;
 class OAuth2Vipps extends OAuth2Base
 {
     public array $conditions = [
-        '$id' => 'vipps',
+        '$id' => ['vipps', 'vippsSandbox'],
     ];
 
     public function getProviderLabel(): string

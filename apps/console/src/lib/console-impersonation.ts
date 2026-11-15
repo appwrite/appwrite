@@ -1,4 +1,5 @@
 import { clearConsoleAccountCache } from '@/lib/console-account-cache'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 
 /**
  * Console operator impersonation (Console Auth users via console SDK - not project Auth users).
@@ -45,15 +46,6 @@ const AUTH_REDIRECT_PATHS = new Set([
   '/auth/magic-url',
 ])
 
-function isSafeConsoleRedirect(redirect: string): boolean {
-  // Reject protocol-relative URLs (//evil.com) alongside absolute ones.
-  return (
-    redirect.startsWith('/') &&
-    !redirect.startsWith('//') &&
-    !redirect.includes('://')
-  )
-}
-
 /**
  * Same-origin console path after confirm. Rejects open redirects, auth pages,
  * and the impersonate confirm routes themselves.
@@ -62,7 +54,7 @@ export function resolveConsoleImpersonationRedirect(
   redirect?: string | null,
 ): string {
   const value = redirect?.trim()
-  if (!value || !isSafeConsoleRedirect(value)) {
+  if (!value || !isValidRelativeRedirect(value)) {
     return ACCOUNT_PATH_AFTER_IMPERSONATION
   }
   const pathname = pathnameFromRedirect(value)

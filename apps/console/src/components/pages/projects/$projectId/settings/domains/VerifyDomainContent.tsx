@@ -4,8 +4,10 @@ import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
 import {
   getApexDomain,
   getRecordName,
+  getVerificationMethods,
   isCloud as isCloudEndpoint,
   isDomainClaimError,
+  type VerificationMethod,
 } from '@/lib/utils/proxy-domains'
 import {
   getAppwriteErrorInfo,
@@ -30,6 +32,13 @@ import { useT } from '@/lib/i18n/translate'
 
 export const DNS_PROVIDERS_LINK =
   '/docs/advanced/platform/custom-domains'
+
+const TAB_LABELS: Record<VerificationMethod, string> = {
+  cname: 'CNAME',
+  nameservers: 'Nameservers',
+  a: 'A',
+  aaaa: 'AAAA',
+}
 
 export type DomainVerificationError = {
   title: string
@@ -85,8 +94,9 @@ interface VerifyDomainContentProps {
    * - 'api' → use `_APP_DOMAIN_TARGET_CNAME` from console variables (project endpoint host).
    * - 'function' / 'site' → when the active profile has `edgeNetwork` enabled,
    *   use the edge network CNAME (`appwrite.network`) instead of the project
-   *   endpoint host. When edge network is off (self-hosted), use
-   *   `_APP_DOMAIN_FUNCTIONS` / `_APP_DOMAIN_SITES`.
+   *   endpoint host. When edge network is off (self-hosted), functions use
+   *   `_APP_DOMAIN_TARGET_CNAME` like API domains and sites use `_APP_DOMAIN_SITES`,
+   *   matching the targets the server verifies against.
    * Defaults to 'api' for backward compatibility.
    */
   resourceType?: 'api' | 'function' | 'site'
@@ -267,7 +277,6 @@ export function VerifyDomainContent({
     aaaa,
     caa,
     nameservers,
-    functionsDomain,
     sitesDomain,
     isLoading,
     error,
@@ -283,39 +292,36 @@ export function VerifyDomainContent({
   // (`appwrite.network`) - not the project endpoint host returned by
   // `_APP_DOMAIN_TARGET_CNAME` (which only applies to custom API domains).
   // For region-pinned routing users can use `<region>.appwrite.run`.
-  // Self-hosted uses `_APP_DOMAIN_FUNCTIONS` / `_APP_DOMAIN_SITES` instead.
+  // Self-hosted verifies function domains against `_APP_DOMAIN_TARGET_CNAME`
+  // (same as API domains) and site domains against `_APP_DOMAIN_SITES`.
   const cname = useMemo(() => {
     if (resourceType === 'function' || resourceType === 'site') {
       if (edgeNetworkEnabled) {
         return 'appwrite.network'
       }
-      const serviceDomain =
-        resourceType === 'function' ? functionsDomain : sitesDomain
-      return serviceDomain || rawCname
+      if (resourceType === 'site') {
+        return sitesDomain || rawCname
+      }
     }
     return rawCname
-  }, [
-    edgeNetworkEnabled,
-    resourceType,
-    rawCname,
-    functionsDomain,
-    sitesDomain,
-  ])
+  }, [edgeNetworkEnabled, resourceType, rawCname, sitesDomain])
 
-  const hasCname = !!cname
   const hasNameservers = isCloud && nameservers.length > 0
-  const hasA = !isCloud && !!a
-  const hasAaaa = !isCloud && !!aaaa
-  const hasCaa = !!caa
+  // Older servers send `0 issue ""` for an unset CAA target, a record that
+  // would block every CA.
+  const hasCaa = !!caa && caa !== '0 issue ""'
 
-  const tabOptions = [
-    ...(hasCname ? [{ id: 'cname' as const, label: 'CNAME' }] : []),
-    ...(hasNameservers
-      ? [{ id: 'nameservers' as const, label: 'Nameservers' }]
-      : []),
-    ...(hasA ? [{ id: 'a' as const, label: 'A' }] : []),
-    ...(hasAaaa ? [{ id: 'aaaa' as const, label: 'AAAA' }] : []),
-  ]
+  // On the edge network the CNAME targets appwrite.network, while A and AAAA
+  // name the region's address, so only the CNAME and nameservers are offered.
+  const edge = edgeNetworkEnabled && resourceType !== 'api'
+  const tabOptions = getVerificationMethods({
+    domain: rule.domain,
+    cloud: isCloud,
+    cname,
+    a: edge ? undefined : a,
+    aaaa: edge ? undefined : aaaa,
+    nameservers,
+  }).map((id) => ({ id, label: TAB_LABELS[id] }))
 
   const selectedTab =
     activeTab && tabOptions.some((tab) => tab.id === activeTab)

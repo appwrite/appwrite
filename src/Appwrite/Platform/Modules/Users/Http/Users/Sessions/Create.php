@@ -128,6 +128,7 @@ class Create extends Action
 
         $session
             ->setAttribute('secret', $encoded)
+            ->setAttribute('userName', $user->getAttribute('name', ''))
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents
