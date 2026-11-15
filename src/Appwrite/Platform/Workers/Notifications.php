@@ -543,7 +543,8 @@ class Notifications extends Action
     /**
      * Pushes to every signed-in device of the console user the recipient names: their push
      * targets on the console project that have not expired. The user's `beep` prefs mute
-     * organizations and projects and turn resolved pushes off for all of them. Each device's
+     * organizations and projects, turn resolved pushes off for all of them, and snooze an
+     * organization's pushes, or all of them, until a time. Each device's
      * push is recorded before it is sent, so a redelivered message pushes nothing twice, even
      * after a crash between the send and the record, while a new device still gets it.
      * Each device is pushed through the service its token belongs to; a device whose service is
@@ -576,6 +577,11 @@ class Notifications extends Action
             || ($status === 'resolved' && ($beep['resolved'] ?? true) === false)
         ) {
             Span::add('push.skipped', 'muted');
+            return null;
+        }
+
+        if (self::isSnoozed($beep, $data['organizationId'] ?? '', new \DateTimeImmutable())) {
+            Span::add('push.skipped', 'snoozed');
             return null;
         }
 
@@ -680,6 +686,38 @@ class Notifications extends Action
         }
 
         return null;
+    }
+
+    /**
+     * Whether the user's `beep.snoozes` holds back pushes for the organization at `$now`. Snoozes map
+     * an organization ID, or `*` for every organization, to the ISO 8601 time they end, so a snooze
+     * runs out by itself and needs no write to end. Prefs are user-written: a value that is not a
+     * date reads as no snooze.
+     *
+     * @param array<string, mixed> $beep
+     */
+    public static function isSnoozed(array $beep, string $organizationId, \DateTimeImmutable $now): bool
+    {
+        $snoozes = $beep['snoozes'] ?? null;
+        if (!\is_array($snoozes)) {
+            return false;
+        }
+        foreach ([$organizationId, '*'] as $key) {
+            $until = $snoozes[$key] ?? null;
+            // A date and time, not a relative phrase like `+1 day` that would never run out.
+            if ($key === '' || !\is_string($until) || !\preg_match('/^\d{4}-\d{2}-\d{2}T/', $until)) {
+                continue;
+            }
+            try {
+                if (new \DateTimeImmutable($until) > $now) {
+                    return true;
+                }
+            } catch (\Exception) {
+                continue;
+            }
+        }
+
+        return false;
     }
 
     /**

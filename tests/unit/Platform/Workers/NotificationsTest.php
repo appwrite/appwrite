@@ -1338,4 +1338,29 @@ final class NotificationsTest extends TestCase
         $this->assertSame(NOTIFICATION_TYPE_WEBHOOK, $rows[0]->getAttribute('channel'));
         $this->assertFalse($rows[0]->getAttribute('read'));
     }
+
+    public function testSnoozeHoldsBackPushesUntilItEnds(): void
+    {
+        $now = new \DateTimeImmutable('2026-11-15T12:00:00Z');
+        $later = '2026-11-15T13:00:00.000Z';
+        $earlier = '2026-11-15T11:00:00.000Z';
+
+        // An organization's snooze, or one for every organization, holds back pushes until it ends.
+        $this->assertTrue(Notifications::isSnoozed(['snoozes' => ['org' => $later]], 'org', $now));
+        $this->assertTrue(Notifications::isSnoozed(['snoozes' => ['*' => $later]], 'org', $now));
+        $this->assertTrue(Notifications::isSnoozed(['snoozes' => ['org' => $earlier, '*' => $later]], 'org', $now));
+        $this->assertTrue(Notifications::isSnoozed(['snoozes' => ['org' => '2026-11-15T18:30:00+05:30']], 'org', $now));
+
+        // Another organization's snooze, an ended one, and no snooze let them through.
+        $this->assertFalse(Notifications::isSnoozed(['snoozes' => ['other' => $later]], 'org', $now));
+        $this->assertFalse(Notifications::isSnoozed(['snoozes' => ['org' => $earlier]], 'org', $now));
+        $this->assertFalse(Notifications::isSnoozed(['snoozes' => ['org' => '2026-11-15T12:00:00Z']], 'org', $now));
+        $this->assertFalse(Notifications::isSnoozed([], 'org', $now));
+        $this->assertFalse(Notifications::isSnoozed(['snoozes' => [$later]], '', $now));
+
+        // Prefs are user-written: anything that is not a date and time reads as no snooze.
+        foreach ([null, true, 42, $later, ['org' => 42], ['org' => 'soon'], ['org' => '+1 day'], ['org' => 'tomorrow'], ['org' => [$later]]] as $snoozes) {
+            $this->assertFalse(Notifications::isSnoozed(['snoozes' => $snoozes], 'org', $now), \json_encode($snoozes));
+        }
+    }
 }
