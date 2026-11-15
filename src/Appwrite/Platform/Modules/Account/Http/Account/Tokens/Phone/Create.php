@@ -72,7 +72,7 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse', [
-                Limit::attempts(['url', 'param.phone'], 10),
+                Limit::attempts(['projectId', 'url', 'param.phone'], 10),
                 Limit::attempts(['url', 'ip'], 10),
             ])
             ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.', false, ['dbForProject'])

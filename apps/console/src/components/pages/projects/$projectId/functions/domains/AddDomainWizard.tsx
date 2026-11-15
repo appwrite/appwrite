@@ -29,7 +29,8 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   ensureApexDomainInOrganization,
-  isDomainClaimError,
+  getDomainClaimReason,
+  type DomainClaimReason,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
@@ -67,6 +68,7 @@ export function AddDomainWizard() {
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
+  const [claimReason, setClaimReason] = useState<DomainClaimReason>('pointed')
   const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/functions/${functionId}/domains`
@@ -117,7 +119,7 @@ export function AddDomainWizard() {
       return
     }
     if (!isValidDomain(d)) {
-      setError(t('Invalid'))
+      setError(t('Please enter a valid domain'))
       return
     }
     if (behaviour === 'branch' && !hasRepo) {
@@ -163,7 +165,9 @@ export function AddDomainWizard() {
     try {
       await createRule(d)
     } catch (err) {
-      if (isDomainClaimError(err)) {
+      const reason = getDomainClaimReason(err)
+      if (reason) {
+        setClaimReason(reason)
         setClaimDomain(d)
         return
       }
@@ -285,6 +289,7 @@ export function AddDomainWizard() {
       >
         <ClaimDomainContent
           domain={claimDomain}
+          reason={claimReason}
           projectId={projectId!}
           verificationError={verificationError}
         />

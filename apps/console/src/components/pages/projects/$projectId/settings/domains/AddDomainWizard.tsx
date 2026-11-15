@@ -25,7 +25,8 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   ensureApexDomainInOrganization,
-  isDomainClaimError,
+  getDomainClaimReason,
+  type DomainClaimReason,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
@@ -53,6 +54,7 @@ export function AddDomainWizard({
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
+  const [claimReason, setClaimReason] = useState<DomainClaimReason>('pointed')
   const [registering, setRegistering] = useState(false)
   const [verificationError, setVerificationError] =
     useState<DomainVerificationError | null>(null)
@@ -94,7 +96,7 @@ export function AddDomainWizard({
       return
     }
     if (!isValidDomain(d)) {
-      setError(t('Invalid format'))
+      setError(t('Please enter a valid domain'))
       return
     }
 
@@ -118,11 +120,15 @@ export function AddDomainWizard({
     try {
       await createRule(d)
     } catch (err) {
-      if (isDomainClaimError(err)) {
+      const reason = getDomainClaimReason(err)
+      if (reason) {
+        setClaimReason(reason)
         setClaimDomain(d)
         return
       }
-      toast.error(err instanceof Error ? err.message : t('Failed to add domain'))
+      toast.error(
+        err instanceof Error ? err.message : t('Failed to add domain'),
+      )
     }
   }
 
@@ -237,6 +243,7 @@ export function AddDomainWizard({
       >
         <ClaimDomainContent
           domain={claimDomain}
+          reason={claimReason}
           projectId={projectId!}
           verificationError={verificationError}
         />

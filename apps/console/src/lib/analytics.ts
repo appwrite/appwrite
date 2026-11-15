@@ -74,6 +74,7 @@ export type AnalyticsEventName =
   | 'View Mode Changed'
   | 'Wizard Opened'
   | 'Wizard Option Selected'
+  | 'WebMCP Tool Called'
 
 export type AnalyticsPropValue = string | number | boolean | null | undefined
 export type AnalyticsProps = Record<string, AnalyticsPropValue>

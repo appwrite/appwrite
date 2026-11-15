@@ -5,6 +5,7 @@ import { changePasswordUrlMiddleware } from '@/server/middleware/change-password
 import { hostCanonicalMiddleware } from '@/server/middleware/host-canonical'
 import { legacyRedirectsMiddleware } from '@/server/middleware/legacy-redirects'
 import { legacyConsolePathMiddleware } from '@/server/middleware/legacy-console-path'
+import { markdownNegotiationMiddleware } from '@/server/middleware/markdown-negotiation'
 import { rootGuestRedirectMiddleware } from '@/server/middleware/root-guest-redirect'
 import { runtimeConfigMiddleware } from '@/server/middleware/runtime-config'
 import { securityTxtMiddleware } from '@/server/middleware/security-txt'
@@ -33,6 +34,7 @@ export const startInstance = createStart(() => ({
     legacyConsolePathMiddleware,
     preLaunchMiddleware,
     selfHostedRoutesMiddleware,
+    markdownNegotiationMiddleware,
     rootGuestRedirectMiddleware,
   ],
 }))

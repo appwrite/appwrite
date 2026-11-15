@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace Utopia\Image\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
+use Utopia\Image\Canvas;
+use Utopia\Image\Exception\CorruptImageException;
 use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Format;
+use Utopia\Image\Limits;
 
+// A format is read through a canvas, which the utopia extension provides.
+#[RequiresPhpExtension('utopia')]
 final class FormatTest extends TestCase
 {
     /**
@@ -33,7 +39,36 @@ final class FormatTest extends TestCase
     #[DataProvider('signatureProvider')]
     public function testDetect(string $data, Format $expected): void
     {
-        $this->assertSame($expected, Format::detect($data));
+        $this->assertDetected($expected, $data);
+    }
+
+    /**
+     * A canvas reads the size with the format, so each signature opens a whole picture here.
+     *
+     * @return iterable<string, array{string, Format}>
+     */
+    public static function pictureProvider(): iterable
+    {
+        $avif = self::picture('avif');
+        $heic = \file_get_contents(__DIR__ . '/resources/resize/100x100.heic') ?: '';
+
+        yield 'jpeg' => [self::picture('jpeg'), Format::Jpeg];
+        yield 'png' => [self::picture('png'), Format::Png];
+        yield 'gif87a' => ['GIF87a' . \substr(self::picture('gif'), 6), Format::Gif];
+        yield 'gif89a' => ['GIF89a' . \substr(self::picture('gif'), 6), Format::Gif];
+        yield 'webp' => [self::picture('webp'), Format::Webp];
+        yield 'avif' => [self::withFileType(self::fileType('avif', ['avif', 'mif1', 'miaf']), $avif), Format::Avif];
+        yield 'avif compatible with a heif major brand' => [self::withFileType(self::fileType('mif1', ['avif', 'mif1']), $avif), Format::Avif];
+        yield 'heic' => [self::withFileType(self::fileType('heic', ['mif1', 'heic']), $heic), Format::Heic];
+        yield 'heif' => [self::withFileType(self::fileType('mif1', ['mif1', 'heic']), $heic), Format::Heic];
+        yield 'avif with an extended box size' => [self::withFileType(self::extendedFileType('avif', ['avif', 'mif1']), $avif), Format::Avif];
+        yield 'heic with an extended box size' => [self::withFileType(self::extendedFileType('heic', ['mif1', 'heic']), $heic), Format::Heic];
+    }
+
+    #[DataProvider('pictureProvider')]
+    public function testFormatOfACanvas(string $data, Format $expected): void
+    {
+        $this->assertSame($expected, (new Canvas($data))->format);
     }
 
     /**
@@ -54,7 +89,7 @@ final class FormatTest extends TestCase
         $this->expectException(UnsupportedFormatException::class);
         $this->expectExceptionMessage('Unsupported image format');
 
-        Format::detect($data);
+        new Canvas($data);
     }
 
     public function testDetectReadsOnlyTheStartOfAnOversizedFileTypeBox(): void
@@ -66,7 +101,7 @@ final class FormatTest extends TestCase
         $baseline = \memory_get_peak_usage();
 
         try {
-            Format::detect($data);
+            new Canvas($data);
             $this->fail('An oversized file type box without a supported brand near its start must be refused');
         } catch (UnsupportedFormatException $exception) {
             $this->assertSame('Unsupported image format', $exception->getMessage());
@@ -79,7 +114,55 @@ final class FormatTest extends TestCase
     {
         $box = 'mif1' . "\0\0\0\0" . 'avif' . \str_repeat('isom', 5_000_000);
 
-        $this->assertSame(Format::Avif, Format::detect(\pack('N', \strlen($box) + 8) . 'ftyp' . $box));
+        $this->assertDetected(Format::Avif, \pack('N', \strlen($box) + 8) . 'ftyp' . $box);
+    }
+
+    /**
+     * A signature with no picture behind it makes no canvas to ask, so its format shows in
+     * which allow-list lets the data through to the header.
+     */
+    private function assertDetected(Format $expected, string $signature): void
+    {
+        $others = \array_values(\array_filter(Format::cases(), fn (Format $format) => $format !== $expected));
+
+        foreach ([[[$expected], CorruptImageException::class], [$others, UnsupportedFormatException::class]] as [$formats, $refusal]) {
+            try {
+                new Canvas($signature, new Limits(formats: $formats));
+                $this->fail('A signature alone is not a picture');
+            } catch (CorruptImageException|UnsupportedFormatException $exception) {
+                $this->assertInstanceOf($refusal, $exception);
+            }
+        }
+    }
+
+    /**
+     * A 4x4 picture, written by GD.
+     */
+    private static function picture(string $type): string
+    {
+        $picture = \imagecreatetruecolor(4, 4);
+        \ob_start();
+        match ($type) {
+            'jpeg' => \imagejpeg($picture),
+            'gif' => \imagegif($picture),
+            'webp' => \imagewebp($picture),
+            'avif' => \imageavif($picture),
+            default => \imagepng($picture),
+        };
+
+        return \ob_get_clean() ?: '';
+    }
+
+    /**
+     * The file with another file type box in place of its own.
+     */
+    private static function withFileType(string $fileType, string $file): string
+    {
+        $size = \unpack('N', $file);
+        self::assertIsArray($size);
+        self::assertIsInt($size[1]);
+
+        return $fileType . \substr($file, $size[1]);
     }
 
     /**

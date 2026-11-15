@@ -528,12 +528,19 @@ final class MqttServerTest extends Scope
         $this->assertSame(201, $device['headers']['status-code']);
         $deviceCookie = $device['cookies'][$deviceKey];
 
-        $signIn = fn () => $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge($client, [
-            'cookie' => $deviceKey . '=' . $deviceCookie,
-        ]), [
-            'email' => 'mqtt-' . $userId . '@appwrite.io',
-            'password' => 'password',
-        ]);
+        // Joining a session rotates the device secret, so each sign-in carries the cookie the last one issued
+        $signIn = function () use ($client, $deviceKey, &$deviceCookie, $userId): array {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge($client, [
+                'cookie' => $deviceKey . '=' . $deviceCookie,
+            ]), [
+                'email' => 'mqtt-' . $userId . '@appwrite.io',
+                'password' => 'password',
+            ]);
+
+            $deviceCookie = $response['cookies'][$deviceKey] ?? $deviceCookie;
+
+            return $response;
+        };
 
         $replaced = $signIn();
         $this->assertSame(201, $replaced['headers']['status-code']);

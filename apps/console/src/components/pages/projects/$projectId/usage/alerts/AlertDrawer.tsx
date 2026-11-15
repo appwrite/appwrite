@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
+import { Loader2, UserCheck } from 'lucide-react'
+import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
@@ -11,7 +13,9 @@ import {
   thresholdRatio,
 } from '@/lib/alerts/metrics'
 import { useT } from '@/lib/i18n/translate'
+import { useUpdateAlert } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { StatusPill } from '../monitors/StatusPill'
 import { alertLength } from '@/lib/alerts/timeline'
 import { alertCondition } from './AlertHistory'
@@ -41,6 +45,109 @@ function Stat({
       {note && (
         <p className="truncate text-[12px] text-muted-foreground">{note}</p>
       )}
+    </div>
+  )
+}
+
+/** Who acknowledged the alert: a member by name, or an API key, which has none. */
+export function acknowledgedBy(
+  alert: Alert,
+  t: (text: string) => string,
+): string {
+  if (alert.acknowledgedByName) {
+    return t('Acknowledged by {name}').replace(
+      '{name}',
+      alert.acknowledgedByName,
+    )
+  }
+  return alert.acknowledgedBy
+    ? t('Acknowledged by a member')
+    : t('Acknowledged with an API key')
+}
+
+/**
+ * Lets a member tell the team they have a firing alert, or take that back.
+ * Hidden on servers whose alerts carry no acknowledgement.
+ */
+function Acknowledgement({
+  projectId,
+  alert,
+  onAlertChange,
+}: {
+  projectId: string
+  alert: Alert
+  onAlertChange: (alert: Alert) => void
+}) {
+  const t = useT()
+  const update = useUpdateAlert(projectId)
+  if (!('acknowledgedAt' in alert) || alert.status !== 'firing') return null
+  const acknowledged = !!alert.acknowledgedAt
+
+  const submit = () =>
+    update.mutate(
+      { alertId: alert.$id, acknowledged: !acknowledged },
+      {
+        onSuccess: onAlertChange,
+        onError: (error) =>
+          toast.error(
+            getErrorMessage(
+              error,
+              acknowledged
+                ? t('Failed to undo the acknowledgement')
+                : t('Failed to acknowledge the alert'),
+            ),
+          ),
+      },
+    )
+
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-3 rounded-xl border px-4 py-3',
+        acknowledged
+          ? 'border-border bg-muted/40'
+          : 'border-red-500/30 bg-red-500/5',
+      )}
+    >
+      <UserCheck
+        aria-hidden
+        className={cn(
+          'h-4 w-4 shrink-0',
+          acknowledged ? 'text-foreground' : 'text-red-500',
+        )}
+      />
+      <div className="min-w-0 flex-1">
+        {acknowledged ? (
+          <p className="truncate text-[13px] text-foreground">
+            {acknowledgedBy(alert, t)}
+            <span className="text-muted-foreground">
+              {' · '}
+              <DateTooltip date={alert.acknowledgedAt!} />
+            </span>
+          </p>
+        ) : (
+          <>
+            <p className="text-[13px] font-medium text-foreground">
+              {t('Nobody has acknowledged this alert')}
+            </p>
+            <p className="text-[12px] text-muted-foreground">
+              {t(
+                'Let your team know someone is on it. It keeps firing until usage recovers.',
+              )}
+            </p>
+          </>
+        )}
+      </div>
+      <Button
+        type="button"
+        size="sm"
+        variant={acknowledged ? 'ghost' : 'default'}
+        disabled={update.isPending}
+        onClick={submit}
+      >
+        {update.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        {acknowledged ? t('Undo') : t('Acknowledge')}
+      </Button>
     </div>
   )
 }
@@ -75,6 +182,8 @@ interface AlertDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   alert: Alert | null
+  /** The alert as the server returns it after an acknowledgement. */
+  onAlertChange: (alert: Alert) => void
 }
 
 /** One alert: how far over its threshold it went, and its timeline. */
@@ -83,6 +192,7 @@ export function AlertDrawer({
   open,
   onOpenChange,
   alert,
+  onAlertChange,
 }: AlertDrawerProps) {
   const t = useT()
   const firing = alert?.status === 'firing'
@@ -132,6 +242,12 @@ export function AlertDrawer({
               <Stat label={t('Notifications')} value={alert.notifications} />
             </div>
 
+            <Acknowledgement
+              projectId={projectId}
+              alert={alert}
+              onAlertChange={onAlertChange}
+            />
+
             <dl className="grid grid-cols-[120px_minmax(0,1fr)] gap-y-2 text-[13px]">
               <dt className="text-muted-foreground">{t('Condition')}</dt>
               <dd className="text-foreground">{alertCondition(alert, t)}</dd>
@@ -157,6 +273,11 @@ export function AlertDrawer({
                       '{count}',
                       String(alert.notifications),
                     )}
+                  </Step>
+                )}
+                {alert.acknowledgedAt && (
+                  <Step tone="muted" title={acknowledgedBy(alert, t)}>
+                    <DateTooltip date={alert.acknowledgedAt} />
                   </Step>
                 )}
                 {alert.resolvedAt ? (

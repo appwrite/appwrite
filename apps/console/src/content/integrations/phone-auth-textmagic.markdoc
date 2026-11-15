@@ -1,0 +1,98 @@
+---
+layout: integration
+title: Phone auth with Textmagic
+description: Deliver one-time passwords for phone authentication through Textmagic
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/phone-auth-textmagic/cover.avif
+category: auth
+product:
+    vendor: Textmagic
+    description: "Textmagic is a business text messaging service with a web app and an API for sending and receiving SMS."
+platform:
+    - 'Self-hosted'
+---
+
+[Textmagic](https://www.textmagic.com) is a business text messaging service. Its web app and REST API send and receive SMS, and its dashboard manages your API keys, sender numbers, and sender IDs.
+
+# How does the integration work?
+
+If you self-host Appwrite, you can use Textmagic to deliver the one-time passwords (OTPs) that Appwrite Auth sends by SMS. Appwrite uses the provider you configure for [phone (SMS) login](/docs/products/auth/phone-sms), phone number verification, SMS challenges for [multi-factor authentication](/docs/products/auth/mfa), and team invitations sent to a phone number.
+
+Phone authentication lets users sign in without a password, which suits mobile apps where users already have their phone at hand.
+
+{% info title="Phone authentication on Appwrite Cloud" %}
+Appwrite Cloud delivers phone authentication SMS for you, so there is no SMS provider to configure. Messages are billed per message, with [rates](/docs/advanced/billing/phone-otp#rates) that vary by country.
+{% /info %}
+
+# How to implement
+
+To implement the Textmagic provider for phone authentication, there are several steps you must complete:
+
+## Step 1: Set up Textmagic
+
+First, sign up for a [Textmagic](https://www.textmagic.com) account. Then save the following information from the Textmagic dashboard:
+
+| Field name | |
+| --- | --- |
+| API key | Head to **Services** > **API** and click **Add new API key**. |
+| Username | Head to **My account** and copy your **Username**. |
+| Sender | Head to **Services** > **Sender settings** to find the phone number or sender ID your SMS messages are sent from. |
+
+## Step 2: Add Textmagic to your Appwrite instance
+
+For this step, you must [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already.
+
+Open the `.env` file of your Appwrite installation and update the following environment variables:
+
+```bash
+_APP_SMS_PROVIDER=sms://<USERNAME>:<API_KEY>@textmagic
+_APP_SMS_FROM=<PHONE_NUMBER_OR_SENDER_ID>
+```
+
+Use `textmagic`, without a hyphen, as the provider name in the URL. Write a phone number with a leading `+` and the country code, such as `+14155550123`. URL-encode the values in `_APP_SMS_PROVIDER` if they contain characters other than letters and numbers. Appwrite only turns on SMS delivery when both variables are set.
+
+Then recreate your Appwrite stack and confirm the variables were applied:
+
+```bash
+docker compose up -d
+docker compose exec appwrite vars
+```
+
+## Step 3: Test the provider
+
+To test the provider, [implement phone (SMS) login](/docs/products/auth/phone-sms) in a web or mobile app. Request a code for your phone number, then create a session with the code you receive:
+
+```js
+import { Client, Account, ID } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<APPWRITE_DOMAIN>/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const token = await account.createPhoneToken({
+    userId: ID.unique(),
+    phone: '+14255550123'
+});
+
+const session = await account.createSession({
+    userId: token.userId,
+    secret: '<SECRET>'
+});
+```
+
+After you sign in, the user appears on the **Auth** page of your project with their phone number as the identifier.
+
+# Read more about Textmagic and Appwrite Auth
+
+If you would like to learn more about phone authentication with Textmagic and Appwrite Auth, we have some resources that you should visit:
+
+- [Textmagic API documentation](https://docs.textmagic.com)
+- [SMS delivery for self-hosted Appwrite](/docs/advanced/self-hosting/configuration/sms)
+- [Phone (SMS) login with Appwrite Auth](/docs/products/auth/phone-sms)
+- [SMS with Textmagic in Appwrite Messaging](/integrations/sms-textmagic)
+- [Appwrite Account API reference](/docs/references/cloud/client-web/account)

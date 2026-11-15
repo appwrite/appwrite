@@ -1,0 +1,80 @@
+---
+layout: integration
+title: Image generation with fal.ai
+description: Generate images from text prompts with fal.ai's fast SDXL model in an Appwrite Function
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/ai-fal-image-generation/cover.avif
+category: ai
+product:
+    vendor: fal
+    description: "fal is a generative media platform that runs image, video, and audio models behind a fast inference API."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+[fal](https://fal.ai/) is a generative media platform. It hosts image, video, and audio models behind one API and focuses on fast inference, so apps can generate media while the user waits.
+
+# How does the integration work?
+
+The **Generate with fal.ai** function template turns a text prompt into an image. It sends the prompt to fal's `fal-ai/fast-sdxl` model and returns the URL of the generated image, which fal hosts. Your API key stays in the function, so your app can call the function directly without exposing it.
+
+| Route | Purpose |
+| --- | --- |
+| `GET /` | Serves a demo form for trying prompts |
+| `POST /` | Generates an image from the `prompt` in the JSON body and returns `{"ok": true, "src": "<IMAGE_URL>"}` |
+
+# Prerequisites
+
+- A [fal account](https://fal.ai/) with billing set up. fal charges for each request.
+
+# How to implement
+
+To implement the fal.ai integration, there are several steps you must complete:
+
+## Step 1: Create a fal API key
+
+Open the [API keys page](https://fal.ai/dashboard/keys) in the fal dashboard and click **Create Key**. Give it a name and copy the key. fal shows it only once.
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. If you self-host Appwrite, enable a Node.js runtime in `_APP_FUNCTIONS_RUNTIMES` and follow the [Functions configuration guide](/docs/advanced/self-hosting/configuration/functions) so function domains work.
+
+In the Appwrite Console, go to **Functions**, open the **Templates** tab, search for **Generate with fal.ai**, and click **Create from template**. Under **Template variables**, set `FAL_API_KEY` to your fal key.
+
+Choose **Connect your repository** to clone the template into a Git repository you can edit later, for example to try another fal model, or **Connect later** to deploy it right away. Then click **Create and deploy**.
+
+## Step 3: Generate an image
+
+Copy the function's domain from the **Domains** tab and open it in your browser to use the demo form, or send a prompt:
+
+```bash
+curl -X POST https://<FUNCTION_DOMAIN> \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "city nightscape neon cyberpunk photorealistic"}'
+```
+
+The response contains the image URL:
+
+```json
+{
+  "ok": true,
+  "src": "https://fal.media/files/..."
+}
+```
+
+To keep generated images, download them from that URL and upload them to [Appwrite Storage](/docs/products/storage) in your own code.
+
+The template allows anyone to execute the function, so anyone who finds its domain can generate images with your fal key. Before you use it in a public app, replace `Any` in the function's [execute access](/docs/products/functions/functions#execution-access) with narrower [roles](/docs/advanced/security/permissions#permission-roles), such as `Users`, and call the function [with an Appwrite SDK](/docs/products/functions/execute#sdk) instead of its domain.
+
+# Read more about fal and Appwrite Functions
+
+If you would like to learn more about fal and Appwrite Functions, we have some resources that you should visit:
+
+- [fal fast SDXL API reference](https://fal.ai/models/fal-ai/fast-sdxl/api)
+- [Integrate fal.ai into an Appwrite Function step by step](/docs/products/ai/integrations/fal-ai)
+- [Learn more about Functions templates in Appwrite docs](/docs/products/functions/templates)
+- [Generate with fal.ai template source](https://github.com/appwrite/templates/tree/1.2.0/node/generate-with-fal)

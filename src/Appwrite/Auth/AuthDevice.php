@@ -8,6 +8,8 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Proofs\Token as ProofsToken;
+use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
@@ -27,8 +29,8 @@ use Utopia\Locale\Locale;
 class AuthDevice
 {
     /**
-     * Transient attribute set by the `authDevice` resource: the encoded cookie value the request
-     * arrived with. Re-issued when the device expiry moves. Never written to the database.
+     * Transient attribute holding the encoded cookie value to issue: what the request arrived
+     * with, or the rotated one `attach()` minted. Never written to the database.
      */
     public const string ATTRIBUTE_COOKIE = 'cookie';
 
@@ -39,12 +41,15 @@ class AuthDevice
      * out and replaced, so signing in again refreshes an account instead of listing it twice.
      * The device lives as long as its newest session, so its expiry moves out to the session's.
      *
+     * The device secret is rotated, so the caller must issue the new cookie value carried on the
+     * returned device, with `refreshCookie()` or its own `Set-Cookie`.
+     *
      * The session must already carry the device's id (set when it was created, or by the caller).
      * Call before the response is sent, so the device reads consistently on the next request.
      *
-     * @return Document The device with the new active pointer and expiry, holding its sessions.
+     * @return Document The device with the new active pointer, expiry and cookie value, holding its sessions.
      */
-    public static function attach(Database $dbForProject, Authorization $authorization, Document $device, Document $session, DeletePublisher $publisherForDeletes, Document $project, Mqtt $mqtt): Document
+    public static function attach(Database $dbForProject, Authorization $authorization, ProofsToken $proofForToken, Document $device, Document $session, DeletePublisher $publisherForDeletes, Document $project, Mqtt $mqtt): Document
     {
         $userId = $session->getAttribute('userId', '');
         $replaced = false;
@@ -76,10 +81,16 @@ class AuthDevice
             }
         }
 
-        $cookie = $device->getAttribute(self::ATTRIBUTE_COOKIE, '');
         $deviceId = $device->getId();
 
+        // Joining a session is a privilege change: the device now has authority over the account
+        // that just signed in. Mint a new device secret, so a copy of the credential taken before
+        // the sign-in -- planted in this browser, or kept elsewhere -- stops working, the same way
+        // a session secret is replaced at sign-in.
+        $secret = $proofForToken->generate();
+
         $authorization->skip(fn () => $dbForProject->updateDocument('devices', $deviceId, new Document([
+            'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
             'activeSessionId' => $session->getId(),
             'activeSessionInternalId' => $session->getSequence(),
             'expire' => self::latestExpire($device, $session),
@@ -92,7 +103,14 @@ class AuthDevice
 
         // Read back so the held sessions reflect the new one and any replaced ones
         $device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
-        $device->setAttribute(self::ATTRIBUTE_COOKIE, $cookie);
+
+        $store = new Store();
+        $store
+            ->setKey(self::key($project))
+            ->setProperty('id', $deviceId)
+            ->setProperty('secret', $secret);
+
+        $device->setAttribute(self::ATTRIBUTE_COOKIE, $store->encode());
 
         return $device;
     }
@@ -147,9 +165,17 @@ class AuthDevice
     }
 
     /**
-     * Re-issue the device cookie with the device's current expiry, so the browser keeps the
-     * device for as long as the server does. A device created in this request already had its
-     * cookie written by the create action and carries no transient cookie value, so it is skipped.
+     * The name of the cookie, and of the X-Fallback-Cookies entry, that carries the device.
+     */
+    private static function key(Document $project): string
+    {
+        return ($project instanceof Project ? $project : new Project($project->getArrayCopy()))->getDeviceKey();
+    }
+
+    /**
+     * Issue the device cookie, with the device's current expiry and whatever secret it now
+     * carries, so the browser keeps the device for as long as the server does. A device that
+     * carries no transient cookie value has nothing to issue, so it is skipped.
      */
     public static function refreshCookie(Request $request, Response $response, Document $project, Document $device, string $protocol, bool $domainVerification, ?string $cookieDomain): void
     {
@@ -158,7 +184,7 @@ class AuthDevice
             return;
         }
 
-        $key = ($project instanceof Project ? $project : new Project($project->getArrayCopy()))->getDeviceKey();
+        $key = self::key($project);
         $expire = (new \DateTime($device->getAttribute('expire')))->getTimestamp();
 
         if (!$domainVerification) {

@@ -9,6 +9,7 @@ use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -20,7 +21,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -140,6 +140,9 @@ class Update extends Action
         if ($message->isEmpty()) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
+
+        $this->assertProviderType($message, MESSAGE_TYPE_PUSH);
+        $this->requireAttachmentsScope($message, $request);
 
         if (!\is_null($draft) || !\is_null($scheduledAt)) {
             if ($draft) {

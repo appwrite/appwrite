@@ -53,6 +53,20 @@ export enum MonitorResourceType {
   Organization = 'organization',
 }
 
+export enum MonitorSeverity {
+  Info = 'info',
+  Warning = 'warning',
+  Error = 'error',
+  Critical = 'critical',
+}
+
+export enum AlertSeverity {
+  Info = 'info',
+  Warning = 'warning',
+  Error = 'error',
+  Critical = 'critical',
+}
+
 export enum MonitorStatus {
   Ok = 'ok',
   Firing = 'firing',
@@ -96,11 +110,27 @@ export type Alert = {
    */
   resolvedAt?: string | null
   /**
+   * Date a member acknowledged the alert, in ISO 8601 format. Empty while nobody has. Absent on servers without acknowledgements.
+   */
+  acknowledgedAt?: string | null
+  /**
+   * ID of the user who acknowledged the alert. Empty while nobody has, or when it was acknowledged with an API key.
+   */
+  acknowledgedBy?: string
+  /**
+   * Name of the user who acknowledged the alert, when they did.
+   */
+  acknowledgedByName?: string
+  /**
    * The monitor's rules when the alert fired, as query strings.
    */
   rules: string[]
   /**
-   * Whether the monitor was critical when the alert fired.
+   * The monitor's severity when the alert fired: `info`, `warning`, `error` or `critical`.
+   */
+  severity: AlertSeverity
+  /**
+   * Deprecated: use `severity`. Whether the monitor was critical when the alert fired.
    */
   critical: boolean
   /**
@@ -212,7 +242,11 @@ export type Monitor = {
    */
   notify: string[]
   /**
-   * Whether the monitor is critical: its alerts may be delivered with higher urgency by the notification channels that support it.
+   * How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it.
+   */
+  severity: MonitorSeverity
+  /**
+   * Deprecated: use `severity`. Whether the monitor's severity is `critical`.
    */
   critical: boolean
   /**

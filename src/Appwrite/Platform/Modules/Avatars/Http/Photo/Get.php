@@ -22,9 +22,12 @@ use Utopia\Balancer\Algorithm\First;
 use Utopia\Balancer\Balancer;
 use Utopia\Balancer\Option;
 use Utopia\Client\Client;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Image\Image;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
+use Utopia\Image\Transform;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -228,21 +231,21 @@ class Get extends Action
      */
     private function process(string $raw, int $width, int $height, int $quality, string $output): string
     {
-        if (! \extension_loaded('imagick') || $raw === '') {
+        if ($raw === '') {
             return $raw;
         }
 
         try {
-            $image = new Image($raw);
+            $image = new Canvas($raw, Config::getParam('storage-image-limits'));
 
             if ($width > 0 || $height > 0) {
-                $image->crop(
-                    $width > 0 ? $width : 256,
-                    $height > 0 ? $height : 256,
-                );
+                $image = $image->apply(new Transform(
+                    width: $width > 0 ? $width : 256,
+                    height: $height > 0 ? $height : 256,
+                ));
             }
 
-            return $image->output($output, $quality);
+            return $image->encode(Format::from($output), $quality);
         } catch (\Throwable) {
             return $raw;
         }
