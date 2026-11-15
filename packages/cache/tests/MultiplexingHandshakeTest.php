@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Server;
 use Swoole\Coroutine\Server\Connection;
+use Utopia\Cache\Adapter\Redis\Client;
 use Utopia\Cache\Adapter\Redis\ConnectionException;
 use Utopia\Cache\Adapter\Redis\Multiplexing as RedisMultiplexing;
 
@@ -52,22 +53,14 @@ final class MultiplexingHandshakeTest extends TestCase
                     $buffer .= $chunk;
 
                     // Each handshake command arrives as one RESP array; answer per array.
-                    while (preg_match('/^\*(\d+)\r\n/', $buffer, $m) === 1) {
-                        $parts = [];
-                        $offset = \strlen($m[0]);
-                        for ($i = 0; $i < (int) $m[1]; $i++) {
-                            if (preg_match('/\G\$(\d+)\r\n/', $buffer, $len, 0, $offset) !== 1) {
-                                continue 3;
-                            }
-                            $offset += \strlen($len[0]);
-                            if (\strlen($buffer) < $offset + (int) $len[1] + 2) {
-                                continue 3;
-                            }
-                            $parts[] = substr($buffer, $offset, (int) $len[1]);
-                            $offset += (int) $len[1] + 2;
+                    while (true) {
+                        $offset = 0;
+                        $command = Client::parse($buffer, $offset);
+                        if ($command === Client::INCOMPLETE) {
+                            break;
                         }
                         $buffer = substr($buffer, $offset);
-                        $received[] = strtoupper($parts[0] ?? '');
+                        $received[] = strtoupper(\is_array($command) ? (string) ($command[0] ?? '') : '');
 
                         Coroutine::sleep($replyDelay);
                         $connection->send("+OK\r\n");
