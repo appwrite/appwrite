@@ -39,10 +39,8 @@ class Get extends Base
             $state,
         );
 
-        // Constructor scopes are added to the sign-in defaults (openid, email).
-        // The VCS application allows only read_user and api. Requesting openid
-        // or email makes GitLab reject the authorize URL. api covers webhook
-        // registration and merge-request notes; no finer-grained scope covers both.
+        // The VCS app allows only read_user and api; replace the sign-in defaults.
+        // api is required for webhook/merge-request-note writes; no finer-grained scope covers both.
         $oauth2->setScopes([
             'read_user',
             'api',

@@ -28,12 +28,10 @@ class Gitlab extends OAuth2
     protected array $tokens = [];
 
     /**
-     * Sign-in scopes. openid and email are what /oauth/userinfo uses for the
-     * primary address. read_user remains for grants issued before those
-     * scopes existed. Scopes passed to the constructor are added to this
-     * list. A VCS installation must call setScopes(): its GitLab application
-     * allows only read_user and api, and GitLab rejects the authorize URL
-     * when it asks for a scope the application does not allow.
+     * Existing GitLab applications must allow these scopes. openid and email
+     * are what /oauth/userinfo uses for the primary address. read_user remains
+     * for grants issued before those scopes existed.
+     * VCS installs override this with setScopes().
      *
      * @var array
      */
@@ -52,9 +50,7 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * Replaces every scope, including the sign-in defaults and any scopes
-     * passed to the constructor. An account session leaves this unset, so
-     * an extra scope there stays appended to read_user, openid, and email.
+     * Replaces every scope, including ones passed to the constructor.
      *
      * @param array<int, string> $scopes
      */
