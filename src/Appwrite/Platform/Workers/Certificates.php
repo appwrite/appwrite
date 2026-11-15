@@ -474,6 +474,14 @@ class Certificates extends Action
                     $this->notifyError($domain->get(), $e->getMessage(), $attempts, $renewing, $certificate->getAttribute('expireDate'), $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
                 }
 
+                // The domain's DNS does not point here: the outcome is recorded above and maintenance
+                // retries it. A queue redelivery would only repeat it within minutes, count each run
+                // as another attempt, and email the owner again.
+                if ($e instanceof AppwriteException && $e->getType() === AppwriteException::RULE_VERIFICATION_FAILED) {
+                    Span::add('certificate.dns_failed', true);
+                    return;
+                }
+
                 throw $e;
             }
         } finally {
