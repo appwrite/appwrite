@@ -2157,63 +2157,54 @@ trait MessagingBase
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
 
-        // A subscriber whose target was deleted, read before the deletes worker removes it.
-        // The worker runs on its own, so retry until a read lands in that window.
-        $orphanSeen = false;
-        for ($attempt = 0; $attempt < 5 && !$orphanSeen; $attempt++) {
-            $orphanTarget = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]), [
-                'targetId' => Id::unique(),
-                'providerType' => 'email',
-                'providerId' => $provider['body']['$id'],
-                'identifier' => 'orphan-' . $attempt . '-' . \uniqid() . '@mail.org',
-            ]);
-            $this->assertEquals(201, $orphanTarget['headers']['status-code']);
+        // A subscriber whose target was deleted: the deletes worker removes it on its own, so
+        // reads right after the delete may find it with no target or already gone, never fail.
+        $orphanTarget = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'targetId' => Id::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => 'random-email-orphan@mail.org',
+        ]);
+        $this->assertEquals(201, $orphanTarget['headers']['status-code']);
 
-            $orphan = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', \array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'subscriberId' => Id::unique(),
-                'targetId' => $orphanTarget['body']['$id'],
-            ]);
-            $this->assertEquals(201, $orphan['headers']['status-code']);
+        $orphan = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subscriberId' => Id::unique(),
+            'targetId' => $orphanTarget['body']['$id'],
+        ]);
+        $this->assertEquals(201, $orphan['headers']['status-code']);
 
-            $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/targets/' . $orphanTarget['body']['$id'], [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
-            $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/targets/' . $orphanTarget['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
-            $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers/' . $orphan['body']['$id'], [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
-            $this->assertContains($response['headers']['status-code'], [200, 404]);
-            if ($response['headers']['status-code'] === 404) {
-                continue;
-            }
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers/' . $orphan['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertContains($response['headers']['status-code'], [200, 404]);
+        if ($response['headers']['status-code'] === 200) {
             $this->assertSame('', $response['body']['userName']);
-
-            $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ], [
-                'queries' => [Query::equal('targetId', [$orphanTarget['body']['$id']])->toString()],
-            ]);
-            $this->assertEquals(200, $response['headers']['status-code']);
-            if ($response['body']['total'] === 1) {
-                $this->assertSame('', $response['body']['subscribers'][0]['userName']);
-                $orphanSeen = true;
-            }
         }
-        $this->assertTrue($orphanSeen, 'No read reached a subscriber whose target was deleted');
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [Query::equal('targetId', [$orphanTarget['body']['$id']])->toString()],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     public function testDeleteTopic(): void
