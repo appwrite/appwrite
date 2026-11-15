@@ -395,11 +395,10 @@ final class S3Test extends TestCase
         $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain');
         $request = $client->requests[0];
 
-        $this->assertSame(1, preg_match(
-            '~^AWS4-HMAC-SHA256 Credential=test-key/(\d{8})/us-east-1/s3/aws4_request,SignedHeaders=([a-z0-9;-]+),Signature=([0-9a-f]{64})$~',
-            $request->getHeaderLine('authorization'),
-            $matches,
-        ));
+        $authorization = $request->getHeaderLine('authorization');
+        if (preg_match('~^AWS4-HMAC-SHA256 Credential=test-key/(\d{8})/us-east-1/s3/aws4_request,SignedHeaders=([a-z0-9;-]+),Signature=([0-9a-f]{64})$~', $authorization, $matches) !== 1) {
+            $this->fail('Not a SigV4 authorization header: ' . $authorization);
+        }
         [, $date, $signedHeaders, $signature] = $matches;
 
         $canonical = [$request->getMethod(), $request->getUri()->getPath(), $request->getUri()->getQuery()];
