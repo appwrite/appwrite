@@ -7,9 +7,6 @@
 //! | `Uri\Rfc3986\Uri::parse($uri)` | [`rfc3986::Uri::parse`] |
 //!
 //! `Uri\WhatWg\Url` is not reimplemented: no Utopia library uses it.
-//!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `url.*`).
 
 use std::borrow::Cow;
 use std::ops::Range;

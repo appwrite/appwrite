@@ -444,8 +444,6 @@ jobs:
       - name: Test package${{ matrix.linked && ' (linked)' || '' }}
         run: bin/monorepo test "$PACKAGE" $LINKED
 
-  # The utopia PHP extension (crates/extension): the crates' own checks, then
-  # the PHP packages it replaces classes of, tested with it loaded.
   extension:
     name: Extension
     needs: changes
@@ -463,52 +461,21 @@ jobs:
 
       - name: Check crates
         run: |
-          # rustdoc does not read .cargo/config.toml's rustflags, and a static
-          # musl doctest cannot link the shared libheif.
           docker run --rm --volume "$PWD:/usr/local/src" --env CARGO_TARGET_DIR=/tmp/target \
             --env RUSTDOCFLAGS="-C target-feature=-crt-static" utopia-extension-build sh -c '
             . "$HOME/.cargo/env" &&
             rustup component add clippy rustfmt &&
             cargo fmt --all --check &&
             cargo clippy --workspace --all-targets --all-features --locked -- -D warnings &&
-            cargo test --locked -p php-std -p utopia-image -p utopia-locale --all-features'
+            cargo test --locked --workspace --exclude utopia-extension --all-features'
 
       - name: Build the image
         run: docker build --target development --tag appwrite-utopia --build-arg TESTING=true .
 
-      - name: Test packages with the extension loaded
+      - name: Test the extension
         run: |
           docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
-            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
-            php --ri utopia &&
-            php crates/extension/tests/canvas.php &&
-            vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/image/tests'
-
-      - name: Test DSN on the extension
-        run: |
-          # Utopia\DSN\DSN is registered only when _APP_EXTENSION_LIBRARIES names dsn: the package's
-          # tests must pass on it, and the parity corpus must print the same on both implementations.
-          docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
-            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
-            set -e
-            _APP_EXTENSION_LIBRARIES=dsn php -r "exit((new ReflectionClass(Utopia\\DSN\\DSN::class))->isInternal() ? 0 : 1);"
-            _APP_EXTENSION_LIBRARIES=dsn vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/dsn/tests
-            php crates/extension/tests/dsn.php > /tmp/php.jsonl
-            _APP_EXTENSION_LIBRARIES=dsn php crates/extension/tests/dsn.php > /tmp/rust.jsonl
-            diff /tmp/php.jsonl /tmp/rust.jsonl'
-
-      - name: Test Locale on the extension
-        run: |
-          # Utopia\Locale\Locale is registered only when _APP_EXTENSION_LIBRARIES names locale: the
-          # package's tests must pass on it, and the parity corpus must print the same on both.
-          docker run --rm --volume "$PWD/packages:/usr/src/code/packages" \
-            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia sh -c '
-            set -e
-            _APP_EXTENSION_LIBRARIES=locale php -r "exit((new ReflectionClass(Utopia\\Locale\\Locale::class))->isInternal() ? 0 : 1);"
-            _APP_EXTENSION_LIBRARIES=locale vendor/bin/phpunit --no-configuration --bootstrap vendor/autoload.php packages/locale/tests
-            php crates/extension/tests/locale.php > /tmp/php.jsonl
-            _APP_EXTENSION_LIBRARIES=locale php crates/extension/tests/locale.php > /tmp/rust.jsonl
-            diff /tmp/php.jsonl /tmp/rust.jsonl'
+            --volume "$PWD/crates:/usr/src/code/crates" appwrite-utopia crates/extension/tests/run.sh
 
   build:
     name: Build

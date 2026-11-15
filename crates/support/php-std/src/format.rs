@@ -15,9 +15,6 @@
 //! | `round`, `ceil`, `fmod` | [`round`] with [`RoundingMode`], [`ceil`], [`fmod`] |
 //! | `intval`, `floatval`, `(int)`, `(float)` | [`intval`], [`floatval`], [`Arg::to_int`], [`Arg::to_float`], [`str_to_int`], [`str_to_float`] |
 //! | `max`, `min` (numbers) | [`max`], [`min`], [`max_array`], [`min_array`] |
-//!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `format.*`).
 
 use std::borrow::Cow;
 
