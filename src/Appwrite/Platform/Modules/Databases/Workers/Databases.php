@@ -529,6 +529,11 @@ class Databases extends Action
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
+        } catch (NotFound $e) {
+            Span::add('database.index.not_found', $e->getMessage());
+
+            $dbForProject->deleteDocument('indexes', $index->getId());
+            $index->setAttribute('status', 'deleted');
         } catch (\Throwable $e) {
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());

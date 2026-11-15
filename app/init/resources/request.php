@@ -687,6 +687,15 @@ return function (Container $context): void {
     }, ['projectId', 'dbForPlatform', 'console', 'authorization']);
 
     $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request, Document $project, Document $console, string $mode) {
+        /**
+         * The session the request is acting on, identified either by its secret or, failing
+         * that, by the sessionId claim inside an x-appwrite-jwt header.
+         *
+         * The JWT branch identifies a session without proving possession of its secret, so this
+         * resource is not evidence that the caller holds the session. A route that trades the
+         * session for another credential has to verify the secret itself with
+         * `$user->sessionVerify()`, the way `POST /v1/account/jwts` does.
+         */
         if ($user->isEmpty()) {
             return;
         }
@@ -741,6 +750,11 @@ return function (Container $context): void {
          * mode (dbForProject already maps the console project to the platform database).
          */
         $authorization->setStatus(true);
+
+        // Turning the policy off retires the devices created before it too
+        if (($project->getAttribute('auths', [])['accountDevices'] ?? true) === false) {
+            return null;
+        }
 
         $key = $project->getDeviceKey();
 

@@ -39,6 +39,11 @@ final class NatsBrokerTest extends TestCase
     /** @var list<Nats> brokers a test builds itself, closed whether or not it passes */
     private array $brokers = [];
 
+    private int $proxyPort = 0;
+
+    /** @var resource|null the TCP proxy standing in for the server, when a test needs one */
+    private $proxy = null;
+
     protected function setUp(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
@@ -63,6 +68,7 @@ final class NatsBrokerTest extends TestCase
         foreach ($this->brokers as $broker) {
             $broker->close();
         }
+        $this->stopProxy();
     }
 
     public function testPublishReceiveCommit(): void
@@ -1014,6 +1020,59 @@ final class NatsBrokerTest extends TestCase
     }
 
     /**
+     * The tick maintain() takes reads a socket, so it can fail too -- and a tick
+     * that cannot reconnect must not strand the sweep behind it.
+     *
+     * The broker reaches NATS through a proxy this test kills and restarts, which
+     * is the reported outage from the broker's side: the socket under the parked
+     * commands connection is gone, the connection still reads as connected, and
+     * the address serves again by the time anything rebuilds. The tick is what
+     * now discovers that, so it raises "Connection closed by server" here --
+     * where maintain() must still sweep the queue it serves and only then report
+     * the failure, rather than let the dead tick cost the stranded message a
+     * whole maintenance interval.
+     */
+    public function testMaintainReapsAfterTheCommandsTickFails(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $this->startProxy($url);
+
+        // Reconnect off so the tick reports the dead socket instead of quietly
+        // rebuilding it: the reap behind it is then the only thing that can.
+        $options = new ConnectionOptions(servers: "nats://127.0.0.1:{$this->proxyPort}", allowReconnect: false);
+        $this->brokers[] = $broker = new Nats(
+            static fn (): Connection => Connection::connect($options),
+            ackWait: 1.0,
+            maxDeliver: 1,
+            strandedAfter: 0.0,
+        );
+        $stream = 'Q_' . strtoupper($this->queue->name);
+
+        $broker->publish($this->queue, ['poison' => true]);
+        $this->strand($broker, $url, $stream);
+        $this->assertSame([], $broker->receive($this->queue, 1), 'the stranded message is no longer delivered');
+
+        // Opens the commands connection and takes the first reading; the sweep
+        // only moves anything on the second.
+        $broker->maintain();
+
+        // The server goes away under the parked connection, and is back before
+        // anything reconnects.
+        $this->stopProxy();
+        $this->startProxy($url);
+
+        try {
+            $broker->maintain();
+            $this->fail('the failed tick is raised for the adapter to report');
+        } catch (ConnectionException) {
+        }
+
+        $js = Connection::connect($url)->jetStream();
+        $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'the queue was swept despite the failed tick');
+        $this->assertSame(1, $js->getStreamInfo($stream . '_DEAD')->state->messages);
+    }
+
+    /**
      * A message behind the floor is only swept once the floor has stood for strandedAfter,
      * so an ack whose delete has not landed is not taken for it. A consumer recreated
      * between two readings starts a floor of its own, which says nothing about how long
@@ -1109,6 +1168,80 @@ final class NatsBrokerTest extends TestCase
         // Empty sections are dropped: they round-trip as a JSON list the server refuses.
         $config = array_filter($js->getStreamInfo($stream)->config->toArray(), static fn (mixed $value): bool => $value !== []);
         $js->updateStream(StreamConfig::fromArray([...$config, ...$changes]));
+    }
+
+    /**
+     * Put a plain TCP proxy in front of NATS on a port of its own, so a test can
+     * take the server away from a connection and give it back. Killing the proxy
+     * closes every socket through it at once, which is what a server restart or
+     * an eviction looks like to a connection parked on one.
+     */
+    private function startProxy(string $url): void
+    {
+        // Kept across a restart: the connections built before it must find the
+        // address serving again, not a new one.
+        $this->proxyPort = $this->proxyPort === 0 ? $this->freePort() : $this->proxyPort;
+        $script = __DIR__ . '/servers/Proxy/proxy.php';
+        $command = [
+            PHP_BINARY,
+            $script,
+            (string) $this->proxyPort,
+            parse_url($url, PHP_URL_HOST) ?: '127.0.0.1',
+            (string) (parse_url($url, PHP_URL_PORT) ?: 4222),
+        ];
+
+        $proxy = proc_open($command, [], $pipes);
+        $this->assertIsResource($proxy, 'proxy must start');
+
+        $this->proxy = $proxy;
+        $this->waitFor(fn (): bool => $this->portAccepts($this->proxyPort), 'proxy to listen');
+    }
+
+    private function stopProxy(): void
+    {
+        if (!\is_resource($this->proxy)) {
+            return;
+        }
+
+        proc_terminate($this->proxy, 9);
+        proc_close($this->proxy);
+        $this->proxy = null;
+
+        $this->waitFor(fn (): bool => !$this->portAccepts($this->proxyPort), 'proxy port to close');
+    }
+
+    private function portAccepts(int $port): bool
+    {
+        $socket = @stream_socket_client("tcp://127.0.0.1:{$port}", $errno, $errstr, 0.2);
+        if ($socket === false) {
+            return false;
+        }
+        fclose($socket);
+
+        return true;
+    }
+
+    private function freePort(): int
+    {
+        $socket = stream_socket_server('tcp://127.0.0.1:0');
+        $this->assertNotFalse($socket);
+        $port = (int) explode(':', (string) stream_socket_get_name($socket, false))[1];
+        fclose($socket);
+
+        return $port;
+    }
+
+    private function waitFor(callable $condition, string $what): void
+    {
+        for ($attempt = 0; $attempt < 100; $attempt++) {
+            if ($condition()) {
+                return;
+            }
+
+            usleep(20_000);
+        }
+
+        $this->fail("timed out waiting for {$what}");
     }
 
     /**

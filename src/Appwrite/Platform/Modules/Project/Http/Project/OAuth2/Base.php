@@ -407,6 +407,7 @@ abstract class Base extends Action
             'kick' => Kick\Update::class,
             'kakao' => Kakao\Update::class,
             'tiktok' => TikTok\Update::class,
+            'naver' => Naver\Update::class,
             'apple' => Apple\Update::class,
             'microsoft' => Microsoft\Update::class,
             'resend' => Resend\Update::class,

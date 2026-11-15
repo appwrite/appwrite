@@ -91,7 +91,7 @@ describe('ClaimDomainContent', () => {
       createElement(ClaimDomainContent, {
         domain: 'shop.example.com',
         projectId: 'project1',
-        claimRequired: true,
+        reason: 'held',
       }),
     )
 

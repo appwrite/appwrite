@@ -1,19 +1,22 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/firewall/View'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
-  parseFirewallListSearch,
-  type FirewallResourceType,
+  firewallTabPath,
+  resolveFirewallListSearch,
 } from '@/lib/firewall/conditions'
-import { pageTitle } from '@/lib/utils/page-title'
 
-export type FirewallListSearch = {
-  resourceType?: FirewallResourceType
-  resourceId?: string
-}
-
+/**
+ * Firewall rules live in a Firewall tab on each function and site, and in
+ * project settings for the API. Keep old links working by opening the tab
+ * for the scope they name.
+ */
 export const Route = createFileRoute('/_public/projects/$projectId/firewall/')({
-  head: () => ({ meta: [{ title: pageTitle('Firewall') }] }),
-  validateSearch: (search: Record<string, unknown>): FirewallListSearch =>
-    parseFirewallListSearch(search) ?? {},
-  component: View,
+  beforeLoad: ({ params, search }) => {
+    throw redirect({
+      to: firewallTabPath(
+        params.projectId,
+        resolveFirewallListSearch(search as Record<string, unknown>),
+      ),
+      replace: true,
+    })
+  },
 })

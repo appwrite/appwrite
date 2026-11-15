@@ -11,6 +11,7 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlatformDrawer } from './_components/PlatformDrawer'
 import { PlatformContextMenu } from './_components/PlatformContextMenu'
 import { AppsEmptyState } from './_components/AppsEmptyState'
+import { WildcardWarning } from './_components/WildcardWarning'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
@@ -25,6 +26,7 @@ import {
   getPlatformDisplayName,
   getPlatformIdentifier,
   getPlatformSearchText,
+  isWildcardPlatform,
   type ProjectPlatform,
 } from '@/lib/utils/platform'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
@@ -199,11 +201,11 @@ export function View({ initialData }: ViewProps = {}) {
                         {displayName}
                       </p>
                       {identifier && (
-                        <p
-                          className="truncate text-[12px] text-muted-foreground"
-                          title={identifier}
-                        >
-                          {identifier}
+                        <p className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                          <span className="truncate" title={identifier}>
+                            {identifier}
+                          </span>
+                          {isWildcardPlatform(platform) && <WildcardWarning />}
                         </p>
                       )}
                     </div>

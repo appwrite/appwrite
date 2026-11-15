@@ -693,16 +693,23 @@ class GitHub extends Git
 
     /**
      * Create an installation access token for a service that acts on the installation's
-     * repositories itself, limited to the given repositories when any are named.
+     * repositories itself, limited to the given repositories and permissions when any are named.
      *
      * @param array<int> $repositoryIds
+     * @param array<string, string> $permissions GitHub permission name to access level, such as ['contents' => 'read']
      * @return array{token: string, expiresAt: string}
      *
      * @throws Exception
      */
-    public function createAccessToken(array $repositoryIds = []): array
+    public function createAccessToken(array $repositoryIds = [], array $permissions = []): array
     {
-        $params = $repositoryIds === [] ? [] : ['repository_ids' => $repositoryIds];
+        $params = [];
+        if ($repositoryIds !== []) {
+            $params['repository_ids'] = $repositoryIds;
+        }
+        if ($permissions !== []) {
+            $params['permissions'] = $permissions;
+        }
 
         $response = $this->call(self::METHOD_POST, '/app/installations/' . $this->installationId . '/access_tokens', ['Authorization' => 'Bearer ' . $this->jwtToken], $params);
         $responseBody = $response['body'] ?? [];
@@ -1279,6 +1286,68 @@ class GitHub extends Git
         $checkRun['id'] = (string) ($checkRun['id'] ?? '');
 
         return $checkRun;
+    }
+
+    /**
+     * GitHub reports a build as a check run, so it shows queued and running
+     * apart. A run cannot be named into a suite, so the suite joins the name
+     * as it does for a commit status, and the key finds the run again as its
+     * external id. A rebuild starts a new run instead of reopening a finished
+     * one. An installation that has not granted checks keeps getting commit
+     * statuses.
+     */
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = '', string $suite = '', string $key = '', string $suiteKey = ''): void
+    {
+        $name = $suite === '' ? $name : "{$name} ({$suite})";
+        $key = $key === '' ? $name : $key;
+        [$status, $conclusion] = match ($state) {
+            'queued' => ['queued', ''],
+            'pending' => ['in_progress', ''],
+            'success' => ['completed', 'success'],
+            'cancelled' => ['completed', 'cancelled'],
+            default => ['completed', 'failure'],
+        };
+
+        $response = $this->call(self::METHOD_GET, "/repos/$owner/$repositoryName/commits/$SHA/check-runs", ['Authorization' => "Bearer $this->accessToken"], [
+            'check_name' => $name,
+            'filter' => 'latest',
+        ]);
+        $headers = \is_array($response['headers'] ?? null) ? $response['headers'] : [];
+        $statusCode = \is_numeric($headers['status-code'] ?? null) ? (int) $headers['status-code'] : 0;
+        if ($statusCode === 403) {
+            parent::updateCheck($owner, $repositoryName, $SHA, $state, $name, $title, '', $detailsUrl);
+            return;
+        }
+        // An unread list would start a second run beside the existing one
+        if ($statusCode >= 400) {
+            throw new Exception("Failed to list check runs: HTTP $statusCode", $statusCode);
+        }
+
+        $body = \is_array($response['body'] ?? null) ? $response['body'] : [];
+        $checkRuns = \is_array($body['check_runs'] ?? null) ? $body['check_runs'] : [];
+        $checkRunId = '';
+        foreach ($checkRuns as $checkRun) {
+            if (\is_array($checkRun) && ($checkRun['external_id'] ?? '') === $key && \is_scalar($checkRun['id'] ?? null)) {
+                if (($checkRun['status'] ?? '') !== 'completed' || $status === 'completed') {
+                    $checkRunId = (string) $checkRun['id'];
+                }
+                break;
+            }
+        }
+
+        try {
+            if ($checkRunId === '') {
+                $this->createCheckRun($owner, $repositoryName, $SHA, $name, $status, $conclusion, $title, $summary, detailsUrl: $detailsUrl, externalId: $key);
+            } else {
+                $this->updateCheckRun($owner, $repositoryName, $checkRunId, $name, $status, $conclusion, $title, $summary, detailsUrl: $detailsUrl, externalId: $key);
+            }
+        } catch (Exception $e) {
+            // Read access to checks lists runs but cannot write them
+            if ($e->getCode() !== 403) {
+                throw $e;
+            }
+            parent::updateCheck($owner, $repositoryName, $SHA, $state, $name, $title, '', $detailsUrl);
+        }
     }
 
     /**

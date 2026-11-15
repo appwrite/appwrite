@@ -82,6 +82,41 @@ describe('isOpenAiAdsLead', () => {
     expect(isOpenAiAdsLead([project], registration)).toBe(false)
   })
 
+  it('ignores the web platform the Console adds to a new project', () => {
+    const stages = {
+      'tablesDB.create': completed(),
+      'storage.createBucket': completed(),
+    }
+    const withDefault = {
+      $createdAt: '2026-11-01T11:59:59.000+00:00',
+      onboarding: {
+        ...stages,
+        'project.createWebPlatform': completed('2026-11-01 12:00:00.000'),
+      },
+    }
+    const addedLater = {
+      $createdAt: '2026-11-01T11:00:00.000+00:00',
+      onboarding: {
+        ...stages,
+        'project.createWebPlatform': completed('2026-11-01 12:00:00.000'),
+      },
+    }
+    const fromKey = {
+      $createdAt: '2026-11-01T11:59:59.000+00:00',
+      onboarding: {
+        ...stages,
+        'project.createWebPlatform': completed(
+          '2026-11-01 12:00:00.000',
+          'keyOrganization',
+        ),
+      },
+    }
+
+    expect(isOpenAiAdsLead([withDefault], registration)).toBe(false)
+    expect(isOpenAiAdsLead([addedLater], registration)).toBe(true)
+    expect(isOpenAiAdsLead([fromKey], registration)).toBe(true)
+  })
+
   it('reads stage times as UTC in any browser time zone', () => {
     const minutesAfter = {
       onboarding: {

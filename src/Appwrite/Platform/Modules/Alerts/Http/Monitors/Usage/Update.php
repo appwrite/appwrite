@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors\Usage;
 
+use Appwrite\Alert\Severity;
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -61,7 +62,7 @@ class Update extends Base
             ->param('cooldown', null, new Nullable(new Range(300, 2592000)), 'Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Whether the monitor is evaluated.', true)
             ->param('notify', null, fn () => new Nullable(new ArrayList(new WhiteList(Config::getParam('alerts', [])['roles'] ?? [], true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.', true)
-            ->param('critical', null, new Nullable(new Boolean()), 'Whether the monitor is critical: its alerts may be delivered with higher urgency by the notification channels that support it.', true)
+            ->param('severity', null, new Nullable(new WhiteList(Severity::values(), true)), 'How urgent the monitor\'s alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it, such as a push that rings through silent mode. Omit to keep the current one.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -82,13 +83,13 @@ class Update extends Base
         ?int $cooldown,
         ?bool $enabled,
         ?array $notify,
-        ?bool $critical,
+        ?string $severity,
         Response $response,
         Document $project,
         Database $dbForPlatform,
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $this->updateMonitor(MONITOR_TYPE_USAGE, $monitorId, $name, $rules, $window, $cooldown, $enabled, $notify, $response, $project, $dbForPlatform, $dbForProject, $authorization, $critical);
+        $this->updateMonitor(MONITOR_TYPE_USAGE, $monitorId, $name, $rules, $window, $cooldown, $enabled, $notify, $response, $project, $dbForPlatform, $dbForProject, $authorization, $severity === null ? null : Severity::from($severity));
     }
 }

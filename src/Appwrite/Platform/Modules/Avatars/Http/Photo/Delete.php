@@ -79,10 +79,6 @@ class Delete extends Base
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if (!\extension_loaded('imagick')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
-        }
-
         // The placeholder becomes the user's own photo, so it shadows every other source — identity photos, Gravatar, Libravatar, initials — the way an upload does
         $photo = (new Fallback())->render(self::RESOLUTION, self::RESOLUTION);
 
