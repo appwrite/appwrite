@@ -52,8 +52,9 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * Replaces the sign-in scopes. Constructor scopes are appended to those,
-     * which is what an account session wants when it asks for an extra scope.
+     * Replaces every scope, including the sign-in defaults and any scopes
+     * passed to the constructor. An account session leaves this unset, so
+     * an extra scope there stays appended to read_user, openid, and email.
      *
      * @param array<int, string> $scopes
      */

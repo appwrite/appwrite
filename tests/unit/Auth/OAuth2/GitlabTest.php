@@ -50,6 +50,18 @@ final class GitlabTest extends TestCase
         $this->assertStringNotContainsString(',', (string) $query['scope']);
     }
 
+    public function testSetScopesReplacesConstructorScopes(): void
+    {
+        $gitlab = $this->gitlab(scopes: ['read_api'])->setScopes([
+            'read_user',
+            'api',
+        ]);
+
+        \parse_str((string) \parse_url($gitlab->getLoginURL(), PHP_URL_QUERY), $query);
+
+        $this->assertSame('read_user api', $query['scope']);
+    }
+
     public function testLoginURLUsesConfiguredEndpoint(): void
     {
         $gitlab = $this->gitlab('https://gitlab.example.com')->setScopes([
