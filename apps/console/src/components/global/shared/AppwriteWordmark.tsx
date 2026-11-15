@@ -4,7 +4,7 @@ import { LegacyAppwriteLogo } from '@/components/global/shared/LegacyAppwriteBra
 
 /**
  * Full "Appwrite" wordmark for loaders; word uses --foreground, mark uses --brand-cta
- * (aligned with header logo + theme tokens on light/dark/system and debug themes).
+ * (aligned with header logo + theme tokens on light/dark and debug themes).
  */
 export function AppwriteWordmark({
   className,

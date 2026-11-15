@@ -156,6 +156,12 @@ class CloudFront implements Provider
         return $status;
     }
 
+    public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+    {
+        // Managed certificate details carry no expiry; reading it needs an ACM call this provider is not granted.
+        return null;
+    }
+
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         $tenant = $this->findTenant(Domain::validate($domain));

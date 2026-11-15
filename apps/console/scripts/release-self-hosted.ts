@@ -131,11 +131,15 @@ function section(notes: string, ...names: string[]): string {
  * Paragraphs without fenced code blocks or the sentences that introduce them.
  */
 function prose(markdown: string): string {
-  return markdown
-    .split(/\n{2,}/)
+  const paragraphs = markdown.split(/\n{2,}/)
+  return paragraphs
     .filter(
-      (paragraph) =>
-        !paragraph.startsWith('```') && !paragraph.trimEnd().endsWith(':'),
+      (paragraph, index) =>
+        !paragraph.startsWith('```') &&
+        !(
+          paragraph.trimEnd().endsWith(':') &&
+          (paragraphs[index + 1] ?? '').startsWith('```')
+        ),
     )
     .join('\n\n')
     .trim()

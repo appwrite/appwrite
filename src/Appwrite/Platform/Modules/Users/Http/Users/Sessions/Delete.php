@@ -90,6 +90,8 @@ class Delete extends Action
         $dbForProject->deleteDocument('sessions', $session->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
+        $session->setAttribute('userName', $user->getAttribute('name', ''));
+
         try {
             $mqtt->revoke($project->getId(), $user->getId());
         } catch (\Throwable $error) {

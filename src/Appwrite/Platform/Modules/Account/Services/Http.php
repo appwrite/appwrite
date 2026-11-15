@@ -4,6 +4,10 @@ namespace Appwrite\Platform\Modules\Account\Services;
 
 use Appwrite\Platform\Modules\Account\Http\Account\Create as CreateAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\Delete as DeleteAccount;
+use Appwrite\Platform\Modules\Account\Http\Account\Devices\Create as CreateDevice;
+use Appwrite\Platform\Modules\Account\Http\Account\Devices\Delete as DeleteDevice;
+use Appwrite\Platform\Modules\Account\Http\Account\Devices\Get as GetDevice;
+use Appwrite\Platform\Modules\Account\Http\Account\Devices\Sessions\Update as UpdateDeviceSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Email\Update as UpdateEmail;
 use Appwrite\Platform\Modules\Account\Http\Account\Get as GetAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\Identities\Delete as DeleteIdentity;
@@ -41,6 +45,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Delete as DeleteSess
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Email\Create as CreateEmailPasswordSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Get as GetSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken\Create as CreateIdTokenSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\LDAP\Create as CreateLDAPSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\MagicURL\Update as UpdateMagicURLSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Create as CreateOAuth2Callback;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Get as GetOAuth2Callback;
@@ -82,6 +87,10 @@ class Http extends Service
             ->addAction('getSession', GetSession::class)
             ->addAction('deleteSession', DeleteSession::class)
             ->addAction('updateSession', UpdateSession::class)
+            ->addAction('createDevice', CreateDevice::class)
+            ->addAction('getDevice', GetDevice::class)
+            ->addAction('updateDeviceSession', UpdateDeviceSession::class)
+            ->addAction('deleteDevice', DeleteDevice::class)
             ->addAction('createEmailPasswordSession', CreateEmailPasswordSession::class)
             ->addAction('createAnonymousSession', CreateAnonymousSession::class)
             ->addAction('createSession', CreateSession::class)
@@ -137,6 +146,7 @@ class Http extends Service
             ->addAction('updatePasskey', UpdatePasskey::class)
             ->addAction('listMemberships', ListMemberships::class)
             ->addAction('createPasskeyToken', CreatePasskeyToken::class)
-            ->addAction('updatePasskeyToken', UpdatePasskeyToken::class);
+            ->addAction('updatePasskeyToken', UpdatePasskeyToken::class)
+            ->addAction('createLDAPSession', CreateLDAPSession::class);
     }
 }

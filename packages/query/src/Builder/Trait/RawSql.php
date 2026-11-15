@@ -20,7 +20,7 @@ trait RawSql
     #[\Override]
     public function selectCast(string $column, string $type, string $alias = ''): static
     {
-        if (!\preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\s+[A-Za-z_][A-Za-z0-9_]*)*(\s*\(\s*[A-Za-z0-9_,\s]+\s*\))?$/', $type)) {
+        if (!\preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\s+[A-Za-z_][A-Za-z0-9_]*)*(\s*\(\s*[A-Za-z0-9_,\s]+\s*\))?$/D', $type)) {
             throw new ValidationException('Invalid cast type: ' . $type);
         }
 

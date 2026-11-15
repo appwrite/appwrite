@@ -1,0 +1,144 @@
+---
+layout: integration
+title: Drizzle ORM with managed PostgreSQL and MySQL
+description: Use Drizzle ORM and Drizzle Kit with an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-drizzle/cover.avif
+category: databases
+product:
+    vendor: Drizzle
+    description: 'Drizzle ORM is a TypeScript ORM with a SQL-like query builder, and Drizzle Kit generates and applies its migrations.'
+platform:
+    - 'Cloud'
+---
+
+[Drizzle ORM](https://orm.drizzle.team/) is a TypeScript ORM with a SQL-like query builder and fully typed schemas. Its companion CLI, Drizzle Kit, generates SQL migrations from your schema and applies them.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Drizzle connects to them through its regular drivers, node-postgres or postgres.js for PostgreSQL and mysql2 for MySQL, so the query builder and Drizzle Kit work with no Appwrite-specific configuration.
+
+Runtime queries can go through the database's connection pooler, while Drizzle Kit runs migrations over a direct connection to the engine.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To use Drizzle with an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database, click **Credentials**, and copy the connection string from the **DSN**, **.env**, or **Drizzle** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Set the connection strings
+
+Use a pooled URL for runtime traffic and a direct URL for Drizzle Kit:
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+# Runtime: pooler, transaction mode
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+
+# Migrations and introspection: direct connection
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+# Runtime: pooler, transaction mode
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default"
+
+# Migrations and introspection: direct connection
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+```
+
+Connections are encrypted with TLS. If mysql2 does not infer TLS from the connection string in your runtime, configure it to require TLS.
+{% /tabsitem %}
+{% /tabs %}
+
+## Step 3: Install Drizzle and create the client
+
+{% tabs %}
+{% tabsitem #client-postgresql title="PostgreSQL" %}
+```bash
+npm install drizzle-orm postgres
+npm install -D drizzle-kit
+```
+
+```ts
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+
+// The pooler's transaction mode does not support prepared statements
+const client = postgres(process.env.DATABASE_URL!, { prepare: false });
+
+export const db = drizzle({ client });
+```
+
+To use node-postgres instead, install `pg` and import `drizzle` from `drizzle-orm/node-postgres`.
+{% /tabsitem %}
+
+{% tabsitem #client-mysql title="MySQL" %}
+```bash
+npm install drizzle-orm mysql2
+npm install -D drizzle-kit
+```
+
+```ts
+import { drizzle } from 'drizzle-orm/mysql2';
+
+export const db = drizzle(process.env.DATABASE_URL!);
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Define your tables with `pgTable` from `drizzle-orm/pg-core` or `mysqlTable` from `drizzle-orm/mysql-core`.
+
+## Step 4: Configure Drizzle Kit and migrate
+
+Point `drizzle.config.ts` at the direct URL, because migrations issue DDL that needs a session-level connection:
+
+```ts
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+    dialect: 'postgresql', // or 'mysql'
+    schema: './src/schema.ts',
+    out: './drizzle',
+    dbCredentials: { url: process.env.DIRECT_URL! }
+});
+```
+
+Generate SQL migrations from your schema and apply them:
+
+```bash
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+For prototypes and preview databases, `npx drizzle-kit push` applies the current schema without migration files. Run schema changes as the primary user, `admin` on PostgreSQL or `admin.<hash>` on MySQL.
+
+## Step 5: Test the integration
+
+Insert a row and read it back through the query builder to confirm the connection works. For pull-request previews, create a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch, run `drizzle-kit migrate` against it, run your tests, and delete the branch when the job finishes.
+
+If your app relies on prepared statements, advisory locks, `LISTEN`/`NOTIFY`, user variables, or temporary tables, switch the pooler to session mode or use the direct port.
+
+# Read more about Drizzle and Appwrite Databases
+
+If you would like to learn more about Drizzle and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Drizzle with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/drizzle)
+- [Use Drizzle with a native MySQL database](/docs/products/databases/mysql/integrations/drizzle)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Drizzle ORM documentation](https://orm.drizzle.team/docs/overview)

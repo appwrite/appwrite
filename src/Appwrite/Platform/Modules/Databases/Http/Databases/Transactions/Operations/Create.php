@@ -131,7 +131,7 @@ class Create extends Action
                 'bulkUpsert',
                 'bulkDelete'
             ])) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
             }
 
             $database = $databases[$operation['databaseId']] ??= $authorization->skip(fn () => $dbForProject->getDocument('databases', $operation['databaseId']));

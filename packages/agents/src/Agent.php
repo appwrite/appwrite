@@ -128,12 +128,14 @@ class Agent
     {
         $produced = [];
         $steps = [];
+        $usage = new Usage();
 
         while (true) {
             $request = $this->request([...$messages, ...$produced]);
             $response = $listener === null
                 ? $this->model->generate($request)
                 : $this->model->stream($request, $listener);
+            $usage = $usage->add($response->usage);
 
             $produced[] = $response->message();
 
@@ -176,7 +178,7 @@ class Agent
 
         $output = null;
         if ($this->schema !== null && $step->response->finish !== FinishReason::ToolCalls) {
-            $output = $this->parse($this->schema, $step->text());
+            $output = $this->parse($this->schema, $step->text(), $usage);
         }
 
         $result = new Result($steps, $produced, $output);
@@ -212,11 +214,11 @@ class Agent
 
     /**
      * Decode and validate structured output. Tolerates a Markdown code fence
-     * around the JSON.
+     * around the JSON. $usage is what the run cost, carried by the exception.
      *
      * @throws Output
      */
-    protected function parse(Schema $schema, string $text): mixed
+    protected function parse(Schema $schema, string $text, Usage $usage = new Usage()): mixed
     {
         $json = trim($text);
         if (str_starts_with($json, '```')) {
@@ -237,12 +239,12 @@ class Agent
         try {
             $output = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
         } catch (\JsonException $error) {
-            throw new Output('Structured output is not valid JSON: '.$error->getMessage(), $text);
+            throw new Output('Structured output is not valid JSON: '.$error->getMessage(), $text, usage: $usage);
         }
 
         $errors = $schema->validate($output);
         if ($errors !== []) {
-            throw new Output('Structured output does not match the schema: '.implode('; ', $errors), $text, $errors);
+            throw new Output('Structured output does not match the schema: '.implode('; ', $errors), $text, $errors, $usage);
         }
 
         return $output;

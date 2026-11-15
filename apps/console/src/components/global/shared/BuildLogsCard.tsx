@@ -13,6 +13,7 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { BuildLogsView } from '@/components/global/shared/BuildLogsView'
+import { RefreshButton } from '@/components/global/shared/RefreshButton'
 import {
   Search,
   Copy,
@@ -34,6 +35,9 @@ export interface BuildLogsCardProps {
   title?: string
   /** Hide the title header (e.g. when used inside a modal with its own title) */
   hideTitle?: boolean
+  /** Shows a refresh button next to download and copy. */
+  onRefresh?: () => void
+  isRefreshing?: boolean
 }
 
 export function BuildLogsCard({
@@ -44,6 +48,8 @@ export function BuildLogsCard({
   hideWhenEmpty = false,
   title = 'Build logs',
   hideTitle = false,
+  onRefresh,
+  isRefreshing,
 }: BuildLogsCardProps) {
   const t = useT()
   const resolvedEmptyMessage = emptyMessage ?? (
@@ -179,6 +185,9 @@ export function BuildLogsCard({
                 className="ps-9 h-9 text-[13px]"
               />
             </div>
+            {onRefresh ? (
+              <RefreshButton onClick={onRefresh} isRefreshing={isRefreshing} />
+            ) : null}
             <TooltipPrimitive.Root>
               <TooltipTrigger asChild>
                 <Button

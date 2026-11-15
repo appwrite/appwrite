@@ -1,0 +1,106 @@
+---
+layout: integration
+title: Ruby on Rails with managed PostgreSQL and MySQL
+description: Run Ruby on Rails and ActiveRecord on an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-rails/cover.avif
+category: databases
+product:
+    vendor: Ruby on Rails
+    description: 'Ruby on Rails is an open-source web framework for Ruby with the ActiveRecord ORM and built-in schema migrations.'
+platform:
+    - 'Cloud'
+---
+
+[Ruby on Rails](https://rubyonrails.org/) is a web framework for Ruby. Its ActiveRecord ORM maps tables to models, manages a per-process connection pool, and evolves your schema with migrations.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. ActiveRecord connects to them through its regular `postgresql` and `mysql2` adapters, so models, migrations, and the rest of the Rails toolchain work with no Appwrite-specific configuration.
+
+A Rails app under Puma is a long-running process, so it pairs naturally with a direct connection to the engine and a pool sized to your connection budget.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect Rails to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database, click **Credentials**, and copy the connection string from the **DSN** or **.env** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Install the driver gem
+
+Add `gem 'pg'` for PostgreSQL or `gem "mysql2", "~> 0.5"` for MySQL to your `Gemfile`, then run `bundle install`. Both gems build against native client libraries, so install the PostgreSQL or MySQL client headers first.
+
+## Step 3: Configure database.yml
+
+Keep the connection string in `DATABASE_URL`, which Rails reads automatically, and set TLS and the pool size in `config/database.yml`:
+
+{% tabs %}
+{% tabsitem #yml-postgresql title="PostgreSQL" %}
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+```yaml
+# config/database.yml
+production:
+  adapter: postgresql
+  url: <%= ENV["DATABASE_URL"] %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+```
+{% /tabsitem %}
+
+{% tabsitem #yml-mysql title="MySQL" %}
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default"
+DB_SSL_MODE="required"
+```
+
+```yaml
+# config/database.yml
+production:
+  adapter: mysql2
+  url: <%= ENV["DATABASE_URL"] %>
+  ssl_mode: <%= ENV.fetch("DB_SSL_MODE", "required") %>
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+```
+
+Older Rails apps name the pool setting `pool`. For certificate verification, set `ssl_mode` to `verify_identity`.
+{% /tabsitem %}
+{% /tabs %}
+
+Each Puma worker has its own pool, so the backend connection count is roughly the pool size times workers times server instances. Keep that within your specification's connection limit.
+
+## Step 4: Run migrations
+
+Run migrations with `DATABASE_URL` pointing at the direct port, `5432` or `3306`, because DDL needs a session-level connection:
+
+```bash
+bin/rails db:migrate
+```
+
+## Step 5: Test the integration
+
+Create a record and read it back from the Rails console, for example `User.create!(email: 'ada@example.com')` followed by `User.order(created_at: :desc).limit(10)`.
+
+If you route through the connection pooler instead of connecting directly, prefer session mode. On the default transaction-mode pooler, port `6432` for PostgreSQL or `6033` for MySQL, add `prepared_statements: false` to `database.yml`, because server-side prepared statements are tied to one backend connection. To test migrations in CI, export a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch's connection string as `DATABASE_URL` and run `bin/rails db:migrate`.
+
+# Read more about Ruby on Rails and Appwrite Databases
+
+If you would like to learn more about Ruby on Rails and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Rails with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/rails)
+- [Use Rails with a native MySQL database](/docs/products/databases/mysql/integrations/rails)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Rails configuration guide](https://guides.rubyonrails.org/configuring.html)

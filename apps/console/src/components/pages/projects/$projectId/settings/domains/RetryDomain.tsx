@@ -14,6 +14,7 @@ import type { Models } from '@appwrite.io/console'
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
   type DomainVerificationError,
 } from './VerifyDomainContent'
 
@@ -58,14 +59,18 @@ export function RetryDomainDialog({
       ) {
         setVerificationError(dnsPendingVerificationError(t))
       } else if (updatedRule.status === 'verified') {
-        toast.success(`${rule.domain} ${t('has been verified')}`)
+        toast.success(
+          rule.status === 'verified'
+            ? t('Certificate renewal started')
+            : `${rule.domain} ${t('has been verified')}`,
+        )
         onRetrySuccess()
       } else {
         toast.success(t('Verification in progress'))
         onRetrySuccess()
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 

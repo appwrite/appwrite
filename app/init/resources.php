@@ -28,6 +28,7 @@ use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
+use Appwrite\Messaging\PushService;
 use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
@@ -41,14 +42,17 @@ use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
+use Psr\Http\Client\ClientInterface;
 use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Destinations\IPRange;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Pool as HttpClientPool;
+use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Document;
@@ -57,7 +61,6 @@ use Utopia\DI\Container;
 use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
-use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
@@ -73,6 +76,7 @@ use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\S3\RetryStrategy;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
@@ -207,13 +211,21 @@ $container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname 
     }
 }, ['telemetry', 'publicHostname']);
 
-$container->set('adapterForPush', function (Telemetry $telemetry, PublicHostname $publicHostname): ?PushAdapter {
-    try {
-        return (new MessagingProvider($telemetry, $publicHostname))->internalPush();
-    } catch (\Throwable $error) {
-        Console::error('Ignoring _APP_NOTIFICATIONS_PUSH_APNS: ' . $error->getMessage());
-        return null;
+$container->set('adaptersForPush', function (Telemetry $telemetry, PublicHostname $publicHostname): array {
+    $adapters = [];
+    foreach (PushService::cases() as $service) {
+        try {
+            $adapter = (new MessagingProvider($telemetry, $publicHostname))->internalPush($service);
+        } catch (\Throwable $error) {
+            Console::error('Ignoring ' . $service->variable() . ': ' . $error->getMessage());
+            continue;
+        }
+        if ($adapter !== null) {
+            $adapters[$service->value] = $adapter;
+        }
     }
+
+    return $adapters;
 }, ['telemetry', 'publicHostname']);
 
 $container->set('authorization', fn () => new Authorization(), []);
@@ -408,7 +420,7 @@ $container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, i
 
 $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
 
-function getDevice(string $root, string $connection = ''): Device
+function getDevice(string $root, string $connection = '', (ClientInterface&StreamingClientInterface)|null $client = null): Device
 {
     $configuredDevice = DeviceType::tryFrom(strtolower(System::getEnv('_APP_STORAGE_DEVICE', DeviceType::Local->value))) ?? DeviceType::Local;
     $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
@@ -480,6 +492,7 @@ function getDevice(string $root, string $connection = ''): Device
                     $accessSecret,
                     $endpoint,
                     $region,
+                    client: $client,
                     bucket: $bucketName !== '' ? $bucketName : null,
                     // Unset lets the device infer it from the endpoint and bucket.
                     pathStyle: match (System::getEnv('_APP_STORAGE_S3_PATH_STYLE', '')) {
@@ -490,19 +503,34 @@ function getDevice(string $root, string $connection = ''): Device
                 );
             }
 
-            return new AWS($root, $accessKey, $accessSecret, $bucket, $region);
+            return new AWS($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::DoSpaces:
-            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region);
+            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::Backblaze:
-            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region);
+            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::Linode:
-            return new Linode($root, $accessKey, $accessSecret, $bucket, $region);
+            return new Linode($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::Wasabi:
-            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region);
+            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, client: $client);
         case DeviceType::Local:
             return new Local($root);
     }
 }
+
+// Read by the response cache only. Reused connections keep a read near the cost of a
+// local file, and the short timeouts turn an outage into a quick miss. A small pool, since
+// reconnecting many at once is slow. A provider closes idle connections, so one retry
+// keeps a dropped connection from reading as a miss.
+$container->set('cacheClient', fn () => new HttpClientPool(new Connections(
+    new SwoolePoolAdapter(),
+    'cache.storage',
+    4,
+    fn () => new Retry(
+        new Client((new SwooleClientAdapter())->withConnectionReuse()->withTimeout(1)->withConnectTimeout(1)),
+        new RetryStrategy(retries: 1, delay: 0.05, maxDelay: 0.05),
+    ),
+    timeout: 1.0,
+)), []);
 
 $container->set('geoClient', function () {
     $endpoint = System::getEnv('_APP_GEO_ENDPOINT', '');

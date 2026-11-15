@@ -143,6 +143,7 @@ abstract class OAuth2Base extends Model
             ])
             ->addRule($this->getClientSecretFieldName(), [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => $this->getClientSecretDescription(),
                 'default' => '',
                 'example' => $this->getClientSecretExample(),

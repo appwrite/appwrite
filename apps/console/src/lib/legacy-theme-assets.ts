@@ -5,7 +5,7 @@ export function resolveEffectiveTheme(
   theme: string | undefined,
   resolvedTheme: string | undefined,
 ): string | undefined {
-  return theme === 'system' ? resolvedTheme : theme
+  return theme === 'system' ? (resolvedTheme ?? 'dark') : theme
 }
 
 export function isLegacyTheme(
@@ -17,24 +17,17 @@ export function isLegacyTheme(
 
 /** Matches THEME_SCRIPT / first-paint theme class on `<html>`. */
 export function readStoredThemePreference(): string {
-  if (typeof window === 'undefined') return 'system'
+  if (typeof window === 'undefined') return 'dark'
   try {
-    const stored = localStorage.getItem('theme') || 'system'
-    return stored === 'classic' ? 'dark' : stored
+    const stored = localStorage.getItem('theme') || 'dark'
+    return stored === 'classic' || stored === 'system' ? 'dark' : stored
   } catch {
-    return 'system'
+    return 'dark'
   }
 }
 
 export function readEffectiveThemeFromStorage(): string {
-  const preference = readStoredThemePreference()
-  if (preference === 'system') {
-    if (typeof window === 'undefined') return 'light'
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light'
-  }
-  return preference
+  return readStoredThemePreference()
 }
 
 export function isLegacyThemeFromStorage(): boolean {

@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { CONSOLE_PROFILES } from '@/lib/console-profiles'
 import { getVisibleVcsOAuthProviders } from '@/lib/vcs/providers'
 
-const ids = (features: { extraVcsOAuth: boolean }) =>
+const ids = (features: { vcsOrigin: boolean }) =>
   getVisibleVcsOAuthProviders(features, undefined).map(
     (provider) => provider.id,
   )
@@ -20,8 +20,8 @@ describe('Git connect providers', () => {
     }
   })
 
-  test('extraVcsOAuth adds Origin', () => {
-    expect(ids({ extraVcsOAuth: true })).toEqual([
+  test('vcsOrigin adds Origin', () => {
+    expect(ids({ vcsOrigin: true })).toEqual([
       'github',
       'entire',
       'origin',

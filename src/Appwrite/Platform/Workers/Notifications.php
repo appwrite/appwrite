@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Alert\Unsubscribe;
+use Appwrite\Messaging\PushService;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
@@ -56,7 +57,8 @@ class Notifications extends Action
 
     private Telemetry $telemetry;
 
-    private ?PushAdapter $adapterForPush = null;
+    /** @var array<string, PushAdapter> by push service */
+    private array $adaptersForPush = [];
 
     public static function getName(): string
     {
@@ -75,15 +77,15 @@ class Notifications extends Action
             ->inject('clientForWebhooks')
             ->inject('publicHostname')
             ->inject('telemetry')
-            ->inject('adapterForPush')
+            ->inject('adaptersForPush')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname, Telemetry $telemetry, ?PushAdapter $adapterForPush = null): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname, Telemetry $telemetry, array $adaptersForPush = []): void
     {
         $this->publicHostname = $publicHostname;
         $this->telemetry = $telemetry;
-        $this->adapterForPush = $adapterForPush;
+        $this->adaptersForPush = $adaptersForPush;
 
         $payload = $message->getPayload();
 
@@ -544,15 +546,16 @@ class Notifications extends Action
      * organizations and projects and turn resolved pushes off for all of them. Each device's
      * push is recorded before it is sent, so a redelivered message pushes nothing twice, even
      * after a crash between the send and the record, while a new device still gets it.
-     * A critical monitor's firing goes out with APNs' critical sound. A token the push service
-     * reports expired marks its target expired.
+     * Each device is pushed through the service its token belongs to; a device whose service is
+     * not configured is skipped. A critical monitor's firing goes out with APNs' critical sound on
+     * iOS and on the `critical` notification channel on Android, which the app lets ring through
+     * Do Not Disturb. A token the push service reports expired marks its target expired.
      *
      * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
      */
     protected function dispatchPush(array $recipient, string $messageId, array $payload, Document $project, Database $dbForPlatform): ?string
     {
-        $adapter = $this->adapterForPush;
-        if ($adapter === null) {
+        if ($this->adaptersForPush === []) {
             Span::add('push.skipped', 'disabled');
             return null;
         }
@@ -592,6 +595,13 @@ class Notifications extends Action
         $failures = [];
 
         foreach ($targets as $target) {
+            $token = (string) $target->getAttribute('identifier');
+            $service = PushService::forToken($token);
+            $adapter = $this->adaptersForPush[$service->value] ?? null;
+            if ($adapter === null) {
+                Span::add('push.skipped', 'unconfigured');
+                continue;
+            }
             $delivery = [...$recipient, 'address' => $target->getId()];
 
             if ($messageId !== '') {
@@ -605,16 +615,39 @@ class Notifications extends Action
                 }
             }
 
-            $message = new PushMessage(
-                to: [(string) $target->getAttribute('identifier')],
-                title: (string) ($push['title'] ?? ''),
-                body: (string) ($push['body'] ?? ''),
-                data: $data === [] ? null : $data,
-                sound: $critical ? 'siren.caf' : null,
-                tag: ($push['tag'] ?? '') === '' ? null : (string) $push['tag'],
-                critical: $critical ? true : null,
-                priority: Priority::HIGH,
-            );
+            $title = (string) ($push['title'] ?? '');
+            $body = (string) ($push['body'] ?? '');
+            $tag = ($push['tag'] ?? '') === '' ? null : (string) $push['tag'];
+
+            $message = $service === PushService::FCM
+                // Data-only: a notification block makes Android draw a background push itself, so the
+                // app never sees it. These are the keys Expo's notification builder reads, so an app
+                // that draws nothing of its own still shows the same title, body, channel (the one
+                // that rings through Do Not Disturb, for critical) and replacing tag.
+                ? new PushMessage(
+                    to: [$token],
+                    data: [
+                        ...$data,
+                        'title' => $title,
+                        'message' => $body,
+                        'channelId' => $critical ? 'critical' : 'alerts',
+                        ...($tag === null ? [] : ['tag' => $tag]),
+                    ],
+                    priority: Priority::HIGH,
+                )
+                // Mutable content runs the app's notification service extension, which can add to the
+                // alert before iOS shows it; without one, iOS shows it unchanged.
+                : new PushMessage(
+                    to: [$token],
+                    title: $title,
+                    body: $body,
+                    data: $data === [] ? null : $data,
+                    sound: $critical ? 'siren.caf' : null,
+                    tag: $tag,
+                    critical: $critical ? true : null,
+                    priority: Priority::HIGH,
+                    mutableContent: true,
+                );
 
             try {
                 $result = $adapter->send($message);
@@ -818,14 +851,14 @@ class Notifications extends Action
 
     /**
      * Mail the platform writes to a project's console users, such as an alert
-     * rule changing state, goes out through the platform mailer, never through
-     * the SMTP server the project configured for its own users.
+     * rule changing state or a domain going live, goes out through the platform
+     * mailer, never through the SMTP server the project configured for its own users.
      *
      * @param array<string, mixed> $payload
      */
     protected function isPlatformMail(array $payload): bool
     {
-        return ($payload['template'] ?? '') === MAIL_TEMPLATE_ALERT;
+        return \in_array($payload['template'] ?? '', [MAIL_TEMPLATE_ALERT, MAIL_TEMPLATE_DOMAIN_VERIFIED], true);
     }
 
     private function validateConsoleRecipient(array $recipient): void

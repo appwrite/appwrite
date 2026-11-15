@@ -1,0 +1,94 @@
+---
+layout: integration
+title: Deploy Starlog with Sites
+description: Publish release notes with an Astro theme on Appwrite Sites
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/sites-starlog/cover.avif
+category: sites
+product:
+    vendor: Starlog
+    description: "Starlog is a release notes theme for Astro, styled with Sass and available in light and dark modes."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/sites-starlog/cover.avif
+    - /images/sites/templates/astro-starlog-dark.png
+    - /images/sites/templates/astro-starlog-light.png
+---
+
+[Starlog](https://github.com/doodlemarks/starlog) is a release notes theme for [Astro](https://astro.build). Each release is a Markdown file with a version number, a date, and a cover image, and the theme renders them as a feed of release announcements with a page for each release. It is styled with Sass and supports light and dark modes.
+
+# How does the integration work?
+
+[Appwrite Sites](/docs/products/sites) includes Starlog in its template library as **Astro Starlog**. When you create a site from the template, Appwrite builds the theme from the [appwrite/templates-for-sites](https://github.com/appwrite/templates-for-sites/tree/main/astro/starlog) repository and serves it as a static site on an Appwrite domain. If you connect a repository, every release note you push to the production branch is built and published.
+
+Appwrite applies these build settings to the template:
+
+| Setting | Value |
+| --- | --- |
+| Framework | Astro |
+| Install command | `npm install` |
+| Build command | `npm run build` |
+| Output directory | `./dist` |
+| Rendering | Static |
+
+{% info title="Self-hosted Appwrite" %}
+The template builds on the `node-22` runtime, which `_APP_SITES_RUNTIMES` enables by default. To create a repository from the template, configure [version control](/docs/advanced/self-hosting/configuration/version-control) for your instance first. **Connect later** deploys the template straight from its public GitHub source.
+{% /info %}
+
+# How to implement
+
+To deploy Starlog with Appwrite Sites, there are several steps you must complete:
+
+## Step 1: Create a site from the template
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, go to **Sites** and click **Create site**. Search the templates for **Astro Starlog** and select it.
+
+Enter a **Site name** and a **Site ID**, then choose how to manage the code:
+
+- **Connect your repository** creates a new repository from the template with your Git provider, such as GitHub, or connects one you already have, and redeploys on every push to the production branch. Choose this to publish your own release notes.
+- **Connect later** deploys the template as it is. You can connect a repository afterwards from the site's **Settings** > **Git repository**.
+
+Pick a subdomain under **Domain** and click **Deploy**. You can follow the build logs in the Console, and the site goes live on that domain when the build succeeds.
+
+## Step 2: Publish your release notes
+
+Clone the repository and replace the sample content:
+
+- `src/consts.ts`: set `SiteTitle` and `SiteDescription`.
+- `src/content/releases/`: add one Markdown file per release. The collection schema in `src/content.config.ts` requires `title`, `description`, `versionNumber`, `date`, and an `image` with `src` and `alt` in the frontmatter, so a release without them fails the build.
+- `src/assets/`: keep the images your releases reference here.
+- `astro.config.mjs`: set `site` to your site's URL.
+
+A release note starts like this:
+
+```md
+---
+title: 'Introducing version 2.1'
+description: 'Faster sync and a new settings page.'
+versionNumber: '2.1'
+date: '2026-11-06'
+image:
+  src: '../../assets/release-2-1.jpg'
+  alt: 'The new settings page'
+---
+```
+
+Commit and push to the production branch. Appwrite builds the change and activates the new deployment.
+
+## Step 3: Add a custom domain
+
+Open your site's **Domains** tab to serve your release notes from your own domain, such as a `changelog` subdomain. Follow [Add a custom domain](/docs/products/sites/domains#add-a-custom-domain) for the DNS records to create.
+
+# Read more about Starlog and Appwrite Sites
+
+If you would like to learn more about Starlog and Appwrite Sites, we have some resources that you should visit:
+
+- [Appwrite Sites templates](/docs/products/sites/templates)
+- [Deploy Sites from Git](/docs/products/sites/deploy-from-git)
+- [Free Astro hosting with Appwrite Sites](/blog/post/free-astro-hosting)
+- [Starlog on GitHub](https://github.com/doodlemarks/starlog)

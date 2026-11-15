@@ -92,7 +92,7 @@ export function ProxyRuleContextMenu({
             {t('View logs')}
           </ContextMenuItem>
         )}
-        {canRetryRule(rule.status) && (
+        {canRetryRule(rule) && (
           <ContextMenuItem
             onSelect={() => openDialogAfterOverlayCloses(() => onRetry(rule))}
           >

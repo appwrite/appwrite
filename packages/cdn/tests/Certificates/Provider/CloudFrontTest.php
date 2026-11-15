@@ -221,6 +221,14 @@ final class CloudFrontTest extends TestCase
         $this->assertSame(Status::UNKNOWN, $this->provider(new TestClient([$this->notFound()]))->getCertificateStatus('example.com', null));
     }
 
+    public function testCertificateExpiryIsUnknownWithoutAnyRequest(): void
+    {
+        $client = new TestClient([]);
+
+        $this->assertNull($this->provider($client)->getCertificateExpiry('example.com', null));
+        $this->assertSame([], $client->calls);
+    }
+
     public function testIsRenewRequired(): void
     {
         $this->assertTrue($this->provider(new TestClient([$this->notFound()]))->isRenewRequired('example.com', null));

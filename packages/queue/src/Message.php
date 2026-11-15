@@ -14,6 +14,7 @@ class Message
     protected ?int $maxAttempts = null;
     protected ?int $sequence = null;
     protected bool $terminal = false;
+    protected bool $skipped = false;
     protected ?int $size = null;
 
     public function __construct(array $array = [])
@@ -207,6 +208,22 @@ class Message
     public function isTerminal(): bool
     {
         return $this->terminal;
+    }
+
+    /**
+     * Set from an init hook to acknowledge the message without running its job.
+     * Shutdown hooks still run; error hooks do not.
+     */
+    public function skip(bool $skipped = true): self
+    {
+        $this->skipped = $skipped;
+
+        return $this;
+    }
+
+    public function isSkipped(): bool
+    {
+        return $this->skipped;
     }
 
     public function asArray(): array

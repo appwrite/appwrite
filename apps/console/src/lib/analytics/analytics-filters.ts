@@ -30,7 +30,9 @@ export const ANALYTICS_FILTER_ATTRIBUTES = [
   'region',
   'city',
   'browser',
+  'browserVersion',
   'operatingSystem',
+  'operatingSystemVersion',
   'device',
   'screenSize',
   'referrerSource',
@@ -45,17 +47,42 @@ export const ANALYTICS_FILTER_ATTRIBUTES = [
   'botName',
   'botCategory',
   'eventName',
+  'userId',
 ] as const
 
-export type AnalyticsFilterAttribute =
-  (typeof ANALYTICS_FILTER_ATTRIBUTES)[number]
+type AnalyticsColumnFilterAttribute = (typeof ANALYTICS_FILTER_ATTRIBUTES)[number]
 
-const ATTRIBUTE_TITLES: Record<AnalyticsFilterAttribute, string> = {
+/** A custom event prop, filtered as `props.<key>`. */
+export type AnalyticsPropFilterAttribute = `props.${string}`
+
+export type AnalyticsFilterAttribute =
+  | AnalyticsColumnFilterAttribute
+  | AnalyticsPropFilterAttribute
+
+const PROP_FILTER_PREFIX = 'props.'
+
+export function analyticsPropFilterAttribute(
+  key: string,
+): AnalyticsPropFilterAttribute {
+  return `${PROP_FILTER_PREFIX}${key}`
+}
+
+/** The prop key behind a `props.<key>` attribute, or null for a column. */
+export function analyticsPropKeyOf(attribute: string): string | null {
+  return attribute.startsWith(PROP_FILTER_PREFIX) &&
+    attribute.length > PROP_FILTER_PREFIX.length
+    ? attribute.slice(PROP_FILTER_PREFIX.length)
+    : null
+}
+
+const ATTRIBUTE_TITLES: Record<AnalyticsColumnFilterAttribute, string> = {
   country: 'Country',
   region: 'Region',
   city: 'City',
   browser: 'Browser',
+  browserVersion: 'Browser version',
   operatingSystem: 'Operating system',
+  operatingSystemVersion: 'OS version',
   device: 'Device',
   screenSize: 'Screen size',
   referrerSource: 'Source',
@@ -70,6 +97,7 @@ const ATTRIBUTE_TITLES: Record<AnalyticsFilterAttribute, string> = {
   botName: 'Bot',
   botCategory: 'Bot category',
   eventName: 'Event',
+  userId: 'User ID',
 }
 
 export const ANALYTICS_FILTER_COLUMNS: FilterColumn[] =
@@ -80,13 +108,39 @@ export const ANALYTICS_FILTER_COLUMNS: FilterColumn[] =
     allowedOperators: [...ANALYTICS_FILTER_OPERATORS],
   }))
 
+/**
+ * The filter columns plus one per active `props.<key>` filter, titled with the
+ * key, so chips, exports and the filter editor can resolve it.
+ */
+export function analyticsFilterColumns(
+  filters: readonly AnalyticsFilter[],
+): FilterColumn[] {
+  const propAttributes = new Set(
+    filters
+      .map((filter) => filter.attribute)
+      .filter((attribute) => analyticsPropKeyOf(attribute) !== null),
+  )
+  if (propAttributes.size === 0) return ANALYTICS_FILTER_COLUMNS
+  return [
+    ...ANALYTICS_FILTER_COLUMNS,
+    ...[...propAttributes].map(
+      (id): FilterColumn => ({
+        id,
+        title: analyticsPropKeyOf(id)!,
+        type: 'string',
+        allowedOperators: [...ANALYTICS_FILTER_OPERATORS],
+      }),
+    ),
+  ]
+}
+
 const ATTRIBUTE_SET = new Set<string>(ANALYTICS_FILTER_ATTRIBUTES)
 const OPERATOR_SET = new Set<string>(ANALYTICS_FILTER_OPERATORS)
 
 export function isAnalyticsFilterAttribute(
   value: string,
 ): value is AnalyticsFilterAttribute {
-  return ATTRIBUTE_SET.has(value)
+  return ATTRIBUTE_SET.has(value) || analyticsPropKeyOf(value) !== null
 }
 
 /**
@@ -106,6 +160,16 @@ export function analyticsFilterAttributeForDimension(
     return null
   }
   return isAnalyticsFilterAttribute(dimension) ? dimension : null
+}
+
+/** Which attribute a breakdown tab's rows filter on; prop tabs use `props.<key>`. */
+export function analyticsFilterAttributeForTab(tab: {
+  dimension: AnalyticsDimension
+  propKey?: string
+}): AnalyticsFilterAttribute | null {
+  return tab.propKey
+    ? analyticsPropFilterAttribute(tab.propKey)
+    : analyticsFilterAttributeForDimension(tab.dimension)
 }
 
 /** Drop anything the API wouldn't accept (stale or hand-edited URLs). */
@@ -179,15 +243,23 @@ export function trafficKindOfFilterKey(
 }
 
 /**
- * `page` and `eventName` are only accepted "alongside `interval`, or with a
- * breakdown on a dimension other than entryPage, exitPage". The flat
- * aggregate (summary stats, live counter) and entry/exit page breakdowns
- * therefore can't honour them.
+ * Events-only attributes (no column on the sessions table) are only accepted
+ * "alongside `interval`, or with a breakdown on a dimension other than
+ * entryPage, exitPage". The flat aggregate (summary stats, live counter) and
+ * entry/exit page breakdowns therefore can't honour them.
  */
 const SHAPE_RESTRICTED_ATTRIBUTES = new Set<AnalyticsFilterAttribute>([
   'page',
   'eventName',
+  'userId',
 ])
+
+function isShapeRestricted(attribute: AnalyticsFilterAttribute): boolean {
+  return (
+    SHAPE_RESTRICTED_ATTRIBUTES.has(attribute) ||
+    analyticsPropKeyOf(attribute) !== null
+  )
+}
 
 export type AnalyticsQueryShape =
   | { kind: 'flat' }
@@ -198,7 +270,7 @@ export function isAnalyticsFilterShapeSupported(
   filters: readonly AnalyticsFilter[],
   shape: AnalyticsQueryShape,
 ): boolean {
-  if (!filters.some((filter) => SHAPE_RESTRICTED_ATTRIBUTES.has(filter.attribute))) {
+  if (!filters.some((filter) => isShapeRestricted(filter.attribute))) {
     return true
   }
   if (shape.kind === 'series') return true
@@ -228,4 +300,4 @@ export function analyticsFiltersKey(
 }
 
 export const ANALYTICS_FILTER_UNSUPPORTED_MESSAGE =
-  'Not available with a page or event filter'
+  'Not available with this filter'

@@ -1253,12 +1253,13 @@ export function useRetryDomainVerification(
     mutationFn: async (domainId: string) => {
       return await retryDomainVerification(domainId)
     },
-    onSuccess: (_, domainId) => {
-      queryClient.invalidateQueries({
-        queryKey: ['domains', 'organization', organizationId],
-      })
-      queryClient.invalidateQueries({
+    onSuccess: async (_, domainId) => {
+      await queryClient.refetchQueries({
         queryKey: ['domain', domainId],
+      })
+      // Refetch inactive lists too: they use refetchOnMount: false, so invalidating would leave them stale
+      queryClient.refetchQueries({
+        queryKey: ['domains', 'organization', organizationId],
       })
     },
   })

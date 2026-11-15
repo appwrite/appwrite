@@ -1,0 +1,67 @@
+---
+layout: integration
+title: OAuth with Spotify
+description: Authenticate users with an existing Spotify account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-spotify/cover.avif
+category: auth
+product:
+    vendor: Spotify
+    description: "Spotify is a music and podcast streaming service with a Web API for building apps on top of listeners' accounts."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+Spotify is a music and podcast streaming service. Its Web API lets apps work with a listener's account, such as their playlists, saved tracks, and listening history, after the listener authorizes the app with OAuth 2.0. Sign in with Spotify fits music discovery apps, party playlists, and other tools for Spotify listeners.
+
+# How does the integration work?
+
+You can use the Spotify OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account. The session stores Spotify's access token as `providerAccessToken`, so your server can call the Spotify Web API on the user's behalf when you request the extra scopes it needs.
+
+Appwrite requests the `user-read-email` scope and stores the user's name and email address. Spotify also shares the user's profile photo, which Appwrite uses for [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars.
+
+Spotify doesn't guarantee that the email address is verified, so Appwrite stores it as unverified. If another user in your project already has the same address, Appwrite redirects to your failure URL instead of signing in to that account. To connect Spotify to an existing account, have the user sign in first and then start `createOAuth2Session` from the browser, which links Spotify as a new [identity](/docs/products/auth/identities).
+
+# How to implement
+
+To implement the Spotify OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create a Spotify app
+
+First, sign in to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) and create an app. Enter a name and description, select the **Web API**, and accept the terms. The form asks for a redirect URI, so temporarily add `https://temporary-endpoint.com/`. You will replace it with the URI from Appwrite in the next step.
+
+Open the app's **Settings** and save the **Client ID** and the client secret for later use.
+
+New Spotify apps run in development mode, where only users you add to the app's allowlist can use it, up to five users. To open sign-in to everyone, Spotify must approve your app for extended quota mode. Read Spotify's [quota modes](https://developer.spotify.com/documentation/web-api/concepts/quota-modes) guide for the requirements.
+
+## Step 2: Add the Spotify OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **Spotify** under the **OAuth2 Providers** section.
+
+Enter the **Client ID** and **Client Secret** you saved from Spotify, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/spotify/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in your Spotify app's settings, replace the temporary URL under **Redirect URIs** with this URI and save.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Spotify` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server, and sign in with a Spotify account on your app's allowlist. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about Spotify and Appwrite Auth
+
+If you would like to learn more about Spotify and Appwrite Auth, we have some resources that you should visit:
+
+- [Spotify Web API authorization](https://developer.spotify.com/documentation/web-api/concepts/authorization)
+- [Spotify quota modes](https://developer.spotify.com/documentation/web-api/concepts/quota-modes)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)

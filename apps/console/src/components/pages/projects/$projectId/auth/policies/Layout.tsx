@@ -38,7 +38,15 @@ const NAV_ITEMS = [
     label: 'Sessions',
     to: '/projects/$projectId/auth/policies/sessions' as const,
     icon: Clock,
-    keywords: ['session', 'length', 'limit', 'invalidation', 'alerts'],
+    keywords: [
+      'session',
+      'length',
+      'limit',
+      'invalidation',
+      'alerts',
+      'account switching',
+      'devices',
+    ],
   },
   {
     id: 'users' as const,

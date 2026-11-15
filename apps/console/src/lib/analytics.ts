@@ -61,6 +61,10 @@ export type AnalyticsEventName =
   | 'Form Validation Failed'
   | 'Menu Item Clicked'
   | 'Navigation Clicked'
+  | 'Overview Quick Start Clicked'
+  | 'Overview Resource Create Clicked'
+  | 'Overview Resource Opened'
+  | 'Overview Resource View All Clicked'
   | 'Pagination Changed'
   | 'Resource Created'
   | 'Resource Creation Failed'
@@ -70,6 +74,7 @@ export type AnalyticsEventName =
   | 'View Mode Changed'
   | 'Wizard Opened'
   | 'Wizard Option Selected'
+  | 'WebMCP Tool Called'
 
 export type AnalyticsPropValue = string | number | boolean | null | undefined
 export type AnalyticsProps = Record<string, AnalyticsPropValue>

@@ -20,6 +20,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Messaging\Provider;
+use Appwrite\Messaging\PushService;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Alerts\Workers\Alerts;
 use Appwrite\Platform\Workers\Notifications;
@@ -87,7 +88,7 @@ final class EvaluationCustomServerTest extends Scope
         $name = 'Egress ' . \uniqid();
         $webhook = $this->createAlertWebhook();
         // The owner signed in on a phone too.
-        $device = $this->createDevice($this->getRoot()['email'], 'password', 'phone-' . \uniqid());
+        $device = $this->createDevice($this->getRoot()['email'], 'password', \bin2hex(\random_bytes(32)));
 
         // Traffic for the project, so network.outbound has something to sum.
         for ($i = 0; $i < 5; $i++) {
@@ -100,17 +101,17 @@ final class EvaluationCustomServerTest extends Scope
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'window' => 3600,
             'cooldown' => 300,
-            'critical' => true,
+            'severity' => 'critical',
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
-        $this->assertTrue($created['body']['critical']);
+        $this->assertSame('critical', $created['body']['severity']);
         $monitorId = $created['body']['$id'];
 
         /**
          * Test for SUCCESS
          */
         $firing = $this->waitForStatus($monitorId, 'firing');
-        $this->assertTrue($firing['critical']);
+        $this->assertSame('critical', $firing['severity']);
         $this->assertGreaterThan(0, $firing['value']);
         $this->assertNotNull($firing['triggeredAt']);
         $this->assertNotNull($firing['evaluatedAt']);
@@ -119,6 +120,7 @@ final class EvaluationCustomServerTest extends Scope
         $alert = $this->getAlert($firing['alertId']);
         $this->assertSame('firing', $alert['status']);
         // The alert keeps what the monitor was when it fired.
+        $this->assertSame('critical', $alert['severity']);
         $this->assertTrue($alert['critical']);
         $this->assertSame($monitorId, $alert['monitorId']);
         $this->assertSame($name, $alert['name']);
@@ -146,7 +148,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame($name, $delivery['data']['name']);
         $this->assertSame('usage', $delivery['data']['type']);
         $this->assertSame('network.outbound', $delivery['data']['metric']);
-        $this->assertTrue($delivery['data']['critical']);
+        $this->assertSame('critical', $delivery['data']['severity']);
         $this->assertGreaterThan(0, $delivery['data']['value']);
         $this->assertNull($delivery['data']['resolvedAt']);
         $this->assertArrayNotHasKey('projectInternalId', $delivery['data']);
@@ -183,13 +185,55 @@ final class EvaluationCustomServerTest extends Scope
         // The monitor is critical, so its firing rings with the critical sound.
         $this->assertTrue($push['critical']);
         $this->assertSame('siren.caf', $push['sound']);
+        // Mutable content lets the app's notification service extension add to it before iOS shows it.
+        $this->assertTrue($push['mutableContent']);
         $this->assertSame('alert', $push['data']['type']);
+        $this->assertSame('critical', $push['data']['severity']);
         $this->assertSame($firing['alertId'], $push['data']['alertId']);
         $this->assertSame($monitorId, $push['data']['monitorId']);
         $this->assertSame($this->getProject()['$id'], $push['data']['projectId']);
         $this->assertSame($this->teamId(), $push['data']['organizationId']);
         $this->assertStringContainsString('/projects/' . $this->getProject()['$id'] . '/usage/alerts?alert=' . $firing['alertId'], (string) $push['data']['url']);
         $this->assertNotSame('', $push['data']['unsubscribeToken']);
+
+        // A member acknowledges the alert for everyone who can read it; it keeps firing.
+        $acknowledgements = $this->createAlertWebhook(['monitors.*.alerts.*.acknowledged', 'monitors.*.alerts.*.unacknowledged']);
+        $member = \array_merge($this->consoleHeaders(), ['x-appwrite-project' => $this->getProject()['$id'], 'x-appwrite-mode' => 'admin']);
+        $acknowledged = $this->updateAlert($firing['alertId'], true, $member);
+        $this->assertSame('firing', $acknowledged['status']);
+        $this->assertNotNull($acknowledged['acknowledgedAt']);
+        $this->assertSame($this->getRoot()['$id'], $acknowledged['acknowledgedBy']);
+        $this->assertSame($this->getRoot()['name'], $acknowledged['acknowledgedByName']);
+        $this->assertSame($acknowledged['acknowledgedAt'], $this->getAlert($firing['alertId'])['acknowledgedAt']);
+        $delivery = $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'acknowledged');
+        $this->assertSame($this->getRoot()['$id'], $delivery['data']['acknowledgedBy']);
+        $this->assertSame('firing', $delivery['data']['status']);
+
+        // Acknowledging again keeps the first member on it and fires nothing new.
+        $again = $this->updateAlert($firing['alertId'], true);
+        $this->assertSame($acknowledged['acknowledgedAt'], $again['acknowledgedAt']);
+        $this->assertSame($this->getRoot()['$id'], $again['acknowledgedBy']);
+
+        // Undo clears it for everyone.
+        $undone = $this->updateAlert($firing['alertId'], false, $member);
+        $this->assertNull($undone['acknowledgedAt']);
+        $this->assertSame('', $undone['acknowledgedBy']);
+        $this->assertSame('', $undone['acknowledgedByName']);
+        $this->waitForAcknowledgement($acknowledgements['path'], $firing['alertId'], 'unacknowledged');
+
+        // An API key acknowledges as nobody in particular.
+        $byKey = $this->updateAlert($firing['alertId'], true);
+        $this->assertNotNull($byKey['acknowledgedAt']);
+        $this->assertSame('', $byKey['acknowledgedBy']);
+        $this->assertSame('', $byKey['acknowledgedByName']);
+        // Two acknowledgements reached the webhook: the member's and the key's, not the repeat in between.
+        $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.acknowledged';
+        $deliveries = fn (): int => \count(\array_filter(
+            \json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($acknowledgements['path'])), true) ?: [],
+            fn (array $request): bool => \in_array($event, \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')), true),
+        ));
+        $this->assertEventually(fn () => $this->assertGreaterThanOrEqual(2, $deliveries()), 60_000, 1_000);
+        $this->assertSame(2, $deliveries());
 
         // Raising the threshold above any traffic the test made resolves the alert.
         $this->setThreshold($monitorId, 1e15);
@@ -202,6 +246,12 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('resolved', $alert['status']);
         $this->assertNotNull($alert['resolvedAt']);
         $this->assertSame(1, $alert['notifications']);
+        // Resolving keeps the acknowledgement, so the history shows it was handled, and it can no longer change.
+        $this->assertSame($byKey['acknowledgedAt'], $alert['acknowledgedAt']);
+        $refused = $this->client->call(Client::METHOD_PATCH, '/alerts/' . $firing['alertId'], $this->headers(), ['acknowledged' => false]);
+        $this->assertSame(400, $refused['headers']['status-code']);
+        $this->assertSame('alert_resolved', $refused['body']['type']);
+        $this->assertSame($byKey['acknowledgedAt'], $this->getAlert($firing['alertId'])['acknowledgedAt']);
         $this->assertSame([], $this->listAlerts([
             Query::equal('monitorId', [$monitorId])->toString(),
             Query::equal('status', ['firing'])->toString(),
@@ -231,7 +281,8 @@ final class EvaluationCustomServerTest extends Scope
         $teamId = $this->teamId();
         $projectId = $this->getProject()['$id'];
 
-        // One owner signed in on several phones, and owners who set their alert push prefs.
+        // One owner signed in on several phones, iPhones and Android phones (an FCM token is not hex),
+        // and owners who set their alert push prefs.
         $owner = $this->createMember($teamId);
         $first = $owner['device'];
         $second = $this->createDevice($owner['email'], $owner['password'], 'second-' . \uniqid());
@@ -249,7 +300,7 @@ final class EvaluationCustomServerTest extends Scope
             'rules' => [Query::greaterThan('network.outbound', 10)->toString()],
             'cooldown' => 300,
             'enabled' => false,
-            'critical' => true,
+            'severity' => 'critical',
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -263,15 +314,36 @@ final class EvaluationCustomServerTest extends Scope
         $this->deliverPushes($monitorId, $members, 20, $at, 2);
         $tag = 'alert:' . $this->getMonitorBody($monitorId)['alertId'];
 
-        // Every device gets one push, with the critical sound of a critical monitor.
+        // Every device gets one push through its own service: an iPhone with APNs' critical sound,
+        // an Android phone on the channel that rings through Do Not Disturb.
         foreach ([$first, $second, $removed, $quiet['device']] as $device) {
             $pushes = $this->pushes($device['token'], $tag);
             $this->assertCount(1, $pushes, $device['token']);
-            $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
-            $this->assertTrue($pushes[0]['critical']);
-            $this->assertSame('siren.caf', $pushes[0]['sound']);
             $this->assertSame('high', $pushes[0]['priority']);
-            $this->assertSame($tag, $pushes[0]['tag']);
+            if (\ctype_xdigit($device['token'])) {
+                $this->assertSame(PushService::APNS->value, $pushes[0]['service']);
+                $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
+                $this->assertSame($tag, $pushes[0]['tag']);
+                $this->assertTrue($pushes[0]['critical']);
+                $this->assertSame('siren.caf', $pushes[0]['sound']);
+                $this->assertTrue($pushes[0]['mutableContent']);
+                $this->assertArrayNotHasKey('channelId', $pushes[0]);
+            } else {
+                // Data-only, so the app draws it even in the background, under the keys Expo reads.
+                $this->assertSame(PushService::FCM->value, $pushes[0]['service']);
+                $this->assertArrayNotHasKey('title', $pushes[0]);
+                $this->assertArrayNotHasKey('body', $pushes[0]);
+                $this->assertArrayNotHasKey('tag', $pushes[0]);
+                $this->assertArrayNotHasKey('channelId', $pushes[0]);
+                $this->assertArrayNotHasKey('critical', $pushes[0]);
+                $this->assertArrayNotHasKey('sound', $pushes[0]);
+                $this->assertArrayNotHasKey('mutableContent', $pushes[0]);
+                $this->assertSame('Firing: ' . $name, $pushes[0]['data']['title']);
+                $this->assertNotSame('', $pushes[0]['data']['message']);
+                $this->assertSame($tag, $pushes[0]['data']['tag']);
+                $this->assertSame('critical', $pushes[0]['data']['channelId']);
+                $this->assertSame('alert', $pushes[0]['data']['type']);
+            }
         }
         // Owners who muted the organization or the project get none.
         $this->assertSame([], $this->pushes($organizationMuted['device']['token'], $tag));
@@ -287,10 +359,12 @@ final class EvaluationCustomServerTest extends Scope
         foreach ([$first, $second] as $device) {
             $resolved = \array_values(\array_filter($this->pushes($device['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'));
             $this->assertCount(1, $resolved);
-            $this->assertSame('Resolved: ' . $name, $resolved[0]['title']);
+            $this->assertSame('Resolved: ' . $name, $resolved[0]['title'] ?? $resolved[0]['data']['title']);
             $this->assertArrayNotHasKey('critical', $resolved[0]);
             $this->assertArrayNotHasKey('sound', $resolved[0]);
         }
+        // A resolved push on Android goes on the normal channel.
+        $this->assertSame('alerts', \array_values(\array_filter($this->pushes($second['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'))[0]['data']['channelId']);
         $this->assertCount(1, $this->pushes($quiet['device']['token'], $tag));
 
         // Signing out of a phone, or removing its target, stops its pushes.
@@ -1891,6 +1965,18 @@ final class EvaluationCustomServerTest extends Scope
         return $response['body'];
     }
 
+    /**
+     * @param array<string, string>|null $headers
+     * @return array<string, mixed>
+     */
+    private function updateAlert(string $alertId, bool $acknowledged, ?array $headers = null): array
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/alerts/' . $alertId, $headers ?? $this->headers(), ['acknowledged' => $acknowledged]);
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        return $response['body'];
+    }
+
     private function setThreshold(string $monitorId, float|int $threshold): void
     {
         $response = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
@@ -2045,7 +2131,7 @@ final class EvaluationCustomServerTest extends Scope
     {
         $password = 'password-' . \uniqid(); // pragma: allowlist secret
         $user = $this->createConsoleUser($password);
-        $device = $this->createDevice($user['email'], $password, 'phone-' . \uniqid());
+        $device = $this->createDevice($user['email'], $password, \bin2hex(\random_bytes(32)));
         // Accepted while signed in: accepting signed out proves the email and revokes the password.
         $this->addMember($teamId, ['owner'], $user['email'], $device['headers']);
 
@@ -2065,10 +2151,13 @@ final class EvaluationCustomServerTest extends Scope
     private function pushes(string $token, string $tag): array
     {
         $pushes = [];
-        foreach (\json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode('/mock-push')), true) ?: [] as $request) {
-            $push = \json_decode($request['data'] ?? '{}', true) ?: [];
-            if (\in_array($token, $push['to'] ?? [], true) && ($push['tag'] ?? $push['data']['tag'] ?? null) === $tag) {
-                $pushes[] = $push;
+        // The .env points APNs and FCM at separate mock paths, so each push says which service carried it.
+        foreach ([PushService::APNS->value => '/mock-push', PushService::FCM->value => '/mock-fcm'] as $service => $path) {
+            foreach (\json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [] as $request) {
+                $push = \json_decode($request['data'] ?? '{}', true) ?: [];
+                if (\in_array($token, $push['to'] ?? [], true) && ($push['tag'] ?? $push['data']['tag'] ?? null) === $tag) {
+                    $pushes[] = [...$push, 'service' => $service];
+                }
             }
         }
 
@@ -2109,8 +2198,12 @@ final class EvaluationCustomServerTest extends Scope
             $this->evaluateMonitor($this->platform(), $monitorId, $value, messages: $messages, now: $at);
 
             $publicHostname = new PublicHostname(new PublicInternet(), new FixedLookup());
-            $adapter = (new Provider(new NoTelemetry(), $publicHostname))->internalPush();
-            $this->assertInstanceOf(PushAdapter::class, $adapter, '_APP_NOTIFICATIONS_PUSH_APNS is not set');
+            $adapters = [];
+            foreach (PushService::cases() as $service) {
+                $adapter = (new Provider(new NoTelemetry(), $publicHostname))->internalPush($service);
+                $this->assertInstanceOf(PushAdapter::class, $adapter, $service->variable() . ' is not set');
+                $adapters[$service->value] = $adapter;
+            }
             $project = $this->platform()->getDocument('projects', $this->getProject()['$id']);
 
             foreach ($messages as $message) {
@@ -2133,7 +2226,7 @@ final class EvaluationCustomServerTest extends Scope
                         new HttpClient(new CurlAdapter()),
                         $publicHostname,
                         new NoTelemetry(),
-                        $adapter,
+                        $adapters,
                     );
                 }
             }
@@ -2212,18 +2305,19 @@ final class EvaluationCustomServerTest extends Scope
     }
 
     /**
-     * A project webhook on both alert events, posting to a path of its own.
+     * A project webhook on `$events`, by default the firing and resolved ones, posting to a path of its own.
      *
+     * @param list<string> $events
      * @return array{path: string, url: string, secret: string}
      */
-    private function createAlertWebhook(): array
+    private function createAlertWebhook(array $events = ['monitors.*.alerts.*.firing', 'monitors.*.alerts.*.resolved']): array
     {
         $path = '/alerts/' . \uniqid();
         $url = 'http://request-catcher-webhook:5000' . $path;
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', $this->headers(), [
             'webhookId' => 'unique()',
             'name' => 'Alerts ' . $path,
-            'events' => ['monitors.*.alerts.*.firing', 'monitors.*.alerts.*.resolved'],
+            'events' => $events,
             'url' => $url,
             'tls' => false,
         ]);
@@ -2266,6 +2360,29 @@ final class EvaluationCustomServerTest extends Scope
      *
      * @return array<string, mixed> the request the catcher recorded, with its raw `body` and decoded `data`
      */
+    /**
+     * The delivery to `$path` of the alert's `$change` event, once it arrives.
+     *
+     * @return array<string, mixed>
+     */
+    private function waitForAcknowledgement(string $path, string $alertId, string $change): array
+    {
+        $delivery = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            self::REQUEST_TYPE_WEBHOOK,
+            ['url' => $path],
+            60,
+            1_000,
+            function (array $request) use ($alertId, $change) {
+                $this->assertSame($alertId, $request['data']['$id'] ?? null);
+                $this->assertContains('monitors.*.alerts.*.' . $change, \explode(',', (string) ($request['headers']['X-Appwrite-Webhook-Events'] ?? '')));
+            },
+        );
+        $this->assertNotSame([], $delivery, "No '{$change}' event of alert {$alertId} reached {$path}");
+
+        return $delivery;
+    }
+
     private function waitForEvent(string $path, string $monitorId, string $status, int $count = 1): array
     {
         $this->assertEventually(function () use ($path, $monitorId, $status, $count) {
