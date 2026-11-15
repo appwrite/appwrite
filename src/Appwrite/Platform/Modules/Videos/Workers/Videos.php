@@ -97,9 +97,13 @@ class Videos extends Action
      * ffmpeg run limit: ENCODE_BASE + duration x factor, at least ENCODE_FLOOR and
      * at most _APP_VIDEOS_ENCODE_TIMEOUT. A factor of 4 lets an encode run as slowly
      * as 0.25x realtime; frames above 1080p double it.
+     *
+     * The floor is generous on purpose: a short source at 1080p on a busy node runs
+     * well under 0.25x realtime, and a hung encoder is caught by STALL_TIMEOUT long
+     * before this limit.
      */
-    private const ENCODE_BASE = 120;
-    private const ENCODE_FLOOR = 300;
+    private const ENCODE_BASE = 600;
+    private const ENCODE_FLOOR = 1800;
     private const ENCODE_FACTORS = [
         Base::CODEC_H264 => 4,
         Base::CODEC_HEVC => 8,
