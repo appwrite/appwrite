@@ -57,40 +57,35 @@ mock.module('@appwrite.io/console', () => ({
         `track:${name}:${options.url}:${JSON.stringify(options.props)}`,
       )
     }
-    disableAutoPageviews() {
-      calls.push('stop')
-    }
-    disableAutoOutboundTracking() {}
-    disableAutoScrollDepth() {}
-    disableAutoEngagementTime() {}
-    disableAutoDownloadTracking() {}
   },
 }))
 
-const { startAppwriteAnalytics, stopAppwriteAnalytics } = await import(
+const { resetAppwriteAnalyticsForTests, startAppwriteAnalytics } = await import(
   '@/lib/appwrite-analytics'
 )
 const { trackEvent } = await import('@/lib/analytics')
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
+const fullConfig = () => ({
+  appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
+  appwriteAnalyticsProjectId: 'site',
+  appwriteAnalyticsPropertyId: 'web',
+})
+
 describe('appwrite analytics', () => {
   const hadWindow = 'window' in globalThis
 
-  beforeEach(async () => {
-    stopAppwriteAnalytics()
-    await flush()
+  beforeEach(() => {
+    resetAppwriteAnalyticsForTests()
     calls.length = 0
     failImport = false
+    config = fullConfig()
     Object.assign(globalThis, { window: globalThis })
-    setCookieConsentState({
-      resolved: true,
-      bannerRequired: true,
-      analyticsGranted: true,
-    })
   })
 
   afterAll(() => {
+    resetAppwriteAnalyticsForTests()
     resetCookieConsentStateForTests()
     if (!hadWindow) Reflect.deleteProperty(globalThis, 'window')
     mock.module('@/lib/runtime-config', () => realRuntimeConfig)
@@ -98,41 +93,21 @@ describe('appwrite analytics', () => {
   })
 
   test('stays off unless endpoint, project and property are all set', async () => {
-    config = {
-      appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
-      appwriteAnalyticsProjectId: 'site',
-      appwriteAnalyticsPropertyId: '',
+    for (const key of Object.keys(config) as (keyof typeof config)[]) {
+      config = { ...fullConfig(), [key]: '' }
+      startAppwriteAnalytics()
+      trackEvent('Form Submitted', { form: 'enterprise' })
+      await flush()
     }
-    startAppwriteAnalytics()
-    await flush()
     expect(calls).toEqual([])
   })
 
-  test('custom events reach the started tracker with the Plausible name and props', async () => {
-    config = {
-      appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
-      appwriteAnalyticsProjectId: 'site',
-      appwriteAnalyticsPropertyId: '',
-    }
-    trackEvent('Form Submitted', { form: 'enterprise' })
-    await flush()
-    expect(calls).toEqual([])
-
-    config.appwriteAnalyticsPropertyId = 'web'
-    startAppwriteAnalytics()
-    trackEvent('Form Submitted', { form: 'enterprise', skipped: undefined })
-    await flush()
-    expect(calls.at(-1)).toBe(
-      'track:Form Submitted:undefined:{"form":"enterprise","auth":"guest","plan":"none","lang":"en"}',
-    )
-  })
-
-  test('starts once on its own client without credentials, then stops', async () => {
-    config = {
-      appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
-      appwriteAnalyticsProjectId: 'site',
-      appwriteAnalyticsPropertyId: 'web',
-    }
+  test('starts once on its own client without credentials, regardless of consent', async () => {
+    setCookieConsentState({
+      resolved: true,
+      bannerRequired: true,
+      analyticsGranted: false,
+    })
     startAppwriteAnalytics()
     startAppwriteAnalytics()
     await flush()
@@ -144,34 +119,18 @@ describe('appwrite analytics', () => {
       'start',
       'downloads',
     ])
-
-    stopAppwriteAnalytics()
-    await flush()
-    expect(calls.at(-1)).toBe('stop')
   })
 
-  test('does not start once consent is withdrawn', async () => {
-    config = {
-      appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
-      appwriteAnalyticsProjectId: 'site',
-      appwriteAnalyticsPropertyId: 'web',
-    }
-    setCookieConsentState({
-      resolved: true,
-      bannerRequired: true,
-      analyticsGranted: false,
-    })
+  test('custom events reach the started tracker with the Plausible name and props', async () => {
     startAppwriteAnalytics()
+    trackEvent('Form Submitted', { form: 'enterprise', skipped: undefined })
     await flush()
-    expect(calls).toEqual([])
+    expect(calls.at(-1)).toBe(
+      'track:Form Submitted:undefined:{"form":"enterprise","auth":"guest","plan":"none","lang":"en"}',
+    )
   })
 
   test('a failed load is retried on the next start', async () => {
-    config = {
-      appwriteAnalyticsEndpoint: 'https://fra.cloud.appwrite.io/v1',
-      appwriteAnalyticsProjectId: 'site',
-      appwriteAnalyticsPropertyId: 'web',
-    }
     failImport = true
     startAppwriteAnalytics()
     await flush()

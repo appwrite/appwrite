@@ -1,14 +1,11 @@
 import type { Tracking, TrackingEventOptions } from '@appwrite.io/console'
-import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 
 let tracking: Promise<Tracking | null> | null = null
 
 /** Appwrite Analytics auto-tracking for the Console's own traffic. Idempotent. */
 export function startAppwriteAnalytics() {
-  // Re-checked here: the consent loader defers this call, and consent may be
-  // withdrawn before it runs.
-  if (typeof window === 'undefined' || tracking || !canTrackAnalytics()) return
+  if (typeof window === 'undefined' || tracking) return
 
   const {
     appwriteAnalyticsEndpoint: endpoint,
@@ -40,20 +37,11 @@ export function startAppwriteAnalytics() {
   tracking = pending
 }
 
-export function stopAppwriteAnalytics() {
-  const current = tracking
+export function resetAppwriteAnalyticsForTests() {
   tracking = null
-  void current?.then((tracker) => {
-    if (!tracker) return
-    tracker.disableAutoPageviews()
-    tracker.disableAutoOutboundTracking()
-    tracker.disableAutoScrollDepth()
-    tracker.disableAutoEngagementTime()
-    tracker.disableAutoDownloadTracking()
-  })
 }
 
-/** Custom event; a no-op unless tracking was started under consent. */
+/** Custom event; a no-op until tracking has started. */
 export function trackAppwriteEvent(
   name: string,
   options: TrackingEventOptions,
