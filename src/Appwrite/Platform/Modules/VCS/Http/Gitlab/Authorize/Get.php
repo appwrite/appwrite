@@ -28,7 +28,7 @@ class Get extends Base
     protected function createOAuth2(Client $client, string $callback, array $state): OAuth2
     {
         // Auth\OAuth2\Gitlab reads the endpoint out of a JSON-encoded appSecret; no setEndpoint().
-        return new OAuth2Gitlab(
+        $oauth2 = new OAuth2Gitlab(
             $client,
             System::getEnv('_APP_VCS_GITLAB_CLIENT_ID', ''),
             \json_encode([
@@ -37,11 +37,17 @@ class Get extends Base
             ]),
             $callback,
             $state,
-            // api is required for webhook/merge-request-note writes; no finer-grained scope covers both.
-            [
-                'read_user',
-                'api',
-            ]
         );
+
+        // Constructor scopes are added to the sign-in defaults (openid, email).
+        // The VCS application allows only read_user and api. Requesting openid
+        // or email makes GitLab reject the authorize URL. api covers webhook
+        // registration and merge-request notes; no finer-grained scope covers both.
+        $oauth2->setScopes([
+            'read_user',
+            'api',
+        ]);
+
+        return $oauth2;
     }
 }
