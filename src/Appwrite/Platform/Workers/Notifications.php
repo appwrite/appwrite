@@ -704,21 +704,34 @@ class Notifications extends Action
         }
         foreach ([$organizationId, '*'] as $key) {
             $until = $snoozes[$key] ?? null;
-            // Exactly an ISO 8601 date and time with its offset: a relative phrase like `+1 day`,
-            // alone or after a date, would never run out.
-            if ($key === '' || !\is_string($until) || !\preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?(Z|[+-]\d{2}:\d{2})$/', $until)) {
+            if ($key === '' || !\is_string($until)) {
                 continue;
             }
-            try {
-                if (new \DateTimeImmutable($until) > $now) {
-                    return true;
-                }
-            } catch (\Exception) {
-                continue;
+            $end = self::parseInstant($until);
+            if ($end !== null && $end > $now) {
+                return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Parses exactly an ISO 8601 date and time with its offset, with or without fractional
+     * seconds. Anything else, such as a relative phrase like `+1 day` alone or after a date,
+     * which would never run out, or a time with no offset, is null.
+     */
+    private static function parseInstant(string $value): ?\DateTimeImmutable
+    {
+        foreach (['!Y-m-d\\TH:i:sP', '!Y-m-d\\TH:i:s.uP'] as $format) {
+            $parsed = \DateTimeImmutable::createFromFormat($format, $value);
+            $errors = \DateTimeImmutable::getLastErrors();
+            if ($parsed !== false && ($errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0))) {
+                return $parsed;
+            }
+        }
+
+        return null;
     }
 
     /**
