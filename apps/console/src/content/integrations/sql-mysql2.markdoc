@@ -1,0 +1,90 @@
+---
+layout: integration
+title: mysql2 with managed MySQL
+description: Query an Appwrite native MySQL database from Node.js with the mysql2 driver
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-mysql2/cover.avif
+category: databases
+product:
+    vendor: mysql2
+    description: 'mysql2 is an open-source MySQL client for Node.js with promise and callback APIs, connection pools, and prepared statements.'
+platform:
+    - 'Cloud'
+---
+
+[mysql2](https://sidorares.github.io/node-mysql2/docs) is an open-source MySQL client for Node.js. It offers promise and callback APIs, connection pools, and server-side prepared statements, and ORMs such as Drizzle use it as their MySQL driver.
+
+# How does the integration work?
+
+An Appwrite native MySQL database is a standard MySQL engine that Appwrite provisions in your project's region, with its own hostname, credentials, and TLS. mysql2 connects to it like any other MySQL server, so you get a connection pool you control with no Appwrite-specific adapter.
+
+Long-running servers can connect to the engine directly on port `3306`. Serverless functions should connect through the database's connection pooler on port `6033`, which absorbs the connection fan-out of many short-lived instances.
+
+{% info title="Available on Appwrite Cloud" %}
+Native MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To query an Appwrite native MySQL database with mysql2, there are several steps you must complete:
+
+## Step 1: Create a native MySQL database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+Read the connection values from the database object with `mysql.get()` and an API key that has the `databases.read` scope. The username is `admin.<hash>`, where the hash matches the one in the hostname, and the database name is always `default`. Keep the password in an environment variable.
+
+## Step 2: Create a pool
+
+Install the driver with `npm install mysql2`, then create one promise pool at module scope and reuse it for every request:
+
+```js
+import mysql from 'mysql2/promise';
+
+const pool = mysql.createPool({
+    host: 'db-<hash>.<region>.appwrite.center',
+    port: 3306,
+    user: 'admin.<hash>',
+    password: process.env.DB_PASSWORD,
+    database: 'default',
+    ssl: { rejectUnauthorized: true },
+    waitForConnections: true,
+    connectionLimit: 10,
+    idleTimeout: 30000,
+    enableKeepAlive: true
+});
+```
+
+`ssl: { rejectUnauthorized: true }` verifies the certificate with Node's built-in trust store. The certificate is signed by a public CA, so add a custom `ca` bundle only for runtime images that don't ship one. Always use the full `admin.<hash>` username, because the proxy routes your connection by it.
+
+Every connection in `connectionLimit`, across every running instance, counts against your specification's connection cap. Size it to that cap divided by your replica count.
+
+## Step 3: Use the pooler from serverless runtimes
+
+On serverless platforms, set `port: 6033` to connect through the pooler, keep `connectionLimit` at `1` or `2`, and create the pool at module scope so warm invocations reuse it.
+
+The pooler defaults to transaction mode. On port `6033`, send text queries with placeholders through `query` instead of `execute`, because mysql2 prepares `execute` statements on the server and caches them per connection. Keep prepared statements, temporary tables, user variables, and migrations on the direct port `3306`, or switch the pooler to session mode.
+
+## Step 4: Test the connection
+
+Run a parameterized query to confirm the pool can reach the database:
+
+```js
+const [rows] = await pool.query('SELECT NOW() AS time, ? AS greeting', ['hello']);
+console.log(rows[0]);
+```
+
+If you see `ER_CON_COUNT_ERROR`, your combined pool sizes exceed the connection cap. If the connection times out, check the database's IP allowlist and raise `connectTimeout`.
+
+# Read more about mysql2 and Appwrite Databases
+
+If you would like to learn more about mysql2 and Appwrite Databases, we have some resources that you should visit:
+
+- [Node.js drivers for native MySQL databases](/docs/products/databases/mysql/integrations/drivers)
+- [Connect to a native MySQL database](/docs/products/databases/mysql/connections)
+- [MySQL connection pooling](/docs/products/databases/mysql/connection-pooling)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [mysql2 documentation](https://sidorares.github.io/node-mysql2/docs)

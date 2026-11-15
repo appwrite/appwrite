@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { VideoOutput } from '@appwrite.io/console'
-import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -27,6 +25,8 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatBitrate, formatResolution } from '@/lib/utils/video-format'
 import { VideoOutputBadge } from './VideoOutputBadge'
 import { VideoTermHint } from './VideoTermHint'
+import { VideoOutput } from '@/lib/appwrite/videos'
+import type { Video, VideoProfile } from '@/lib/appwrite/videos'
 
 const OUTPUT_DESCRIPTIONS: Record<VideoOutput, string> = {
   [VideoOutput.Hls]: 'MPEG-TS segments. Plays natively on Safari and iOS.',
@@ -38,7 +38,7 @@ type CreateRenditionsProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
-  video: Models.Video
+  video: Video
 }
 
 export function CreateRenditions({
@@ -73,7 +73,7 @@ export function CreateRenditions({
     [renditionsData?.renditions, output],
   )
 
-  const isUpscale = (profile: Models.VideoProfile) =>
+  const isUpscale = (profile: VideoProfile) =>
     video.height > 0 && profile.height > video.height
 
   useEffect(() => {

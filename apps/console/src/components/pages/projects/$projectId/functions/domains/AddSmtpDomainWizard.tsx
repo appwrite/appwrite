@@ -7,7 +7,6 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -19,6 +18,7 @@ import {
   domainVerificationError,
 } from './VerifySmtpDomainContent'
 import type { DomainVerificationError } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+import { ClaimDomainContent } from '@/components/pages/projects/$projectId/settings/domains/ClaimDomainContent'
 import {
   useCreateSmtpDomainRule,
   useProjectFunction,
@@ -28,6 +28,8 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   ensureApexDomainInOrganization,
+  getDomainClaimReason,
+  type DomainClaimReason,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import {
@@ -45,7 +47,6 @@ export function AddSmtpDomainWizard() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: func } = useProjectFunction(projectId, functionId)
   // Inbound email is Cloud-only.
@@ -60,6 +61,8 @@ export function AddSmtpDomainWizard() {
   const [verificationError, setVerificationError] =
     useState<DomainVerificationError | null>(null)
   const [rule, setRule] = useState<SmtpProxyRule | null>(null)
+  const [claimDomain, setClaimDomain] = useState<string | null>(null)
+  const [claimReason, setClaimReason] = useState<DomainClaimReason>('pointed')
   const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/functions/${functionId}/domains`
@@ -95,6 +98,20 @@ export function AddSmtpDomainWizard() {
     return null
   }
 
+  const createRule = async (d: string) => {
+    const created = await createMutation.mutateAsync({
+      domain: d,
+      functionId: functionId!,
+    })
+    setClaimDomain(null)
+    if (created.status === 'verified') {
+      toast.success(t('Email domain verified'))
+      leave()
+    } else {
+      setRule(created)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isPending) return
@@ -105,7 +122,7 @@ export function AddSmtpDomainWizard() {
       return
     }
     if (!isValidDomain(d)) {
-      setError(t('Invalid format'))
+      setError(t('Please enter a valid domain'))
       return
     }
     if (!emailEnabled) {
@@ -114,7 +131,9 @@ export function AddSmtpDomainWizard() {
 
     setRegistering(true)
     try {
-      await ensureApexDomainInOrganization(project?.teamId ?? '', d)
+      await ensureApexDomainInOrganization(project?.teamId ?? '', d, {
+        region: project?.region,
+      })
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
@@ -126,21 +145,25 @@ export function AddSmtpDomainWizard() {
     }
 
     try {
-      const created = await createMutation.mutateAsync({
-        domain: d,
-        functionId: functionId!,
-      })
-      if (created.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
-        toast.success(t('Email domain verified'))
-        leave()
-      } else {
-        setRule(created)
-      }
+      await createRule(d)
     } catch (err) {
+      const reason = getDomainClaimReason(err)
+      if (reason) {
+        setClaimReason(reason)
+        setClaimDomain(d)
+        return
+      }
       toast.error(getErrorMessage(err, t('Failed to add email domain')))
+    }
+  }
+
+  const handleClaim = async () => {
+    if (!claimDomain) return
+    setVerificationError(null)
+    try {
+      await createRule(claimDomain)
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
@@ -200,6 +223,42 @@ export function AddSmtpDomainWizard() {
         <VerifySmtpDomainContent
           rule={rule}
           region={project?.region}
+          verificationError={verificationError}
+        />
+      </WizardLayout>
+    )
+  }
+
+  if (claimDomain) {
+    return (
+      <WizardLayout
+        title={t('Verify domain ownership')}
+        fallbackPath={fallbackPath}
+        fullscreen
+        useSidebar={false}
+        maxWidth="max-w-4xl"
+        footer={
+          <div className="flex gap-2 justify-end w-full">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setClaimDomain(null)
+                setVerificationError(null)
+              }}
+              disabled={isPending}
+            >
+              {t('Back')}
+            </Button>
+            <Button onClick={handleClaim} disabled={isPending}>
+              {t('Verify')}
+            </Button>
+          </div>
+        }
+      >
+        <ClaimDomainContent
+          domain={claimDomain}
+          reason={claimReason}
+          projectId={projectId!}
           verificationError={verificationError}
         />
       </WizardLayout>

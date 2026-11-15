@@ -7,7 +7,6 @@
 
 import { useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -29,7 +28,8 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   ensureApexDomainInOrganization,
-  isDomainClaimError,
+  getDomainClaimReason,
+  type DomainClaimReason,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
@@ -41,7 +41,6 @@ export function AddDomainWizard() {
   const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: site } = useProjectSite(projectId, siteId)
 
@@ -62,6 +61,7 @@ export function AddDomainWizard() {
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
+  const [claimReason, setClaimReason] = useState<DomainClaimReason>('pointed')
   const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/sites/${siteId}/domains`
@@ -86,18 +86,12 @@ export function AddDomainWizard() {
     })
     setClaimDomain(null)
     if (created.status === 'verified') {
-      await queryClient.refetchQueries({
-        queryKey: ['proxy-rules', 'site', projectId, siteId],
-      })
       toast.success(t('Domain verified'))
       navigate({
         to: '/projects/$projectId/sites/$siteId/domains',
         params: { projectId: projectId!, siteId: siteId! },
       })
     } else if (created.status === 'verifying') {
-      await queryClient.refetchQueries({
-        queryKey: ['proxy-rules', 'site', projectId, siteId],
-      })
       toast.success(t('Verification in progress'))
       navigate({
         to: '/projects/$projectId/sites/$siteId/domains',
@@ -118,7 +112,7 @@ export function AddDomainWizard() {
       return
     }
     if (!isValidDomain(d)) {
-      setError(t('Invalid'))
+      setError(t('Please enter a valid domain'))
       return
     }
     if (behaviour === 'branch' && !hasRepo) {
@@ -149,7 +143,7 @@ export function AddDomainWizard() {
     setRegistering(true)
     try {
       await ensureApexDomainInOrganization(project?.teamId ?? '', d, {
-        skipForSites: true,
+        region: project?.region,
       })
     } catch (err: unknown) {
       const e = err as { type?: string }
@@ -164,7 +158,9 @@ export function AddDomainWizard() {
     try {
       await createRule(d)
     } catch (err) {
-      if (isDomainClaimError(err)) {
+      const reason = getDomainClaimReason(err)
+      if (reason) {
+        setClaimReason(reason)
         setClaimDomain(d)
         return
       }
@@ -286,6 +282,7 @@ export function AddDomainWizard() {
       >
         <ClaimDomainContent
           domain={claimDomain}
+          reason={claimReason}
           projectId={projectId!}
           verificationError={verificationError}
         />

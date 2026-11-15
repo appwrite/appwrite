@@ -558,21 +558,31 @@ export async function fetchFunctionDomains(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const trimmedSearch = search?.trim() || ''
+
+  // The SDK's listRules has no text `search` param; match domain or `$id` in queries.
+  const searchQueries = trimmedSearch
+    ? [
+        Query.or([
+          Query.contains('domain', trimmedSearch.toLowerCase()),
+          Query.startsWith('$id', trimmedSearch),
+        ]),
+      ]
+    : []
+
   const fixedQueries = [
     Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentResourceType', 'function'),
     Query.equal('deploymentResourceId', functionId),
     Query.equal('trigger', 'manual'),
     ...(filterQueries ?? []),
+    ...searchQueries,
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.proxy.listRules({
-    queries: fixedQueries,
-    search: search?.trim() || undefined,
-  })
+  const response = await projectSdk.proxy.listRules({ queries: fixedQueries })
 
   return {
     rules: response.rules || [],
@@ -1541,7 +1551,13 @@ export function useCreateFunctionDomainRule(
         functionId,
       })
     },
-    onSuccess: () => {
+    onSuccess: async (_rule, { functionId }) => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
       queryClient.invalidateQueries({
         queryKey: ['proxy-rules'],
       })
@@ -1604,7 +1620,13 @@ export function useCreateSmtpDomainRule(projectId: string | null | undefined) {
       }
       return await createSmtpDomainRule(projectId, params)
     },
-    onSuccess: () => {
+    onSuccess: async (_rule, { functionId }) => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
       queryClient.invalidateQueries({
         queryKey: ['proxy-rules'],
       })

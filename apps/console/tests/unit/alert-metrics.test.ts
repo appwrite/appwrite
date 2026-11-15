@@ -117,22 +117,22 @@ describe('alert rule form', () => {
     const input = monitorInputFromForm(emptyRuleForm(), t)
     expect(Object.keys(input).sort()).toEqual([
       'cooldown',
-      'critical',
       'name',
       'notify',
       'rules',
+      'severity',
       'window',
     ])
     expect(input.notify).toEqual(['owner'])
-    expect(input.critical).toBe(false)
+    expect(input.severity).toBe('warning')
   })
 
-  test('keeps a critical monitor critical through the edit form', () => {
+  test("keeps a monitor's severity through the edit form", () => {
     const input = monitorInputFromForm(
-      { ...emptyRuleForm(), critical: true },
+      { ...emptyRuleForm(), severity: 'critical' },
       t,
     )
-    expect(input.critical).toBe(true)
+    expect(input.severity).toBe('critical')
     const monitor = parseMonitor({
       $id: 'm1',
       $createdAt: '',
@@ -150,8 +150,8 @@ describe('alert rule form', () => {
       triggeredAt: null,
       ...input,
     } as Monitor)
-    expect(monitorInputFromForm(ruleFormFromMonitor(monitor), t).critical).toBe(
-      true,
+    expect(monitorInputFromForm(ruleFormFromMonitor(monitor), t).severity).toBe(
+      'critical',
     )
   })
 
@@ -381,8 +381,11 @@ describe('alerts feed', () => {
 })
 
 describe('alert history pages', () => {
+  // Copy the real module now: the namespace import is live and points at the mock once it is set.
+  const realSdk = { ...actualSdk }
+
   afterAll(() => {
-    mock.module('@/lib/appwrite/sdk', () => actualSdk)
+    mock.module('@/lib/appwrite/sdk', () => realSdk)
   })
 
   test('loads the alerts past the first page after the last one', async () => {

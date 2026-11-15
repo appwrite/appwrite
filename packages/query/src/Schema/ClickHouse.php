@@ -322,7 +322,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
         if ($index->algorithmArgs !== []) {
             $args = \array_map(
                 fn (string|int|float $arg): string => match (true) {
-                    \is_string($arg) => "'" . \str_replace("'", "''", $arg) . "'",
+                    \is_string($arg) => "'" . \str_replace(['\\', "'"], ['\\\\', "''"], $arg) . "'",
                     // sprintf('%F', ...) avoids scientific notation (e.g. 1.0E-5)
                     // which ClickHouse rejects in index type arguments. Trim
                     // trailing zeros so 0.01 stays "0.010000" → "0.01".
@@ -367,8 +367,8 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
             Engine::CollapsingMergeTree => $engine->value . '(' . $this->quoteLiteral($args[0]) . ')',
 
             Engine::ReplicatedMergeTree => $engine->value
-                . "('" . \str_replace("'", "''", $args[0]) . "'"
-                . ", '" . \str_replace("'", "''", $args[1]) . "')",
+                . "('" . \str_replace(['\\', "'"], ['\\\\', "''"], $args[0]) . "'"
+                . ", '" . \str_replace(['\\', "'"], ['\\\\', "''"], $args[1]) . "')",
 
             Engine::Memory,
             Engine::Log,

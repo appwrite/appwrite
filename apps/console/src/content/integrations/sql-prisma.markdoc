@@ -1,0 +1,157 @@
+---
+layout: integration
+title: Prisma with managed PostgreSQL and MySQL
+description: Use Prisma ORM, Prisma Migrate, and Prisma Client with an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-prisma/cover.avif
+category: databases
+product:
+    vendor: Prisma
+    description: 'Prisma ORM is an open-source TypeScript ORM with a declarative schema, generated type-safe client, and Prisma Migrate.'
+platform:
+    - 'Cloud'
+---
+
+[Prisma ORM](https://www.prisma.io/) is a TypeScript ORM. You describe your models in a Prisma schema, Prisma Migrate turns schema changes into SQL migrations, and Prisma Client gives you a generated, type-safe query API.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Prisma treats them as regular `postgresql` and `mysql` datasources, and Prisma 7 connects at runtime through a driver adapter, `@prisma/adapter-pg` for PostgreSQL or `@prisma/adapter-mariadb` for MySQL.
+
+Prisma Client sends runtime traffic through the database's connection pooler, while the Prisma CLI runs migrations and introspection over a direct connection to the engine.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To use Prisma with an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database, click **Credentials**, and copy the connection string from the **Prisma** or **DSN** tab. For MySQL, read `connectionString` from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Initialize Prisma
+
+{% tabs %}
+{% tabsitem #init-postgresql title="PostgreSQL" %}
+```bash
+npm install -D prisma typescript tsx @types/node @types/pg
+npm install @prisma/client @prisma/adapter-pg dotenv pg
+npx prisma init --datasource-provider postgresql --output ../generated/prisma
+```
+{% /tabsitem %}
+
+{% tabsitem #init-mysql title="MySQL" %}
+```bash
+npm install -D prisma typescript tsx @types/node
+npm install @prisma/client @prisma/adapter-mariadb dotenv mariadb
+npx prisma init --datasource-provider mysql --output ../generated/prisma
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Prisma 7 generates `prisma.config.ts` and `prisma/schema.prisma`. Set `"type": "module"` in `package.json` if your project doesn't already use ECMAScript modules.
+
+## Step 3: Configure the connection strings
+
+Point `DATABASE_URL` at the pooler for Prisma Client and `DIRECT_URL` at the engine for the CLI:
+
+{% tabs %}
+{% tabsitem #env-postgresql title="PostgreSQL" %}
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+SHADOW_DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require&schema=prisma_shadow"
+```
+
+The `admin` user can't create extra databases, so `prisma migrate dev` uses a shadow schema. Create it once with `CREATE SCHEMA IF NOT EXISTS prisma_shadow;` and set `shadowDatabaseUrl` in `prisma.config.ts`.
+{% /tabsitem %}
+
+{% tabsitem #env-mysql title="MySQL" %}
+```env
+DATABASE_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:6033/default?sslaccept=strict"
+DIRECT_URL="mysql://admin.<hash>:<password>@db-<hash>.<region>.appwrite.center:3306/default?sslaccept=strict"
+```
+
+`sslaccept=strict` enables TLS with certificate verification.
+{% /tabsitem %}
+{% /tabs %}
+
+In `prisma.config.ts`, set the CLI datasource to `process.env["DIRECT_URL"]`, because migrations need a session-level connection.
+
+## Step 4: Run migrations
+
+{% tabs %}
+{% tabsitem #migrate-postgresql title="PostgreSQL" %}
+```bash
+# Development
+npx prisma migrate dev --name init
+
+# CI and production
+npx prisma migrate deploy
+```
+{% /tabsitem %}
+
+{% tabsitem #migrate-mysql title="MySQL" %}
+```bash
+mkdir -p prisma/migrations/20260708160000_init
+npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script --output prisma/migrations/20260708160000_init/migration.sql
+npx prisma migrate deploy
+```
+
+To use `migrate dev`, run it against a local MySQL database, a separate Appwrite database, or a branch, then apply committed migrations with `migrate deploy`.
+{% /tabsitem %}
+{% /tabs %}
+
+Run `npx prisma generate` after you change the schema. Run migrations as the primary user, `admin` or `admin.<hash>`.
+
+## Step 5: Query with Prisma Client
+
+Create Prisma Client with the driver adapter for your engine, once per module scope:
+
+{% tabs %}
+{% tabsitem #client-postgresql title="PostgreSQL" %}
+```ts
+import 'dotenv/config';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from './generated/prisma/client';
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
+
+const user = await prisma.user.create({ data: { email: 'grace@example.com' } });
+```
+{% /tabsitem %}
+
+{% tabsitem #client-mysql title="MySQL" %}
+```ts
+import 'dotenv/config';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import { PrismaClient } from './generated/prisma/client';
+
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
+const prisma = new PrismaClient({ adapter });
+
+const user = await prisma.user.create({ data: { email: 'grace@example.com' } });
+```
+{% /tabsitem %}
+{% /tabs %}
+
+If your app relies on advisory locks, `LISTEN`/`NOTIFY`, user variables, temporary tables, or session-scoped prepared statements, switch the pooler to session mode or use the direct port. To test migrations in CI, run `npx prisma migrate deploy` against a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch. MySQL branches have no pooler, so use the branch's direct URL for both variables.
+
+# Read more about Prisma and Appwrite Databases
+
+If you would like to learn more about Prisma and Appwrite Databases, we have some resources that you should visit:
+
+- [Use Prisma with a native PostgreSQL database](/docs/products/databases/postgresql/integrations/prisma)
+- [Use Prisma with a native MySQL database](/docs/products/databases/mysql/integrations/prisma)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Prisma ORM documentation](https://www.prisma.io/docs/orm)

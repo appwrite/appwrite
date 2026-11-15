@@ -24,7 +24,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
+import {
+  getRuleStatusBadgeConfig,
+  isWaitingForDns,
+} from '@/lib/utils/status-badge'
 import {
   canRetryRule,
   canViewRuleLogs,
@@ -37,6 +40,7 @@ import {
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
+import { CheckDomain } from '@/components/pages/projects/$projectId/settings/domains/CheckDomain'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { toast } from 'sonner'
@@ -205,7 +209,13 @@ export function SiteDomainsView() {
                                   {t('View logs')}
                                 </Button>
                               )}
-                            {canRetryRule(ruleData) && (
+                            <CheckDomain
+                              projectId={projectId ?? ''}
+                              region={project?.region}
+                              rule={ruleData}
+                              organizationDomainId={getOrganizationDomainId(ruleData)}
+                            />
+                            {canRetryRule(ruleData) && !isWaitingForDns(ruleData) && (
                               <Button
                                 variant="link"
                                 size="sm"

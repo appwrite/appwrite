@@ -1,0 +1,66 @@
+---
+layout: integration
+title: MCP with Grok Build
+description: Connect Grok Build to your Appwrite project and docs through the hosted Appwrite MCP server
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-grok-build/cover.avif
+category: mcp
+product:
+    vendor: xAI
+    description: "Grok Build is xAI's coding agent, which you run in your terminal with the grok command."
+platform:
+    - 'Cloud'
+---
+
+Grok Build is a coding agent from [xAI](https://x.ai) that runs in your terminal. You start a session with the `grok` command, and it works on your project using Grok models, with MCP servers available as extra tools.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects Grok Build to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that uses the HTTP transport and signs you in with OAuth, so there is nothing to install and no API key to create.
+
+Once connected, Grok Build can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation while it codes. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+{% info title="Self-hosted Appwrite" %}
+The hosted MCP server authenticates against Appwrite Cloud. If you self-host Appwrite, use the [local MCP server](/docs/advanced/self-hosting/mcp) instead. It runs on your machine over stdio and connects to your instance with an API key.
+{% /info %}
+
+# How to implement
+
+To connect Grok Build to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: Grok Build opens your browser so you can sign in to Appwrite when it first connects.
+
+## Step 2: Add the Appwrite MCP server to Grok Build
+
+Run the following command in your terminal:
+
+```bash
+grok mcp add --transport http appwrite https://mcp.appwrite.io/
+```
+
+When Grok Build first connects, sign in to your Appwrite account in the browser window that opens and authorize access. If you are not prompted, run `/mcps` in a Grok Build session, select **appwrite**, and press `i` to authenticate.
+
+To check the configuration, run `grok mcp list` in your terminal or `/mcps` in a session.
+
+## Step 3: Test the integration
+
+Start a session with `grok` and try prompts like:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `Show me how to authenticate users with OAuth`
+
+# Read more about Grok Build and the Appwrite MCP server
+
+If you would like to learn more about Grok Build and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Connect the Appwrite MCP server to Grok Build](/docs/tooling/ai/agents/grok-build)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [The Appwrite MCP server is now remote: one URL, no API keys](/blog/post/announcing-remote-appwrite-mcp-server)
+- [xAI](https://x.ai)

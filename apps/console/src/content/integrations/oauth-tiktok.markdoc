@@ -1,0 +1,67 @@
+---
+layout: integration
+title: OAuth with TikTok
+description: Authenticate users with an existing TikTok account
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/oauth-tiktok/cover.avif
+category: auth
+product:
+    vendor: TikTok
+    description: "TikTok is a short-form video platform, and TikTok Login Kit lets apps sign people in with their TikTok accounts."
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+---
+
+TikTok is a short-form video platform for creators and their audiences. [TikTok Login Kit](https://developers.tiktok.com/doc/login-kit-web) lets apps sign people in with their TikTok account, which makes it a natural fit for creator tools, analytics dashboards, and consumer apps for TikTok's audience.
+
+# How does the integration work?
+
+You can use the TikTok OAuth adapter in Appwrite Auth for user authentication and management. This can be convenient for users because they can start using your app without creating a new account. It can also be more secure, because the user has one less password that could become vulnerable.
+
+Appwrite requests `user.info.basic`, the narrowest TikTok scope that returns an identity, and stores the user's display name and avatar. The avatar also powers [user photos](/docs/products/avatars/user-photos) in Appwrite Avatars. TikTok doesn't offer an email scope, so Appwrite creates TikTok users without an email address and recognizes them on later sign-ins by their TikTok user ID. If your app needs an email address, ask for it after sign-in and set it from your server with the Users API.
+
+{% info title="Self-hosted availability" %}
+Sign in with TikTok is available on Appwrite Cloud and in self-hosted Appwrite 2.1 and later.
+{% /info %}
+
+# How to implement
+
+To implement the TikTok OAuth adapter in Appwrite Auth, there are several steps you must complete:
+
+## Step 1: Create a TikTok app with Login Kit
+
+First, sign in to [TikTok for Developers](https://developers.tiktok.com/) and create an app. Add the **Login Kit** product to it and choose **Web** as the platform. You will add the redirect URI to Login Kit's settings in the next step.
+
+Save the app's **Client key** and **Client secret** for later use. TikTok calls the client ID the client key. TikTok reviews apps before they go live, so submit your app for review in the developer portal before you launch.
+
+## Step 2: Add the TikTok OAuth adapter to your Appwrite project
+
+For this step, you must [create an account on Appwrite Cloud](/sign-up) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. In your Appwrite project, head over to the **Auth** page, open the **Settings** tab, and click **TikTok** under the **OAuth2 Providers** section.
+
+Enter the **Client key** and **Client secret** you saved from TikTok, turn the provider on, and click **Update**.
+
+Copy the **Redirect URI** shown in the provider settings. It follows this format:
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/account/sessions/oauth2/callback/tiktok/<PROJECT_ID>
+```
+
+The URI starts with the API endpoint your app uses, so on self-hosted Appwrite it starts with your own domain. Always copy the exact value from the Console. Back in TikTok for Developers, add this URI as a redirect URI in your app's Login Kit settings for the web and save.
+
+## Step 3: Test the provider
+
+Follow the [OAuth 2 login](/docs/products/auth/oauth2#init) flow to test your provider. Pass `OAuthProvider.Tiktok` as the provider when you call `createOAuth2Session` from a client app or `createOAuth2Token` from a server. Add your app's domain as a platform in your Appwrite project so Appwrite accepts your `success` and `failure` URLs.
+
+# Read more about TikTok and Appwrite Auth
+
+If you would like to learn more about TikTok and Appwrite Auth, we have some resources that you should visit:
+
+- [TikTok Login Kit for Web](https://developers.tiktok.com/doc/login-kit-web)
+- [Announcing six new OAuth2 login providers in Appwrite Auth](/blog/post/announcing-new-oauth2-providers)
+- [Implement OAuth login in your apps using Appwrite Auth](/docs/products/auth/oauth2)
+- [Manage linked accounts with Identities](/docs/products/auth/identities)
+- [Appwrite Auth API reference](/docs/references/cloud/client-web/account)
