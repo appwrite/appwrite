@@ -47,7 +47,7 @@ final class MultiplexingHandshakeTest extends TestCase
                 $buffer = '';
                 while (true) {
                     $chunk = $connection->recv(2.0);
-                    if ($chunk === '' || $chunk === false) {
+                    if (! \is_string($chunk) || $chunk === '') {
                         return;
                     }
                     $buffer .= $chunk;
@@ -60,7 +60,8 @@ final class MultiplexingHandshakeTest extends TestCase
                             break;
                         }
                         $buffer = substr($buffer, $offset);
-                        $received[] = strtoupper(\is_array($command) ? (string) ($command[0] ?? '') : '');
+                        $name = \is_array($command) ? ($command[0] ?? null) : null;
+                        $received[] = \is_string($name) ? strtoupper($name) : '';
 
                         Coroutine::sleep($replyDelay);
                         $connection->send("+OK\r\n");
@@ -68,7 +69,7 @@ final class MultiplexingHandshakeTest extends TestCase
                 }
             });
 
-            Coroutine::create(fn () => $server->start());
+            Coroutine::create(fn (): bool => $server->start());
 
             try {
                 $client($port);
