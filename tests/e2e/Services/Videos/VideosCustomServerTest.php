@@ -781,8 +781,7 @@ final class VideosCustomServerTest extends Scope
     {
         $videoId = $this->createVideo();
         $captionId = $this->createReadyCaption($videoId);
-        $vttPath = $this->captionStoragePath($videoId, $captionId);
-        $this->waitUntilPathExists($vttPath);
+        $this->waitUntilCaptionStored($videoId, $captionId);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/captions/' . $captionId, $this->headers());
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -796,7 +795,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('video_caption_not_found', $response['body']['type']);
 
-        $this->waitUntilPathGone($vttPath);
+        $this->waitUntilCaptionGone($videoId, $captionId);
 
         $source = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files/' . $this->getCaptionFile()['$id'], $this->headers());
         $this->assertEquals(200, $source['headers']['status-code']);
@@ -1307,6 +1306,42 @@ final class VideosCustomServerTest extends Scope
         } while ($cursor !== null);
 
         return [$count, $bytes];
+    }
+
+    /**
+     * Whether a caption's WebVTT is on the videos device, wherever that stores it.
+     */
+    private function captionStored(string $videoId, string $captionId): bool
+    {
+        $device = $this->videosDevice();
+
+        return $device->exists($device->getPath($videoId . '/captions/' . $captionId . '.vtt'));
+    }
+
+    private function waitUntilCaptionStored(string $videoId, string $captionId, int $timeout = 30): void
+    {
+        $deadline = \time() + $timeout;
+        while (\time() < $deadline) {
+            if ($this->captionStored($videoId, $captionId)) {
+                return;
+            }
+            \usleep(100000);
+        }
+
+        $this->fail('Caption storage never appeared: ' . $videoId . '/captions/' . $captionId . '.vtt');
+    }
+
+    private function waitUntilCaptionGone(string $videoId, string $captionId, int $timeout = 60): void
+    {
+        $deadline = \time() + $timeout;
+        while (\time() < $deadline) {
+            if (!$this->captionStored($videoId, $captionId)) {
+                return;
+            }
+            \usleep(100000);
+        }
+
+        $this->fail('Caption storage still present: ' . $videoId . '/captions/' . $captionId . '.vtt');
     }
 
     private function waitUntilRenditionStored(string $videoId, string $name, string $renditionId, int $timeout = 30): void
@@ -1904,11 +1939,8 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $firstReady['status']);
         $this->assertEquals('ready', $secondReady['status']);
 
-        $firstDir = $this->renditionStoragePath($videoId, $firstReady['name'], $firstId);
-        $secondDir = $this->renditionStoragePath($videoId, $secondReady['name'], $secondId);
-        $this->waitUntilPathExists($firstDir);
-        $this->waitUntilPathExists($secondDir);
-        $this->assertDirectoryHasFiles($firstDir);
+        $this->waitUntilRenditionStored($videoId, $firstReady['name'], $firstId);
+        $this->waitUntilRenditionStored($videoId, $secondReady['name'], $secondId);
 
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
         $this->assertEquals(204, $delete['headers']['status-code']);
@@ -1929,8 +1961,8 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringNotContainsString($firstId, (string) $master['body']);
         $this->assertStringContainsString($secondId, (string) $master['body']);
 
-        $this->waitUntilPathGone($firstDir);
-        $this->assertDirectoryExists($secondDir);
+        $this->waitUntilRenditionGone($videoId, $firstReady['name'], $firstId);
+        $this->assertGreaterThan(0, $this->storedRendition($videoId, $secondReady['name'], $secondId)[0], 'deleting one rendition must leave the other stored');
     }
 
     // ---------------------------------------------------------------- playback
@@ -4307,12 +4339,5 @@ final class VideosCustomServerTest extends Scope
         $stderr = '';
         $code = Console::execute($command, '', $stdout, $stderr);
         $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
-    }
-
-    private function assertDirectoryHasFiles(string $path): void
-    {
-        $this->assertDirectoryExists($path);
-        $entries = \array_values(\array_diff(\scandir($path) ?: [], ['.', '..']));
-        $this->assertNotEmpty($entries, 'Expected packaged files in ' . $path);
     }
 }

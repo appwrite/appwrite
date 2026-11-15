@@ -385,6 +385,46 @@ final class S3Test extends TestCase
         $this->assertSame('utopia-php/storage', $request->getHeaderLine('user-agent'));
     }
 
+    /**
+     * Recomputes the signature the way an S3 server does, from the request as
+     * sent and the secret, so a wrong signing key cannot pass.
+     */
+    public function testAuthorizationHeaderCarriesAValidSigV4Signature(): void
+    {
+        $client = new ScriptedClient([new Response(200)->withHeader('etag', '"abc"')]);
+        $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain');
+        $request = $client->requests[0];
+
+        $this->assertSame(1, preg_match(
+            '~^AWS4-HMAC-SHA256 Credential=test-key/(\d{8})/us-east-1/s3/aws4_request,SignedHeaders=([a-z0-9;-]+),Signature=([0-9a-f]{64})$~',
+            $request->getHeaderLine('authorization'),
+            $matches,
+        ));
+        [, $date, $signedHeaders, $signature] = $matches;
+
+        $canonical = [$request->getMethod(), $request->getUri()->getPath(), $request->getUri()->getQuery()];
+        foreach (explode(';', $signedHeaders) as $name) {
+            $canonical[] = $name . ':' . trim($request->getHeaderLine($name));
+        }
+        $canonical[] = '';
+        $canonical[] = $signedHeaders;
+        $canonical[] = hash('sha256', 'Hello World');
+
+        $stringToSign = implode("\n", [
+            'AWS4-HMAC-SHA256',
+            $request->getHeaderLine('x-amz-date'),
+            $date . '/us-east-1/s3/aws4_request',
+            hash('sha256', implode("\n", $canonical)),
+        ]);
+
+        $key = 'AWS4test-secret';
+        foreach ([$date, 'us-east-1', 's3', 'aws4_request'] as $part) {
+            $key = hash_hmac('sha256', $part, $key, true);
+        }
+
+        $this->assertSame(hash_hmac('sha256', $stringToSign, $key), $signature);
+    }
+
     public function testEndpointPathIsExcludedFromHostHeader(): void
     {
         $client = new ScriptedClient([new Response(200)->withHeader('etag', '"abc"')]);

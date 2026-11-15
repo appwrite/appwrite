@@ -336,6 +336,30 @@ final class RequestTest extends TestCase
         $this->assertSame($first->cacheIdentifier(), $second->cacheIdentifier());
     }
 
+    public function testCacheIdentifierKeysByTheAcceptedTypeNotTheHeader(): void
+    {
+        // A route that upgrades to webp from the Accept header alone, like video thumbnails
+        $route = new Route(Request::METHOD_GET, '/thumbnail');
+        $route->label('cache.accept', ['image/webp']);
+
+        $chrome = $this->negotiatedRequest('image/avif,image/webp,image/apng,*/*;q=0.8', [], $route);
+        $firefox = $this->negotiatedRequest('image/webp,*/*', [], $route);
+        $legacy = $this->negotiatedRequest('image/png,*/*', [], $route);
+
+        $this->assertSame($chrome->cacheIdentifier(), $firefox->cacheIdentifier());
+        $this->assertNotSame($chrome->cacheIdentifier(), $legacy->cacheIdentifier());
+    }
+
+    public function testCacheIdentifierIgnoresAcceptWithoutCacheAccept(): void
+    {
+        $route = new Route(Request::METHOD_GET, '/download');
+
+        $webp = $this->negotiatedRequest('image/webp', ['token' => 'abc'], $route);
+        $html = $this->negotiatedRequest('text/html', ['token' => 'abc'], $route);
+
+        $this->assertSame($webp->cacheIdentifier(), $html->cacheIdentifier());
+    }
+
     public function testGetHeaderLineReturnsStringValue(): void
     {
         $this->request->addHeader('referer', 'https://example.com');

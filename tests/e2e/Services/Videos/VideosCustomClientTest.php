@@ -1579,6 +1579,8 @@ final class VideosCustomClientTest extends Scope
             $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
             $this->assertSame('hit', $cachedAgain['headers']['x-appwrite-cache']);
             $this->assertSame($cached['body'], $cachedAgain['body']);
+            // The format follows Accept, so a hit has to say so as well as the miss
+            $this->assertEquals('Accept', $cached['headers']['vary']);
         });
 
         $this->assertEquals(200, $cached['headers']['status-code']);
