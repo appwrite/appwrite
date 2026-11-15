@@ -704,8 +704,9 @@ class Notifications extends Action
         }
         foreach ([$organizationId, '*'] as $key) {
             $until = $snoozes[$key] ?? null;
-            // A date and time, not a relative phrase like `+1 day` that would never run out.
-            if ($key === '' || !\is_string($until) || !\preg_match('/^\d{4}-\d{2}-\d{2}T/', $until)) {
+            // Exactly an ISO 8601 date and time with its offset: a relative phrase like `+1 day`,
+            // alone or after a date, would never run out.
+            if ($key === '' || !\is_string($until) || !\preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?(Z|[+-]\d{2}:\d{2})$/', $until)) {
                 continue;
             }
             try {

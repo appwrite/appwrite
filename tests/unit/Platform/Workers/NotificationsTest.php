@@ -1359,7 +1359,7 @@ final class NotificationsTest extends TestCase
         $this->assertFalse(Notifications::isSnoozed(['snoozes' => [$later]], '', $now));
 
         // Prefs are user-written: anything that is not a date and time reads as no snooze.
-        foreach ([null, true, 42, $later, ['org' => 42], ['org' => 'soon'], ['org' => '+1 day'], ['org' => 'tomorrow'], ['org' => [$later]]] as $snoozes) {
+        foreach ([null, true, 42, $later, ['org' => 42], ['org' => 'soon'], ['org' => '+1 day'], ['org' => 'tomorrow'], ['org' => '2026-11-15T11:00:00Z +10 years'], ['org' => '2026-11-15T13:00:00'], ['org' => [$later]]] as $snoozes) {
             $this->assertFalse(Notifications::isSnoozed(['snoozes' => $snoozes], 'org', $now), \json_encode($snoozes));
         }
     }
