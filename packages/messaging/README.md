@@ -158,6 +158,7 @@ $messaging->send($message);
 - [x] [Seven](https://www.seven.io/)
 - [ ] [SmsGlobal](https://www.smsglobal.com/)
 - [x] [Inforu](https://www.inforu.co.il/)
+- [x] [kwtSMS](https://www.kwtsms.com/)
 - [x] [WhatsApp](https://developers.facebook.com/docs/whatsapp/cloud-api) (one-time codes through authentication templates)
 
 ### Push
