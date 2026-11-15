@@ -205,7 +205,7 @@ class Update extends Action
             $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
 
             $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
-            if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
+            if (!$hasSession && !$user->getAttribute($verification, false)) {
                 $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven, $mqtt));
                 $claimed = $user;
