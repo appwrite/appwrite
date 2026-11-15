@@ -395,11 +395,11 @@ final class S3Test extends TestCase
         $this->device($client)->write('/root/file.txt', new Stream('Hello World'), 'text/plain');
         $request = $client->requests[0];
 
+        // Which headers were signed is the sender's choice; everything else is recomputed
         $authorization = $request->getHeaderLine('authorization');
-        if (preg_match('~^AWS4-HMAC-SHA256 Credential=test-key/(\d{8})/us-east-1/s3/aws4_request,SignedHeaders=([a-z0-9;-]+),Signature=([0-9a-f]{64})$~', $authorization, $matches) !== 1) {
-            $this->fail('Not a SigV4 authorization header: ' . $authorization);
-        }
-        [, $date, $signedHeaders, $signature] = $matches;
+        $signedHeaders = str_replace('SignedHeaders=', '', explode(',', $authorization)[1] ?? '');
+        $date = substr($request->getHeaderLine('x-amz-date'), 0, 8);
+        $scope = $date . '/us-east-1/s3/aws4_request';
 
         $canonical = [$request->getMethod(), $request->getUri()->getPath(), $request->getUri()->getQuery()];
         foreach (explode(';', $signedHeaders) as $name) {
@@ -412,7 +412,7 @@ final class S3Test extends TestCase
         $stringToSign = implode("\n", [
             'AWS4-HMAC-SHA256',
             $request->getHeaderLine('x-amz-date'),
-            $date . '/us-east-1/s3/aws4_request',
+            $scope,
             hash('sha256', implode("\n", $canonical)),
         ]);
 
@@ -421,7 +421,13 @@ final class S3Test extends TestCase
             $key = hash_hmac('sha256', $part, $key, true);
         }
 
-        $this->assertSame(hash_hmac('sha256', $stringToSign, $key), $signature);
+        $this->assertContains('host', explode(';', $signedHeaders));
+        $this->assertSame(
+            'AWS4-HMAC-SHA256 Credential=test-key/' . $scope
+            . ',SignedHeaders=' . $signedHeaders
+            . ',Signature=' . hash_hmac('sha256', $stringToSign, $key),
+            $authorization,
+        );
     }
 
     public function testEndpointPathIsExcludedFromHostHeader(): void
