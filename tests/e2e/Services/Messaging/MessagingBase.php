@@ -2651,11 +2651,12 @@ trait MessagingBase
         $this->assertSame($fileId, $list['body']['messages'][0]['data']['image']['fileId']);
         $this->assertArrayNotHasKey('url', $list['body']['messages'][0]['data']['image']);
 
-        // The email and SMS update routes accept any message ID and echo the message back.
+        // The email and SMS update routes must not reach a push message at all: they would carry its
+        // stored image forward without the files.read its own route demands.
         foreach (['email', 'sms'] as $type) {
             $patched = $this->client->call(Client::METHOD_PATCH, "/messaging/messages/{$type}/" . $message['$id'], $headers + $writeKey, ['draft' => true]);
-            $this->assertSame(200, $patched['headers']['status-code']);
-            $this->assertArrayNotHasKey('url', $patched['body']['data']['image']);
+            $this->assertSame(404, $patched['headers']['status-code']);
+            $this->assertSame('message_not_found', $patched['body']['type']);
         }
 
         $fileReader = ['x-appwrite-key' => $this->getNewKey(['messages.read', 'files.read'])];

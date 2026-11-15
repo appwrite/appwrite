@@ -9,7 +9,10 @@ import {
   type Client,
   type Payload,
 } from '@appwrite.io/console'
-import type { Monitor, MonitorList } from './api'
+import type { Monitor, MonitorList, MonitorSeverity as Level } from './api'
+
+/** The severity as a plain string, so callers can pass `'critical'` as well as the enum. */
+type MonitorSeverity = `${Level}`
 
 export class Monitors {
   client: Client
@@ -21,7 +24,7 @@ export class Monitors {
   /**
    * Get a list of the project's monitors of every type. Use queries to filter by type, resource, metric or status, and `Query.search('search', term)` to search monitor IDs, names, metrics and resources.
    *
-   * @param {string[]} params.queries - Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, type, resourceType, resourceId, metric, enabled, critical, status, evaluatedAt, triggeredAt, search
+   * @param {string[]} params.queries - Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, type, resourceType, resourceId, metric, enabled, severity, status, evaluatedAt, triggeredAt, search
    * @param {boolean} params.total - When set to false, the total count returned will be 0 and will not be calculated.
    * @throws {AppwriteException}
    * @returns {Promise<MonitorList>}
@@ -30,7 +33,7 @@ export class Monitors {
   /**
    * Get a list of the project's monitors of every type. Use queries to filter by type, resource, metric or status, and `Query.search('search', term)` to search monitor IDs, names, metrics and resources.
    *
-   * @param {string[]} queries - Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, type, resourceType, resourceId, metric, enabled, critical, status, evaluatedAt, triggeredAt, search
+   * @param {string[]} queries - Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, type, resourceType, resourceId, metric, enabled, severity, status, evaluatedAt, triggeredAt, search
    * @param {boolean} total - When set to false, the total count returned will be 0 and will not be calculated.
    * @throws {AppwriteException}
    * @returns {Promise<MonitorList>}
@@ -93,7 +96,7 @@ export class Monitors {
    * @param {number} params.cooldown - Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.
    * @param {boolean} params.enabled - Set to false to create the monitor without evaluating it.
    * @param {string[]} params.notify - Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.
-   * @param {boolean} params.critical - Set to true to mark the monitor critical: its alerts may be delivered with higher urgency by the notification channels that support it.
+   * @param {MonitorSeverity} params.severity - How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it, such as a push that rings through silent mode.
    * @throws {AppwriteException}
    * @returns {Promise<Monitor>}
    */
@@ -105,7 +108,7 @@ export class Monitors {
     cooldown?: number
     enabled?: boolean
     notify?: string[]
-    critical?: boolean
+    severity?: MonitorSeverity
   }): Promise<Monitor>
   /**
    * Create a usage monitor. It reads a usage metric of the project, or of one of its databases or buckets, on a schedule, and opens an alert when all its rules hold. Each alert fires the `monitors.[monitorId].alerts.[alertId].firing` event when it opens and `.resolved` when usage recovers, for project webhooks, functions and realtime, and notifies the organization's owners by email and in the console.
@@ -117,7 +120,7 @@ export class Monitors {
    * @param {number} cooldown - Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.
    * @param {boolean} enabled - Set to false to create the monitor without evaluating it.
    * @param {string[]} notify - Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.
-   * @param {boolean} critical - Set to true to mark the monitor critical: its alerts may be delivered with higher urgency by the notification channels that support it.
+   * @param {MonitorSeverity} severity - How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Critical alerts may be delivered with higher urgency by the notification channels that support it, such as a push that rings through silent mode.
    * @throws {AppwriteException}
    * @returns {Promise<Monitor>}
    * @deprecated Use the object parameter style method for a better developer experience.
@@ -130,7 +133,7 @@ export class Monitors {
     cooldown?: number,
     enabled?: boolean,
     notify?: string[],
-    critical?: boolean,
+    severity?: MonitorSeverity,
   ): Promise<Monitor>
   createUsageMonitor(
     paramsOrFirst:
@@ -142,7 +145,7 @@ export class Monitors {
           cooldown?: number
           enabled?: boolean
           notify?: string[]
-          critical?: boolean
+          severity?: MonitorSeverity
         }
       | string,
     ...rest: [
@@ -152,7 +155,7 @@ export class Monitors {
       number?,
       boolean?,
       string[]?,
-      boolean?,
+      MonitorSeverity?,
     ]
   ): Promise<Monitor> {
     let params: {
@@ -163,7 +166,7 @@ export class Monitors {
       cooldown?: number
       enabled?: boolean
       notify?: string[]
-      critical?: boolean
+      severity?: MonitorSeverity
     }
 
     if (
@@ -179,7 +182,7 @@ export class Monitors {
         cooldown?: number
         enabled?: boolean
         notify?: string[]
-        critical?: boolean
+        severity?: MonitorSeverity
       }
     } else {
       params = {
@@ -190,7 +193,7 @@ export class Monitors {
         cooldown: rest[3] as number,
         enabled: rest[4] as boolean,
         notify: rest[5] as string[],
-        critical: rest[6] as boolean,
+        severity: rest[6] as MonitorSeverity,
       }
     }
 
@@ -201,7 +204,7 @@ export class Monitors {
     const cooldown = params.cooldown
     const enabled = params.enabled
     const notify = params.notify
-    const critical = params.critical
+    const severity = params.severity
 
     if (typeof monitorId === 'undefined') {
       throw new AppwriteException('Missing required parameter: "monitorId"')
@@ -235,8 +238,8 @@ export class Monitors {
     if (typeof notify !== 'undefined') {
       apiPayload['notify'] = notify
     }
-    if (typeof critical !== 'undefined') {
-      apiPayload['critical'] = critical
+    if (typeof severity !== 'undefined') {
+      apiPayload['severity'] = severity
     }
     const uri = new URL(this.client.config.endpoint + apiPath)
 
@@ -261,7 +264,7 @@ export class Monitors {
    * @param {number | null} params.cooldown - Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.
    * @param {boolean | null} params.enabled - Whether the monitor is evaluated.
    * @param {string[] | null} params.notify - Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.
-   * @param {boolean | null} params.critical - Whether the monitor is critical: its alerts may be delivered with higher urgency by the notification channels that support it.
+   * @param {MonitorSeverity | null} params.severity - How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Omit to keep the current one.
    * @throws {AppwriteException}
    * @returns {Promise<Monitor>}
    */
@@ -273,7 +276,7 @@ export class Monitors {
     cooldown?: number | null
     enabled?: boolean | null
     notify?: string[] | null
-    critical?: boolean | null
+    severity?: MonitorSeverity | null
   }): Promise<Monitor>
   /**
    * Update a usage monitor by its unique ID. Only the parameters passed change; the monitor's state and its open alert are kept. Passing `rules` replaces all of them.
@@ -285,7 +288,7 @@ export class Monitors {
    * @param {number | null} cooldown - Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.
    * @param {boolean | null} enabled - Whether the monitor is evaluated.
    * @param {string[] | null} notify - Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.
-   * @param {boolean | null} critical - Whether the monitor is critical: its alerts may be delivered with higher urgency by the notification channels that support it.
+   * @param {MonitorSeverity | null} severity - How urgent the monitor's alerts are: `info`, `warning`, `error` or `critical`. Omit to keep the current one.
    * @throws {AppwriteException}
    * @returns {Promise<Monitor>}
    * @deprecated Use the object parameter style method for a better developer experience.
@@ -298,7 +301,7 @@ export class Monitors {
     cooldown?: number | null,
     enabled?: boolean | null,
     notify?: string[] | null,
-    critical?: boolean | null,
+    severity?: MonitorSeverity | null,
   ): Promise<Monitor>
   updateUsageMonitor(
     paramsOrFirst:
@@ -310,7 +313,7 @@ export class Monitors {
           cooldown?: number | null
           enabled?: boolean | null
           notify?: string[] | null
-          critical?: boolean | null
+          severity?: MonitorSeverity | null
         }
       | string,
     ...rest: [
@@ -320,7 +323,7 @@ export class Monitors {
       (number | null)?,
       (boolean | null)?,
       (string[] | null)?,
-      (boolean | null)?,
+      (MonitorSeverity | null)?,
     ]
   ): Promise<Monitor> {
     let params: {
@@ -331,7 +334,7 @@ export class Monitors {
       cooldown?: number | null
       enabled?: boolean | null
       notify?: string[] | null
-      critical?: boolean | null
+      severity?: MonitorSeverity | null
     }
 
     if (
@@ -347,7 +350,7 @@ export class Monitors {
         cooldown?: number | null
         enabled?: boolean | null
         notify?: string[] | null
-        critical?: boolean | null
+        severity?: MonitorSeverity | null
       }
     } else {
       params = {
@@ -358,7 +361,7 @@ export class Monitors {
         cooldown: rest[3] as number | null,
         enabled: rest[4] as boolean | null,
         notify: rest[5] as string[] | null,
-        critical: rest[6] as boolean | null,
+        severity: rest[6] as MonitorSeverity | null,
       }
     }
 
@@ -369,7 +372,7 @@ export class Monitors {
     const cooldown = params.cooldown
     const enabled = params.enabled
     const notify = params.notify
-    const critical = params.critical
+    const severity = params.severity
 
     if (typeof monitorId === 'undefined' || monitorId === '') {
       throw new AppwriteException('Missing required parameter: "monitorId"')
@@ -397,8 +400,8 @@ export class Monitors {
     if (typeof notify !== 'undefined') {
       apiPayload['notify'] = notify
     }
-    if (typeof critical !== 'undefined') {
-      apiPayload['critical'] = critical
+    if (typeof severity !== 'undefined') {
+      apiPayload['severity'] = severity
     }
     const uri = new URL(this.client.config.endpoint + apiPath)
 

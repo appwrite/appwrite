@@ -65,6 +65,8 @@ import {
 } from '@/lib/screenshot-mode'
 
 type OrganizationListResponse = Models.TeamList
+
+const ORGANIZATIONS_PAGE_SIZE = 100
 type OrganizationRecord = Models.Organization
 type OrganizationPlan = Models.BillingPlan
 
@@ -283,18 +285,38 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
  *
  * @returns Organizations list response from the API
  */
-export async function fetchOrganizations() {
-  if (isBillingEnabled()) {
-    const response = await sdk.forConsole.organizations.list({
-      queries: [Query.equal('platform', 'appwrite')],
-    })
-    return response as OrganizationListResponse
+export async function fetchOrganizations(): Promise<OrganizationListResponse> {
+  // One page holds 25 organizations by default, and a member of more would miss
+  // the rest: a project in one of them showed another organization's name.
+  const billing = isBillingEnabled()
+  const teams: OrganizationListResponse['teams'] = []
+  const seen = new Set<string>()
+  for (;;) {
+    const last = teams.at(-1)
+    const page = [
+      Query.limit(ORGANIZATIONS_PAGE_SIZE),
+      ...(last ? [Query.cursorAfter(last.$id)] : []),
+    ]
+    const response = (
+      billing
+        ? await sdk.forConsole.organizations.list({
+            queries: [Query.equal('platform', 'appwrite'), ...page],
+          })
+        : await sdk.forConsole.teams.list({ queries: page, total: true })
+    ) as OrganizationListResponse
+    const fresh = response.teams.filter((team) => !seen.has(team.$id))
+    fresh.forEach((team) => seen.add(team.$id))
+    teams.push(...fresh)
+    // Organizations hides draft organizations after reading a page, so a short
+    // page there can still have more after it: the end is a page that adds no
+    // organization, which also stops a list that ignores the cursor.
+    const end = billing
+      ? fresh.length === 0
+      : response.teams.length < ORGANIZATIONS_PAGE_SIZE
+    if (end) {
+      return { ...response, teams }
+    }
   }
-
-  const response = await sdk.forConsole.teams.list({
-    total: true,
-  })
-  return response as OrganizationListResponse
 }
 
 /**

@@ -26,6 +26,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Manage billing',
             href: '/docs/advanced/billing/payments',
           },
+          {
+            label: 'Project transfers',
+            href: '/docs/advanced/billing/project-transfers',
+          },
         ],
       },
       {

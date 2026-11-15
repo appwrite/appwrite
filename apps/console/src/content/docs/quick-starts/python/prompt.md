@@ -47,7 +47,7 @@ source .venv/bin/activate
 
 ## Step 3: Install Appwrite SDK
 
-- Run: `python -m pip install "appwrite==27.0.0"`
+- Run: `python -m pip install "appwrite==27.2.0"`
 
 - When upgrading from SDK 26.0.0, update dependency pins or constraints that exclude `requests>=2.34.2,<3` or `urllib3>=2.8.0,<3`. The service API and response format `2.5.0` are unchanged.
 

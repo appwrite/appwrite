@@ -1,5 +1,83 @@
 # Change Log
 
+## 24.2.0
+
+* Updated: `project.listEnvironments`, `project.createEnvironment`, `project.getEnvironment`, `project.updateEnvironment` return `Environment` models instead of `Project`
+* Added: `account.createDevice`, `account.getDevice`, `account.deleteDevice` and `account.updateDeviceSession`, and the `Device` model
+* Added: `project.updateAccountDevicesPolicy`, `ProjectPolicyId.ACCOUNT_DEVICES` and the `PolicyAccountDevices` model
+* Added: `project.updateOAuth2Vipps`, `project.updateOAuth2VippsSandbox` and the `OAuth2Vipps` model
+* Added: `OAuthProvider.VIPPS` and `OAuthProvider.VIPPSSANDBOX`
+* Added: `proxy.updateFunctionRule`, `proxy.updateRedirectRule` and `proxy.updateSiteRule`
+* Added: optional `schedule` on `waf` rule create and update methods and on `WafRule*` models
+* Added: `project.getPrefs` and `project.updatePrefs` for project preferences
+* Added: `Client.setEnvironment` to act in a project environment
+* Added: `AppwriteMigrationResource.PROJECT_PREFERENCES` to migrate project preferences
+* Added: `monitors.read`, `monitors.write`, `alerts.read`, `alerts.write`, `reviews.read` and `reviews.write` to `ProjectKeyScopes`
+* Added: `Organization.budgetNotify`, `budgetCritical` and `educationExpiresAt`
+* Added: `Project.environmentId`, `Session.userName` and `ActivityEvent.reason`
+* Added: `ProxyRule.expireAt` and `certificateStatus`
+* Updated: requests send response format `2.7.1`; README targets Appwrite 2.7.x
+
+## 24.1.0
+
+* Updated: requests send response format `2.6.2`
+* Updated: redirects are no longer followed; a 3xx response throws `AppwriteException` naming its `Location`
+* Fixed: a `.` or `..` path parameter throws `AppwriteException` before the request is sent
+* Added: `migrations` service with `list`, `get`, `retry`, `delete`, Appwrite, Firebase, NHost and Supabase migrations, and CSV and JSON imports and exports
+* Added: `AppwriteMigrationResource`, `FirebaseMigrationResource`, `NHostMigrationResource`, `SupabaseMigrationResource` and `OnDuplicate` enums
+* Added: `Migration`, `MigrationList` and `MigrationReport` models
+* Added: `project.updateDenyRealtimeGuestsPolicy`, `ProjectPolicyId.DENY_REALTIME_GUESTS` and the `PolicyDenyRealtimeGuests` model
+* Added: `project.deleteSessions` to sign out every session in the project
+* Added: `deploymentRetention`, `deploymentRetentionMax` and `deploymentsRetentionCount` on `BillingPlan`
+* Added: `PYTHON_3_15`, `DENO_2_9`, `GO_1_27` and `RUST_1_99` on `Runtime` and `BuildRuntime`
+* Fixed: path parameters and upload IDs are percent-encoded as one segment, so `/`, `?` and `#` stay in the value
+* Fixed: a chunked upload whose file ID returns 404 on the resume lookup starts a new upload
+* Updated: Kotlin 2.4.21, OkHttp 5.5.1 and Gradle 9.8.2
+
+## 24.0.0
+
+* Breaking: `create` and `update` on `TablesDB`, `DocumentsDB` and `VectorsDB` take `description` before `specification`
+* Breaking: `functions.update` takes `description` before `emailEnabled`
+* Added: `description` params and model fields on databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, topics, variables, keys and webhooks
+* Added: `account.listMemberships` to list the current user's team memberships
+* Added: `createQuery` on `Databases`, `DocumentsDB` and `TablesDB` to send list queries in the request body
+* Added: `total` param on `Activities`, `Backups`, `Domains`, `Mongo`, `Mysql` and `Postgresql` list methods
+* Added: `emails` param on `messaging.createEmail` and `updateEmail` for recipients without an Appwrite target
+* Added: `denyList` on `project.updatePasswordDictionaryPolicy`, `updatePasswordPersonalDataPolicy` and their policy models
+* Added: `BillingPlan.functionsAllowCron`
+* Added: `@JvmStatic` on `ID`, `Permission`, `Role`, `Query`, `Operator` and `InputFile` helpers for Java
+* Added: `stripMetadata` on `storage.createBucket`, `storage.updateBucket` and the `Bucket` model
+* Fixed: `row.data` keeps null-valued columns instead of dropping them
+* Updated: Java examples catch `AppwriteException` and import `List` and `Map`
+
+## 23.0.0
+
+* Breaking: removed `account.listLogs` and `users.listLogs`
+* Breaking: removed `organization.createKey`, `getKey`, `listKeys`, `updateKey` and `deleteKey`, and `OrganizationKeyScopes`; use `organization.listProjectKeys`, `getProjectKey`, `updateProjectKey` and `deleteProjectKey` instead
+* Breaking: removed the `Log`, `LogList` and `DevKey` models
+* Breaking: removed `Project.devKeys` and the unsent `Block` fields
+* Breaking: `listSpecifications` returns each specification's prices and overage rates on the row itself. Removed the list-level `pricing` field and the `DedicatedDatabaseSpecificationPricing` model
+* Breaking: removed `Client.setDevKey`
+* Breaking: removed `BillingPlanGroup.STARTER`; use `BillingPlanGroup.FREE`
+* Breaking: requests send response format `2.5.0`
+* Breaking: `resource` on the `oauth2` authorize, PAR, device and token methods is now `List<String>?`
+* Breaking: `project.updateOAuth2Kakao` takes `enabled` before `prompt`
+* Breaking: `BackupRestoration.options` is now a `Map<String, Any?>`
+* Breaking: billing, backup and dedicated database fields the server can omit are now nullable
+* Breaking: `providerIdToken`, `fingerprints`, OAuth2 `prompt` and native fields are now non-nullable
+* Breaking: model constructors follow the API field order; optional fields no longer default to `null`
+* Added: `Topic` helper to build MQTT topics for push messages
+* Added: `mongo`, `mysql` and `postgresql` `promoteRestoration`, `restoreMode`, `targetName` and `autoPromote` on `createRestoration`, and `DedicatedDatabaseRestoration.restoreMode`
+* Added: `proxy.createSMTPRule`, the `ProxyRuleProtocol` enum and `ProxyRule.protocol`
+* Added: `emailEnabled` on `functions.update` and `Function`, and `ExecutionTrigger.EMAIL`
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query.builder()` to chain queries; `build()` returns the query list
+* Updated: models fill documented defaults for fields missing from a response
+* Updated: empty required path parameters now throw `AppwriteException` before sending the request
+* Updated: multipart requests encode map parameters as JSON
+* Updated: Kotlin 2.4.20
+* Fixed: OAuth2 models with a `prompt` list no longer throw `ClassCastException`
+
 ## 22.4.0
 
 * Added: `domains` service to manage domains, DNS records, email presets, prices, transfer status and zones

@@ -1,0 +1,76 @@
+---
+layout: integration
+title: Retool with managed PostgreSQL and MySQL
+description: Build internal tools and admin panels in Retool on an Appwrite native PostgreSQL or MySQL database
+date: 2026-11-06
+featured: false
+isPartner: false
+isNew: true
+cover: /images/integrations/sql-retool/cover.avif
+category: databases
+product:
+    vendor: Retool
+    description: 'Retool is a platform for building internal tools, dashboards, and admin panels on top of your databases and APIs.'
+platform:
+    - 'Cloud'
+---
+
+[Retool](https://retool.com/) is a platform for building internal tools. You connect a database as a resource, write queries against it, and wire the results to tables, forms, and charts to build dashboards and admin panels.
+
+# How does the integration work?
+
+Appwrite native PostgreSQL and MySQL databases are standard engines that Appwrite provisions in your project's region, each with its own hostname, credentials, and TLS. Retool connects to them through its built-in **PostgreSQL** or **MySQL** resource, with no Appwrite-specific setup. Retool stores the credentials server-side, so app users query through the resource instead of connecting from the browser.
+
+Retool sends queries as prepared statements by default, so it connects to the direct engine port or a session-mode pooler rather than the default transaction-mode pooler.
+
+{% info title="Available on Appwrite Cloud" %}
+Native PostgreSQL and MySQL databases run in every Appwrite Cloud region and are available on paid plans.
+{% /info %}
+
+# How to implement
+
+To connect Retool to an Appwrite native database, there are several steps you must complete:
+
+## Step 1: Create a native database
+
+[Create an account on Appwrite Cloud](/sign-up) if you haven't already. In your project, go to **Databases**, click **Create database**, and select **PostgreSQL** or **MySQL** from the **Native databases** group. Pick a specification and click **Create database**. The database becomes `ready` within a few minutes.
+
+For PostgreSQL, open the database and click **Credentials** to copy the connection string or individual values. For MySQL, read them from the database object with `mysql.get()` and an API key that has the `databases.read` scope.
+
+## Step 2: Choose credentials
+
+On PostgreSQL, use `admin` only for setup and schema work. For a Retool app, create a narrower role from the database's **Roles** tab in the Console and grant only the table privileges the app needs, for example `SELECT` for a dashboard, or `SELECT`, `INSERT`, `UPDATE`, and `DELETE` on specific tables for an admin tool.
+
+On MySQL, use the returned `admin.<hash>` credentials and limit access with Retool resource permissions, Appwrite network controls, and narrowly scoped queries.
+
+## Step 3: Create the resource
+
+In Retool, go to **Resources**, click **Create new** > **Resource**, and select the **PostgreSQL** or **MySQL** tile. Paste the Appwrite connection string, or fill in the fields:
+
+| Retool setting | PostgreSQL | MySQL |
+| --- | --- | --- |
+| Host | `db-<hash>.<region>.appwrite.center` | `db-<hash>.<region>.appwrite.center` |
+| Port | `5432` | `3306` |
+| Database name | `<database>` | `default` |
+| Username | `admin` or a narrower role | `admin.<hash>` |
+| Password | From the credentials | From `connectionPassword` |
+
+Enable **SSL/TLS**. The certificate is signed by a public CA, so keep **Reject unauthorized** on, choose **Full verification** if Retool shows a verification mode, and leave **CA certificate** empty. Click **Test connection**, then **Create resource**.
+
+If you enabled an IP allowlist on the database, add the Retool Cloud egress addresses for the resource's outbound region from [Retool's IP address documentation](https://docs.retool.com/data-sources/reference/ip-allowlist-cloud-orgs).
+
+## Step 4: Build an admin tool
+
+Create a query in **SQL mode** to feed a **Table** or chart, and use **GUI mode** actions such as **Insert a record** and **Update an existing record** for forms and editable tables. Reference component values with `{{ }}` expressions, and keep Retool's prepared statements on, because they separate values from SQL text. Refresh the read query after writes, and confirm deletes in a modal.
+
+For staging, create a [PostgreSQL](/docs/products/databases/postgresql/branches) or [MySQL](/docs/products/databases/mysql/branches) branch and add a second Retool resource that points at it.
+
+# Read more about Retool and Appwrite Databases
+
+If you would like to learn more about Retool and Appwrite Databases, we have some resources that you should visit:
+
+- [Connect Retool to a native PostgreSQL database](/docs/products/databases/postgresql/integrations/retool)
+- [Connect Retool to a native MySQL database](/docs/products/databases/mysql/integrations/retool)
+- [Managed PostgreSQL on Appwrite](/docs/products/databases/postgresql)
+- [Native MySQL databases on Appwrite](/docs/products/databases/mysql)
+- [Retool documentation](https://docs.retool.com/)

@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\Abuse\Limit;
-use Appwrite\Databases\ListCache;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -18,6 +17,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Cache\ListCache;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Console;

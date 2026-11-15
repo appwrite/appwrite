@@ -531,7 +531,7 @@ export function formatError(
       const apiMessageLooksUseful =
         message.length > 0 &&
         message.length <= 200 &&
-        !message.includes('at ') &&
+        !message.includes('\n    at ') &&
         (lowerMessage.includes('timed out') ||
           lowerMessage.includes('timeout') ||
           lowerMessage.includes('index') ||
@@ -550,7 +550,7 @@ export function formatError(
     // For other Error objects, check if message is user-friendly
     // If it's a technical error (contains stack trace indicators, etc.), use fallback
     const isTechnicalError =
-      message.includes('at ') ||
+      message.includes('\n    at ') ||
       message.includes('Error:') ||
       message.includes('TypeError') ||
       message.includes('ReferenceError') ||

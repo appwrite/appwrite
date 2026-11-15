@@ -49,6 +49,7 @@ class Device extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
+                'format' => 'password',
                 'description' => 'Secret used to authenticate the device. Carried by the device cookie; only included in the response if the request was made with an API key.',
                 'default' => '',
                 'example' => '5e5bb8c16897e',

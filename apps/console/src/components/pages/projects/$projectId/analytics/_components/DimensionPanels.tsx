@@ -1,4 +1,4 @@
-import { AnalyticsDimension } from '@appwrite.io/console'
+import { AnalyticsDimension, AnalyticsPropertyType } from '@appwrite.io/console'
 import { useMemo } from 'react'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import {
@@ -243,14 +243,28 @@ const TECH_TABS: BreakdownTab[] = [
   },
 ]
 
-export function TechnologyPanel(props: PanelProps) {
+// The Flutter tracker sends no user agent, so apps have no browser to break
+// down; OS versions is left alone, so it drops its one-entry Versions menu.
+const MOBILE_TECH_TABS = TECH_TABS.filter(
+  (tab) => tab.id !== 'browsers' && tab.id !== 'browser-versions',
+).map((tab) => ({ ...tab, group: undefined }))
+
+export function TechnologyPanel({
+  type,
+  ...props
+}: PanelProps & {
+  type: AnalyticsPropertyType
+}) {
+  const mobile = type === AnalyticsPropertyType.Mobile
   return (
     <BreakdownPanel
       {...props}
       cardId="technology"
       title="Technology"
-      description="What visitors are browsing with"
-      tabs={TECH_TABS}
+      description={
+        mobile ? 'What visitors are using' : 'What visitors are browsing with'
+      }
+      tabs={mobile ? MOBILE_TECH_TABS : TECH_TABS}
       renderLeading={(entry, _index, tabId) =>
         tabId === 'browsers' ? <BrowserIcon name={entry.value} /> : undefined
       }
