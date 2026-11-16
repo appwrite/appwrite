@@ -1699,6 +1699,7 @@
     "Utopia\\Http\\Adapter\\Swoole\\Server::*": "Swoole server adapter (process/coroutine context slots, Swoole worker and coroutine gauges): runtime plumbing; the per-request context, start hooks, max_concurrency and max_wait_time are in utopia_http::serve and App.",
     "Utopia\\Http\\Adapter\\Swoole\\Request::getSwooleRequest": "Returns the Swoole request object: runtime plumbing.",
     "Utopia\\Http\\Adapter\\Swoole\\Response::getSwooleResponse": "Returns the Swoole response object: runtime plumbing.",
+    "Utopia\\Http\\Adapter\\Swoole\\Response::setServer": "Gives write() the Swoole server whose send queues it polls, so it waits for a slow client (and closes one that stalls) instead of the reactor buffering the whole response: Swoole plumbing. A Rust response body is written through hyper on tokio, where a write already waits until the client reads.",
     "Utopia\\Http\\Adapter\\Swoole\\Response::__construct": "Wraps a Swoole response object: runtime plumbing; Response::__construct is covered.",
     "Utopia\\Http\\Adapter\\Swoole\\Response::write": "Output primitive of the Swoole adapter: the PHP side records it in tests/compat/http/Capture.php and utopia_http::Wire is its counterpart; every op's output is compared through it.",
     "Utopia\\Http\\Adapter\\Swoole\\Response::end": "Output primitive of the Swoole adapter: recorded by Capture.php, counterpart utopia_http::Wire.",

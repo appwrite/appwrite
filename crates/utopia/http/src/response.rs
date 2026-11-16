@@ -618,10 +618,12 @@ impl Response {
         if body.len() <= CHUNK_SIZE {
             self.out_end(Some(body));
         } else {
-            for chunk in body.chunks(CHUNK_SIZE) {
-                self.out_write(chunk);
+            // Stop at the first write the client cannot take: it has gone, or
+            // stopped reading, and the rest would only be buffered for nobody.
+            let written = body.chunks(CHUNK_SIZE).all(|chunk| self.out_write(chunk));
+            if written {
+                self.out_end(None);
             }
-            self.out_end(None);
         }
         self.sent = true;
         self.disable_payload = true;
