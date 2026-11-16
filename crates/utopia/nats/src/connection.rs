@@ -25,7 +25,9 @@ use crate::transport::{TcpTransport, TlsTransport, Transport, WebSocketTransport
 const CLIENT_LANG: &str = "php";
 const CLIENT_VERSION: &str = "0.1.0";
 
-/// How long, and how many times, `tick` reads to collect its own PONGs.
+/// How long, and how many times, `tick` reads: short enough that a sweep over
+/// an idle pool stays cheap, and capped so a connection with live
+/// subscription traffic cannot hold maintenance.
 const TICK_READ_TIMEOUT: Duration = Duration::from_millis(50);
 const TICK_MAX_READS: usize = 4;
 
@@ -670,18 +672,39 @@ impl Connection {
         Inbox::create(&self.options.inbox_prefix)
     }
 
-    /// Sends the keepalive `PING` when it is due and recycles a connection
-    /// whose server stopped answering, without consuming messages. A holder
-    /// that never reads (a pooled publisher) calls this regularly.
+    /// Sends the keepalive `PING` when it is due, recycles a connection whose
+    /// server stopped answering, and takes a short, bounded read so a socket
+    /// the server has closed is noticed and rebuilt here rather than by the
+    /// next command. A holder that never reads (a pooled publisher) calls
+    /// this regularly.
+    ///
+    /// The read dispatches whatever it finds, as
+    /// [`process_message`](Self::process_message) does: a callback
+    /// subscription's callback runs inside the tick, and its error propagates.
     ///
     /// PHP: `Connection::tick()`.
     pub async fn tick(&mut self) -> Result<()> {
         self.assert_readable()?;
         self.check_pings().await?;
-        let mut reads = 0;
-        while self.outstanding_pings > 0 && reads < TICK_MAX_READS {
+        self.read_ready().await
+    }
+
+    /// Reads the PONGs owed for the keepalive PINGs, and anything else
+    /// already waiting. The first read is taken whether or not a PONG is
+    /// owed: only a read sees a socket the server has closed. Only a
+    /// connection that claims to be live is read, so one deliberately left
+    /// dead is not rebuilt on every sweep.
+    ///
+    /// PHP: the private `Connection::readReady()`.
+    async fn read_ready(&mut self) -> Result<()> {
+        if self.status != Status::Connected {
+            return Ok(());
+        }
+        for _ in 0..TICK_MAX_READS {
             self.read_message(Some(TICK_READ_TIMEOUT), true).await?;
-            reads += 1;
+            if self.outstanding_pings == 0 {
+                return Ok(());
+            }
         }
         Ok(())
     }
@@ -716,6 +739,11 @@ impl Connection {
                 if reconnect && self.options.allow_reconnect && self.status != Status::Closed {
                     self.attempt_reconnect().await?;
                     return Ok(None);
+                }
+                // Not rebuilding it is no reason to keep claiming it: left at
+                // connected, the next publish writes into the dead socket.
+                if self.status != Status::Closed {
+                    self.recycle_dead_connection(false).await?;
                 }
                 Err(error)
             }

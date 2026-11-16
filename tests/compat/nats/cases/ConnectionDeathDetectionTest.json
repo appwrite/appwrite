@@ -1067,6 +1067,280 @@
       ]
     },
     {
+      "name": "tick reconnects after the server closed the socket",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "pingInterval": 300.0,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 1
+        },
+        {
+          "op": "fake.fail_reads",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "error": {
+              "class": "ConnectionException",
+              "message": "Connection closed by server"
+            },
+            "until_connect": true
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 2
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "tick marks a closed socket dead when reconnect is off",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "pingInterval": 300.0,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0,
+              "allowReconnect": false
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.fail_reads",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "error": {
+              "class": "ConnectionException",
+              "message": "Connection closed by server"
+            },
+            "until_connect": true
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Connection closed by server"
+            }
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": false,
+            "closed": false,
+            "reconnecting": false,
+            "status": "disconnected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 1
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "orders",
+            "data": "lost"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Not connected (status: disconnected)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a command after a tick survives a server that went away while parked",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "pingInterval": 300.0,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            },
+            "rules": [
+              {
+                "when": {
+                  "prefix": "PUB $JS.API.CONSUMER.INFO"
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "$JS.API.CONSUMER.INFO",
+                      "payload": "ok"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.fail_reads",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "error": {
+              "class": "ConnectionException",
+              "message": "Connection closed by server"
+            },
+            "until_connect": true
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.tick",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "$JS.API.CONSUMER.INFO",
+            "data": "",
+            "timeout": 1.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "ok",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 1
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
       "name": "publish takes the keepalive verdict before writing",
       "steps": [
         {
