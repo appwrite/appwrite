@@ -338,6 +338,10 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 )
                 .map_err(Error::from)
             );
+            let mut held = Vec::new();
+            for _ in 0..a.opt_i64("held")?.unwrap_or(0) {
+                held.push(tri!(connections.pop().await.map_err(Error::from)));
+            }
             let pool = Pool::new(connections);
             let stream = a.opt_bool("stream")?.unwrap_or(false);
             let mut responses = Vec::new();
@@ -353,6 +357,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                     responses.push(result(&tri!(pool.send(req).await), session));
                 }
             }
+            drop(held);
             let created = *created.lock().unwrap();
             Outcome::ok(json!({"responses": responses, "created": created}))
         }
