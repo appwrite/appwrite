@@ -5,7 +5,7 @@ use utopia_http::Response;
 use utopia_validators::Range;
 
 use appwrite_core::auth::jwt;
-use appwrite_core::platform::{Context, Labels, Mode, Route};
+use appwrite_core::platform::{Context, Labels, Limit, Mode, Route};
 use appwrite_core::response::JwtModel;
 use appwrite_core::{Error, ErrorType, Result};
 
@@ -13,9 +13,7 @@ use crate::{GROUPS_AUTH, route};
 
 pub fn routes() -> Vec<Route> {
     let labels = Labels {
-        abuse_limit: 120,
-        abuse_time: 60,
-        abuse_key: &["url:{url},userId:{userId}"],
+        abuse: const { &[Limit::attempts(&["projectId", "url", "userId"], 120, 60)] },
         auth_type: "jwt",
         impersonation: "allow",
         ..Labels::NONE

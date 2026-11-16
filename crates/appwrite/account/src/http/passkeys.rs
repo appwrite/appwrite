@@ -12,7 +12,7 @@ use utopia_validators::{Assoc, Text};
 use appwrite_core::database::documents::{self, Attributes, Authenticator, Token, User};
 use appwrite_core::database::{LIMIT_COUNT, collections, filters};
 use appwrite_core::datetime;
-use appwrite_core::platform::{Audit, Context, Labels, Route};
+use appwrite_core::platform::{Audit, Context, Labels, Limit, Route};
 use appwrite_core::response::{PasskeyChallengeModel, PasskeyListModel, PasskeyModel, TokenModel};
 use appwrite_core::validators::{CustomId, uid};
 use appwrite_core::{Error, ErrorType, Result};
@@ -30,7 +30,8 @@ const LIMIT: usize = 10;
 const TOKEN_DURATION: i64 = 60;
 
 pub fn routes() -> Vec<Route> {
-    let ceremony = Labels { abuse_limit: 10, abuse_key: &["url:{url},userId:{userId}"], ..Labels::NONE };
+    let ceremony =
+        Labels { abuse: const { &[Limit::attempts(&["projectId", "url", "userId"], 10, 3600)] }, ..Labels::NONE };
     vec![
         route!(
             POST,

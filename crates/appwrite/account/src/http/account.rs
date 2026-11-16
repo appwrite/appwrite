@@ -6,7 +6,7 @@ use utopia_http::Response;
 use utopia_validators::{AllOf, Text, Validator};
 
 use appwrite_core::datetime;
-use appwrite_core::platform::{Audit, Context, Labels, Route};
+use appwrite_core::platform::{Audit, Context, Labels, Limit, Route};
 use appwrite_core::response::AccountModel;
 use appwrite_core::validators::{CustomId, PasswordDictionary, PasswordStrength};
 use appwrite_core::{Error, ErrorType, Result};
@@ -25,7 +25,11 @@ pub fn routes() -> Vec<Route> {
         None,
         Some(Audit { event: "user.create", resource: "user/{response.$id}" }),
         GROUPS_AUTH,
-        Labels { abuse_limit: 10, auth_type: "email-password", ..Labels::NONE },
+        Labels {
+            abuse: const { &[Limit::attempts(&["url", "ip"], 10, 3600)] },
+            auth_type: "email-password",
+            ..Labels::NONE
+        },
         create
     )]
 }

@@ -108,8 +108,8 @@ pub struct Context {
     /// The domain of the custom domain rule the request comes from, when it
     /// serves the project (the `rule` resource).
     pub rule: Option<hostnames::Rule>,
-    /// The abuse keys' parameters (`{projectId}`, `{ip}`, ...), for the
-    /// limits' reset after the action.
+    /// What the abuse limits are kept per (`Limit::values()`), for the
+    /// release of the failure limits after the action.
     pub abuse_params: Vec<(String, String)>,
     /// The keys of the account API key's user (see the `user` resource).
     pub account_keys: Vec<crate::database::project::Key>,

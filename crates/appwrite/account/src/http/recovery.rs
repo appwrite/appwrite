@@ -10,7 +10,7 @@ use utopia_validators::{AllOf, Boolean, Text, Validator, php};
 use appwrite_core::auth::otp_token::OtpToken;
 use appwrite_core::database::documents::{self, Attributes, Token, User};
 use appwrite_core::datetime;
-use appwrite_core::platform::{Context, Route};
+use appwrite_core::platform::{Context, Limit, Route};
 use appwrite_core::response::TokenModel;
 use appwrite_core::validators::{PasswordDictionary, PasswordStrength, uid};
 use appwrite_core::{Error, ErrorType, Result};
@@ -32,7 +32,14 @@ pub fn routes() -> Vec<Route> {
             audit("recovery.create", "user/{response.userId}"),
             create,
             crate::GROUPS,
-            abuse(&["url:{url},email:{param-email}", "url:{url},ip:{ip}"])
+            abuse(
+                const {
+                    &[
+                        Limit::attempts(&["projectId", "url", "param.email"], 10, 3600),
+                        Limit::attempts(&["url", "ip"], 10, 3600),
+                    ]
+                }
+            )
         ),
         profile_route!(
             PUT,
@@ -44,7 +51,7 @@ pub fn routes() -> Vec<Route> {
             audit("recovery.update", "user/{response.userId}"),
             update,
             crate::GROUPS,
-            abuse(&["url:{url},userId:{param-userId}"])
+            abuse(const { &[Limit::attempts(&["projectId", "url", "param.userId"], 10, 3600).everyone()] })
         ),
         profile_route!(
             POST,
@@ -56,7 +63,14 @@ pub fn routes() -> Vec<Route> {
             audit("recovery.create", "user/{response.userId}"),
             create_otp,
             crate::GROUPS,
-            abuse(&["url:{url},email:{param-email}", "url:{url},ip:{ip}"])
+            abuse(
+                const {
+                    &[
+                        Limit::attempts(&["projectId", "url", "param.email"], 10, 3600),
+                        Limit::attempts(&["url", "ip"], 10, 3600),
+                    ]
+                }
+            )
         ),
         profile_route!(
             PUT,
@@ -68,7 +82,7 @@ pub fn routes() -> Vec<Route> {
             audit("recovery.update", "user/{response.userId}"),
             update_otp,
             crate::GROUPS,
-            abuse(&["url:{url},userId:{param-userId}"])
+            abuse(const { &[Limit::attempts(&["projectId", "url", "param.userId"], 10, 3600).everyone()] })
         ),
     ]
 }

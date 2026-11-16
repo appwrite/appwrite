@@ -13,7 +13,7 @@ mod model;
 mod scan;
 
 use appwrite_core::action;
-use appwrite_core::platform::{Audit, Labels, Module, Route};
+use appwrite_core::platform::{Audit, Labels, Limit, Module, Route};
 use utopia_http::Method;
 
 /// The Storage module.
@@ -26,23 +26,16 @@ const FILE_READ: &[&str] = &["files.read"];
 const FILE_WRITE: &[&str] = &["files.write"];
 
 /// `APP_LIMIT_WRITE_RATE_DEFAULT` requests per `APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT`.
-const FILE_CREATE: Labels = Labels {
-    abuse_key: &["ip:{ip},method:{method},url:{url},userId:{userId},chunkId:{chunkId}"],
-    abuse_limit: 60,
-    abuse_time: 60,
-    ..Labels::NONE
-};
+const FILE_CREATE: Labels =
+    Labels { abuse: &[Limit::attempts(&["ip", "method", "url", "userId", "chunkId"], 60, 60)], ..Labels::NONE };
 
-const FILE_MUTATE: Labels = Labels {
-    abuse_key: &["ip:{ip},method:{method},url:{url},userId:{userId}"],
-    abuse_limit: 60,
-    abuse_time: 60,
-    ..Labels::NONE
-};
+const FILE_MUTATE: Labels =
+    Labels { abuse: &[Limit::attempts(&["ip", "method", "url", "userId"], 60, 60)], ..Labels::NONE };
 
 /// Preview responses are cached. The action's `Cache-Control` is 30 days;
 /// a hit is served by the context hook with its own max-age.
 const PREVIEW: Labels = Labels {
+    abuse: &[Limit::attempts(&["ip", "method", "url", "userId", "param.fileId"], 60, 60)],
     cache: true,
     cache_resource: "file/{request.fileId}",
     cache_resource_type: "bucket/{request.bucketId}",
@@ -260,9 +253,7 @@ mod tests {
         let routes = Storage.routes();
         assert_eq!(routes.len(), 14);
         let create = routes.iter().find(|r| r.name == "createFile").unwrap();
-        assert_eq!(create.labels.abuse_limit, 60);
-        assert_eq!(create.labels.abuse_time, 60);
-        assert!(create.labels.abuse_key[0].contains("chunkId:{chunkId}"));
+        assert_eq!(create.labels.abuse, &[Limit::attempts(&["ip", "method", "url", "userId", "chunkId"], 60, 60)]);
         let preview = routes.iter().find(|r| r.name == "getFilePreview").unwrap();
         assert!(preview.labels.cache);
         assert_eq!(preview.labels.cache_resource, "file/{request.fileId}");

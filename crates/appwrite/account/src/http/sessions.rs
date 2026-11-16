@@ -10,7 +10,7 @@ use utopia_validators::{Nullable, Range, Text, php};
 use appwrite_core::database::documents::{self, Session, User};
 use appwrite_core::database::filters;
 use appwrite_core::datetime;
-use appwrite_core::platform::{Audit, Context, Labels, Route};
+use appwrite_core::platform::{Audit, Context, Labels, Limit, Route};
 use appwrite_core::response::{SESSION_SENSITIVE, SessionListModel, SessionModel};
 use appwrite_core::validators::{CustomId, Password, uid};
 use appwrite_core::{Error, ErrorType, Result};
@@ -46,7 +46,7 @@ pub fn routes() -> Vec<Route> {
             EVENT_DELETE,
             Some(Audit { event: "session.delete", resource: "user/{user.$id}" }),
             GROUPS,
-            Labels { abuse_limit: 100, ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["url", "ip"], 100, 3600)] }, ..Labels::NONE },
             delete_all
         ),
         route!(
@@ -70,7 +70,11 @@ pub fn routes() -> Vec<Route> {
             EVENT_DELETE,
             Some(Audit { event: "session.delete", resource: "user/{user.$id}" }),
             &["api", "account", "mfa"],
-            Labels { abuse_limit: 100, impersonation: "allow", ..Labels::NONE },
+            Labels {
+                abuse: const { &[Limit::attempts(&["url", "ip"], 100, 3600)] },
+                impersonation: "allow",
+                ..Labels::NONE
+            },
             delete
         ),
         route!(
@@ -82,7 +86,7 @@ pub fn routes() -> Vec<Route> {
             Some("users.[userId].sessions.[sessionId].update"),
             Some(Audit { event: "session.update", resource: "user/{response.userId}" }),
             GROUPS,
-            Labels { abuse_limit: 10, ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["url", "ip"], 10, 3600)] }, ..Labels::NONE },
             update
         ),
         route!(
@@ -95,9 +99,12 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_AUTH_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["projectId:{projectId},url:{url},email:{param-email}"],
-                abuse_reset: &[201],
+                abuse: const {
+                    &[
+                        Limit::failures(&["projectId", "url", "param.email"], 10, 3600),
+                        Limit::failures(&["projectId", "url", "ip"], 100, 3600),
+                    ]
+                },
                 auth_type: "email-password",
                 ..Labels::NONE
             },
@@ -114,9 +121,12 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_AUTH_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["projectId:{projectId},url:{url},email:{param-email}"],
-                abuse_reset: &[201],
+                abuse: const {
+                    &[
+                        Limit::failures(&["projectId", "url", "param.email"], 10, 3600),
+                        Limit::failures(&["projectId", "url", "ip"], 100, 3600),
+                    ]
+                },
                 auth_type: "email-password",
                 ..Labels::NONE
             },
@@ -131,7 +141,7 @@ pub fn routes() -> Vec<Route> {
             EVENT_CREATE,
             AUDIT_CREATE,
             GROUPS_AUTH_SESSION,
-            Labels { abuse_limit: 50, abuse_key: &["ip:{ip}"], auth_type: "anonymous", ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["ip"], 50, 3600)] }, auth_type: "anonymous", ..Labels::NONE },
             anonymous
         ),
         route!(
@@ -144,9 +154,13 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["ip:{ip},userId:{param-userId}"],
-                abuse_reset: &[201],
+                abuse: const {
+                    &[
+                        Limit::failures(&["url", "ip", "param.userId"], 10, 3600).everyone(),
+                        Limit::failures(&["projectId", "url", "param.userId"], 10, 3600).everyone(),
+                        Limit::failures(&["projectId", "url", "ip"], 100, 3600),
+                    ]
+                },
                 ..Labels::NONE
             },
             token
@@ -161,9 +175,13 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["ip:{ip},userId:{param-userId}"],
-                abuse_reset: &[201],
+                abuse: const {
+                    &[
+                        Limit::failures(&["url", "ip", "param.userId"], 10, 3600).everyone(),
+                        Limit::failures(&["projectId", "url", "param.userId"], 10, 3600).everyone(),
+                        Limit::failures(&["projectId", "url", "ip"], 100, 3600),
+                    ]
+                },
                 ..Labels::NONE
             },
             magic_url
@@ -177,7 +195,15 @@ pub fn routes() -> Vec<Route> {
             EVENT_CREATE,
             AUDIT_CREATE,
             GROUPS_SESSION,
-            Labels { abuse_limit: 10, abuse_key: &["ip:{ip},userId:{param-userId}"], ..Labels::NONE },
+            Labels {
+                abuse: const {
+                    &[
+                        Limit::attempts(&["url", "ip", "param.userId"], 10, 3600).everyone(),
+                        Limit::attempts(&["projectId", "url", "param.userId"], 10, 3600).everyone(),
+                    ]
+                },
+                ..Labels::NONE
+            },
             token
         ),
         route!(
@@ -190,9 +216,7 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["url:{url},ip:{ip}"],
-                abuse_reset: &[201],
+                abuse: const { &[Limit::failures(&["projectId", "url", "ip"], 10, 3600)] },
                 session_allow_active: true,
                 ..Labels::NONE
             },
@@ -207,7 +231,7 @@ pub fn routes() -> Vec<Route> {
             None,
             None,
             GROUPS,
-            Labels { abuse_limit: 50, abuse_key: &["ip:{ip}"], error_page: true, ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["ip"], 50, 3600)] }, error_page: true, ..Labels::NONE },
             crate::oauth2::create_session
         ),
         route!(
@@ -247,8 +271,7 @@ pub fn routes() -> Vec<Route> {
             Some(Audit { event: "session.create", resource: "user/{user.$id}" }),
             &["api", "account", "session"],
             Labels {
-                abuse_limit: 50,
-                abuse_key: &["ip:{ip}"],
+                abuse: const { &[Limit::attempts(&["ip"], 50, 3600)] },
                 session_allow_active: true,
                 error_page: true,
                 ..Labels::NONE

@@ -10,7 +10,7 @@ use appwrite_core::auth::otp_token::OtpToken;
 use appwrite_core::database::documents::{self, Attributes, Challenge, Session, User};
 use appwrite_core::database::filters;
 use appwrite_core::datetime;
-use appwrite_core::platform::{Audit, Context, Labels, Route};
+use appwrite_core::platform::{Audit, Context, Labels, Limit, Route};
 use appwrite_core::response::{
     AccountModel, MfaChallengeModel, MfaFactorsModel, MfaRecoveryCodesModel, MfaTypeModel, SESSION_SENSITIVE,
     SessionModel,
@@ -25,11 +25,13 @@ const AUDIT_USER: Option<Audit> = Some(Audit { event: "user.update", resource: "
 const PROTECTED: &[&str] = &["api", "account", "mfaProtected"];
 
 pub fn routes() -> Vec<Route> {
-    let challenge =
-        Labels { abuse_limit: 10, abuse_key: &["url:{url},userId:{userId}"], impersonation: "allow", ..Labels::NONE };
+    let challenge = Labels {
+        abuse: const { &[Limit::attempts(&["projectId", "url", "userId"], 10, 3600)] },
+        impersonation: "allow",
+        ..Labels::NONE
+    };
     let confirm = Labels {
-        abuse_limit: 10,
-        abuse_key: &["url:{url},challengeId:{param-challengeId}"],
+        abuse: const { &[Limit::attempts(&["projectId", "url", "param.challengeId"], 10, 3600).everyone()] },
         impersonation: "allow",
         ..Labels::NONE
     };
@@ -83,7 +85,10 @@ pub fn routes() -> Vec<Route> {
             EVENT_MFA,
             AUDIT_USER,
             GROUPS,
-            Labels::NONE,
+            Labels {
+                abuse: const { &[Limit::attempts(&["projectId", "url", "userId"], 10, 3600).everyone()] },
+                ..Labels::NONE
+            },
             update_authenticator
         ),
         route!(

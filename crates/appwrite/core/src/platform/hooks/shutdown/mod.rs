@@ -63,8 +63,11 @@ struct Job {
     disabled_metrics: Vec<String>,
     /// The user whose session the request created (the session limit).
     session_user: Option<String>,
-    /// The abuse keys' parameters (the limits' reset).
+    /// What the abuse limits are kept per (the failure limits' release).
     abuse_params: Vec<(String, String)>,
+    /// A key or a privileged caller: exempt from the limits that do not
+    /// count for everyone.
+    abuse_trusted: bool,
     /// The response cache entry to write (`cache` routes).
     cache: Option<cache_write::Entry>,
     /// A function changed: its events cache is purged.
@@ -150,6 +153,7 @@ pub(in crate::platform) async fn schedule(
         functions_changed: listened.functions,
         cache,
         session_user,
+        abuse_trusted: roles::is_key(&ctx.roles) || roles::is_privileged(&ctx.roles),
         abuse_params: ctx.abuse_params,
         deletes: ctx.events.deletes,
         queued: ctx.events.queued,
@@ -174,7 +178,7 @@ impl Job {
         let project_payload = self.project.message_payload();
         let trimmed = project_payload.clone();
 
-        abuse_reset::abuse_reset(&self.state, self.route.labels, self.status.as_u16(), &self.abuse_params).await;
+        abuse_reset::abuse_reset(&self.state, self.route.labels, self.abuse_trusted, &self.abuse_params).await;
         self.cache_write().await;
         // The session limit only deletes rows and purges their cache, which
         // the work below neither reads nor orders against: it runs alongside.
