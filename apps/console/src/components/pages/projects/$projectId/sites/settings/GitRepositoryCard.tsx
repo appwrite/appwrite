@@ -58,9 +58,6 @@ export function GitRepositoryCard({
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
 
   // Form state
-  const [selectedBranch, setSelectedBranch] = useState(
-    site?.providerBranch || '',
-  )
   const [selectedDir, setSelectedDir] = useState(
     site?.providerRootDirectory || '',
   )
