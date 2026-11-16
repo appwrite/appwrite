@@ -203,6 +203,19 @@ mod tests {
         assert!(cipher.wrap(b"").is_err());
     }
 
+    /// A key wrapped and a segment sealed by PHP's `Cipher`
+    /// (`wrap('your-secret-key')`, `encrypt('hello segmented world', 3, true)`).
+    #[test]
+    fn opens_what_php_seals() {
+        use base64::Engine as _;
+        let b64 = |s: &str| base64::engine::general_purpose::STANDARD.decode(s).unwrap();
+        let wrapped = b64("NubhfyBOuiSVA5Korf9qFjiw73P+5iADs0Ha1VIKhLd+Xnl7L0b3gG2FC+sRvk6VWGBgDHMWhRXRHz6R");
+        let sealed = b64("iwUkpYZwIUH3M1qe4OgyjNDma4BsOQiCOsAFiNwG5l8uS86h7AJJmTX9amTfdi7fuw==");
+        let cipher = Cipher::unwrap(&wrapped, b"your-secret-key").unwrap();
+        assert_eq!(cipher.decrypt(&sealed, 3, true).unwrap(), b"hello segmented world");
+        assert!(cipher.decrypt(&sealed, 2, true).is_err());
+    }
+
     #[test]
     fn sizes_as_php() {
         assert_eq!(segments(0), 1);
