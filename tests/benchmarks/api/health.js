@@ -38,6 +38,7 @@ const bench = define({
         { name: 'health.version.get', route: 'GET /v1/health/version', weight: 3, run: (api, d) => api.call('GET', '/health/version', null, [200], d.guest) },
     ],
     skipped: [
+        { skipped: 'GET /v1/health/queue/videos', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'GET /v1/health/time', reason: 'queries the production NTP server time.google.com' },
         { skipped: 'GET /v1/health/certificate', reason: 'accepts only public domains and opens a TLS connection to the production host on port 443' },
     ],

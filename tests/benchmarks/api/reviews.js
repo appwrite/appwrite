@@ -7,6 +7,7 @@ const bench = define({
     scopes: [],
     scenarios: [],
     skipped: [
+        { skipped: 'PATCH /v1/reviews/repositories/:repositoryId/strength', reason: 'added on main after the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'GET /v1/reviews', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'GET /v1/reviews/:reviewId', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'GET /v1/reviews/:reviewId/events', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
