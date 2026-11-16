@@ -93,8 +93,8 @@ impl Stored {
 
     pub async fn read(&self, path: &str, offset: u64, length: Option<u64>) -> Result<Body> {
         match self {
-            Stored::Local(device) => device.read(path, offset, length, None).await.map_err(base::device_error),
-            Stored::S3(device) => device.read(path, offset, length, None).await.map_err(base::device_error),
+            Stored::Local(device) => device.read(path, offset, length, None, None).await.map_err(base::device_error),
+            Stored::S3(device) => device.read(path, offset, length, None, None).await.map_err(base::device_error),
         }
     }
 

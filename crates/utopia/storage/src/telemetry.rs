@@ -6,6 +6,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use async_trait::async_trait;
+use chrono::{DateTime, FixedOffset};
 use utopia_telemetry::{Histogram, Telemetry as Backend, Value};
 
 use crate::device::{self, Device, DeviceType, FileInfo, FileList, Metadata, Sink, UploadList};
@@ -157,8 +158,15 @@ impl Device for Telemetry {
         self.measure("abort", self.device.abort(path, upload_id)).await
     }
 
-    async fn read(&self, path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -> Result<Body> {
-        self.measure("read", self.device.read(path, offset, length, etag)).await
+    async fn read(
+        &self,
+        path: &str,
+        offset: u64,
+        length: Option<u64>,
+        etag: Option<&str>,
+        modified_since: Option<DateTime<FixedOffset>>,
+    ) -> Result<Body> {
+        self.measure("read", self.device.read(path, offset, length, etag, modified_since)).await
     }
 
     async fn stream(

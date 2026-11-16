@@ -161,7 +161,7 @@
       ]
     },
     "device.read": {
-      "doc": "(string) $device->read(path, offset, length, etag)",
+      "doc": "(string) $device->read(path, offset, length, etag, modifiedSince): `modified_since` (Unix seconds) or `modified_since_in` (seconds from now)",
       "covers": [
         "Utopia\\Storage\\Device\\Local::read",
         "Utopia\\Storage\\Device\\S3::read",
@@ -1181,6 +1181,88 @@
           }
         }
       ]
+    },
+    "cipher.new": {
+      "doc": "new Cipher(key)",
+      "covers": [
+        "Utopia\\Storage\\Cipher::__construct"
+      ]
+    },
+    "cipher.generate": {
+      "doc": "Cipher::generate()",
+      "covers": [
+        "Utopia\\Storage\\Cipher::generate"
+      ]
+    },
+    "cipher.encrypt": {
+      "doc": "$cipher->encrypt(data, index, last), held as a blob (`pattern`: that many bytes of (i * 31 + 7) % 256)",
+      "covers": [
+        "Utopia\\Storage\\Cipher::encrypt"
+      ]
+    },
+    "cipher.decrypt": {
+      "doc": "$cipher->decrypt(data (a blob or bytes), index, last); with `digest` its size and MD5",
+      "covers": [
+        "Utopia\\Storage\\Cipher::decrypt"
+      ]
+    },
+    "cipher.wrap": {
+      "doc": "$cipher->wrap(master), held as a blob",
+      "covers": [
+        "Utopia\\Storage\\Cipher::wrap"
+      ]
+    },
+    "cipher.unwrap": {
+      "doc": "Cipher::unwrap(wrapped (a blob or bytes), master)",
+      "covers": [
+        "Utopia\\Storage\\Cipher::unwrap"
+      ]
+    },
+    "cipher.range": {
+      "doc": "$cipher->range(device, path, size, start, end); with `digest` its size and MD5",
+      "covers": [
+        "Utopia\\Storage\\Cipher::range"
+      ]
+    },
+    "cipher.stream": {
+      "doc": "$cipher->stream(device, path, size, sink): what the sink received; with `digest` its size and MD5",
+      "covers": [
+        "Utopia\\Storage\\Cipher::stream"
+      ]
+    },
+    "cipher.copy": {
+      "doc": "$cipher->copy(device, path, size, to, target, content_type, chunk)",
+      "covers": [
+        "Utopia\\Storage\\Cipher::copy"
+      ]
+    },
+    "cipher.sizes": {
+      "doc": "Cipher::segments(size), Cipher::size(size), Cipher::offset(index) and the constants",
+      "covers": [
+        "Utopia\\Storage\\Cipher::segments",
+        "Utopia\\Storage\\Cipher::size",
+        "Utopia\\Storage\\Cipher::offset"
+      ]
+    },
+    "blob.size": {
+      "doc": "strlen() of a blob",
+      "covers": []
+    },
+    "blob.slice": {
+      "doc": "substr() of a blob, as a blob",
+      "covers": []
+    },
+    "blob.concat": {
+      "doc": "blobs joined, as a blob",
+      "covers": []
+    },
+    "blob.flip": {
+      "doc": "a blob with byte `at` changed (to 'b' if it is 'a', else to 'a')",
+      "covers": []
+    },
+    "blob.store": {
+      "doc": "$device->write(path, blob, 'application/octet-stream')",
+      "covers": []
     }
   },
   "generators": {},

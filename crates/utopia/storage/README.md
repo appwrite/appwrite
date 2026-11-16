@@ -33,7 +33,7 @@ let path = device.path("hello.txt");
 let etag = device.write(&path, Body::from("Hello World"), "text/plain").await?;
 assert_eq!(etag, "b10a8db164e0754105b7a99be72e3fe5");
 
-let world = device.read(&path, 6, Some(5), None).await?.bytes().await.unwrap();
+let world = device.read(&path, 6, Some(5), None, None).await?.bytes().await.unwrap();
 assert_eq!(&world[..], b"World");
 ```
 
@@ -51,7 +51,7 @@ let mut metadata = Metadata::default();
 device.upload(Body::from("BBBB"), &path, "video/mp4", 2, 2, &mut metadata).await?;
 let received = device.upload(Body::from("AAAA"), &path, "video/mp4", 1, 2, &mut metadata).await?;
 assert_eq!(received, 2);
-assert_eq!(&device.read(&path, 0, None, None).await?.bytes().await.unwrap()[..], b"AAAABBBB");
+assert_eq!(&device.read(&path, 0, None, None, None).await?.bytes().await.unwrap()[..], b"AAAABBBB");
 ```
 
 ## Write only where nothing is

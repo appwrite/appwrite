@@ -562,6 +562,82 @@
           }
         }
       ]
+    },
+    {
+      "name": "a read since a time reaches the decorated device",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "u"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry-since.txt",
+            "data": "two",
+            "content_type": "text/plain"
+          },
+          "expect": "b8a9f715dbb64fd5c56e7783c6820a61"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry-since.txt",
+            "modified_since_in": 3600
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotModifiedException",
+              "message": "File /tmp/compat-fs/${ns}/disk/telemetry-since.txt has not been modified"
+            }
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry-since.txt",
+            "modified_since": 1
+          },
+          "expect": "two"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "u"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry-since.txt"
+          },
+          "expect": true
+        }
+      ]
     }
   ]
 }

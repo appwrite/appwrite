@@ -26,6 +26,7 @@ use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use Utopia\Psr7\Uri;
 use Utopia\Storage\Acl;
+use Utopia\Storage\Cipher;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\AWS;
 use Utopia\Storage\Device\Backblaze;
@@ -139,7 +140,7 @@ final class Adapter implements Base, Benchmarks
                 try {
                     $result = match ($a['call']) {
                         'write' => $device->write($a['path'], new Stream($a['data']), $a['content_type']),
-                        'read' => $device->read($a['path'], $a['offset'], $a['length'])->getContents(),
+                        'read' => $device->read($a['path'], $a['offset'], $a['length'], modifiedSince: self::modifiedSince($a))->getContents(),
                         'delete' => $device->delete($a['path']),
                         'list' => self::fileList($device->listFiles($a['path'], 1000, $a['cursor'] ?? null)),
                         'info' => self::fileInfo($device->getFileInfo($a['path'])),
@@ -181,6 +182,52 @@ final class Adapter implements Base, Benchmarks
                 }
             }),
             'device.abort' => fn (array $a, Session $s) => self::run($a, fn () => self::device($a, $s)->abort($a['path'], $a['upload_id'] ?? '')),
+            'cipher.new' => fn (array $a, Session $s) => $s->handle(new Cipher($a['key'])),
+            'cipher.generate' => fn (array $a, Session $s) => $s->handle(Cipher::generate()),
+            'cipher.encrypt' => fn (array $a, Session $s) => $s->handle(new CipherBlob(self::cipher($a, $s)->encrypt(self::plain($a), $a['index'], $a['last']))),
+            'cipher.decrypt' => fn (array $a, Session $s) => self::digest($a, self::cipher($a, $s)->decrypt(self::blob($a['data'], $s), $a['index'], $a['last'])),
+            'cipher.wrap' => fn (array $a, Session $s) => $s->handle(new CipherBlob(self::cipher($a, $s)->wrap($a['master']))),
+            'cipher.unwrap' => fn (array $a, Session $s) => $s->handle(Cipher::unwrap(self::blob($a['wrapped'], $s), $a['master'])),
+            'cipher.range' => fn (array $a, Session $s) => self::digest($a, self::cipher($a, $s)->range(self::device($a, $s), $a['path'], $a['size'], $a['start'], $a['end'])),
+            'cipher.stream' => function (array $a, Session $s) {
+                $received = '';
+                self::cipher($a, $s)->stream(self::device($a, $s), $a['path'], $a['size'], static function (string $chunk) use (&$received): void {
+                    $received .= $chunk;
+                });
+
+                return self::digest($a, $received);
+            },
+            'cipher.copy' => function (array $a, Session $s) {
+                $to = $s->get($a['to']);
+                if (! $to instanceof Device) {
+                    throw new Fault('not a device');
+                }
+                self::cipher($a, $s)->copy(self::device($a, $s), $a['path'], $a['size'], $to, $a['target'], $a['content_type'], $a['chunk']);
+
+                return null;
+            },
+            'cipher.sizes' => fn (array $a, Session $s) => [
+                'segments' => Cipher::segments($a['size']),
+                'size' => Cipher::size($a['size']),
+                'offset' => Cipher::offset($a['index']),
+                'name' => Cipher::NAME,
+                'segment' => Cipher::SEGMENT,
+                'overhead' => Cipher::OVERHEAD,
+            ],
+            'blob.size' => fn (array $a, Session $s) => \strlen(self::blob($a['blob'], $s)),
+            'blob.slice' => fn (array $a, Session $s) => $s->handle(new CipherBlob(\substr(self::blob($a['blob'], $s), $a['from'], $a['length'] ?? null))),
+            'blob.concat' => fn (array $a, Session $s) => $s->handle(new CipherBlob(\implode('', \array_map(fn ($b) => self::blob($b, $s), $a['blobs'])))),
+            'blob.flip' => function (array $a, Session $s) {
+                $data = self::blob($a['blob'], $s);
+                $data[$a['at']] = $data[$a['at']] === 'a' ? 'b' : 'a';
+
+                return $s->handle(new CipherBlob($data));
+            },
+            'blob.store' => function (array $a, Session $s) {
+                self::device($a, $s)->write($a['path'], new Stream(self::blob($a['blob'], $s)), 'application/octet-stream');
+
+                return null;
+            },
             'device.read' => fn (array $a, Session $s) => self::run($a, fn () => self::read($a, $s)->getContents()),
             'device.read_digest' => fn (array $a, Session $s) => self::run($a, function () use ($a, $s) {
                 $data = self::read($a, $s)->getContents();
@@ -446,9 +493,71 @@ final class Adapter implements Base, Benchmarks
         return $metadata instanceof \ArrayObject ? $metadata : throw new Fault('not metadata');
     }
 
+    /**
+     * Bytes as they are, or with `digest` their size and MD5.
+     */
+    private static function digest(array $a, string $data): string|array
+    {
+        return ($a['digest'] ?? false) ? ['size' => \strlen($data), 'md5' => md5($data)] : $data;
+    }
+
+    private static function cipher(array $a, Session $s): Cipher
+    {
+        $cipher = $s->get($a['cipher']);
+
+        return $cipher instanceof Cipher ? $cipher : throw new Fault('not a cipher');
+    }
+
+    /**
+     * Bytes a cipher op takes: a blob handle, or bytes.
+     */
+    private static function blob(mixed $value, Session $s): string
+    {
+        if (\is_array($value) && isset($value['$handle'])) {
+            $blob = $s->get($value);
+
+            return $blob instanceof CipherBlob ? $blob->data : throw new Fault('not a blob');
+        }
+
+        return \is_string($value) ? $value : throw new Fault('expected bytes');
+    }
+
+    /**
+     * The plaintext of an encrypt: `data`, or `pattern` bytes of (i * 31 + 7) % 256.
+     */
+    private static function plain(array $a): string
+    {
+        if (isset($a['pattern'])) {
+            $out = '';
+            for ($i = 0; $i < $a['pattern']; $i++) {
+                $out .= \chr(($i * 31 + 7) % 256);
+            }
+
+            return $out;
+        }
+
+        return $a['data'];
+    }
+
     private static function read(array $a, Session $s): StreamInterface
     {
-        return self::device($a, $s)->read($a['path'], $a['offset'] ?? 0, $a['length'] ?? null, $a['etag'] ?? null);
+        return self::device($a, $s)->read($a['path'], $a['offset'] ?? 0, $a['length'] ?? null, $a['etag'] ?? null, self::modifiedSince($a));
+    }
+
+    /**
+     * The time a read is conditional on: `modified_since` (Unix seconds), or
+     * `modified_since_in` seconds from now.
+     */
+    private static function modifiedSince(array $a): ?\DateTimeImmutable
+    {
+        if (isset($a['modified_since'])) {
+            return new \DateTimeImmutable('@' . $a['modified_since']);
+        }
+        if (isset($a['modified_since_in'])) {
+            return new \DateTimeImmutable('@' . (\time() + $a['modified_since_in']));
+        }
+
+        return null;
     }
 
     /**
@@ -895,5 +1004,13 @@ final class UnseekableStream implements StreamInterface
     public function getMetadata(?string $key = null): mixed
     {
         return null;
+    }
+}
+
+/** Ciphertext or a wrapped key held for later steps. */
+final readonly class CipherBlob
+{
+    public function __construct(public string $data)
+    {
     }
 }
