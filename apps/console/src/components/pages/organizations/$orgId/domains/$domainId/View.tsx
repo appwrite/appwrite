@@ -246,22 +246,28 @@ export function View({ initialData }: ViewProps = {}) {
       ? getDomainTransferStatusBadgeConfig(effectiveTransferStatus)
       : null
 
-  // Fetch DNS records (use initialData only when no filters so we don't show unfiltered data when filtered)
+  // Fetch DNS records. The loader snapshot fills in only before this query
+  // resolves, and never when filters are on (that snapshot is unfiltered).
+  // A resolved empty page, including after delete, must not bring it back.
   const hasRecordFilters = (filterQueries?.length ?? 0) > 0
-  const { dnsRecords: recordsFromHook, total: recordsTotalFromHook } =
-    useDomainRecords(
-      domainId,
-      pageIndexed,
-      pageSize,
-      filterQueries,
-      recordsSortBy,
-      recordsSortOrder,
-    )
+  const {
+    dnsRecords: recordsFromHook,
+    total: recordsTotalFromHook,
+    isSuccess: recordsLoaded,
+  } = useDomainRecords(
+    domainId,
+    pageIndexed,
+    pageSize,
+    filterQueries,
+    recordsSortBy,
+    recordsSortOrder,
+  )
   const isFirstPage = currentPage === 1
   const canUseInitialRecords =
     isFirstPage &&
     initialData?.records &&
     !hasRecordFilters &&
+    !recordsLoaded &&
     !recordsFromHook?.length
   const rawRecords =
     canUseInitialRecords && initialData?.records
@@ -290,9 +296,19 @@ export function View({ initialData }: ViewProps = {}) {
     return [...lockedRecords, ...unlockedRecords]
   }, [rawRecords])
   const recordsTotal =
-    isFirstPage && initialData?.records && !hasRecordFilters
-      ? (recordsTotalFromHook ?? initialData.records.total)
+    canUseInitialRecords && initialData?.records
+      ? initialData.records.total
       : (recordsTotalFromHook ?? 0)
+
+  // Deleting the last rows of a later page leaves that page empty while
+  // earlier pages still have records. Step back so the list and the count
+  // stay on the same page.
+  useEffect(() => {
+    if (!recordsLoaded || currentPage <= 1) return
+    if ((recordsFromHook?.length ?? 0) > 0) return
+    if ((recordsTotalFromHook ?? 0) === 0) return
+    setCurrentPage(1)
+  }, [recordsLoaded, currentPage, recordsFromHook, recordsTotalFromHook])
 
   // Nameserver delegation of the zone, not a project domain's verification;
   // short enough for one metadata column
