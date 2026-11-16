@@ -31,6 +31,7 @@ impl Job {
             "hostname": self.request.hostname,
             "sdk": self.request.sdk,
             "sdkVersion": self.request.sdk_version,
+            "reason": self.request.reason,
         });
         self.publish(&self.state.config.queue_audits, &message).await;
     }

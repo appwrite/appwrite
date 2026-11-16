@@ -13,6 +13,18 @@ use crate::database::Databases;
 use crate::database::documents::Attributes;
 use crate::event::{self, FunctionMessage, WebhookMessage};
 
+/// The membership payload fields the project's membership privacy policy
+/// governs: the field, the `auths` setting that makes it visible and that
+/// setting's default for older projects (as the read endpoints apply it).
+const MEMBERSHIP_PRIVACY: [(&str, &str, bool); 6] = [
+    ("userName", "membershipsUserName", true),
+    ("userEmail", "membershipsUserEmail", true),
+    ("userPhone", "membershipsUserPhone", true),
+    ("userId", "membershipsUserId", true),
+    ("mfa", "membershipsMfa", true),
+    ("userAccessedAt", "membershipsUserAccessedAt", false),
+];
+
 impl Job {
     pub(super) async fn realtime(&self, events: &[String], user_id: Option<&str>, payload: &RawValue) {
         let Some(first) = events.first() else { return };
@@ -36,13 +48,15 @@ impl Job {
         // a console user's connections end with their access.
         let allowed_on_console = self.route.groups.iter().any(|g| event::CONSOLE_ALLOWLIST.contains(g));
         if !self.project.is_console() || allowed_on_console {
-            if self.sensitive.is_empty() {
+            let hidden = self.hidden_membership_fields(events.first().map(String::as_str).unwrap_or(""));
+            if self.sensitive.is_empty() && hidden.is_empty() {
                 self.realtime(events, user_id, &payload).await;
             } else {
-                // `Realtime::getRealtimePayload()`: the sensitive keys left out.
+                // `Realtime::getRealtimePayload()`: the sensitive keys, and the
+                // membership fields the project's privacy policy hides, left out.
                 let mut trimmed: serde_json::Map<String, Value> =
                     serde_json::from_slice(&self.payload).unwrap_or_default();
-                trimmed.retain(|k, _| !self.sensitive.contains(&k.as_str()));
+                trimmed.retain(|k, _| !self.sensitive.contains(&k.as_str()) && !hidden.contains(&k.as_str()));
                 let bytes = Bytes::from(crate::json::to_vec(&Value::Object(trimmed)));
                 self.realtime(events, user_id, &raw(&bytes)).await;
             }
@@ -67,6 +81,22 @@ impl Job {
             };
             self.publish(&self.state.config.queue_webhooks, &message).await;
         }
+    }
+
+    /// `Realtime::hiddenMembershipFields()`: a membership event goes to
+    /// `team:{teamId}`, which every confirmed member holds, while the payload
+    /// was rendered for the writer; the project's privacy policy is applied
+    /// again, with no privileged or self exemption.
+    fn hidden_membership_fields(&self, event: &str) -> Vec<&'static str> {
+        let mut parts = event.split('.');
+        if parts.next() != Some("teams") || parts.nth(1) != Some("memberships") {
+            return Vec::new();
+        }
+        MEMBERSHIP_PRIVACY
+            .iter()
+            .filter(|(_, setting, default)| !self.project.auth_bool(setting, *default))
+            .map(|(field, _, _)| *field)
+            .collect()
     }
 
     /// The project's functions events cache key (none for the console).
