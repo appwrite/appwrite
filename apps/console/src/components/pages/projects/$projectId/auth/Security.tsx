@@ -52,7 +52,7 @@ import {
 import { useT } from '@/lib/i18n/translate'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 
-const SESSION_LENGTH_UNITS: TimeUnit[] = [
+export const SESSION_LENGTH_UNITS: TimeUnit[] = [
   'weeks',
   'days',
   'hours',

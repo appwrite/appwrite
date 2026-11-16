@@ -417,6 +417,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_LDAP_DIRECTORY_ERROR => [
+        'name' => Exception::USER_LDAP_DIRECTORY_ERROR,
+        'description' => 'The LDAP directory could not be reached or refused the service account.',
+        'code' => 424,
+    ],
     Exception::USER_OAUTH2_PROVIDER_FAILURE => [
         'name' => Exception::USER_OAUTH2_PROVIDER_FAILURE,
         'description' => '%s couldn\'t complete sign-in (%s). Please try again.',
@@ -1316,6 +1321,11 @@ return [
         'description' => 'Provided SMTP config is invalid. Please check the configured values and try again.',
         'code' => 400,
     ],
+    Exception::PROJECT_LDAP_CONFIG_INVALID => [
+        'name' => Exception::PROJECT_LDAP_CONFIG_INVALID,
+        'description' => 'Provided LDAP config is invalid. Please check the configured values and try again.',
+        'code' => 400,
+    ],
     Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
         'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
         'description' => 'You can\'t delete default template. If you are trying to reset your template changes, you can ignore this error as it\'s already been reset.',
@@ -1704,6 +1714,103 @@ return [
         'name' => Exception::REPORT_ALREADY_EXISTS,
         'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
+    ],
+
+    /** Videos */
+    Exception::VIDEO_NOT_FOUND => [
+        'name' => Exception::VIDEO_NOT_FOUND,
+        'description' => 'Video with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_NOT_VALID => [
+        'name' => Exception::VIDEO_NOT_VALID,
+        'description' => 'The requested file is not a valid video or audio file.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_PROFILE_NOT_FOUND => [
+        'name' => Exception::VIDEO_PROFILE_NOT_FOUND,
+        'description' => 'Video profile with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_PROFILE_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_PROFILE_ALREADY_EXISTS,
+        'description' => 'A video profile with the same width, height, bitrates, and codec already exists.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_CODEC_DISABLED => [
+        'name' => Exception::VIDEO_CODEC_DISABLED,
+        'description' => 'The requested video codec is not enabled on this instance.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_CODEC_OUTPUT_UNSUPPORTED => [
+        'name' => Exception::VIDEO_CODEC_OUTPUT_UNSUPPORTED,
+        'description' => 'The requested output format is not supported for this video codec.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_RENDITION_NOT_FOUND => [
+        'name' => Exception::VIDEO_RENDITION_NOT_FOUND,
+        'description' => 'Video rendition with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_RENDITION_ALREADY_EXISTS => [
+        'name' => Exception::VIDEO_RENDITION_ALREADY_EXISTS,
+        'description' => 'A rendition with the same profile and output already exists for this video. Delete it before creating again.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_RENDITION_IN_PROGRESS => [
+        'name' => Exception::VIDEO_RENDITION_IN_PROGRESS,
+        'description' => 'Cannot delete a video or rendition while a rendition is still being encoded. Wait for the job to finish, or wait until a stuck rendition is older than the retention window.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND => [
+        'name' => Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND,
+        'description' => 'Video rendition segment with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_CAPTION_NOT_FOUND => [
+        'name' => Exception::VIDEO_CAPTION_NOT_FOUND,
+        'description' => 'Video caption with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_CAPTION_NOT_VALID => [
+        'name' => Exception::VIDEO_CAPTION_NOT_VALID,
+        'description' => 'The requested file is not a valid caption file.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_CAPTION_IN_PROGRESS => [
+        'name' => Exception::VIDEO_CAPTION_IN_PROGRESS,
+        'description' => 'Cannot delete a caption while it is processing. Wait for the job to finish, or wait until a stuck caption is older than the retention window.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND => [
+        'name' => Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND,
+        'description' => 'Video caption segment with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_LANGUAGE_CODE_NOT_VALID => [
+        'name' => Exception::VIDEO_LANGUAGE_CODE_NOT_VALID,
+        'description' => 'The caption language code is not a valid ISO 639-2 code.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_THUMBNAIL_NOT_FOUND => [
+        'name' => Exception::VIDEO_THUMBNAIL_NOT_FOUND,
+        'description' => 'Video thumbnail with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_TIMELINES_NOT_FOUND => [
+        'name' => Exception::VIDEO_TIMELINES_NOT_FOUND,
+        'description' => 'Video timeline could not be found. The video may still be processing.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_TIMELINE_IN_PROGRESS => [
+        'name' => Exception::VIDEO_TIMELINE_IN_PROGRESS,
+        'description' => 'Cannot delete a video while its timeline is being generated. Wait for the job to finish, or wait until a stuck timeline is older than the retention window.',
+        'code' => 409,
+    ],
+    Exception::VIDEO_SECOND_OUT_OF_RANGE => [
+        'name' => Exception::VIDEO_SECOND_OUT_OF_RANGE,
+        'description' => 'The requested second is outside the video duration range.',
+        'code' => 400,
     ],
 
     /** Reviews */

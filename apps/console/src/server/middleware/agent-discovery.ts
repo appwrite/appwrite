@@ -1,4 +1,5 @@
 import { createMiddleware } from '@tanstack/react-start'
+import { A2A_AGENT_CARD_PATH, buildAgentCard } from '@/lib/a2a/agent'
 import {
   APPWRITE_AI_CATALOG_PATH,
   APPWRITE_ARD_PATH,
@@ -7,11 +8,14 @@ import {
   APPWRITE_API_CATALOG_PATH,
   API_CATALOG_CONTENT_TYPE,
   DISCOVERY_CORS_HEADERS,
+  APPWRITE_MCP_DOCS_SERVER_CARD_PATH,
   APPWRITE_MCP_SERVER_CARD_PATH,
   MCP_SERVER_CARD_CONTENT_TYPE,
   buildAgentSkillsDiscoveryDocument,
   buildAiCatalogDocument,
+  buildArdDocument,
   buildApiCatalogDocument,
+  buildMcpDocsServerCard,
   buildMcpServerCard,
   discoveryJsonResponse,
   serializeDiscoveryJson,
@@ -26,13 +30,21 @@ const DISCOVERY_HANDLERS: Record<
     contentType: MCP_SERVER_CARD_CONTENT_TYPE,
     body: () => serializeDiscoveryJson(buildMcpServerCard()),
   },
+  [APPWRITE_MCP_DOCS_SERVER_CARD_PATH]: {
+    contentType: MCP_SERVER_CARD_CONTENT_TYPE,
+    body: () => serializeDiscoveryJson(buildMcpDocsServerCard()),
+  },
   [APPWRITE_ARD_PATH]: {
     contentType: ARD_CONTENT_TYPE,
-    body: () => serializeDiscoveryJson(buildAiCatalogDocument()),
+    body: () => serializeDiscoveryJson(buildArdDocument()),
   },
   [APPWRITE_AI_CATALOG_PATH]: {
     contentType: ARD_CONTENT_TYPE,
     body: () => serializeDiscoveryJson(buildAiCatalogDocument()),
+  },
+  [A2A_AGENT_CARD_PATH]: {
+    contentType: 'application/json; charset=utf-8',
+    body: () => serializeDiscoveryJson(buildAgentCard()),
   },
   [APPWRITE_API_CATALOG_PATH]: {
     contentType: API_CATALOG_CONTENT_TYPE,

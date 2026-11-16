@@ -1,8 +1,5 @@
 //! `serialize`, `unserialize` and `var_export`, in PHP 8.5's formats.
 //!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `serialize.*`).
-//!
 //! | PHP | Rust |
 //! |---|---|
 //! | `serialize($value)` | [`serialize`] ([`Value`]) |

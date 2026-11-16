@@ -45,6 +45,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Delete as DeleteSess
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Email\Create as CreateEmailPasswordSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Get as GetSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken\Create as CreateIdTokenSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\LDAP\Create as CreateLDAPSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\MagicURL\Update as UpdateMagicURLSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Create as CreateOAuth2Callback;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Get as GetOAuth2Callback;
@@ -145,6 +146,7 @@ class Http extends Service
             ->addAction('updatePasskey', UpdatePasskey::class)
             ->addAction('listMemberships', ListMemberships::class)
             ->addAction('createPasskeyToken', CreatePasskeyToken::class)
-            ->addAction('updatePasskeyToken', UpdatePasskeyToken::class);
+            ->addAction('updatePasskeyToken', UpdatePasskeyToken::class)
+            ->addAction('createLDAPSession', CreateLDAPSession::class);
     }
 }

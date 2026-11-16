@@ -127,6 +127,16 @@ class Update extends Action
             throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
         }
 
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $session->getAttribute('userId')));
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_DEVICE_SESSION_NOT_FOUND);
+        }
+
+        if ($user->getAttribute('status') === false) {
+            throw new Exception(Exception::USER_BLOCKED);
+        }
+
         $protocol = $request->getProtocol();
 
         // Session secrets are hashed, so the original can never be put back into a cookie. Switching
@@ -146,8 +156,6 @@ class Update extends Action
             'activeSessionId' => $session->getId(),
             'activeSessionInternalId' => $session->getSequence(),
         ])));
-
-        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $session->getAttribute('userId')));
 
         $dbForProject->purgeCachedDocument('users', $session->getAttribute('userId'));
 

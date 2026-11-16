@@ -135,6 +135,10 @@ If you would like to help us extend our platforms and SDKs stack, you are more t
 
 # Project environments {% #environments %}
 
+{% info title="Beta" %}
+Project environments are in beta. They are available on the Pro plan and above, with up to 3 environments per project.
+{% /info %}
+
 On Appwrite Cloud, a project can have environments, such as `staging`, each with its own resources and users. An environment has no project ID of its own. To act in one, keep the ID of the project it belongs to in `setProject` and add the environment's ID with `setEnvironment`. Leave `setEnvironment` out to act in the project itself.
 
 {% tabs %}

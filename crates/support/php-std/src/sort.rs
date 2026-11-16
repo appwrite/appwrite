@@ -2,9 +2,6 @@
 //! `array_diff`, `array_intersect`, `in_array` and `array_search`, with the
 //! `SORT_*` flags.
 //!
-//! Every function here is checked against the engine by
-//! `bin/compat fuzz php-std` (operations `sort.*`).
-//!
 //! | PHP | Rust |
 //! |---|---|
 //! | `sort($a, $flags)` | [`sort`] |

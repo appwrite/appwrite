@@ -59,7 +59,7 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@29f47cf3489e7da429ef3017d9a7f9105578a98b",
+    "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@d3e8a304d3a7cb63ac5f53adb937057145302586",
     "@appwrite.io/specs": "github:appwrite/specs#9a50097dd538fd7663748aceed37fa05692bc5e4",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

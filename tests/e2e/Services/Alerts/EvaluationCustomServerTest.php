@@ -185,6 +185,8 @@ final class EvaluationCustomServerTest extends Scope
         // The monitor is critical, so its firing rings with the critical sound.
         $this->assertTrue($push['critical']);
         $this->assertSame('siren.caf', $push['sound']);
+        // Mutable content lets the app's notification service extension add to it before iOS shows it.
+        $this->assertTrue($push['mutableContent']);
         $this->assertSame('alert', $push['data']['type']);
         $this->assertSame('critical', $push['data']['severity']);
         $this->assertSame($firing['alertId'], $push['data']['alertId']);
@@ -317,19 +319,30 @@ final class EvaluationCustomServerTest extends Scope
         foreach ([$first, $second, $removed, $quiet['device']] as $device) {
             $pushes = $this->pushes($device['token'], $tag);
             $this->assertCount(1, $pushes, $device['token']);
-            $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
             $this->assertSame('high', $pushes[0]['priority']);
-            $this->assertSame($tag, $pushes[0]['tag']);
             if (\ctype_xdigit($device['token'])) {
                 $this->assertSame(PushService::APNS->value, $pushes[0]['service']);
+                $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
+                $this->assertSame($tag, $pushes[0]['tag']);
                 $this->assertTrue($pushes[0]['critical']);
                 $this->assertSame('siren.caf', $pushes[0]['sound']);
+                $this->assertTrue($pushes[0]['mutableContent']);
                 $this->assertArrayNotHasKey('channelId', $pushes[0]);
             } else {
+                // Data-only, so the app draws it even in the background, under the keys Expo reads.
                 $this->assertSame(PushService::FCM->value, $pushes[0]['service']);
-                $this->assertSame('critical', $pushes[0]['channelId']);
+                $this->assertArrayNotHasKey('title', $pushes[0]);
+                $this->assertArrayNotHasKey('body', $pushes[0]);
+                $this->assertArrayNotHasKey('tag', $pushes[0]);
+                $this->assertArrayNotHasKey('channelId', $pushes[0]);
                 $this->assertArrayNotHasKey('critical', $pushes[0]);
                 $this->assertArrayNotHasKey('sound', $pushes[0]);
+                $this->assertArrayNotHasKey('mutableContent', $pushes[0]);
+                $this->assertSame('Firing: ' . $name, $pushes[0]['data']['title']);
+                $this->assertNotSame('', $pushes[0]['data']['message']);
+                $this->assertSame($tag, $pushes[0]['data']['tag']);
+                $this->assertSame('critical', $pushes[0]['data']['channelId']);
+                $this->assertSame('alert', $pushes[0]['data']['type']);
             }
         }
         // Owners who muted the organization or the project get none.
@@ -346,12 +359,12 @@ final class EvaluationCustomServerTest extends Scope
         foreach ([$first, $second] as $device) {
             $resolved = \array_values(\array_filter($this->pushes($device['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'));
             $this->assertCount(1, $resolved);
-            $this->assertSame('Resolved: ' . $name, $resolved[0]['title']);
+            $this->assertSame('Resolved: ' . $name, $resolved[0]['title'] ?? $resolved[0]['data']['title']);
             $this->assertArrayNotHasKey('critical', $resolved[0]);
             $this->assertArrayNotHasKey('sound', $resolved[0]);
         }
         // A resolved push on Android goes on the normal channel.
-        $this->assertSame('alerts', \array_values(\array_filter($this->pushes($second['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'))[0]['channelId']);
+        $this->assertSame('alerts', \array_values(\array_filter($this->pushes($second['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'))[0]['data']['channelId']);
         $this->assertCount(1, $this->pushes($quiet['device']['token'], $tag));
 
         // Signing out of a phone, or removing its target, stops its pushes.

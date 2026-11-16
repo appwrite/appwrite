@@ -1688,6 +1688,40 @@ final class StorageCustomServerTest extends Scope
         \unlink($binary);
         $this->assertEquals(400, $file['headers']['status-code']);
         $this->assertEquals('storage_file_type_unsupported', $file['body']['type']);
+
+        // A resent first chunk replaces the stored bytes along with the type checked against the bucket.
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1024;
+        $png = \file_get_contents(realpath(__DIR__ . '/../../../resources/logo.png'));
+        $pdf = \file_get_contents(realpath(__DIR__ . '/../../../resources/document.pdf'));
+        $fileId = Id::unique();
+        $upload = function (string $range, string $body) use ($bucketId, $fileId): array {
+            $chunk = \tempnam(\sys_get_temp_dir(), 'chunk');
+            \file_put_contents($chunk, $body);
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+                'x-appwrite-id' => $fileId,
+            ], $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => new CURLFile($chunk, 'image/png', 'resent.png'),
+            ]);
+            \unlink($chunk);
+
+            return $file;
+        };
+
+        $first = 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize;
+        $file = $upload($first, \str_pad($pdf, $chunkSize, "\0"));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $file = $upload($first, \str_pad($png, $chunkSize, "\0"));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $file = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, \str_repeat("\0", 1024));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertSame('image/png', $file['body']['mimeType']);
+
+        $this->assertSame(\substr($png, 0, 8), \substr($this->downloadFile($bucketId, $fileId), 0, 8));
     }
 
     public function testIdleChunkedUploadDeletedByMaintenance(): void

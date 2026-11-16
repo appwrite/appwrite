@@ -4,10 +4,8 @@
 //! that behaviour comes from the PHP engine rather than the library: type
 //! juggling, `is_numeric`, `(string)` casts, loose comparison, `strtolower`,
 //! `mb_*`, `number_format`, `json_encode`/`json_decode`, `filter_var`,
-//! `parse_url`. Each is reimplemented here once, and verified against the
-//! real PHP function by `bin/compat` (library `php-std`, see
-//! `tests/compat/php-std`). Utopia crates use these functions instead of
-//! their own approximations (crates/CONVERSION.md §3).
+//! `parse_url`. Each is reimplemented here once, and Utopia crates use these
+//! functions instead of their own approximations.
 //!
 //! PHP values are [`Value`] ([`types`]): byte strings, ordered arrays with
 //! integer and string keys, `stdClass`, and crate-defined objects. The

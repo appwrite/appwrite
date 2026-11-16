@@ -1173,7 +1173,7 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 - `VITE_CONSOLE_USER_VERIFICATION` – `true`/`false` to force post-signup email verification
 - `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
-- `VITE_CONSOLE_EXTRA_VCS_OAUTH` – `true`/`false` to show extra Git connect OAuth providers (Origin). GitHub, GitLab, and Bitbucket stay available. Off in both profiles by default.
+- `VITE_CONSOLE_VCS_ORIGIN` – `true`/`false` to show Origin (Cursor) on Git connect. Off in both profiles by default; accounts with the `quality` label can also turn it on from the header Previews menu.
 - `VITE_CONSOLE_PROJECT_ENVIRONMENTS` – `true`/`false` to show the project environments switcher and leave environments out of organization project lists. Off by default; ignored on self-hosted, which has no environments API.
 
 **Pre-launch mode** (not a profile feature; unset = off):
@@ -1712,12 +1712,15 @@ After flagging a post:
 
 appwrite.io exposes tools to in-browser agents through [WebMCP](https://webmachinelearning.github.io/webmcp/) (`document.modelContext`).
 
-- `src/lib/webmcp/register.ts` owns the standard: which `modelContext` to use, the shared lifetime (one `AbortSignal` per tool set), registration failures, and the `ToolError` result. Don't call `document.modelContext` anywhere else.
-- A tool set is a folder under `src/lib/webmcp/` (today `site/`, for the public site): `tools.ts` lists the tools and `actions.ts` holds what they do. A new surface, such as signed-in console tools, gets its own folder and a `use…Tools()` hook called from that surface's layout route (`site/` is used by `_marketing` and `/docs`). The layout also adds `WEBMCP_DETECT_SCRIPT` (`site/detect.ts`) to its `head`: an inline check that records whether the browser has WebMCP, so the hook downloads the tools chunk only where an agent can use it. Scanners read inline scripts and `<script src>`, not TanStack's modulepreloaded chunks, so that inline check is also where they find `modelContext`.
-- In `tools.ts`, pass each definition to `modelContext.registerTool({...}, options)` as an object literal. Agent-readiness scanners read the definitions from the shipped bundle, so don't build them from arrays or helpers.
+- A tool set is a folder under `src/lib/webmcp/` (today `site/`, for the public site):
+  - `tools.ts`: `installSiteTools()` registers every tool with a literal `modelContext.registerTool({...})` and forwards each call to handlers connected later. It runs as an inline script (`SITE_TOOLS_SCRIPT`, rendered with `ScriptOnce` by the `_marketing` and `/docs` layouts), so the tools register while the HTML parses. It is serialized with `toString()`, so it must stay self-contained: no imports or outside values at runtime.
+  - `actions.ts`: what each tool does, as `siteHandlers()` keyed by tool name.
+  - `use-site-tools.ts`: the hook those layouts call. It installs the tools after a client-side navigation, loads `actions.ts` (only in browsers that have WebMCP), connects the handlers, and unregisters the tools when the layout unmounts.
+- Why inline: agent-readiness scanners (Ora) read only inline scripts and same-origin `<script src>`. They don't follow TanStack's modulepreloaded chunks or `import()`, and appwrite.io's chunks are on a CDN origin. Keep the definitions literal; don't build them from arrays or helpers.
+- `src/lib/webmcp/calls.ts`: the `ToolError` result and `recordCalls()`, which sends a `WebMCP Tool Called` analytics event (tool and status, never input) for every call.
 - Name tools `verb_noun` in snake_case, give each a `title`, describe what it returns in one sentence, and describe every input property.
 - Annotations must match behaviour: `readOnlyHint` for tools that only read, `untrustedContentHint` when output contains text other people wrote, and `consequentialHint` for tools that buy, send, delete or publish. Omit a hint instead of setting it to `false`.
-- On failure, an action resolves `toolError(code, message, retryable)` instead of throwing.
+- On failure, an action resolves `toolError(code, message, retryable)` instead of throwing. A tool that navigates answers before navigating: leaving the layout unregisters it, and a tool unregistered mid-call never delivers its result.
 - Cover tool changes in `e2e/website.webmcp.spec.ts` through `openAsAgent()`. Run it against Chrome's native API with `E2E_WEBMCP_CHANNEL=chrome` (Chrome 149+); CI's bundled Chromium uses a registry that follows the spec.
 
 ## Environment

@@ -16,6 +16,7 @@ import { Domains } from './Domains'
 import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
+import { IdentityServers } from './IdentityServers'
 import { Variables } from './Variables'
 import { Firewall } from '../firewall/Firewall'
 import type { Models } from '@appwrite.io/console'
@@ -74,6 +75,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
             'migrations',
             'smtp',
             'variables',
+            'identity-servers',
             'firewall',
           ].includes(tabFromPath)
         ) {
@@ -141,8 +143,19 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         to: '/projects/$projectId/settings/smtp',
         params: { projectId: projectId as string },
       },
+      // Preview: the route redirects to the overview while the flag is off.
+      ...(features.identityServers
+        ? [
+            {
+              id: 'identity-servers',
+              label: t('Identity servers'),
+              to: '/projects/$projectId/settings/identity-servers',
+              params: { projectId: projectId as string },
+            },
+          ]
+        : []),
     ],
-    [projectId, showFirewallTab, t],
+    [projectId, showFirewallTab, t, features.identityServers],
   )
 
   const noDomainsPermission = !canWriteProjectDomains(access, features)
@@ -166,6 +179,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
     activeTab !== 'overview' &&
     activeTab !== 'smtp' &&
     activeTab !== 'variables' &&
+    activeTab !== 'identity-servers' &&
     activeTab !== 'firewall'
   const searchPlaceholder = hasSearch
     ? activeTab === 'domains'
@@ -268,6 +282,9 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
           />
         )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
+        {activeTab === 'identity-servers' && features.identityServers && (
+          <IdentityServers projectId={projectId} />
+        )}
         {activeTab === 'variables' && <Variables />}
         {activeTab === 'firewall' && (
           <Firewall projectId={projectId} resourceSelection={API_SCOPE} />

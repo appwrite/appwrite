@@ -164,6 +164,7 @@ export const heCatalog: EnCatalog = {
           network: 'רשת',
           analytics: 'אנליטיקה',
           firewall: 'Firewall',
+          mcp1: 'MCP1',
         },
         learn: {
           ...enCatalog.app.footer.expanded.learn,
