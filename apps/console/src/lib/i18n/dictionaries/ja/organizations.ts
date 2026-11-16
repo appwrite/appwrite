@@ -304,6 +304,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to load logo files': 'ロゴファイルの読み込みに失敗しました',
   'Failed to load members': 'メンバーの読み込みに失敗しました',
   'Failed to load page': 'ページの読み込みに失敗しました',
+  'Failed to load preset records':
+    'プリセットの DNS レコードの読み込みに失敗しました',
   'Failed to load projects': 'プロジェクトの読み込みに失敗しました',
   'Failed to load regions': 'リージョンの読み込みに失敗しました',
   'Failed to read file. Please try again.':
@@ -665,6 +667,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'このアプリは無効で、ユーザーを認可できません。',
   'This organization has no projects.':
     'この組織にはプロジェクトがありません。',
+  'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.':
+    'これらの DNS レコードが追加されます。このドメインに既にあるレコードは変更されません。確認するまで何も作成されません。',
   'This will add': 'これにより次が追加されます',
   'Ticket submitted': 'チケットを送信しました',
   'Total due': '合計支払額',
@@ -932,6 +936,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プロトコルを除いたドメイン名を入力してください (例: example.com)',
   'Enter the domain name you want to add to your organization.':
     '組織に追加したいドメイン名を入力してください。',
+  'Enter the hostname only, without https:// or a path.':
+    'https:// やパスを含めず、ホスト名のみを入力してください。',
+  'Enter the hostname only:': 'ホスト名のみを入力してください:',
+  'Remove the spaces.': 'スペースを削除してください。',
+  'Remove the trailing dot.': '末尾のドットを削除してください。',
+  'Wildcard domains are not supported. Enter a specific hostname.':
+    'ワイルドカードドメインには対応していません。特定のホスト名を入力してください。',
   'Enter your card details to add a new payment method.':
     '新しい支払い方法を追加するには、カード情報を入力してください。',
   'Enter your full domain name to load a price quote.':

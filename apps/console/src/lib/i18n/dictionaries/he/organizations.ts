@@ -475,6 +475,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הזינו את שם הדומיין ללא פרוטוקול (למשל example.com)',
   'Enter the domain name you want to add to your organization.':
     'הזינו את שם הדומיין שברצונכם להוסיף לארגון שלכם.',
+  'Enter the hostname only, without https:// or a path.':
+    'הזינו את שם המארח בלבד, בלי https:// או נתיב.',
+  'Enter the hostname only:': 'הזינו את שם המארח בלבד:',
+  'Remove the spaces.': 'הסירו את הרווחים.',
+  'Remove the trailing dot.': 'הסירו את הנקודה בסוף.',
+  'Wildcard domains are not supported. Enter a specific hostname.':
+    'דומיינים עם תו כללי אינם נתמכים. הזינו שם מארח מסוים.',
   'Enter your card details to add a new payment method.':
     'הזינו את פרטי הכרטיס שלכם להוספת אמצעי תשלום חדש.',
   'Enter your full domain name to load a price quote.':
@@ -525,6 +532,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to load logo files': 'טעינת קובצי הלוגו נכשלה',
   'Failed to load members': 'טעינת החברים נכשלה',
   'Failed to load page': 'טעינת הדף נכשלה',
+  'Failed to load preset records': 'טעינת רשומות ה-DNS של התבנית נכשלה',
   'Failed to load projects': 'טעינת הפרויקטים נכשלה',
   'Failed to load regions': 'טעינת האזורים נכשלה',
   'Failed to mount payment form. Please try again.':
@@ -1155,6 +1163,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'זה בדרך כלל לוקח כמה שניות. השאירו את החלון הזה פתוח.',
   'This usually takes a few seconds to a couple of minutes. Please keep this window open.':
     'זה בדרך כלל לוקח בין כמה שניות לכמה דקות. השאירו את החלון הזה פתוח.',
+  'These DNS records will be added. Records this domain already has are left unchanged. Nothing is created until you confirm.':
+    'רשומות ה-DNS האלה יתווספו. רשומות שכבר קיימות בדומיין נשארות ללא שינוי. לא נוצר שום דבר עד שתאשרו.',
   'This will add': 'פעולה זו תוסיף',
   'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.':
     'פעולה זו תיצור קוד הרשאה להעברת הדומיין שלכם. שמרו אותו בסוד עד לשימוש אצל הרשם הקולט.',

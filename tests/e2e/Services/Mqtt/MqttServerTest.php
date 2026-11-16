@@ -1936,6 +1936,75 @@ final class MqttServerTest extends Scope
         }, 180_000, 3_000);
     }
 
+    public function testAcknowledgedDeliveryCountsTowardProjectUsage(): void
+    {
+        $this->skipIfUsageUnavailable();
+
+        [$projectId, $usageKey] = $this->deliverToFreshProject(acknowledge: true);
+
+        $this->assertEventually(function () use ($projectId, $usageKey): void {
+            $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.acked'), 'acknowledged delivery was not recorded');
+        }, 180_000, 3_000);
+    }
+
+    public function testUnacknowledgedDeliveryIsNotCountedAsAcked(): void
+    {
+        $this->skipIfUsageUnavailable();
+
+        [$projectId, $usageKey] = $this->deliverToFreshProject(acknowledge: false);
+
+        // Deliveries and acks flush together, so once the delivery shows up the ack count is final.
+        $this->assertEventually(function () use ($projectId, $usageKey): void {
+            $this->assertGreaterThan(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.delivered'), 'delivery usage was not recorded');
+        }, 180_000, 3_000);
+
+        $this->assertSame(0, $this->usageSeriesTotal($projectId, $usageKey, 'mqtt.messages.acked'));
+    }
+
+    /**
+     * Push one QoS 1 message to a connected user of a fresh project, acknowledging it or not.
+     *
+     * @return array{0: string, 1: string} the project ID and a key that can read its usage
+     */
+    private function deliverToFreshProject(bool $acknowledge): array
+    {
+        $project = $this->getProject(fresh: true);
+        $projectId = $project['$id'];
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $userId = Id::unique();
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $userId,
+            'email' => 'mqtt-ack-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $jwtResponse = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, []);
+        $this->assertEquals(201, $jwtResponse['headers']['status-code']);
+
+        $this->setupAppwriteProvider($server);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwtResponse['body']['jwt'], 'e2e-ack-' . $userId, cleanStart: true));
+        $this->assertSame([1], $subscriber->subscribe(['users/' . $userId]));
+
+        try {
+            $this->publishToUser($server, $userId, 'Ping', 'ack me');
+            $received = $subscriber->consume(limit: 1, timeout: 20.0, shouldAck: fn () => $acknowledge);
+            $this->assertCount(1, $received);
+            $this->assertSame(1, $received[0]['qos']);
+        } finally {
+            $subscriber->disconnect();
+        }
+
+        return [$projectId, $this->mintProjectKey($projectId, ['usage.read'])];
+    }
+
     /** Skip when the stack has no usage pipeline (the dedicated MQTT lane may omit it). */
     private function skipIfUsageUnavailable(): void
     {

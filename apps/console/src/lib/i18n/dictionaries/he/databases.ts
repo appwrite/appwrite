@@ -976,7 +976,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'One Relation column within this table': 'עמודת קשר (Relation) אחת בטבלה זו',
   'One Relation column within this table and another within the related table': 'עמודת קשר (Relation) אחת בטבלה זו ועוד אחת בטבלה המקושרת',
   'One-way relationship': 'קשר חד-כיווני',
-  'Only applicable to string and varchar columns': 'רלוונטי רק לעמודות string ו-varchar',
+  'Only applicable to string, varchar and text columns': 'רלוונטי רק לעמודות string ו-varchar',
   'Only CSV files can be imported': 'ניתן לייבא קובצי CSV בלבד',
   'only if they have collection permissions': 'רק אם יש להם הרשאות אוסף',
   'only if they have table permissions': 'רק אם יש להם הרשאות טבלה',
