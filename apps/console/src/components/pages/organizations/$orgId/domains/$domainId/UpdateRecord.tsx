@@ -108,7 +108,7 @@ export function UpdateRecordDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const priorityError =
-      record.type === 'MX' || record.type === 'SRV'
+      record.type === 'SRV' || (record.type === 'MX' && priority.trim())
         ? recordNumberFieldMessage(priority, 'priority')
         : null
     const weightError =

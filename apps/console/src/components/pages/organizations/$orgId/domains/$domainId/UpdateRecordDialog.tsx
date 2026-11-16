@@ -8,9 +8,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { useT } from '@/lib/i18n/translate'
 import {
+  RECORD_NUMBER_MAX,
   RECORD_TTL_MAX,
   parseRecordNumber,
-  recordNumberFieldMessage,
 } from '@/lib/domains/record-numeric-fields'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
@@ -63,11 +63,6 @@ export function UpdateRecordDialog({
   const [weight, setWeight] = useState(record.weight?.toString() || '')
   const [port, setPort] = useState(record.port?.toString() || '')
   const [comment, setComment] = useState(record.comment || '')
-  const [fieldErrors, setFieldErrors] = useState<{
-    priority?: string
-    weight?: string
-    port?: string
-  }>({})
   const [error, setError] = useState<string | null>(null)
 
   // Refresh the form when the drawer opens or the record changes, and drop a
@@ -82,20 +77,14 @@ export function UpdateRecordDialog({
       setWeight(record.weight?.toString() || '')
       setPort(record.port?.toString() || '')
       setComment(record.comment || '')
-      setFieldErrors({})
     }
   }, [open, record])
 
   const change =
-    (setter: (value: string) => void, field?: 'priority' | 'weight' | 'port') =>
+    (setter: (value: string) => void) =>
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setter(event.target.value)
       setError(null)
-      if (field) {
-        setFieldErrors((prev) =>
-          prev[field] ? { ...prev, [field]: undefined } : prev,
-        )
-      }
     }
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -107,31 +96,7 @@ export function UpdateRecordDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const priorityError =
-      record.type === 'MX' || record.type === 'SRV'
-        ? recordNumberFieldMessage(priority, 'priority')
-        : null
-    const weightError =
-      record.type === 'SRV' ? recordNumberFieldMessage(weight, 'weight') : null
-    const portError =
-      record.type === 'SRV' ? recordNumberFieldMessage(port, 'port') : null
-
-    setFieldErrors({
-      priority: priorityError ?? undefined,
-      weight: weightError ?? undefined,
-      port: portError ?? undefined,
-    })
-
-    if (
-      isLoading ||
-      !name.trim() ||
-      !value.trim() ||
-      priorityError ||
-      weightError ||
-      portError
-    ) {
-      return
-    }
+    if (isLoading || !name.trim() || !value.trim()) return
 
     const parsedTtl = parseRecordNumber(ttl)
     const parsedPriority = parseRecordNumber(priority)
@@ -236,19 +201,11 @@ export function UpdateRecordDialog({
                       id="priority"
                       type="number"
                       value={priority}
-                      onChange={change(setPriority, 'priority')}
-                      step="any"
+                      onChange={change(setPriority)}
+                      min="0"
+                      max={RECORD_NUMBER_MAX}
                       disabled={isLoading}
-                      aria-invalid={!!fieldErrors.priority}
-                      className={
-                        fieldErrors.priority ? 'border-destructive' : ''
-                      }
                     />
-                    {fieldErrors.priority && (
-                      <p className="text-[12px] text-destructive">
-                        {t(fieldErrors.priority)}
-                      </p>
-                    )}
                   </div>
                 )}
 
@@ -263,19 +220,11 @@ export function UpdateRecordDialog({
                         id="weight"
                         type="number"
                         value={weight}
-                        onChange={change(setWeight, 'weight')}
-                        step="any"
+                        onChange={change(setWeight)}
+                        min="0"
+                        max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
-                        aria-invalid={!!fieldErrors.weight}
-                        className={
-                          fieldErrors.weight ? 'border-destructive' : ''
-                        }
                       />
-                      {fieldErrors.weight && (
-                        <p className="text-[12px] text-destructive">
-                          {t(fieldErrors.weight)}
-                        </p>
-                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -286,17 +235,11 @@ export function UpdateRecordDialog({
                         id="port"
                         type="number"
                         value={port}
-                        onChange={change(setPort, 'port')}
-                        step="any"
+                        onChange={change(setPort)}
+                        min="0"
+                        max={RECORD_NUMBER_MAX}
                         disabled={isLoading}
-                        aria-invalid={!!fieldErrors.port}
-                        className={fieldErrors.port ? 'border-destructive' : ''}
                       />
-                      {fieldErrors.port && (
-                        <p className="text-[12px] text-destructive">
-                          {t(fieldErrors.port)}
-                        </p>
-                      )}
                     </div>
                   </>
                 )}

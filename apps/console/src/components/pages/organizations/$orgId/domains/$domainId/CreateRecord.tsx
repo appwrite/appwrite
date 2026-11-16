@@ -128,8 +128,9 @@ export function CreateRecordDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    // MX defaults to priority 10, so only a value typed in is checked.
     const priorityError =
-      type === 'MX' || type === 'SRV'
+      type === 'SRV' || (type === 'MX' && priority.trim())
         ? recordNumberFieldMessage(priority, 'priority')
         : null
     const weightError =
@@ -166,7 +167,12 @@ export function CreateRecordDialog({
         name: name.trim(),
         value: value.trim(),
         ttl: parsedTtl ?? DEFAULT_TTL,
-        priority: type === 'MX' || type === 'SRV' ? parsedPriority : undefined,
+        priority:
+          type === 'MX'
+            ? (parsedPriority ?? DEFAULT_MX_PRIORITY)
+            : type === 'SRV'
+              ? parsedPriority
+              : undefined,
         weight: type === 'SRV' ? parsedWeight : undefined,
         port: type === 'SRV' ? parsedPort : undefined,
         comment: comment.trim() || undefined,
@@ -201,6 +207,10 @@ export function CreateRecordDialog({
                     value={type}
                     onValueChange={(next) => {
                       setType(next)
+                      // MX records almost always use priority 10.
+                      if (next === 'MX' && !priority.trim()) {
+                        setPriority(DEFAULT_MX_PRIORITY.toString())
+                      }
                       setFieldErrors({})
                       setError(null)
                     }}
