@@ -2166,10 +2166,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description",
-            "providerComments",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2313,10 +2310,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description",
-            "providerComments",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -3856,10 +3850,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description",
-            "providerComments",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -3995,10 +3986,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description",
-            "providerComments",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -6578,10 +6566,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description",
-            "providerComments",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -6715,10 +6700,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "interval",
-            "description",
-            "providerComments",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -8186,10 +8168,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description",
-            "providerComments",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -8315,10 +8294,7 @@
             "runtimeSpecification",
             "deploymentRetention",
             "scopes",
-            "description",
-            "providerComments",
-            "providerDeployments",
-            "providerStatuses"
+            "description"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
