@@ -190,9 +190,9 @@ pub trait Sequences: Dialect {
 /// `RETURNING` after inserts, updates and deletes.
 pub trait Returning: Dialect {}
 
-/// `/^[a-zA-Z_][a-zA-Z0-9_]*$/` (where `$` also matches before a final newline).
+/// `/^[a-zA-Z_][a-zA-Z0-9_]*$/D`.
 pub(crate) fn is_plain_identifier(name: &str) -> bool {
-    let bytes = name.strip_suffix('\n').unwrap_or(name).as_bytes();
+    let bytes = name.as_bytes();
     match bytes.split_first() {
         Some((first, rest)) => {
             (first.is_ascii_alphabetic() || *first == b'_')
@@ -202,10 +202,10 @@ pub(crate) fn is_plain_identifier(name: &str) -> bool {
     }
 }
 
-/// `/^[A-Za-z_][A-Za-z0-9_]*(\s+[A-Za-z_][A-Za-z0-9_]*)*(\s*\(\s*[A-Za-z0-9_,\s]+\s*\))?$/`:
+/// `/^[A-Za-z_][A-Za-z0-9_]*(\s+[A-Za-z_][A-Za-z0-9_]*)*(\s*\(\s*[A-Za-z0-9_,\s]+\s*\))?$/D`:
 /// a type name of words, with an optional parenthesised argument list.
 pub(crate) fn is_cast_type(text: &str) -> bool {
-    let text = text.strip_suffix('\n').unwrap_or(text).as_bytes();
+    let text = text.as_bytes();
     let is_space = |b: u8| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | b'\x0B' | b'\x0C');
     let word_start = |b: u8| b.is_ascii_alphabetic() || b == b'_';
     let word = |b: u8| b.is_ascii_alphanumeric() || b == b'_';

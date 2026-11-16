@@ -4972,6 +4972,2910 @@
           "id": 3
         }
       ]
+    },
+    {
+      "name": "testRawFilterOrCannotEscapeTenantScope",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "static": "raw",
+            "class": "Query",
+            "args": [
+              "a = ? OR b = ?",
+              [
+                1,
+                2
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "a = ? OR b = ?",
+            "values": [
+              1,
+              2
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT * FROM `docs` WHERE (a = ? OR b = ?) AND tenant_id IN (?)",
+            "bindings": [
+              1,
+              2,
+              "7"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `docs` WHERE (a = ? OR b = ?) AND tenant_id IN (?)",
+        [
+          1,
+          2,
+          "7"
+        ]
+      ]
+    },
+    {
+      "name": "testWhereRawOrCannotEscapeTenantScope with data set \"select\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "whereRaw",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "a = ? OR b = ?",
+              [
+                1,
+                2
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `docs` WHERE tenant_id IN (?) AND (a = ? OR b = ?)",
+            "bindings": [
+              "7",
+              1,
+              2
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `docs` WHERE tenant_id IN (?) AND (a = ? OR b = ?)",
+        [
+          "7",
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "name": "testWhereRawOrCannotEscapeTenantScope with data set \"update\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "whereRaw",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "a = ? OR b = ?",
+              [
+                1,
+                2
+              ]
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "c": 3
+              }
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE `docs` SET `c` = ? WHERE tenant_id IN (?) AND (a = ? OR b = ?)",
+            "bindings": [
+              3,
+              "7",
+              1,
+              2
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "UPDATE `docs` SET `c` = ? WHERE tenant_id IN (?) AND (a = ? OR b = ?)",
+        [
+          3,
+          "7",
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "name": "testWhereRawOrCannotEscapeTenantScope with data set \"delete\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "whereRaw",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "a = ? OR b = ?",
+              [
+                1,
+                2
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `docs` WHERE tenant_id IN (?) AND (a = ? OR b = ?)",
+            "bindings": [
+              "7",
+              1,
+              2
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `docs` WHERE tenant_id IN (?) AND (a = ? OR b = ?)",
+        [
+          "7",
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "name": "testJoinWhereRawOrCannotEscapeJoinedTenantScope",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "joinWhere",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              {
+                "$fn": 1
+              },
+              {
+                "$enum": "Builder\\JoinType::Left"
+              }
+            ],
+            "cb": [
+              {
+                "fn": 1,
+                "do": [
+                  {
+                    "call": "on",
+                    "on": {
+                      "$o": 3
+                    },
+                    "args": [
+                      "docs.id",
+                      "orders.doc_id"
+                    ]
+                  },
+                  {
+                    "call": "whereRaw",
+                    "on": {
+                      "$o": 3
+                    },
+                    "args": [
+                      "orders.x = orders.y OR 1 = 1"
+                    ]
+                  }
+                ],
+                "ret": null
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "fn:1",
+          "args": [
+            {
+              "$object": "Builder\\JoinBuilder",
+              "id": 3
+            }
+          ]
+        },
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT * FROM `docs` LEFT JOIN `orders` ON `docs`.`id` = `orders`.`doc_id` AND (orders.x = orders.y OR 1 = 1) AND tenant_id IN (?) WHERE tenant_id IN (?)",
+            "bindings": [
+              "7",
+              "7"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `docs` LEFT JOIN `orders` ON `docs`.`id` = `orders`.`doc_id` AND (orders.x = orders.y OR 1 = 1) AND tenant_id IN (?) WHERE tenant_id IN (?)",
+        [
+          "7",
+          "7"
+        ]
+      ]
+    },
+    {
+      "name": "testJoinOnRawOrStaysInsideOnClause",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "joinWhere",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              {
+                "$fn": 1
+              }
+            ],
+            "cb": [
+              {
+                "fn": 1,
+                "do": [
+                  {
+                    "call": "on",
+                    "on": {
+                      "$o": 2
+                    },
+                    "args": [
+                      "docs.id",
+                      "orders.doc_id"
+                    ]
+                  },
+                  {
+                    "call": "onRaw",
+                    "on": {
+                      "$o": 2
+                    },
+                    "args": [
+                      "orders.x = ? OR 1 = 1",
+                      [
+                        5
+                      ]
+                    ]
+                  }
+                ],
+                "ret": null
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "fn:1",
+          "args": [
+            {
+              "$object": "Builder\\JoinBuilder",
+              "id": 2
+            }
+          ]
+        },
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `docs` JOIN `orders` ON `docs`.`id` = `orders`.`doc_id` AND (orders.x = ? OR 1 = 1)",
+            "bindings": [
+              5
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `docs` JOIN `orders` ON `docs`.`id` = `orders`.`doc_id` AND (orders.x = ? OR 1 = 1)",
+        [
+          5
+        ]
+      ]
+    },
+    {
+      "name": "testHavingRawOrStaysInsideHavingClause",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "cnt"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "cnt",
+              1
+            ]
+          },
+          {
+            "call": "having",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "havingRaw",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SUM(total) > ? OR COUNT(*) > ?",
+              [
+                100,
+                10
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "cnt",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT COUNT(*) AS `cnt` FROM `orders` GROUP BY `user_id` HAVING COUNT(*) > ? AND (SUM(total) > ? OR COUNT(*) > ?)",
+            "bindings": [
+              1,
+              100,
+              10
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS `cnt` FROM `orders` GROUP BY `user_id` HAVING COUNT(*) > ? AND (SUM(total) > ? OR COUNT(*) > ?)",
+        [
+          1,
+          100,
+          10
+        ]
+      ]
+    },
+    {
+      "name": "testToAstEnclosesRawFilter",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "static": "raw",
+            "class": "Query",
+            "args": [
+              "a = 1 OR b = 2"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "tenant",
+              [
+                7
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toAst",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "AST\\Serializer",
+            "args": []
+          },
+          {
+            "call": "serialize",
+            "on": {
+              "$o": 12
+            },
+            "args": [
+              {
+                "$o": 4
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "a = 1 OR b = 2",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "tenant",
+            "values": [
+              7
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 4,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Star",
+                "id": 5,
+                "props": {
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 6,
+              "props": {
+                "name": "docs",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 7,
+              "props": {
+                "left": {
+                  "$value": "AST\\Raw",
+                  "id": 8,
+                  "props": {
+                    "sql": "a = 1 OR b = 2"
+                  }
+                },
+                "operator": "AND",
+                "right": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 9,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 10,
+                      "props": {
+                        "name": "tenant",
+                        "table": null,
+                        "schema": null
+                      }
+                    },
+                    "operator": "=",
+                    "right": {
+                      "$value": "AST\\Literal",
+                      "id": 11,
+                      "props": {
+                        "value": 7
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$object": "AST\\Serializer",
+          "id": 12
+        },
+        "SELECT * FROM `docs` WHERE (a = 1 OR b = 2) AND `tenant` = 7"
+      ]
+    },
+    {
+      "name": "testFilterInjectorEnclosesRawCondition",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Parser",
+            "args": []
+          },
+          {
+            "new": "Tokenizer\\Tokenizer",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "SELECT name FROM users WHERE a = 1"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                },
+                {
+                  "$o": 10
+                },
+                {
+                  "$o": 11
+                },
+                {
+                  "$o": 12
+                },
+                {
+                  "$o": 13
+                },
+                {
+                  "$o": 14
+                },
+                {
+                  "$o": 15
+                },
+                {
+                  "$o": 16
+                },
+                {
+                  "$o": 17
+                },
+                {
+                  "$o": 18
+                }
+              ]
+            ]
+          },
+          {
+            "call": "parse",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 19
+                },
+                {
+                  "$o": 20
+                },
+                {
+                  "$o": 21
+                },
+                {
+                  "$o": 22
+                },
+                {
+                  "$o": 23
+                },
+                {
+                  "$o": 24
+                },
+                {
+                  "$o": 25
+                },
+                {
+                  "$o": 26
+                },
+                {
+                  "$o": 27
+                }
+              ]
+            ]
+          },
+          {
+            "new": "AST\\Raw",
+            "args": [
+              "tenant = 7 OR tenant IS NULL"
+            ]
+          },
+          {
+            "new": "AST\\Visitor\\FilterInjector",
+            "args": [
+              {
+                "$o": 34
+              }
+            ]
+          },
+          {
+            "call": "visitSelect",
+            "on": {
+              "$o": 35
+            },
+            "args": [
+              {
+                "$o": 28
+              }
+            ]
+          },
+          {
+            "new": "AST\\Serializer",
+            "args": []
+          },
+          {
+            "call": "serialize",
+            "on": {
+              "$o": 44
+            },
+            "args": [
+              {
+                "$o": 36
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "AST\\Parser",
+          "id": 1
+        },
+        {
+          "$object": "Tokenizer\\Tokenizer",
+          "id": 2
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 16
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "a",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 30
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 31
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 32
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 17,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 33
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 18,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 34
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 19,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 20,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "name",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 21,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 12
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 22,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 23,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 24,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "a",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 25,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "=",
+              "position": 31
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 26,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 33
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 27,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 34
+            }
+          }
+        ],
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 28,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 29,
+                "props": {
+                  "name": "name",
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 30,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 31,
+              "props": {
+                "left": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 32,
+                  "props": {
+                    "name": "a",
+                    "table": null,
+                    "schema": null
+                  }
+                },
+                "operator": "=",
+                "right": {
+                  "$value": "AST\\Literal",
+                  "id": 33,
+                  "props": {
+                    "value": 1
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$value": "AST\\Raw",
+          "id": 34,
+          "props": {
+            "sql": "tenant = 7 OR tenant IS NULL"
+          }
+        },
+        {
+          "$object": "AST\\Visitor\\FilterInjector",
+          "id": 35
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 36,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 37,
+                "props": {
+                  "name": "name",
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 38,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 39,
+              "props": {
+                "left": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 40,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 41,
+                      "props": {
+                        "name": "a",
+                        "table": null,
+                        "schema": null
+                      }
+                    },
+                    "operator": "=",
+                    "right": {
+                      "$value": "AST\\Literal",
+                      "id": 42,
+                      "props": {
+                        "value": 1
+                      }
+                    }
+                  }
+                },
+                "operator": "AND",
+                "right": {
+                  "$value": "AST\\Raw",
+                  "id": 43,
+                  "props": {
+                    "sql": "tenant = 7 OR tenant IS NULL"
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$object": "AST\\Serializer",
+          "id": 44
+        },
+        "SELECT `name` FROM `users` WHERE `a` = 1 AND (tenant = 7 OR tenant IS NULL)"
+      ]
+    },
+    {
+      "name": "testUpdateFromWhereOrCannotEscapeTenantScope",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "c": 3
+              }
+            ]
+          },
+          {
+            "call": "updateFrom",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "other"
+            ]
+          },
+          {
+            "call": "updateFromWhere",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "other.id = docs.ref OR other.owner = ?",
+              "u1"
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE \"docs\" SET \"c\" = ? FROM \"other\" WHERE tenant_id IN (?) AND (other.id = docs.ref OR other.owner = ?)",
+            "bindings": [
+              3,
+              "7",
+              "u1"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "UPDATE \"docs\" SET \"c\" = ? FROM \"other\" WHERE tenant_id IN (?) AND (other.id = docs.ref OR other.owner = ?)",
+        [
+          3,
+          "7",
+          "u1"
+        ]
+      ]
+    },
+    {
+      "name": "testDeleteUsingOrCannotEscapeTenantScope",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "deleteUsing",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "other",
+              "other.id = docs.ref OR other.owner = ?",
+              "u1"
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM \"docs\" USING \"other\" WHERE tenant_id IN (?) AND (other.id = docs.ref OR other.owner = ?)",
+            "bindings": [
+              "7",
+              "u1"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM \"docs\" USING \"other\" WHERE tenant_id IN (?) AND (other.id = docs.ref OR other.owner = ?)",
+        [
+          "7",
+          "u1"
+        ]
+      ]
+    },
+    {
+      "name": "testToRawSqlEscapesBackslashBeforeQuote",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "\\' OR 1=1 -- "
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toRawSql",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "\\' OR 1=1 -- "
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        "SELECT * FROM `t` WHERE `name` IN ('\\\\'' OR 1=1 -- ')"
+      ]
+    },
+    {
+      "name": "testToRawSqlKeepsBackslashLiteralInStandardStrings with data set \"postgresql\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "a\\b'c"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toRawSql",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "a\\b'c"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        "SELECT * FROM \"t\" WHERE \"name\" IN ('a\\b''c')"
+      ]
+    },
+    {
+      "name": "testToRawSqlKeepsBackslashLiteralInStandardStrings with data set \"sqlite\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "a\\b'c"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toRawSql",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "a\\b'c"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        "SELECT * FROM `t` WHERE `name` IN ('a\\b''c')"
+      ]
+    },
+    {
+      "name": "testClickHouseReplicatedEngineEscapesBackslash",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "engine",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ClickHouse\\Engine::ReplicatedMergeTree"
+              },
+              "/tables/a\\",
+              "r\\"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `events` (`id` Int32) ENGINE = ReplicatedMergeTree('/tables/a\\\\', 'r\\\\') ORDER BY (`id`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `events` (`id` Int32) ENGINE = ReplicatedMergeTree('/tables/a\\\\', 'r\\\\') ORDER BY (`id`)"
+      ]
+    },
+    {
+      "name": "testClickHouseSkipIndexEscapesBackslashInStringArgument",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "country"
+            ]
+          },
+          {
+            "call": "index",
+            "on": {
+              "$o": 4
+            },
+            "args": {
+              "0": [
+                "country"
+              ],
+              "algorithm": {
+                "$enum": "Schema\\ClickHouse\\IndexAlgorithm::Set"
+              },
+              "algorithmArgs": [
+                "a\\"
+              ]
+            }
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `events` (`id` Int32, `country` String, INDEX `idx_country` `country` TYPE set('a\\\\') GRANULARITY 1) ENGINE = MergeTree() ORDER BY (`id`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `events` (`id` Int32, `country` String, INDEX `idx_country` `country` TYPE set('a\\\\') GRANULARITY 1) ENGINE = MergeTree() ORDER BY (`id`)"
+      ]
+    },
+    {
+      "name": "testJsonPathRejectsTrailingNewline with data set \"mysql\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "jsonPath",
+            "class": "Query",
+            "args": [
+              "data",
+              "a.b\n",
+              "=",
+              1
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::JsonPath"
+            },
+            "attribute": "data",
+            "values": [
+              "a.b\n",
+              "=",
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid JSON path: a.b\n"
+          },
+          "id": 5
+        }
+      ]
+    },
+    {
+      "name": "testJsonPathRejectsTrailingNewline with data set \"postgresql\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "jsonPath",
+            "class": "Query",
+            "args": [
+              "data",
+              "a.b\n",
+              "=",
+              1
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::JsonPath"
+            },
+            "attribute": "data",
+            "values": [
+              "a.b\n",
+              "=",
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid JSON path: a.b\n"
+          },
+          "id": 5
+        }
+      ]
+    },
+    {
+      "name": "testJsonPathRejectsTrailingNewline with data set \"sqlite\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "jsonPath",
+            "class": "Query",
+            "args": [
+              "data",
+              "a.b\n",
+              "=",
+              1
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::JsonPath"
+            },
+            "attribute": "data",
+            "values": [
+              "a.b\n",
+              "=",
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid JSON path: a.b\n"
+          },
+          "id": 5
+        }
+      ]
+    },
+    {
+      "name": "testJoinBuilderRejectsTrailingNewlineInColumn with data set \"on left\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\JoinBuilder",
+            "args": []
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.id\n",
+              "orders.user_id"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column name: users.id\n"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testJoinBuilderRejectsTrailingNewlineInColumn with data set \"on right\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\JoinBuilder",
+            "args": []
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.id",
+              "orders.user_id\n"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column name: orders.user_id\n"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testJoinBuilderRejectsTrailingNewlineInColumn with data set \"where\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\JoinBuilder",
+            "args": []
+          },
+          {
+            "call": "where",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders.status\n",
+              "=",
+              "active"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column name: orders.status\n"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testTenantRejectsTrailingNewlineInColumn",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ],
+              "tenant_id\n"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Invalid column name: tenant_id\n"
+          },
+          "id": 1
+        }
+      ]
     }
   ]
 }

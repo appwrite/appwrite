@@ -46,6 +46,7 @@ import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
+import { DomainRecordsDialog } from './domains/DomainRecords'
 import { ProxyRuleContextMenu } from './domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from './domains/RuleStatusBadge'
 import { CheckDomain } from './domains/CheckDomain'
@@ -79,6 +80,7 @@ export function Domains({
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [retryDomainOpen, setRetryDomainOpen] = useState(false)
+  const [recordsOpen, setRecordsOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
     null,
   )
@@ -117,6 +119,13 @@ export function Domains({
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
       setRetryDomainOpen(true)
+    })
+  }
+
+  const handleRecords = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setRecordsOpen(true)
     })
   }
 
@@ -189,10 +198,9 @@ export function Domains({
                     key={rule.$id}
                     projectId={projectId}
                     rule={rule}
-                    projectTeamId={project?.teamId}
-                    apexToOrgDomainId={apexToOrgDomainId}
                     onViewLogs={handleViewLogs}
                     onRetry={handleRetry}
+                    onRecords={handleRecords}
                     onDelete={handleDelete}
                   >
                     <TableRow>
@@ -268,27 +276,7 @@ export function Domains({
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
-                                onClick={() => {
-                                  const apex = getApexDomain(rule.domain)
-                                  const orgDomainId = apex
-                                    ? apexToOrgDomainId.get(apex.toLowerCase())
-                                    : undefined
-                                  if (project?.teamId && orgDomainId) {
-                                    navigate({
-                                      to: '/organizations/$orgId/domains/$domainId',
-                                      params: {
-                                        orgId: project.teamId,
-                                        domainId: orgDomainId}})
-                                  }
-                                }}
-                                disabled={
-                                  !project?.teamId ||
-                                  !getApexDomain(rule.domain) ||
-                                  !apexToOrgDomainId.has(
-                                    getApexDomain(rule.domain)?.toLowerCase() ??
-                                      '',
-                                  )
-                                }
+                                onClick={() => handleRecords(rule)}
                               >
                                 <MenuItemContent icon={Globe}>{t('Records')}</MenuItemContent>
                               </DropdownMenuItem>
@@ -338,6 +326,12 @@ export function Domains({
               setRetryDomainOpen(false)
               setSelectedRule(null)
             }}
+          />
+          <DomainRecordsDialog
+            open={recordsOpen}
+            onOpenChange={setRecordsOpen}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
+            region={region}
           />
 
           <ViewLogsDialog

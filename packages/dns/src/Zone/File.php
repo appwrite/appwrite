@@ -553,7 +553,22 @@ final readonly class File
                 return \sprintf('%d %d %d %s', $pri, $wgt, $prt, self::relativizeDomainName($rdata, $origin));
 
             case Record::TYPE_TXT:
-                return '"' . addcslashes($rdata, '"\\') . '"';
+                // Split rdata into chunks of up to 255 bytes each per RFC 1035
+                $totalLen = \strlen($rdata);
+                if ($totalLen <= Record::MAX_TXT_CHUNK) {
+                    return '"' . addcslashes($rdata, '"\\') . '"';
+                }
+
+                $chunks = [];
+                $pos = 0;
+                while ($pos < $totalLen) {
+                    $chunkLen = min(Record::MAX_TXT_CHUNK, $totalLen - $pos);
+                    $chunk = substr($rdata, $pos, $chunkLen);
+                    $chunks[] = '"' . addcslashes($chunk, '"\\') . '"';
+                    $pos += $chunkLen;
+                }
+
+                return implode(' ', $chunks);
 
             case Record::TYPE_CAA:
 

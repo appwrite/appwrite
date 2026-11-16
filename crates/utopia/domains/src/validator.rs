@@ -74,7 +74,7 @@ impl<'a> Subject<'a> {
 }
 
 fn new_domain(bytes: &[u8]) -> Result<Domain<'static>, Error> {
-    Domain::new(&String::from_utf8_lossy(bytes)).map_err(|e| Error::Exception(e.to_string()))
+    Domain::new(bytes).map_err(|e| Error::Exception(e.to_string()))
 }
 
 /// Whether the subject is a known public domain or an allowed one.

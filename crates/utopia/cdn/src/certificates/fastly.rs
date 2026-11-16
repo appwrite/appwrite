@@ -440,6 +440,15 @@ impl<C: Client> Provider for Fastly<C> {
         Box::pin(async move { self.tls.status(&domain::validate(domain)?).await })
     }
 
+    /// The TLS subscription's newest certificate expiry (see [`FastlyTls`]).
+    fn certificate_expiry<'a>(
+        &'a self,
+        domain: &'a str,
+        _domain_type: Option<&'a str>,
+    ) -> BoxFuture<'a, Result<Option<String>, Error>> {
+        Box::pin(async move { self.tls.expiry(&domain::validate(domain)?).await })
+    }
+
     /// Whether the domain is missing or on another service, or its
     /// subscription needs issuing; never for a classic domain.
     fn is_renew_required<'a>(

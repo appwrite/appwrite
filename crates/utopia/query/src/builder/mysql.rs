@@ -78,9 +78,9 @@ impl MySqlFamily for MySqlDialect {
     }
 }
 
-/// `/^[A-Za-z0-9_()=, \`.]+$/` (where `$` also matches before a final newline).
+/// `/^[A-Za-z0-9_()=, \`.]+$/D`.
 pub(crate) fn is_hint(hint: &str) -> bool {
-    let bytes = hint.strip_suffix('\n').unwrap_or(hint).as_bytes();
+    let bytes = hint.as_bytes();
     !bytes.is_empty()
         && bytes
             .iter()

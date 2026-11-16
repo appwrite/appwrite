@@ -143,8 +143,9 @@ final class Fixture
 final class Stable
 {
     /**
-     * A queued response with every string `@days:<n>` in its `json`
-     * replaced by the UTC time `n` days from now (`Y-m-d\TH:i:s\Z`), for
+     * A queued response with every string `@days:<n>` (`@hours:<n>`) in
+     * its `json` replaced by the UTC time `n` days (hours) from now
+     * (`Y-m-d\TH:i:s\Z`), for
      * responses whose meaning depends on the clock (a certificate's expiry).
      *
      * @param array<mixed> $response
@@ -166,6 +167,9 @@ final class Stable
         }
         if (\is_string($value) && str_starts_with($value, '@days:')) {
             return gmdate('Y-m-d\TH:i:s\Z', time() + (int) substr($value, 6) * 86400);
+        }
+        if (\is_string($value) && str_starts_with($value, '@hours:')) {
+            return gmdate('Y-m-d\TH:i:s\Z', time() + (int) substr($value, 7) * 3600);
         }
 
         return $value;
