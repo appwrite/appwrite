@@ -1039,11 +1039,11 @@
             [
               {
                 "valid": false,
-                "description": "DNS query failed.",
+                "description": "DNS TXT query to 127.0.0.1 failed.",
                 "records": [],
                 "value": "a..b",
                 "count": 0,
-                "reason": "DNS query failed."
+                "reason": "DNS TXT query to 127.0.0.1 failed."
               }
             ]
           ]
