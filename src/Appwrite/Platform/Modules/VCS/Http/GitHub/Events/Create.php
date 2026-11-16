@@ -653,6 +653,8 @@ class Create extends Action
             'trigger' => $trigger['kind'],
             'providerCommentId' => isset($trigger['comment']) ? (string) $trigger['comment']['id'] : '',
             'status' => 'queued',
+            // Kept on the review, so it runs and is billed at the strength it was queued at.
+            'strength' => $repository->getAttribute('strength', 'normal'),
         ]);
 
         // A redelivered comment that already queued its review changes nothing, not even the
@@ -727,6 +729,7 @@ class Create extends Action
                 pullNumber: $pullNumber,
                 headSha: $headSha,
                 trigger: $trigger,
+                strength: $review->getAttribute('strength', 'normal'),
             ));
 
             if ($queued === false) {
