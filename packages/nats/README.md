@@ -76,10 +76,11 @@ A connection held unread between calls, such as a pooled one, can be closed by t
 meanwhile: a server entering lame-duck mode sends it an `INFO` and then closes it. `request()`,
 `requestBatch()`, `requestMany()`, `flush()`, `Consumer::fetch()` and `JetStream::publishMany()`
 first act on whatever the server has already sent, so they reconnect (when `allowReconnect` is
-set) or fail before writing, rather than writing into the closed socket. That settling gets its
-own budget of the call's timeout ahead of the wait for the reply, not a share of it, so a call
-can take up to about twice its timeout. `JetStream::publish()`, the key-value store and the
-object store are covered through `request()` and `fetch()`. A connection the server reset is
+set) or fail before writing, rather than writing into the closed socket. Settling stops once
+nothing is waiting, and after `Connection::SETTLE_TIMEOUT` (50ms) at most, so live subscription
+traffic cannot hold a request back; the call's timeout then covers the wait for the reply.
+`JetStream::publish()`, the key-value store and the object store are covered through `request()`
+and `fetch()`. A connection the server reset is
 caught the same way on every transport but `wss://`, given ext-sockets or Swoole's socket hooks
 (which load ext-sockets themselves). A fire-and-forget `publish()` only writes, so it does not
 settle: call `settle()` before one after a long idle, or before your own write-then-read. Custom

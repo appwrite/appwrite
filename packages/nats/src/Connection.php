@@ -50,6 +50,14 @@ final class Connection
     private const int TICK_MAX_READS = 4;
 
     /**
+     * Budget for acting on what the server already sent before a request is
+     * written. What a parked connection holds (an INFO, a PING, an -ERR, EOF)
+     * takes far less; the cap only bites under live subscription traffic, so
+     * that traffic cannot hold a request back past its own timeout.
+     */
+    public const float SETTLE_TIMEOUT = 0.05;
+
+    /**
      * Server -ERR substrings after which NATS closes the connection. Lowercase;
      * matched as substrings because the server wraps some of them in quotes.
      *
@@ -257,7 +265,7 @@ final class Connection
         if ($requests === []) {
             return;
         }
-        $this->settle($timeout);
+        $this->settle(min($timeout, self::SETTLE_TIMEOUT));
         $pending = [];
         $publishing = $written = false;
         $this->collecting = true;
@@ -346,7 +354,7 @@ final class Connection
         $timeout = $opts['timeout'] ?? $this->options->requestTimeout;
         $stall = $opts['stall'] ?? null;
 
-        $this->settle($timeout);
+        $this->settle(min($timeout, self::SETTLE_TIMEOUT));
         $this->ensureConnected();
 
         // Dedicated inbox subscription so replies never touch the mux inbox used
@@ -466,11 +474,12 @@ final class Connection
     /**
      * Act on what the server has already sent, reconnecting if it closed the socket.
      * Reads the socket, so the caller must hold the connection exclusively.
+     * Returns once nothing is waiting, or after $timeout (default {@see self::SETTLE_TIMEOUT}).
      */
     public function settle(?float $timeout = null): void
     {
         $this->assertReadable();
-        $this->absorb($timeout ?? $this->options->requestTimeout);
+        $this->absorb($timeout ?? self::SETTLE_TIMEOUT);
     }
 
     /**
@@ -596,7 +605,7 @@ final class Connection
     {
         $this->assertReadable();
         $timeout ??= $this->options->connectTimeout;
-        $error = $this->absorb($timeout);
+        $error = $this->absorb(min($timeout, self::SETTLE_TIMEOUT));
         $this->ensureConnected();
 
         $this->send($this->writer->ping());

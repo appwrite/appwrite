@@ -327,7 +327,7 @@ final class JetStream
     {
         $options = $this->conn->getOptions();
         $timeout ??= $options->requestTimeout;
-        $this->conn->settle($timeout);
+        $this->conn->settle(min($timeout, Connection::SETTLE_TIMEOUT));
 
         // Every message replies to its own subject beneath a shared prefix. The server
         // acknowledges in whatever order it durably stores the messages, so the trailing

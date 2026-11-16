@@ -303,7 +303,31 @@ final class ParkedConnectionTest extends TestCase
         $elapsed = microtime(true) - $started;
 
         $this->assertSame('ok', $reply->data);
-        $this->assertLessThan(0.2 + 0.3, $elapsed, 'Traffic that never stops must not hold the request past its own timeout');
+        $this->assertLessThan(0.2, $elapsed, 'Traffic that never stops must not hold the request back for its whole timeout');
+
+        $connection->close();
+    }
+
+    public function testContinuousSubscriptionTrafficKeepsAnUnansweredRequestNearItsTimeout(): void
+    {
+        $fake = new FakeTransport();
+        $connection = $this->connect($fake, requestTimeout: 30.0);
+        $subscription = $connection->subscribe('events', static function (Message $message) use ($fake): void {
+            $fake->pushInbound("MSG events {$message->sid} 1\r\nx\r\n");
+        });
+        for ($i = 0; $i < 10; $i++) {
+            $fake->pushInbound("MSG events {$subscription->sid} 1\r\nx\r\n");
+        }
+
+        $started = microtime(true);
+        try {
+            $connection->request('work', timeout: 0.5);
+            $this->fail('An unanswered request must time out');
+        } catch (TimeoutException) {
+        }
+        $elapsed = microtime(true) - $started;
+
+        $this->assertLessThan(0.5 * 1.2, $elapsed, 'Settling must not add a second timeout ahead of the reply wait');
 
         $connection->close();
     }
