@@ -277,11 +277,8 @@ export function GitRepositoryCard({
   }
 
   const hasChanges = useMemo(() => {
-    return (
-      selectedBranch !== site?.providerBranch ||
-      selectedDir !== (site?.providerRootDirectory || '')
-    )
-  }, [selectedBranch, selectedDir, site])
+    return selectedDir !== (site?.providerRootDirectory || '')
+  }, [selectedDir, site])
 
   // The site document stores the provider's repository id, not its name, so a
   // failed lookup falls back to the installation owner instead of an empty row.
