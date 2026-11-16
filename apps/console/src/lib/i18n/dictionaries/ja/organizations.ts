@@ -825,6 +825,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'チーム管理と請求の書き込みを除くすべてのリソース。',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'OAuth2 Device Authorization Grant (RFC 8628) を許可します。',
+  'Already in this organization': 'すでにこの組織にあります',
   'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.':
     '組織に Appwrite クレジットを適用します。クレジットは一定期間後に失効し、繰り越されません。',
   'Apps published by your organization.': '組織が公開しているアプリ。',
@@ -1126,6 +1127,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'この組織に参加できなくなります。',
   'This app may have been deleted or you do not have access.':
     'このアプリは削除されたか、アクセス権がない可能性があります。',
+  "This domain can't be transferred. Check the name and try again.":
+    'このドメインは移管できません。名前を確認して、もう一度お試しください。',
   'This entire organization will be deleted, including all of its projects and resources.':
     'この組織全体と、そのすべてのプロジェクトおよびリソースが削除されます。',
   'This invoice is missing authentication details.':

@@ -114,6 +114,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'כל המשאבים מלבד ניהול הצוות ופעולות כתיבה בחיוב.',
   'Allow OAuth2 Device Authorization Grant (RFC 8628).':
     'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
+  'Already in this organization': 'כבר נמצא בארגון הזה',
   Amount: 'סכום',
   'Amount due': 'סכום לתשלום',
   'An error occurred': 'אירעה שגיאה',
@@ -1147,6 +1148,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'האפליקציה מושבתת ואינה יכולה לאמת משתמשים.',
   'This app may have been deleted or you do not have access.':
     'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
+  "This domain can't be transferred. Check the name and try again.":
+    'לא ניתן להעביר את הדומיין הזה. בדקו את השם ונסו שוב.',
   'This entire organization will be deleted, including all of its projects and resources.':
     'כל הארגון הזה יימחק, כולל כל הפרויקטים והמשאבים שלו.',
   'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':

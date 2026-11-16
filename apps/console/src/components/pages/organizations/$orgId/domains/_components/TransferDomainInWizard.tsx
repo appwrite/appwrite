@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { DomainPurchaseStatus } from '@appwrite.io/console'
+import { DomainPurchaseStatus, Query } from '@appwrite.io/console'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +14,13 @@ import {
   createDomainTransferIn,
   domainTransferPriceQueryOptions,
   finalizeDomainTransferIn,
+  organizationDomainsQueryOptions,
 } from '@/lib/react-query/hooks/domains'
+import {
+  domainFieldError,
+  getApexDomain,
+  isValidDomain,
+} from '@/lib/utils/proxy-domains'
 import { confirmPayment } from '@/lib/utils/stripe'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
@@ -59,12 +65,40 @@ export function TransferDomainInWizard({
     return () => clearTimeout(timer)
   }, [domainInput])
 
+  const normalizedDomain = domainInput.trim().toLowerCase()
+  const isDomainValid = isValidDomain(normalizedDomain)
+  const apexDomain = isDomainValid ? getApexDomain(normalizedDomain) : null
+
+  const existingDomainQuery = useQuery({
+    ...organizationDomainsQueryOptions(
+      orgId,
+      0,
+      1,
+      undefined,
+      apexDomain ? [Query.equal('domain', apexDomain)] : undefined,
+    ),
+    enabled: !!orgId && !!apexDomain,
+  })
+  const isAlreadyInOrganization =
+    !!apexDomain &&
+    !!existingDomainQuery.data?.domains.some(
+      (domain) => domain.domain === apexDomain,
+    )
+  const isCheckingOrganization = !!apexDomain && existingDomainQuery.isFetching
+
   const priceQuery = useQuery(
-    domainTransferPriceQueryOptions(debouncedPriceDomain),
+    domainTransferPriceQueryOptions(
+      isValidDomain(debouncedPriceDomain) &&
+        !isAlreadyInOrganization &&
+        !isCheckingOrganization
+        ? debouncedPriceDomain
+        : '',
+    ),
   )
 
-  const normalizedDomain = domainInput.trim().toLowerCase()
   const canQuoteDomain =
+    isDomainValid &&
+    !isAlreadyInOrganization &&
     domainTransferPriceQueryOptions(normalizedDomain).enabled === true
   const isQuoteCurrent =
     normalizedDomain === debouncedPriceDomain &&
@@ -77,6 +111,16 @@ export function TransferDomainInWizard({
     priceQuery.data.price != null &&
     Number.isFinite(priceQuery.data.price) &&
     priceQuery.data.price > 0
+  const isQuoteMissing =
+    canQuoteDomain &&
+    normalizedDomain === debouncedPriceDomain &&
+    !isCheckingOrganization &&
+    !priceQuery.isFetching &&
+    (priceQuery.isError || (isQuoteCurrent && !hasTransferQuote))
+  const domainError =
+    normalizedDomain === debouncedPriceDomain
+      ? domainFieldError(domainInput, false, t)
+      : null
 
   useEffect(() => {
     if (!organization) return
@@ -239,7 +283,9 @@ export function TransferDomainInWizard({
           quotedDomain={canQuoteDomain ? normalizedDomain : ''}
           isPriceLoading={
             canQuoteDomain &&
-            (normalizedDomain !== debouncedPriceDomain || priceQuery.isFetching)
+            (normalizedDomain !== debouncedPriceDomain ||
+              isCheckingOrganization ||
+              priceQuery.isFetching)
           }
           priceError={
             normalizedDomain === debouncedPriceDomain && priceQuery.isError
@@ -313,7 +359,25 @@ export function TransferDomainInWizard({
                 onChange={(e) => setDomainInput(e.target.value)}
                 placeholder="example.com"
                 className="h-9 text-[13px] font-mono"
+                aria-invalid={
+                  domainError || isAlreadyInOrganization || isQuoteMissing
+                    ? true
+                    : undefined
+                }
               />
+              {domainError ? (
+                <p className="text-[12px] text-destructive">{domainError}</p>
+              ) : isAlreadyInOrganization ? (
+                <p className="text-[12px] text-destructive">
+                  {t('Already in this organization')}
+                </p>
+              ) : isQuoteMissing ? (
+                <p className="text-[12px] text-destructive">
+                  {t(
+                    "This domain can't be transferred. Check the name and try again.",
+                  )}
+                </p>
+              ) : null}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="td-auth" className="text-[13px]">
