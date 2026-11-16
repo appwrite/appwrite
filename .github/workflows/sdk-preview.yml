@@ -110,21 +110,43 @@ jobs:
       always()
       && (needs.changes.outputs.preview == 'true'
       || (github.event_name == 'workflow_dispatch' && inputs.platform == 'console'))
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # gcrunner refuses jobs from forks; those build the image without the layer cache.
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}-console/runner=build', github.run_id)
+      || 'ubuntu-24.04' }}
+    timeout-minutes: 40
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          submodules: recursive
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+      # The runner injects GCRUNNER_REGISTRY into the shell only; action inputs
+      # read ${{ env.* }}, which needs it promoted to GITHUB_ENV first.
+      - name: Expose the runner registry to workflow expressions
+        if: runner.environment == 'self-hosted'
+        run: echo "GCRUNNER_REGISTRY=${GCRUNNER_REGISTRY}" >> "${GITHUB_ENV}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      # The image `docker compose run appwrite` uses: Appwrite's CLI boots only with the
+      # utopia extension, which a host PHP does not load. Reads CI's layer cache, never writes it.
+      - name: Build Appwrite
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
-          php-version: '8.5'
-          extensions: swoole
-          tools: composer:v2
-          coverage: none
+          context: .
+          load: true
+          tags: appwrite-dev
+          target: development
+          cache-from: ${{ env.GCRUNNER_REGISTRY && format('type=registry,ref={0}/appwrite:buildcache', env.GCRUNNER_REGISTRY) || '' }}
+          build-args: |
+            DEBUG=false
+            TESTING=true
+            VERSION=dev
 
       - name: Setup Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -137,9 +159,8 @@ jobs:
           bun-version: 1.4
 
       - name: Install dependencies
-        run: |
-          composer install --prefer-dist --no-progress --ignore-platform-reqs
-          cd apps/console && bun install --frozen-lockfile
+        working-directory: apps/console
+        run: bun install --frozen-lockfile
 
       - name: Build SDK
         working-directory: apps/console

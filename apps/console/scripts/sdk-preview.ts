@@ -9,7 +9,10 @@
  * so Cloud-only parameters, properties and enum values survive. Removals and
  * renames are not carried.
  *
- * Needs PHP with swoole and `composer install` at the repository root.
+ * Runs the Appwrite CLI in the `appwrite` Compose service's image: Appwrite boots
+ * only with the utopia extension, which a host PHP does not load. Build the image
+ * first (`docker compose build appwrite` at the repository root); no service needs
+ * to run.
  *
  * Usage:
  *   bun run sdk:preview               build and install it into node_modules
@@ -116,6 +119,27 @@ const run = (command: string[], cwd: string) => {
   }
 }
 
+// The CLI in a throwaway container of the `appwrite` service, as this user, so the
+// specs and SDK it writes into the mounted app/ stay writable here.
+const cli = (args: string[]) =>
+  run(
+    [
+      'docker',
+      'compose',
+      'run',
+      '--rm',
+      '--no-deps',
+      '-T',
+      `--user=${process.getuid?.()}:${process.getgid?.()}`,
+      '--env=_APP_SDK_PREVIEW=enabled',
+      '--entrypoint=php',
+      'appwrite',
+      'app/cli.php',
+      ...args,
+    ],
+    REPOSITORY,
+  )
+
 const readSpec = (path: string): Spec => JSON.parse(readFileSync(path, 'utf8'))
 
 function main() {
@@ -126,17 +150,7 @@ function main() {
     )
   }
 
-  run(
-    [
-      'php',
-      'app/cli.php',
-      'specs',
-      '--version=latest',
-      '--mode=normal',
-      '--git=no',
-    ],
-    REPOSITORY,
-  )
+  cli(['specs', '--version=latest', '--mode=normal', '--git=no'])
 
   const base = readSpec(pinned)
   const branch = readSpec(join(SPECS, 'open-api3-latest-console.json'))
@@ -150,18 +164,13 @@ function main() {
   console.log(`This branch: ${count(branch)}`)
   console.log(`Preview: ${count(preview)}`)
 
-  run(
-    [
-      'php',
-      'app/cli.php',
-      'sdks',
-      '--platform=console',
-      '--sdk=web',
-      `--version=${VERSION}`,
-      '--git=no',
-    ],
-    REPOSITORY,
-  )
+  cli([
+    'sdks',
+    '--platform=console',
+    '--sdk=web',
+    `--version=${VERSION}`,
+    '--git=no',
+  ])
   run(['npm', 'install', '--no-audit', '--no-fund'], SDK)
   run(['npm', 'run', 'build'], SDK)
 
