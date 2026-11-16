@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-16T12:09:00Z",
+  "updated": "2026-11-16T14:27:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -763,11 +763,11 @@
     },
     {
       "id": "nov16-services-gaps",
-      "title": "Storage: a stale preview right after an S3 overwrite",
+      "title": "Storage: no stale preview after a delete or an S3 overwrite",
       "area": "Services",
-      "status": "todo",
-      "updated": "2026-11-16T12:09:00Z",
-      "note": "S3CustomServerTest::testS3OverwritePathsInvalidatePreviewCache fails through the Rust proxy (passes on PHP): about 5 ms after PHP's S3 PutObject or CopyObject commits a new path, a Rust preview that misses the cache re-reads the file document, still gets the old row, and caches the old rendering. Not ported yet, and not covered by the diff or the default E2E config: the response cache on a storage device (_APP_CONNECTIONS_STORAGE_CACHE), account-switching devices (the authDevice resource and device routes)."
+      "status": "done",
+      "updated": "2026-11-16T14:27:00Z",
+      "note": "Fixed (2537ae0915): a response-cache hit wrote its cached bytes back to the cache, which PHP never does (its cache-write shutdown only writes an action's own output). When the deletes worker removed the entry between the hit's read and that write, Rust recreated it with the old rendering. Now only a response the action produced is cached. testFilePreviewCache and testS3OverwritePathsInvalidatePreviewCache pass through the Rust proxy; the full diff is 6,210 of 6,210 identical. Not ported yet, and not covered by the diff or the default E2E config: the response cache on a storage device (_APP_CONNECTIONS_STORAGE_CACHE), account-switching devices (the authDevice resource and device routes)."
     }
   ]
 }
