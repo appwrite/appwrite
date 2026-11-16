@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy;
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\DomainTargets;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
 use Swoole\Coroutine;
@@ -20,7 +21,6 @@ use Utopia\Domains\Domain;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
-use Utopia\Validator\IP;
 
 class Action extends PlatformAction
 {
@@ -193,24 +193,14 @@ class Action extends PlatformAction
         // Ensures different target based on rule's type, as configured by env variables
         if ($resourceType === 'site') {
             // For example: appwrite.network
-            foreach (\explode(',', System::getEnv('_APP_DOMAIN_SITES', '')) as $targetCNAME) {
-                if (empty($targetCNAME)) {
-                    continue;
-                }
-                $targetCNAMEs[] = new Domain($targetCNAME);
-            }
+            $targetCNAMEs = DomainTargets::domains(System::getEnv('_APP_DOMAIN_SITES', ''));
         } elseif ($resourceType === 'function' || $ruleType === 'api') {
             // For example: fra.cloud.appwrite.io
-            $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
+            $targetCNAMEs = DomainTargets::domains(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
         } elseif ($ruleType === 'redirect') {
-            // Shouldn't be needed, because redirect should always have resourceTyp too, but just in case we default to sites
+            // Shouldn't be needed, because redirect should always have resourceType too, but just in case we default to sites
             // For example: appwrite.network
-            foreach (\explode(',', System::getEnv('_APP_DOMAIN_SITES', '')) as $targetCNAME) {
-                if (empty($targetCNAME)) {
-                    continue;
-                }
-                $targetCNAMEs[] = new Domain($targetCNAME);
-            }
+            $targetCNAMEs = DomainTargets::domains(System::getEnv('_APP_DOMAIN_SITES', ''));
         }
 
         $validators = [];
@@ -228,24 +218,18 @@ class Action extends PlatformAction
         }
 
         // Ensure at least one of CNAME/A/AAAA record points to our servers properly
-        foreach (\explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', '')) as $targetA) {
-            if (empty($targetA)) {
-                continue;
-            }
-            if ((new IP(IP::V4))->isValid($targetA)) {
-                $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
-                $validators[] = $validator;
-                $checks[] = $validator;
-                $checkApex ??= $validator;
+        foreach (DomainTargets::ipv4(System::getEnv('_APP_DOMAIN_TARGET_A', '')) as $targetA) {
+            $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
+            $validators[] = $validator;
+            $checks[] = $validator;
+            $checkApex ??= $validator;
 
-                if (\is_null($mainValidator)) {
-                    $mainValidator = $validator;
-                }
+            if (\is_null($mainValidator)) {
+                $mainValidator = $validator;
             }
         }
 
-        $targetAAAA = System::getEnv('_APP_DOMAIN_TARGET_AAAA', '');
-        if ((new IP(IP::V6))->isValid($targetAAAA)) {
+        foreach (DomainTargets::ipv6(System::getEnv('_APP_DOMAIN_TARGET_AAAA', '')) as $targetAAAA) {
             $validator = new $dnsValidatorClass($targetAAAA, Record::TYPE_AAAA, $dnsServers);
             $validators[] = $validator;
             $checks[] = $validator;
