@@ -332,7 +332,7 @@ trait Deployment
                             ])));
                         }
                     }
-                } elseif (!empty($providerBranch)) {
+                } elseif ($comments && !empty($providerBranch)) {
                     $latestComments = $authorization->skip(fn () => $dbForPlatform->find('vcsComments', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::equal('providerBranch', [$providerBranch]),
