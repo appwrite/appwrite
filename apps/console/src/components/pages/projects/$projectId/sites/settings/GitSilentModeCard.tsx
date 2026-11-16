@@ -63,10 +63,7 @@ export function GitSilentModeCard({
     },
     onSuccess: (updated) => {
       toast.success(t('Repository settings updated successfully'))
-      queryClient.setQueryData(
-        ['site', 'project', projectId, siteId],
-        updated,
-      )
+      queryClient.setQueryData(['site', 'project', projectId, siteId], updated)
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
