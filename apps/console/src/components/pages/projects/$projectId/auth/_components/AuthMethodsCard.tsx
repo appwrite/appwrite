@@ -9,7 +9,7 @@ import {
 import { PUBLIC_CATALOG_LOGO_IMAGE_CLASSES } from '@/lib/public-icon-classes'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
-import { useVisibleAuthMethods } from '../Settings'
+import { AUTH_METHODS } from '../Settings'
 
 export function AuthMethodsCard({
   projectId,
@@ -24,8 +24,7 @@ export function AuthMethodsCard({
   canManage: boolean
 }) {
   const t = useT()
-  const authMethods = useVisibleAuthMethods()
-  const enabledCount = authMethods.filter(
+  const enabledCount = AUTH_METHODS.filter(
     (method) => methods[method.key],
   ).length
 
@@ -39,14 +38,14 @@ export function AuthMethodsCard({
           <p className="h-4 truncate text-[12px] leading-4 text-muted-foreground">
             {t('{enabled} of {total} enabled')
               .replace('{enabled}', enabledCount.toLocaleString())
-              .replace('{total}', authMethods.length.toLocaleString())}
+              .replace('{total}', AUTH_METHODS.length.toLocaleString())}
           </p>
         </div>
       </div>
       <div className="border-t border-border" />
       <div className="space-y-5 px-6 py-5">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {authMethods.map((method) => {
+          {AUTH_METHODS.map((method) => {
             const Icon = method.icon
             const enabled = methods[method.key]
             return (

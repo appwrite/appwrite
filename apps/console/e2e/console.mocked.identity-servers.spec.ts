@@ -3,8 +3,8 @@ import type { Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
- * Identity servers (preview) holds the project's LDAP directory, and LDAP shows up
- * as an auth method next to it. The Appwrite API is mocked at the network layer
+ * Identity servers holds the project's LDAP directory, and LDAP shows up as an
+ * auth method next to it. The Appwrite API is mocked at the network layer
  * and the real console pages are asserted.
  */
 
@@ -195,16 +195,13 @@ async function mockAppwriteApi(
   return calls
 }
 
-async function useProfile(page: Page, identityServers: boolean) {
-  await page.addInitScript((enabled) => {
+async function useSelfHostedProfile(page: Page) {
+  await page.addInitScript(() => {
     window.localStorage.setItem(
       'debug:consoleProfile',
-      JSON.stringify({
-        id: 'self-hosted',
-        features: { identityServers: enabled },
-      }),
+      JSON.stringify({ id: 'self-hosted', features: {} }),
     )
-  }, identityServers)
+  })
 }
 
 async function openIdentityServers(page: Page) {
@@ -212,6 +209,7 @@ async function openIdentityServers(page: Page) {
     waitUntil: 'domcontentloaded',
   })
   await expect(page.locator('#ldap-base-dn')).toBeVisible({ timeout: 60_000 })
+  await expect(page).toHaveURL(/\/settings\/identity-servers\/ldap$/)
 }
 
 /** A paste event as the browser fires it; a real clipboard is not available headless. */
@@ -249,7 +247,7 @@ async function chooseEncryption(
 
 test.describe('identity servers (mocked API)', () => {
   test('shows every saved LDAP setting', async ({ page }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     await mockAppwriteApi(page, project(CONFIGURED))
     await openIdentityServers(page)
 
@@ -284,20 +282,35 @@ test.describe('identity servers (mocked API)', () => {
       'displayName',
     )
     await expect(page.locator('#ldap-phone-attribute')).toHaveValue('mobile')
-    await expect(
-      page.getByText(
-        'Using Active Directory? Set the user filter to (sAMAccountName={username}) and the ID attribute to objectGUID.',
-      ),
-    ).toBeVisible()
     await expect(page.getByRole('button', { name: 'Update' })).toBeDisabled()
 
+    // LDAP sits under the Identity servers group of the side navigation.
+    const navigation = page.getByRole('navigation', {
+      name: 'Identity servers navigation',
+    })
+    await expect(navigation.getByText('Identity servers')).toBeVisible()
+    await expect(navigation.getByRole('link', { name: 'LDAP' })).toBeVisible()
+
     await screenshot(page, 'identity-servers.png')
+  })
+
+  test('shows the Active Directory values in a popover', async ({ page }) => {
+    await useSelfHostedProfile(page)
+    await mockAppwriteApi(page, project(CONFIGURED))
+    await openIdentityServers(page)
+
+    await expect(page.getByText('(sAMAccountName={username})')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Using Active Directory?' }).click()
+    const popover = page.getByRole('dialog')
+    await expect(popover.getByText('(sAMAccountName={username})')).toBeVisible()
+    await expect(popover.getByText('objectGUID')).toBeVisible()
+    await expect(popover.getByText('displayName')).toBeVisible()
   })
 
   test('asks for the bind password again when certificate verification changes', async ({
     page,
   }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     const calls = await mockAppwriteApi(page, project(CONFIGURED))
     await openIdentityServers(page)
 
@@ -322,11 +335,10 @@ test.describe('identity servers (mocked API)', () => {
   test('sends the renamed certificate and user filter fields', async ({
     page,
   }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     const calls = await mockAppwriteApi(page, project(CONFIGURED))
     await openIdentityServers(page)
 
-    await page.locator('#ldap-verification').click()
     await page.locator('#ldap-certificate').fill(CERTIFICATE)
     await page.locator('#ldap-user-filter').fill('(mail={username})')
     await page.locator('#ldap-bind-password').fill('service-secret')
@@ -335,7 +347,6 @@ test.describe('identity servers (mocked API)', () => {
     await expect.poll(() => calls.ldapUpdates.length).toBe(1)
     const body = calls.ldapUpdates[0].postDataJSON()
     expect(body).toEqual({
-      verification: false,
       certificate: CERTIFICATE,
       bindPassword: 'service-secret',
       userFilter: '(mail={username})',
@@ -345,10 +356,26 @@ test.describe('identity servers (mocked API)', () => {
     expect(body).not.toHaveProperty('caCertificate')
   })
 
+  test('hides the certificate while verification is off and keeps it', async ({
+    page,
+  }) => {
+    await useSelfHostedProfile(page)
+    await mockAppwriteApi(page, project(CONFIGURED))
+    await openIdentityServers(page)
+
+    await page.locator('#ldap-certificate').fill(CERTIFICATE)
+    await page.locator('#ldap-verification').click()
+    await expect(page.locator('#ldap-verification')).not.toBeChecked()
+    await expect(page.locator('#ldap-certificate')).toHaveCount(0)
+
+    await page.locator('#ldap-verification').click()
+    await expect(page.locator('#ldap-certificate')).toHaveValue(CERTIFICATE)
+  })
+
   test('hides the certificate settings without encryption and keeps them', async ({
     page,
   }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     await mockAppwriteApi(page, project(CONFIGURED))
     await openIdentityServers(page)
 
@@ -370,7 +397,7 @@ test.describe('identity servers (mocked API)', () => {
   test('a pasted LDAP URL fills host, encryption, port and base DN', async ({
     page,
   }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     await mockAppwriteApi(
       page,
       project({ ...UNCONFIGURED, ldapEncryption: 'none', ldapPort: 389 }),
@@ -403,7 +430,7 @@ test.describe('identity servers (mocked API)', () => {
   test('a pasted LDAP URL offers its base DN instead of replacing one', async ({
     page,
   }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     await mockAppwriteApi(page, project(CONFIGURED))
     await openIdentityServers(page)
 
@@ -435,7 +462,7 @@ test.describe('identity servers (mocked API)', () => {
   })
 
   test('a user filter without {username} blocks saving', async ({ page }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     const calls = await mockAppwriteApi(page, project(UNCONFIGURED))
     await openIdentityServers(page)
 
@@ -471,7 +498,7 @@ test.describe('identity servers (mocked API)', () => {
   test('switching to anonymous search clears the bind password', async ({
     page,
   }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     const calls = await mockAppwriteApi(page, project(CONFIGURED))
     await openIdentityServers(page)
 
@@ -489,7 +516,7 @@ test.describe('identity servers (mocked API)', () => {
   })
 
   test('enabling needs a host and a base DN', async ({ page }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     const calls = await mockAppwriteApi(page, project(UNCONFIGURED))
     await openIdentityServers(page)
 
@@ -504,8 +531,8 @@ test.describe('identity servers (mocked API)', () => {
     expect(calls.ldapUpdates).toHaveLength(0)
   })
 
-  test('auth settings lists LDAP while the preview is on', async ({ page }) => {
-    await useProfile(page, true)
+  test('auth settings lists LDAP', async ({ page }) => {
+    await useSelfHostedProfile(page)
     await mockAppwriteApi(page, project(UNCONFIGURED))
 
     await page.goto(`/projects/${PROJECT_ID}/auth/settings`, {
@@ -525,7 +552,7 @@ test.describe('identity servers (mocked API)', () => {
   test('reads LDAP from ldapEnabled when authMethods leave it out', async ({
     page,
   }) => {
-    await useProfile(page, true)
+    await useSelfHostedProfile(page)
     await mockAppwriteApi(
       page,
       project(CONFIGURED, { enabled: true, listed: false }),
@@ -540,20 +567,5 @@ test.describe('identity servers (mocked API)', () => {
 
     await openIdentityServers(page)
     await expect(page.locator('#ldap-enabled')).toBeChecked()
-  })
-
-  test('auth settings hides LDAP while the preview is off', async ({
-    page,
-  }) => {
-    await useProfile(page, false)
-    await mockAppwriteApi(page, project(CONFIGURED))
-
-    await page.goto(`/projects/${PROJECT_ID}/auth/settings`, {
-      waitUntil: 'domcontentloaded',
-    })
-    await expect(page.locator('#email-password')).toBeVisible({
-      timeout: 60_000,
-    })
-    await expect(page.locator('#ldap')).toHaveCount(0)
   })
 })

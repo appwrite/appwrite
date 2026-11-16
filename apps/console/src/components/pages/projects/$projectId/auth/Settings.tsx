@@ -9,7 +9,6 @@ import {
   usePlatforms,
   useUpdateAuthMethod,
 } from '@/lib/react-query/hooks'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { authMethodsRecordFromProject } from '@/lib/project-settings'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -48,7 +47,7 @@ type AuthMethodPolicy = {
     | '/projects/$projectId/auth/policies/emails'
     | '/projects/$projectId/auth/policies/memberships'
     | '/projects/$projectId/auth/policies/passkeys'
-    | '/projects/$projectId/settings/identity-servers'
+    | '/projects/$projectId/settings/identity-servers/ldap'
   label: string
 }
 
@@ -123,20 +122,11 @@ export const AUTH_METHODS: ReadonlyArray<{
     label: 'LDAP',
     icon: Network,
     policy: {
-      to: '/projects/$projectId/settings/identity-servers',
+      to: '/projects/$projectId/settings/identity-servers/ldap',
       label: 'Identity servers',
     },
   },
 ]
-
-/** The auth methods to list. LDAP is a preview: it is listed only while Identity servers, where it is configured, is on. */
-export function useVisibleAuthMethods(): typeof AUTH_METHODS {
-  const { features } = useConsoleProfile()
-  return AUTH_METHODS.filter(
-    (method) =>
-      method.key !== ProjectAuthMethodId.Ldap || features.identityServers,
-  )
-}
 
 export function AuthSettings({ projectId }: AuthSettingsProps) {
   const t = useT()
@@ -149,7 +139,6 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
     projectData?.region,
   )
   const passkeyReady = security.authPasskey.origins.length > 0
-  const visibleAuthMethods = useVisibleAuthMethods()
   // Enabling LDAP needs a directory to sign in against.
   const ldapConfigured = Boolean(
     projectData?.ldapHosts?.length && projectData?.ldapBaseDn,
@@ -249,7 +238,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             {t('Enable the authentication methods you wish to use.')}
           </p>
           <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-            {visibleAuthMethods.map((method) => {
+            {AUTH_METHODS.map((method) => {
               const Icon = method.icon
               const isUpdating = updatingAuthMethods.has(method.key)
               const enabled = authMethods[method.key] ?? false
