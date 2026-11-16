@@ -244,6 +244,20 @@ final class ClickHouseTest extends TestCase
         $this->assertStringContainsString(' AND ', $body);
     }
 
+    public function testCompilesExistsFilters(): void
+    {
+        $client = new CapturingClient([$this->jsonResponse([])]);
+
+        $this->store($client)->find('project', [
+            Query::exists(['region']),
+            Query::notExists(['deploymentId']),
+        ]);
+
+        $body = (string) $client->requests[0]->getBody();
+        $this->assertStringContainsString("(region != '')", $body);
+        $this->assertStringContainsString("(deploymentId = '')", $body);
+    }
+
     public function testRejectsInvalidStream(): void
     {
         $this->expectException(\InvalidArgumentException::class);

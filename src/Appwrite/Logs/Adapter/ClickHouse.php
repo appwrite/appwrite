@@ -416,6 +416,20 @@ class ClickHouse extends Adapter
             return '(' . \implode($method === QueryMethod::And ? ' AND ' : ' OR ', $parts) . ')';
         }
 
+        // Exists names its attributes in the values, not the attribute.
+        if ($method === QueryMethod::Exists || $method === QueryMethod::NotExists) {
+            $parts = [];
+            foreach ($query->getValues() as $attribute) {
+                [$column] = $this->column((string) $attribute);
+                $parts[] = $column . ($method === QueryMethod::Exists ? " != ''" : " = ''");
+            }
+            if ($parts === []) {
+                throw new \InvalidArgumentException('Empty log exists query');
+            }
+
+            return '(' . \implode(' AND ', $parts) . ')';
+        }
+
         [$column, $type] = $this->column($query->getAttribute());
         $values = $query->getValues();
         $parameters = [];
