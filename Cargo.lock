@@ -5430,6 +5430,7 @@ dependencies = [
  "utopia-async",
  "utopia-dsn",
  "utopia-lock",
+ "utopia-nats",
  "utopia-validators",
  "xxhash-rust",
 ]
@@ -5500,11 +5501,13 @@ dependencies = [
 name = "utopia-storage"
 version = "0.1.0"
 dependencies = [
+ "aes-gcm",
  "async-trait",
  "base64 0.22.1",
  "bytes",
  "chrono",
  "futures-util",
+ "getrandom 0.3.4",
  "hex",
  "hmac 0.12.1",
  "http-body-util",

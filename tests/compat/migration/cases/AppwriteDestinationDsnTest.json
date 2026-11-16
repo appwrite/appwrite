@@ -859,6 +859,7 @@
             "project-variable",
             "project-protocols",
             "project-labels",
+            "project-preferences",
             "project-services",
             "project-email-template",
             "project-environment",

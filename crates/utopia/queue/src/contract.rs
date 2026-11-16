@@ -29,6 +29,13 @@ pub trait Publisher: Send + Sync {
         Box::pin(async move { if failed { self.failed_count(queue).await } else { self.pending_count(queue).await } })
     }
 
+    /// Seconds the oldest message not yet handed to a consumer has waited, or
+    /// 0 when none is waiting. Unlike the size it says whether consumers keep
+    /// up: a deep queue that drains in seconds reads low.
+    ///
+    /// PHP: `getQueueAge(Queue $queue)`.
+    fn queue_age<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>>;
+
     /// Messages waiting to be delivered.
     fn pending_count<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>>;
 
@@ -155,6 +162,9 @@ impl<P: Publisher + ?Sized> Publisher for Arc<P> {
     }
     fn queue_size<'a>(&'a self, queue: &'a Queue, failed: bool) -> BoxFuture<'a, Result<i64>> {
         (**self).queue_size(queue, failed)
+    }
+    fn queue_age<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>> {
+        (**self).queue_age(queue)
     }
     fn pending_count<'a>(&'a self, queue: &'a Queue) -> BoxFuture<'a, Result<i64>> {
         (**self).pending_count(queue)

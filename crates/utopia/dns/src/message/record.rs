@@ -78,9 +78,14 @@ const TYPES: [(&str, u16); 19] = [
 
 const MAX_U16: i64 = 65535;
 const MAX_CAA_FLAGS: i64 = 255;
-const MAX_TXT_CHUNK: usize = 255;
+const MAX_TXT_CHUNK: usize = Record::MAX_TXT_CHUNK;
 
 impl Record {
+    /// The most bytes one TXT character-string holds (RFC 1035).
+    ///
+    /// PHP: `Record::MAX_TXT_CHUNK`.
+    pub const MAX_TXT_CHUNK: usize = 255;
+
     /// `A`: an IPv4 address.
     pub const TYPE_A: u16 = 1;
     /// `NS`: a name server.

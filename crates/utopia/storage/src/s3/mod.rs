@@ -1014,7 +1014,17 @@ impl Device for S3 {
         Ok(true)
     }
 
-    async fn read(&self, path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -> Result<Body> {
+    async fn read(
+        &self,
+        path: &str,
+        offset: u64,
+        length: Option<u64>,
+        etag: Option<&str>,
+        modified_since: Option<DateTime<FixedOffset>>,
+    ) -> Result<Body> {
+        if etag.is_some() && modified_since.is_some() {
+            return Err(Error::InvalidArgument("A read cannot be conditional on both an ETag and a time".into()));
+        }
         if length == Some(0) {
             return Ok(Body::empty());
         }
@@ -1027,9 +1037,16 @@ impl Device for S3 {
         if let Some(etag) = etag {
             headers.push(("if-match", quote(etag)));
         }
+        if let Some(since) = modified_since {
+            let date = php_std::datetime::gmdate(b"D, d M Y H:i:s \\G\\M\\T", since.timestamp());
+            headers.push(("if-modified-since", String::from_utf8_lossy(&date).into_owned()));
+        }
         let headers: Vec<(&str, &str)> = headers.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let response =
             self.call(Method::Get, &read_uri(path), Hashed::empty(), &[], &headers, &[], false, true).await?;
+        if response.status == 304 {
+            return Err(Error::NotModified(format!("File {path} has not been modified")));
+        }
         match response.body {
             // Streamed as it arrives, and kept as it is read, so the body
             // rewinds like PHP's `php://temp` copy of the response; memory

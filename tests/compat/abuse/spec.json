@@ -69,6 +69,12 @@
         "Utopia\\Abuse\\Adapter\\TokenBucket::reset"
       ]
     },
+    "limit.release": {
+      "doc": "$limit->release() (TimeLimit only)",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\TimeLimit::release"
+      ]
+    },
     "limit.key": {
       "doc": "$limit->key()",
       "covers": [

@@ -1280,6 +1280,9 @@ impl Adapter for Bitbucket {
                 php_std::encoding::rawurlencode(branch.as_bytes())
             ))
             .await?;
+        if response.status == 404 {
+            return Err(Error::RepositoryNotFound(format!("Branch not found: {branch}")));
+        }
         if response.status >= 400 {
             return Err(Error::exception(
                 format!("Failed to get latest commit: HTTP {}", response.status),

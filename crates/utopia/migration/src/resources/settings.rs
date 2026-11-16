@@ -46,6 +46,37 @@ impl Labels {
     }
 }
 
+/// The project's preferences: a key-value object, one per project. The
+/// destination replaces the whole object.
+///
+/// PHP: `Utopia\Migration\Resources\Settings\Preferences`.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Preferences {
+    /// The preferences (`getPreferences()`).
+    pub preferences: Array,
+}
+
+impl Preferences {
+    /// A resource of these preferences.
+    pub fn resource(
+        self,
+        id: impl Into<String>,
+        created_at: impl Into<String>,
+        updated_at: impl Into<String>,
+    ) -> ResourceRef {
+        based(Kind::Preferences(self), id.into(), created_at.into(), updated_at.into())
+    }
+
+    /// PHP: `Preferences::fromArray()`.
+    pub fn from_array(array: &Array) -> Result<ResourceRef> {
+        let i = Input::new(array);
+        let class = "Utopia\\Migration\\Resources\\Settings\\Preferences::__construct";
+        let (id, c, u) = ids(&i, class, 3)?;
+        let preferences = to_array(&i.or("preferences", Value::Array(Array::new())), &param(class, 2, "preferences"))?;
+        Ok(Preferences { preferences }.resource(id, c, u))
+    }
+}
+
 /// An environment of the project: a separate project in the same
 /// organization, billed under its parent. Only the environment itself is
 /// carried; its own resources belong to a different project.

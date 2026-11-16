@@ -7237,8 +7237,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Exception",
-              "message": "Branch 'non-existing-branch' not found",
+              "class": "Utopia\\VCS\\Exception\\RepositoryNotFound",
+              "message": "Branch not found: non-existing-branch",
               "code": 0
             }
           }

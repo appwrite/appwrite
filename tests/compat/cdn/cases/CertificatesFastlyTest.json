@@ -4022,6 +4022,55 @@
           }
         }
       ]
+    },
+    {
+      "name": "certificate expiry delegates to tls",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateExpiry",
+            "domain": "Example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"sub_1\",\"attributes\":{\"state\":\"issued\"},\"relationships\":{\"tls_certificates\":{\"data\":[{\"id\":\"cert_1\",\"type\":\"tls_certificate\"}]}}}],\"included\":[{\"id\":\"cert_1\",\"type\":\"tls_certificate\",\"attributes\":{\"not_after\":\"2027-02-01T00:00:00Z\"}}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": "2027-02-01 00:00:00.000",
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

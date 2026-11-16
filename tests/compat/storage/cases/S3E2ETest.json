@@ -1498,6 +1498,104 @@
           }
         }
       ]
+    },
+    {
+      "name": "a read since a time is one conditional GET",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "bucket": "compat"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/modified-since.txt",
+            "data": "Hello",
+            "content_type": "text/plain"
+          },
+          "expect": "8b1a9953c4611296a827abf8c47804d7"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/modified-since.txt",
+            "modified_since_in": -3600
+          },
+          "expect": "Hello"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/modified-since.txt",
+            "modified_since_in": 3600
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotModifiedException",
+              "message": "File ${ns}/testing/modified-since.txt has not been modified"
+            }
+          }
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/modified-since.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/modified-since.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/modified-since.txt",
+            "modified_since_in": -3600
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the message carries the service's request IDs"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "<masked>"
+            }
+          }
+        }
+      ]
     }
   ]
 }

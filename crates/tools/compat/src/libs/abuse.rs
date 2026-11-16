@@ -19,6 +19,7 @@ pub const OPS: &[&str] = &[
     "limit.check",
     "limit.peek",
     "limit.reset",
+    "limit.release",
     "limit.key",
     "limit.with_params",
     "limit.with_param",
@@ -241,6 +242,15 @@ impl time_limit::Store for MemoryStore {
         let mut s = self.state();
         s.calls += 1;
         s.put(format!("{key}__{window}"), value);
+        Ok(())
+    }
+
+    async fn unhit(&self, key: &str, window: i64) -> utopia_abuse::Result<()> {
+        let mut s = self.state();
+        s.calls += 1;
+        let k = format!("{key}__{window}");
+        let used = s.get(&k);
+        s.put(k, (used - 1).max(0));
         Ok(())
     }
 
@@ -491,6 +501,20 @@ impl time_limit::Tables for FakeTables {
         Ok(row.clone())
     }
 
+    async fn decrement(&self, _database: &str, id: &str, min: Option<i64>) -> utopia_abuse::Result<()> {
+        let mut s = self.call("decrementRowColumn");
+        let row =
+            s.rows.iter_mut().find(|r| r.id == id).ok_or_else(|| appwrite("Row not found", 404, "row_not_found"))?;
+        if let Some(min) = min
+            && row.count - 1 < min
+        {
+            let message = format!("Column \"count\" has reached the minimum value of {min}");
+            return Err(appwrite(&message, 400, "column_limit_exceeded"));
+        }
+        row.count -= 1;
+        Ok(())
+    }
+
     async fn update_row(&self, _database: &str, id: &str, count: i64) -> utopia_abuse::Result<()> {
         let mut s = self.call("updateRow");
         let row =
@@ -566,6 +590,10 @@ impl time_limit::Documents for Racing {
             race.await;
         }
         self.memory.increase(id, max).await
+    }
+
+    async fn decrease(&self, id: &str, min: Option<i64>) -> utopia_abuse::Result<()> {
+        self.memory.decrease(id, min).await
     }
 
     async fn update(&self, id: &str, count: i64) -> utopia_abuse::Result<()> {
@@ -890,6 +918,26 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             };
             match r {
                 Ok(v) => Outcome::Ok(v),
+                Err(e) => err(e),
+            }
+        }
+        "limit.release" => {
+            let l = limit(session)?;
+            let when = at(&l, a.0.get("now"))?;
+            let r = match (&l, when) {
+                (AnyLimit::TlPool(l), At::Secs(t)) => l.release_at(t).await,
+                (AnyLimit::TlMemory(l), At::Secs(t)) => l.release_at(t).await,
+                (AnyLimit::TlNone(l), _) => l.release().await,
+                (AnyLimit::TlRedis(l), _) => l.release().await,
+                (AnyLimit::TlCluster(l), _) => l.release().await,
+                (AnyLimit::TlPool(l), _) => l.release().await,
+                (AnyLimit::TlDatabase(l), _) => l.release().await,
+                (AnyLimit::TlMemory(l), _) => l.release().await,
+                (AnyLimit::TlTables(l), _) => l.release().await,
+                _ => return Err(Fault::new("release() is a TimeLimit method")),
+            };
+            match r {
+                Ok(()) => Outcome::Ok(Value::Null),
                 Err(e) => err(e),
             }
         }

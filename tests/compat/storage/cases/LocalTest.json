@@ -5825,6 +5825,146 @@
           }
         }
       ]
+    },
+    {
+      "name": "read since a time compares the modified time",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/modified-since.txt",
+            "data": "Hello",
+            "content_type": "text/plain"
+          },
+          "expect": "8b1a9953c4611296a827abf8c47804d7"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/modified-since.txt",
+            "modified_since_in": -3600
+          },
+          "expect": "Hello"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/modified-since.txt",
+            "modified_since_in": 3600
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotModifiedException",
+              "message": "File /tmp/compat-fs/${ns}/disk/modified-since.txt has not been modified"
+            }
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/modified-since.txt",
+            "modified_since_in": 3600,
+            "catch": true
+          },
+          "expect": {
+            "class": "Utopia\\Storage\\Exception\\NotModifiedException",
+            "message": "File /tmp/compat-fs/${ns}/disk/modified-since.txt has not been modified",
+            "code": 0,
+            "error_code": null,
+            "previous": false
+          }
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/modified-since.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/missing.txt",
+            "modified_since_in": -3600
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File not found"
+            }
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/modified-since.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "read cannot be conditional on both an etag and a time",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/missing.txt",
+            "etag": "abc",
+            "modified_since_in": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "A read cannot be conditional on both an ETag and a time"
+            }
+          }
+        }
+      ]
     }
   ]
 }

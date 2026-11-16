@@ -163,11 +163,15 @@ final class Adapter implements Base, Benchmarks
             },
             'pool.send' => function (array $a, Session $s) {
                 $created = 0;
-                $pool = new Pool(new Connections(new Stack(), 'test', $a['size'], function () use (&$created) {
+                $connections = new Connections(new Stack(), 'test', $a['size'], function () use (&$created) {
                     $created++;
 
                     return new Curl();
-                }, 0.0));
+                }, 0.0);
+                for ($i = 0; $i < ($a['held'] ?? 0); $i++) {
+                    $connections->pop();
+                }
+                $pool = new Pool($connections);
                 $results = [];
                 foreach ($a['requests'] as $request) {
                     if ($a['stream'] ?? false) {

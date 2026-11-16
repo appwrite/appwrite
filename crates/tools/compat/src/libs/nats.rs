@@ -339,6 +339,7 @@ struct FakeState {
     answer_pings: bool,
     rules: Arc<Vec<Value>>,
     fail_reads: Option<Value>,
+    fail_reads_until_connect: bool,
     connects: i64,
     inbound: Vec<u8>,
     connected: bool,
@@ -496,6 +497,10 @@ impl Transport for Fake {
         }
         state.connected = true;
         state.connects += 1;
+        if state.fail_reads_until_connect {
+            state.fail_reads = None;
+            state.fail_reads_until_connect = false;
+        }
         let mut info = Map::new();
         for (k, v) in [
             ("server_id", json!("FAKE")),
@@ -2250,7 +2255,10 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Ok(Outcome::ok(Value::Null))
         }
         "fake.fail_reads" => {
-            fake_of(session, &a).await?.lock().fail_reads = a.opt("error").cloned();
+            let fake = fake_of(session, &a).await?;
+            let mut state = fake.lock();
+            state.fail_reads = a.opt("error").cloned();
+            state.fail_reads_until_connect = a.opt_bool("until_connect")?.unwrap_or(false);
             Ok(Outcome::ok(Value::Null))
         }
         "fake.count" => {

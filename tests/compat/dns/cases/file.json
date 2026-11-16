@@ -1842,6 +1842,85 @@
           ]
         }
       ]
+    },
+    {
+      "name": "export splits TXT rdata over 255 bytes into quoted chunks",
+      "steps": [
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": "x.test",
+              "records": [
+                {
+                  "name": "a.x.test",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+                },
+                {
+                  "name": "b.x.test",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
+                },
+                {
+                  "name": "c.x.test",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\k\"\\zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+                },
+                {
+                  "name": "d.x.test",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": ""
+                },
+                {
+                  "name": "e.x.test",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                },
+                {
+                  "name": "f.x.test",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+                }
+              ],
+              "soa": {
+                "name": "x.test",
+                "type": 6,
+                "ttl": 5,
+                "rdata": "ns.x.test. hm.x.test. 1 2 3 4 5"
+              }
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN x.test.",
+            "$TTL 5",
+            "",
+            "@\t5\tIN\tSOA\tns hm (",
+            "\t\t\t\t1\t; serial",
+            "\t\t\t\t2\t; refresh",
+            "\t\t\t\t3\t; retry",
+            "\t\t\t\t4\t; expire",
+            "\t\t\t\t5 )\t; minimum",
+            "",
+            "a\t1\tIN\tTXT\t\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\"",
+            "b\t1\tIN\tTXT\t\"wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\" \"w\"",
+            "c\t1\tIN\tTXT\t\"k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\\" \"k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\k\\\"\\\\zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\" \"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\"",
+            "d\t1\tIN\tTXT\t\"\"",
+            "e\t1\tIN\tTXT\t\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+            {
+              "$bytes": "ZgkxCUlOCVRYVAkiw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDIiAiqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqcOpw6nDqSI="
+            },
+            ""
+          ]
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,1145 @@
+{
+  "source": "packages/migration/tests/Destinations/AppwriteBucketFileSizeTest.php",
+  "cases": [
+    {
+      "name": "a size within the limit is kept",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/storage/buckets",
+                "status": 200,
+                "body": {
+                  "$id": "b-new",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "$permissions": [],
+                  "fileSecurity": false,
+                  "name": "",
+                  "enabled": false,
+                  "maximumFileSize": 30000000,
+                  "allowedFileExtensions": [],
+                  "compression": "",
+                  "encryption": false,
+                  "antivirus": false,
+                  "transformations": false,
+                  "totalSize": 0
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": "Bucket",
+              "maxFileSize": 30000000
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "bucket"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "bucket",
+                "id": "b-new",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\Bucket",
+            "getAllowedFileExtensions": [],
+            "getAntiVirus": false,
+            "getBucketName": "Bucket",
+            "getCompression": "none",
+            "getCreatedAt": "",
+            "getDescription": "",
+            "getEnabled": false,
+            "getEncryption": false,
+            "getFileSecurity": false,
+            "getGroup": "storage",
+            "getId": "b-new",
+            "getMaxFileSize": 30000000,
+            "getMessage": "",
+            "getName": "bucket",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getStripMetadata": false,
+            "getTransformations": false,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/storage/buckets",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"bucketId\":\"bucket\",\"name\":\"Bucket\",\"permissions\":[],\"fileSecurity\":false,\"enabled\":false,\"maximumFileSize\":30000000,\"allowedFileExtensions\":[],\"compression\":\"none\",\"encryption\":false,\"antivirus\":false,\"transformations\":false,\"description\":\"\",\"stripMetadata\":false}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a size above the limit is imported with the destination's limit",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/storage/buckets",
+                "status": 400,
+                "body": {
+                  "message": "Invalid `maximumFileSize` param: Value must be a valid range between 1 and 50,000,000",
+                  "code": 400,
+                  "type": "general_argument_invalid"
+                },
+                "times": 1
+              },
+              {
+                "method": "POST",
+                "path": "/v1/storage/buckets",
+                "status": 200,
+                "body": {
+                  "$id": "b-new",
+                  "$createdAt": "",
+                  "$updatedAt": "",
+                  "$permissions": [],
+                  "fileSecurity": false,
+                  "name": "",
+                  "enabled": false,
+                  "maximumFileSize": 50000000,
+                  "allowedFileExtensions": [],
+                  "compression": "",
+                  "encryption": false,
+                  "antivirus": false,
+                  "transformations": false,
+                  "totalSize": 0
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": "Bucket",
+              "maxFileSize": 5000000000
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "bucket"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "bucket",
+                "id": "b-new",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "resourceName": "bucket",
+              "resourceGroup": "storage",
+              "resourceId": "bucket",
+              "message": "Bucket \"bucket\" allowed files of up to 5000000000 bytes, more than this project allows, so it was imported with the limit of 50000000 bytes."
+            }
+          ]
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\Bucket",
+            "getAllowedFileExtensions": [],
+            "getAntiVirus": false,
+            "getBucketName": "Bucket",
+            "getCompression": "none",
+            "getCreatedAt": "",
+            "getDescription": "",
+            "getEnabled": false,
+            "getEncryption": false,
+            "getFileSecurity": false,
+            "getGroup": "storage",
+            "getId": "b-new",
+            "getMaxFileSize": 5000000000,
+            "getMessage": "",
+            "getName": "bucket",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getStripMetadata": false,
+            "getTransformations": false,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/storage/buckets",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"bucketId\":\"bucket\",\"name\":\"Bucket\",\"permissions\":[],\"fileSecurity\":false,\"enabled\":false,\"maximumFileSize\":5000000000,\"allowedFileExtensions\":[],\"compression\":\"none\",\"encryption\":false,\"antivirus\":false,\"transformations\":false,\"description\":\"\",\"stripMetadata\":false}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/storage/buckets",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"bucketId\":\"bucket\",\"name\":\"Bucket\",\"permissions\":[],\"fileSecurity\":false,\"enabled\":false,\"allowedFileExtensions\":[],\"compression\":\"none\",\"encryption\":false,\"antivirus\":false,\"transformations\":false,\"description\":\"\",\"stripMetadata\":false}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "another refusal is reported as it was",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/storage/buckets",
+                "status": 400,
+                "body": {
+                  "message": "Invalid `name` param: Value must be a valid string and at least 1 chars and no longer than 128 chars",
+                  "code": 400,
+                  "type": "general_argument_invalid"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": "",
+              "maxFileSize": 30000000
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "bucket"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "bucket",
+                "id": "bucket",
+                "status": "error",
+                "message": "Invalid `name` param: Value must be a valid string and at least 1 chars and no longer than 128 chars"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 400,
+              "message": "Invalid `name` param: Value must be a valid string and at least 1 chars and no longer than 128 chars",
+              "resourceName": "bucket",
+              "resourceGroup": "storage",
+              "resourceId": "bucket",
+              "json": {
+                "code": 400,
+                "message": "Invalid `name` param: Value must be a valid string and at least 1 chars and no longer than 128 chars",
+                "resourceName": "bucket",
+                "resourceGroup": "storage",
+                "resourceId": "bucket",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "Invalid `name` param: Value must be a valid string and at least 1 chars and no longer than 128 chars"
+              }
+            }
+          ]
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\Bucket",
+            "getAllowedFileExtensions": [],
+            "getAntiVirus": false,
+            "getBucketName": "",
+            "getCompression": "none",
+            "getCreatedAt": "",
+            "getDescription": "",
+            "getEnabled": false,
+            "getEncryption": false,
+            "getFileSecurity": false,
+            "getGroup": "storage",
+            "getId": "bucket",
+            "getMaxFileSize": 30000000,
+            "getMessage": "Invalid `name` param: Value must be a valid string and at least 1 chars and no longer than 128 chars",
+            "getName": "bucket",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "error",
+            "getStripMetadata": false,
+            "getTransformations": false,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/storage/buckets",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"bucketId\":\"bucket\",\"name\":\"\",\"permissions\":[],\"fileSecurity\":false,\"enabled\":false,\"maximumFileSize\":30000000,\"allowedFileExtensions\":[],\"compression\":\"none\",\"encryption\":false,\"antivirus\":false,\"transformations\":false,\"description\":\"\",\"stripMetadata\":false}"
+            },
+            {
+              "method": "POST",
+              "path": "/v1/storage/buckets",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"bucketId\":\"bucket\",\"name\":\"\",\"permissions\":[],\"fileSecurity\":false,\"enabled\":false,\"allowedFileExtensions\":[],\"compression\":\"none\",\"encryption\":false,\"antivirus\":false,\"transformations\":false,\"description\":\"\",\"stripMetadata\":false}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "another failure than an invalid argument is not retried",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/v1/storage/buckets",
+                "status": 500,
+                "body": {
+                  "message": "Server Error",
+                  "code": 500,
+                  "type": "general_unknown"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "users"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "targets"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "providers"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "users",
+            "document": {
+              "$id": "u1",
+              "name": "U"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "providers",
+            "document": {
+              "$id": "fcm1",
+              "name": "F"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Storage\\Bucket",
+            "args": {
+              "id": "bucket",
+              "name": "Bucket",
+              "maxFileSize": 5000000000
+            }
+          },
+          "bind": "r0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "bucket"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "bucket",
+                "id": "bucket",
+                "status": "error",
+                "message": "Server Error"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "Server Error",
+              "resourceName": "bucket",
+              "resourceGroup": "storage",
+              "resourceId": "bucket",
+              "json": {
+                "code": 500,
+                "message": "Server Error",
+                "resourceName": "bucket",
+                "resourceGroup": "storage",
+                "resourceId": "bucket",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "Server Error"
+              }
+            }
+          ]
+        },
+        {
+          "op": "target.warnings",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "r0"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Storage\\Bucket",
+            "getAllowedFileExtensions": [],
+            "getAntiVirus": false,
+            "getBucketName": "Bucket",
+            "getCompression": "none",
+            "getCreatedAt": "",
+            "getDescription": "",
+            "getEnabled": false,
+            "getEncryption": false,
+            "getFileSecurity": false,
+            "getGroup": "storage",
+            "getId": "bucket",
+            "getMaxFileSize": 5000000000,
+            "getMessage": "Server Error",
+            "getName": "bucket",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "error",
+            "getStripMetadata": false,
+            "getTransformations": false,
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "path": "/v1/storage/buckets",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/32.3.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.7.1",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "32.3.0"
+              },
+              "body": "{\"bucketId\":\"bucket\",\"name\":\"Bucket\",\"permissions\":[],\"fileSecurity\":false,\"enabled\":false,\"maximumFileSize\":5000000000,\"allowedFileExtensions\":[],\"compression\":\"none\",\"encryption\":false,\"antivirus\":false,\"transformations\":false,\"description\":\"\",\"stripMetadata\":false}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

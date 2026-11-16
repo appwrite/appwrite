@@ -89,7 +89,7 @@
               "metric": "proj.users",
               "value": 5,
               "time": {
-                "$time": "-3 days",
+                "$time": "-60 days",
                 "format": "Y-m-d H:i:s.v"
               },
               "tenant": "1",
@@ -107,7 +107,7 @@
             "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
             "params": {
               "metric": "proj.users",
-              "value": 9,
+              "value": 0,
               "time": {
                 "$time": "-1 hour",
                 "format": "Y-m-d H:i:s.v"
@@ -129,7 +129,7 @@
               "metric": "proj.users",
               "value": 2,
               "time": {
-                "$time": "-2 days",
+                "$time": "-50 days",
                 "format": "Y-m-d H:i:s.v"
               },
               "tenant": "1",
@@ -144,9 +144,19 @@
             "adapter": {
               "$ref": "ch"
             },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, resourceType, tenant) SELECT concat('history-', toString(number)), 'proj.users', 5, now64(3) - INTERVAL 2 HOUR + toIntervalMillisecond(number), 'user', '1' FROM numbers(100000)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
             "sql": "SELECT `metric`, argMax(`value`, `time`) AS `value`, `resourceType` FROM `${ns}`.`utopia_usage_gauge_proj_usage_gauges` WHERE `tenant` IN ('1') AND `metric` IN ('proj.users') GROUP BY `metric`, `resourceType` ORDER BY `resourceType` SETTINGS optimize_use_projections = 1, force_optimize_projection = 1"
           },
-          "expect": "proj.users\t2\tteam\nproj.users\t9\tuser\n"
+          "expect": "proj.users\t2\tteam\nproj.users\t0\tuser\n"
         },
         {
           "op": "usage.purge",
@@ -252,7 +262,7 @@
               "metric": "proj.users",
               "value": 5,
               "time": {
-                "$time": "-3 days",
+                "$time": "-60 days",
                 "format": "Y-m-d H:i:s.v"
               },
               "tenant": "1",
@@ -270,7 +280,7 @@
             "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
             "params": {
               "metric": "proj.users",
-              "value": 9,
+              "value": 0,
               "time": {
                 "$time": "-1 hour",
                 "format": "Y-m-d H:i:s.v"
@@ -292,7 +302,7 @@
               "metric": "proj.users",
               "value": 2,
               "time": {
-                "$time": "-2 days",
+                "$time": "-50 days",
                 "format": "Y-m-d H:i:s.v"
               },
               "tenant": "1",
@@ -300,6 +310,26 @@
             }
           },
           "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_gauge_proj_usage_gauges` (id, metric, value, time, resourceType, tenant) SELECT concat('history-', toString(number)), 'proj.users', 5, now64(3) - INTERVAL 2 HOUR + toIntervalMillisecond(number), 'user', '1' FROM numbers(100000)"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.next_query_id",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "id": "${ns}-q"
+          },
+          "expect": true
         },
         {
           "op": "usage.find",
@@ -345,11 +375,31 @@
             },
             {
               "metric": "proj.users",
-              "value": 9,
+              "value": 0,
               "resourceType": "user",
               "type": "gauge"
             }
           ]
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SYSTEM FLUSH LOGS"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT projections, read_rows < 100000 FROM system.query_log WHERE query_id = '${ns}-q' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
+          },
+          "expect": "['${ns}.utopia_usage_gauge_proj_usage_gauges.p_latest_by_resourceType']\t1\n"
         },
         {
           "op": "usage.total",
@@ -361,7 +411,7 @@
               "$ref": "u"
             }
           },
-          "expect": 9
+          "expect": 0
         },
         {
           "op": "usage.total_batch",
@@ -377,7 +427,7 @@
             }
           },
           "expect": {
-            "proj.users": 9,
+            "proj.users": 0,
             "none": 0
           }
         },

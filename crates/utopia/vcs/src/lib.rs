@@ -87,13 +87,17 @@ pub use entire::Entire;
 pub use error::{Error, Message, Result};
 pub use git::clone_command;
 pub use gitea::{Flavor, Gitea};
-pub use github::GitHub;
+pub use github::{AccessToken, GitHub};
 pub use gitlab::GitLab;
 pub use origin::{BatchCheckRun, Origin};
 pub use php_std::Value;
 
 /// GitHub's app JWT lifetime in seconds.
 pub use github::APP_JWT_EXPIRY as GITHUB_APP_JWT_EXPIRY;
+/// GitHub's event type of a comment on a pull request's conversation.
+pub use github::EVENT_ISSUE_COMMENT as GITHUB_EVENT_ISSUE_COMMENT;
+/// GitHub's event type of a comment in a pull request review thread.
+pub use github::EVENT_PULL_REQUEST_REVIEW_COMMENT as GITHUB_EVENT_PULL_REQUEST_REVIEW_COMMENT;
 /// Origin's app JWT lifetime in seconds.
 pub use origin::APP_JWT_EXPIRY as ORIGIN_APP_JWT_EXPIRY;
 /// Origin's push event type.

@@ -855,6 +855,9 @@ impl Adapter for GitLab {
                 enc(branch)
             ))
             .await?;
+        if response.status == 404 {
+            return Err(Error::RepositoryNotFound(format!("Branch not found: {branch}")));
+        }
         if response.status >= 400 {
             return Err(Error::exception(
                 format!("Failed to get latest commit: HTTP {}", response.status),

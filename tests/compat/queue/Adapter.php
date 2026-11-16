@@ -131,6 +131,7 @@ final class Adapter implements Base, Benchmarks
                 \array_key_exists('sequence', $a) && $m->setSequence($a['sequence']);
                 isset($a['receipt']) && $m->setReceipt($a['receipt']);
                 isset($a['terminal']) && $m->terminal($a['terminal']);
+                isset($a['skipped']) && $m->skip($a['skipped']);
                 \array_key_exists('size', $a) && $m->setSize($a['size']);
 
                 $out = [
@@ -146,6 +147,9 @@ final class Adapter implements Base, Benchmarks
                     'array' => $m->asArray(),
                 ];
                 // Only when the case sets it, so cases recorded before it existed keep their results.
+                if (\array_key_exists('skipped', $a)) {
+                    $out['skipped'] = $m->isSkipped();
+                }
                 if (\array_key_exists('max_attempts', $a)) {
                     $m->setMaxAttempts($a['max_attempts']);
                     $out['max_attempts'] = $m->getMaxAttempts();
@@ -258,6 +262,7 @@ final class Adapter implements Base, Benchmarks
             'broker.retry' => fn (array $a, Session $s) => self::consumer($a, $s)->retry(self::queue($a['queue']), $a['limit'] ?? null, $a['max_attempts'] ?? null, $a['newer_than'] ?? null),
             'broker.reap' => fn (array $a, Session $s) => self::consumer($a, $s)->reap(self::queue($a['queue']), $a['older_than'] ?? 90000, $a['limit'] ?? null, $a['max_attempts'] ?? null, $a['newer_than'] ?? null, ...(isset($a['scan']) ? ['scan' => $a['scan']] : [])),
             'broker.queue_size' => fn (array $a, Session $s) => self::publisher($a, $s)->getQueueSize(self::queue($a['queue']), $a['failed'] ?? false),
+            'broker.queue_age' => fn (array $a, Session $s) => self::publisher($a, $s)->getQueueAge(self::queue($a['queue'])),
             'broker.failed_count' => fn (array $a, Session $s) => self::publisher($a, $s)->getFailedCount(self::queue($a['queue'])),
             'broker.in_flight_ceiling' => fn (array $a, Session $s) => self::consumer($a, $s)->inFlightCeiling(),
             'broker.close' => fn (array $a, Session $s) => self::consumer($a, $s)->close(),
@@ -310,6 +315,7 @@ final class Adapter implements Base, Benchmarks
                 return null;
             },
             'background.size' => fn (array $a, Session $s) => $s->get($a['background'])->getQueueSize(self::queue($a['queue']), $a['failed'] ?? false),
+            'background.age' => fn (array $a, Session $s) => $s->get($a['background'])->getQueueAge(self::queue($a['queue'])),
             'background.failed_count' => fn (array $a, Session $s) => $s->get($a['background'])->getFailedCount(self::queue($a['queue'])),
             'background.retry' => fn (array $a, Session $s) => $s->get($a['background'])->retry(self::queue($a['queue']), $a['limit'] ?? null),
             'background.publish' => fn (array $a, Session $s) => $s->get($a['background'])->publish(self::queue($a['queue']), Typed::decode($a['payload'])),
@@ -320,6 +326,27 @@ final class Adapter implements Base, Benchmarks
 
             'server.configure' => fn (array $a, Session $s) => self::configure($a, $s),
             'server.run' => fn (array $a, Session $s) => self::run($a, $s),
+            'nats.dsn_arguments' => fn (array $a) => Typed::dump(array_map(
+                fn (mixed $v): mixed => $v instanceof DiscardPolicy ? 'DiscardPolicy::' . $v->name : $v,
+                Nats::dsnArguments(new DSN($a['dsn'])),
+            )),
+            'nats.from_dsn' => function (array $a): array {
+                $arguments = [];
+                if (isset($a['replicas'])) {
+                    $arguments['replicas'] = $a['replicas'];
+                }
+                if (($a['provisioning'] ?? null) === 'require') {
+                    $arguments['provisioning'] = Provisioning::Require;
+                }
+                $broker = Nats::fromDSN(new DSN($a['dsn']), $a['name'] ?? '', ...$arguments);
+
+                return ['max_deliver' => $broker->getMaxDeliver()];
+            },
+            'nats.connection_options' => function (array $a): array {
+                $options = Nats::connectionOptions(new DSN($a['dsn']), $a['name'] ?? '');
+
+                return ['servers' => $options->servers, 'name' => $options->name, 'user' => $options->user, 'pass' => $options->pass, 'token' => $options->token];
+            },
             'nats.broker' => function (array $a, Session $s): array {
                 self::clock($a);
                 $url = $s->service('queue-nats');
@@ -758,6 +785,14 @@ final class Adapter implements Base, Benchmarks
                     $seen[] = $server->context()->has($spec['has']) ? $server->context()->get($spec['has']) : null;
                 }
                 $events[] = [$name, $seen];
+                // `skip`: mark the message skipped (an init hook acknowledging it without its job).
+                if ($spec['skip'] ?? false) {
+                    foreach ($args as $arg) {
+                        if ($arg instanceof Message) {
+                            $arg->skip();
+                        }
+                    }
+                }
                 $fail = $spec['fail'] ?? null;
                 if ($fail === 'terminal') {
                     foreach ($args as $arg) {

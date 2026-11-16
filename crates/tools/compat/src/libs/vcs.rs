@@ -67,6 +67,7 @@ const METHODS: &[&str] = &[
     "getName",
     "getOrganizationUrl",
     "getOwnerName",
+    "getCollaboratorPermission",
     "getPullRequest",
     "getPullRequestFiles",
     "getPullRequestFromBranch",
@@ -122,6 +123,7 @@ const METHODS: &[&str] = &[
     "supportsRepositoryDeletion",
     "syncMirror",
     "updateCheck",
+    "createAccessToken",
     "updateCheckRun",
     "updateComment",
     "updateCommitStatus",
@@ -149,6 +151,7 @@ pub const OPS: &[&str] = &[
     "vcs.batch_upsert_check_runs",
     "vcs.compare_commits",
     "vcs.compare_files",
+    "vcs.create_access_token",
     "vcs.create_branch",
     "vcs.create_check_run",
     "vcs.create_comment",
@@ -169,6 +172,7 @@ pub const OPS: &[&str] = &[
     "vcs.get_branch_url",
     "vcs.get_check_run",
     "vcs.get_check_suite",
+    "vcs.get_collaborator_permission",
     "vcs.get_comment",
     "vcs.get_commit",
     "vcs.get_commit_statuses",
@@ -993,6 +997,40 @@ async fn invoke(any: &mut Any, method: &str, a: &Map<String, Value>) -> Result<V
             Any::Entire(g) => {
                 g.set_endpoint(required(a, "endpoint")?);
                 Value::Null
+            }
+            other => undefined(other.class(), method),
+        },
+        "createAccessToken" => match any {
+            Any::GitHub(g) => {
+                let ids = match a.get("repositoryIds") {
+                    None => Vec::new(),
+                    Some(Value::Array(ids)) => ids
+                        .iter()
+                        .map(|id| id.as_i64().ok_or_else(|| Fault::new("repositoryIds: integers")))
+                        .collect::<Result<Vec<_>, _>>()?,
+                    Some(_) => return Err(Fault::new("repositoryIds: a list")),
+                };
+                let permissions = match a.get("permissions") {
+                    None => Vec::new(),
+                    Some(Value::Object(levels)) => levels
+                        .iter()
+                        .map(|(name, level)| {
+                            level.as_str().map(|l| (name.as_str(), l)).ok_or_else(|| Fault::new("permissions: strings"))
+                        })
+                        .collect::<Result<Vec<_>, _>>()?,
+                    Some(Value::Array(levels)) if levels.is_empty() => Vec::new(),
+                    Some(_) => return Err(Fault::new("permissions: an object")),
+                };
+                ok!(g.create_access_token(&ids, &permissions).await, |t: utopia_vcs::AccessToken| json!({
+                    "token": t.token,
+                    "expiresAt": t.expires_at,
+                }))
+            }
+            other => undefined(other.class(), method),
+        },
+        "getCollaboratorPermission" => match any {
+            Any::GitHub(g) => {
+                ok!(g.collaborator_permission(owner()?, repo()?, required(a, "username")?).await, |v: String| json!(v))
             }
             other => undefined(other.class(), method),
         },

@@ -251,6 +251,8 @@ pub struct Policies {
     pub passkey_rp_id: Option<String>,
     /// Reject realtime connections without a session.
     pub deny_realtime_guests: Option<bool>,
+    /// The account devices policy.
+    pub account_devices: Option<bool>,
 }
 
 impl Default for Policies {
@@ -280,6 +282,7 @@ impl Default for Policies {
             password_rotation: None,
             passkey_rp_id: None,
             deny_realtime_guests: None,
+            account_devices: None,
         }
     }
 }
@@ -342,6 +345,7 @@ impl Policies {
             password_rotation: to_opt_array(&i.or("passwordRotation", Value::Null), &p(25, "passwordRotation"))?,
             passkey_rp_id: to_opt_string(&i.or("passkeyRpId", Value::Null), &p(26, "passkeyRpId"))?,
             deny_realtime_guests: to_opt_bool(&i.or("denyRealtimeGuests", Value::Null), &p(27, "denyRealtimeGuests"))?,
+            account_devices: to_opt_bool(&i.or("accountDevices", Value::Null), &p(28, "accountDevices"))?,
             ..policies
         };
         Ok(policies.resource(id, created, updated))
@@ -531,6 +535,7 @@ pub const OAUTH2_PROVIDERS: &[(&str, &[ProviderField])] = &[
     ("kick", CLIENT),
     ("linkedin", CLIENT),
     ("microsoft", &[app("clientId"), secret("tenant", None)]),
+    ("naver", CLIENT),
     ("notion", CLIENT),
     (
         "oidc",
@@ -555,6 +560,8 @@ pub const OAUTH2_PROVIDERS: &[(&str, &[ProviderField])] = &[
     ("tradeshift", CLIENT),
     ("tradeshiftBox", CLIENT),
     ("twitch", CLIENT),
+    ("vipps", CLIENT),
+    ("vippsSandbox", CLIENT),
     ("webflow", CLIENT),
     ("wordpress", CLIENT),
     ("x", CLIENT),

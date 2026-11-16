@@ -378,7 +378,7 @@
           },
           "expect": [
             {
-              "key": "_<uniqid>_<uniqid>",
+              "key": "_db1_<uniqid>",
               "entry": {
                 "$resource": "table",
                 "id": "table1",
@@ -430,7 +430,7 @@
             ],
             "table": [
               {
-                "key": "_<uniqid>_<uniqid>",
+                "key": "_db1_<uniqid>",
                 "entry": {
                   "$resource": "table",
                   "id": "table1",
@@ -538,7 +538,7 @@
               "$ref": "row"
             }
           },
-          "expect": "<uniqid>_<uniqid>_<uniqid>"
+          "expect": "db1_table1_<uniqid>"
         },
         {
           "op": "resource.set",
@@ -912,7 +912,7 @@
             ],
             "table": [
               {
-                "key": "_<uniqid>_<uniqid>",
+                "key": "_db1_<uniqid>",
                 "entry": {
                   "$resource": "table",
                   "id": "t",
@@ -1026,7 +1026,7 @@
               "$ref": "col"
             }
           },
-          "expect": "vectorsdb_7_<uniqid>"
+          "expect": "vectorsdb_v_<uniqid>"
         },
         {
           "op": "resource.set",
@@ -1053,7 +1053,7 @@
               "$ref": "col"
             }
           },
-          "expect": "vectorsdb_7_12"
+          "expect": "vectorsdb_v_12"
         },
         {
           "op": "resource.new",
@@ -1096,7 +1096,7 @@
               "$ref": "col1"
             }
           },
-          "expect": "7_12_3"
+          "expect": "v_c1_3"
         },
         {
           "op": "resource.new",
@@ -1140,7 +1140,7 @@
               "$ref": "idx"
             }
           },
-          "expect": "7_12_4"
+          "expect": "v_c1_4"
         },
         {
           "op": "resource.new",
@@ -1628,6 +1628,289 @@
               }
             ]
           }
+        }
+      ]
+    },
+    {
+      "name": "tables of different databases keep their own entries",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "app",
+              "name": "app"
+            }
+          },
+          "bind": "app",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "analytics",
+              "name": "analytics"
+            }
+          },
+          "bind": "analytics",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "app"
+              },
+              "name": "countries",
+              "id": "countries"
+            }
+          },
+          "bind": "countries",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "analytics"
+              },
+              "name": "events",
+              "id": "events"
+            }
+          },
+          "bind": "events",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "countries"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "1"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "events"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "1"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "countries"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "events"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "table"
+          },
+          "expect": [
+            {
+              "key": "_app_1",
+              "entry": {
+                "$resource": "table",
+                "id": "countries",
+                "status": "pending",
+                "message": ""
+              }
+            },
+            {
+              "key": "_analytics_1",
+              "entry": {
+                "$resource": "table",
+                "id": "events",
+                "status": "pending",
+                "message": ""
+              }
+            }
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "by_name",
+              "key": "by_name",
+              "table": {
+                "$ref": "countries"
+              },
+              "type": "key",
+              "columns": [
+                "name"
+              ]
+            }
+          },
+          "bind": "byName",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Index",
+            "args": {
+              "id": "by_day",
+              "key": "by_day",
+              "table": {
+                "$ref": "events"
+              },
+              "type": "key",
+              "columns": [
+                "day"
+              ]
+            }
+          },
+          "bind": "byDay",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "byName"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "1"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "byDay"
+            },
+            "method": "setSequence",
+            "args": {
+              "sequence": "1"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "byName"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "resource": {
+              "$ref": "byDay"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.get",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "name": "index"
+          },
+          "expect": [
+            {
+              "key": "app_countries_1",
+              "entry": {
+                "$resource": "index",
+                "id": "by_name",
+                "status": "pending",
+                "message": ""
+              }
+            },
+            {
+              "key": "analytics_events_1",
+              "entry": {
+                "$resource": "index",
+                "id": "by_day",
+                "status": "pending",
+                "message": ""
+              }
+            }
+          ]
         }
       ]
     }
