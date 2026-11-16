@@ -73,6 +73,104 @@ export function isValidDomain(domain: string): boolean {
   return DOMAIN_REGEX.test(normalized)
 }
 
+type DomainFormatError =
+  | { code: 'url'; suggestion: string | null }
+  | { code: 'wildcard' }
+  | { code: 'trailing-dot' }
+  | { code: 'spaces' }
+  | { code: 'invalid' }
+
+function looksLikeUrl(value: string): boolean {
+  return value.includes('://') || value.includes('/')
+}
+
+/** Hostname of a pasted URL, without a trailing dot, or null when it has none. */
+function bareHost(value: string): string | null {
+  try {
+    const url =
+      value.includes('://') || value.startsWith('//')
+        ? new URL(value.startsWith('//') ? `https:${value}` : value)
+        : new URL(`https://${value}`)
+    let host = url.hostname.toLowerCase()
+    while (host.endsWith('.')) host = host.slice(0, -1)
+    return host || null
+  } catch {
+    return null
+  }
+}
+
+function hasWhitespace(value: string): boolean {
+  return (
+    value.includes(' ') ||
+    value.includes('\t') ||
+    value.includes('\n') ||
+    value.includes('\r')
+  )
+}
+
+/**
+ * Why a custom domain is rejected, or null when it is empty or acceptable.
+ * Acceptance stays `isValidDomain`, so uppercase is still valid (callers
+ * lowercase it on save) and a wildcard or a trailing dot stays rejected,
+ * matching Utopia's Domain validator.
+ */
+function getDomainFormatError(value: string): DomainFormatError | null {
+  const trimmed = value.trim()
+  if (!trimmed || isValidDomain(trimmed)) return null
+
+  if (looksLikeUrl(trimmed)) {
+    const host = bareHost(trimmed)
+    if (host?.includes('*') || (!host && trimmed.includes('*'))) {
+      return { code: 'wildcard' }
+    }
+    if (host && isValidDomain(host)) return { code: 'url', suggestion: host }
+    return { code: 'url', suggestion: null }
+  }
+
+  if (trimmed.includes('*')) return { code: 'wildcard' }
+  if (hasWhitespace(trimmed)) return { code: 'spaces' }
+  if (trimmed.endsWith('.')) return { code: 'trailing-dot' }
+  return { code: 'invalid' }
+}
+
+function domainFormatErrorMessage(
+  error: DomainFormatError,
+  t: (text: string) => string,
+): string {
+  switch (error.code) {
+    case 'url':
+      return error.suggestion
+        ? `${t('Enter the hostname only:')} ${error.suggestion}`
+        : t('Enter the hostname only, without https:// or a path.')
+    case 'wildcard':
+      return t('Wildcard domains are not supported. Enter a specific hostname.')
+    case 'trailing-dot':
+      return t('Remove the trailing dot.')
+    case 'spaces':
+      return t('Remove the spaces.')
+    case 'invalid':
+      return t('Please enter a valid domain')
+  }
+}
+
+/**
+ * Inline error for a custom-domain field.
+ *
+ * A non-empty invalid value is reported as it changes, so Add stays disabled
+ * with the reason in view. Blur (`touched`) reports an empty field. Callers
+ * still trim and lowercase a valid value before saving.
+ */
+export function domainFieldError(
+  value: string,
+  touched: boolean,
+  t: (text: string) => string = (text) => text,
+): string | null {
+  if (!value.trim()) return touched ? t('Required') : null
+  const error = getDomainFormatError(value)
+  if (!error) return null
+  return domainFormatErrorMessage(error, t)
+}
+
 /**
  * Get apex/root domain from a full domain (e.g. api.example.com → example.com)
  */

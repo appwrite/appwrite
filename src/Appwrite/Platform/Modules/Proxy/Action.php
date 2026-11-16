@@ -199,7 +199,17 @@ class Action extends PlatformAction
                 }
                 $targetCNAMEs[] = new Domain($targetCNAME);
             }
-        } elseif ($resourceType === 'function' || $ruleType === 'api') {
+        } elseif ($resourceType === 'function') {
+            // Regional target (fra.cloud.appwrite.io) and the sites target
+            // (appwrite.network) the console and docs tell users to CNAME.
+            $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_SITES', '')) as $targetCNAME) {
+                if (empty($targetCNAME)) {
+                    continue;
+                }
+                $targetCNAMEs[] = new Domain($targetCNAME);
+            }
+        } elseif ($ruleType === 'api') {
             // For example: fra.cloud.appwrite.io
             $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
         } elseif ($ruleType === 'redirect') {
