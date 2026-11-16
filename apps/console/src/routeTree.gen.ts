@@ -226,6 +226,7 @@ import { Route as PublicOrganizationsOrgIdAppsAppIdRouteImport } from './routes/
 import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './routes/_public/organizations.$orgId.domains.index'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId'
 import { Route as PublicOrganizationsOrgIdDomainsBuyRouteImport } from './routes/_public/organizations.$orgId.domains.buy'
+import { Route as PublicOrganizationsOrgIdDomainsContinueRouteImport } from './routes/_public/organizations.$orgId.domains.continue'
 import { Route as PublicOrganizationsOrgIdDomainsTransferInRouteImport } from './routes/_public/organizations.$orgId.domains.transfer-in'
 import { Route as PublicOrganizationsOrgIdMarketplaceIndexRouteImport } from './routes/_public/organizations.$orgId.marketplace.index'
 import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './routes/_public/organizations.$orgId.settings.billing'
@@ -1674,6 +1675,12 @@ const PublicOrganizationsOrgIdDomainsBuyRoute =
   PublicOrganizationsOrgIdDomainsBuyRouteImport.update({
     id: '/buy',
     path: '/buy',
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
+  } as any)
+const PublicOrganizationsOrgIdDomainsContinueRoute =
+  PublicOrganizationsOrgIdDomainsContinueRouteImport.update({
+    id: '/continue',
+    path: '/continue',
     getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
   } as any)
 const PublicOrganizationsOrgIdDomainsTransferInRoute =
@@ -3793,6 +3800,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  '/organizations/$orgId/domains/continue': typeof PublicOrganizationsOrgIdDomainsContinueRoute
   '/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
@@ -4259,6 +4267,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/agent/$agentId': typeof PublicOrganizationsOrgIdAgentAgentIdRoute
   '/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  '/organizations/$orgId/domains/continue': typeof PublicOrganizationsOrgIdDomainsContinueRoute
   '/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
@@ -4731,6 +4740,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/apps/$appId': typeof PublicOrganizationsOrgIdAppsAppIdRouteWithChildren
   '/_public/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   '/_public/organizations/$orgId/domains/buy': typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  '/_public/organizations/$orgId/domains/continue': typeof PublicOrganizationsOrgIdDomainsContinueRoute
   '/_public/organizations/$orgId/domains/transfer-in': typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   '/_public/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
   '/_public/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
@@ -5227,6 +5237,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/apps/$appId'
     | '/organizations/$orgId/domains/$domainId'
     | '/organizations/$orgId/domains/buy'
+    | '/organizations/$orgId/domains/continue'
     | '/organizations/$orgId/domains/transfer-in'
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
@@ -5693,6 +5704,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/organizations/$orgId/agent/$agentId'
     | '/organizations/$orgId/domains/buy'
+    | '/organizations/$orgId/domains/continue'
     | '/organizations/$orgId/domains/transfer-in'
     | '/organizations/$orgId/settings/billing'
     | '/organizations/$orgId/settings/compliance'
@@ -6164,6 +6176,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/apps/$appId'
     | '/_public/organizations/$orgId/domains/$domainId'
     | '/_public/organizations/$orgId/domains/buy'
+    | '/_public/organizations/$orgId/domains/continue'
     | '/_public/organizations/$orgId/domains/transfer-in'
     | '/_public/organizations/$orgId/settings/billing'
     | '/_public/organizations/$orgId/settings/compliance'
@@ -8024,6 +8037,13 @@ declare module '@tanstack/react-router' {
       path: '/buy'
       fullPath: '/organizations/$orgId/domains/buy'
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsBuyRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
+    }
+    '/_public/organizations/$orgId/domains/continue': {
+      id: '/_public/organizations/$orgId/domains/continue'
+      path: '/continue'
+      fullPath: '/organizations/$orgId/domains/continue'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsContinueRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
     }
     '/_public/organizations/$orgId/domains/transfer-in': {
@@ -10348,6 +10368,7 @@ const PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren =
 interface PublicOrganizationsOrgIdDomainsRouteChildren {
   PublicOrganizationsOrgIdDomainsDomainIdRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
   PublicOrganizationsOrgIdDomainsBuyRoute: typeof PublicOrganizationsOrgIdDomainsBuyRoute
+  PublicOrganizationsOrgIdDomainsContinueRoute: typeof PublicOrganizationsOrgIdDomainsContinueRoute
   PublicOrganizationsOrgIdDomainsTransferInRoute: typeof PublicOrganizationsOrgIdDomainsTransferInRoute
   PublicOrganizationsOrgIdDomainsIndexRoute: typeof PublicOrganizationsOrgIdDomainsIndexRoute
 }
@@ -10358,6 +10379,8 @@ const PublicOrganizationsOrgIdDomainsRouteChildren: PublicOrganizationsOrgIdDoma
       PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren,
     PublicOrganizationsOrgIdDomainsBuyRoute:
       PublicOrganizationsOrgIdDomainsBuyRoute,
+    PublicOrganizationsOrgIdDomainsContinueRoute:
+      PublicOrganizationsOrgIdDomainsContinueRoute,
     PublicOrganizationsOrgIdDomainsTransferInRoute:
       PublicOrganizationsOrgIdDomainsTransferInRoute,
     PublicOrganizationsOrgIdDomainsIndexRoute:

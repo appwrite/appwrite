@@ -64,6 +64,8 @@
         "project.policies.read",
         "project.policies.write",
         "project.read",
+        "project.videos.profiles.read",
+        "project.videos.profiles.write",
         "project.write",
         "providers.read",
         "providers.write",
@@ -110,6 +112,9 @@
         "vectorsdb.indexes.write",
         "vectorsdb.read",
         "vectorsdb.write",
+        "videos.play",
+        "videos.read",
+        "videos.write",
         "webhooks.read",
         "webhooks.write"
     ],

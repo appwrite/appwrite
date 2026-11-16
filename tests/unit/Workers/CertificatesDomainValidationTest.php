@@ -45,6 +45,9 @@ final class CertificatesDomainValidationTest extends TestCase
 
     private const MAIN_DOMAIN = 'appwrite.example.invalid';
 
+    /** What the last job threw back to the queue, if anything. */
+    private ?\Throwable $thrown = null;
+
     public function testAJobFromAVerifiedEndpointReachesIssuanceWithoutASecondDnsCheck(): void
     {
         $certificates = $this->createMock(Provider::class);
@@ -74,9 +77,19 @@ final class CertificatesDomainValidationTest extends TestCase
         $certificates = $this->createMock(Provider::class);
         $certificates->expects($this->never())->method('issueCertificate');
 
-        $writes = $this->generate($certificates, skipDomainValidation: false);
+        // The failure is emailed to the certificates address, which every deployment sets
+        $previous = \getenv('_APP_EMAIL_CERTIFICATES');
+        \putenv('_APP_EMAIL_CERTIFICATES=certificates@example.invalid');
+        try {
+            $writes = $this->generate($certificates, skipDomainValidation: false);
+        } finally {
+            \putenv($previous === false ? '_APP_EMAIL_CERTIFICATES' : '_APP_EMAIL_CERTIFICATES=' . $previous);
+        }
 
         $this->assertSame(RULE_STATUS_CERTIFICATE_GENERATION_FAILED, $writes['rules']['status']);
+        // The domain's DNS failing is recorded above and retried by maintenance. Thrown back,
+        // the queue would redeliver it at once, spending an attempt and emailing on each run.
+        $this->assertNull($this->thrown, 'A DNS failure must end the job, not hand it back to the queue');
     }
 
     /**
@@ -151,9 +164,10 @@ final class CertificatesDomainValidationTest extends TestCase
                 $this->createStub(Authorization::class),
                 (new Bus())->setResolver(static fn (): null => null),
             );
-        } catch (\Throwable) {
+        } catch (\Throwable $error) {
             // The worker rethrows an issuance failure after recording it; the
             // records are what these tests read.
+            $this->thrown = $error;
         }
 
         return $writes;

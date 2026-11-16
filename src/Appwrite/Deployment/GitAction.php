@@ -101,7 +101,6 @@ final class GitAction
         self::check($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
         self::deployment($status, $vcs, $commitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
 
-        // A posted comment is finished even if comments were switched off since
         $commentId = $deployment->getAttribute('providerCommentId', '');
         if (empty($commentId)) {
             return;
@@ -152,7 +151,7 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
+        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
             return;
         }
 
@@ -229,7 +228,7 @@ final class GitAction
         Database $dbForPlatform,
         array $platform,
     ): void {
-        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true || $resource->getAttribute('providerStatuses', true) === false) {
+        if ($commitHash === '' || $resource->getAttribute('providerSilentMode', false) === true) {
             return;
         }
 
