@@ -22,7 +22,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { Lock, ExternalLink, Loader2, X } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { VcsInstallationErrorAlert } from '@/components/global/shared/VcsInstallationError'
