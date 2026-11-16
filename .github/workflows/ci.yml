@@ -1406,11 +1406,14 @@ jobs:
           COMPAT_LIB: '!database'
         run: cargo test -p compat --test replay --locked
 
+      # image has no PHP class left to run its examples' PHP twins against (PHP
+      # runs the crate through the utopia extension), and agents' twins use the
+      # library before its redesign (task agents-redesign).
       - name: Run documentation examples
         if: matrix.shard == 'integrations'
         env:
           COMPAT_IMAGE: compat-cache-php
-        run: bin/compat examples
+        run: bin/compat examples $(ls crates/utopia | grep -vxE 'agents|image') $(ls crates/support)
 
       - name: Stop library services
         if: always()
