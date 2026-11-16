@@ -5193,12 +5193,14 @@ dependencies = [
 name = "utopia-http"
 version = "0.1.0"
 dependencies = [
+ "brotli",
  "bytes",
  "futures-util",
  "http",
  "http-body-util",
  "hyper",
  "indexmap",
+ "libz-sys",
  "php-std",
  "serde_json",
  "thiserror 2.0.21",

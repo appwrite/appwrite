@@ -387,13 +387,15 @@ fn wire_json(wire: &Wire) -> Value {
     }
     let now =
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0);
+    // As Capture::out(): the four encodings it decodes, `false` when decoding fails.
     let decoded = wire
         .headers
         .iter()
         .find(|(n, _)| n == "content-encoding")
         .and_then(|(_, v)| v.first())
+        .filter(|e| matches!(e.as_str(), "gzip" | "deflate" | "br" | "zstd"))
         .and_then(|e| utopia_http::Algorithm::from_name(e))
-        .and_then(|a| a.decompress(&wire.body));
+        .map(|a| a.decompress(&wire.body).map_or(Value::Bool(false), |d| bytes_value(&d)));
     let mut out = json!({
         "status": wire.status,
         "headers": if headers.is_empty() { json!([]) } else { Value::Object(headers) },
@@ -407,7 +409,7 @@ fn wire_json(wire: &Wire) -> Value {
         out["aborted"] = Value::Bool(true);
     }
     if let Some(d) = decoded {
-        out["decoded"] = bytes_value(&d);
+        out["decoded"] = d;
     }
     out
 }
@@ -844,6 +846,13 @@ async fn statements(list: &[Value], env: &mut Env<'_, '_>, out: &Out) -> Result<
                 let v = php_string(&env.eval(&at(0))?);
                 let end = at(1).as_bool().unwrap_or(false);
                 env.response().chunk(v.as_bytes(), end)?;
+            }
+            "stream" => {
+                let v = php_string(&env.eval(&at(0))?);
+                let end = at(1).as_bool().unwrap_or(false);
+                if !env.response().stream(v.as_bytes(), end) {
+                    return Err(utopia_http::Error::custom("RuntimeException", "stream() returned false", 0));
+                }
             }
             "status" => {
                 env.response().set_status_code(a.as_i64().unwrap_or(0))?;

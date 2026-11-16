@@ -676,6 +676,7 @@
         "Utopia\\Http\\Response::getCookies",
         "Utopia\\Http\\Response::send",
         "Utopia\\Http\\Response::chunk",
+        "Utopia\\Http\\Response::stream",
         "Utopia\\Http\\Response::redirect",
         "Utopia\\Http\\Response::html",
         "Utopia\\Http\\Response::text",

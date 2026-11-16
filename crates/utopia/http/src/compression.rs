@@ -9,10 +9,12 @@
 //! algorithms `Utopia\Http\Response::send()` uses.
 
 mod algorithm;
+mod encoder;
 
 use utopia_compression::Compression as Codec;
 
 pub use algorithm::Algorithm;
+pub(crate) use encoder::Encoder;
 
 /// Response compression settings of an application.
 ///
