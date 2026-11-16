@@ -143,15 +143,14 @@ impl Apns {
                 return Ok(());
             }
             let reason = at(&result.response, &[K::S("reason")]);
-            let expired =
-                matches!(&reason, Some(Value::Str(s)) if matches!(s.as_bytes(), b"ExpiredToken" | b"BadDeviceToken"));
+            let expired = matches!(&reason, Some(Value::Str(s)) if matches!(s.as_bytes(), b"ExpiredToken" | b"BadDeviceToken" | b"Unregistered"));
             let error = if expired {
                 EXPIRED_MESSAGE.to_owned()
             } else {
                 let error = reason.unwrap_or_else(|| {
                     text(if result.error.is_empty() || result.error == "0" { "Unknown error" } else { &result.error })
                 });
-                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 160 })?
+                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 167 })?
             };
             locked(&response).add_failure(device, error);
             Ok(())
@@ -170,6 +169,14 @@ impl Apns {
                         ];
                         if let Some(priority) = priority {
                             headers.push(format!("apns-priority: {priority}"));
+                        }
+                        // A later push with the same tag replaces the earlier one on the
+                        // device. APNs refuses a collapse ID over 64 bytes, so a longer
+                        // tag is left out rather than failing the push.
+                        if let Some(tag) = message.tag()
+                            && tag.len() <= 64
+                        {
+                            headers.push(format!("apns-collapse-id: {tag}"));
                         }
                         headers
                     },
@@ -438,6 +445,139 @@ impl Adapter for Fcm {
 
     fn max_messages_per_request(&self) -> i64 {
         5000
+    }
+
+    fn base(&self) -> &Base {
+        &self.base
+    }
+
+    fn process<'a>(&'a self, message: &'a Message) -> BoxFuture<'a, Result<Sent, Error>> {
+        Box::pin(self.send_push(push(message)))
+    }
+}
+
+/// A push adapter for tests: posts the whole message to a request catcher
+/// instead of FCM or APNs, so a test can read back exactly what would have
+/// been pushed (any address is allowed).
+///
+/// A device token starting with [`Mock::EXPIRED_PREFIX`] is reported as an
+/// expired token, so the caller's expiry handling can be driven without a
+/// real push service.
+///
+/// PHP: `Utopia\Messaging\Adapter\Push\Mock`.
+#[derive(Debug)]
+pub struct Mock {
+    url: std::sync::RwLock<String>,
+    base: Base,
+}
+
+impl Default for Mock {
+    fn default() -> Mock {
+        Mock::new()
+    }
+}
+
+impl Mock {
+    /// The device token prefix reported as an expired token.
+    ///
+    /// PHP: `Mock::EXPIRED_PREFIX`.
+    pub const EXPIRED_PREFIX: &str = "expired-";
+
+    /// Posts to `http://request-catcher:5000/mock-push`.
+    ///
+    /// PHP: `new Mock()`.
+    pub fn new() -> Mock {
+        Mock {
+            url: std::sync::RwLock::new("http://request-catcher:5000/mock-push".into()),
+            base: Base::new(Http::anywhere("Mock")),
+        }
+    }
+
+    /// Where messages are posted.
+    ///
+    /// PHP: `getEndpoint()`.
+    pub fn endpoint(&self) -> String {
+        self.url.read().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    /// Posts messages to `url` from now on.
+    ///
+    /// PHP: `setEndpoint()`.
+    pub fn set_endpoint(&self, url: impl Into<String>) -> &Mock {
+        *self.url.write().unwrap_or_else(|e| e.into_inner()) = url.into();
+        self
+    }
+
+    /// Posts messages to `url`.
+    pub fn with_endpoint(self, url: impl Into<String>) -> Mock {
+        self.set_endpoint(url);
+        self
+    }
+
+    async fn send_push(&self, message: &Push) -> Result<Sent, Error> {
+        let mut response = Response::new(TYPE);
+        let opt_text = |s: Option<&str>| s.map(text);
+        let opt_bool = |b: Option<bool>| b.map(Value::Bool);
+        let fields: [(&str, Option<Value>); 16] = [
+            ("to", Some(crate::values::list(message.to().iter().map(|to| text(to))))),
+            ("title", opt_text(message.title())),
+            ("body", opt_text(message.body())),
+            ("data", message.data().cloned()),
+            ("action", opt_text(message.action())),
+            ("sound", opt_text(message.sound())),
+            ("image", opt_text(message.image())),
+            ("icon", opt_text(message.icon())),
+            ("color", opt_text(message.color())),
+            ("tag", opt_text(message.tag())),
+            ("badge", message.badge().map(Value::Int)),
+            ("contentAvailable", opt_bool(message.content_available())),
+            ("critical", opt_bool(message.critical())),
+            ("priority", message.priority().map(|p| text(if p == Priority::High { "high" } else { "normal" }))),
+            ("channelId", opt_text(message.channel_id())),
+            ("mutableContent", opt_bool(message.mutable_content())),
+        ];
+        // PHP: `array_filter(..., fn ($value) => $value !== null)`.
+        let body = map(fields
+            .into_iter()
+            .filter_map(|(key, value)| value.filter(|v| !matches!(v, Value::Null)).map(|v| (key, v))));
+        let result = self
+            .base
+            .request(Call::new("POST", self.endpoint(), vec!["Content-Type: application/json".into()], Some(body)))
+            .await?;
+        for to in message.to() {
+            if to.starts_with(Self::EXPIRED_PREFIX) {
+                response.add_failure(to, EXPIRED_MESSAGE);
+                continue;
+            }
+            if result.status_code == 200 {
+                response.increment_delivered_to();
+                response.add_success(to);
+                continue;
+            }
+            let error = if result.error.is_empty() || result.error == "0" { "Unknown Error." } else { &result.error };
+            response.add_failure(to, error);
+        }
+        Ok(Sent::Response(response))
+    }
+}
+
+configure!(Mock, |_| Http::anywhere("Mock"));
+
+impl Adapter for Mock {
+    fn name(&self) -> &str {
+        "Mock"
+    }
+
+    fn kind(&self) -> &str {
+        TYPE
+    }
+
+    fn message_type(&self) -> MessageType {
+        MessageType::Push
+    }
+
+    fn max_messages_per_request(&self) -> i64 {
+        1000
     }
 
     fn base(&self) -> &Base {

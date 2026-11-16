@@ -162,39 +162,95 @@ async fn send<A: Adapter + ?Sized>(adapter: &A, message: &Message) -> Result<Sen
             if let Sent::Response(response) = &sent
                 && !response.details().is_empty()
             {
-                let delivered = response.details().iter().filter(|d| d.status == Status::Success).count();
-                record(adapter, message, response.details().len(), delivered);
+                let outcomes = response
+                    .details()
+                    .iter()
+                    .map(|d| (Some(d.recipient.as_str()), d.status == Status::Success))
+                    .collect::<Vec<_>>();
+                record(adapter, message, &outcomes);
             }
             Ok(sent)
         }
         Err(error) => {
-            record(adapter, message, message.recipient_count().unwrap_or(1), 0);
+            let outcomes: Vec<(Option<&str>, bool)> = match message {
+                Message::Email(m) => m.to().iter().map(|_| (None, false)).collect(),
+                Message::Sms(m) => m.to().iter().map(|to| (Some(to.as_str()), false)).collect(),
+                Message::Push(m) => m.to().iter().map(|to| (Some(to.as_str()), false)).collect(),
+                Message::Discord(_) => vec![(None, false)],
+            };
+            record(adapter, message, &outcomes);
             Err(error)
         }
     }
 }
 
+/// Counts each attempt once, grouped by the attributes its recipient adds,
+/// so a message to several recipients splits its successes and failures
+/// between them. `outcomes` holds each recipient and whether it was
+/// delivered.
+///
 /// PHP: `recordSend()`, with `telemetryAttributes()`.
-fn record<A: Adapter + ?Sized>(adapter: &A, message: &Message, recipients: usize, delivered: usize) {
+fn record<A: Adapter + ?Sized>(adapter: &A, message: &Message, outcomes: &[(Option<&str>, bool)]) {
     let counter = adapter.base().counter();
     let lower = php_std::string::strtolower(adapter.name().as_bytes());
     let provider = String::from_utf8_lossy(&lower);
-    let attributes = |result: &'static str| {
-        let mut list: Vec<(&str, Attribute<'_>)> = Vec::with_capacity(4);
-        list.push(("result", result.into()));
-        if let Some(origin) = message.origin() {
-            list.push(("origin", origin.into()));
+    // Groups in order of first appearance: (recipient attributes, successes, failures).
+    let mut groups: Vec<(RecipientAttributes, usize, usize)> = Vec::new();
+    for &(recipient, delivered) in outcomes {
+        let attributes = recipient_attributes(adapter, recipient);
+        let index = match groups.iter().position(|(a, _, _)| *a == attributes) {
+            Some(index) => index,
+            None => {
+                groups.push((attributes, 0, 0));
+                groups.len() - 1
+            }
+        };
+        if delivered {
+            groups[index].1 += 1;
+        } else {
+            groups[index].2 += 1;
         }
-        list.push(("type", adapter.kind().into()));
-        list.push(("provider", provider.as_ref().into()));
-        list
+    }
+    let template = match message {
+        Message::Email(email) => email.template(),
+        _ => None,
     };
-    if delivered > 0 {
-        counter.add(delivered, &attributes("success"));
+    for (extra, success, failure) in &groups {
+        for (result, count) in [("success", *success), ("failure", *failure)] {
+            if count == 0 {
+                continue;
+            }
+            let mut list: Vec<(&str, Attribute<'_>)> = Vec::with_capacity(6);
+            list.push(("result", result.into()));
+            if let Some(origin) = message.origin() {
+                list.push(("origin", origin.into()));
+            }
+            list.push(("type", adapter.kind().into()));
+            list.push(("provider", provider.as_ref().into()));
+            // PHP: `Adapter\Email::telemetryAttributes()`.
+            if let Some(template) = template {
+                list.push(("template", template.into()));
+            }
+            list.extend(extra.iter().map(|&(key, value)| (key, value.into())));
+            counter.add(count, &list);
+        }
     }
-    if recipients > delivered {
-        counter.add(recipients - delivered, &attributes("failure"));
+}
+
+/// The attributes one recipient adds to the attempts to it.
+type RecipientAttributes = Vec<(&'static str, &'static str)>;
+
+/// Attributes describing one recipient, recorded with each attempt to it,
+/// kept low-cardinality: SMS adapters label the recipient's country calling
+/// code (`91`, `1`; `unknown` when it matches none), others add nothing.
+///
+/// PHP: `recipientAttributes()`, overridden by `Adapter\SMS`.
+fn recipient_attributes<A: Adapter + ?Sized>(adapter: &A, recipient: Option<&str>) -> RecipientAttributes {
+    if adapter.message_type() != MessageType::Sms {
+        return Vec::new();
     }
+    let code = recipient.and_then(crate::sms::calling_code::from_phone_number).unwrap_or("unknown");
+    vec![("country_code", code)]
 }
 
 /// Swaps how an adapter makes requests.

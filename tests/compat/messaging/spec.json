@@ -503,6 +503,8 @@
         "Utopia\\Messaging\\Adapter\\Push\\APNS::getName",
         "Utopia\\Messaging\\Adapter\\Push\\FCM::getMaxMessagesPerRequest",
         "Utopia\\Messaging\\Adapter\\Push\\FCM::getName",
+        "Utopia\\Messaging\\Adapter\\Push\\Mock::getMaxMessagesPerRequest",
+        "Utopia\\Messaging\\Adapter\\Push\\Mock::getName",
         "Utopia\\Messaging\\Adapter\\SMS::getMessageType",
         "Utopia\\Messaging\\Adapter\\SMS::getType",
         "Utopia\\Messaging\\Adapter\\SMS\\Bird::getMaxMessagesPerRequest",
@@ -815,11 +817,13 @@
       ]
     },
     "adapter.call": {
-      "doc": "another adapter method: set_telemetry, set_local (GEOSMS::setLocal), get_endpoint / set_endpoint (SMS Mock; `{fixture}` in a URL is this runtime's fixture base and namespace), disconnect (SMTP), upsert_template / get_template / delete_template (WhatsApp): {result | error | $invalid, requests} as adapter.send",
+      "doc": "another adapter method: set_telemetry, set_local (GEOSMS::setLocal), get_endpoint / set_endpoint (SMS and push Mock; `{fixture}` in a URL is this runtime's fixture base and namespace), disconnect (SMTP), upsert_template / get_template / delete_template (WhatsApp): {result | error | $invalid, requests} as adapter.send",
       "covers": [
         "Utopia\\Messaging\\Adapter\\SMS\\GEOSMS::setLocal",
         "Utopia\\Messaging\\Adapter\\SMS\\Mock::getEndpoint",
         "Utopia\\Messaging\\Adapter\\SMS\\Mock::setEndpoint",
+        "Utopia\\Messaging\\Adapter\\Push\\Mock::getEndpoint",
+        "Utopia\\Messaging\\Adapter\\Push\\Mock::setEndpoint",
         "Utopia\\Messaging\\Adapter\\Email\\SMTP::disconnect",
         "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp::upsertTemplate",
         "Utopia\\Messaging\\Adapter\\SMS\\WhatsApp::getTemplate",
