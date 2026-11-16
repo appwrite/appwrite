@@ -243,13 +243,26 @@ emit('clone', outcome(function () {
 
     return [properties($copy), properties($copy)['domainInstance'] === properties($email)['domainInstance'], $copy == $email];
 }));
+/** $dump with each object handle ("#12 ") dropped: handles differ between runs. */
+function withoutHandles(string $dump): string
+{
+    $parts = explode('#', $dump);
+    $result = array_shift($parts);
+    foreach ($parts as $part) {
+        $digits = strspn($part, '0123456789');
+        $result .= '#' . ($digits > 0 && ($part[$digits] ?? '') === ' ' ? substr($part, $digits) : $part);
+    }
+
+    return $result;
+}
+
 emit('var_dump', outcome(function () {
     $email = new Email(' User@Mail.Example.CO.UK ');
     $email->getProvider();
     ob_start();
     var_dump($email);
 
-    return preg_replace('/#\d+ /', '# ', ob_get_clean());
+    return withoutHandles(ob_get_clean());
 }));
 emit('read protected', outcome(fn () => (new Email('a@example.com'))->email));
 emit('instanceof', outcome(fn () => new Email('a@example.com') instanceof Email));
