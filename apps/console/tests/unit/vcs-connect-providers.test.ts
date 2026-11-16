@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import { CONSOLE_PROFILES } from '@/lib/console-profiles'
-import { getVisibleVcsOAuthProviders } from '@/lib/vcs/providers'
+import {
+  getVcsProviderColumns,
+  getVisibleVcsOAuthProviders,
+} from '@/lib/vcs/providers'
 
 const ids = (features: { vcsOrigin: boolean }) =>
   getVisibleVcsOAuthProviders(features, undefined).map(
@@ -29,5 +32,14 @@ describe('Git connect providers', () => {
       'bitbucket',
       'gitea',
     ])
+  })
+})
+
+describe('Git connect provider columns', () => {
+  test('rows stay balanced as providers are added', () => {
+    const columns = Array.from({ length: 11 }, (_, i) =>
+      getVcsProviderColumns(i + 1),
+    )
+    expect(columns).toEqual([1, 2, 3, 2, 3, 3, 3, 3, 3, 3, 3])
   })
 })
