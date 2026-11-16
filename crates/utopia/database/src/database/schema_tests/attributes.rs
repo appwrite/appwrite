@@ -106,6 +106,19 @@ fn deleting_an_attribute_removes_it_from_the_collection() {
 }
 
 #[test]
+fn deleting_an_attribute_drops_its_index_lengths_and_orders() {
+    block_on(async {
+        let index = Index::key("idx", ["a", "b", "c"], vec![Some(10), Some(20), Some(30)], Vec::new()).unwrap();
+        let attributes = vec![Attribute::string("a", 128), Attribute::string("b", 128), Attribute::string("c", 128)];
+        let f = Fixture::new(vec![definition(COLLECTION, attributes, vec![index])]);
+        f.db.delete_attribute(COLLECTION, "b").await.unwrap();
+        let indexes = f.last_write().indexes().unwrap().to_vec();
+        assert_eq!(indexes[0].attributes, ["a", "c"]);
+        assert_eq!(indexes[0].lengths, [Some(10), Some(30)]);
+    });
+}
+
+#[test]
 fn deleting_a_missing_attribute_is_not_found() {
     block_on(async {
         let f = fixture(Vec::new());

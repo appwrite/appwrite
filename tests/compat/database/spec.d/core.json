@@ -764,6 +764,13 @@
         "Utopia\\Database\\Trait\\Collections::getSizeOfCollectionOnDisk"
       ]
     },
+    "database.estimate_count": {
+      "doc": "$db->estimateCount(...) with named arguments (README: database, Values)",
+      "covers": [
+        "Utopia\\Database\\Database::estimateCount",
+        "Utopia\\Database\\Trait\\Collections::estimateCount"
+      ]
+    },
     "database.analyze_collection": {
       "doc": "$db->analyzeCollection(...) with named arguments (README: database, Values)",
       "covers": [
@@ -1307,6 +1314,7 @@
         "Utopia\\Database\\Adapter::getNamespace",
         "Utopia\\Database\\Adapter::getProfiler",
         "Utopia\\Database\\Adapter::getSchemaIndexType",
+        "Utopia\\Database\\Adapter::estimateCount",
         "Utopia\\Database\\Adapter::getTenant",
         "Utopia\\Database\\Adapter::getTenantHook",
         "Utopia\\Database\\Adapter::getWriteHooks",
@@ -1513,6 +1521,7 @@
         "Utopia\\Database\\Adapter\\Pool::getSchemaIndexes",
         "Utopia\\Database\\Adapter\\Pool::getSequences",
         "Utopia\\Database\\Adapter\\Pool::getSizeOfCollection",
+        "Utopia\\Database\\Adapter\\Pool::estimateCount",
         "Utopia\\Database\\Adapter\\Pool::getSizeOfCollectionOnDisk",
         "Utopia\\Database\\Adapter\\Pool::getTimeout",
         "Utopia\\Database\\Adapter\\Pool::hasFeature",
@@ -1568,6 +1577,7 @@
         "Utopia\\Database\\Adapter\\Postgres::getSchemaIndexType",
         "Utopia\\Database\\Adapter\\Postgres::getSchemaIndexes",
         "Utopia\\Database\\Adapter\\Postgres::getSizeOfCollection",
+        "Utopia\\Database\\Adapter\\Postgres::estimateCount",
         "Utopia\\Database\\Adapter\\Postgres::getSizeOfCollectionOnDisk",
         "Utopia\\Database\\Adapter\\Postgres::getTimeout",
         "Utopia\\Database\\Adapter\\Postgres::id",

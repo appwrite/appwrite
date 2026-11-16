@@ -102,7 +102,7 @@ impl Resource for Pooled {
 
 /// The calls a [`ReadWritePool`] sends to its read pool
 /// (`ReadWritePool::READ_METHODS`).
-pub const READ_METHODS: [&str; 13] = [
+pub const READ_METHODS: [&str; 14] = [
     "find",
     "getDocument",
     "count",
@@ -114,6 +114,7 @@ pub const READ_METHODS: [&str; 13] = [
     "getSchemaIndexes",
     "getSizeOfCollection",
     "getSizeOfCollectionOnDisk",
+    "estimateCount",
     "ping",
     "id",
 ];
@@ -892,6 +893,10 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
 
     async fn size_of_collection_on_disk(&self, collection: &str) -> Result<i64> {
         delegate!(self, "getSizeOfCollectionOnDisk", |a| a.size_of_collection_on_disk(collection).await)
+    }
+
+    async fn estimate_count(&self, collection: &str) -> Result<Option<i64>> {
+        delegate!(self, "estimateCount", |a| a.estimate_count(collection).await)
     }
 
     fn attribute_width(&self, collection: &Collection) -> Result<i64> {

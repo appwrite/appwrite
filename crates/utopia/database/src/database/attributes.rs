@@ -29,6 +29,12 @@ use crate::value::{Array, Value};
 /// The `attributes` field of a stored index (`INDEX_ATTRIBUTES`).
 const INDEX_ATTRIBUTES: &str = "attributes";
 
+/// The `lengths` field of a stored index.
+const INDEX_LENGTHS: &str = "lengths";
+
+/// The `orders` field of a stored index.
+const INDEX_ORDERS: &str = "orders";
+
 /// `number_format($n)`.
 fn number_format(n: Number) -> String {
     String::from_utf8_lossy(&php_std::format::number_format(n, 0, b".", b",")).into_owned()
@@ -389,6 +395,17 @@ impl Database {
         write_indexes(&mut definition, &without_indexed_attribute(&indexes, key)?)?;
 
         let deleted_in_schema = self.delete_attribute_from_schema(&id, key).await?;
+
+        // An engine drops an index with its column only when no other column is left in it, and under
+        // shared tables every index also holds the tenant column. An index whose last attribute this was
+        // would survive on the tenant column alone and refuse the next index created under its name.
+        if adapter.shared_tables() {
+            for index in &indexes {
+                if index.attributes.len() == 1 && index.attributes[0] == key {
+                    self.delete_index_from_schema(&id, &index.key).await?;
+                }
+            }
+        }
 
         self.update_metadata(
             &definition,
@@ -961,12 +978,39 @@ fn without_indexed_attribute(indexes: &[Index], key: &str) -> Result<Vec<Index>>
             remaining.push(index.clone());
             continue;
         }
-        let attributes: Vec<String> = index.attributes.iter().filter(|a| *a != key).cloned().collect();
+        // Lengths and orders are positional, so drop the entry at each removed attribute's position too.
+        let mut document = index.to_document();
+        let mut attributes = index.attributes.clone();
+        let mut lengths = positional(document.get(INDEX_LENGTHS));
+        let mut orders = positional(document.get(INDEX_ORDERS));
+        let positions: Vec<usize> = attributes.iter().enumerate().filter(|(_, a)| *a == key).map(|(i, _)| i).collect();
+        for &position in positions.iter().rev() {
+            attributes.remove(position);
+            if position < lengths.len() {
+                lengths.remove(position);
+            }
+            if position < orders.len() {
+                orders.remove(position);
+            }
+        }
         if !attributes.is_empty() {
-            remaining.push(with_indexed_attributes(index, &attributes)?);
+            document.set(INDEX_ATTRIBUTES, super::collections::string_list(&attributes))?;
+            document.set(INDEX_LENGTHS, Value::Array(Array::from_list(lengths)))?;
+            document.set(INDEX_ORDERS, Value::Array(Array::from_list(orders)))?;
+            remaining.push(Index::from_document(&document)?);
         }
     }
     Ok(remaining)
+}
+
+/// A stored positional index field as a list (`(array)`): empty when
+/// missing or null, the scalar alone otherwise.
+fn positional(value: Option<&Value>) -> Vec<Value> {
+    match value {
+        None | Some(Value::Null) => Vec::new(),
+        Some(Value::Array(values)) => values.values().cloned().collect(),
+        Some(other) => vec![other.clone()],
+    }
 }
 
 /// The index over `attributes`, read back from its stored form

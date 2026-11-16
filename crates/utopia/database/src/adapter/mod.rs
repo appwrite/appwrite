@@ -933,6 +933,13 @@ pub trait Adapter: Send + Sync + 'static {
     /// The size of a collection on disk (`getSizeOfCollectionOnDisk()`).
     async fn size_of_collection_on_disk(&self, collection: &str) -> Result<i64>;
 
+    /// Estimates the documents in a collection from engine statistics,
+    /// without scanning it (`estimateCount()`): `None` when the engine
+    /// keeps no usable estimate, so the caller counts instead.
+    async fn estimate_count(&self, _collection: &str) -> Result<Option<i64>> {
+        Ok(None)
+    }
+
     /// The bytes a row of the collection's attributes takes (`getAttributeWidth()`).
     fn attribute_width(&self, collection: &Collection) -> Result<i64>;
 
