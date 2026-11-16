@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Reviews\Strength;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
@@ -81,6 +82,14 @@ class Review extends Model
                 'description' => 'Review status. Possible values: queued, processing, completed, skipped, failed, superseded.',
                 'default' => '',
                 'example' => 'completed',
+            ])
+            ->addRule('strength', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Strength the review runs and is billed at: the repository\'s when it was queued. Possible values: basic, normal, expert.',
+                'default' => Strength::Normal->value,
+                'example' => Strength::Normal->value,
+                'enum' => Strength::values(),
+                'enumSDKName' => 'ReviewStrength',
             ])
             ->addRule('verdict', [
                 'type' => self::TYPE_STRING,
