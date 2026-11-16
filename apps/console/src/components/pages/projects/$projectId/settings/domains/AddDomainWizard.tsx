@@ -24,6 +24,10 @@ import {
   useDeleteDomain,
 } from '@/lib/react-query/hooks'
 import {
+  DomainPlanLimitNotice,
+  useNewApexPlanLimit,
+} from '@/components/pages/projects/$projectId/shared/NewApexPlanLimit'
+import {
   ensureApexDomainInOrganization,
   getDomainClaimReason,
   type DomainClaimReason,
@@ -44,12 +48,17 @@ export function AddDomainWizard({
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
+  const [domain, setDomain] = useState(initialDomain ?? '')
+  const { blocked: apexPlanBlocked, limit: domainsLimit } = useNewApexPlanLimit(
+    project?.teamId,
+    domain,
+    region,
+  )
 
   const createMutation = useCreateDomain(projectId, region)
   const verifyMutation = useVerifyDomain(projectId, region)
   const deleteMutation = useDeleteDomain(projectId, region)
 
-  const [domain, setDomain] = useState(initialDomain ?? '')
   const [error, setError] = useState('')
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
@@ -99,6 +108,7 @@ export function AddDomainWizard({
       setError(t('Please enter a valid domain'))
       return
     }
+    if (apexPlanBlocked) return
 
     setRegistering(true)
     try {
@@ -273,7 +283,10 @@ export function AddDomainWizard({
           >
             {t('Cancel')}
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending || !domain.trim()}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isPending || !domain.trim() || apexPlanBlocked}
+          >
             {t('Add')}
           </Button>
         </div>
@@ -306,6 +319,12 @@ export function AddDomainWizard({
             {error && (
               <p className="text-[11px] text-destructive mt-1">{error}</p>
             )}
+            {apexPlanBlocked ? (
+              <DomainPlanLimitNotice
+                orgId={project?.teamId}
+                limit={domainsLimit}
+              />
+            ) : null}
           </div>
         </div>
       </form>
