@@ -42,6 +42,9 @@ Below is a list of the available commands in the Appwrite CLI. You can get more 
 * `generate`
 * The generate command creates a type-safe SDK tailored to your project. It detects your project's language and generates typed helpers based on your database schema. Learn more about [SDK generation](/docs/tooling/command-line/generate).
 ---
+* `terminal [options]`
+* The terminal command opens your projects in an interactive, keyboard-driven interface to browse resources, query rows, execute functions, and watch usage. Learn more about the [terminal interface](/docs/tooling/command-line/terminal).
+---
 {% /table %}
 
 ## Account commands {% #account-commands %}

@@ -4333,6 +4333,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "tooling/command-line/terminal",
+    "title": "Terminal",
+    "description": "Browse, query, and manage your Appwrite projects in an interactive, keyboard-driven interface with the terminal command in the Appwrite CLI.",
+    "layout": "article",
+    "readingTimeMinutes": 8
+  },
+  {
     "slug": "tooling/command-line/topics",
     "title": "Topics",
     "description": "Efficiently deploy your Appwrite topics using the Command-Line Tool (CLI).",

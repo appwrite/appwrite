@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-cli-terminal",
+    "href": "/blog/post/announcing-cli-terminal",
+    "title": "Introducing the terminal command in the Appwrite CLI",
+    "description": "The new terminal command in the Appwrite CLI opens your project in an interactive terminal UI to browse resources, query rows, run functions, and watch usage.",
+    "date": "2026-11-16",
+    "lastUpdated": "2026-11-16",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-cli-terminal/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-activity-reasons",
     "href": "/blog/post/announcing-activity-reasons",
     "title": "Announcing reasons in Activity: see why every change was made",
