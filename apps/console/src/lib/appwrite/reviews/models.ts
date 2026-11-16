@@ -232,10 +232,6 @@ export type ReviewInstallation = Models.Installation & {
    * Whether code review is turned on for repositories added to the installation later.
    */
   reviewNewRepositories?: boolean
-  /**
-   * How hard pull requests of repositories added to the installation later are reviewed.
-   */
-  reviewStrength?: ReviewStrength
 }
 
 /**

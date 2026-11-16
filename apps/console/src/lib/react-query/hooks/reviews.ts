@@ -494,7 +494,6 @@ export function useUpdateReviewInstallation(
     mutationFn: (params: {
       installationId: string
       newRepositories: boolean
-      strength?: ReviewStrength
     }) => sdk.forProject(projectId!).reviews.updateInstallation(params),
     onSuccess: async () => {
       await queryClient.refetchQueries({

@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Reviews\Http\Installations;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
-use Appwrite\Reviews\Strength;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -13,16 +12,15 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\WhiteList;
 
 /**
  * Sets whether repositories added to a GitHub installation later are reviewed: each one that
  * joins it, picked in its settings or created in an account it covers in full, gets code review
- * at the chosen strength. Repositories already in the installation are left as they are.
+ * at normal strength, which can then be changed per repository. Repositories already in the
+ * installation are left as they are.
  */
 class Update extends Action
 {
@@ -48,7 +46,7 @@ class Update extends Action
                 group: 'installations',
                 name: 'updateInstallation',
                 description: <<<EOT
-                Choose whether code review is turned on for repositories added to a GitHub installation later, and how hard their pull requests are reviewed. A repository counts as added when it is picked in the installation's settings, or created in an account the installation covers in full. Repositories already in the installation keep their current setting. Reviews are only charged when they run.
+                Choose whether code review is turned on for repositories added to a GitHub installation later. They are reviewed at normal strength, which can be changed per repository. A repository counts as added when it is picked in the installation's settings, or created in an account the installation covers in full. Repositories already in the installation keep their current setting. Reviews are only charged when they run.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -62,7 +60,6 @@ class Update extends Action
             ))
             ->param('installationId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Installation ID.', false, ['dbForPlatform'])
             ->param('newRepositories', false, new Boolean(true), 'Turn on code review for repositories added to the installation later.')
-            ->param('strength', Strength::Normal->value, new WhiteList(Strength::values(), true), 'How hard pull requests of repositories added later are reviewed. Possible values: basic, normal, expert.', true, enum: new Enum(name: 'ReviewStrength'))
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -73,7 +70,6 @@ class Update extends Action
     public function action(
         string $installationId,
         bool $newRepositories,
-        string $strength,
         Response $response,
         Document $project,
         Database $dbForPlatform,
@@ -95,7 +91,6 @@ class Update extends Action
 
         $installation = $authorization->skip(fn () => $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
             'reviewNewRepositories' => $newRepositories,
-            'reviewStrength' => $strength,
         ])));
 
         $response->dynamic($installation, Response::MODEL_INSTALLATION);

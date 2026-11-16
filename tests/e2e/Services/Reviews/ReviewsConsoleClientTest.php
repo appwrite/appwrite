@@ -664,21 +664,18 @@ final class ReviewsConsoleClientTest extends Scope
         $installation = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installationId, $this->projectHeaders());
         $this->assertSame(200, $installation['headers']['status-code']);
         $this->assertFalse($installation['body']['reviewNewRepositories']);
-        $this->assertSame('normal', $installation['body']['reviewStrength']);
 
         $installation = $this->client->call(Client::METHOD_PATCH, '/reviews/installations/' . $installationId, $this->projectHeaders(), [
             'newRepositories' => true,
-            'strength' => 'basic',
         ]);
         $this->assertSame(200, $installation['headers']['status-code']);
         $this->assertSame($installationId, $installation['body']['$id']);
         $this->assertTrue($installation['body']['reviewNewRepositories']);
-        $this->assertSame('basic', $installation['body']['reviewStrength']);
 
         $installation = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installationId, $this->projectHeaders());
         $this->assertTrue($installation['body']['reviewNewRepositories']);
 
-        // A repository added to the installation is reviewed at the chosen strength
+        // A repository added to the installation is reviewed at normal strength
         $event = $this->sendInstallationRepositoriesEvent('added', [$added]);
         $this->assertSame(200, $event['headers']['status-code']);
 
@@ -686,7 +683,7 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame(1, $repositories['body']['total']);
         $repository = $repositories['body']['repositories'][0];
         $this->assertSame($installationId, $repository['installationId']);
-        $this->assertSame('basic', $repository['strength']);
+        $this->assertSame('normal', $repository['strength']);
 
         // Only in the project that asked for it
         $this->assertSame(0, $this->listRepositories([$added], $otherProjectId)['body']['total']);
@@ -710,7 +707,6 @@ final class ReviewsConsoleClientTest extends Scope
         ]);
         $this->assertSame(200, $installation['headers']['status-code']);
         $this->assertFalse($installation['body']['reviewNewRepositories']);
-        $this->assertSame('normal', $installation['body']['reviewStrength']);
 
         $this->sendInstallationRepositoriesEvent('added', [$addedLater]);
         $this->assertSame(0, $this->listRepositories([$addedLater])['body']['total']);
@@ -732,8 +728,7 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame(404, $unknown['headers']['status-code']);
 
         $invalid = $this->client->call(Client::METHOD_PATCH, '/reviews/installations/' . $installationId, $this->projectHeaders(), [
-            'newRepositories' => true,
-            'strength' => 'extreme',
+            'newRepositories' => 'maybe',
         ]);
         $this->assertSame(400, $invalid['headers']['status-code']);
 

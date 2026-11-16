@@ -262,7 +262,7 @@ class Create extends Action
                         'resourceInternalId' => $project->getSequence(),
                         'resourceType' => RESOURCE_TYPE_REVIEWS,
                         'providerPullRequestIds' => [],
-                        'strength' => $installation->getAttribute('reviewStrength', Strength::Normal->value),
+                        'strength' => Strength::Normal->value,
                     ])));
                 } catch (DuplicateException) {
                     continue;

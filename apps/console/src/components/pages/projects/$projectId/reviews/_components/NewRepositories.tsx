@@ -1,10 +1,9 @@
 import { toast } from 'sonner'
 import { Switch } from '@/components/ui/switch'
-import type { ReviewInstallation, ReviewStrength } from '@/lib/appwrite/reviews'
+import type { ReviewInstallation } from '@/lib/appwrite/reviews'
 import { useUpdateReviewInstallation } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { StrengthPicker } from './StrengthSelect'
 
 type NewRepositoriesProps = {
   projectId: string
@@ -15,7 +14,8 @@ type NewRepositoriesProps = {
 /**
  * Turns code review on for repositories added to a GitHub installation later,
  * whether picked in the app's settings or created in an account the app has
- * in full. Repositories already in the installation keep their own switch.
+ * in full. They start at normal strength, changed per repository like any
+ * other. Repositories already in the installation keep their own switch.
  */
 export function NewRepositories({
   projectId,
@@ -25,20 +25,16 @@ export function NewRepositories({
   const t = useT()
   const mutation = useUpdateReviewInstallation(projectId)
 
-  // Show where the settings are going while the request runs.
+  // Show where the setting is going while the request runs.
   const enabled = mutation.isPending
     ? mutation.variables.newRepositories
     : (installation.reviewNewRepositories ?? false)
-  const strength: ReviewStrength = mutation.isPending
-    ? (mutation.variables.strength ?? 'normal')
-    : (installation.reviewStrength ?? 'normal')
 
-  const update = (newRepositories: boolean, next: ReviewStrength) => {
+  const update = (newRepositories: boolean) => {
     mutation.mutate(
       {
         installationId: installation.$id,
         newRepositories,
-        strength: next,
       },
       {
         onSuccess: () => {
@@ -70,22 +66,13 @@ export function NewRepositories({
           ).replace('{organization}', installation.organization)}
         </p>
       </div>
-      <div className="flex shrink-0 items-center gap-3">
-        {enabled && (
-          <StrengthPicker
-            value={strength}
-            disabled={!canWrite || mutation.isPending}
-            label={t('Review strength for new repositories')}
-            onChange={(next) => update(true, next)}
-          />
-        )}
-        <Switch
-          checked={enabled}
-          disabled={!canWrite || mutation.isPending}
-          aria-label={t('Review new repositories')}
-          onCheckedChange={(next) => update(next, strength)}
-        />
-      </div>
+      <Switch
+        className="shrink-0"
+        checked={enabled}
+        disabled={!canWrite || mutation.isPending}
+        aria-label={t('Review new repositories')}
+        onCheckedChange={update}
+      />
     </div>
   )
 }

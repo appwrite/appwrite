@@ -216,7 +216,6 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Review new repositories': '新しいリポジトリをレビュー',
   'Turn on code review for repositories added to {organization} on GitHub later.':
     '後から GitHub の {organization} に追加されたリポジトリのコードレビューを有効にします。',
-  'Review strength for new repositories': '新しいリポジトリのレビュー強度',
   'New repositories will be reviewed': '新しいリポジトリをレビューします',
   'New repositories will not be reviewed': '新しいリポジトリはレビューしません',
   'Failed to update new repositories':

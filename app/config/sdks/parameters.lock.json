@@ -3828,8 +3828,7 @@
         ],
         "reviews.updateInstallation": [
             "installationId",
-            "newRepositories",
-            "strength"
+            "newRepositories"
         ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",
@@ -8156,8 +8155,7 @@
         ],
         "reviews.updateInstallation": [
             "installationId",
-            "newRepositories",
-            "strength"
+            "newRepositories"
         ],
         "reviews.updateRepositoryStrength": [
             "repositoryId",

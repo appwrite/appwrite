@@ -214,7 +214,6 @@ export const heReviewsDictionary: Record<string, string> = {
   'Review new repositories': 'סקירת מאגרים חדשים',
   'Turn on code review for repositories added to {organization} on GitHub later.':
     'הפעלת סקירת קוד למאגרים שיתווספו ל-{organization} ב-GitHub בהמשך.',
-  'Review strength for new repositories': 'עוצמת הסקירה למאגרים חדשים',
   'New repositories will be reviewed': 'מאגרים חדשים ייסקרו',
   'New repositories will not be reviewed': 'מאגרים חדשים לא ייסקרו',
   'Failed to update new repositories': 'עדכון ההגדרה למאגרים חדשים נכשל',
