@@ -38,6 +38,7 @@ class Get extends Base
                 namespace: 'videos',
                 group: 'videos',
                 name: 'get',
+                // Hidden until videos is generally available; preview SDK builds show it.
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/videos/get-video.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],

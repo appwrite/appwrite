@@ -46,6 +46,7 @@ class XList extends Base
                 namespace: 'project',
                 group: 'profiles',
                 name: 'listVideoProfiles',
+                // Hidden until videos is generally available; preview SDK builds show it.
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
                 description: '/docs/references/project/list-video-profiles.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
