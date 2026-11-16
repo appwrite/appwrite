@@ -159,7 +159,7 @@ impl Conn {
             };
             result.map_err(from_rusqlite)?;
         }
-        let columns: Vec<Str> = stmt.column_names().iter().map(|n| Str::from(n.as_bytes().to_vec())).collect();
+        let columns: Vec<Str> = stmt.column_names().map(|n| Str::from(n.as_bytes().to_vec())).collect();
         let mut out = Vec::new();
         {
             let mut rows = stmt.raw_query();

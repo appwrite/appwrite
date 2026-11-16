@@ -785,11 +785,8 @@ mod tests {
         let users = inv.services.iter().find(|s| s.id == "users").expect("users");
         assert!(users.endpoints.iter().any(|e| e.method == "PATCH" && e.path == "/v1/users/:userId/status"));
         // The abuse hook reads its labels and throws the rate limit error.
-        let abuse = inv
-            .hooks
-            .iter()
-            .find(|h| h.kind == "init" && h.labels.iter().any(|l| l == "abuse"))
-            .expect("abuse hook");
+        let abuse =
+            inv.hooks.iter().find(|h| h.kind == "init" && h.labels.iter().any(|l| l == "abuse")).expect("abuse hook");
         assert_eq!(abuse.file, "app/controllers/shared/api.php");
         assert!(abuse.errors.iter().any(|e| e == "GENERAL_RATE_LIMIT_EXCEEDED"));
         assert!(abuse.headers.iter().any(|h| h == "X-RateLimit-Limit"));

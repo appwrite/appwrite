@@ -822,7 +822,8 @@ jobs:
         run: |
           ./dev/openldap/certs.sh
           docker compose up -d --wait openldap
-          docker compose --profile openldap-seed run --rm openldap-seed
+          # --profile would replace COMPOSE_PROFILES (and drop the database's).
+          COMPOSE_PROFILES="${COMPOSE_PROFILES},openldap-seed" docker compose run --rm openldap-seed
 
       - name: Load and Start Appwrite
         timeout-minutes: 5
