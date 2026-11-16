@@ -18,9 +18,12 @@ redis-cluster = ["redis", "redis/cluster-async"]
 memcached = []
 # Files under a directory.
 filesystem = []
+# Objects on a utopia-storage device.
+storage = ["dep:utopia-storage", "dep:chrono"]
 
 [dependencies]
 bytes.workspace = true
+chrono = { workspace = true, optional = true }
 crc32fast.workspace = true
 flate2.workspace = true
 getrandom.workspace = true
@@ -37,9 +40,10 @@ utopia-async.workspace = true
 tracing.workspace = true
 utopia-circuit-breaker.workspace = true
 utopia-pools.workspace = true
+utopia-storage = { workspace = true, optional = true }
 utopia-telemetry.workspace = true
 
 
 [package.metadata.utopia]
 category = "data"
-php-sync = "3771bfa38cc3455b4ab30d6c39dfa0ad9b3c50da"
+php-sync = "ef6cd8fe161e711873663009cf3ba02b7392af7c"

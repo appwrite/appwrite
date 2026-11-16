@@ -31,6 +31,33 @@ final class TestAction extends Action
 {
 }
 
+/** An action registered by its class name, built on first use. */
+final class LazyAction extends Action
+{
+    public static int $built = 0;
+
+    public function __construct()
+    {
+        self::$built++;
+        $this->desc('lazy');
+    }
+}
+
+/** A lazily registered action with a name of its own, which must be its key. */
+final class NamedLazyAction extends Action
+{
+    public static function getName(): string
+    {
+        return 'named';
+    }
+
+    public function __construct()
+    {
+        LazyAction::$built++;
+        $this->desc('named');
+    }
+}
+
 final class TestService extends Service
 {
     public function __construct(string $type)
@@ -398,13 +425,14 @@ final class Adapter implements Base, Benchmarks
     }
 
     /**
-     * A service of `type` driven by steps: set_type, type, add_action {key, action}, remove_action, action key, actions.
+     * A service of `type` driven by steps: set_type, type, add_action {key, action | lazy: plain|named (a class name, built on first use)}, built (lazy actions built so far), remove_action, action key, actions.
      *
      * @param array<string, mixed> $a
      * @return list<mixed>
      */
     private static function service(array $a): array
     {
+        LazyAction::$built = 0;
         $service = new TestService($a['type'] ?? Service::TYPE_HTTP);
         $results = [];
         foreach ($a['steps'] ?? [] as $step) {
@@ -413,7 +441,12 @@ final class Adapter implements Base, Benchmarks
             $results[] = match ($op) {
                 'set_type' => $service->setType($x) === $service,
                 'type' => $service->getType(),
-                'add_action' => $service->addAction($x['key'], self::build($service->getType(), $x['action'] ?? [])) === $service,
+                'add_action' => $service->addAction($x['key'], match ($x['lazy'] ?? null) {
+                    'plain' => LazyAction::class,
+                    'named' => NamedLazyAction::class,
+                    default => self::build($service->getType(), $x['action'] ?? []),
+                }) === $service,
+                'built' => LazyAction::$built,
                 'remove_action' => $service->removeAction($x) === $service,
                 'action' => ($found = $service->getAction($x)) === null ? null : self::describe($found),
                 'actions' => array_keys($service->getActions()),

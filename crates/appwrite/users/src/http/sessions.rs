@@ -69,6 +69,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let country_name = country_name(ctx, &country);
     let model = SessionModel {
         session: &session,
+        user_name: user.name.as_deref().unwrap_or(""),
         country_name: &country_name,
         current: false,
         secret: Some(&encoded),
@@ -92,7 +93,14 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
         .sessions
         .iter()
         .zip(names.iter())
-        .map(|(s, n)| SessionModel { session: s, country_name: n, current: false, secret: None, render })
+        .map(|(s, n)| SessionModel {
+            session: s,
+            user_name: user.name.as_deref().unwrap_or(""),
+            country_name: n,
+            current: false,
+            secret: None,
+            render,
+        })
         .collect();
     let total = if include_total { sessions.len() as i64 } else { 0 };
     Ok(ctx.ok(&SessionListModel { total, sessions }))
@@ -113,8 +121,14 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     db.purge_cached_document("users", &user.id).await?;
     ctx.mqtt_revoke(&user.id).await;
     let country = country_name(ctx, session.country_code.as_deref().unwrap_or(""));
-    let model =
-        SessionModel { session: &session, country_name: &country, current: false, secret: None, render: ctx.render() };
+    let model = SessionModel {
+        session: &session,
+        user_name: user.name.as_deref().unwrap_or(""),
+        country_name: &country,
+        current: false,
+        secret: None,
+        render: ctx.render(),
+    };
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
     ctx.event_payload_sensitive(&model, SESSION_SENSITIVE);
@@ -192,6 +206,6 @@ pub async fn jwt(ctx: &mut Context) -> Result<Response> {
     claims.insert("projectId".into(), Value::String(ctx.project.id.clone()));
     claims.insert("userId".into(), Value::String(user.id.clone()));
     claims.insert("sessionId".into(), Value::String(session.map(|s| s.id.clone()).unwrap_or_default()));
-    let token = jwt::encode(&ctx.state.config.openssl_key_v1, claims, duration);
+    let token = jwt::encode(&ctx.state.config.openssl_key, claims, duration);
     Ok(ctx.created(&JwtModel { jwt: &token }))
 }

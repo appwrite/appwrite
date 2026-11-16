@@ -148,6 +148,52 @@ pub async fn update_user(ctx: &mut Context, id: &str, updates: Document, keep: &
     Ok(User::from(&updated))
 }
 
+/// [`update_user`] under the user lock that recovery requests take: the
+/// user's recovery tokens are deleted and the update made in one
+/// transaction, so no recovery lands between the two
+/// (`User::deleteRecoveryTokens`).
+pub async fn update_password(ctx: &mut Context, user: &User, updates: Document, keep: &[&str]) -> Result<User> {
+    let db = ctx.db()?;
+    let skipped = skipped(&[]);
+    let id = user.id.clone();
+    let sequence = user.sequence.to_string();
+    let mut updated = Box::pin(db.with_transaction(|| {
+        let db = db.clone();
+        let id = id.clone();
+        let sequence = sequence.clone();
+        let updates = updates.clone();
+        let skipped = skipped.clone();
+        async move {
+            db.get_document("users", &id, Vec::new(), true).await?;
+            db.delete_documents(
+                "tokens",
+                vec![
+                    utopia_database::Query::equal("userInternalId", [sequence.as_str()]),
+                    utopia_database::Query::equal("type", [TOKEN_TYPE_RECOVERY, TOKEN_TYPE_RECOVERY_OTP]),
+                ],
+                utopia_database::database::BATCH_SIZE,
+                None,
+            )
+            .await?;
+            db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &id, updates)).await
+        }
+    }))
+    .await?;
+    if updated.is_empty() {
+        return Err(Error::new(ErrorType::UserNotFound));
+    }
+    for filter in keep {
+        let value = filters::sub_query(&db, filter, &updated).await?;
+        updated.put(sub_query_attribute(filter), value);
+    }
+    Ok(User::from(&updated))
+}
+
+/// `TOKEN_TYPE_RECOVERY`.
+const TOKEN_TYPE_RECOVERY: i64 = 3;
+/// `TOKEN_TYPE_RECOVERY_OTP`.
+const TOKEN_TYPE_RECOVERY_OTP: i64 = 11;
+
 /// The attribute a user sub-query filter fills (`subQueryTargets`:
 /// `targets`).
 fn sub_query_attribute(filter: &str) -> String {

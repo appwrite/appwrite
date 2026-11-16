@@ -16,6 +16,8 @@ pub(in crate::platform) struct RequestInfo {
     pub(in crate::platform) sdk_name: String,
     pub(in crate::platform) sdk_language: String,
     pub(in crate::platform) sdk_version: String,
+    /// `X-Appwrite-Reason`, percent-decoded and trimmed (the audit's reason).
+    pub(in crate::platform) reason: String,
     pub(in crate::platform) protocol: String,
     pub(in crate::platform) accept: String,
     pub(in crate::platform) accept_language: String,
@@ -37,6 +39,11 @@ impl RequestInfo {
             sdk_name: request.header_or_empty("x-sdk-name").to_owned(),
             sdk_language: request.header_or_empty("x-sdk-language").to_owned(),
             sdk_version: request.header_or_empty("x-sdk-version").to_owned(),
+            reason: String::from_utf8_lossy(&php_std::encoding::rawurldecode(
+                request.header_line_or("x-appwrite-reason", "").as_bytes(),
+            ))
+            .trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B'])
+            .to_owned(),
             protocol: request
                 .header("x-forwarded-proto")
                 .map(|p| p.split(',').next().unwrap_or("").trim().to_lowercase())

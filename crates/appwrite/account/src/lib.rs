@@ -49,7 +49,7 @@ mod base;
 mod http;
 mod oauth2;
 
-use appwrite_core::platform::{Audit, Labels, Module, Route};
+use appwrite_core::platform::{Audit, Labels, Limit, Module, Route};
 
 /// The Account module.
 pub struct Account;
@@ -102,9 +102,9 @@ pub(crate) const fn audit(event: &'static str, resource: &'static str) -> Option
     Some(Audit { event, resource })
 }
 
-/// `abuse-limit` 10 with the given `abuse-key`s (the window stays an hour).
-pub(crate) const fn abuse(keys: &'static [&'static str]) -> Labels {
-    Labels { abuse_key: keys, abuse_limit: 10, ..Labels::NONE }
+/// A route's `abuse` limits.
+pub(crate) const fn abuse(limits: &'static [Limit]) -> Labels {
+    Labels { abuse: limits, ..Labels::NONE }
 }
 
 impl Module for Account {

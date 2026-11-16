@@ -2241,7 +2241,7 @@
             },
             {
               "transform": "document_find",
-              "query": "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_vectorPlan\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL ORDER BY (\"table_main\".\"embedding\" <=> ?::vector) LIMIT ?"
+              "query": "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_vectorPlan\" AS \"table_main\" WHERE (\"table_main\".\"embedding\" IS NOT NULL) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector) LIMIT ?"
             }
           ]
         },

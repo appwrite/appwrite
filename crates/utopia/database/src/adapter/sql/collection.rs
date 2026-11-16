@@ -29,6 +29,11 @@ const SQLITE_INDEX_1: &str = "_index_1";
 /// SQLite's second permissions index (`SQLite::INDEX_2`).
 const SQLITE_INDEX_2: &str = "_index_2";
 
+/// `is_numeric()` of a string.
+fn is_numeric(value: &Value) -> bool {
+    matches!(value, Value::Str(s) if php_std::value::numeric_bytes_ex(s.as_bytes()).is_some())
+}
+
 /// `(int) (is_numeric($value) ? $value : 0)`.
 fn numeric(value: Option<Value>) -> i64 {
     match value {
@@ -707,6 +712,41 @@ impl Sql {
         }
         .await
         .map_err(|e| Error::database(format!("Failed to get collection size: {}", e.message())))?
+    }
+
+    /// `estimateCount()`: Postgres reads live tuples from the statistics
+    /// collector, which every commit on the primary updates; a standby
+    /// collects none, so it reads `reltuples` from the last vacuum or
+    /// analyze instead. Shared tables hold every tenant's rows, so they
+    /// have no per-tenant estimate. Other engines keep none.
+    ///
+    /// Fails ([`crate::Kind::Database`]) when the statistics read fails.
+    pub(crate) async fn estimate_count(&self, collection: &str) -> Result<Option<i64>> {
+        if self.engine != Engine::Postgres || self.shared_tables() {
+            return Ok(None);
+        }
+        let name = self.table(&self.filter(collection));
+        let mut builder = self.dialect_builder();
+        builder.from_none().select_raw(
+            "CASE WHEN pg_is_in_recovery() THEN class.reltuples::bigint\n                ELSE COALESCE(stats.n_live_tup, class.reltuples::bigint) END FROM pg_class AS class\n                LEFT JOIN pg_stat_user_tables AS stats ON stats.relid = class.oid\n                WHERE class.oid = to_regclass(?)",
+            vec![utopia_query::Value::from(name.as_str())],
+        );
+        let result = builder.build().map_err(query_error)?;
+        let estimate = async {
+            let mut statement = self.execute_result(&result, Some(Event::CollectionRead), "").await?;
+            self.execute(&mut statement).await?;
+            statement.statement.fetch_column(0)
+        }
+        .await
+        .map_err(|e| Error::database(format!("Failed to estimate collection count: {}", e.message())))?;
+        let estimate = match estimate {
+            Some(Value::Int(i)) => i,
+            Some(Value::Float(f)) if f < 0.0 => return Ok(None),
+            Some(Value::Float(f)) => f as i64,
+            Some(v @ Value::Str(_)) if is_numeric(&v) => crate::value::to_long(&v),
+            _ => return Ok(None),
+        };
+        Ok((estimate >= 0).then_some(estimate))
     }
 
     /// `getSizeOfCollectionOnDisk()`

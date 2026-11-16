@@ -10,7 +10,7 @@ use utopia_validators::{Nullable, Range, Text, php};
 use appwrite_core::database::documents::{self, Session, User};
 use appwrite_core::database::filters;
 use appwrite_core::datetime;
-use appwrite_core::platform::{Audit, Context, Labels, Route};
+use appwrite_core::platform::{Audit, Context, Labels, Limit, Route};
 use appwrite_core::response::{SESSION_SENSITIVE, SessionListModel, SessionModel};
 use appwrite_core::validators::{CustomId, Password, uid};
 use appwrite_core::{Error, ErrorType, Result};
@@ -46,7 +46,7 @@ pub fn routes() -> Vec<Route> {
             EVENT_DELETE,
             Some(Audit { event: "session.delete", resource: "user/{user.$id}" }),
             GROUPS,
-            Labels { abuse_limit: 100, ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["url", "ip"], 100, 3600)] }, ..Labels::NONE },
             delete_all
         ),
         route!(
@@ -70,7 +70,11 @@ pub fn routes() -> Vec<Route> {
             EVENT_DELETE,
             Some(Audit { event: "session.delete", resource: "user/{user.$id}" }),
             &["api", "account", "mfa"],
-            Labels { abuse_limit: 100, impersonation: "allow", ..Labels::NONE },
+            Labels {
+                abuse: const { &[Limit::attempts(&["url", "ip"], 100, 3600)] },
+                impersonation: "allow",
+                ..Labels::NONE
+            },
             delete
         ),
         route!(
@@ -82,7 +86,7 @@ pub fn routes() -> Vec<Route> {
             Some("users.[userId].sessions.[sessionId].update"),
             Some(Audit { event: "session.update", resource: "user/{response.userId}" }),
             GROUPS,
-            Labels { abuse_limit: 10, ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["url", "ip"], 10, 3600)] }, ..Labels::NONE },
             update
         ),
         route!(
@@ -95,9 +99,12 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_AUTH_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["projectId:{projectId},url:{url},email:{param-email}"],
-                abuse_reset: &[201],
+                abuse: const {
+                    &[
+                        Limit::failures(&["projectId", "url", "param.email"], 10, 3600),
+                        Limit::failures(&["projectId", "url", "ip"], 100, 3600),
+                    ]
+                },
                 auth_type: "email-password",
                 ..Labels::NONE
             },
@@ -114,9 +121,12 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_AUTH_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["projectId:{projectId},url:{url},email:{param-email}"],
-                abuse_reset: &[201],
+                abuse: const {
+                    &[
+                        Limit::failures(&["projectId", "url", "param.email"], 10, 3600),
+                        Limit::failures(&["projectId", "url", "ip"], 100, 3600),
+                    ]
+                },
                 auth_type: "email-password",
                 ..Labels::NONE
             },
@@ -131,7 +141,7 @@ pub fn routes() -> Vec<Route> {
             EVENT_CREATE,
             AUDIT_CREATE,
             GROUPS_AUTH_SESSION,
-            Labels { abuse_limit: 50, abuse_key: &["ip:{ip}"], auth_type: "anonymous", ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["ip"], 50, 3600)] }, auth_type: "anonymous", ..Labels::NONE },
             anonymous
         ),
         route!(
@@ -144,9 +154,13 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["ip:{ip},userId:{param-userId}"],
-                abuse_reset: &[201],
+                abuse: const {
+                    &[
+                        Limit::failures(&["url", "ip", "param.userId"], 10, 3600).everyone(),
+                        Limit::failures(&["projectId", "url", "param.userId"], 10, 3600).everyone(),
+                        Limit::failures(&["projectId", "url", "ip"], 100, 3600),
+                    ]
+                },
                 ..Labels::NONE
             },
             token
@@ -161,9 +175,13 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["ip:{ip},userId:{param-userId}"],
-                abuse_reset: &[201],
+                abuse: const {
+                    &[
+                        Limit::failures(&["url", "ip", "param.userId"], 10, 3600).everyone(),
+                        Limit::failures(&["projectId", "url", "param.userId"], 10, 3600).everyone(),
+                        Limit::failures(&["projectId", "url", "ip"], 100, 3600),
+                    ]
+                },
                 ..Labels::NONE
             },
             magic_url
@@ -177,7 +195,15 @@ pub fn routes() -> Vec<Route> {
             EVENT_CREATE,
             AUDIT_CREATE,
             GROUPS_SESSION,
-            Labels { abuse_limit: 10, abuse_key: &["ip:{ip},userId:{param-userId}"], ..Labels::NONE },
+            Labels {
+                abuse: const {
+                    &[
+                        Limit::attempts(&["url", "ip", "param.userId"], 10, 3600).everyone(),
+                        Limit::attempts(&["projectId", "url", "param.userId"], 10, 3600).everyone(),
+                    ]
+                },
+                ..Labels::NONE
+            },
             token
         ),
         route!(
@@ -190,9 +216,7 @@ pub fn routes() -> Vec<Route> {
             AUDIT_CREATE,
             GROUPS_SESSION,
             Labels {
-                abuse_limit: 10,
-                abuse_key: &["url:{url},ip:{ip}"],
-                abuse_reset: &[201],
+                abuse: const { &[Limit::failures(&["projectId", "url", "ip"], 10, 3600)] },
                 session_allow_active: true,
                 ..Labels::NONE
             },
@@ -207,7 +231,7 @@ pub fn routes() -> Vec<Route> {
             None,
             None,
             GROUPS,
-            Labels { abuse_limit: 50, abuse_key: &["ip:{ip}"], error_page: true, ..Labels::NONE },
+            Labels { abuse: const { &[Limit::attempts(&["ip"], 50, 3600)] }, error_page: true, ..Labels::NONE },
             crate::oauth2::create_session
         ),
         route!(
@@ -247,8 +271,7 @@ pub fn routes() -> Vec<Route> {
             Some(Audit { event: "session.create", resource: "user/{user.$id}" }),
             &["api", "account", "session"],
             Labels {
-                abuse_limit: 50,
-                abuse_key: &["ip:{ip}"],
+                abuse: const { &[Limit::attempts(&["ip"], 50, 3600)] },
                 session_allow_active: true,
                 error_page: true,
                 ..Labels::NONE
@@ -288,6 +311,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
         .zip(names.iter())
         .map(|(s, n)| SessionModel {
             session: s,
+            user_name: user.name.as_deref().unwrap_or(""),
             country_name: n,
             current: current.as_deref() == Some(s.id.as_str()),
             secret: None,
@@ -309,6 +333,7 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
     let country = base::country_name(ctx, session.country_code.as_deref().unwrap_or(""));
     Ok(ctx.ok(&SessionModel {
         session,
+        user_name: user.name.as_deref().unwrap_or(""),
         country_name: &country,
         current: current.as_deref() == Some(session.id.as_str()),
         secret: None,
@@ -336,8 +361,9 @@ fn document_json(document: &Document) -> Json {
 
 /// `DELETE_TYPE_SESSION_TARGETS`: the targets of a deleted session, queued
 /// now, as the action's publisher does (before the MQTT revoke).
-async fn delete_targets(ctx: &mut Context, mut session: Document, current: bool, country: &str) {
+async fn delete_targets(ctx: &mut Context, mut session: Document, user_name: &str, current: bool, country: &str) {
     session.put("current", Value::Bool(current));
+    session.put("userName", Value::from(user_name));
     session.put("countryName", Value::from(country));
     let message = appwrite_core::event::delete_message(
         &ctx.project.message_payload(),
@@ -375,10 +401,11 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
         let country = base::country_name(ctx, session.country_code.as_deref().unwrap_or(""));
         if base::token_matches(&ctx.store.secret, session.secret.as_deref().unwrap_or("")) {
             base::clear_session_cookies(ctx, &mut response);
-            let payload = base::session_payload(ctx, &session, true, &country, None);
+            let payload =
+                base::session_payload(ctx, &session, user.name.as_deref().unwrap_or(""), true, &country, None);
             ctx.events.payload = Some(payload);
             ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
-            delete_targets(ctx, document, true, &country).await;
+            delete_targets(ctx, document, user.name.as_deref().unwrap_or(""), true, &country).await;
             current_session = Some(session);
         }
     }
@@ -425,10 +452,12 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     ctx.mqtt_revoke(&user.id).await;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    ctx.events.payload = Some(base::session_payload(ctx, &session, is_current, &country, None));
+    ctx.events.payload =
+        Some(base::session_payload(ctx, &session, user.name.as_deref().unwrap_or(""), is_current, &country, None));
     ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
     let mut document = document;
     document.put("current", Value::Bool(is_current));
+    document.put("userName", Value::from(user.name.as_deref().unwrap_or("")));
     if is_current {
         document.put("countryName", Value::from(country.as_str()));
     }
@@ -489,10 +518,12 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
-    ctx.events.payload = Some(base::session_payload(ctx, &session, false, "", None));
+    ctx.events.payload =
+        Some(base::session_payload(ctx, &session, user.name.as_deref().unwrap_or(""), false, "", None));
     ctx.events.sensitive = SESSION_SENSITIVE.to_vec();
     Ok(ctx.ok(&SessionModel {
         session: &session,
+        user_name: user.name.as_deref().unwrap_or(""),
         country_name: "",
         current: false,
         secret: None,
@@ -582,7 +613,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     let encoded = base::encode_store(&user.id, &secret)?;
     // The response keeps the stored expiry; only the cookies use this one.
     let cookie_expire = datetime::add_seconds(datetime::now(), duration);
-    let response = created_response(ctx, &session, &encoded, &cookie_expire, false);
+    let response = created_response(ctx, &session, user.name.as_deref().unwrap_or(""), &encoded, &cookie_expire, false);
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
     if let Err(e) = base::session_alert(ctx, &user, &session).await {
@@ -597,6 +628,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
 fn created_response(
     ctx: &mut Context,
     session: &Session,
+    user_name: &str,
     encoded: &str,
     cookie_expire: &chrono::NaiveDateTime,
     override_expire: bool,
@@ -608,6 +640,7 @@ fn created_response(
     let country = base::country_name(ctx, session.country_code.as_deref().unwrap_or(""));
     let model = SessionModel {
         session: &shown,
+        user_name,
         country_name: &country,
         current: true,
         secret: Some(encoded),
@@ -672,7 +705,7 @@ pub async fn anonymous(ctx: &mut Context) -> Result<Response> {
     ctx.event_param("sessionId", session.id.clone());
     let encoded = base::encode_store(&user.id, &secret)?;
     let cookie_expire = datetime::add_seconds(datetime::now(), duration);
-    Ok(created_response(ctx, &session, &encoded, &cookie_expire, false))
+    Ok(created_response(ctx, &session, user.name.as_deref().unwrap_or(""), &encoded, &cookie_expire, false))
 }
 
 /// `POST /v1/account/sessions/token` and `PUT /v1/account/sessions/phone`.
@@ -693,7 +726,7 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
 
     // An OAuth2 token flow's secret is a JWT carrying the provider.
     let mut oauth_provider: Option<String> = None;
-    if let Ok(claims) = appwrite_core::auth::jwt::decode(&ctx.state.config.openssl_key_v1, &secret, 60) {
+    if let Ok(claims) = appwrite_core::auth::jwt::decode_accepted(&ctx.state.config.openssl_keys, &secret, 60, 0) {
         let provider = claims.get("provider").and_then(Json::as_str).unwrap_or("").to_owned();
         if provider.is_empty() {
             return Err(Error::new(ErrorType::UserInvalidToken));
@@ -857,5 +890,5 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
     ctx.event_param("sessionId", session.id.clone());
     let encoded = base::encode_store(&user.id, &session_secret)?;
     let cookie_expire = datetime::add_seconds(datetime::now(), duration);
-    Ok(created_response(ctx, &session, &encoded, &cookie_expire, true))
+    Ok(created_response(ctx, &session, user.name.as_deref().unwrap_or(""), &encoded, &cookie_expire, true))
 }

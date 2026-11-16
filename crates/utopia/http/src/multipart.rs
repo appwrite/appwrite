@@ -13,21 +13,15 @@ use crate::params::{Params, array_to_params};
 /// `UPLOAD_ERR_NO_FILE`.
 const NO_FILE: i64 = 4;
 
-/// `UPLOAD_ERR_CANT_WRITE`.
-const CANT_WRITE: i64 = 7;
-
-/// The part header Swoole takes as the path of an upload it already wrote
-/// (swoole/swoole-src#6309), matched case-insensitively.
-const UPLOAD_MARKER: &[u8] = b"swoole-upload-file";
-
 /// The fields and files of a multipart body with the `Content-Type` header
 /// `content_type`. Uploaded files are written to the temporary directory;
-/// their paths are the files' `tmp_name`. A file part with a
-/// `Swoole-Upload-File` header names a path of the client's choosing, which
-/// Swoole would report as the upload: it is dropped, with an empty
-/// `tmp_name`, `UPLOAD_ERR_CANT_WRITE` and a size of 0.
+/// their paths are the files' `tmp_name`. A `Swoole-Upload-File` part
+/// header is an ordinary header: the part is uploaded like any other, never
+/// taken as a path of the client's choosing (swoole/swoole-src#6309, fixed
+/// in Swoole 6.2.5, which Appwrite runs).
 ///
-/// PHP: Swoole's parser, then `Swoole\Request::dropSpoofedUploads()`.
+/// PHP: Swoole's parser, then `Swoole\Request::dropSpoofedUploads()`, which
+/// finds nothing to drop on Swoole 6.2.5.
 pub(crate) fn parse(content_type: &str, body: &[u8]) -> (Params, Params) {
     let Some(boundary) = boundary(content_type) else {
         return (Params::new(), Params::new());
@@ -61,7 +55,6 @@ pub(crate) fn parse(content_type: &str, body: &[u8]) -> (Params, Params) {
         let mut name: Option<Vec<u8>> = None;
         let mut filename: Option<Vec<u8>> = None;
         let mut kind: Vec<u8> = Vec::new();
-        let mut spoofed = false;
         for line in head.split(|&b| b == b'\n') {
             let line = line.strip_suffix(b"\r").unwrap_or(line);
             let Some(colon) = line.iter().position(|&b| b == b':') else { continue };
@@ -81,8 +74,6 @@ pub(crate) fn parse(content_type: &str, body: &[u8]) -> (Params, Params) {
                 }
             } else if header.eq_ignore_ascii_case(b"content-type") {
                 kind = value.to_vec();
-            } else if trim(header).eq_ignore_ascii_case(UPLOAD_MARKER) {
-                spoofed = true;
             }
         }
         let Some(name) = name else { continue };
@@ -93,8 +84,6 @@ pub(crate) fn parse(content_type: &str, body: &[u8]) -> (Params, Params) {
                     // Swoole reports no type for a part without a file.
                     kind.clear();
                     (Vec::new(), 0, NO_FILE)
-                } else if spoofed {
-                    (Vec::new(), 0, CANT_WRITE)
                 } else {
                     match store(data) {
                         Some(path) => (path.into_os_string().into_encoded_bytes(), data.len() as i64, 0),

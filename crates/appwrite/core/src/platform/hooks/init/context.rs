@@ -18,6 +18,28 @@ use crate::platform::hooks::resources::resource_token::resource_token;
 use crate::platform::hooks::shutdown::cache_write;
 use crate::{Result, datetime};
 
+/// `APP_LIMIT_AUDIT_REASON_LENGTH`.
+const REASON_LENGTH: usize = 256;
+
+/// `Appwrite\Event\Validator\Reason`: one line of UTF-8 text of at most
+/// [`REASON_LENGTH`] characters, without control characters, line or
+/// paragraph separators or bidirectional overrides.
+fn reason_valid(value: &[u8]) -> bool {
+    let Ok(text) = std::str::from_utf8(value) else { return false };
+    if text.chars().count() > REASON_LENGTH {
+        return false;
+    }
+    text.chars().all(|c| {
+        let c = c as u32;
+        !(c < 0x20
+            || (0x7F..=0x9F).contains(&c)
+            || c == 0x2028
+            || c == 0x2029
+            || (0x202A..=0x202E).contains(&c)
+            || (0x2066..=0x2069).contains(&c))
+    })
+}
+
 /// How long a cached response is served (180 days).
 const CACHE_TTL: i64 = 60 * 60 * 24 * 180;
 /// `APP_CACHE_UPDATE`: a hit refreshes the cache entry this often.
@@ -35,6 +57,20 @@ const PREVIEW: &str = "/v1/storage/buckets/:bucketId/files/:fileId/preview";
 /// fill.
 pub(in crate::platform) async fn context(ctx: &mut Context) -> Result<()> {
     let token = resource_token(ctx).await?;
+    // Why the caller made this request, shown next to it in Activity. Always
+    // percent-decoded, so clients that cannot send non-ASCII header bytes can
+    // send any language. Validated before trimming, so an encoded line break
+    // or NUL at either end is refused rather than dropped.
+    let raw = ctx.request.header_line_or("x-appwrite-reason", "");
+    let reason = php_std::encoding::rawurldecode(raw.as_bytes());
+    if !reason_valid(&reason) {
+        return Err(Error::with_message(
+            ErrorType::GeneralArgumentInvalid,
+            format!(
+                "Invalid X-Appwrite-Reason header value: Value must be one line of UTF-8 text of at most {REASON_LENGTH} characters, without control characters. Percent-encode it with encodeURIComponent."
+            ),
+        ));
+    }
     // Download, view and preview read the token after this hook. A cache
     // miss returns before the action, so keep it on the context either way.
     ctx.resource_token = token.clone();
@@ -51,9 +87,11 @@ pub(in crate::platform) async fn context(ctx: &mut Context) -> Result<()> {
             && plan.get("imageTransformations").is_some_and(Value::is_i64)
     }) && !privileged;
 
+    // `auto` params resolved from the Accept header: the response varies by Accept.
+    let negotiated = ctx.negotiated_params();
     let key = cache_write::identifier(
         ctx.request.uri(),
-        ctx.request.params(),
+        &cache_write::keyed(ctx.request.params(), &negotiated),
         ctx.route.labels.cache_params,
         ctx.request.header_or_empty("x-appwrite-project"),
     );
@@ -147,10 +185,16 @@ pub(in crate::platform) async fn context(ctx: &mut Context) -> Result<()> {
         let mut response = Response::with_body(StatusCode::OK, &mime, data);
         response.add("cache-control", &cache_control);
         response.add("x-appwrite-cache", "hit");
+        if !negotiated.is_empty() {
+            response.add("vary", "Accept");
+        }
         ctx.send(response);
     } else {
         ctx.response_headers.push(("cache-control", cache_control));
         ctx.response_headers.push(("x-appwrite-cache", "hit".to_owned()));
+        if !negotiated.is_empty() {
+            ctx.response_headers.push(("vary", "Accept".to_owned()));
+        }
     }
     Ok(())
 }

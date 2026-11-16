@@ -139,7 +139,7 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
         updates.put("password", DbValue::from(""));
         updates.put("passwordPwned", DbValue::Null);
         updates.put("passwordUpdate", datetime::value(&datetime::now()));
-        let user = base::update_user(ctx, &user.id, updates, &[base::TARGETS, base::SESSIONS]).await?;
+        let user = base::update_password(ctx, &user, updates, &[base::TARGETS, base::SESSIONS]).await?;
         if ctx.project.auth_bool("invalidateSessions", true) {
             invalidate_sessions(ctx, &user).await?;
         }
@@ -200,7 +200,7 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
     updates.put("passwordUpdate", datetime::value(&datetime::now()));
     updates.put("hash", DbValue::from(proof.name()));
     updates.put("hashOptions", base::hash_options(proof.as_ref()));
-    let updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS, base::SESSIONS]).await?;
+    let updated = base::update_password(ctx, user, updates, &[base::TARGETS, base::SESSIONS]).await?;
 
     if ctx.project.auth_bool("invalidateSessions", true) {
         invalidate_sessions(ctx, &updated).await?;

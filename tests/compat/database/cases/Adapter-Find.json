@@ -14277,35 +14277,35 @@
             },
             {
               "transform": "document_find",
-              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"table_main\".\"emb\" IS NOT NULL ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
+              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE (\"table_main\".\"emb\" IS NOT NULL) ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
             },
             {
               "transform": "document_find",
-              "query": "SELECT *, (\"table_main\".\"emb\" <-> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"table_main\".\"emb\" IS NOT NULL ORDER BY (\"table_main\".\"emb\" <-> ?::vector) LIMIT ?"
+              "query": "SELECT *, (\"table_main\".\"emb\" <-> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE (\"table_main\".\"emb\" IS NOT NULL) ORDER BY (\"table_main\".\"emb\" <-> ?::vector) LIMIT ?"
             },
             {
               "transform": "document_find",
-              "query": "SELECT *, (\"table_main\".\"emb\" <#> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"active\" IN (?) AND \"table_main\".\"emb\" IS NOT NULL ORDER BY (\"table_main\".\"emb\" <#> ?::vector) LIMIT ?"
+              "query": "SELECT *, (\"table_main\".\"emb\" <#> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"active\" IN (?) AND (\"table_main\".\"emb\" IS NOT NULL) ORDER BY (\"table_main\".\"emb\" <#> ?::vector) LIMIT ?"
             },
             {
               "transform": "document_find",
-              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"table_main\".\"emb\" IS NOT NULL ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
+              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE (\"table_main\".\"emb\" IS NOT NULL) ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
             },
             {
               "transform": "document_find",
-              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"table_main\".\"emb\" IS NOT NULL ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
+              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE (\"table_main\".\"emb\" IS NOT NULL) ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
             },
             {
               "transform": "document_find",
-              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"table_main\".\"emb\" IS NOT NULL ORDER BY (\"table_main\".\"emb\" <=> ?::vector), \"year\" ASC LIMIT ?"
+              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE (\"table_main\".\"emb\" IS NOT NULL) ORDER BY (\"table_main\".\"emb\" <=> ?::vector), \"year\" ASC LIMIT ?"
             },
             {
               "transform": "document_find",
-              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"table_main\".\"emb\" IS NOT NULL ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
+              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE (\"table_main\".\"emb\" IS NOT NULL) ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
             },
             {
               "transform": "document_find",
-              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE \"table_main\".\"emb\" IS NOT NULL ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
+              "query": "SELECT *, (\"table_main\".\"emb\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE (\"table_main\".\"emb\" IS NOT NULL) ORDER BY (\"table_main\".\"emb\" <=> ?::vector) LIMIT ?"
             },
             {
               "transform": "document_count",

@@ -1909,6 +1909,970 @@
         "out": [],
         "error": null
       }
+    },
+    {
+      "name": "stream: decoded as it arrives (gzip)",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "last"
+            ]
+          },
+          {
+            "stream": [
+              "streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          },
+          {
+            "stream": [
+              "after the end"
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "gzip"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": {
+            "$bytes": "H4sIAAAAAAAAA0rLLCou0QUAAAD//8pJLC4BAAAA//8qLilKTcxNTVFIzijNy1YY5Y5yqcIFAAAA//8DACI9rzZiAgAA"
+          },
+          "writes": 3,
+          "ended": true,
+          "decoded": "first-laststreamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+        },
+        "out": [],
+        "error": {
+          "class": "RuntimeException",
+          "message": "stream() returned false",
+          "code": 0,
+          "previous": null
+        }
+      }
+    },
+    {
+      "name": "stream: decoded as it arrives (deflate)",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "deflate"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "last"
+            ]
+          },
+          {
+            "stream": [
+              "streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          },
+          {
+            "stream": [
+              "after the end"
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "deflate"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": {
+            "$bytes": "SsssKi7RBQAAAP//ykksLgEAAAD//youKUpNzE1NUUjOKM3LVhjljnKpwgUAAAD//wMA"
+          },
+          "writes": 3,
+          "ended": true,
+          "decoded": "first-laststreamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+        },
+        "out": [],
+        "error": {
+          "class": "RuntimeException",
+          "message": "stream() returned false",
+          "code": 0,
+          "previous": null
+        }
+      }
+    },
+    {
+      "name": "stream: decoded as it arrives (br)",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "br"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "last"
+            ]
+          },
+          {
+            "stream": [
+              "streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          },
+          {
+            "stream": [
+              "after the end"
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "br"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": {
+            "$bytes": "iwKAZmlyc3QtGAAIbGFzdLgSAED0hte7+12slDggGgyhAXsjlhwW3wkDAw=="
+          },
+          "writes": 3,
+          "ended": true,
+          "decoded": "first-laststreamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+        },
+        "out": [],
+        "error": {
+          "class": "RuntimeException",
+          "message": "stream() returned false",
+          "code": 0,
+          "previous": null
+        }
+      }
+    },
+    {
+      "name": "stream: decoded as it arrives (zstd, gzip;q=0.5)",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "zstd, gzip;q=0.5"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "last"
+            ]
+          },
+          {
+            "stream": [
+              "streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          },
+          {
+            "stream": [
+              "after the end"
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "gzip"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": {
+            "$bytes": "H4sIAAAAAAAAA0rLLCou0QUAAAD//8pJLC4BAAAA//8qLilKTcxNTVFIzijNy1YY5Y5yqcIFAAAA//8DACI9rzZiAgAA"
+          },
+          "writes": 3,
+          "ended": true,
+          "decoded": "first-laststreamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+        },
+        "out": [],
+        "error": {
+          "class": "RuntimeException",
+          "message": "stream() returned false",
+          "code": 0,
+          "previous": null
+        }
+      }
+    },
+    {
+      "name": "stream: decoded as it arrives (zstd)",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "zstd"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "last"
+            ]
+          },
+          {
+            "stream": [
+              "streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          },
+          {
+            "stream": [
+              "after the end"
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "first-laststreamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk ",
+          "writes": 3,
+          "ended": true
+        },
+        "out": [],
+        "error": {
+          "class": "RuntimeException",
+          "message": "stream() returned false",
+          "code": 0,
+          "previous": null
+        }
+      }
+    },
+    {
+      "name": "stream: decoded as it arrives (identity)",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "identity"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "last"
+            ]
+          },
+          {
+            "stream": [
+              "streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          },
+          {
+            "stream": [
+              "after the end"
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "first-laststreamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk ",
+          "writes": 3,
+          "ended": true
+        },
+        "out": [],
+        "error": {
+          "class": "RuntimeException",
+          "message": "stream() returned false",
+          "code": 0,
+          "previous": null
+        }
+      }
+    },
+    {
+      "name": "stream: decoded as it arrives (gzip;q=0.2, br;q=0.8)",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip;q=0.2, br;q=0.8"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "last"
+            ]
+          },
+          {
+            "stream": [
+              "streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          },
+          {
+            "stream": [
+              "after the end"
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "br"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": {
+            "$bytes": "iwKAZmlyc3QtGAAIbGFzdLgSAED0hte7+12slDggGgyhAXsjlhwW3wkDAw=="
+          },
+          "writes": 3,
+          "ended": true,
+          "decoded": "first-laststreamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk streamed chunk "
+        },
+        "out": [],
+        "error": {
+          "class": "RuntimeException",
+          "message": "stream() returned false",
+          "code": 0,
+          "previous": null
+        }
+      }
+    },
+    {
+      "name": "stream: a compressed stream drops Content-Length",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "add_header": [
+              "Content-Length",
+              "6"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "gzip"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": {
+            "$bytes": "H4sIAAAAAAAAA0rLLCou0QUAAAD//wMAQQZAYgYAAAA="
+          },
+          "writes": 1,
+          "ended": true,
+          "decoded": "first-"
+        },
+        "out": [],
+        "error": null
+      }
+    },
+    {
+      "name": "stream: a stream that never carries bytes stays unencoded",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              ""
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": true
+        },
+        "out": [],
+        "error": null
+      }
+    },
+    {
+      "name": "stream: an incompressible type is streamed as it is",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "image/png"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "last",
+              true
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "image/png"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "first-last",
+          "writes": 1,
+          "ended": true
+        },
+        "out": [],
+        "error": null
+      }
+    },
+    {
+      "name": "stream: a set Content-Encoding is kept",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "gzip"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "add_header": [
+              "Content-Encoding",
+              "custom"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "custom"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "first-",
+          "writes": 1,
+          "ended": true
+        },
+        "out": [],
+        "error": null
+      }
+    },
+    {
+      "name": "stream: a HEAD-like response negotiates like GET and sends no body",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "br"
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "disable_payload": true
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "br"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "",
+          "writes": 0,
+          "ended": true,
+          "decoded": false
+        },
+        "out": [],
+        "error": null
+      }
+    },
+    {
+      "name": "stream: the supported list is honoured",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "accept_encoding": "br, gzip"
+          },
+          {
+            "compression_supported": [
+              "gzip"
+            ]
+          },
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "",
+              true
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "content-encoding": [
+              "gzip"
+            ],
+            "x-utopia-compression": [
+              "true"
+            ],
+            "vary": [
+              "Accept-Encoding"
+            ],
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "content-encoding",
+            "x-utopia-compression",
+            "vary",
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": {
+            "$bytes": "H4sIAAAAAAAAA0rLLCou0QUAAAD//wMAQQZAYgYAAAA="
+          },
+          "writes": 1,
+          "ended": true,
+          "decoded": "first-"
+        },
+        "out": [],
+        "error": null
+      }
+    },
+    {
+      "name": "stream: without an Accept-Encoding the bytes go as they are",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "content_type": [
+              "text/html",
+              "UTF-8"
+            ]
+          },
+          {
+            "stream": [
+              "first-"
+            ]
+          },
+          {
+            "stream": [
+              "last",
+              true
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>",
+            "content-type": [
+              "text/html; charset=UTF-8"
+            ]
+          },
+          "order": [
+            "x-debug-speed",
+            "content-type"
+          ],
+          "cookies": [],
+          "body": "first-last",
+          "writes": 1,
+          "ended": true
+        },
+        "out": [],
+        "error": null
+      }
     }
   ]
 }

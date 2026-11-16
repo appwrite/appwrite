@@ -1325,10 +1325,10 @@
       "expect": [
         {
           "type": "text/plain",
-          "tmp_name": "",
-          "size": 0,
+          "tmp_name": "payload",
+          "size": 7,
           "name": "upload.txt",
-          "error": 7
+          "error": 0
         }
       ]
     },
@@ -1378,19 +1378,19 @@
           ],
           "tmp_name": [
             {
-              "part": "",
+              "part": "payload",
               "other": "payload"
             }
           ],
           "error": [
             {
-              "part": 7,
+              "part": 0,
               "other": 0
             }
           ],
           "size": [
             {
-              "part": 0,
+              "part": 7,
               "other": 7
             }
           ]

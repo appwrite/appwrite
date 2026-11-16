@@ -32,9 +32,12 @@ pub(in crate::platform) async fn resource_token(ctx: &mut Context) -> Result<Opt
     if jwt.is_empty() || !ctx.project_found {
         return Ok(None);
     }
-    let key = ctx.state.config.openssl_key_v1.clone();
-    let Ok(claims) = crate::auth::jwt::decode_with_leeway(&key, &jwt, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY)
-    else {
+    let Ok(claims) = crate::auth::jwt::decode_accepted(
+        &ctx.state.config.openssl_keys,
+        &jwt,
+        RESOURCE_TOKEN_MAX_AGE,
+        RESOURCE_TOKEN_LEEWAY,
+    ) else {
         return Ok(None);
     };
     let token_id = match claims.get("tokenId") {

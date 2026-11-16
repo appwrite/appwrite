@@ -221,10 +221,12 @@ name = "appwrite-storage"
 version = "0.1.0"
 dependencies = [
  "appwrite-core",
+ "base64 0.22.1",
  "bytes",
  "futures-util",
  "hex",
  "indexmap",
+ "md-5 0.10.6",
  "php-std",
  "serde",
  "serde_json",
@@ -4952,6 +4954,7 @@ name = "utopia-cache"
 version = "0.1.0"
 dependencies = [
  "bytes",
+ "chrono",
  "crc32fast",
  "flate2",
  "getrandom 0.3.4",
@@ -4968,6 +4971,7 @@ dependencies = [
  "utopia-async",
  "utopia-circuit-breaker",
  "utopia-pools",
+ "utopia-storage",
  "utopia-telemetry",
 ]
 
@@ -5191,12 +5195,14 @@ dependencies = [
 name = "utopia-http"
 version = "0.1.0"
 dependencies = [
+ "brotli",
  "bytes",
  "futures-util",
  "http",
  "http-body-util",
  "hyper",
  "indexmap",
+ "libz-sys",
  "php-std",
  "serde_json",
  "thiserror 2.0.21",

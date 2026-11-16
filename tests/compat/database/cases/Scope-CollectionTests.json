@@ -4910,6 +4910,519 @@
       ]
     },
     {
+      "name": "CollectionTests::testEstimateCount",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "estimateTest",
+                "name": "estimateTest",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "estimateTest",
+              "name": "estimateTest",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "estimateTest",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc0",
+                        "name": "name0"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc1",
+                        "name": "name1"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc2",
+                        "name": "name2"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc3",
+                        "name": "name3"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc4",
+                        "name": "name4"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc5",
+                        "name": "name5"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc6",
+                        "name": "name6"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc7",
+                        "name": "name7"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc8",
+                        "name": "name8"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "document": {
+                      "$document": {
+                        "$id": "doc9",
+                        "name": "name9"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "doc0",
+                        "name": "name0",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "doc1",
+                        "name": "name1",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "2"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "doc2",
+                        "name": "name2",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "3"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "doc3",
+                        "name": "name3",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "4"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "doc4",
+                        "name": "name4",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "5"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "doc5",
+                        "name": "name5",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "6"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "doc6",
+                        "name": "name6",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "7"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "doc7",
+                        "name": "name7",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "8"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "doc8",
+                        "name": "name8",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "9"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "doc9",
+                        "name": "name9",
+                        "$collection": "estimateTest",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "10"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasSharedTables",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "estimateTest"
+          },
+          "expect": 0
+        },
+        {
+          "op": "database.analyze_collection",
+          "args": {
+            "collection": "estimateTest"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.estimate_count",
+          "args": {
+            "collection": "estimateTest"
+          },
+          "expect": 10
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc0"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc1"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc2"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc3"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc4"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc5"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc6"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc7"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc8"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "estimateTest",
+                    "id": "doc9"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true,
+                    true
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "estimateTest"
+          },
+          "expect": 0
+        },
+        {
+          "op": "database.estimate_count",
+          "args": {
+            "collection": "estimateTest"
+          },
+          "expect": 10
+        }
+      ]
+    },
+    {
       "name": "CollectionTests::testSizeCollectionOnDisk",
       "state": [
         "postgres@database-postgres"

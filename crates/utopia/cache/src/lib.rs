@@ -88,6 +88,8 @@ mod redis_adapter;
 mod redis_cluster;
 pub mod resp;
 mod sharding;
+#[cfg(feature = "storage")]
+mod storage;
 pub mod versioned;
 /// The telemetry library the cache records its metrics with.
 pub use utopia_telemetry as telemetry;
@@ -113,6 +115,8 @@ pub use redis_adapter::Redis;
 #[cfg(feature = "redis-cluster")]
 pub use redis_cluster::RedisCluster;
 pub use sharding::Sharding;
+#[cfg(feature = "storage")]
+pub use storage::Storage;
 
 /// The redis-rs crate the Redis adapters are built on.
 #[cfg(feature = "redis")]

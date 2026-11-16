@@ -90,14 +90,14 @@ impl ApiKey {
     /// header is of those types. `None` where PHP throws `USER_UNAUTHORIZED`:
     /// an unknown secret or prefix, a JWT that fails to decode, or an
     /// ephemeral key of another project.
-    pub fn decode(project: &Project, header: &str, jwt_key: &str, owners: &Owners<'_>) -> Option<Self> {
+    pub fn decode(project: &Project, header: &str, jwt_keys: &[String], owners: &Owners<'_>) -> Option<Self> {
         let (kind, secret) = match header.split_once('_') {
             Some((prefix, secret)) => (KeyType::parse(prefix), secret),
             None => (KeyType::Standard, header),
         };
         match kind {
             KeyType::Ephemeral | KeyType::Dynamic => {
-                let claims = jwt::decode(jwt_key, secret, 86_400).ok()?;
+                let claims = jwt::decode_accepted(jwt_keys, secret, 86_400, 0).ok()?;
                 // Every minted key carries the purpose claim, so another JWT
                 // signed with the same secret is not a key.
                 if claims.get(PURPOSE_CLAIM).and_then(Value::as_str) != Some(PURPOSE) {
@@ -237,7 +237,7 @@ mod tests {
     }
 
     fn decode(header: &str) -> Option<ApiKey> {
-        ApiKey::decode(&project(), header, SECRET, &Owners::default())
+        ApiKey::decode(&project(), header, &[SECRET.to_owned()], &Owners::default())
     }
 
     #[test]

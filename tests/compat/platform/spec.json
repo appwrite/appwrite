@@ -74,7 +74,7 @@
       ]
     },
     "service.run": {
-      "doc": "A service of `type` (its $type and $actions set, as subclasses do) driven by `steps`: set_type, type, add_action {key, action (as platform.run's ACTION)}, remove_action key, action key (described as action.run's get, or null), actions (keys)",
+      "doc": "A service of `type` (its $type and $actions set, as subclasses do) driven by `steps`: set_type, type, add_action {key, action (as platform.run's ACTION) | lazy: plain|named (a class name, built on first use; named's getName() is 'named')}, built (lazy actions built so far), remove_action key, action key (described as action.run's get, or null), actions (keys)",
       "covers": [
         "Utopia\\Platform\\Service::setType",
         "Utopia\\Platform\\Service::getType",
