@@ -27,6 +27,10 @@ import {
   useDeleteDomain,
 } from '@/lib/react-query/hooks'
 import {
+  DomainPlanLimitNotice,
+  useNewApexPlanLimit,
+} from '@/components/pages/projects/$projectId/shared/NewApexPlanLimit'
+import {
   domainFieldError,
   ensureApexDomainInOrganization,
   getDomainClaimReason,
@@ -50,6 +54,11 @@ export function AddDomainWizard() {
   const deleteMutation = useDeleteDomain(projectId, project?.region)
 
   const [domain, setDomain] = useState('')
+  const { blocked: apexPlanBlocked, limit: domainsLimit } = useNewApexPlanLimit(
+    project?.teamId,
+    domain,
+    project?.region,
+  )
   const [verificationError, setVerificationError] =
     useState<DomainVerificationError | null>(null)
   const [behaviour, setBehaviour] = useState<'active' | 'branch' | 'redirect'>(
@@ -136,6 +145,7 @@ export function AddDomainWizard() {
         return
       }
     }
+    if (apexPlanBlocked) return
 
     setRegistering(true)
     try {
@@ -311,7 +321,7 @@ export function AddDomainWizard() {
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isPending || !isValidDomain(domain)}
+            disabled={isPending || !isValidDomain(domain) || apexPlanBlocked}
           >
             {t('Add')}
           </Button>
@@ -342,6 +352,12 @@ export function AddDomainWizard() {
             />
             {domainError ? (
               <p className="text-[11px] text-destructive mt-1">{domainError}</p>
+            ) : null}
+            {apexPlanBlocked ? (
+              <DomainPlanLimitNotice
+                orgId={project?.teamId}
+                limit={domainsLimit}
+              />
             ) : null}
           </div>
         </div>

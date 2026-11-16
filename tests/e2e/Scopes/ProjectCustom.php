@@ -180,6 +180,8 @@ trait ProjectCustom
                     'mocks.write',
                     'project.policies.read',
                     'project.policies.write',
+                    'project.videos.profiles.read',
+                    'project.videos.profiles.write',
                     'project.oauth2.read',
                     'project.oauth2.write',
                     'templates.read',
@@ -188,6 +190,9 @@ trait ProjectCustom
                     'insights.write',
                     'reports.read',
                     'reports.write',
+                    'videos.play',
+                    'videos.read',
+                    'videos.write',
                 ],
             ]);
 
