@@ -3,6 +3,7 @@ layout: post
 title: "Add push notifications to your Android app without Firebase"
 description: Send push notifications to a Kotlin app with Appwrite Push. Notify customers when an order ships, deliver while the app is closed, and open the order on tap.
 date: 2026-11-06
+lastUpdated: 2026-11-16
 cover: /images/blog/add-push-notifications-to-your-android-app/cover.avif
 timeToRead: 9
 author: atharva
@@ -264,7 +265,14 @@ For instant delivery in the background, turn on the SDK's foreground service whi
 push.setForeground(true)
 ```
 
-In our tests, notifications then arrived within two seconds. The service shows a quiet ongoing notification and uses the `remoteMessaging` foreground service type, which Google Play asks you to declare. The setting is saved across restarts. [Delivery while the app is closed](/docs/products/messaging/appwrite-push#background-android) covers exact alarms and battery optimization, which also affect timing.
+In our tests, notifications then arrived within two seconds. The service shows a quiet ongoing notification and uses the `remoteMessaging` foreground service type, which Google Play asks you to declare. The setting is saved across restarts.
+
+Foreground mode is opt-in, so declare its permissions in `app/src/main/AndroidManifest.xml`, inside `<manifest>`. Without them, `setForeground(true)` reports an error to `onError` and delivery stays on the scheduled wake-ups:
+
+```xml
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
+``` [Delivery while the app is closed](/docs/products/messaging/appwrite-push#background-android) covers exact alarms and battery optimization, which also affect timing.
 
 # Sign out
 

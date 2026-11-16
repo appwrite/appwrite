@@ -838,10 +838,20 @@ Flutter and React Native have the same methods on `push`, without the `context` 
 
 For immediate delivery, call `push.setForeground(true)` while the app is on screen. It runs a foreground service that shows a quiet ongoing notification, and the setting is kept across restarts.
 
-The service is a `remoteMessaging` foreground service, which Google Play asks you to declare. If you never call `setForeground`, remove these from your merged manifest with `tools:node="remove"`:
+Foreground mode is opt-in, because Google Play asks every app that declares a `remoteMessaging` foreground service to justify it in the Play Console. The SDKs declare the push service, but not its permissions. To use foreground mode:
 
-- the push service: `io.appwrite.services.PushService` on Android, `io.appwrite.flutter.services.PushService` on Flutter, or `io.appwrite.reactnative.services.PushService` on React Native
-- the `FOREGROUND_SERVICE_REMOTE_MESSAGING` permission
+1. Add both permissions to your app's `AndroidManifest.xml`, inside `<manifest>` and outside `<application>`. That's `app/src/main/AndroidManifest.xml` on Android and `android/app/src/main/AndroidManifest.xml` on Flutter and React Native.
+
+    ```xml
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
+    ```
+
+    With Expo, list both under `android.permissions` in `app.json` instead, then rebuild the native app.
+1. In the Play Console, complete the foreground service declaration for remote messaging, under **App content** > **Foreground service permissions**.
+1. Call `push.setForeground(true)` while the app is on screen.
+
+Without the permissions, `setForeground(true)` reports an error to `onError`, and `backgroundStatus()` reports `foregroundService` as `false`. Delivery continues through the scheduled wake-ups. This applies from Android SDK 31.3.0, Flutter SDK 28.4.0, and React Native SDK 3.3.0. Earlier versions declare both permissions for every app, and an app that doesn't use foreground mode can remove them, and the push service, from its merged manifest with `tools:node="remove"`.
 
 ## iOS {% #background-ios %}
 
