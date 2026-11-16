@@ -284,4 +284,10 @@ export async function ensureApexDomainInOrganization(
     if (e?.type === 'domain_owned_by_different_organization') return
     throw err
   }
+
+  // The add wizards read this list with refetchOnMount: false. Without a
+  // refresh, a subdomain of the apex just created still looks over the cap.
+  await queryClient.invalidateQueries({
+    queryKey: ['domains', 'organization', teamId],
+  })
 }
