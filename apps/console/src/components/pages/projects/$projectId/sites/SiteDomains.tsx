@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useParams, useNavigate } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
 import {
   FileText,
   RefreshCw,
@@ -41,6 +41,7 @@ import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/setti
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
 import { CheckDomain } from '@/components/pages/projects/$projectId/settings/domains/CheckDomain'
+import { DomainRecordsDialog } from '@/components/pages/projects/$projectId/settings/domains/DomainRecords'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { toast } from 'sonner'
@@ -54,11 +55,11 @@ export function SiteDomainsView() {
   const t = useT()
   const visitUrl = useVisitUrl()
   const { projectId, siteId } = useParams({ strict: false })
-  const navigate = useNavigate()
   const { project } = useProject(projectId)
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
+  const [recordsOpen, setRecordsOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
@@ -96,6 +97,13 @@ export function SiteDomainsView() {
     openDialogAfterOverlayCloses(() => {
       setSelectedRule(rule)
       setVerifyOpen(true)
+    })
+  }
+
+  const handleRecords = (rule: Models.ProxyRule) => {
+    openDialogAfterOverlayCloses(() => {
+      setSelectedRule(rule)
+      setRecordsOpen(true)
     })
   }
 
@@ -163,10 +171,9 @@ export function SiteDomainsView() {
                         key={ruleData.$id}
                         projectId={projectId!}
                         rule={ruleData}
-                        projectTeamId={project?.teamId}
-                        apexToOrgDomainId={apexToOrgDomainId}
                         onViewLogs={handleViewLogs}
                         onRetry={handleRetry}
+                        onRecords={handleRecords}
                         onDelete={handleDelete}
                       >
                       <TableRow>
@@ -256,30 +263,7 @@ export function SiteDomainsView() {
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
-                                  onClick={() => {
-                                    const apex = getApexDomain(ruleData.domain)
-                                    const orgDomainId = apex
-                                      ? apexToOrgDomainId.get(
-                                          apex.toLowerCase(),
-                                        )
-                                      : undefined
-                                    if (project?.teamId && orgDomainId) {
-                                      navigate({
-                                        to: '/organizations/$orgId/domains/$domainId',
-                                        params: {
-                                          orgId: project.teamId,
-                                          domainId: orgDomainId}})
-                                    }
-                                  }}
-                                  disabled={
-                                    !project?.teamId ||
-                                    !getApexDomain(ruleData.domain) ||
-                                    !apexToOrgDomainId.has(
-                                      getApexDomain(
-                                        ruleData.domain,
-                                      )?.toLowerCase() ?? '',
-                                    )
-                                  }
+                                  onClick={() => handleRecords(ruleData)}
                                 >
                                   <MenuItemContent icon={Globe}>
                                     {t('Records')}
@@ -347,6 +331,13 @@ export function SiteDomainsView() {
               setVerifyOpen(false)
               setSelectedRule(null)
             }}
+          />
+          <DomainRecordsDialog
+            open={recordsOpen}
+            onOpenChange={setRecordsOpen}
+            rule={selectedRule}
+            region={project?.region}
+            resourceType="site"
           />
           <DeleteDomainDialog
             open={deleteDomainOpen}
