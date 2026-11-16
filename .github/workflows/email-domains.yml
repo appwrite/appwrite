@@ -17,6 +17,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   domains:
@@ -50,10 +51,13 @@ jobs:
         run: php import.php all --commit=true
 
       # Skip the push when main already has these lists, or when the open pull
-      # request already carries them, so its CI only reruns on new domains.
+      # request already carries them, so its CI only reruns on new domains. A
+      # matching branch without an open pull request still gets one.
       - name: Compare
         id: compare
         env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           REMOTE: ${{ github.server_url }}/${{ github.repository }}
         run: |
           set -euo pipefail
@@ -65,8 +69,9 @@ jobs:
           fi
 
           if git fetch --depth=1 "$REMOTE" "refs/heads/$BRANCH" 2>/dev/null \
-            && git diff --quiet FETCH_HEAD -- "$DATA"; then
-            echo "Lists match $BRANCH."
+            && git diff --quiet FETCH_HEAD -- "$DATA" \
+            && [ -n "$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number // empty')" ]; then
+            echo "Lists match the open pull request from $BRANCH."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi

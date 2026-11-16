@@ -239,15 +239,16 @@ function fetchAllSources(array $sources, string $type): array
         $processedSources++;
         Console::info("[{$processedSources}/{$totalSources}] Processing {$sourceConfig['name']}...");
 
-        // A source that fails or comes back empty aborts the run: saving the
-        // rest would drop every domain that source contributes.
+        // A remote source that fails or comes back empty aborts the run: saving
+        // the rest would drop every domain that source contributes. Manual
+        // lists may be empty.
         try {
             $domains = fetchSource($sourceKey, $sourceConfig, $type);
         } catch (\Exception $e) {
             throw new \Exception("Failed to fetch from {$sourceConfig['name']}: ".$e->getMessage(), previous: $e);
         }
 
-        if (empty($domains)) {
+        if ($sourceConfig['url'] !== null && empty($domains)) {
             throw new \Exception("No domains fetched from {$sourceConfig['name']}");
         }
 

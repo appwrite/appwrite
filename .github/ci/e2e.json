@@ -334,7 +334,8 @@
         "src/Appwrite/Platform/Modules/Organization/",
         "src/Appwrite/Platform/Workers/Mails.php",
         "app/config/locale/",
-        "packages/smtp/"
+        "packages/smtp/",
+        "packages/emails/data/"
       ]
     },
     {
