@@ -870,7 +870,7 @@ class Create extends Action
     /**
      * The repository as the review service's jobs name it.
      *
-     * @return array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string, consoleUrl?: string}
+     * @return array{projectId: string, projectInternalId: string, repositoryId: string, installationId: string, providerInstallationId: string, providerRepositoryId: string, owner: string, name: string, region: string, consoleUrl?: string}
      */
     private function getReviewRepository(array $parsedPayload, Document $project, Document $repository, array $platform): array
     {
@@ -883,6 +883,9 @@ class Create extends Action
             'providerRepositoryId' => $parsedPayload['repositoryId'] ?? '',
             'owner' => $parsedPayload['owner'] ?? '',
             'name' => $parsedPayload['repositoryName'] ?? '',
+            // The region whose Appwrite queued the job: one review service may serve every region
+            // from one queue, and sends the job's results back to this one.
+            'region' => System::getEnv('_APP_REGION', 'default'),
         ];
 
         // For links to the review, from its check run and the summary comment.
