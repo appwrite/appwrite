@@ -106,6 +106,11 @@ import { CreateRecordDialog } from './CreateRecord'
 import { UpdateRecordDialog } from './UpdateRecord'
 import { DeleteRecordDialog } from './DeleteRecord'
 import { ImportZoneDialog } from './ImportZone'
+import {
+  AddPresetDialog,
+  DNS_PRESET_OPTIONS,
+  type DnsPresetId,
+} from './AddPresetDialog'
 import { RetryVerification } from '../RetryVerification'
 import { DnsRecordContextMenu } from '../_components/DnsRecordContextMenu'
 import type { Models } from '@appwrite.io/console'
@@ -115,7 +120,6 @@ import {
   useDeleteDnsRecord,
   deleteDnsRecord,
   useUpdateDomainZone,
-  useCreatePresetRecords,
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
   useOrganizations,
@@ -162,6 +166,8 @@ export function View({ initialData }: ViewProps = {}) {
   const [updateRecordDialogOpen, setUpdateRecordDialogOpen] = useState(false)
   const [deleteRecordDialogOpen, setDeleteRecordDialogOpen] = useState(false)
   const [importZoneDialogOpen, setImportZoneDialogOpen] = useState(false)
+  const [addPresetDialogOpen, setAddPresetDialogOpen] = useState(false)
+  const [selectedPreset, setSelectedPreset] = useState<DnsPresetId | null>(null)
   const [retryDialogOpen, setRetryDialogOpen] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<Models.DnsRecord | null>(
     null,
@@ -373,9 +379,6 @@ export function View({ initialData }: ViewProps = {}) {
   // Create record mutation
   const createRecordMutation = useCreateDnsRecord(domainId)
 
-  // Preset records
-  const createPresetMutation = useCreatePresetRecords(domainId)
-
   const handleCreateRecord = (data: {
     type: string
     name: string
@@ -546,37 +549,9 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }
 
-  // Handle preset selection
-  const handlePresetSelect = async (
-    preset:
-      | 'zoho'
-      | 'mailgun'
-      | 'outlook'
-      | 'protonmail'
-      | 'icloud'
-      | 'google-workspace',
-  ) => {
-    const presetLabels: Record<string, string> = {
-      'google-workspace': 'Google Workspace',
-      outlook: 'Outlook',
-      mailgun: 'Mailgun',
-      zoho: 'Zoho',
-      protonmail: 'ProtonMail',
-      icloud: 'iCloud',
-    }
-
-    // The preset endpoint adds only the records the domain does not have yet,
-    // so applying a preset again, or over matching records, is not an error.
-    // It returns all of the preset's records, so the toast states no count.
-    try {
-      await createPresetMutation.mutateAsync(preset)
-
-      toast.success(
-        `${t('Successfully added')} ${t('DNS records from')} ${presetLabels[preset]}`,
-      )
-    } catch (error) {
-      toast.error(getErrorMessage(error))
-    }
+  const openPresetDialog = (preset: DnsPresetId) => {
+    setSelectedPreset(preset)
+    openDialogAfterOverlayCloses(() => setAddPresetDialogOpen(true))
   }
 
   // Export zone file
@@ -1196,42 +1171,14 @@ export function View({ initialData }: ViewProps = {}) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('google-workspace')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        Google Workspace
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('outlook')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        Outlook
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('mailgun')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        Mailgun
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('zoho')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        Zoho
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('protonmail')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        ProtonMail
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handlePresetSelect('icloud')}
-                        disabled={createPresetMutation.isPending}
-                      >
-                        iCloud
-                      </DropdownMenuItem>
+                      {DNS_PRESET_OPTIONS.map((preset) => (
+                        <DropdownMenuItem
+                          key={preset.id}
+                          onSelect={() => openPresetDialog(preset.id)}
+                        >
+                          {preset.label}
+                        </DropdownMenuItem>
+                      ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -1265,42 +1212,14 @@ export function View({ initialData }: ViewProps = {}) {
                         {t('Preset')}
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-52">
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('google-workspace')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          Google Workspace
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('outlook')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          Outlook
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('mailgun')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          Mailgun
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('zoho')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          Zoho
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('protonmail')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          ProtonMail
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handlePresetSelect('icloud')}
-                          disabled={createPresetMutation.isPending}
-                        >
-                          iCloud
-                        </DropdownMenuItem>
+                        {DNS_PRESET_OPTIONS.map((preset) => (
+                          <DropdownMenuItem
+                            key={preset.id}
+                            onSelect={() => openPresetDialog(preset.id)}
+                          >
+                            {preset.label}
+                          </DropdownMenuItem>
+                        ))}
                       </DropdownMenuSubContent>
                     </DropdownMenuSub>
                   </DropdownMenuContent>
@@ -2241,6 +2160,13 @@ export function View({ initialData }: ViewProps = {}) {
           isLoading={deleteRecordMutation.isPending}
         />
       )}
+
+      <AddPresetDialog
+        open={addPresetDialogOpen}
+        onOpenChange={setAddPresetDialogOpen}
+        domainId={domainId}
+        preset={selectedPreset}
+      />
 
       {/* Import Zone Dialog */}
       <ImportZoneDialog
