@@ -475,6 +475,13 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'הזינו את שם הדומיין ללא פרוטוקול (למשל example.com)',
   'Enter the domain name you want to add to your organization.':
     'הזינו את שם הדומיין שברצונכם להוסיף לארגון שלכם.',
+  'Enter the hostname only, without https:// or a path.':
+    'הזינו את שם המארח בלבד, בלי https:// או נתיב.',
+  'Enter the hostname only:': 'הזינו את שם המארח בלבד:',
+  'Remove the spaces.': 'הסירו את הרווחים.',
+  'Remove the trailing dot.': 'הסירו את הנקודה בסוף.',
+  'Wildcard domains are not supported. Enter a specific hostname.':
+    'דומיינים עם תו כללי אינם נתמכים. הזינו שם מארח מסוים.',
   'Enter your card details to add a new payment method.':
     'הזינו את פרטי הכרטיס שלכם להוספת אמצעי תשלום חדש.',
   'Enter your full domain name to load a price quote.':
