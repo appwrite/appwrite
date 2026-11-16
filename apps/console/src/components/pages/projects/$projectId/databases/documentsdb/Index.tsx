@@ -548,7 +548,11 @@ export function IndexDrawer({
                           <Input
                             value={attributeEntry.column}
                             onChange={(e) =>
-                              updateAttribute(rowIndex, 'column', e.target.value)
+                              updateAttribute(
+                                rowIndex,
+                                'column',
+                                e.target.value,
+                              )
                             }
                             placeholder={t('e.g. email, score, tags')}
                             autoComplete="off"
@@ -629,7 +633,10 @@ export function IndexDrawer({
                           )
                           const isSizedStringAttribute =
                             selectedAttribute?.type === 'string' ||
-                            selectedAttribute?.type === 'varchar'
+                            selectedAttribute?.type === 'varchar' ||
+                            ['text', 'mediumtext', 'longtext'].includes(
+                              selectedAttribute?.type ?? '',
+                            )
 
                           if (!isSizedStringAttribute || customRow) {
                             return null
@@ -657,7 +664,7 @@ export function IndexDrawer({
                               />
                               <p className="text-[10px] text-muted-foreground">
                                 {t(
-                                  'Only applicable to string and varchar columns',
+                                  'Only applicable to string, varchar and text columns',
                                 )}
                               </p>
                             </div>

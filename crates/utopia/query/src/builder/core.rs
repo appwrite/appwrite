@@ -211,6 +211,15 @@ pub trait Dialect: Clone + Default + Send + Sync + Sized + 'static {
         crate::quote::quote(identifier, Self::WRAP)
     }
 
+    /// A string literal for `to_raw_sql()`: `\` doubled and `'` doubled
+    /// (PostgreSQL and SQLite double only `'`, since `\` is not an escape
+    /// in their standard strings).
+    ///
+    /// PHP: `quoteString()`.
+    fn quote_string(value: &[u8]) -> Vec<u8> {
+        quote_bytes(value, true)
+    }
+
     /// The random-order expression (`RAND()`).
     fn compile_random(b: &Builder<Self>) -> String;
 
@@ -763,7 +772,7 @@ impl<D: Dialect> Builder<D> {
             }
         }
         for raw in self.core.raw_wheres.clone() {
-            clauses.push(raw.expression);
+            clauses.push(enclose(&raw.expression));
             self.add_bindings(raw.bindings);
         }
         for predicate in self.core.column_predicates.clone() {
@@ -815,7 +824,7 @@ impl<D: Dialect> Builder<D> {
             }
         }
         for raw in self.core.raw_havings.clone() {
-            clauses.push(raw.expression);
+            clauses.push(enclose(&raw.expression));
             self.add_bindings(raw.bindings);
         }
         if clauses.is_empty() {
@@ -1038,7 +1047,7 @@ impl<D: Dialect> Builder<D> {
             self.add_bindings(result.bindings);
         }
         for raw in self.core.raw_wheres.clone() {
-            clauses.push(raw.expression);
+            clauses.push(enclose(&raw.expression));
             self.add_bindings(raw.bindings);
         }
         for predicate in self.core.column_predicates.clone() {
@@ -1801,8 +1810,33 @@ impl<D: Dialect> Builder<D> {
         for binding in query.values().values() {
             self.add_binding(binding.clone(), None);
         }
-        query.attribute().to_owned()
+        enclose(query.attribute())
     }
+}
+
+/// `value` in single quotes with `'` doubled, and `\` doubled when
+/// `backslashes` is set.
+pub(crate) fn quote_bytes(value: &[u8], backslashes: bool) -> Vec<u8> {
+    let mut out = Vec::with_capacity(value.len() + 2);
+    out.push(b'\'');
+    for &b in value {
+        if b == b'\'' || (backslashes && b == b'\\') {
+            out.push(b);
+        }
+        out.push(b);
+    }
+    out.push(b'\'');
+    out
+}
+
+/// A raw SQL condition enclosed in parentheses. Conditions are joined with
+/// AND, which binds tighter than OR, so a raw `a = ? OR b = ?` left bare
+/// beside a hook's `tenant_id IN (?)` would let the OR escape the tenant and
+/// permission conditions.
+///
+/// PHP: `Builder::enclose()`.
+pub(crate) fn enclose(condition: &str) -> String {
+    format!("({condition})")
 }
 
 /// The PHP method compiling a time bucket for dialect `D` (ClickHouse

@@ -119,8 +119,8 @@
       "op": "data.digest",
       "args": {},
       "expect": {
-        "rules": 9468,
-        "sha256": "ff7278165f210101fc05c608d9c7b94d2660bf9383ff2e23550b9858708f98df"
+        "rules": 10396,
+        "sha256": "24343cd32e48ac805a1eadb1ae25ba14af13d4bb4fef9d451352152f4f55384f"
       }
     }
   ]

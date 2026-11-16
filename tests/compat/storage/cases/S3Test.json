@@ -13282,6 +13282,214 @@
           ]
         }
       ]
+    },
+    {
+      "name": "read since a time sends If-Modified-Since",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "Hello",
+                "headers": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/file.txt",
+            "modified_since": 1767315845
+          },
+          "expect": "Hello"
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": {
+                "authorization": "<masked>",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "if-modified-since": "Fri, 02 Jan 2026 01:04:05 GMT",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "read of an unmodified object is refused in one request",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 304,
+                "body": "",
+                "headers": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/file.txt",
+            "modified_since": 1767315845
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotModifiedException",
+              "message": "File /root/file.txt has not been modified"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": {
+                "authorization": "<masked>",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "if-modified-since": "Fri, 02 Jan 2026 01:04:05 GMT",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "read cannot be conditional on both an etag and a time",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/file.txt",
+            "etag": "abc",
+            "modified_since": 1767315845
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "A read cannot be conditional on both an ETag and a time"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": []
+        }
+      ]
     }
   ]
 }

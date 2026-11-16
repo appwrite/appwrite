@@ -251,6 +251,22 @@ final class FakeTables extends Client
 
                 return $this->row($db, $table, $row, $meta);
             case 'PATCH tablesdb/*/tables/*/rows/{row}':
+                if (str_ends_with($path, '/decrement')) {
+                    $this->calls[] = 'decrementRowColumn';
+                    $id = $parts[5];
+                    foreach ($this->rows as $i => $row) {
+                        if ($row['id'] === $id) {
+                            $min = $params['min'] ?? null;
+                            if (\is_numeric($min) && $row['count'] - (int) ($params['value'] ?? 1) < $min) {
+                                throw new AppwriteException('Column "count" has reached the minimum value of ' . $min, 400, 'column_limit_exceeded');
+                            }
+                            $this->rows[$i]['count'] = $row['count'] - (int) ($params['value'] ?? 1);
+
+                            return $this->row($db, $table, $this->rows[$i], $meta);
+                        }
+                    }
+                    throw new AppwriteException('Row not found', 404, 'row_not_found');
+                }
                 $increment = str_ends_with($path, '/increment');
                 if ($increment && $this->race instanceof \Closure) {
                     $race = $this->race;
@@ -374,6 +390,15 @@ final class Adapter implements Base, Benchmarks
             'limit.peek' => fn (array $a, Session $s) => self::result(self::clocked($a, $s)->peek()),
             'limit.reset' => function (array $a, Session $s) {
                 self::clocked($a, $s)->reset();
+
+                return;
+            },
+            'limit.release' => function (array $a, Session $s) {
+                $limit = self::clocked($a, $s);
+                if (!$limit instanceof TimeLimit) {
+                    throw new Fault('release() is a TimeLimit method');
+                }
+                $limit->release();
 
                 return;
             },

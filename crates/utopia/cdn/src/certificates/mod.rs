@@ -163,6 +163,16 @@ pub trait Provider: Send + Sync {
         domain_type: Option<&'a str>,
     ) -> BoxFuture<'a, Result<Status, Error>>;
 
+    /// When the certificate serving the domain expires, as
+    /// `Y-m-d H:i:s.v` in UTC, or `None` when the provider cannot tell.
+    ///
+    /// PHP: `getCertificateExpiry($domain, $domainType)`.
+    fn certificate_expiry<'a>(
+        &'a self,
+        domain: &'a str,
+        domain_type: Option<&'a str>,
+    ) -> BoxFuture<'a, Result<Option<String>, Error>>;
+
     /// Whether the certificate has to be issued (again).
     ///
     /// PHP: `isRenewRequired($domain, $domainType)`.
@@ -209,6 +219,15 @@ impl<T: Provider + ?Sized> Provider for Arc<T> {
         domain_type: Option<&'a str>,
     ) -> BoxFuture<'a, Result<Status, Error>> {
         (**self).certificate_status(domain, domain_type)
+    }
+
+    /// Asks the shared provider.
+    fn certificate_expiry<'a>(
+        &'a self,
+        domain: &'a str,
+        domain_type: Option<&'a str>,
+    ) -> BoxFuture<'a, Result<Option<String>, Error>> {
+        (**self).certificate_expiry(domain, domain_type)
     }
 
     /// Asks the shared provider.
@@ -307,6 +326,13 @@ impl<P: Provider> Certificates<P> {
     /// PHP: `getCertificateStatus($domain, $domainType)`.
     pub async fn certificate_status(&self, domain: &str, domain_type: Option<&str>) -> Result<Status, Error> {
         self.provider.certificate_status(domain, domain_type).await
+    }
+
+    /// See [`Provider::certificate_expiry`].
+    ///
+    /// PHP: `getCertificateExpiry($domain, $domainType)`.
+    pub async fn certificate_expiry(&self, domain: &str, domain_type: Option<&str>) -> Result<Option<String>, Error> {
+        self.provider.certificate_expiry(domain, domain_type).await
     }
 
     /// See [`Provider::is_renew_required`].

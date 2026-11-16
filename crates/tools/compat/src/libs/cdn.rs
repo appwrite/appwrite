@@ -319,23 +319,27 @@ fn token_value(token: &ValidationToken) -> Value {
 struct Stable;
 
 impl Stable {
-    /// A queued response with every string `@days:<n>` in its `json`
-    /// replaced by the UTC time `n` days from now (`Y-m-d\TH:i:s\Z`).
+    /// A queued response with every string `@days:<n>` (`@hours:<n>`) in
+    /// its `json` replaced by the UTC time `n` days (hours) from now
+    /// (`Y-m-d\TH:i:s\Z`).
     fn prepare(response: &Value) -> Value {
         fn relative(value: &Value) -> Value {
             match value {
                 Value::Array(items) => Value::Array(items.iter().map(relative).collect()),
                 Value::Object(map) => Value::Object(map.iter().map(|(k, v)| (k.clone(), relative(v))).collect()),
-                Value::String(s) if s.starts_with("@days:") => {
+                Value::String(s) if s.starts_with("@days:") || s.starts_with("@hours:") => {
                     // (int) substr($value, 6): leading digits, 0 when none.
-                    let rest = &s[6..];
+                    let (rest, unit) = match s.strip_prefix("@days:") {
+                        Some(rest) => (rest, 86400),
+                        None => (&s[7..], 3600),
+                    };
                     let digits: String = rest
                         .char_indices()
                         .take_while(|(i, c)| c.is_ascii_digit() || (*i == 0 && (*c == '-' || *c == '+')))
                         .map(|(_, c)| c)
                         .collect();
                     let days: i64 = digits.parse().unwrap_or(0);
-                    let at = php_std::datetime::time() + days * 86400;
+                    let at = php_std::datetime::time() + days * unit;
                     let date = php_std::datetime::DateTime::new(
                         format!("@{at}").as_bytes(),
                         None,
@@ -530,6 +534,7 @@ struct ProviderRecorder {
     instant: bool,
     date: Option<String>,
     renew: bool,
+    expiry: Option<String>,
 }
 
 impl certificates::Provider for ProviderRecorder {
@@ -559,6 +564,17 @@ impl certificates::Provider for ProviderRecorder {
         _domain_type: Option<&'a str>,
     ) -> BoxFuture<'a, Result<Status, Error>> {
         Box::pin(async move { Ok(self.status) })
+    }
+
+    fn certificate_expiry<'a>(
+        &'a self,
+        domain: &'a str,
+        _domain_type: Option<&'a str>,
+    ) -> BoxFuture<'a, Result<Option<String>, Error>> {
+        Box::pin(async move {
+            self.log.append(Value::from(format!("{}:expiry:{domain}", self.name)));
+            Ok(self.expiry.clone())
+        })
     }
 
     fn is_renew_required<'a>(
@@ -1050,6 +1066,7 @@ fn provider_new(a: &Args<'_>, session: &Session) -> Result<Result<ProviderHandle
                 instant: a.opt_bool("instant")?.unwrap_or(false),
                 date: a.opt_str("date")?.map(str::to_owned),
                 renew: a.opt_bool("renew")?.unwrap_or(false),
+                expiry: a.opt_str("expiry")?.map(str::to_owned),
             }),
             None,
         ),
@@ -1123,6 +1140,7 @@ async fn provider_call(handle: &ProviderHandle, a: &Args<'_>) -> Result<Value, F
             "getCertificateStatus" => {
                 record(wire, a, async { c.certificate_status(domain, kind).await.map(|s| s.as_str()) }).await
             }
+            "getCertificateExpiry" => record(wire, a, async { c.certificate_expiry(domain, kind).await }).await,
             "isRenewRequired" => record(wire, a, async { c.is_renew_required(domain, kind).await }).await,
             "deleteCertificate" => {
                 record(wire, a, async { c.delete_certificate(domain, kind).await.map(|()| Value::Null) }).await
@@ -1136,6 +1154,7 @@ async fn provider_call(handle: &ProviderHandle, a: &Args<'_>) -> Result<Value, F
         "getCertificateStatus" => {
             record(wire, a, async { p.certificate_status(domain, kind).await.map(|s| s.as_str()) }).await
         }
+        "getCertificateExpiry" => record(wire, a, p.certificate_expiry(domain, kind)).await,
         "isRenewRequired" => record(wire, a, p.is_renew_required(domain, kind)).await,
         "deleteCertificate" => {
             record(wire, a, async { p.delete_certificate(domain, kind).await.map(|()| Value::Null) }).await

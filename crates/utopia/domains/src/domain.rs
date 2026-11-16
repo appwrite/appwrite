@@ -97,8 +97,15 @@ impl PublicSuffixList {
     }
 
     /// The embedded list ([`Self::EMBEDDED`]), parsed.
+    ///
+    /// # Panics
+    ///
+    /// When the embedded list does not parse, which the crate's tests rule out.
     pub fn embedded() -> Self {
-        Self::parse(Self::EMBEDDED).unwrap_or_default()
+        match Self::parse(Self::EMBEDDED) {
+            Ok(list) => list,
+            Err(error) => panic!("the embedded Public Suffix List does not parse: {error}"),
+        }
     }
 
     /// Installs the process-wide list used by [`Domain::new`]. The first list
@@ -226,8 +233,8 @@ impl Domain<'static> {
     ///     echo $e->getMessage(), "\n"; // 'https://example.com' must be a valid domain or hostname
     /// }
     /// ```
-    pub fn new(domain: &str) -> Result<Self, Error> {
-        Self::build(domain, None)
+    pub fn new(domain: &(impl AsRef<[u8]> + ?Sized)) -> Result<Self, Error> {
+        Self::build(domain.as_ref(), None)
     }
 }
 
@@ -235,15 +242,18 @@ impl<'l> Domain<'l> {
     /// Parses a domain against a given list.
     ///
     /// Fails for a URL (`http://`, `https://`).
-    pub fn with_list(domain: &str, list: &'l PublicSuffixList) -> Result<Self, Error> {
-        Self::build(domain, Some(list))
+    pub fn with_list(domain: &(impl AsRef<[u8]> + ?Sized), list: &'l PublicSuffixList) -> Result<Self, Error> {
+        Self::build(domain.as_ref(), Some(list))
     }
 
-    fn build(domain: &str, list: Option<&'l PublicSuffixList>) -> Result<Self, Error> {
-        if domain.starts_with("http://") || domain.starts_with("https://") {
-            return Err(Error::exception(format!("'{domain}' must be a valid domain or hostname"), 0));
+    /// PHP takes any bytes: the URL check reads them as given, and `mb_strtolower`
+    /// turns bytes that are not UTF-8 into `?`.
+    fn build(domain: &[u8], list: Option<&'l PublicSuffixList>) -> Result<Self, Error> {
+        if domain.starts_with(b"http://") || domain.starts_with(b"https://") {
+            let shown = String::from_utf8_lossy(domain);
+            return Err(Error::exception(format!("'{shown}' must be a valid domain or hostname"), 0));
         }
-        let lower = mb::mb_strtolower(domain.as_bytes());
+        let lower = mb::mb_strtolower(domain);
         let domain = String::from_utf8(lower).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned());
         Ok(Self { domain, list, parts: OnceLock::new() })
     }
@@ -404,6 +414,15 @@ impl<'l> Domain<'l> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn embedded_list_parses_whole() {
+        let list = PublicSuffixList::parse(PublicSuffixList::EMBEDDED).expect("the embedded list parses");
+        let rules =
+            PublicSuffixList::EMBEDDED.lines().filter(|line| !line.is_empty() && !line.starts_with("#\t")).count();
+        assert_eq!(list.len(), rules);
+        assert!(rules > 9000, "the embedded list has {rules} rules");
+    }
 
     fn list() -> PublicSuffixList {
         PublicSuffixList::parse("#\tit's\nICANN\tcom\nICANN\tco.uk\nICANN\t*.ck\nICANN\t!www.ck\nPRIVATE\tgithub.io\n")

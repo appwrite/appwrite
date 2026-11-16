@@ -22,7 +22,9 @@ use crate::resources::domains::Rule;
 use crate::resources::functions::{Deployment, EnvVar, Func};
 use crate::resources::integrations::{ApiKey, Platform};
 use crate::resources::messaging::{Message, Provider, Subscriber, Topic};
-use crate::resources::settings::{Environment, Labels, ProjectVariable, Protocols, Services, Smtp, Webhook};
+use crate::resources::settings::{
+    Environment, Labels, Preferences, ProjectVariable, Protocols, Services, Smtp, Webhook,
+};
 use crate::resources::sites::{Site, SiteDeployment, SiteEnvVar};
 use crate::resources::storage::{Bucket, File};
 use crate::resources::templates::EmailTemplate;
@@ -544,10 +546,19 @@ impl Appwrite {
                 Err(e) => return Err(e),
             };
         }
-        for t in [types::PROJECT_PROTOCOLS, types::PROJECT_LABELS, types::PROJECT_SERVICES] {
+        for t in [types::PROJECT_PROTOCOLS, types::PROJECT_LABELS] {
             if has(t) {
                 report.insert(t.to_owned(), Value::Int(1));
             }
+        }
+        if has(types::PROJECT_PREFERENCES) {
+            // Singleton; a source older than 2.7.0 has no project preferences.
+            let project = self.api("Project", "get", &[]).await?;
+            let total = if project.model("prefs").is_some() { 1 } else { 0 };
+            report.insert(types::PROJECT_PREFERENCES.to_owned(), Value::Int(total));
+        }
+        if has(types::PROJECT_SERVICES) {
+            report.insert(types::PROJECT_SERVICES.to_owned(), Value::Int(1));
         }
         if has(types::PROJECT_EMAIL_TEMPLATE) {
             let total = match self
@@ -688,6 +699,7 @@ impl Appwrite {
         let rotation = supported("password-rotation").await?;
         let passkey = supported("passkey").await?;
         let realtime_guests = supported("deny-realtime-guests").await?;
+        let account_devices = supported("account-devices").await?;
         let fields = |model: &Option<Model>, keys: &[&str]| {
             model.as_ref().map(|m| {
                 let mut a = Array::new();
@@ -729,6 +741,7 @@ impl Appwrite {
             password_rotation: fields(&of(rotation, "PolicyPasswordRotation"), &["enabled", "maxAge"]),
             passkey_rp_id: of(passkey, "PolicyPasskey").map(|m| s(&m, "rpId")),
             deny_realtime_guests: enabled(&of(realtime_guests, "PolicyDenyRealtimeGuests")),
+            account_devices: enabled(&of(account_devices, "PolicyAccountDevices")),
         };
         let r = policies.resource(self.project_id.clone(), "", "");
         out.emit(vec![r]).await
@@ -2096,6 +2109,22 @@ impl Appwrite {
                 self.target.add_error(group_error(types::PROJECT_LABELS, group::PROJECTS, e, true));
             }
         }
+        if has(types::PROJECT_PREFERENCES) {
+            let result: Result<()> = async {
+                let p = self.api("Project", "get", &[]).await?;
+                let Some(prefs) = p.model("prefs") else { return Ok(()) };
+                let r = Preferences { preferences: arr(prefs.value("data")) }.resource(
+                    self.project_id.clone(),
+                    s(&p, "createdAt"),
+                    s(&p, "updatedAt"),
+                );
+                out.emit(vec![r]).await
+            }
+            .await;
+            if let Err(e) = result {
+                self.target.add_error(group_error(types::PROJECT_PREFERENCES, group::PROJECTS, e, true));
+            }
+        }
         if has(types::PROJECT_SERVICES) {
             let result: Result<()> = async {
                 let p = self.api("Project", "get", &[]).await?;
@@ -2139,12 +2168,12 @@ impl Appwrite {
                 q.push(query::cursor_after(last));
             }
             let Some(response) = self.list_environments(query::list(q)).await? else { break };
-            let projects = response.models("projects");
-            if projects.is_empty() {
+            let environments = response.models("environments");
+            if environments.is_empty() {
                 break;
             }
             let mut list = Vec::new();
-            for e in &projects {
+            for e in &environments {
                 list.push(Environment { name: s(e, "name") }.resource(
                     s(e, "id"),
                     s(e, "createdAt"),
@@ -2153,7 +2182,7 @@ impl Appwrite {
                 last = Some(s(e, "id"));
             }
             out.emit(list).await?;
-            if (projects.len() as i64) < batch {
+            if (environments.len() as i64) < batch {
                 break;
             }
         }
@@ -2336,6 +2365,7 @@ impl Source for Appwrite {
             types::PROJECT_VARIABLE,
             types::PROJECT_PROTOCOLS,
             types::PROJECT_LABELS,
+            types::PROJECT_PREFERENCES,
             types::PROJECT_SERVICES,
             types::PROJECT_EMAIL_TEMPLATE,
             types::PROJECT_ENVIRONMENT,

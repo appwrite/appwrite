@@ -103,6 +103,7 @@ pub static CLICKHOUSE_ATTRIBUTES: LazyLock<Vec<Attribute>> = LazyLock::new(|| {
             ("deviceName", false),
             ("deviceBrand", false),
             ("deviceModel", false),
+            ("reason", false),
         ]
         .into_iter()
         .map(|(id, required)| string(id, required)),

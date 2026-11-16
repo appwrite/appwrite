@@ -855,12 +855,538 @@
       ]
     },
     {
-      "name": "testUpdateCheckNamesTheStatusAfterItsSuite",
+      "name": "testUpdateCheckReportsACheckRun",
       "steps": [
         {
           "op": "fixture.script",
           "args": {
             "routes": [
+              {
+                "method": "GET",
+                "path": "/repos/owner/repo/commits/abc123/check-runs",
+                "status": 200,
+                "body": {
+                  "check_runs": [
+                    {
+                      "id": 7,
+                      "external_id": "project/functions/billing"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/repos/owner/repo/check-runs/7",
+                "status": 200,
+                "body": {
+                  "id": 7
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "pending",
+            "name": "Billing",
+            "title": "Building...",
+            "summary": "- Function Billing",
+            "detailsUrl": "https://cloud.appwrite.io",
+            "suite": "Atlas Production",
+            "key": "project/functions/billing"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=Billing+%28Atlas+Production%29&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "PATCH",
+              "target": "/repos/owner/repo/check-runs/7",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"Billing (Atlas Production)\",\"status\":\"in_progress\",\"details_url\":\"https:\\/\\/cloud.appwrite.io\",\"external_id\":\"project\\/functions\\/billing\",\"output\":{\"title\":\"Building...\",\"summary\":\"- Function Billing\"}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testUpdateCheckStartsANewRunOnRebuild",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/repos/owner/repo/commits/abc123/check-runs",
+                "status": 200,
+                "body": {
+                  "check_runs": [
+                    {
+                      "id": 7,
+                      "status": "completed",
+                      "external_id": "project/functions/billing"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/repos/owner/repo/check-runs",
+                "status": 201,
+                "body": {
+                  "id": 8
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "queued",
+            "name": "Billing",
+            "title": "Starting...",
+            "key": "project/functions/billing"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=Billing&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/repos/owner/repo/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"Billing\",\"head_sha\":\"abc123\",\"status\":\"queued\",\"external_id\":\"project\\/functions\\/billing\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testUpdateCheckFailsWhenRunsCannotBeListed",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/repos/owner/repo/commits/abc123/check-runs",
+                "status": 500,
+                "body": []
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "queued",
+            "name": "Billing",
+            "title": "Starting..."
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to list check runs: HTTP 500",
+              "code": 500
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=Billing&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testUpdateCheckFallsBackToAStatusWithoutChecks",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/repos/owner/repo/commits/abc123/check-runs",
+                "status": 403,
+                "body": []
+              },
               {
                 "method": "POST",
                 "path": "/repos/owner/repo/statuses/abc123",
@@ -928,6 +1454,184 @@
           "expect": null
         },
         {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=Billing+%28Atlas+Production%29&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/repos/owner/repo/statuses/abc123",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"state\":\"pending\",\"target_url\":\"https:\\/\\/cloud.appwrite.io\",\"description\":\"Starting...\",\"context\":\"Billing (Atlas Production)\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a check run that cannot be written falls back to a status",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/repos/owner/repo/commits/abc123/check-runs",
+                "status": 200,
+                "body": {
+                  "check_runs": [
+                    {
+                      "id": 7,
+                      "external_id": "Deploy"
+                    },
+                    {
+                      "id": 9,
+                      "external_id": "Billing"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/repos/owner/repo/check-runs/9",
+                "status": 403,
+                "body": []
+              },
+              {
+                "method": "POST",
+                "path": "/repos/owner/repo/statuses/abc123",
+                "status": 201,
+                "body": []
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
           "op": "vcs.update_check",
           "args": {
             "adapter": {
@@ -938,7 +1642,8 @@
             "SHA": "abc123",
             "state": "success",
             "name": "Billing",
-            "title": "Build succeeded."
+            "title": "Built.",
+            "summary": "Done"
           },
           "expect": null
         },
@@ -980,8 +1685,36 @@
             },
             {
               "provider": "github",
-              "method": "POST",
-              "target": "/repos/owner/repo/statuses/abc123",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=Billing&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "PATCH",
+              "target": "/repos/owner/repo/check-runs/9",
               "headers": [
                 [
                   "Host",
@@ -1008,7 +1741,7 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"state\":\"pending\",\"target_url\":\"https:\\/\\/cloud.appwrite.io\",\"description\":\"Starting...\",\"context\":\"Billing (Atlas Production)\"}"
+              "body": "{\"name\":\"Billing\",\"status\":\"completed\",\"external_id\":\"Billing\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Built.\",\"summary\":\"Done\"}}"
             },
             {
               "provider": "github",
@@ -1040,7 +1773,672 @@
                   "<body>"
                 ]
               ],
-              "body": "{\"state\":\"success\",\"target_url\":\"\",\"description\":\"Build succeeded.\",\"context\":\"Billing\"}"
+              "body": "{\"state\":\"success\",\"target_url\":\"\",\"description\":\"Built.\",\"context\":\"Billing\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every check state maps to a run status and conclusion",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/repos/owner/repo/commits/abc123/check-runs",
+                "status": 200,
+                "body": {
+                  "check_runs": [
+                    {
+                      "id": "x1",
+                      "status": "in_progress",
+                      "external_id": "k"
+                    },
+                    {
+                      "id": 3,
+                      "external_id": "k"
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "PATCH",
+                "path": "/repos/owner/repo/check-runs/x1",
+                "status": 200,
+                "body": {
+                  "id": "x1"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/repos/owner/repo/check-runs",
+                "status": 500,
+                "body": []
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "queued",
+            "name": "N",
+            "title": "T",
+            "summary": "S",
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "pending",
+            "name": "N",
+            "title": "T",
+            "summary": "S",
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "success",
+            "name": "N",
+            "title": "T",
+            "summary": "S",
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "cancelled",
+            "name": "N",
+            "title": "T",
+            "summary": "S",
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "failure",
+            "name": "N",
+            "title": "T",
+            "summary": "S",
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "error",
+            "name": "N",
+            "title": "T",
+            "summary": "S",
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "SHA": "abc123",
+            "state": "success",
+            "name": "N",
+            "title": "T",
+            "key": "other"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to create check run: HTTP 500",
+              "code": 500
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=N&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "PATCH",
+              "target": "/repos/owner/repo/check-runs/x1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"N\",\"status\":\"queued\",\"external_id\":\"k\",\"output\":{\"title\":\"T\",\"summary\":\"S\"}}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=N&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "PATCH",
+              "target": "/repos/owner/repo/check-runs/x1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"N\",\"status\":\"in_progress\",\"external_id\":\"k\",\"output\":{\"title\":\"T\",\"summary\":\"S\"}}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=N&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "PATCH",
+              "target": "/repos/owner/repo/check-runs/x1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"N\",\"status\":\"completed\",\"external_id\":\"k\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"T\",\"summary\":\"S\"}}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=N&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "PATCH",
+              "target": "/repos/owner/repo/check-runs/x1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"N\",\"status\":\"completed\",\"external_id\":\"k\",\"conclusion\":\"cancelled\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"T\",\"summary\":\"S\"}}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=N&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "PATCH",
+              "target": "/repos/owner/repo/check-runs/x1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"N\",\"status\":\"completed\",\"external_id\":\"k\",\"conclusion\":\"failure\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"T\",\"summary\":\"S\"}}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=N&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "PATCH",
+              "target": "/repos/owner/repo/check-runs/x1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"N\",\"status\":\"completed\",\"external_id\":\"k\",\"conclusion\":\"failure\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"T\",\"summary\":\"S\"}}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/owner/repo/commits/abc123/check-runs?check_name=N&filter=latest",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/repos/owner/repo/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"N\",\"head_sha\":\"abc123\",\"status\":\"completed\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"external_id\":\"other\"}"
             }
           ]
         }
@@ -5911,6 +7309,1030 @@
                 [
                   "Authorization",
                   "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testCreateAccessTokenLimitsItToTheRepositoriesAndPermissions",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/app/installations/1234/access_tokens",
+                "status": 201,
+                "body": {
+                  "token": "ghs_scoped",
+                  "expires_at": "2026-10-27T16:00:00Z"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.create_access_token",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryIds": [
+              42
+            ],
+            "permissions": {
+              "contents": "read",
+              "pull_requests": "write"
+            }
+          },
+          "expect": {
+            "token": "ghs_scoped",
+            "expiresAt": "2026-10-27T16:00:00Z"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"repository_ids\":[42],\"permissions\":{\"contents\":\"read\",\"pull_requests\":\"write\"}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testCreateAccessTokenWithoutRepositoriesCoversTheInstallation",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/app/installations/1234/access_tokens",
+                "status": 201,
+                "body": {
+                  "token": "ghs_all",
+                  "expires_at": "2026-10-27T16:00:00Z"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.create_access_token",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "token": "ghs_all",
+            "expiresAt": "2026-10-27T16:00:00Z"
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testCreateAccessTokenThrowsWhenGitHubRefuses",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "POST",
+                "path": "/app/installations/1234/access_tokens",
+                "status": 422,
+                "times": 1,
+                "body": {
+                  "message": "There is at least one repository that does not exist or is not accessible to the parent installation.",
+                  "token": "leaked"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/app/installations/1234/access_tokens",
+                "status": 500,
+                "times": 1,
+                "body": "oops"
+              },
+              {
+                "method": "POST",
+                "path": "/app/installations/1234/access_tokens",
+                "status": 201,
+                "times": 1,
+                "body": {
+                  "token": 1,
+                  "expires_at": "x",
+                  "documentation_url": "https://docs"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.create_access_token",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryIds": [
+              42
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to create access token from GitHub API. Status: 422. Response: {\"message\":\"There is at least one repository that does not exist or is not accessible to the parent installation.\"}",
+              "code": 422
+            }
+          }
+        },
+        {
+          "op": "vcs.create_access_token",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryIds": [
+              42
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to create access token from GitHub API. Status: 500. Response: ",
+              "code": 500
+            }
+          }
+        },
+        {
+          "op": "vcs.create_access_token",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "repositoryIds": [
+              42
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to create access token from GitHub API. Status: 201. Response: {\"documentation_url\":\"https:\\/\\/docs\"}",
+              "code": 201
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"repository_ids\":[42]}"
+            },
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"repository_ids\":[42]}"
+            },
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"repository_ids\":[42]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetCollaboratorPermissionReturnsThePermission",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/repos/appwrite/appwrite/collaborators/octocat/permission",
+                "status": 200,
+                "body": {
+                  "permission": "write",
+                  "role_name": "maintain"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/repos/appwrite/appwrite/collaborators/odd/permission",
+                "status": 200,
+                "body": {
+                  "permission": 5
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_collaborator_permission",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "appwrite",
+            "repositoryName": "appwrite",
+            "username": "octocat"
+          },
+          "expect": "write"
+        },
+        {
+          "op": "vcs.get_collaborator_permission",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "appwrite",
+            "repositoryName": "appwrite",
+            "username": "odd"
+          },
+          "expect": "none"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/appwrite/appwrite/collaborators/octocat/permission",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/appwrite/appwrite/collaborators/odd/permission",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetCollaboratorPermissionIsNoneForAnUnknownUser",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/repos/appwrite/appwrite/collaborators/ghost/permission",
+                "status": 404,
+                "body": {
+                  "message": "Not Found"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_collaborator_permission",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "appwrite",
+            "repositoryName": "appwrite",
+            "username": "ghost"
+          },
+          "expect": "none"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/appwrite/appwrite/collaborators/ghost/permission",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetCollaboratorPermissionThrowsWhenGitHubFails",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/repos/appwrite/appwrite/collaborators/octocat/permission",
+                "status": 500,
+                "body": {
+                  "message": "Server Error"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "github": {
+                "rs256": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlCXSM2duSq23FE3kD2m+\nJVZ6ZlXn0LEPu6vAySCxOfTGKvvOcb0IShN984vedyvbke4xIsx5YRrdHYGYLDuz\nYSbeADne6MZeksPH0QKw45cHTUVqbjoz45AUoGHCxjGhM2IPuWVOcU+u1Xm+CLll\nyhrC2Aw2LYz5rZmYZYsFOclHiI79fkyLcFR/fJykD+lTS10OElhvFOmLhTsP5Qej\nenvpOVzpOJ66spaHy/gmmM7b4+E8ri4/XuWQOGpquzFi/vUOGtFWRpyTf7M+L0u3\nv+/bXqFQ3WBDhQBXB5kKYnIxayRp623+42Ov+XRj6+ypJgkxSdfgybC0RWeHVaAD\nbwIDAQAB\n-----END PUBLIC KEY-----\n"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "github",
+            "endpoint": "${vcs}/~${ns}/github"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "1234",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUJdIzZ25KrbcU\nTeQPab4lVnpmVefQsQ+7q8DJILE59MYq+85xvQhKE33zi953K9uR7jEizHlhGt0d\ngZgsO7NhJt4AOd7oxl6Sw8fRArDjlwdNRWpuOjPjkBSgYcLGMaEzYg+5ZU5xT67V\neb4IuWXKGsLYDDYtjPmtmZhliwU5yUeIjv1+TItwVH98nKQP6VNLXQ4SWG8U6YuF\nOw/lB6N6e+k5XOk4nrqylofL+CaYztvj4TyuLj9e5ZA4amq7MWL+9Q4a0VZGnJN/\nsz4vS7e/79teoVDdYEOFAFcHmQpicjFrJGnrbf7jY6/5dGPr7KkmCTFJ1+DJsLRF\nZ4dVoANvAgMBAAECggEAD+hDustHV3Nxrhdy/oivJxkzCVv+CTWJ5+/YQoBlJ0D2\nKlVhZGsUwcd4BbemCovGBtRZqE/mVJvq1Ck/Kri6WRswSTvtiHcMXpvxD6tHTRjB\navWiKPXM7olg/Zuhq2BW28qSv6h2FMqmjjuFQTCPEnVvKH2fL6LsiExuxbB4viyJ\nuCdgRNftblEwTZbDJxIYHLu3/t2LReZ9+7syySxowI/imceD09fGbNwV8zbsYR2i\nYDSm18E2VaZmUcPjiwLtaYgN+QXSJ/BXib1bKJRfmILc0jgMBhJqc3MOZpbNGKo8\nelglfGtHHQkNk84Hj+vxLtAe4mt+ezE0uR5eTNuRwQKBgQDRZvy7aTYW+PDULlPw\nLoG8+IqZEXYLJicmt61dHeNq8prIPDgS4T2XqThgMPFr21TXKsPyEFBoaxg6Awb3\nFLqw3yiBYX3cdN+Ge5XO5CCUPfvLZXHmuMPjpSJMGMyHFZ+COGGu/3SdS6NBlSwx\nHMCKHyvF3LB19Hg042q7retSoQKBgQC1HVkOBA4dOGT+HOD1cRfftN66B6GYFYxN\nXdzpzlZj7qCWGwHINpR1REiNa3u9UlbuWxLGsO1ezAyjN5mb7PMGN1HAc8bT3cxZ\nX3eDYJOTqzDNsAgUdz+NY8J5B2uS7RjtYq+HNNmjpVn3HBVvrGAjuofLTVhHMVgT\n6C/R+hKsDwKBgF6eZ4KTZtJ4h/GIQXtcuFjYAWBq6GjfQ3+WLWrO74zKtK/Xrgqx\n5i/aUdP9KYlv4OUcuM9vGbYk9hx4c7Q/lKAJJfdYQxPTZ5EP1MBYinQRke31F8OG\nJ1V8r4OtDPXZCms/6Lu3SE0u+UTQD9jdQg7nSNMuBjo2Tf6v5/GIA7YhAoGBAIdu\n5bwsXh2NoT/AepwvMKoRR4gW0si2PE9SRDL2H/XkaGM22NNNtSAnqpVN7Z755pWg\ntt6rSSVdMooOtqg5vNVGIrTmHqUps3iVgfpVCqYfGoSFANXFAloJYlA8sz2QXNaO\nuDFD3QeZSzgU4Ra78Lxm7MqjEMNT68gfFTtQZAwTAoGALmdlhXrGRVlXbV1KAFkJ\nFeac6STB5r+cA0ooIhWIdgWI9/IN8/iyPpfbSoBrFpUDsJoQxEHvDVQwN81QvLg9\nKPsH09app+W9Dp87y3FJknyx1h39HZKYFqCGG1uQrqBVcrLBnnuYraU7p6jJKLaL\ngPxSUkH5MFtMJzUvWx7R2iQ=\n-----END PRIVATE KEY-----\n",
+            "appId": "5678"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_collaborator_permission",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "appwrite",
+            "repositoryName": "appwrite",
+            "username": "octocat"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Failed to get collaborator permission: HTTP 500",
+              "code": 500
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "github",
+              "method": "POST",
+              "target": "/app/installations/1234/access_tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"typ\":\"JWT\",\"alg\":\"RS256\"},\"claims\":{\"iat\":\"<now>\",\"exp\":\"<iat+540>\",\"iss\":5678},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{}"
+            },
+            {
+              "provider": "github",
+              "method": "GET",
+              "target": "/repos/appwrite/appwrite/collaborators/octocat/permission",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer ghs_fixture1234"
                 ]
               ],
               "body": ""

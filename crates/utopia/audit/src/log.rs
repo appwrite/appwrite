@@ -157,6 +157,14 @@ impl Log {
         self.text("sdkVersion")
     }
 
+    /// The reason the actor gave for this action (`reason`, ClickHouse),
+    /// or `None` when no reason was given.
+    ///
+    /// PHP: `getReason()`.
+    pub fn reason(&self) -> Option<&str> {
+        self.text("reason")
+    }
+
     /// The user agent's OS code (`osCode`, ClickHouse).
     ///
     /// PHP: `getOsCode()`.

@@ -38,6 +38,11 @@ pub enum Error {
         /// The HTTP status, or 0.
         code: i64,
     },
+    /// A read conditional on a time found the file not modified after it.
+    ///
+    /// PHP: `Utopia\Storage\Exception\NotModifiedException`.
+    #[error("{0}")]
+    NotModified(String),
     /// A chunked upload is in an invalid state: a chunk is missing, the
     /// multipart upload was never prepared, or it could not be finalized.
     ///
@@ -99,6 +104,7 @@ impl Error {
             Error::Storage(_) => "Utopia\\Storage\\Exception\\StorageException",
             Error::NotFound { .. } => "Utopia\\Storage\\Exception\\NotFoundException",
             Error::PreconditionFailed { .. } => "Utopia\\Storage\\Exception\\PreconditionFailedException",
+            Error::NotModified(_) => "Utopia\\Storage\\Exception\\NotModifiedException",
             Error::Upload(_) => "Utopia\\Storage\\Exception\\UploadException",
             Error::Remote { .. } => "Utopia\\Storage\\Exception\\RemoteException",
             Error::Transport { .. } => "Utopia\\Storage\\Exception\\TransportException",

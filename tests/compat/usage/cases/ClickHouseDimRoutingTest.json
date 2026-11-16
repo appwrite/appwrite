@@ -1656,6 +1656,759 @@
       ]
     },
     {
+      "name": "the billing window groups by resourceType through its projection",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_dim_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, path, method, status, service, country) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}, {t_method:String}, {t_status:String}, {t_service:String}, {t_country:String}",
+            "params": {
+              "metric": "dim.routing.metric",
+              "value": 10,
+              "time": "2025-02-15 15:20:00.000",
+              "tenant": "1",
+              "t_path": "/v1/a",
+              "t_method": "GET",
+              "t_status": "200",
+              "t_service": "storage",
+              "t_country": "us"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, path, method, status, service, country) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}, {t_method:String}, {t_status:String}, {t_service:String}, {t_country:String}",
+            "params": {
+              "metric": "dim.routing.metric",
+              "value": 20,
+              "time": "2025-02-16 15:20:00.000",
+              "tenant": "1",
+              "t_path": "/v1/a",
+              "t_method": "GET",
+              "t_status": "200",
+              "t_service": "storage",
+              "t_country": "us"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, path, method, status, service, country) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}, {t_method:String}, {t_status:String}, {t_service:String}, {t_country:String}",
+            "params": {
+              "metric": "dim.routing.metric",
+              "value": 30,
+              "time": "2025-02-17 15:20:00.000",
+              "tenant": "1",
+              "t_path": "/v1/b",
+              "t_method": "POST",
+              "t_status": "201",
+              "t_service": "databases",
+              "t_country": "de"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, path, method, status, service, country) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}, {t_method:String}, {t_status:String}, {t_service:String}, {t_country:String}",
+            "params": {
+              "metric": "dim.routing.metric",
+              "value": 40,
+              "time": "2025-02-17 15:20:00.000",
+              "tenant": "1",
+              "t_path": "/v1/c",
+              "t_method": "POST",
+              "t_status": "500",
+              "t_service": "functions",
+              "t_country": "fr"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "dim.routing.metric",
+                "value": 5,
+                "tags": {
+                  "path": "/v1/a",
+                  "method": "GET",
+                  "status": "200",
+                  "service": "storage",
+                  "country": "us"
+                },
+                "time": "2025-02-20 15:20:00.000"
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "billing.events",
+              "value": 10,
+              "time": "2025-02-13 15:00:00.000",
+              "tenant": "1",
+              "t_resourceType": "bucket"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "billing.events",
+              "value": -2,
+              "time": "2025-02-13 15:00:00.000",
+              "tenant": "1",
+              "t_resourceType": "bucket"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "billing.events",
+              "value": 40,
+              "time": "2025-02-13 15:00:00.000",
+              "tenant": "1",
+              "t_resourceType": "site"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "billing.compute",
+              "value": 7,
+              "time": "2025-02-13 15:00:00.000",
+              "tenant": "1",
+              "t_resourceType": "function"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, resourceType) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_resourceType:String}",
+            "params": {
+              "metric": "billing.events",
+              "value": 999,
+              "time": "2025-02-18 15:00:00.000",
+              "tenant": "1",
+              "t_resourceType": "bucket"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.next_query_id",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "id": "${ns}-q"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-02-13 15:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-02-18 15:00:00"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "attribute": "resourceType",
+                "values": []
+              },
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  10000
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "resourceType",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "expect": [
+            {
+              "metric": "billing.events",
+              "value": 8,
+              "resourceType": "bucket",
+              "type": "event"
+            },
+            {
+              "metric": "billing.compute",
+              "value": 7,
+              "resourceType": "function",
+              "type": "event"
+            },
+            {
+              "metric": "billing.events",
+              "value": 40,
+              "resourceType": "site",
+              "type": "event"
+            },
+            {
+              "metric": "dim.routing.metric",
+              "value": 100,
+              "resourceType": null,
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SYSTEM FLUSH LOGS"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT projections FROM system.query_log WHERE query_id = '${ns}-q' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
+          },
+          "expect": "['${ns}.utopia_usage_dim_routing_usage_events.p_by_resourceType']\n"
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "materializing the resourceType projection keeps the totals",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_dim_routing",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, path, method, status, service, country) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}, {t_method:String}, {t_status:String}, {t_service:String}, {t_country:String}",
+            "params": {
+              "metric": "dim.routing.metric",
+              "value": 10,
+              "time": "2025-02-15 15:20:00.000",
+              "tenant": "1",
+              "t_path": "/v1/a",
+              "t_method": "GET",
+              "t_status": "200",
+              "t_service": "storage",
+              "t_country": "us"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, path, method, status, service, country) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}, {t_method:String}, {t_status:String}, {t_service:String}, {t_country:String}",
+            "params": {
+              "metric": "dim.routing.metric",
+              "value": 20,
+              "time": "2025-02-16 15:20:00.000",
+              "tenant": "1",
+              "t_path": "/v1/a",
+              "t_method": "GET",
+              "t_status": "200",
+              "t_service": "storage",
+              "t_country": "us"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, path, method, status, service, country) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}, {t_method:String}, {t_status:String}, {t_service:String}, {t_country:String}",
+            "params": {
+              "metric": "dim.routing.metric",
+              "value": 30,
+              "time": "2025-02-17 15:20:00.000",
+              "tenant": "1",
+              "t_path": "/v1/b",
+              "t_method": "POST",
+              "t_status": "201",
+              "t_service": "databases",
+              "t_country": "de"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "INSERT INTO `${ns}`.`utopia_usage_dim_routing_usage_events` (id, metric, value, time, tenant, path, method, status, service, country) SELECT lower(hex(randomString(16))), {metric:String}, {value:Int64}, {time:DateTime64(3)}, {tenant:String}, {t_path:String}, {t_method:String}, {t_status:String}, {t_service:String}, {t_country:String}",
+            "params": {
+              "metric": "dim.routing.metric",
+              "value": 40,
+              "time": "2025-02-17 15:20:00.000",
+              "tenant": "1",
+              "t_path": "/v1/c",
+              "t_method": "POST",
+              "t_status": "500",
+              "t_service": "functions",
+              "t_country": "fr"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.add_batch",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "metrics": [
+              {
+                "tenant": "1",
+                "metric": "dim.routing.metric",
+                "value": 5,
+                "tags": {
+                  "path": "/v1/a",
+                  "method": "GET",
+                  "status": "200",
+                  "service": "storage",
+                  "country": "us"
+                },
+                "time": "2025-02-20 15:20:00.000"
+              }
+            ],
+            "type": "event"
+          },
+          "expect": true
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_dim_routing_usage_events` DROP PROJECTION p_by_resourceType"
+          },
+          "expect": ""
+        },
+        {
+          "op": "usage.setup",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.next_query_id",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "id": "${ns}-before"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-02-13 15:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-02-18 15:00:00"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "attribute": "resourceType",
+                "values": []
+              },
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  10000
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "resourceType",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "expect": [
+            {
+              "metric": "dim.routing.metric",
+              "value": 100,
+              "resourceType": null,
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SYSTEM FLUSH LOGS"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT projections FROM system.query_log WHERE query_id = '${ns}-before' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
+          },
+          "expect": "[]\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_dim_routing_usage_events` MATERIALIZE PROJECTION p_by_resourceType SETTINGS mutations_sync = 2"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.next_query_id",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "id": "${ns}-after"
+          },
+          "expect": true
+        },
+        {
+          "op": "usage.find",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": [
+              {
+                "method": "greaterThanEqual",
+                "attribute": "time",
+                "values": [
+                  "2025-02-13 15:00:00"
+                ]
+              },
+              {
+                "method": "lessThan",
+                "attribute": "time",
+                "values": [
+                  "2025-02-18 15:00:00"
+                ]
+              },
+              {
+                "method": "groupBy",
+                "attribute": "resourceType",
+                "values": []
+              },
+              {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  10000
+                ]
+              },
+              {
+                "method": "orderAsc",
+                "attribute": "resourceType",
+                "values": []
+              }
+            ],
+            "type": "event"
+          },
+          "expect": [
+            {
+              "metric": "dim.routing.metric",
+              "value": 100,
+              "resourceType": null,
+              "type": "event"
+            }
+          ]
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SYSTEM FLUSH LOGS"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT projections FROM system.query_log WHERE query_id = '${ns}-after' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
+          },
+          "expect": "['${ns}.utopia_usage_dim_routing_usage_events.p_by_resourceType']\n"
+        },
+        {
+          "op": "usage.purge",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            },
+            "tenant": "1",
+            "queries": []
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
       "name": "several dimensions in no projection read the table",
       "steps": [
         {
@@ -4867,7 +5620,7 @@
             },
             "sql": "SELECT projections FROM system.query_log WHERE query_id = '${ns}-q' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
           },
-          "expect": "['${ns}.utopia_usage_dim_routing_usage_events.p_by_path']\n"
+          "expect": "['${ns}.utopia_usage_dim_routing_usage_events.p_by_resourceType']\n"
         },
         {
           "op": "clickhouse.query",
@@ -5203,7 +5956,7 @@
             },
             "sql": "SELECT projections FROM system.query_log WHERE query_id = '${ns}-q' AND type = 'QueryFinish' ORDER BY event_time DESC LIMIT 1"
           },
-          "expect": "['${ns}.utopia_usage_dim_routing_usage_events.p_by_path']\n"
+          "expect": "['${ns}.utopia_usage_dim_routing_usage_events.p_by_resourceType']\n"
         },
         {
           "op": "clickhouse.query",

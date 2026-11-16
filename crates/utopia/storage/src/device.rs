@@ -262,10 +262,22 @@ pub trait Device: Send + Sync + Any {
     async fn abort(&self, path: &str, upload_id: &str) -> Result<bool>;
 
     /// Reads `length` bytes (to the end when `None`) from `offset`. With an
-    /// ETag, reads only while the file still carries it.
+    /// ETag, reads only while the file still carries it. With a time
+    /// (`modified_since`), reads only if the file was modified after it, and
+    /// fails with [`Error::NotModified`] otherwise: age and bytes told apart
+    /// in one request. A time and an ETag cannot be combined
+    /// ([`Error::InvalidArgument`]), because services disagree on which one
+    /// wins.
     ///
-    /// PHP: `read()`.
-    async fn read(&self, path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -> Result<Body>;
+    /// PHP: `read($path, $offset, $length, $etag, $modifiedSince)`.
+    async fn read(
+        &self,
+        path: &str,
+        offset: u64,
+        length: Option<u64>,
+        etag: Option<&str>,
+        modified_since: Option<DateTime<FixedOffset>>,
+    ) -> Result<Body>;
 
     /// Delivers `length` bytes (to the end when `None`) from `offset` to
     /// `sink` as they are read, without keeping the file in memory. With an
@@ -429,7 +441,7 @@ pub async fn stream<D: Device + ?Sized>(
     length: Option<u64>,
     etag: Option<&str>,
 ) -> Result<()> {
-    let mut body = device.read(path, offset, length, etag).await?;
+    let mut body = device.read(path, offset, length, etag, None).await?;
     loop {
         let chunk = body.read(STREAM_CHUNK_SIZE).await.map_err(Error::Body)?;
         if chunk.is_empty() {
@@ -498,7 +510,7 @@ pub async fn copy(
     let content_type = from.file_mime_type(source).await?;
     let chunk_size = chunk_size as u64;
     if size <= chunk_size {
-        let data = from.read(source, 0, None, None).await?;
+        let data = from.read(source, 0, None, None, None).await?;
         to.write(target, data, &content_type).await?;
         return Ok(true);
     }
@@ -506,7 +518,7 @@ pub async fn copy(
     let mut metadata = Metadata { content_type: Some(content_type.clone()), ..Metadata::default() };
     for counter in 0..total {
         let result = async {
-            let data = from.read(source, counter as u64 * chunk_size, Some(chunk_size), None).await?;
+            let data = from.read(source, counter as u64 * chunk_size, Some(chunk_size), None, None).await?;
             to.upload(data, target, &content_type, counter + 1, total, &mut metadata).await
         }
         .await;

@@ -212,6 +212,83 @@
       ]
     },
     {
+      "name": "value the parser would trim",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": "dev@example.com "
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": "dev@example.com  "
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": " dev@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": "\tdev@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": "dev@example.com\r"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": "dev@example.com\n"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": "dev@example.com\u0000"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": "dev@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "email",
+            "value": "dev@example.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
       "name": "non string input",
       "steps": [
         {

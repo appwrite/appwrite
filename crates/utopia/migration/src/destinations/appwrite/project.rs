@@ -122,6 +122,9 @@ impl Appwrite {
                 }
                 self.update_project("labels", list(&Array::from_list(seen)), true).await?;
             }
+            Kind::Preferences(p) => {
+                self.update_project("prefs", list(&p.preferences), true).await?;
+            }
             Kind::Services(svc) => {
                 let mut services = array_attr(&self.project().await?, "services");
                 for (k, v) in svc.services.iter() {
@@ -493,6 +496,7 @@ impl Appwrite {
             ("passwordPwned", p.password_pwned.clone().map(Value::Array)),
             ("passwordRotation", p.password_rotation.clone().map(Value::Array)),
             ("realtimeGuests", flag(p.deny_realtime_guests)),
+            ("accountDevices", flag(p.account_devices)),
             ("passkeyRpId", passkey_rp_id.map(|id| Value::from(id.as_str()))),
         ];
         for (k, v) in reported {

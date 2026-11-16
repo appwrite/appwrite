@@ -662,9 +662,9 @@
         "isValid": false,
         "hasValidLocal": true,
         "hasValidDomain": false,
-        "isDisposable": false,
+        "isDisposable": true,
         "isFree": false,
-        "isCorporate": true,
+        "isCorporate": false,
         "provider": "example.com",
         "subdomain": "",
         "hasSubdomain": false,
@@ -974,9 +974,9 @@
         "isValid": true,
         "hasValidLocal": true,
         "hasValidDomain": true,
-        "isDisposable": false,
+        "isDisposable": true,
         "isFree": false,
-        "isCorporate": true,
+        "isCorporate": false,
         "provider": "example.com",
         "subdomain": "0",
         "hasSubdomain": false,
@@ -1552,7 +1552,7 @@
               "$bytes": "dXP/ZXJAZXhhbXBsZS5jb20="
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "validator.is_valid",

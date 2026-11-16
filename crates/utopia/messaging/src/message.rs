@@ -269,6 +269,7 @@ pub struct Email {
     html: bool,
     headers: Vec<(String, String)>,
     origin: Option<String>,
+    template: Option<String>,
 }
 
 /// Builds an [`Email`].
@@ -426,6 +427,31 @@ impl Email {
     pub fn set_origin(&mut self, origin: Option<String>) {
         self.origin = origin;
     }
+
+    /// The template this email was rendered from, recorded as the
+    /// `template` attribute of the send counter.
+    ///
+    /// PHP: `getTemplate()`.
+    pub fn template(&self) -> Option<&str> {
+        self.template.as_deref()
+    }
+
+    /// Names the template this email was rendered from. Use a fixed
+    /// identifier, never a subject or any other caller-provided text, so the
+    /// attribute stays low-cardinality.
+    ///
+    /// PHP: `setTemplate()`.
+    pub fn with_template(mut self, template: Option<String>) -> Email {
+        self.template = template;
+        self
+    }
+
+    /// Names the template this email was rendered from, in place.
+    ///
+    /// PHP: `setTemplate()`.
+    pub fn set_template(&mut self, template: Option<String>) {
+        self.template = template;
+    }
 }
 
 impl EmailBuilder {
@@ -527,6 +553,7 @@ impl EmailBuilder {
             html: self.html,
             headers: self.headers,
             origin: None,
+            template: None,
         })
     }
 }

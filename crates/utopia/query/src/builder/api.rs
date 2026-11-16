@@ -24,10 +24,10 @@ fn strings<S: Into<String>>(items: impl IntoIterator<Item = S>) -> Vec<String> {
 }
 
 /// `/^[A-Za-z_][A-Za-z0-9_]*\s*\(\s*[A-Za-z0-9_,.\s*"`]*\s*\)$/` on the
-/// trimmed function (`$` also matches before a final newline).
+/// trimmed function, with `/D` (`$` only at the very end).
 fn is_window_function(function: &str) -> bool {
     let text = function.trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']);
-    let text = text.strip_suffix('\n').unwrap_or(text).as_bytes();
+    let text = text.as_bytes();
     let is_space = |b: u8| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | b'\x0B' | b'\x0C');
     let mut i = 0;
     match text.first() {
@@ -308,7 +308,8 @@ impl<D: Dialect> Builder<D> {
         self.build()?.execute()
     }
 
-    /// The select with its bindings inlined: strings quoted (`'` doubled),
+    /// The select with its bindings inlined: strings quoted by the dialect
+    /// (`'` doubled, and `\` doubled outside PostgreSQL and SQLite),
     /// numbers as PHP prints them, booleans as `1`/`0`, anything else `NULL`.
     /// For logs only: never execute it.
     ///
@@ -319,18 +320,7 @@ impl<D: Dialect> Builder<D> {
         let mut offset = 0;
         for binding in &result.bindings {
             let literal: Vec<u8> = match binding {
-                Value::Str(s) => {
-                    let mut out = Vec::with_capacity(s.len() + 2);
-                    out.push(b'\'');
-                    for &b in s.as_bytes() {
-                        if b == b'\'' {
-                            out.push(b'\'');
-                        }
-                        out.push(b);
-                    }
-                    out.push(b'\'');
-                    out
-                }
+                Value::Str(s) => D::quote_string(s.as_bytes()),
                 Value::Int(_) | Value::Float(_) => crate::value::to_php_string(binding).into_bytes(),
                 Value::Bool(b) => {
                     if *b {

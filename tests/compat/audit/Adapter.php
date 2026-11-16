@@ -402,6 +402,7 @@ final class Adapter implements Base, Benchmarks
             'resource' => $log->getResource(),
             'sdk' => $log->getSdk(),
             'sdkVersion' => $log->getSdkVersion(),
+            'reason' => $log->getReason(),
             'osCode' => $log->getOsCode(),
             'osName' => $log->getOsName(),
             'osVersion' => $log->getOsVersion(),

@@ -81,6 +81,15 @@ impl EmailValidator {
         if self.allow_empty && value.is_empty() {
             return true;
         }
+        // The parser trims before it checks, but callers store the value they
+        // were given: `dev@x.com ` or `dev@x.com\0` would pass as `dev@x.com`
+        // and be stored as a second, distinct address.
+        // PHP: `$value !== trim($value) || !ctype_print($value)`.
+        let trimmed = |b: &u8| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | b'\0' | b'\x0B');
+        let printable = !value.is_empty() && value.iter().all(|b| (0x20..=0x7E).contains(b));
+        if !printable || value.first().is_some_and(trimmed) || value.last().is_some_and(trimmed) {
+            return false;
+        }
         check(value, |_| true)
     }
 }
@@ -179,7 +188,10 @@ mod tests {
     #[test]
     fn validators() {
         let v = EmailValidator::default();
-        assert!(v.is_valid(&Value::String("  John@X.COM ".into())));
+        assert!(v.is_valid(&Value::String("John@X.COM".into())));
+        // The parser would trim these into an address other than the one stored.
+        assert!(!v.is_valid(&Value::String("  John@X.COM ".into())));
+        assert!(!v.is_valid(&Value::String("dev@example.com\0".into())));
         assert!(!v.is_valid(&Value::String(String::new())));
         assert!(!v.is_valid(&Value::Null));
         assert!(EmailValidator::new(true).is_valid(&Value::String(String::new())));

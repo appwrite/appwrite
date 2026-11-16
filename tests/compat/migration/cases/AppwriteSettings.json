@@ -433,6 +433,29 @@
         {
           "op": "resource.new",
           "args": {
+            "class": "Settings\\Preferences",
+            "args": {
+              "id": "preferences",
+              "preferences": {
+                "theme": "dark",
+                "count": 2,
+                "nested": {
+                  "a": [
+                    1,
+                    2
+                  ]
+                }
+              }
+            }
+          },
+          "bind": "prefs",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
             "class": "Settings\\Services",
             "args": {
               "id": "services",
@@ -504,7 +527,8 @@
                 "custom": false
               },
               "denyAliasedEmail": true,
-              "denyFreeEmail": false
+              "denyFreeEmail": false,
+              "accountDevices": true
             }
           },
           "bind": "pol",
@@ -782,6 +806,18 @@
             },
             "resource": {
               "$ref": "labels"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "prefs"
             }
           },
           "expect": null
@@ -1075,6 +1111,7 @@
               "project-variable",
               "project-protocols",
               "project-labels",
+              "project-preferences",
               "project-services",
               "project-email-template",
               "auth-methods",
@@ -1163,6 +1200,14 @@
               {
                 "$resource": "project-labels",
                 "id": "labels",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "project-preferences",
+                "id": "preferences",
                 "status": "success",
                 "message": ""
               }
@@ -1352,6 +1397,14 @@
               "processing": 0,
               "warning": 0
             },
+            "project-preferences": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
             "project-services": {
               "pending": 0,
               "success": 1,
@@ -1513,7 +1566,8 @@
                 "custom": false
               },
               "canonicalEmails": true,
-              "freeEmails": false
+              "freeEmails": false,
+              "accountDevices": true
             },
             "oAuthProviders": {
               "githubSecret": "{\"clientSecret\":\"old\",\"keep\":1}",
@@ -1529,6 +1583,16 @@
               "b",
               "1"
             ],
+            "prefs": {
+              "theme": "dark",
+              "count": 2,
+              "nested": {
+                "a": [
+                  1,
+                  2
+                ]
+              }
+            },
             "$collection": "projects"
           }
         },
@@ -2153,6 +2217,38 @@
           "op": "resource.describe",
           "args": {
             "resource": {
+              "$ref": "prefs"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Preferences",
+            "getCreatedAt": "",
+            "getDescription": "",
+            "getGroup": "projects",
+            "getId": "preferences",
+            "getMessage": "",
+            "getName": "project-preferences",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getPreferences": {
+              "theme": "dark",
+              "count": 2,
+              "nested": {
+                "a": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
               "$ref": "svc"
             }
           },
@@ -2243,6 +2339,7 @@
           },
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
+            "getAccountDevices": true,
             "getCreatedAt": "",
             "getDenyAliasedEmail": true,
             "getDenyCorporateEmail": null,

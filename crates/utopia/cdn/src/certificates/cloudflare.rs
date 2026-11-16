@@ -208,6 +208,16 @@ impl<C: Client> Provider for Cloudflare<C> {
         })
     }
 
+    /// Unknown: Cloudflare renews custom hostname certificates itself, and
+    /// reading the expiry would cost a custom hostname lookup.
+    fn certificate_expiry<'a>(
+        &'a self,
+        _domain: &'a str,
+        _domain_type: Option<&'a str>,
+    ) -> BoxFuture<'a, Result<Option<String>, Error>> {
+        Box::pin(async { Ok(None) })
+    }
+
     /// Whether the custom hostname is missing.
     fn is_renew_required<'a>(
         &'a self,

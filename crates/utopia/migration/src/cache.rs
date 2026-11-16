@@ -61,8 +61,10 @@ impl Cache {
         Self::default()
     }
 
-    /// The key of `resource`: its sequence prefixed by its parents'
-    /// (`<database type>_<database>_<table>` for a table, ...). A resource
+    /// The key of `resource`: its sequence prefixed by its parents' IDs
+    /// (`<database type>_<database ID>` for a table, `<database ID>_<table
+    /// ID>` for a row, column or index), or its parent's sequence (a file's
+    /// bucket, a deployment's function or site). A resource
     /// without a sequence (or with `"0"`) first gets a `uniqid()` one.
     ///
     /// PHP: `resolveResourceCacheKey()`.
@@ -75,12 +77,15 @@ impl Cache {
         match resource.kind() {
             Kind::Table(t) => {
                 keys.push(t.database.as_database().map(|d| d.database_type.clone()).unwrap_or_default());
-                keys.push(t.database.sequence());
+                // Parents go in by ID: the Appwrite source builds a table's
+                // database and a row's table from the listing, so they never
+                // carry the sequence the destination gave the parent.
+                keys.push(t.database.id());
             }
             Kind::Row(_) | Kind::Field(_) | Kind::Index(_) => {
                 if let Some(table) = resource.table() {
-                    keys.push(table.database().map(|d| d.sequence()).unwrap_or_default());
-                    keys.push(table.sequence());
+                    keys.push(table.database().map(|d| d.id()).unwrap_or_default());
+                    keys.push(table.id());
                 }
             }
             Kind::File(f) => keys.push(f.bucket.sequence()),

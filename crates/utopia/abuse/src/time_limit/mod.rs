@@ -43,6 +43,10 @@ pub trait Store: Send + Sync {
     /// Sets the counter of `key` in `window` to `value`.
     fn set(&self, key: &str, window: i64, value: i64, rule: Rule) -> impl Future<Output = Result<()>> + Send;
 
+    /// Takes one away from the counter of `key` in `window`, never below
+    /// zero.
+    fn unhit(&self, key: &str, window: i64) -> impl Future<Output = Result<()>> + Send;
+
     /// What the store holds, `limit` entries from `offset`.
     fn logs(&self, offset: Option<i64>, limit: Option<i64>) -> impl Future<Output = Result<Vec<Self::Log>>> + Send;
 
@@ -176,6 +180,24 @@ impl<S: Store> TimeLimit<S> {
         self.store.set(self.key.as_str(), self.window(now), 0, self.rule).await
     }
 
+    /// [`TimeLimit::release`] at `now` (Unix seconds).
+    pub async fn release_at(&self, now: i64) -> Result<()> {
+        if self.rule.limit == 0 {
+            return Ok(());
+        }
+        self.store.unhit(self.key.as_str(), self.window(now)).await
+    }
+
+    /// Takes back one hit from the current window, never below zero: for a
+    /// request that reserved a hit with [`Adapter::check`] and turned out not
+    /// to count. Reserving first keeps a limit atomic under concurrent
+    /// requests. A limit of `0` touches no storage.
+    ///
+    /// PHP: `release()`.
+    pub async fn release(&self) -> Result<()> {
+        self.release_at(crate::now_secs()).await
+    }
+
     fn verdict(&self, used: i64, window: i64) -> Result<Verdict> {
         Ok(Verdict {
             limited: used >= self.rule.limit,
@@ -244,6 +266,11 @@ impl Store for None {
 
     /// Does nothing.
     async fn set(&self, _key: &str, _window: i64, _value: i64, _rule: Rule) -> Result<()> {
+        Ok(())
+    }
+
+    /// Does nothing.
+    async fn unhit(&self, _key: &str, _window: i64) -> Result<()> {
         Ok(())
     }
 

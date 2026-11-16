@@ -24,6 +24,10 @@ import {
   useDeleteDomain,
 } from '@/lib/react-query/hooks'
 import {
+  DomainPlanLimitNotice,
+  useNewApexPlanLimit,
+} from '@/components/pages/projects/$projectId/shared/NewApexPlanLimit'
+import {
   domainFieldError,
   ensureApexDomainInOrganization,
   getDomainClaimReason,
@@ -45,14 +49,21 @@ export function AddDomainWizard({
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
+  const [domain, setDomain] = useState(initialDomain ?? '')
+  const { blocked: apexPlanBlocked, limit: domainsLimit } = useNewApexPlanLimit(
+    project?.teamId,
+    domain,
+    region,
+  )
 
   const createMutation = useCreateDomain(projectId, region)
   const verifyMutation = useVerifyDomain(projectId, region)
   const deleteMutation = useDeleteDomain(projectId, region)
 
-  const [domain, setDomain] = useState(initialDomain ?? '')
   const [domainTouched, setDomainTouched] = useState(false)
-  const domainError = domainFieldError(domain, domainTouched, t)
+  // The server's reason the last add failed, such as a domain that exists already
+  const [submitError, setSubmitError] = useState('')
+  const domainError = domainFieldError(domain, domainTouched, t) || submitError
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
   // Set while the create waits for the domain's ownership TXT record
   const [claimDomain, setClaimDomain] = useState<string | null>(null)
@@ -94,6 +105,7 @@ export function AddDomainWizard({
     setDomainTouched(true)
     if (!isValidDomain(domain)) return
     const d = domain.trim().toLowerCase()
+    if (apexPlanBlocked) return
 
     setRegistering(true)
     try {
@@ -122,7 +134,7 @@ export function AddDomainWizard({
         return
       }
       const message = getErrorMessage(err, 'Failed to add domain')
-      setError(message)
+      setSubmitError(message)
       toast.error(message)
     }
   }
@@ -270,7 +282,7 @@ export function AddDomainWizard({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isPending || !isValidDomain(domain)}
+            disabled={isPending || !isValidDomain(domain) || apexPlanBlocked}
           >
             {t('Add')}
           </Button>
@@ -293,7 +305,10 @@ export function AddDomainWizard({
               id="domain"
               placeholder="api.example.com"
               value={domain}
-              onChange={(e) => setDomain(e.target.value)}
+              onChange={(e) => {
+                setDomain(e.target.value)
+                setSubmitError('')
+              }}
               onBlur={() => setDomainTouched(true)}
               aria-invalid={domainError ? true : undefined}
               className="font-mono mt-1.5"
@@ -302,6 +317,12 @@ export function AddDomainWizard({
             />
             {domainError ? (
               <p className="text-[11px] text-destructive mt-1">{domainError}</p>
+            ) : null}
+            {apexPlanBlocked ? (
+              <DomainPlanLimitNotice
+                orgId={project?.teamId}
+                limit={domainsLimit}
+              />
             ) : null}
           </div>
         </div>
