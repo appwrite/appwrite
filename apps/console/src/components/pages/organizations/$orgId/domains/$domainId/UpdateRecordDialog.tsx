@@ -6,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { useT } from '@/lib/i18n/translate'
 import {
-  RECORD_NUMBER_MAX,
   RECORD_TTL_MAX,
   parseRecordNumber,
   recordNumberFieldMessage,
@@ -222,8 +221,7 @@ export function UpdateRecordDialog({
                           }))
                         }
                       }}
-                      min="0"
-                      max={RECORD_NUMBER_MAX}
+                      step="any"
                       disabled={isLoading}
                       aria-invalid={!!fieldErrors.priority}
                       className={
@@ -258,8 +256,7 @@ export function UpdateRecordDialog({
                             }))
                           }
                         }}
-                        min="0"
-                        max={RECORD_NUMBER_MAX}
+                        step="any"
                         disabled={isLoading}
                         aria-invalid={!!fieldErrors.weight}
                         className={
@@ -290,8 +287,7 @@ export function UpdateRecordDialog({
                             }))
                           }
                         }}
-                        min="0"
-                        max={RECORD_NUMBER_MAX}
+                        step="any"
                         disabled={isLoading}
                         aria-invalid={!!fieldErrors.port}
                         className={fieldErrors.port ? 'border-destructive' : ''}

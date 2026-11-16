@@ -13,7 +13,6 @@ import {
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { useT } from '@/lib/i18n/translate'
 import {
-  RECORD_NUMBER_MAX,
   RECORD_TTL_MAX,
   parseRecordNumber,
   recordNumberFieldMessage,
@@ -287,8 +286,7 @@ export function CreateRecordDialog({
                       placeholder={
                         type === 'MX' ? DEFAULT_MX_PRIORITY.toString() : '0'
                       }
-                      min="0"
-                      max={RECORD_NUMBER_MAX}
+                      step="any"
                       disabled={isLoading}
                       aria-invalid={!!fieldErrors.priority}
                       className={
@@ -329,8 +327,7 @@ export function CreateRecordDialog({
                           }
                         }}
                         placeholder="10"
-                        min="0"
-                        max={RECORD_NUMBER_MAX}
+                        step="any"
                         disabled={isLoading}
                         aria-invalid={!!fieldErrors.weight}
                         className={
@@ -362,8 +359,7 @@ export function CreateRecordDialog({
                           }
                         }}
                         placeholder="443"
-                        min="0"
-                        max={RECORD_NUMBER_MAX}
+                        step="any"
                         disabled={isLoading}
                         aria-invalid={!!fieldErrors.port}
                         className={fieldErrors.port ? 'border-destructive' : ''}
