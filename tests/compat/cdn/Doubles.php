@@ -94,6 +94,13 @@ final readonly class ProviderRecorder implements Provider
         return $this->status;
     }
 
+    public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+    {
+        $this->log[] = $this->name . ':getCertificateExpiry:' . $domain;
+
+        return $this->date;
+    }
+
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         return $this->renew;

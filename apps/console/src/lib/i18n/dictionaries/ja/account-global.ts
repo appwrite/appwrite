@@ -1257,7 +1257,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Close panel': 'パネルを閉じる',
   'Switch to dark mode': 'ダークモードに切り替え',
   'Switch to light mode': 'ライトモードに切り替え',
-  'Use system theme': 'システムテーマを使用',
 
   // GitHub Education program sign-up flow (/education/join)
   'Appwrite and GitHub': 'Appwrite と GitHub',

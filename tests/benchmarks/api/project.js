@@ -298,6 +298,13 @@ const bench = define({
         { name: 'project.variables.delete', route: 'DELETE /v1/project/variables/:variableId', run: (api) => api.call('DELETE', `/project/variables/${variable(api)}`, null, [204]) },
     ],
     skipped: [
+        { skipped: 'PATCH /v1/project/ldap', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'POST /v1/project/ldap/tests', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/oauth2/naver', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/oauth2/vipps', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/oauth2/vippsSandbox', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'DELETE /v1/project/passwords', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/project/policies/account-devices', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
         { skipped: 'DELETE /v1/project/sessions', reason: 'signs out every user of the run\'s project, whose sessions the other scenarios use' },
     ],
 });

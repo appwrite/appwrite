@@ -50,7 +50,7 @@ impl Color {
     /// Parses a colour string, failing with `Unrecognized color string` as
     /// Imagick does.
     pub fn parse(text: &str) -> Result<Self> {
-        Self::try_parse(text).ok_or_else(|| Error::imagick("Unrecognized color string"))
+        Self::try_parse(text).ok_or_else(|| Error::InvalidArgument(format!("Invalid color: {text}")))
     }
 
     fn try_parse(text: &str) -> Option<Self> {
@@ -289,6 +289,6 @@ mod tests {
         assert_eq!(Color::parse("#0000ff80").unwrap(), Color::rgba(0, 0, 255, 128));
         assert_eq!(Color::parse("rgba(0,0,255,0.5)").unwrap(), Color::rgba(0, 0, 255, 128));
         assert_eq!(Color::parse("Transparent").unwrap(), Color::TRANSPARENT);
-        assert_eq!(Color::parse("bad").unwrap_err().to_string(), "Unrecognized color string");
+        assert_eq!(Color::parse("bad").unwrap_err().to_string(), "Invalid color: bad");
     }
 }

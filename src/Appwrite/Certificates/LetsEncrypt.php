@@ -22,6 +22,10 @@ class LetsEncrypt implements Provider
 
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
     {
+        if (empty($this->email)) {
+            throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+        }
+
         $stdout = '';
         $stderr = '';
 
@@ -99,6 +103,22 @@ class LetsEncrypt implements Provider
     public function getCertificateStatus(string $domain, ?string $domainType): string
     {
         throw new CertificateStatusException('Certificate status retrieval is not supported for LetsEncrypt.');
+    }
+
+    public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+    {
+        $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
+        if (!\file_exists($certPath)) {
+            return null;
+        }
+
+        $certData = openssl_x509_parse(file_get_contents($certPath));
+        $validTo = $certData['validTo_time_t'] ?? null;
+        if (empty($validTo)) {
+            return null;
+        }
+
+        return DateTime::format((new \DateTime())->setTimestamp($validTo));
     }
 
     public function isRenewRequired(string $domain, ?string $domainType): bool

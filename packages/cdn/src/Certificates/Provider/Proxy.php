@@ -56,6 +56,25 @@ class Proxy implements Provider
         return Status::ISSUED;
     }
 
+    /**
+     * The earliest expiry among the providers serving the domain, so a
+     * certificate about to lapse on one is not hidden by a newer one on another.
+     */
+    public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+    {
+        $domain = Domain::validate($domain);
+        $expiry = null;
+
+        foreach ($this->select($domain, $domainType) as $provider) {
+            $candidate = $provider->getCertificateExpiry($domain, $domainType);
+            if ($candidate !== null && ($expiry === null || $candidate < $expiry)) {
+                $expiry = $candidate;
+            }
+        }
+
+        return $expiry;
+    }
+
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         $domain = Domain::validate($domain);

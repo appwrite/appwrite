@@ -6,7 +6,7 @@ use std::str::FromStr;
 use serde_json::{Value as Json, json};
 use utopia_database::Document;
 use utopia_http::{Response, StatusCode};
-use utopia_image::{FocalPoint, Gravity, Image, OutputFormat, Resource, set_resource_limit};
+use utopia_image::{Canvas, FocalPoint, Gravity, Limits, OutputFormat, Transform};
 use utopia_validators::php::Number;
 use utopia_validators::{HexColor, Range, Type, WhiteList};
 
@@ -72,7 +72,7 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
     let focal = focal_point(&gravity, width, height, &source).await?;
     let chosen = choose_output(&output, &path, &mime);
     let content_type = output_type(&chosen).unwrap_or("image/jpeg").to_owned();
-    let memory = appwrite_core::config::env_int("_APP_IMAGES_RESOURCE_LIMIT_MEMORY", 64 * 1024 * 1024);
+    let limits = image_limits();
     let rendered = utopia_async::spawn_blocking(move || {
         render(
             source,
@@ -88,7 +88,7 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
             background,
             chosen,
             focal,
-            memory,
+            limits,
         )
     })
     .await
@@ -248,6 +248,20 @@ fn exif_orientation(segment: &[u8]) -> Option<u16> {
     None
 }
 
+/// What one image may cost to decode and transform (`storage-image-limits`):
+/// a value that is not a positive number falls back to its default.
+fn image_limits() -> Limits {
+    let limit = |name: &str, default: u64| match appwrite_core::config::env_int(name, default as i64) {
+        value if value > 0 => value as u64,
+        _ => default,
+    };
+    Limits {
+        width: limit("_APP_IMAGES_LIMIT_WIDTH", 50_000),
+        height: limit("_APP_IMAGES_LIMIT_HEIGHT", 50_000),
+        memory: limit("_APP_IMAGES_LIMIT_MEMORY", 576 * 1024 * 1024),
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn render(
     source: Vec<u8>,
@@ -263,60 +277,45 @@ fn render(
     background: String,
     output: String,
     focal: Option<FocalPoint>,
-    memory: i64,
+    limits: Limits,
 ) -> Result<Vec<u8>> {
-    set_resource_limit(Resource::Memory, memory);
-    if let Some((w, h)) = dimensions(&source) {
-        let max = utopia_image::MAX_DIMENSION;
-        let area = Resource::Area.limit();
-        if w > max || h > max || (area > 0 && w.saturating_mul(h) > area) {
-            return Err(Error::with_message(
-                ErrorType::StorageImageResolutionExceeded,
-                format!("Image resolution {w}x{h} exceeds the maximum allowed {max}x{max} or {area} total pixels"),
-            ));
-        }
-    }
-    let mut image = match Image::new(&source) {
-        Ok(image) => image,
-        Err(err) => {
-            let message = err.to_string();
-            if message.contains("exceeds limit") || message.contains("cache resources exhausted") {
-                return Err(Error::with_message(ErrorType::StorageImageResolutionExceeded, message));
-            }
-            return Err(Error::with_message(ErrorType::StorageFileTypeUnsupported, message));
-        }
-    };
+    // Reads the header only; the pixels are decoded once, by encode() below.
+    let canvas = Canvas::decode(&source, limits).map_err(|err| image_error(err, &source))?;
     let gravity =
         if gravity == "auto" { Gravity::Center } else { Gravity::from_name(&gravity).unwrap_or(Gravity::Center) };
-    if width > 0 || height > 0 || gravity != Gravity::Center || focal.is_some() {
-        image.crop(width as u32, height as u32, gravity, focal).map_err(image_error)?;
-    }
-    if (opacity - 1.0).abs() > f64::EPSILON {
-        image.set_opacity(opacity);
-    }
-    if !background.is_empty() {
-        image.set_background(&format!("#{background}")).map_err(image_error)?;
-    }
-    if border_width > 0 {
-        image.set_border(border_width as u32, &format!("#{border_color}")).map_err(image_error)?;
-    }
-    if border_radius > 0 {
-        image.set_border_radius(border_radius as u32).map_err(image_error)?;
-    }
-    if rotation != 0 {
-        image.set_rotation((rotation + 360).rem_euclid(360)).map_err(image_error)?;
-    }
+    let transform = Transform {
+        width: width as u32,
+        height: height as u32,
+        gravity,
+        focus: focal,
+        opacity,
+        background: (!background.is_empty()).then(|| format!("#{background}")),
+        border: (border_width > 0).then(|| (border_width as u32, format!("#{border_color}"))),
+        radius: border_radius as u32,
+        rotation: (rotation + 360) % 360,
+    };
     let format = OutputFormat::from_str(&output)
         .map_err(|err| Error::with_message(ErrorType::StorageFileTypeUnsupported, err.to_string()))?;
-    image.output(format, quality).map_err(image_error)
+    let quality = (quality != -1).then_some(quality.clamp(0, 100) as u8);
+    canvas
+        .apply(transform)
+        .and_then(|transformed| transformed.encode(format, quality))
+        .map_err(|err| image_error(err, &source))
 }
 
-fn image_error(err: utopia_image::Error) -> Error {
-    let message = err.to_string();
-    if message.contains("exceeds limit") || message.contains("cache resources exhausted") {
-        Error::with_message(ErrorType::StorageImageResolutionExceeded, message)
-    } else {
-        Error::with_message(ErrorType::StorageFileTypeUnsupported, message)
+/// A canvas over its limits is `storage_image_resolution_exceeded`, with the
+/// source's size as `getimagesizefromstring` reads it; anything else (damaged
+/// pixels, a format this build cannot encode) is `storage_file_type_unsupported`.
+fn image_error(err: utopia_image::Error, source: &[u8]) -> Error {
+    match err {
+        utopia_image::Error::LimitExceeded => {
+            let (w, h) = dimensions(source).unwrap_or((0, 0));
+            Error::with_message(
+                ErrorType::StorageImageResolutionExceeded,
+                format!("Image resolution {w}x{h} exceeds the maximum allowed for processing"),
+            )
+        }
+        err => Error::with_message(ErrorType::StorageFileTypeUnsupported, err.to_string()),
     }
 }
 

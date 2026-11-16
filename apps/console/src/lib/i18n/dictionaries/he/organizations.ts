@@ -3,6 +3,11 @@
  * Keys are the exact English source strings (English is the source of truth).
  */
 export const heOrganizationsDictionary: Record<string, string> = {
+  'Invoice breakdown unavailable.': 'פירוט החשבונית אינו זמין.',
+  'Recorded charges; detailed pricing unavailable.':
+    'חיובים שנרשמו; פירוט המחירים אינו זמין.',
+  'No invoice yet.': 'עדיין אין חשבונית.',
+
   'A valid transfer price is required to continue.':
     'כדי להמשיך נדרש מחיר תקף להעברת הדומיין.',
   "We couldn't load a transfer price. Try again to continue.":
@@ -28,6 +33,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'אמצעי תשלום גיבוי מבטיח שירות רציף אם אמצעי התשלום הראשי נכשל.',
   'A card was entered in a previous attempt. Complete the details below to finish adding it.':
     'כרטיס הוזן בניסיון קודם. השלימו את הפרטים למטה כדי לסיים את ההוספה.',
+  'Use a different card': 'שימוש בכרטיס אחר',
   'A new payment method has been added to your account':
     'אמצעי תשלום חדש נוסף לחשבון שלכם',
   'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.':
@@ -167,6 +173,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   // pragma: allowlist secret
   'Auto renewal is available for domains registered with Appwrite.':
     'חידוש אוטומטי זמין לדומיינים שנרשמו דרך Appwrite.', // pragma: allowlist secret
+  'Registered with another registrar': 'רשום אצל רשם אחר',
+  'Renew this domain with its current registrar.':
+    'חדשו את הדומיין אצל הרשם הנוכחי שלו.',
   'Available balance': 'יתרה זמינה',
   'Available credits': 'קרדיטים זמינים',
   Avatars: 'אווטארים',
@@ -314,6 +323,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
   'Create organization': 'יצירת ארגון',
   'Create project': 'יצירת פרויקט',
+  'My first project': 'הפרויקט הראשון שלי',
   'Advanced security': 'אבטחה מתקדמת',
   'Security add-on': 'תוסף אבטחה',
   '+ more': '+ עוד',
@@ -412,7 +422,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Domain name': 'שם דומיין',
   'Domain name does not match': 'שם הדומיין אינו תואם',
   'Domain not found': 'הדומיין לא נמצא',
-  'Domain not verified': 'הדומיין לא אומת',
   'Domain not verified yet': 'הדומיין עדיין לא אומת',
   'Domain transfer in progress': 'העברת דומיין בתהליך',
   'Domain transfer started': 'העברת הדומיין החלה',
@@ -715,6 +724,9 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Name must be no longer than': 'השם חייב להיות באורך של עד',
   Nameserver: 'שרת שמות',
   Nameservers: 'שרתי שמות',
+  'Nameservers not pointed to Appwrite': 'שרתי השמות לא מצביעים על Appwrite',
+  'Appwrite nameservers': 'שרתי השמות של Appwrite',
+  'External nameservers': 'שרתי שמות חיצוניים',
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
@@ -1619,4 +1631,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
   'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Check nameservers': 'בדיקת שרתי שמות',
+  'Nameservers changed': 'שרתי השמות השתנו',
+  'The nameservers for this domain no longer point to Appwrite. The domain status has been updated.':
+    'שרתי השמות של הדומיין הזה כבר לא מפנים ל-Appwrite. סטטוס הדומיין עודכן.',
 }

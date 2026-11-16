@@ -40,7 +40,7 @@ impl Translations {
             // skipped rather than registered as a language lookups fail on.
             let mut parsed = Languages::new();
             let texts = match parsed.insert_json(&code, &content) {
-                Ok(()) => Locale::with(&parsed, code.clone(), None).translations().ok().cloned(),
+                Ok(()) => Locale::with(&parsed, code.clone(), None::<String>).translations().ok().cloned(),
                 Err(_) => None,
             };
             match texts {
@@ -93,12 +93,12 @@ mod tests {
         let mut languages = Languages::new();
         languages.insert(
             "en",
-            Texts::from([
+            Texts::from_iter([
                 ("countries.us".to_owned(), "United States".to_owned()),
                 ("locale.country.unknown".to_owned(), "Unknown".to_owned()),
             ]),
         );
-        languages.insert("de", Texts::from([("countries.us".to_owned(), "Vereinigte Staaten".to_owned())]));
+        languages.insert("de", Texts::from_iter([("countries.us".to_owned(), "Vereinigte Staaten".to_owned())]));
         let t = Translations::new(languages);
         assert!(t.has("de-at") && !t.has("fr"));
         assert_eq!(t.text("de-at", "countries.us", None), "Vereinigte Staaten");

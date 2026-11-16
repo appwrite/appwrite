@@ -27,33 +27,33 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Migrations
-        $this->addAction(ListMigrations::getName(), new ListMigrations());
-        $this->addAction(GetMigration::getName(), new GetMigration());
-        $this->addAction(UpdateMigration::getName(), new UpdateMigration());
-        $this->addAction(DeleteMigration::getName(), new DeleteMigration());
+        $this->addAction('listMigrations', ListMigrations::class);
+        $this->addAction('getMigration', GetMigration::class);
+        $this->addAction('retryMigration', UpdateMigration::class);
+        $this->addAction('deleteMigration', DeleteMigration::class);
 
         // Appwrite source
-        $this->addAction(CreateAppwriteMigration::getName(), new CreateAppwriteMigration());
-        $this->addAction(GetAppwriteReport::getName(), new GetAppwriteReport());
+        $this->addAction('createAppwriteMigration', CreateAppwriteMigration::class);
+        $this->addAction('getAppwriteReport', GetAppwriteReport::class);
 
         // Firebase source
-        $this->addAction(CreateFirebaseMigration::getName(), new CreateFirebaseMigration());
-        $this->addAction(GetFirebaseReport::getName(), new GetFirebaseReport());
+        $this->addAction('createFirebaseMigration', CreateFirebaseMigration::class);
+        $this->addAction('getFirebaseReport', GetFirebaseReport::class);
 
         // Supabase source
-        $this->addAction(CreateSupabaseMigration::getName(), new CreateSupabaseMigration());
-        $this->addAction(GetSupabaseReport::getName(), new GetSupabaseReport());
+        $this->addAction('createSupabaseMigration', CreateSupabaseMigration::class);
+        $this->addAction('getSupabaseReport', GetSupabaseReport::class);
 
         // NHost source
-        $this->addAction(CreateNHostMigration::getName(), new CreateNHostMigration());
-        $this->addAction(GetNHostReport::getName(), new GetNHostReport());
+        $this->addAction('createNHostMigration', CreateNHostMigration::class);
+        $this->addAction('getNHostReport', GetNHostReport::class);
 
         // CSV import / export
-        $this->addAction(CreateCSVImport::getName(), new CreateCSVImport());
-        $this->addAction(CreateCSVExport::getName(), new CreateCSVExport());
+        $this->addAction('createCSVImport', CreateCSVImport::class);
+        $this->addAction('createCSVExport', CreateCSVExport::class);
 
         // JSON import / export
-        $this->addAction(CreateJSONImport::getName(), new CreateJSONImport());
-        $this->addAction(CreateJSONExport::getName(), new CreateJSONExport());
+        $this->addAction('createJSONImport', CreateJSONImport::class);
+        $this->addAction('createJSONExport', CreateJSONExport::class);
     }
 }

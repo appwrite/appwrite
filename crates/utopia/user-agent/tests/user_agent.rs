@@ -1,6 +1,5 @@
-//! `packages/user-agent/tests/UserAgentTest.php`, natively. The full
-//! differential suite is `tests/compat/user-agent` (`cargo test -p compat`
-//! replays it).
+//! `packages/user-agent/tests/UserAgentTest.php`, natively. The parity
+//! corpus against PHP is `crates/extension/tests/user-agent.php`.
 
 use utopia_user_agent::{Text, UserAgent, detection};
 

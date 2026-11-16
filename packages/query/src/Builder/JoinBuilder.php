@@ -22,11 +22,11 @@ class JoinBuilder
      */
     public function on(string $left, string $right, string $operator = '='): static
     {
-        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $left)) {
+        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/D', $left)) {
             throw new ValidationException('Invalid column name: ' . $left);
         }
 
-        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $right)) {
+        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/D', $right)) {
             throw new ValidationException('Invalid column name: ' . $right);
         }
 
@@ -40,11 +40,13 @@ class JoinBuilder
     }
 
     /**
+     * Add a raw ON condition, enclosed in parentheses like whereRaw().
+     *
      * @param  list<mixed>  $bindings
      */
     public function onRaw(string $expression, array $bindings = []): static
     {
-        $this->wheres[] = new Condition($expression, $bindings);
+        $this->wheres[] = new Condition('(' . $expression . ')', $bindings);
 
         return $this;
     }
@@ -57,7 +59,7 @@ class JoinBuilder
      */
     public function where(string $column, string $operator, mixed $value): static
     {
-        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $column)) {
+        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/D', $column)) {
             throw new ValidationException('Invalid column name: ' . $column);
         }
 
@@ -71,11 +73,17 @@ class JoinBuilder
     }
 
     /**
+     * Add a raw condition to the join's ON clause.
+     *
+     * The expression is enclosed in parentheses, because the ON conditions are
+     * joined with AND: an OR inside a bare `a = b OR 1 = 1` would escape the
+     * other conditions, including those a join-filter hook adds.
+     *
      * @param  list<mixed>  $bindings
      */
     public function whereRaw(string $expression, array $bindings = []): static
     {
-        $this->wheres[] = new Condition($expression, $bindings);
+        $this->wheres[] = new Condition('(' . $expression . ')', $bindings);
 
         return $this;
     }

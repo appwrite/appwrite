@@ -1,8 +1,5 @@
 //! Date and time: date()/DateTime::format, DateTime parsing and timezones, strtotime, microtime.
 //!
-//! Every function here is checked against the real PHP function by
-//! `bin/compat fuzz php-std` (operations `datetime.*`).
-//!
 //! This is a port of timelib (the library inside `ext/date`) and of the
 //! parts of `php_date.c` around it, so that dates parse, normalise, convert
 //! between zones and format exactly as PHP 8.5 does, quirks included:

@@ -72,6 +72,8 @@ describe('llms.txt decision card', () => {
     expect(txt).toContain('Use Appwrite when a coding agent is writing an app')
     expect(txt).toContain('npx skills add appwrite/skills')
     expect(txt).toContain('https://mcp.appwrite.io')
+    // The endpoint answers 401 without sign-in, so link checkers can't resolve it.
+    expect(txt).not.toContain('](https://mcp.appwrite.io)')
     expect(txt).toContain('/for-agents')
     expect(txt).toContain('/docs/tooling/ai/agents/chatgpt.md')
     expect(txt).toContain(LLMS_BLOG_EXAMPLE_SLUG)

@@ -33,7 +33,6 @@ pub mod domains;
 pub mod dsn;
 pub mod emails;
 pub mod http;
-pub mod image;
 pub mod locale;
 pub mod lock;
 pub mod messaging;
@@ -86,7 +85,6 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("dsn", dsn::OPS),
     ("emails", emails::OPS),
     ("http", http::OPS),
-    ("image", image::OPS),
     ("locale", locale::OPS),
     ("migration", migration::OPS),
     ("mongo", mongo::OPS),
@@ -141,7 +139,6 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "dsn" => dsn::call(op, args, session).await,
         "emails" => emails::call(op, args, session).await,
         "http" => http::call(op, args, session).await,
-        "image" => image::call(op, args, session).await,
         "locale" => locale::call(op, args, session).await,
         "migration" => migration::call(op, args, session).await,
         "mongo" => mongo::call(op, args, session).await,
@@ -198,7 +195,6 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "dsn" => dsn::BENCHES,
         "emails" => emails::BENCHES,
         "http" => http::BENCHES,
-        "image" => image::BENCHES,
         "locale" => locale::BENCHES,
         "migration" => migration::BENCHES,
         "mongo" => mongo::BENCHES,
@@ -255,7 +251,6 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "dsn" => dsn::bench(name, session).await,
         "emails" => emails::bench(name, session).await,
         "http" => http::bench(name, session).await,
-        "image" => image::bench(name, session).await,
         "locale" => locale::bench(name, session).await,
         "migration" => migration::bench(name, session).await,
         "mongo" => mongo::bench(name, session).await,

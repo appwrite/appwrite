@@ -12,7 +12,7 @@ trait Hints
     #[\Override]
     public function hint(string $hint): static
     {
-        if (!\preg_match('/^[A-Za-z0-9_()=, `.]+$/', $hint)) {
+        if (!\preg_match('/^[A-Za-z0-9_()=, `.]+$/D', $hint)) {
             throw new ValidationException('Invalid hint: ' . $hint);
         }
 

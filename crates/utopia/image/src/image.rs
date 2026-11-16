@@ -2,15 +2,16 @@
 
 use std::path::Path;
 
-use php_std::format::{RoundingMode, ceil, dval_to_lval, round};
+use php_std::format::{ceil, dval_to_lval};
 use php_std::value::Number;
 
 use crate::color::Color;
 use crate::decode;
+use crate::draw;
 use crate::encode;
 use crate::error::{Error, Result};
-use crate::frame::{Format, Frame};
-use crate::options::{FocalPoint, Gravity, OutputFormat};
+use crate::frame::{self, Format, Frame};
+use crate::options::{FocalPoint, Gravity, OutputFormat, canvas_bytes, check_pixels};
 use crate::transform::{self, RoundRect};
 
 /// A decoded image (every frame of an animation), transformed in place and
@@ -55,6 +56,7 @@ pub struct Image {
     border_width: u32,
     border_color: String,
     rotation: i32,
+    orientation: u32,
     wand_quality: Option<i64>,
 }
 
@@ -80,11 +82,16 @@ impl Image {
     /// PHP: `new Image($data)`.
     pub fn new(data: &[u8]) -> Result<Image> {
         // Only decoders for the detected format ever see the data.
-        let frames = decode::decode(data, Format::detect(data)?)?;
-        let rotation = match decode::orientation(data) {
-            Some(3) => 180,
-            Some(6) => 90,
-            Some(8) => -90,
+        let format = Format::detect(data)?;
+        let frames = decode::decode(data, format)?;
+        // An AVIF or HEIC decodes already rotated as the file says.
+        let oriented = matches!(format, Format::Avif | Format::Heic);
+        let orientation = decode::orientation(data).unwrap_or(1);
+        let rotation = match orientation {
+            _ if oriented => 0,
+            3 => 180,
+            6 => 90,
+            8 => -90,
             _ => 0,
         };
         let (width, height) = (i64::from(frames[0].width()), i64::from(frames[0].height()));
@@ -96,8 +103,70 @@ impl Image {
             border_width: 0,
             border_color: String::new(),
             rotation,
+            orientation,
             wand_quality: None,
         })
+    }
+
+    /// A `width` x `height` image of one colour, written as PNG unless another
+    /// format is asked for.
+    ///
+    /// PHP: `Image::create($width, $height, $background)`.
+    ///
+    /// ```
+    /// use utopia_image::{Image, OutputFormat};
+    ///
+    /// let mut image = Image::blank(64, 64, "#e5e5e5")?;
+    /// image.fill_path("M0 0h10v10h-10Z", "#333333", 27.0, 27.0, 1.0)?;
+    /// assert_eq!(&image.output(OutputFormat::Png, 75)?[1..4], b"PNG");
+    /// # Ok::<(), utopia_image::Error>(())
+    /// ```
+    pub fn blank(width: u32, height: u32, background: &str) -> Result<Image> {
+        if width == 0 || height == 0 {
+            return Err(Error::InvalidArgument("Width and height must be positive".into()));
+        }
+        crate::options::check_dimensions(u64::from(width), u64::from(height))?;
+        let color = Color::parse(background)?;
+        let pixels = image::RgbaImage::from_pixel(width, height, image::Rgba(color.0));
+        Ok(Image {
+            frames: vec![Frame::new(pixels, color.has_alpha(), 0, Format::Png)],
+            current: 0,
+            width: i64::from(width),
+            height: i64::from(height),
+            border_width: 0,
+            border_color: String::new(),
+            rotation: 0,
+            orientation: 1,
+            wand_quality: None,
+        })
+    }
+
+    /// The EXIF orientation the image was read with (1 to 8; 1 when it had none).
+    ///
+    /// PHP: `getOrientation()`.
+    pub fn orientation(&self) -> u32 {
+        self.orientation
+    }
+
+    /// Fills SVG path data with `color` on the current frame, scaled by `scale`
+    /// and then moved by `x` and `y`.
+    ///
+    /// PHP: `path($path, $color, $x, $y, $scale)`.
+    pub fn fill_path(&mut self, path: &str, color: &str, x: f64, y: f64, scale: f64) -> Result<&mut Self> {
+        draw::validate(path)?;
+        let transform = zeno::Transform::scale(scale as f32, scale as f32).then_translate(x as f32, y as f32);
+        draw::fill(&mut self.frames[self.current].pixels, path, transform, Color::parse(color)?);
+        Ok(self)
+    }
+
+    /// Draws `text` on the current frame in `font` (TrueType or OpenType data)
+    /// at `size` pixels an em, centred on `x` with its baseline at `y`.
+    ///
+    /// PHP: `text($text, $font, $size, $color, $x, $y)`, where `$font` is a path.
+    pub fn draw_text(&mut self, text: &str, font: &[u8], size: f64, color: &str, x: f64, y: f64) -> Result<&mut Self> {
+        let color = Color::parse(color)?;
+        draw::text(&mut self.frames[self.current].pixels, text, font, size as f32, color, x as f32, y as f32)?;
+        Ok(self)
     }
 
     /// The width the operations work from: the decoded width, then the last
@@ -109,6 +178,14 @@ impl Image {
     /// The height the operations work from (see [`width`](Image::width)).
     pub fn height(&self) -> i64 {
         self.height
+    }
+
+    /// Takes the current frame's size as the size later operations work from,
+    /// so a step of a [`Canvas`](crate::Canvas) sees what the steps before it
+    /// left (a border or a rotation changes it).
+    pub(crate) fn settle(&mut self) {
+        let frame = &self.frames[self.current];
+        (self.width, self.height) = (i64::from(frame.width()), i64::from(frame.height()));
     }
 
     /// The number of frames.
@@ -174,6 +251,10 @@ impl Image {
         let dims = |v: i64| u32::try_from(v.max(0)).unwrap_or(u32::MAX);
         let (w, h, rw, rh) = (dims(width), dims(height), dims(resize_width), dims(resize_height));
         if self.frames.len() > 1 {
+            // Every frame is resampled to the target and kept, and the
+            // transforms below each check one canvas only: what the whole
+            // animation costs is checked here, before the first allocation.
+            self.check_frames(w, h, center, (resize_width, resize_height))?;
             for frame in &mut self.frames {
                 if center {
                     transform::crop_thumbnail(frame, w, h)?;
@@ -224,10 +305,8 @@ impl Image {
         let bw = i64::from(self.border_width);
         let (rect_w, rect_h) = if bw > 0 { (w - (bw + 1), h - (bw + 1)) } else { (w - 1, h - 1) };
         if rect_w < bw || rect_h < bw {
-            // ImageMagick refuses a rectangle whose end comes before its start.
-            return Err(Error::imagick(
-                "non-conforming drawing primitive definition `roundrectangle' @ error/draw.c/RenderMVGContent/4708",
-            ));
+            // A rectangle whose end comes before its start: ImageMagick refuses to draw it.
+            return Err(Error::process("border wider than the image"));
         }
         let shape =
             RoundRect { x0: bw as f64, y0: bw as f64, x1: rect_w as f64, y1: rect_h as f64, radius: f64::from(radius) };
@@ -316,7 +395,7 @@ impl Image {
         let text = path.to_string_lossy();
         let dir = php_std::path::dirname(&text);
         if !Path::new(&dir).exists() && (dir.is_empty() || create_dir(&dir).is_err()) {
-            return Err(Error::Exception(format!("Can't create directory {dir}")));
+            return Err(Error::Failed(format!("Can't create directory {dir}")));
         }
         self.prepare(format, quality)?;
         let first = &self.frames[0];
@@ -369,15 +448,30 @@ impl Image {
                 }
                 frame.format = Format::Webp;
             }
+            // PHP scales the quality to 0-9 and sets it on the image, which
+            // ImageMagick's PNG coder never reads (see `encode::png`).
             OutputFormat::Png => {
-                if set {
-                    let scaled = round(Number::Float(quality as f64 / 100.0 * 9.0), 0, RoundingMode::HalfAwayFromZero);
-                    frame.quality = Some(intval(9.0 - scaled));
-                }
                 frame.format = Format::Png;
             }
         }
         Ok(())
+    }
+
+    /// Fails when cropping every frame to `width` x `height` would hold more
+    /// pixels than the budget. A frame's new canvas replaces its old pixels,
+    /// so the frames peak at whichever of the two sets is larger; on top of
+    /// them the frame being worked on holds at once the canvas it is resampled
+    /// to -- `resize` for a crop by gravity, the one covering the target for a
+    /// centred crop -- and the canvas cropped out of it.
+    fn check_frames(&self, width: u32, height: u32, center: bool, resize: (i64, i64)) -> Result<()> {
+        let bytes = |(w, h): (i64, i64)| canvas_bytes(w.max(0) as u64, h.max(0) as u64);
+        let target = canvas_bytes(width.into(), height.into());
+        let frames = target.saturating_mul(self.frames.len() as u64);
+        // A border grows the frame it was applied to and nothing else, so the
+        // cover canvas is the largest frame's, not the image's.
+        let cover = |frame: &Frame| bytes(transform::cover(width, height, frame.width(), frame.height()));
+        let working = if center { self.frames.iter().map(cover).max().unwrap_or(0) } else { bytes(resize) };
+        check_pixels(frame::retained(&self.frames).max(frames).saturating_add(working).saturating_add(target))
     }
 
     /// The width that keeps the aspect ratio at `height`.

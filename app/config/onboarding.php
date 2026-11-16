@@ -34,6 +34,10 @@ return [
     'documentsDB.create' => true,
     'documentsDB.createCollection' => true,
     'documentsDB.createDocument' => true,
+    // Databases — vectorsDB
+    'vectorsDB.create' => true,
+    'vectorsDB.createCollection' => true,
+    'vectorsDB.createDocument' => true,
     // Databases — legacy
     'databases.create' => true,
     'databases.createCollection' => true,

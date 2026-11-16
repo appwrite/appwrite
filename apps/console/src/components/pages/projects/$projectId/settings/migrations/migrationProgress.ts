@@ -165,6 +165,7 @@ const RESOURCE_TYPE_LABELS: Record<string, readonly [string, string]> = {
   'project-variable': ['Project variable', 'Project variables'],
   'project-protocols': ['Protocols', 'Protocols'],
   'project-labels': ['Labels', 'Labels'],
+  'project-preferences': ['Preferences', 'Preferences'],
   'project-services': ['Services', 'Services'],
   'project-email-template': ['Email template', 'Email templates'],
 }

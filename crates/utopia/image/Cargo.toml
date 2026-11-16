@@ -8,15 +8,31 @@ license.workspace = true
 repository = "https://github.com/utopia-rs/image"
 publish.workspace = true
 
+[features]
+default = ["ravif"]
+# AVIF encoding in pure Rust (rav1e). Without it AVIF is written only through `libheif`.
+ravif = ["image/avif"]
+# The codecs no pure-Rust crate has, through the C libraries ImageMagick uses for them.
+# Off by default, so the crate builds without a C toolchain or system libraries.
+# Lossy WebP (libwebp, built from source and linked statically).
+libwebp = ["dep:webp"]
+# AVIF and HEIC decoding, AVIF encoding, and HEIC encoding where libheif has an HEVC encoder (the system's libheif).
+libheif = ["dep:libheif-rs"]
+
 [dependencies]
 fast_image_resize.workspace = true
 gif.workspace = true
 image.workspace = true
 image-webp.workspace = true
+jpeg-encoder.workspace = true
 kamadak-exif.workspace = true
+libheif-rs = { workspace = true, optional = true }
 php-std.workspace = true
 png.workspace = true
+skrifa = "0.50.0"
 thiserror.workspace = true
+webp = { workspace = true, optional = true }
+zeno = "0.3"
 
 [package.metadata.utopia]
 category = "utilities"

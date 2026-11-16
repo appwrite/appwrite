@@ -1,33 +1,50 @@
 /**
- * Creates an environment of a project on one page: a name, and whether to
- * start empty or as a copy. The id is generated. A copy's progress card
- * follows the environment, so the wizard does not wait. Cloud only, behind
- * the projectEnvironments feature like the switcher that opens this.
+ * Creates an environment of a project on one page: a name, the ID it will be
+ * addressed by in the X-Appwrite-Environment header, and whether to start
+ * empty or as a copy. The ID follows the name until it is typed, and is
+ * generated when left blank. A copy's progress card follows the environment,
+ * so the wizard does not wait. Cloud only, behind the projectEnvironments
+ * feature like the switcher that opens this. Environments are offered on Pro
+ * and above: on Free and Start the page shows what an environment is and leads
+ * to the upgrade instead of creating one.
  */
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { AppwriteException } from '@appwrite.io/console'
-import { Box, Copy } from 'lucide-react'
+import { AlertCircle, Box, Copy } from 'lucide-react'
 import { toast } from 'sonner'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  getActiveEnvironmentId,
+  setActiveEnvironment,
+} from '@/lib/active-environment'
+import { isValidProjectId, PROJECT_ID_MAX_LENGTH } from '@/lib/project-id'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   PROJECT_NAME_MAX_LENGTH,
   useCreateProjectEnvironment,
+  useOrganizationPlan,
   useProject,
   useProjectEnvironments,
 } from '@/lib/react-query/hooks'
 import {
   defaultProjectEnvironmentCopySelection,
   projectEnvironmentCopyResources,
+  projectEnvironmentsAllowance,
+  suggestProjectEnvironmentId,
   suggestProjectEnvironmentName,
   type ProjectEnvironmentCopyGroupId,
   type ProjectEnvironmentCopySelection,
+  type ProjectEnvironmentsAllowance,
 } from '@/lib/project-environments'
+import { analyticsAttrs } from '@/lib/analytics-actions'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
@@ -36,8 +53,8 @@ import { CopyResources } from './_components/CopyResources'
 type EnvironmentStartFrom = 'empty' | 'project'
 
 /**
- * Create fails with its own copy for the per-hour creation limit and for the
- * plan caps, which the server words well enough to show as-is.
+ * Create fails with its own copy for the per-hour creation limit, a taken ID
+ * and the plan caps, which the server words well enough to show as-is.
  */
 function getCreateErrorMessage(error: unknown, t: Translator): string {
   if (error instanceof AppwriteException) {
@@ -45,6 +62,9 @@ function getCreateErrorMessage(error: unknown, t: Translator): string {
       return t(
         'Too many environments created for this project in the last hour. Try again later.',
       )
+    }
+    if (error.type === 'project_environment_already_exists') {
+      return t('An environment with this ID already exists in this project.')
     }
     if (
       error.type === 'billing_plan_not_allowed' ||
@@ -63,10 +83,14 @@ export function CreateEnvironmentWizardView({
 }) {
   const t = useT()
   const navigate = useNavigate()
-  const { project, projectData } = useProject(projectId)
+  const { project } = useProject(projectId)
   const region = project?.region
 
   const [name, setName] = useState('')
+  // Suggested from the name until typed; blank leaves the ID to the server
+  const [environmentId, setEnvironmentId] = useState('')
+  const [idError, setIdError] = useState<string | undefined>(undefined)
+  const idTouched = useRef(false)
   const [startFrom, setStartFrom] = useState<EnvironmentStartFrom>('empty')
   const [selection, setSelection] = useState<ProjectEnvironmentCopySelection>(
     defaultProjectEnvironmentCopySelection,
@@ -76,8 +100,12 @@ export function CreateEnvironmentWizardView({
   const nameSuggested = useRef(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
-  const { environments, isLoading: isLoadingEnvironments } =
-    useProjectEnvironments(projectId, region)
+  const {
+    environments,
+    total: environmentCount,
+    isLoading: isLoadingEnvironments,
+    error: environmentsError,
+  } = useProjectEnvironments(projectId, region)
   const createEnvironmentMutation = useCreateProjectEnvironment(
     projectId,
     region,
@@ -85,23 +113,34 @@ export function CreateEnvironmentWizardView({
   const isCreating = createEnvironmentMutation.isPending
   const isCopy = startFrom === 'project'
 
-  // Environments are created from the production project: an environment's own
-  // URL here goes to its parent's. Read the live profile (including the
-  // experiment override); useConsoleProfile's first paint is the canonical
-  // cloud default, which has this flag off and would bounce to overview.
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const allowance = projectEnvironmentsAllowance(
+    plan,
+    isLoadingEnvironments || environmentsError ? undefined : environmentCount,
+  )
+  // Shown, not usable: the notice above the form says why and what lifts it
+  const isBlocked =
+    allowance.status === 'not-offered' || allowance.status === 'at-limit'
+  const isFormDisabled = isCreating || isBlocked
+
+  // Environments are created from production: opened inside an environment, this
+  // page leaves it once, on entry. It does not react to the active environment
+  // afterwards, so entering the environment just created here is not undone.
+  // Read the live profile (including the experiment override); useConsoleProfile's
+  // first paint is the canonical cloud default, which has this flag off and would
+  // bounce to overview.
+  const leftEnvironmentOnEntry = useRef(false)
   useEffect(() => {
     if (!getActiveProfileFeatures().projectEnvironments) {
       void navigate({ to: '/projects/$projectId', params: { projectId } })
       return
     }
-    if (projectData?.parentId) {
-      void navigate({
-        to: '/projects/$projectId/environments/create',
-        params: { projectId: projectData.parentId },
-        replace: true,
-      })
+    if (leftEnvironmentOnEntry.current) return
+    leftEnvironmentOnEntry.current = true
+    if (getActiveEnvironmentId(projectId)) {
+      setActiveEnvironment(projectId, null)
     }
-  }, [projectData?.parentId, projectId, navigate])
+  }, [projectId, navigate])
 
   useEffect(() => {
     if (nameSuggested.current || nameTouched.current || isLoadingEnvironments) {
@@ -113,6 +152,10 @@ export function CreateEnvironmentWizardView({
       project?.name ?? '',
     ])
     setName(suggested)
+    // An ID typed while the environments were loading is the user's; keep it.
+    if (!idTouched.current) {
+      setEnvironmentId(suggestProjectEnvironmentId(suggested))
+    }
     if (suggested) {
       requestAnimationFrame(() => nameInputRef.current?.select())
     }
@@ -121,9 +164,16 @@ export function CreateEnvironmentWizardView({
   const resources = isCopy ? projectEnvironmentCopyResources(selection) : []
   const isCopyEmpty = isCopy && resources.length === 0
   const trimmedName = name.trim()
+  const trimmedId = environmentId.trim()
+  const idTaken = environments.some(
+    (environment) => environment.$id === trimmedId,
+  )
   const canCreate =
+    !isBlocked &&
     trimmedName.length > 0 &&
     trimmedName.length <= PROJECT_NAME_MAX_LENGTH &&
+    isValidProjectId(trimmedId) &&
+    !idTaken &&
     !isCopyEmpty
 
   const setGroup = (
@@ -151,6 +201,25 @@ export function CreateEnvironmentWizardView({
     return true
   }
 
+  const validateId = (): boolean => {
+    if (!isValidProjectId(trimmedId)) {
+      setIdError(
+        t(
+          'Use lowercase letters, numbers and hyphens, starting with a letter or a number.',
+        ),
+      )
+      return false
+    }
+    if (idTaken) {
+      setIdError(
+        t('An environment with this ID already exists in this project.'),
+      )
+      return false
+    }
+    setIdError(undefined)
+    return true
+  }
+
   const close = () =>
     void navigate({
       to: '/projects/$projectId',
@@ -159,17 +228,19 @@ export function CreateEnvironmentWizardView({
 
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault()
-    if (!validateName() || isCopyEmpty) return
+    const nameValid = validateName()
+    const idValid = validateId()
+    if (!nameValid || !idValid || isCopyEmpty) return
 
     try {
       const created = await createEnvironmentMutation.mutateAsync({
+        environmentId: trimmedId,
         name: trimmedName,
         resources,
       })
-      await navigate({
-        to: '/projects/$projectId',
-        params: { projectId: created.$id },
-      })
+      // Open the project in the new environment.
+      setActiveEnvironment(projectId, created.$id)
+      await navigate({ to: '/projects/$projectId', params: { projectId } })
     } catch (error: unknown) {
       toast.error(getCreateErrorMessage(error, t))
     }
@@ -177,7 +248,14 @@ export function CreateEnvironmentWizardView({
 
   return (
     <WizardLayout
-      title={t('Create environment')}
+      title={
+        <>
+          {t('Create environment')}
+          <Badge variant="outline" className="px-1.5 py-0 text-[11px]">
+            {t('Beta')}
+          </Badge>
+        </>
+      }
       fullscreen
       useSidebar={false}
       constrainWidth
@@ -209,6 +287,15 @@ export function CreateEnvironmentWizardView({
         onSubmit={(event) => void handleCreate(event)}
         className="w-full space-y-8"
       >
+        <EnvironmentsPlanNotice
+          allowance={allowance}
+          orgId={project?.teamId}
+          planName={resolveOrganizationPlanDisplayLabel({
+            planName: plan?.name ?? null,
+            planId: plan?.$id,
+          })}
+        />
+
         <section className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="environment-name">
@@ -225,13 +312,50 @@ export function CreateEnvironmentWizardView({
                 nameTouched.current = true
                 setName(event.target.value)
                 if (nameError) setNameError(undefined)
+                // The ID follows the name until it is typed by hand
+                if (!idTouched.current) {
+                  setEnvironmentId(
+                    suggestProjectEnvironmentId(event.target.value),
+                  )
+                  if (idError) setIdError(undefined)
+                }
               }}
-              disabled={isCreating}
+              disabled={isFormDisabled}
               maxLength={PROJECT_NAME_MAX_LENGTH}
               className={nameError ? 'border-destructive' : ''}
             />
             {nameError && (
               <p className="text-[12px] text-destructive">{nameError}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="environment-id">{t('Environment ID')}</Label>
+            <Input
+              id="environment-id"
+              type="text"
+              placeholder={t('Leave blank to auto-generate')}
+              value={environmentId}
+              onChange={(event) => {
+                idTouched.current = true
+                setEnvironmentId(event.target.value)
+                if (idError) setIdError(undefined)
+              }}
+              disabled={isFormDisabled}
+              maxLength={PROJECT_ID_MAX_LENGTH}
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              className={cn('font-mono', idError && 'border-destructive')}
+            />
+            {idError ? (
+              <p className="text-[12px] text-destructive">{idError}</p>
+            ) : (
+              <p className="text-[12px] text-muted-foreground">
+                {t(
+                  'What your apps pass as the environment next to the project ID, so pick one you can type: staging, preview, qa.',
+                )}
+              </p>
             )}
           </div>
         </section>
@@ -253,7 +377,7 @@ export function CreateEnvironmentWizardView({
               description={t(
                 'Nothing is copied from the project. You handle the scaffolding.',
               )}
-              disabled={isCreating}
+              disabled={isFormDisabled}
               onSelect={() => setStartFrom('empty')}
             />
             <StartFromCard
@@ -263,7 +387,7 @@ export function CreateEnvironmentWizardView({
               description={t(
                 'Structure and settings are cloned, data only where you ask for it.',
               )}
-              disabled={isCreating}
+              disabled={isFormDisabled}
               onSelect={() => setStartFrom('project')}
             />
           </div>
@@ -275,7 +399,7 @@ export function CreateEnvironmentWizardView({
             onGroupChange={setGroup}
             onSelectionChange={setSelection}
             isCopyEmpty={isCopyEmpty}
-            disabled={isCreating}
+            disabled={isFormDisabled}
           />
         ) : null}
       </form>
@@ -319,5 +443,77 @@ function StartFromCard({
         </p>
       </div>
     </button>
+  )
+}
+
+/**
+ * Why no environment can be created here: the plan offers none, which the
+ * upgrade lifts, or the project has as many as its plan allows, which no other
+ * plan raises, so it points at deleting one rather than at an upgrade.
+ */
+function EnvironmentsPlanNotice({
+  allowance,
+  orgId,
+  planName,
+}: {
+  allowance: ProjectEnvironmentsAllowance
+  orgId: string | undefined
+  planName: string
+}) {
+  const t = useT()
+
+  if (allowance.status !== 'not-offered' && allowance.status !== 'at-limit') {
+    return null
+  }
+
+  const canUpgrade =
+    allowance.status === 'not-offered' &&
+    !!orgId &&
+    getActiveProfileFeatures().billing
+
+  return (
+    <Alert className="border-amber-500/30 bg-amber-500/5">
+      <AlertCircle className="h-4 w-4 text-amber-500" />
+      <div className="flex flex-1 items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+            {allowance.status === 'not-offered'
+              ? t('Project environments are available on Pro')
+              : `${t("You've reached the limit of")} ${allowance.limit} ${t('environments')}`}
+          </AlertTitle>
+          <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+            {allowance.status === 'not-offered' ? (
+              <>
+                {t('Your plan')} ({planName}){' '}
+                {t(
+                  'does not include project environments. Upgrade to give each project environments such as staging and preview, with resources and users of their own.',
+                )}
+              </>
+            ) : (
+              <>
+                {t('Your plan')} ({planName}) {t('includes up to')}{' '}
+                {allowance.limit} {t('environments per project.')}{' '}
+                {t('Delete an environment to create another.')}
+              </>
+            )}
+          </AlertDescription>
+        </div>
+        {canUpgrade ? (
+          <Button
+            asChild
+            size="sm"
+            className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
+          >
+            <Link
+              to="/upgrade"
+              search={{ orgId }}
+              {...analyticsAttrs('upgrade-clicked')}
+            >
+              {t('Upgrade')}
+            </Link>
+          </Button>
+        ) : null}
+      </div>
+    </Alert>
   )
 }

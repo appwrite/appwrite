@@ -9,10 +9,11 @@ repository = "https://github.com/utopia-rs/locale"
 publish.workspace = true
 
 [dependencies]
-indexmap.workspace = true
+foldhash.workspace = true
+indexmap = { workspace = true, features = ["serde"] }
 php-std.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
-utopia-async.workspace = true
 
 
 [package.metadata.utopia]

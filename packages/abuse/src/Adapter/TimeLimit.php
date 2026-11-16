@@ -34,6 +34,11 @@ abstract readonly class TimeLimit extends Adapter
 
     abstract protected function set(string $key, int $window, int $value): void;
 
+    /**
+     * Take back one hit from the window, never below zero.
+     */
+    abstract protected function unhit(string $key, int $window): void;
+
     protected function now(): int
     {
         return \time();
@@ -72,6 +77,19 @@ abstract readonly class TimeLimit extends Adapter
     final public function reset(): void
     {
         $this->set($this->key(), $this->window($this->now()), 0);
+    }
+
+    /**
+     * Take back one hit from the current window, never below zero: for a request that reserved a hit with
+     * check() and turned out not to count. Reserving first keeps a limit atomic under concurrent requests.
+     */
+    final public function release(): void
+    {
+        if ($this->limit === 0) {
+            return;
+        }
+
+        $this->unhit($this->key(), $this->window($this->now()));
     }
 
     private function result(int $used, int $window): Result

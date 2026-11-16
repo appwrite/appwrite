@@ -42,7 +42,14 @@ const bench = define({
             name: 'console.templates.email.get', route: 'GET /v1/console/templates/email/:templateId', weight: 3,
             run: (api, d) => api.call('GET', `/console/templates/email/${pick(TEMPLATES)}?locale=${pick(LOCALES)}`, null, [200], d.admin),
         },
+        // Served at the root of the host, outside /v1.
+        { name: 'console.versions.get', route: 'GET /versions', run: (api) => api.request('GET', `${ROOT}/versions`, null, [200], { redirects: 0 }) },
         { name: 'console.variables.get', route: 'GET /v1/console/variables', weight: 5, run: (api, d) => api.call('GET', '/console/variables', null, [200], d.admin) },
+    ],
+    skipped: [
+        { skipped: 'GET /v1/console/alerts/unsubscribe', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'POST /v1/console/alerts/unsubscribe', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'DELETE /v1/console/alerts/unsubscribe', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
     ],
 });
 

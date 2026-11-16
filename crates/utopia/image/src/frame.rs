@@ -3,6 +3,7 @@
 use image::RgbaImage;
 
 use crate::color::Color;
+use crate::options::canvas_bytes;
 
 /// The format a frame was read in or last set to.
 pub(crate) use crate::format::Format;
@@ -29,6 +30,12 @@ impl Page {
     }
 }
 
+/// Bytes of pixels `frames` hold together: what a transform over a whole
+/// image has to count, since the per-frame transforms each see one canvas.
+pub(crate) fn retained(frames: &[Frame]) -> u64 {
+    frames.iter().map(Frame::bytes).fold(0, u64::saturating_add)
+}
+
 /// A frame: straight (not premultiplied) RGBA pixels, whether it has an alpha
 /// channel (ImageMagick's alpha trait: without one, compositing a mask darkens
 /// instead of making pixels transparent), its delay in centiseconds, page,
@@ -43,12 +50,15 @@ pub(crate) struct Frame {
     pub background: Color,
     /// `setImageCompressionQuality()`, as ImageMagick stores it.
     pub quality: Option<i64>,
+    /// The luma sampling factors of the JPEG the frame was read from
+    /// (ImageMagick's `jpeg:sampling-factor` property), which a JPEG output keeps.
+    pub jpeg_sampling: Option<(u8, u8)>,
 }
 
 impl Frame {
     pub(crate) fn new(pixels: RgbaImage, alpha: bool, delay: u32, format: Format) -> Self {
         let page = Page::at_origin(pixels.width(), pixels.height());
-        Frame { pixels, alpha, delay, page, format, background: Color::WHITE, quality: None }
+        Frame { pixels, alpha, delay, page, format, background: Color::WHITE, quality: None, jpeg_sampling: None }
     }
 
     pub(crate) fn width(&self) -> u32 {
@@ -57,6 +67,11 @@ impl Frame {
 
     pub(crate) fn height(&self) -> u32 {
         self.pixels.height()
+    }
+
+    /// Bytes of pixels the frame holds.
+    pub(crate) fn bytes(&self) -> u64 {
+        canvas_bytes(self.width().into(), self.height().into())
     }
 
     /// Replaces the pixels, keeping everything else.
@@ -73,6 +88,7 @@ impl Frame {
             format: self.format,
             background: self.background,
             quality: self.quality,
+            jpeg_sampling: self.jpeg_sampling,
         }
     }
 }

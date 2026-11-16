@@ -1,8 +1,9 @@
 /**
  * Progress of an environment's copy from its project: the Appwrite to Appwrite
  * migration created with the environment. Same card as CSV imports. Picks a copy
- * still under way back up after a reload, and refreshes the environment's data
- * once the copy completes.
+ * still under way back up after a reload, and one that failed, which leaves the
+ * environment without what it was meant to hold, until that is dismissed.
+ * Refreshes the environment's data once the copy completes.
  */
 
 import { useEffect, useMemo, useRef } from 'react'
@@ -19,9 +20,16 @@ import {
 import {
   useEnvironmentCopyMigrations,
   useLatestEnvironmentCopyMigration,
+  useProductionProject,
   useProject,
 } from '@/lib/react-query/hooks'
-import { migrationProgress } from '@/lib/project-environments'
+import {
+  migrationProgress,
+  projectEnvironmentId,
+  readDismissedFailedCopies,
+  rememberDismissedFailedCopy,
+  showsCopyAfterReload,
+} from '@/lib/project-environments'
 import { useT } from '@/lib/i18n/translate'
 
 function CopyItem({
@@ -113,20 +121,25 @@ interface EnvironmentCopyBoxProps {
 export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
   const queryClient = useQueryClient()
   const { projectData } = useProject(projectId)
-  const parentId = projectData?.parentId || undefined
-  const { project: parent } = useProject(parentId)
+  const environmentId = projectEnvironmentId(projectData)
+  // The project itself, outside the environment: the copy's source
+  const { project: parent } = useProductionProject(
+    environmentId ? projectId : undefined,
+  )
   const { sessionCopyIds, dismissedCopyIds, addCopyId, dismissCopy } =
     useSessionMigrations(projectId)
 
-  // Only an environment has a copy to show. A reload mid-copy lost the session
-  // IDs, so the latest copy is looked up once and tracked again while under way.
+  // Only an environment has a copy to show. A reload lost the session IDs, so
+  // the latest copy is looked up once and tracked again while under way, or
+  // when it failed: the page that announced the failure is gone, and without
+  // the card nothing on a fresh load says the environment is incomplete.
   const latest = useLatestEnvironmentCopyMigration(
     projectId,
-    !!parentId && sessionCopyIds.length === 0,
+    !!environmentId && sessionCopyIds.length === 0,
   )
 
   useEffect(() => {
-    if (latest && IN_PROGRESS_COPY_STATUSES.includes(latest.status)) {
+    if (latest && showsCopyAfterReload(latest, readDismissedFailedCopies())) {
       addCopyId(projectId, latest.$id)
     }
   }, [latest, projectId, addCopyId])
@@ -160,9 +173,9 @@ export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
     }
   }, [migrations, projectId, queryClient])
 
-  if (!parentId || visible.length === 0) return null
+  if (!environmentId || visible.length === 0) return null
 
-  const sourceName = parent?.name || parentId
+  const sourceName = parent?.name || projectId
 
   return (
     <div className="w-full max-w-sm space-y-2">
@@ -172,7 +185,12 @@ export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
           migration={migration}
           projectId={projectId}
           sourceName={sourceName}
-          onDismiss={() => dismissCopy(projectId, migration.$id)}
+          onDismiss={() => {
+            if (migration.status === 'failed') {
+              rememberDismissedFailedCopy(migration.$id)
+            }
+            dismissCopy(projectId, migration.$id)
+          }}
         />
       ))}
     </div>

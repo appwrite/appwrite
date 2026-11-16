@@ -48,14 +48,13 @@ async fn bench_languages() -> Result<&'static Languages, Fault> {
     for name in ["en", "de", "ar-ma"] {
         languages
             .load(name, &path(&format!("app/config/locale/translations/{name}.json")))
-            .await
             .map_err(|e| Fault::new(format!("locale: bench languages: {e}")))?;
     }
     // Lives as long as the driver, as the PHP languages are static.
     Ok(Box::leak(Box::new(languages)))
 }
 
-fn bench_locale(languages: &'static Languages, default: &str) -> Result<Locale<'static>, Fault> {
+fn bench_locale(languages: &'static Languages, default: &'static str) -> Result<Locale<'static>, Fault> {
     let mut locale = Locale::new(languages, default).map_err(|e| Fault::new(e.to_string()))?;
     locale.set_fallback("en").map_err(|e| Fault::new(e.to_string()))?;
     Ok(locale)
@@ -221,7 +220,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "languages.set_json" => {
             let mut l = languages().take().unwrap_or_default();
-            let result = l.load(a.str("name")?, &path(a.str("path")?)).await;
+            let result = l.load(a.str("name")?, &path(a.str("path")?));
             *languages() = Some(l);
             match result {
                 Ok(()) => Outcome::Ok(Value::Null),

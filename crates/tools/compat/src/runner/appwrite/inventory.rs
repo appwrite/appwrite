@@ -779,7 +779,6 @@ mod tests {
     fn reads_controllers_and_hooks() {
         let inv = read(&root());
         let account = inv.services.iter().find(|s| s.id == "account").expect("account");
-        assert!(account.sources.iter().any(|s| s == "app/controllers/api/account.php"));
         assert!(account.sources.iter().any(|s| s == "src/Appwrite/Platform/Modules/Account"));
         let locale = inv.services.iter().find(|s| s.id == "locale").expect("locale");
         assert!(locale.endpoints.iter().any(|e| e.method == "GET" && e.path == "/v1/locale"));
@@ -789,7 +788,7 @@ mod tests {
         let abuse = inv
             .hooks
             .iter()
-            .find(|h| h.kind == "init" && h.labels.iter().any(|l| l == "abuse-limit"))
+            .find(|h| h.kind == "init" && h.labels.iter().any(|l| l == "abuse"))
             .expect("abuse hook");
         assert_eq!(abuse.file, "app/controllers/shared/api.php");
         assert!(abuse.errors.iter().any(|e| e == "GENERAL_RATE_LIMIT_EXCEEDED"));

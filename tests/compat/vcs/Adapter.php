@@ -454,6 +454,8 @@ final class Adapter implements Base, Benchmarks
             chdir($workspace);
         }
         $stdout = $stderr = '';
+        // The git commands the PHP tests run, as the strings they write.
+        // @phpstan-ignore staticMethod.disallowedShell
         $exit = Console::execute($command, '', $stdout, $stderr);
         if ($cwd !== false) {
             chdir($cwd);

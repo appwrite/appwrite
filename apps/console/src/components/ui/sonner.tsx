@@ -41,7 +41,7 @@ const Toaster = ({
   expand,
   ...props
 }: ToasterProps) => {
-  const { theme = 'system' } = useTheme()
+  const { theme = 'dark' } = useTheme()
   const pageDirection = usePageDirection()
 
   return (

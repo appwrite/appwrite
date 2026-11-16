@@ -1739,6 +1739,330 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $staleRecoveryOtp['headers']['status-code']);
     }
 
+    /**
+     * Request a recovery link for the address and return its secret. Secrets in `$previous`
+     * belong to links sent earlier, so their emails are skipped.
+     *
+     * @param array<string> $previous
+     */
+    private function requestRecoveryLink(string $email, array $previous = []): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $mail = $this->getLastEmailByAddress($email, function ($mail) use ($previous) {
+            $secret = $this->extractQueryParamsFromEmailLink((string) $mail['html'])['secret'] ?? '';
+            $this->assertNotEmpty($secret);
+            $this->assertNotContains($secret, $previous);
+        });
+
+        return $this->extractQueryParamsFromEmailLink((string) $mail['html'])['secret'];
+    }
+
+    /**
+     * Request a recovery code for the address and return it. Codes in `$previous`
+     * were sent earlier, so their emails are skipped.
+     *
+     * @param array<string> $previous
+     */
+    private function requestRecoveryCode(string $email, array $previous = []): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $mail = $this->getLastEmailByAddress($email, function ($mail) use ($previous) {
+            $this->assertArrayHasKey('otp-token', $mail['headers'] ?? []);
+            $code = $this->extractEmailCode((string) $mail['text']);
+            $this->assertNotEmpty($code);
+            $this->assertNotContains($code, $previous);
+        });
+
+        return $this->extractEmailCode((string) $mail['text']);
+    }
+
+    /**
+     * Assert that neither the recovery link secret nor the recovery code resets the password.
+     */
+    private function assertRecoveryRejected(string $userId, string $secret, string $code): void
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $link = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+            'password' => 'recovered-password',
+        ]);
+        $this->assertEquals(401, $link['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $link['body']['type']);
+
+        $otp = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', $headers, [
+            'userId' => $userId,
+            'secret' => $code,
+            'password' => 'recovered-password',
+        ]);
+        $this->assertEquals(401, $otp['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $otp['body']['type']);
+    }
+
+    public function testUpdateAccountPasswordClearsRecovery(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $secret = $this->requestRecoveryLink($data['email']);
+        $code = $this->requestRecoveryCode($data['email']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+        ], [
+            'password' => 'new-password',
+            'oldPassword' => $data['password'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertRecoveryRejected($data['id'], $secret, $code);
+
+        /**
+         * Test for SUCCESS
+         */
+        $fresh = $this->requestRecoveryLink($data['email'], [$secret]);
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => $data['id'],
+            'secret' => $fresh,
+            'password' => 'recovered-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    public function testUpdateUserPasswordClearsRecovery(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $secret = $this->requestRecoveryLink($data['email']);
+        $code = $this->requestRecoveryCode($data['email']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['id'] . '/password', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'password' => 'server-set-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertRecoveryRejected($data['id'], $secret, $code);
+    }
+
+    public function testUpdateRecoveryClearsOtherRecovery(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+
+        // Recovering an unverified account already revokes every token, so verify it first
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['id'] . '/verification', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'emailVerification' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $secret = $this->requestRecoveryLink($data['email']);
+        $code = $this->requestRecoveryCode($data['email']);
+        $used = $this->requestRecoveryLink($data['email'], [$secret]);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => $data['id'],
+            'secret' => $used,
+            'password' => 'first-recovered-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertRecoveryRejected($data['id'], $secret, $code);
+    }
+
+    public function testUpdateRecoveryOTPClearsOtherRecovery(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+
+        // Recovering an unverified account already revokes every token, so verify it first
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['id'] . '/verification', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'emailVerification' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $secret = $this->requestRecoveryLink($data['email']);
+        $code = $this->requestRecoveryCode($data['email']);
+        $used = $this->requestRecoveryCode($data['email'], [$code]);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery/otp', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => $data['id'],
+            'secret' => $used,
+            'password' => 'first-recovered-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertRecoveryRejected($data['id'], $secret, $code);
+    }
+
+    public function testUpdatePhoneFirstPasswordClearsRecovery(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid('', true) . bin2hex(random_bytes(4)) . '@localhost.test';
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // A user without a password, such as one who signs in with magic URLs
+        $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
+            'userId' => Id::unique(),
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/tokens', $serverHeaders);
+        $this->assertEquals(201, $token['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $userId,
+            'secret' => $token['body']['secret'],
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $secret = $this->requestRecoveryLink($email);
+        $code = $this->requestRecoveryCode($email);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ], [
+            'phone' => '+1202' . \random_int(1000000, 9999999),
+            'password' => 'first-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['passwordUpdate']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertRecoveryRejected($userId, $secret, $code);
+    }
+
+    public function testUpdateEmailFirstPasswordClearsRecovery(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid('', true) . bin2hex(random_bytes(4)) . '@localhost.test';
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // A user without a password, such as one who signs in with magic URLs
+        $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
+            'userId' => Id::unique(),
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        // Without its email target, the account can keep its address while it sets a first password
+        $targets = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/targets', $serverHeaders);
+        $this->assertEquals(200, $targets['headers']['status-code']);
+        foreach ($targets['body']['targets'] as $target) {
+            $deleted = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/targets/' . $target['$id'], $serverHeaders);
+            $this->assertEquals(204, $deleted['headers']['status-code']);
+        }
+
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/tokens', $serverHeaders);
+        $this->assertEquals(201, $token['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $userId,
+            'secret' => $token['body']['secret'],
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $secret = $this->requestRecoveryLink($email);
+        $code = $this->requestRecoveryCode($email);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ], [
+            'email' => $email,
+            'password' => 'first-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($email, $response['body']['email']);
+        $this->assertNotEmpty($response['body']['passwordUpdate']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertRecoveryRejected($userId, $secret, $code);
+    }
+
     public function testUpdateAccountPrefs(): void
     {
         $data = $this->setupAccountWithUpdatedEmail();
@@ -2541,6 +2865,116 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent reset may consume the recovery token: ' . json_encode($statuses));
         $this->assertSame(7, $counts[401] ?? 0, 'Every other concurrent reset must be rejected: ' . json_encode($statuses));
+    }
+
+    #[Retry(count: 1)]
+    public function testUpdateEmailVerificationConcurrently(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'concurrent-verification@localhost.test';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $sessionHeaders = $this->createVerifiableAccount($email, $headers);
+
+        $verification = $this->client->call(Client::METHOD_POST, '/account/verifications/email', $sessionHeaders, [
+            'url' => 'http://localhost/verification',
+        ]);
+        $this->assertEquals(201, $verification['headers']['status-code']);
+        $userId = $verification['body']['userId'];
+
+        $mail = $this->getLastEmailByAddress($email, function ($mail) {
+            $this->assertStringContainsString('Account Verification', (string) $mail['subject']);
+        });
+        $secret = $this->extractQueryParamsFromEmailLink((string) $mail['html'])['secret'] ?? '';
+        $this->assertNotEmpty($secret);
+
+        $responses = $this->client->callConcurrently(array_fill(0, 8, [
+            Client::METHOD_PUT,
+            '/account/verifications/email',
+            $sessionHeaders,
+            [
+                'userId' => $userId,
+                'secret' => $secret,
+            ],
+        ]));
+
+        $statuses = array_map(fn (array $response): int => $response['headers']['status-code'], $responses);
+        $counts = array_count_values($statuses);
+
+        $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the verification token: ' . json_encode($statuses));
+        $this->assertSame(7, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
+    }
+
+    #[Retry(count: 1)]
+    public function testUpdateEmailVerificationOTPConcurrently(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'concurrent-verification-otp@localhost.test';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $sessionHeaders = $this->createVerifiableAccount($email, $headers);
+
+        $verification = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', $sessionHeaders);
+        $this->assertEquals(201, $verification['headers']['status-code']);
+        $userId = $verification['body']['userId'];
+
+        $mail = $this->getLastEmailByAddress($email, function ($mail) {
+            $this->assertStringContainsString('Verify your email', (string) $mail['subject']);
+        });
+        $code = $this->extractEmailCode((string) $mail['text']);
+        $this->assertNotEmpty($code);
+
+        $responses = $this->client->callConcurrently(array_fill(0, 8, [
+            Client::METHOD_PUT,
+            '/account/verifications/email/otp',
+            $sessionHeaders,
+            [
+                'userId' => $userId,
+                'secret' => $code,
+            ],
+        ]));
+
+        $statuses = array_map(fn (array $response): int => $response['headers']['status-code'], $responses);
+        $counts = array_count_values($statuses);
+
+        $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the verification code: ' . json_encode($statuses));
+        $this->assertSame(7, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
+    }
+
+    /**
+     * Register an unverified account for the address and return headers carrying its session.
+     *
+     * @param array<string, string> $headers
+     * @return array<string, string>
+     */
+    private function createVerifiableAccount(string $email, array $headers): array
+    {
+        $password = 'password';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return array_merge($headers, [
+            'cookie' => 'a_session_' . $headers['x-appwrite-project'] . '=' . $session['cookies']['a_session_' . $headers['x-appwrite-project']],
+        ]);
     }
 
     public function testSessionAlert(): void
@@ -7258,6 +7692,36 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(401, $verification2['headers']['status-code']);
 
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $challengeIds = array_map(function () use ($headers): string {
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', $headers, [
+                'factor' => 'recoveryCode'
+            ]);
+            $this->assertEquals(201, $challenge['headers']['status-code']);
+
+            return $challenge['body']['$id'];
+        }, range(1, 4));
+
+        $responses = $this->client->callConcurrently(array_map(fn (string $challengeId): array => [
+            Client::METHOD_PUT,
+            '/account/mfa/challenge',
+            $headers,
+            [
+                'challengeId' => $challengeId,
+                'otp' => $recoveryCodes[1],
+            ],
+        ], $challengeIds));
+
+        $statuses = array_map(fn (array $response): int => $response['headers']['status-code'], $responses);
+        $counts = array_count_values($statuses);
+
+        $this->assertSame(1, $counts[200] ?? 0, 'Exactly one concurrent confirmation may consume the recovery code: ' . json_encode($statuses));
+        $this->assertSame(3, $counts[401] ?? 0, 'Every other concurrent confirmation must be rejected: ' . json_encode($statuses));
+
         // Test FAILURE: Invalid recovery code
         $challenge3 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
             'content-type' => 'application/json',
@@ -7791,6 +8255,84 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($data['id'], $account['body']['$id']);
     }
 
+    public function testMFATOTPCodeIsSingleUse(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+        $this->assertSame(200, $authenticator['headers']['status-code']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        if ($totp->expiresIn() <= 10) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
+        $enrollmentOtp = $totp->now();
+
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $enrollmentOtp,
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, ['mfa' => true]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        $victim = $this->createSessionCookie($data['email'], $data['password'])['headers'];
+        $attacker = $this->createSessionCookie($data['email'], $data['password'])['headers'];
+
+        // The code spent on enrolment cannot also complete a sign-in
+        $victimChallenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $victim, ['factor' => 'totp']);
+        $this->assertSame(201, $victimChallenge['headers']['status-code']);
+
+        $replay = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $victim, [
+            'challengeId' => $victimChallenge['body']['$id'],
+            'otp' => $enrollmentOtp,
+        ]);
+        $this->assertSame(401, $replay['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $replay['body']['type']);
+
+        $otp = $this->getNextTOTP($totp, $enrollmentOtp);
+
+        $first = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $victim, [
+            'challengeId' => $victimChallenge['body']['$id'],
+            'otp' => $otp,
+        ]);
+        $this->assertSame(200, $first['headers']['status-code']);
+        $this->assertContains('totp', $first['body']['factors']);
+
+        // The same code, still inside its step, replayed on another session's fresh challenge
+        $attackerChallenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $attacker, ['factor' => 'totp']);
+        $this->assertSame(201, $attackerChallenge['headers']['status-code']);
+
+        $replay = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $attacker, [
+            'challengeId' => $attackerChallenge['body']['$id'],
+            'otp' => $otp,
+        ]);
+        $this->assertSame(401, $replay['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $replay['body']['type']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $attacker);
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        // Only the code was refused: the challenge is still open and a fresh code completes it
+        $fresh = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $attacker, [
+            'challengeId' => $attackerChallenge['body']['$id'],
+            'otp' => $this->getNextTOTP($totp, $otp),
+        ]);
+        $this->assertSame(200, $fresh['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $attacker);
+        $this->assertSame(200, $account['headers']['status-code']);
+    }
+
     protected function createJWTHeaders(string $session): array
     {
         $projectId = $this->getProject()['$id'];
@@ -7985,7 +8527,7 @@ final class AccountCustomClientTest extends Scope
     /**
      * Enables TOTP MFA on the account and leaves a challenge pending on a second session.
      *
-     * @return array{totp: \OTPHP\TOTP, current: array<string, string>, other: array<string, string>, otherId: string, challengeId: string}
+     * @return array{totp: \OTPHP\TOTP, enrollmentOtp: string, current: array<string, string>, other: array<string, string>, otherId: string, challengeId: string}
      */
     protected function createPendingMFAChallenge(array $data): array
     {
@@ -8004,8 +8546,9 @@ final class AccountCustomClientTest extends Scope
         if ($totp->expiresIn() <= 5) {
             $this->getNextTOTP($totp, $totp->now());
         }
+        $enrollmentOtp = $totp->now();
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $current, [
-            'otp' => $totp->now(),
+            'otp' => $enrollmentOtp,
         ]);
         $this->assertEquals(200, $verification['headers']['status-code']);
 
@@ -8023,6 +8566,7 @@ final class AccountCustomClientTest extends Scope
 
         return [
             'totp' => $totp,
+            'enrollmentOtp' => $enrollmentOtp,
             'current' => $current,
             'other' => $other['headers'],
             'otherId' => $other['id'],
@@ -8077,7 +8621,7 @@ final class AccountCustomClientTest extends Scope
         $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
         $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
             'challengeId' => $mfa['challengeId'],
-            'otp' => $mfa['totp']->now(),
+            'otp' => $this->getNextTOTP($mfa['totp'], $mfa['enrollmentOtp']), // The enrolment code is spent, so only a fresh one shows the challenge itself is gone
         ]);
         $this->assertEquals(401, $pending['headers']['status-code']);
         $this->assertEquals('user_invalid_token', $pending['body']['type']);
@@ -8128,7 +8672,7 @@ final class AccountCustomClientTest extends Scope
         $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
         $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
             'challengeId' => $mfa['challengeId'],
-            'otp' => $mfa['totp']->now(),
+            'otp' => $this->getNextTOTP($mfa['totp'], $mfa['enrollmentOtp']), // The enrolment code is spent, so only a fresh one shows the challenge itself is gone
         ]);
         $this->assertEquals(401, $pending['headers']['status-code']);
         $this->assertEquals('user_invalid_token', $pending['body']['type']);
@@ -8165,7 +8709,7 @@ final class AccountCustomClientTest extends Scope
         $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
         $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
             'challengeId' => $mfa['challengeId'],
-            'otp' => $mfa['totp']->now(),
+            'otp' => $this->getNextTOTP($mfa['totp'], $mfa['enrollmentOtp']), // The enrolment code is spent, so only a fresh one shows the challenge itself is gone
         ]);
         $this->assertEquals(401, $pending['headers']['status-code']);
         $this->assertEquals('user_invalid_token', $pending['body']['type']);
@@ -10252,14 +10796,12 @@ final class AccountCustomClientTest extends Scope
             return false;
         }
 
-        $image = new \Imagick();
-        $image->readImageBlob($blob);
+        $image = \imagecreatefromstring($blob);
+        $this->assertNotFalse($image);
 
-        $color = $image
-            ->getImagePixelColor(\intdiv($image->getImageWidth(), 2), \intdiv($image->getImageHeight(), 2))
-            ->getColor();
+        $color = \imagecolorsforindex($image, (int) \imagecolorat($image, \intdiv(\imagesx($image), 2), \intdiv(\imagesy($image), 2)));
 
-        return $color['r'] === 0 && $color['g'] === 255 && $color['b'] === 0;
+        return $color['red'] === 0 && $color['green'] === 255 && $color['blue'] === 0;
     }
 
     /**

@@ -43,8 +43,7 @@ pub const USERS_SUBQUERIES: &[&str] = &[
 ];
 
 /// `APP_PROJECTS_SUBQUERIES`.
-pub const PROJECTS_SUBQUERIES: &[&str] =
-    &["subQueryKeys", "subQueryDevKeys", "subQueryWebhooks", "subQueryPlatforms", "subQueryBlocks"];
+pub const PROJECTS_SUBQUERIES: &[&str] = &["subQueryKeys", "subQueryWebhooks", "subQueryPlatforms", "subQueryBlocks"];
 
 /// `APP_TOPICS_SUBQUERIES`.
 pub const TOPICS_SUBQUERIES: &[&str] = &["subQueryTopicTargets"];
@@ -103,22 +102,23 @@ fn all() -> Vec<(&'static str, Arc<dyn Filter>)> {
         sub("subQueryDevKeys", SubQuery::Empty, 167, 170),
         sub("subQueryWebhooks", SubQuery::ByProject("webhooks"), 177, 180),
         sub("subQuerySessions", SubQuery::ByUser("sessions", false), 191, 194),
-        sub("subQueryTokens", SubQuery::ByUser("tokens", false), 204, 207),
-        sub("subQueryChallenges", SubQuery::ByUser("challenges", false), 218, 221),
-        sub("subQueryAuthenticators", SubQuery::ByUser("authenticators", true), 232, 235),
-        sub("subQueryMemberships", SubQuery::ByUser("memberships", false), 247, 250),
-        sub("subQueryVariables", SubQuery::Variables, 261, 264),
+        sub("subQueryDeviceSessions", SubQuery::ByDevice("sessions"), 204, 207),
+        sub("subQueryTokens", SubQuery::ByUser("tokens", false), 217, 220),
+        sub("subQueryChallenges", SubQuery::ByUser("challenges", false), 231, 234),
+        sub("subQueryAuthenticators", SubQuery::ByUser("authenticators", true), 245, 248),
+        sub("subQueryMemberships", SubQuery::ByUser("memberships", false), 260, 263),
+        sub("subQueryVariables", SubQuery::Variables, 274, 277),
         ("encrypt", Arc::new(Encrypt)),
-        sub("subQueryProjectVariables", SubQuery::ProjectVariables, 310, 313),
-        search("userSearch", Search::User, 324, 340),
-        sub("subQueryTargets", SubQuery::ByUser("targets", false), 347, 350),
-        sub("subQueryTopicTargets", SubQuery::TopicTargets, 361, 364),
-        search("providerSearch", Search::Provider, 389, 401),
-        search("topicSearch", Search::Topic, 408, 419),
-        search("messageSearch", Search::Message, 426, 455),
-        sub("subQueryOrganizationKeys", SubQuery::Keys("teams"), 463, 466),
-        sub("subQueryAccountKeys", SubQuery::Keys("users"), 478, 481),
-        sub("subQueryReportInsights", SubQuery::ReportInsights, 493, 496),
+        sub("subQueryProjectVariables", SubQuery::ProjectVariables, 327, 330),
+        search("userSearch", Search::User, 341, 357),
+        sub("subQueryTargets", SubQuery::ByUser("targets", false), 364, 367),
+        sub("subQueryTopicTargets", SubQuery::TopicTargets, 378, 381),
+        search("providerSearch", Search::Provider, 406, 418),
+        search("topicSearch", Search::Topic, 425, 436),
+        search("messageSearch", Search::Message, 443, 472),
+        sub("subQueryOrganizationKeys", SubQuery::Keys("teams"), 480, 483),
+        sub("subQueryAccountKeys", SubQuery::Keys("users"), 495, 498),
+        sub("subQueryReportInsights", SubQuery::ReportInsights, 510, 513),
     ]
 }
 
@@ -182,13 +182,15 @@ impl Filter for Passthrough {
     }
 }
 
-/// `encrypt`: AES-128-GCM with `_APP_OPENSSL_KEY_V1` ([`crypto`]).
+/// `encrypt`: AES-128-GCM with the current `_APP_OPENSSL_KEY_V<version>` ([`crypto`]).
 struct Encrypt;
 
 #[async_trait]
 impl Filter for Encrypt {
     async fn encode(&self, value: Value, _document: &Document, _database: &Database) -> Result<Value> {
-        Ok(Value::from(crypto::encrypt_env(&to_text(&value)).as_str()))
+        crypto::encrypt_env(&to_text(&value))
+            .map(|stored| Value::from(stored.as_str()))
+            .map_err(|message| utopia_database::Error::new(utopia_database::Kind::Runtime, message))
     }
 
     async fn decode(
@@ -209,7 +211,7 @@ impl Filter for Encrypt {
     }
 
     fn signature(&self) -> String {
-        signature(284, 297)
+        signature(297, 314)
     }
 }
 
@@ -230,6 +232,8 @@ enum SubQuery {
     ByProject(&'static str),
     /// By `userInternalId`; `true` orders by `$createdAt` descending.
     ByUser(&'static str, bool),
+    /// `subQueryDeviceSessions`: by `deviceInternalId`.
+    ByDevice(&'static str),
     /// `subQueryVariables`.
     Variables,
     /// `subQueryProjectVariables`.
@@ -372,6 +376,11 @@ impl Filter for Sub {
                     queries.push(Query::order_desc("$createdAt", None));
                 }
                 queries.push(Query::limit(LIMIT_SUBQUERY));
+                find_skipping(database, collection, queries).await?
+            }
+            SubQuery::ByDevice(collection) => {
+                let queries =
+                    vec![Query::equal("deviceInternalId", [sequence(document)]), Query::limit(LIMIT_SUBQUERY)];
                 find_skipping(database, collection, queries).await?
             }
             SubQuery::Variables => {

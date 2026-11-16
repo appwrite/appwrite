@@ -9,6 +9,7 @@ import {
   usePlatforms,
   useUpdateAuthMethod,
 } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { authMethodsRecordFromProject } from '@/lib/project-settings'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -20,6 +21,7 @@ import {
   Smartphone,
   UserPlus,
   Lock,
+  Network,
   Settings,
   type LucideIcon,
 } from 'lucide-react'
@@ -34,7 +36,7 @@ import { useT } from '@/lib/i18n/translate'
 import { RESOURCE_CARD_GRID_CLASSNAME } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { MockPhoneNumbersCard, useAuthSecuritySnapshot } from './Security'
 import { EnablePasskeys } from './EnablePasskeys'
-import { ForceSignOutCard } from './_components/ForceSignOutCard'
+import { SecurityActionsCard } from './_components/SecurityActionsCard'
 
 interface AuthSettingsProps {
   projectId: string
@@ -46,10 +48,11 @@ type AuthMethodPolicy = {
     | '/projects/$projectId/auth/policies/emails'
     | '/projects/$projectId/auth/policies/memberships'
     | '/projects/$projectId/auth/policies/passkeys'
+    | '/projects/$projectId/settings/identity-servers'
   label: string
 }
 
-const AUTH_METHODS: ReadonlyArray<{
+export const AUTH_METHODS: ReadonlyArray<{
   key: ProjectAuthMethodId
   label: string
   icon: LucideIcon
@@ -115,7 +118,25 @@ const AUTH_METHODS: ReadonlyArray<{
       label: 'Passkey policies',
     },
   },
+  {
+    key: ProjectAuthMethodId.Ldap,
+    label: 'LDAP',
+    icon: Network,
+    policy: {
+      to: '/projects/$projectId/settings/identity-servers',
+      label: 'Identity servers',
+    },
+  },
 ]
+
+/** The auth methods to list. LDAP is a preview: it is listed only while Identity servers, where it is configured, is on. */
+export function useVisibleAuthMethods(): typeof AUTH_METHODS {
+  const { features } = useConsoleProfile()
+  return AUTH_METHODS.filter(
+    (method) =>
+      method.key !== ProjectAuthMethodId.Ldap || features.identityServers,
+  )
+}
 
 export function AuthSettings({ projectId }: AuthSettingsProps) {
   const t = useT()
@@ -128,6 +149,11 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
     projectData?.region,
   )
   const passkeyReady = security.authPasskey.origins.length > 0
+  const visibleAuthMethods = useVisibleAuthMethods()
+  // Enabling LDAP needs a directory to sign in against.
+  const ldapConfigured = Boolean(
+    projectData?.ldapHosts?.length && projectData?.ldapBaseDn,
+  )
   const [passkeySetupOpen, setPasskeySetupOpen] = useState(false)
 
   const [optimisticAuthMethods, setOptimisticAuthMethods] = useState<
@@ -223,7 +249,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             {t('Enable the authentication methods you wish to use.')}
           </p>
           <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-            {AUTH_METHODS.map((method) => {
+            {visibleAuthMethods.map((method) => {
               const Icon = method.icon
               const isUpdating = updatingAuthMethods.has(method.key)
               const enabled = authMethods[method.key] ?? false
@@ -231,6 +257,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
               // asks for the domain first.
               const needsPasskeySetup =
                 method.key === ProjectAuthMethodId.Passkey && !passkeyReady
+              const needsLdapSetup =
+                method.key === ProjectAuthMethodId.Ldap &&
+                !enabled &&
+                !ldapConfigured
 
               return (
                 <div
@@ -276,16 +306,39 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                       {isUpdating && (
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                       )}
-                      <Switch
-                        id={method.key}
-                        checked={enabled}
-                        onCheckedChange={(checked) =>
-                          checked && needsPasskeySetup
-                            ? setPasskeySetupOpen(true)
-                            : handleAuthMethodToggle(method.key, checked)
-                        }
-                        disabled={isUpdating}
-                      />
+                      {needsLdapSetup ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex">
+                                <Switch
+                                  id={method.key}
+                                  checked={false}
+                                  disabled
+                                />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p className="text-xs">
+                                {t(
+                                  'Add at least one host and a base DN under Settings > Identity servers to enable LDAP sign-in.',
+                                )}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Switch
+                          id={method.key}
+                          checked={enabled}
+                          onCheckedChange={(checked) =>
+                            checked && needsPasskeySetup
+                              ? setPasskeySetupOpen(true)
+                              : handleAuthMethodToggle(method.key, checked)
+                          }
+                          disabled={isUpdating}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -300,7 +353,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         currentNumbers={mockNumbers}
       />
 
-      <ForceSignOutCard projectId={projectId} />
+      <SecurityActionsCard projectId={projectId} />
 
       <EnablePasskeys
         projectId={projectId}

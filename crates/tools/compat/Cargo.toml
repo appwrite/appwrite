@@ -77,7 +77,6 @@ utopia-registry.workspace = true
 utopia-schedule.workspace = true
 utopia-emails.workspace = true
 utopia-http.workspace = true
-utopia-image.workspace = true
 utopia-locale.workspace = true
 utopia-mongo.workspace = true
 utopia-lock.workspace = true

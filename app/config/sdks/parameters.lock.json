@@ -34,6 +34,11 @@
         "account.createJWT": [
             "duration"
         ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
+            "duration"
+        ],
         "account.createMFAAuthenticator": [
             "type"
         ],
@@ -878,6 +883,17 @@
             "data",
             "permissions",
             "transactionId"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
         ]
     },
     "console": {
@@ -913,6 +929,11 @@
             "name"
         ],
         "account.createJWT": [
+            "duration"
+        ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
             "duration"
         ],
         "account.createMFAAuthenticator": [
@@ -1139,6 +1160,17 @@
         "advisor.listReports": [
             "queries",
             "total"
+        ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
+            "queries",
+            "total"
+        ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
@@ -2822,6 +2854,36 @@
         "migrations.retry": [
             "migrationId"
         ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "severity"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "severity"
+        ],
         "notifications.list": [
             "queries",
             "total"
@@ -2954,6 +3016,10 @@
             "expire",
             "description"
         ],
+        "project.createLDAPTest": [
+            "username",
+            "password"
+        ],
         "project.createLinuxPlatform": [
             "platformId",
             "name",
@@ -2990,6 +3056,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -3095,6 +3162,24 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "project.updateLDAP": [
+            "enabled",
+            "hosts",
+            "port",
+            "encryption",
+            "verification",
+            "certificate",
+            "timeout",
+            "baseDn",
+            "bindDn",
+            "bindPassword",
+            "userFilter",
+            "requiredGroupDn",
+            "idAttribute",
+            "emailAttribute",
+            "nameAttribute",
+            "phoneAttribute"
         ],
         "project.updateLabels": [
             "labels"
@@ -3276,6 +3361,11 @@
             "enabled",
             "prompt"
         ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -3362,6 +3452,16 @@
             "enabled"
         ],
         "project.updateOAuth2Webflow": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VippsSandbox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -3542,8 +3642,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",
@@ -5030,6 +5170,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     },
     "server": {
@@ -5063,6 +5217,11 @@
             "accessToken",
             "accessTokenExpiry",
             "name"
+        ],
+        "account.createLDAPSession": [
+            "username",
+            "password",
+            "duration"
         ],
         "account.createMFAAuthenticator": [
             "type"
@@ -5275,6 +5434,17 @@
         "advisor.listReports": [
             "queries",
             "total"
+        ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
+            "queries",
+            "total"
+        ],
+        "alerts.update": [
+            "alertId",
+            "acknowledged"
         ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
@@ -6934,6 +7104,36 @@
         "migrations.retry": [
             "migrationId"
         ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "severity"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "severity"
+        ],
         "organization.createEphemeralProjectKey": [
             "projectId",
             "scopes",
@@ -7024,6 +7224,10 @@
             "scopes",
             "duration"
         ],
+        "project.createLDAPTest": [
+            "username",
+            "password"
+        ],
         "project.createLinuxPlatform": [
             "platformId",
             "name",
@@ -7060,6 +7264,7 @@
         "project.deleteMockPhone": [
             "number"
         ],
+        "project.deletePasswords": [],
         "project.deletePlatform": [
             "platformId"
         ],
@@ -7165,6 +7370,24 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "project.updateLDAP": [
+            "enabled",
+            "hosts",
+            "port",
+            "encryption",
+            "verification",
+            "certificate",
+            "timeout",
+            "baseDn",
+            "bindDn",
+            "bindPassword",
+            "userFilter",
+            "requiredGroupDn",
+            "idAttribute",
+            "emailAttribute",
+            "nameAttribute",
+            "phoneAttribute"
         ],
         "project.updateLabels": [
             "labels"
@@ -7346,6 +7569,11 @@
             "enabled",
             "prompt"
         ],
+        "project.updateOAuth2Naver": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2Notion": [
             "oauthClientId",
             "oauthClientSecret",
@@ -7432,6 +7660,16 @@
             "enabled"
         ],
         "project.updateOAuth2Webflow": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VippsSandbox": [
             "clientId",
             "clientSecret",
             "enabled"
@@ -7582,8 +7820,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",
@@ -8978,6 +9256,20 @@
         "webhooks.updateSecret": [
             "webhookId",
             "secret"
+        ],
+        "account.createDevice": [],
+        "account.getDevice": [
+            "deviceId"
+        ],
+        "account.updateDeviceSession": [
+            "deviceId",
+            "sessionId"
+        ],
+        "account.deleteDevice": [
+            "deviceId"
+        ],
+        "project.updateAccountDevicesPolicy": [
+            "enabled"
         ]
     }
 }

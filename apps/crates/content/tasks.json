@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-01T12:05:00Z",
+  "updated": "2026-11-16T07:10:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -712,6 +712,38 @@
       "status": "done",
       "updated": "2026-11-01T12:05:00Z",
       "note": "Fixed by the database 10.0.0 port: on 8e9ac9ee07 the four routes (account.recovery.update, account.delete, teams.delete, teams.memberships.status) purge the same keys in PHP and Rust. The two lanes then showed one different scenario each (users.list purges, account.sessions.phone effects), different in each lane: work landing after the diff's fixed 150 ms window. The diff now waits until the runtime has been quiet for 150 ms (at most 2 s)."
+    },
+    {
+      "id": "sync-nov16",
+      "title": "Merge main: 2,345 commits and the utopia PHP extension",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-11-16T07:10:00Z",
+      "note": "Nov 16. Main now ships five of this branch's crates (php-std, dsn, image, locale, user-agent) in the utopia PHP extension (crates/extension, #15564), copied from here on Nov 11 and improved there: libwebp and libheif codecs for image (AVIF and HEIC decoding), a Canvas and Limits API, faster locale and DSN. Those crates now follow main; the extension joined the workspace. The Rust storage preview moved to Canvas with _APP_IMAGES_LIMIT_* limits, as PHP's did. image left compat: packages/image no longer has a PHP Image class (PHP runs the Rust crate through the extension), so there is nothing to compare against. Dsn's Debug now hides the user and the query too (review on #15564). Ported in the merge, as the core contract tests require: the devices collection and its subQueryDeviceSessions filter, the reviews collections, vectorsDB onboarding stages, version 2.7.2, and the encrypt filter's key rotation (_APP_OPENSSL_KEY_CURRENT; no key, no write)."
+    },
+    {
+      "id": "main-nov16-services",
+      "title": "Users, Teams, Account and Storage: follow main's PHP after the Nov 16 merge",
+      "area": "Services",
+      "status": "todo",
+      "updated": "2026-11-16T07:10:00Z",
+      "note": "Main brought 342 commits to the PHP of the services Rust serves and the shared API hooks: the abuse label rework (Limit::attempts), Environment in locationAuth, output=auto negotiation and Appwrite\\Storage\\Encryption in previews, and more. Not ported in the merge (time-boxed); the Users and Storage (Rust) parity lanes show what differs. JWTs and signatures verified against every accepted key (EncryptionKey::accepted) are part of it."
+    },
+    {
+      "id": "main-nov16-libraries",
+      "title": "Utopia libraries: follow main's PHP after the Nov 16 merge",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-11-16T07:10:00Z",
+      "note": "Main changed 22 absorbed packages (175 commits): vcs, migration, queue, agents, messaging, cache, http, storage, query, cdn, emails, dns, abuse and more. packages/agents was redesigned (models, tools and a step loop; its OpenRouter sync script is gone), so its compat cases no longer describe the PHP library. Each crate's php-sync marker shows what to port; the compat shards show the differences."
+    },
+    {
+      "id": "main-nov16-benchmarks",
+      "title": "Benchmark scenarios for the endpoints main added",
+      "area": "Infrastructure",
+      "status": "todo",
+      "updated": "2026-11-16T07:10:00Z",
+      "note": "The Nov 16 merge brought about 45 new endpoints: account devices and LDAP sessions, project LDAP, OAuth2 (Naver, Vipps) and the account-devices policy, proxy rule updates, console alert unsubscribes, and two new services, alerts and reviews. Each is listed in its tests/benchmarks/api script as skipped with 'its scenario is pending' until it gets a scenario. GET /versions moved from home to console."
     }
   ]
 }

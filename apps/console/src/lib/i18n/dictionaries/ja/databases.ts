@@ -151,6 +151,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Backup policies have been created': 'バックアップポリシーを作成しました',
   'Backup policies': 'バックアップポリシー',
   'backup policies': 'バックアップポリシー',
+  'backup policy': 'バックアップポリシー',
   'Backup policy has been deleted': 'バックアップポリシーを削除しました',
   'Backups already taken by this policy are kept until their retention expires.': 'このポリシーで既に取得されたバックアップは、保持期間が満了するまで保持されます。',
   'backup selected': 'バックアップを選択',

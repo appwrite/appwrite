@@ -50,7 +50,7 @@ function AuthPage() {
   const usersListSearch = useMemo((): UsersListSearch | undefined => {
     if (!isAuthUsersIndexPath(location.pathname, projectId)) return undefined
     const indexMatch = matches.find(
-      (match) => match.routeId === '/_public/projects/$projectId/auth/',
+      (match) => match.routeId === '/_public/projects/$projectId/auth/users/',
     )
     const search = indexMatch?.search
     if (!search || typeof search !== 'object') return undefined

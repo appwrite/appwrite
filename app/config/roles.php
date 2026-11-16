@@ -86,6 +86,7 @@ $admins = [
     'project.policies.write',
     'project.oauth2.read',
     'project.oauth2.write',
+    'project.ldap.write',
     'templates.read',
     'templates.write',
     'projects.write',
@@ -95,6 +96,10 @@ $admins = [
     'organization.projects.keys.write',
     'webhooks.read',
     'webhooks.write',
+    'monitors.read',
+    'monitors.write',
+    'alerts.read',
+    'alerts.write',
     'project.read',
     'project.write',
     'usage.read',
@@ -136,6 +141,8 @@ $admins = [
     'insights.write',
     'reports.read',
     'reports.write',
+    'reviews.read',
+    'reviews.write',
 ];
 
 return [

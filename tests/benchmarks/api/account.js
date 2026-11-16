@@ -870,6 +870,13 @@ const bench = define({
             },
         },
     ].map((s) => ({ ...s, run: (api, data, run) => s.run(guarded(api), data, run) })),
+    skipped: [
+        { skipped: 'POST /v1/account/devices', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'GET /v1/account/devices/:deviceId', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'DELETE /v1/account/devices/:deviceId', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/account/devices/:deviceId/session', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'POST /v1/account/sessions/ldap', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+    ],
 });
 
 export const options = { ...bench.options, maxRedirects: 0 };

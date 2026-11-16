@@ -27,8 +27,9 @@ struct Envelope {
     version: String,
 }
 
-/// Encrypts `plain` into the stored JSON document.
-pub fn encrypt(key: &str, plain: &str) -> String {
+/// Encrypts `plain` into the stored JSON document, recording the key's
+/// `version` for decryption.
+pub fn encrypt(key: &str, version: &str, plain: &str) -> String {
     let cipher = Aes128Gcm::new(&key_bytes(key).into());
     let mut iv = [0u8; 12];
     utopia_auth::random_bytes(&mut iv);
@@ -41,7 +42,7 @@ pub fn encrypt(key: &str, plain: &str) -> String {
         method: "aes-128-gcm".to_owned(),
         iv: hex::encode(iv),
         tag: hex::encode(tag),
-        version: "1".to_owned(),
+        version: version.to_owned(),
     };
     // `json_encode(..., JSON_UNESCAPED_SLASHES)`; every value is ASCII.
     serde_json::to_string(&envelope).expect("the envelope serializes")
@@ -142,9 +143,20 @@ pub fn decrypt_env(stored: &str) -> Option<String> {
     decrypt(stored, env_key)
 }
 
-/// Encrypts with `_APP_OPENSSL_KEY_V1`.
-pub fn encrypt_env(plain: &str) -> String {
-    encrypt(&env_key("1").unwrap_or_default(), plain)
+/// `EncryptionKey::version()`: the key version new data is encrypted with
+/// (`_APP_OPENSSL_KEY_CURRENT`, 1 by default).
+pub fn key_version() -> String {
+    std::env::var("_APP_OPENSSL_KEY_CURRENT").unwrap_or_else(|_| "1".to_owned())
+}
+
+/// Encrypts with the current key, `_APP_OPENSSL_KEY_V<current>`. A key that
+/// is not configured refuses to encrypt, with PHP's message.
+pub fn encrypt_env(plain: &str) -> Result<String, String> {
+    let version = key_version();
+    match env_key(&version).filter(|key| !key.is_empty()) {
+        Some(key) => Ok(encrypt(&key, &version, plain)),
+        None => Err(format!("_APP_OPENSSL_KEY_V{version} is not configured, refusing to encrypt.")),
+    }
 }
 
 #[cfg(test)]
@@ -153,10 +165,14 @@ mod tests {
 
     #[test]
     fn round_trip() {
-        let stored = encrypt("your-secret-key", "hello/world");
+        let stored = encrypt("your-secret-key", "1", "hello/world");
         assert!(stored.contains("\"method\":\"aes-128-gcm\""));
         assert_eq!(decrypt(&stored, |_| Some("your-secret-key".to_owned())).as_deref(), Some("hello/world"));
         assert!(decrypt(&stored, |_| Some("other-key".to_owned())).is_none());
+        let rotated = encrypt("next-key", "2", "hello");
+        assert!(rotated.contains("\"version\":\"2\""));
+        let keys = |v: &str| (v == "2").then(|| "next-key".to_owned());
+        assert_eq!(decrypt(&rotated, keys).as_deref(), Some("hello"));
     }
 
     #[test]
@@ -164,7 +180,7 @@ mod tests {
         // PHP writes it with `JSON_UNESCAPED_SLASHES`; base64 data has `/` in
         // about one envelope in four for a short value, so try many.
         for _ in 0..200 {
-            let stored = encrypt("your-secret-key", "a value long enough for several base64 groups");
+            let stored = encrypt("your-secret-key", "1", "a value long enough for several base64 groups");
             assert!(!stored.contains("\\/"), "{stored}");
             assert!(stored.starts_with("{\"data\":\""), "{stored}");
         }

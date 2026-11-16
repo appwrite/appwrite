@@ -9,6 +9,8 @@
 #   crates/appwrite/<name>  Appwrite domain crates: core, service modules, server binary (not mirrored)
 #   crates/support/<name>   Support crates shared by Utopia crates: php-std (PHP engine semantics),
 #                           mirrored to github.com/utopia-rs/php-std
+#   crates/extension        The `utopia` PHP extension: Utopia crates as the PHP classes of
+#                           packages/<name>, so PHP runs the Rust implementation.
 #   crates/tools/<name>     Development tools (not shipped): compat, the PHP/Rust differential tester
 #   example                 A minimal HTTP server demo (not shipped)
 #
@@ -16,7 +18,7 @@
 # standard each Utopia crate is converted to.
 [workspace]
 resolver = "3"
-members = ["crates/utopia/*", "crates/appwrite/*", "crates/support/*", "crates/tools/*", "example"]
+members = ["crates/utopia/*", "crates/appwrite/*", "crates/support/*", "crates/tools/*", "crates/extension", "example"]
 
 [workspace.package]
 version = "0.1.0"
@@ -59,7 +61,7 @@ utopia-span = { path = "crates/utopia/span" }
 utopia-di = { path = "crates/utopia/di" }
 utopia-registry = { path = "crates/utopia/registry" }
 utopia-abuse = { path = "crates/utopia/abuse" }
-utopia-image = { path = "crates/utopia/image" }
+utopia-image = { path = "crates/utopia/image", default-features = false }
 utopia-compression = { path = "crates/utopia/compression" }
 utopia-client = { path = "crates/utopia/client" }
 utopia-smtp = { path = "crates/utopia/smtp" }
@@ -96,6 +98,11 @@ appwrite-teams = { path = "crates/appwrite/teams" }
 appwrite-storage = { path = "crates/appwrite/storage" }
 
 # Third party
+# The `utopia` PHP extension (crates/extension) on ext-php-rs, with
+# #[php(sensitive(...))] (extphprs/ext-php-rs#840), which `Utopia\DSN\DSN` needs to keep
+# credentials out of exception traces: the PR's commit, which GitHub serves from the upstream
+# repository. Back to a release once it ships in one.
+ext-php-rs = { git = "https://github.com/extphprs/ext-php-rs", rev = "fb34246728d501d81b44348f679c7538f3d1d16a" }
 # Multi-needle substring search (utopia-user-agent: the bot table, in one
 # case-insensitive pass); pure Rust, already a dependency of regex.
 aho-corasick = "1"
@@ -159,18 +166,25 @@ httparse = "1"
 hyper = { version = "1", features = ["server", "http1"] }
 hyper-util = "0.1"
 hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
-# Image codecs for utopia-image, pure Rust only: JPEG (zune-jpeg), PNG, GIF,
-# WebP, and AVIF encoding (ravif/rav1e, without its nasm assembly). AVIF
-# decoding (`avif-native`) would link the dav1d C library, so it stays off.
-image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp", "avif", "rayon"] }
+# Image codecs for utopia-image, pure Rust only: JPEG (zune-jpeg), PNG, GIF and
+# WebP. No `rayon`: it gives the AVIF encoder a process-wide thread pool, and a
+# process that forks after using it (Swoole workers do fork) leaves the child
+# waiting forever on threads it does not have. `avif` (the pure-Rust encoder)
+# is utopia-image's `ravif` feature.
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
 # WebP frames and the lossless encoder (utopia-image writes animated WebP
 # containers around it); pure Rust, the WebP codec of the image crate.
 image-webp = "0.2"
+# JPEG output as ImageMagick (libjpeg) writes it: 4:2:0 chroma and optimized Huffman
+# tables, neither of which the `image` crate's encoder has. Pure Rust.
+jpeg-encoder = "0.7"
 hashbrown = { version = "0.17", default-features = false }
 indexmap = "2"
 # EXIF orientation of JPEG, PNG and WebP images (utopia-image, as Imagick's
 # exif:Orientation property); pure Rust.
 kamadak-exif = "0.6"
+# libheif (a system library): AVIF and HEIC decoding, HEIC encoding. utopia-image's `libheif` feature.
+libheif-rs = { version = "3", default-features = false, features = ["v1_17"] }
 # zlib 1.3.2, the version PHP's ext-zlib links, built from the bundled sources
 # (utopia-compression's Deflate and GZIP). C: gzdeflate()/gzencode() output is
 # zlib's deflate at memLevel 9, which no Rust encoder reproduces byte for byte
@@ -289,15 +303,18 @@ webpki-roots = "1"
 whirlpool = "0.10"
 # XXH3 and XXH128 for php-std hash(); pure Rust.
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
+# libwebp, built from source and linked statically: lossy WebP. utopia-image's `libwebp` feature.
+webp = { version = "0.3", default-features = false }
 zstd = { version = "0.14", default-features = false }
 # libyaml 0.2.5 translated to Rust (php-std yaml_parse(), which must accept and
 # refuse documents as the libyaml of PHP's ext-yaml does); no C toolchain needed.
 unsafe-libyaml = "0.2"
 
+# No `panic = "abort"`: ext-php-rs catches a panic in a method and throws it
+# as a PHP `Error`; aborting would take the Swoole worker down instead.
 [profile.release]
 lto = "fat"
 codegen-units = 1
-panic = "abort"
 strip = "symbols"
 
 [profile.dev.package."*"]

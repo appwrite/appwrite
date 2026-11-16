@@ -1,0 +1,107 @@
+---
+layout: integration
+title: MCP with Pi
+description: Connect Pi to your Appwrite project through the hosted Appwrite MCP server and react to project events
+date: 2026-11-06
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/mcp-pi/cover.avif
+category: mcp
+product:
+    vendor: Pi
+    description: "Pi is a minimal terminal coding agent that you adapt with extensions, skills, and other packages from npm or git."
+platform:
+    - 'Cloud'
+---
+
+[Pi](https://pi.dev) is a minimal coding agent for the terminal. You shape it to your workflow with packages that add extensions, skills, prompt templates, and themes. Two packages connect it to Appwrite: [pi-mcp-adapter](https://github.com/nicobailon/pi-mcp-adapter) adds MCP servers to your Pi sessions, and [pi-mcp-events](https://github.com/mikekelly/pi-mcp-events) lets Pi react to events those servers send.
+
+# How does the integration work?
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connects Pi to your Appwrite project through the [Model Context Protocol](https://modelcontextprotocol.io). It is a hosted server at `https://mcp.appwrite.io/` that signs you in with OAuth, so you don't run a server on your machine or create an API key.
+
+Once connected, Pi can look up your projects, read and change resources such as users, databases, and tables, and search the Appwrite documentation. Changes go through a separate write tool that requires confirmation, and each change carries a short reason that appears in your project's **Activity** tab.
+
+The server also supports [MCP Events](/docs/tooling/ai/mcp-servers#events), an extension to the protocol. With pi-mcp-events installed, Pi can subscribe to a change in your project, such as a new user, finish its turn, and wake up when the event arrives over the connection it already has open, without a public URL.
+
+{% info title="Self-hosted Appwrite" %}
+The hosted MCP server authenticates against Appwrite Cloud, and events are only available on the hosted server. If you self-host Appwrite, use the [local MCP server](/docs/advanced/self-hosting/mcp) instead. It runs on your machine over stdio, connects to your instance with an API key, and does not support events.
+{% /info %}
+
+# How to implement
+
+To connect Pi to Appwrite, there are several steps you must complete:
+
+## Step 1: Set up your Appwrite project
+
+First, [create an account on Appwrite Cloud](/sign-up) if you haven't already, and create a project. You don't need an API key: Pi opens your browser so you can sign in to Appwrite.
+
+## Step 2: Install Pi and the MCP adapter
+
+If you don't have Pi yet, install it on macOS or Linux. On Windows, or to install with npm, see [pi.dev](https://pi.dev).
+
+```bash
+curl -fsSL https://pi.dev/install.sh | sh
+```
+
+Then install pi-mcp-adapter:
+
+```bash
+pi install npm:pi-mcp-adapter
+```
+
+## Step 3: Add the Appwrite MCP server
+
+Add the Appwrite server to `~/.pi/agent/mcp-adapter.json`. Create the file if it doesn't exist, or merge this into it:
+
+```json
+{
+  "mcpServers": {
+    "appwrite": {
+      "url": "https://mcp.appwrite.io/",
+      "auth": "oauth"
+    }
+  }
+}
+```
+
+Start Pi by running `pi`, then run `/mcp-auth appwrite`. Sign in to your Appwrite account in the browser window that opens and authorize access. The adapter keeps the sign-in in your operating system's credential store.
+
+Pi also has built-in MCP support, which you set up with `pi mcp add`. This guide uses the adapter because the events extension needs it. The adapter turns off the built-in support and reads the servers you added with `pi mcp add`, so those keep working.
+
+## Step 4: Test the integration
+
+Run `/mcp` in Pi to check that **appwrite** is listed with its tools, then try prompts like:
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+
+## Step 5: React to project events
+
+Install pi-mcp-events, which adds an `mcp_events` tool on top of the adapter, then restart Pi to load it:
+
+```bash
+pi install npm:@realmikekelly/pi-mcp-events
+```
+
+Ask Pi to subscribe to new users. Replace `<PROJECT_ID>` with your project ID:
+
+```text
+Subscribe with mcp_events to users.user.created on the appwrite server for project_id <PROJECT_ID>, then finish your turn and wait. Whenever an event arrives, look up that user and tell me their name and email.
+```
+
+Pi opens the subscription and goes idle. When a user signs up, or you create one in the Appwrite Console, Pi wakes up without a new prompt, looks up the user, and replies with their name and email. Ask `Unsubscribe from users.user.created` when you're done.
+
+Subscriptions last as long as the Pi session. After you restart Pi or run `/reload`, ask it to subscribe again. The [events reference](/docs/tooling/ai/mcp-servers#events) lists every event you can subscribe to, including failed function executions, completed deployments, new rows, and new files.
+
+# Read more about Pi and the Appwrite MCP server
+
+If you would like to learn more about Pi and the Appwrite MCP server, we have some resources that you should visit:
+
+- [Connect the Appwrite MCP server to Pi](/docs/tooling/ai/agents/pi)
+- [Announcing MCP Events: your agent hears about changes in your Appwrite project](/blog/post/announcing-mcp-events)
+- [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [pi-mcp-adapter on GitHub](https://github.com/nicobailon/pi-mcp-adapter)
+- [pi-mcp-events on GitHub](https://github.com/mikekelly/pi-mcp-events)

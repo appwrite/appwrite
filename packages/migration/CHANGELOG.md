@@ -27,6 +27,12 @@
 
 ### Fixed
 
+- The Appwrite destination imports a bucket whose maximum file size its destination refuses with the destination's
+  limit, and a function or site whose build or runtime specification its destination does not offer with the
+  destination's default, instead of failing it and every file, variable and deployment that belongs to it. A project
+  keeps both when its plan changes, so copying it across plans hit this. Each change is recorded as a warning naming
+  what was asked for. Specifications are listed once per run, and a destination that cannot list them is sent the
+  specification as before.
 - The CSV destination prefixes string values that start with `=`, `+`, `-`, `@`, a tab or a carriage return with a
   single quote, so spreadsheet applications do not evaluate them as formulas. Numbers, booleans and arrays are
   written as before. The CSV source strips the quote again, so exports import back unchanged.
@@ -114,6 +120,7 @@ database library it builds on; read the upgrade notes before you upgrade from 2.
 
 ### Fixed
 
+- The transfer cache keys a table by its database's ID and a column, index or row by its database's and table's IDs, so the first tables of two databases no longer share an entry (the second replaced the first, which then got no columns, indexes or rows).
 - Imports into a destination whose database metadata has `status` but no owner attributes.
 - Recovery of databases left `provisioning` or `failed` without an owner.
 - An ownerless database that another migration may still be provisioning is no longer taken over.

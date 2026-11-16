@@ -23,7 +23,7 @@ utopia-compression.workspace = true
 utopia-database.workspace = true
 utopia-dsn.workspace = true
 utopia-http.workspace = true
-utopia-image.workspace = true
+utopia-image = { workspace = true, features = ["ravif"] }
 utopia-lock.workspace = true
 utopia-query.workspace = true
 utopia-storage.workspace = true

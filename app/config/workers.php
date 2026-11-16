@@ -87,6 +87,12 @@ return [
         'queueEnv' => '_APP_NOTIFICATIONS_QUEUE_NAME',
         'coroutines' => 1,
     ],
+    // Each job reads one rule's usage and publishes at most one notification.
+    'alerts' => [
+        'queue' => Event::ALERTS_QUEUE_NAME,
+        'queueEnv' => '_APP_ALERTS_QUEUE_NAME',
+        'coroutines' => 8,
+    ],
     'messaging' => [
         'queue' => Event::MESSAGING_QUEUE_NAME,
         'queueEnv' => '_APP_MESSAGING_QUEUE_NAME',

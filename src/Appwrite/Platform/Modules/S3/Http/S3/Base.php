@@ -28,6 +28,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
@@ -145,6 +146,10 @@ abstract class Base extends Action
 
     protected function bucket(Database $dbForProject, string $bucketId): Document
     {
+        // The bucket ID is a segment of every object's storage path, so one such as `..` would leave the project's directory.
+        if (!(new UID())->isValid($bucketId)) {
+            throw new AppwriteException(AppwriteException::STORAGE_BUCKET_NOT_FOUND);
+        }
         $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled', true)) {
             throw new AppwriteException(AppwriteException::STORAGE_BUCKET_NOT_FOUND);
@@ -296,6 +301,10 @@ abstract class Base extends Action
             }
         }
         $this->validateFileConstraints($bucket, (string) ($upload['name'] ?? $upload['key'] ?? ''), $size);
+        // Completion requires part 1 and a retry must resend the same bytes, so part 1 decides the type.
+        if ($partNumber === 1) {
+            $this->validateContent($bucket, (string) ($upload['name'] ?? $upload['key'] ?? ''), $body);
+        }
 
         $metadata = $upload['metadata'] ?? [];
         $deviceMetadata = $metadata['device'] ?? [];
@@ -450,6 +459,24 @@ abstract class Base extends Action
     }
 
     /**
+     * Same rule as the REST upload: a signed extension must sniff as one of the bucket's allowed formats.
+     */
+    protected function validateContent(Document $bucket, string $name, string $body): void
+    {
+        $allowed = $bucket->getAttribute('allowedFileExtensions', []);
+        $formats = Config::getParam('storage-formats');
+        if (empty($allowed) || !isset($formats['signatures'][\strtolower(\pathinfo($name, PATHINFO_EXTENSION))])) {
+            return;
+        }
+
+        $mimeType = (new \finfo(FILEINFO_MIME_TYPE))->buffer($body);
+        $types = \array_merge(...\array_map(fn (string $extension): array => $formats['signatures'][\strtolower(\ltrim($extension, '.'))] ?? [], $allowed));
+        if (!\in_array($mimeType, $types, true)) {
+            throw new AppwriteException(AppwriteException::STORAGE_FILE_TYPE_UNSUPPORTED, 'File content type not allowed');
+        }
+    }
+
+    /**
      * The gateway does not scan objects, so it refuses writes the REST upload would scan.
      */
     protected function validateAntivirus(Document $bucket, Device $deviceForFiles, int $size): void
@@ -580,6 +607,11 @@ abstract class Base extends Action
 
     protected function createBucket(Database $dbForProject, string $bucketId): void
     {
+        $validator = new UID();
+        if (!$validator->isValid($bucketId)) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
+        }
+
         $files = (Config::getParam('collections', [])['buckets'] ?? [])['files'] ?? [];
         if (empty($files)) {
             throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Files collection is not configured.');
@@ -639,6 +671,7 @@ abstract class Base extends Action
         $folder = $object['folder'];
         $name = $object['name'];
         $this->validateFileConstraints($bucket, $name, \strlen($body));
+        $this->validateContent($bucket, $name, $body);
         $previousPath = $existing?->getAttribute('path', '') ?? '';
         $path = $existing === null
             ? $this->path($deviceForFiles, $bucket, $fileId, $name)

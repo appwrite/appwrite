@@ -221,6 +221,8 @@ final class Adapter implements Base, Benchmarks
             $progress .= $chunk;
         } : null;
         try {
+            // A string command is the API under test (PHP's Console::execute takes either).
+            // @phpstan-ignore staticMethod.disallowedShell
             $status = Console::execute($cmd, (string) ($a['stdin'] ?? ''), $stdout, $stderr, (int) ($a['timeout'] ?? -1), $onProgress);
         } catch (\Throwable $e) {
             return ['error' => self::error($e)];

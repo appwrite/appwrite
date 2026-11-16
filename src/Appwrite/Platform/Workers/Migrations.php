@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\AppwriteException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Client;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -595,7 +596,7 @@ class Migrations extends Action
             $scopes = \array_values(\array_intersect($scopes, $grant));
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+        $jwt = new JWT(EncryptionKey::current(), 'HS256', 86400, 0);
 
         $apiKey = $jwt->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
@@ -991,7 +992,7 @@ class Migrations extends Action
         $destination->success();
 
         // The link is emailed, so it lives as long as the file itself does.
-        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', DATA_EXPORT_RETENTION, 0);
+        $encoder = new JWT(EncryptionKey::current(), 'HS256', DATA_EXPORT_RETENTION, 0);
         $jwt = $encoder->encode([
             'bucketId' => $bucketId,
             'fileId' => $fileId,

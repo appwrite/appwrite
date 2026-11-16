@@ -53,7 +53,11 @@ class Multiplexing extends Versioned implements Adapter, Batchable, TelemetryFea
     private ?Counter $writeFailures = null;
 
     /**
-     * @param  float  $timeout connect timeout in seconds
+     * @param  float  $timeout connect timeout in seconds, covering the TCP
+     *                         connect and the AUTH/SELECT handshake. The
+     *                         handshake belongs to establishing the connection,
+     *                         not to any caller's read, so it is not held to
+     *                         $readTimeout.
      * @param  float  $readTimeout per-call read deadline in seconds — how long
      *                             one caller waits for its own reply before
      *                             giving up. Caches should fail fast, default
@@ -528,18 +532,25 @@ class Multiplexing extends Versioned implements Adapter, Batchable, TelemetryFea
     {
         $client = new Client($this->host, $this->port, $this->timeout);
 
+        // The handshake is part of connecting, so it gets the connect deadline.
+        // Held to the per-call $readTimeout (0.25s by default), every caller on a
+        // freshly started, busy worker builds an adapter whose AUTH reply lands a
+        // little late, and the constructor throws "Timed out waiting for Redis
+        // response" for a server that was healthy throughout.
+        $handshakeTimeout = $this->timeout;
+
         try {
             if ($this->auth !== null) {
                 $authArgs = \is_array($this->auth)
                     ? array_merge(['AUTH'], array_values($this->auth))
                     : ['AUTH', $this->auth];
 
-                if ($client->command($authArgs, $this->readTimeout) !== 'OK') {
+                if ($client->command($authArgs, $handshakeTimeout) !== 'OK') {
                     throw new \RedisException('Redis AUTH failed');
                 }
             }
 
-            if ($this->dbIndex !== 0 && $client->command(['SELECT', (string) $this->dbIndex], $this->readTimeout) !== 'OK') {
+            if ($this->dbIndex !== 0 && $client->command(['SELECT', (string) $this->dbIndex], $handshakeTimeout) !== 'OK') {
                 throw new \RedisException('Redis SELECT failed');
             }
         } catch (Throwable $th) {

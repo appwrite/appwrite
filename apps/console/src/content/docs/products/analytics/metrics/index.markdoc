@@ -12,7 +12,7 @@ The row of metrics at the top of the dashboard covers the selected date range.
 
 - **Unique visitors**: distinct visitors in the range. Someone who returns several times counts once.
 - **Visits**: visits that started in the range. A visit that started earlier doesn't count, even if it continued into the range.
-- **Pageviews**: `pageview` events, including repeat views of the same page.
+- **Pageviews**: `pageview` and `screen_view` events, including repeat views of the same page or screen.
 - **Views per visit**: pageviews divided by visits.
 - **Bounce rate**: the share of visits with fewer than two pageviews.
 - **Visit duration**: the average time from a visit's first event to its last. A visit with a single event counts as 0 seconds.

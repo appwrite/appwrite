@@ -6,6 +6,7 @@ namespace Utopia\Compression\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Utopia\Compression\Algorithms\Brotli;
+use Utopia\Compression\Algorithms\Deflate;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Snappy;
 use Utopia\Compression\Algorithms\XZ;
@@ -21,6 +22,11 @@ final class CompressionTest extends TestCase
         $this->assertEquals(new XZ(), Compression::fromName('xz'));
         $this->assertEquals(new Zstd(), Compression::fromName('zstd'));
         $this->assertEquals(null, Compression::fromName('unknown'));
+    }
+
+    public function testFromAcceptEncodingSkipsRefusedEncodings(): void
+    {
+        $this->assertEquals(new Deflate(), Compression::fromAcceptEncoding('gzip;q=0, deflate'));
     }
 
     public function testFromAcceptEncoding(): void

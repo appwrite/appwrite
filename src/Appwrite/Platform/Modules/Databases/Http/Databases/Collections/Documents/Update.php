@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -61,9 +62,7 @@ class Update extends Action
             ->label('audits.event', 'document.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),

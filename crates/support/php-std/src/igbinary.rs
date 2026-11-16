@@ -2,9 +2,6 @@
 //! igbinary extension (3.2, format version 2, `igbinary.compact_strings=On`)
 //! of the PHP image. Appwrite's cache and queue payloads use it.
 //!
-//! Every function here is checked against the extension by
-//! `bin/compat fuzz php-std` (operations `igbinary.*`).
-//!
 //! | PHP | Rust |
 //! |---|---|
 //! | `igbinary_serialize($v)` | [`serialize`] |

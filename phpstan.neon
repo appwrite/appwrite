@@ -11,6 +11,8 @@ parameters:
   scanDirectories:
     - vendor/swoole/ide-helper
   scanFiles:
+    # Utopia\Image\Canvas, which the utopia extension registers
+    - packages/image/stubs/Canvas.php
     # Classes the compat database recorder generates with eval()
     - tests/compat/database/recorder/Classes.stub
     # The migration suite's test doubles, which the compat migration adapter extends
@@ -18,6 +20,9 @@ parameters:
     - packages/migration/tests/Adapters/MockDestination.php
   excludePaths:
     - tests/resources
+    # Written against utopia-php/agents before its redesign (models, tools and a
+    # step loop); rewritten with the agents crate (task main-nov16-libraries).
+    - tests/compat/agents
   ignoreErrors:
     # Database\Query::parseQueries inherits the base @throws Utopia\Query\Exception
     # annotation, but late static binding wraps that as Database\Exception\Query.
@@ -28,8 +33,17 @@ parameters:
     -
       identifier: function.disallowedCurl
       path: tests/*
+    -
+      identifier: function.disallowedShell
+      path: tests/*
+rules:
+  - Utopia\Console\PHPStan\DisallowShellStringRule
 services:
   -
     class: Utopia\Client\PHPStan\DisallowRawCurlExtension
+    tags:
+      - phpstan.restrictedFunctionUsageExtension
+  -
+    class: Utopia\Console\PHPStan\DisallowRawShellExtension
     tags:
       - phpstan.restrictedFunctionUsageExtension

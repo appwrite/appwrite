@@ -1,8 +1,6 @@
-import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { toast } from 'sonner'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
@@ -11,6 +9,7 @@ import {
   DnsRecordsTable,
   DomainVerificationAlert,
   dnsPendingVerificationError,
+  domainVerificationError,
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import {
@@ -37,7 +36,6 @@ export function VerifySmtpDomainContent({
   noCard,
 }: VerifySmtpDomainContentProps) {
   const t = useT()
-  const [copiedField, setCopiedField] = useState<string | null>(null)
   const { smtpTarget, isLoading } = useConsoleVariables(region)
   const { projectId } = useParams({ strict: false })
   const mxTarget = typeof smtpTarget === 'string' ? smtpTarget.trim() : ''
@@ -45,13 +43,6 @@ export function VerifySmtpDomainContent({
   const records = projectId
     ? getSmtpDnsRecords({ domain: rule.domain, projectId, mxTarget })
     : []
-
-  const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedField(field)
-    toast.success(t('Copied'))
-    setTimeout(() => setCopiedField(null), 2000)
-  }
 
   if (isLoading) {
     return (
@@ -84,8 +75,6 @@ export function VerifySmtpDomainContent({
       {records.length > 0 ? (
         <DnsRecordsTable
           records={records}
-          onCopy={handleCopy}
-          copiedField={copiedField}
           showTtl={true}
           showPriority={!!mxTarget}
         />
@@ -149,4 +138,4 @@ export function VerifySmtpDomainContent({
   )
 }
 
-export { dnsPendingVerificationError }
+export { dnsPendingVerificationError, domainVerificationError }

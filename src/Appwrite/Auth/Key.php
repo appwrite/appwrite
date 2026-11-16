@@ -9,7 +9,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\System\System;
 
 class Key
 {
@@ -222,15 +221,8 @@ class Key
             // Dynamic supported for backwards compatibility
             case API_KEY_EPHEMERAL:
             case 'dynamic':
-                $jwtObj = new JWT(
-                    key: System::getEnv('_APP_OPENSSL_KEY_V1'),
-                    algo: 'HS256',
-                    maxAge: 86400,
-                    leeway: 0
-                );
-
                 try {
-                    $payload = $jwtObj->decode($secret);
+                    $payload = EncryptionKey::decode($secret, maxAge: 86400);
                 } catch (JWTException) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }

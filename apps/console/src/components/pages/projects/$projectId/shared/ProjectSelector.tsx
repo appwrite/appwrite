@@ -18,6 +18,7 @@ import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import {
   useTeams,
   useProject,
+  useProductionProject,
   useProjectsForTeamInfinite,
   useConsoleTeam,
   fetchActiveProjects,
@@ -39,6 +40,7 @@ import { FailedInvoiceWarningIcon } from '@/components/global/shared/FailedInvoi
 import { ProjectBlockedBadge } from '@/components/global/shared/ProjectBlockedBadge'
 import { ProjectSelectorPlanBadge } from '@/components/pages/projects/$projectId/shared/ProjectSelectorPlanBadge'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
+import { projectEnvironmentId } from '@/lib/project-environments'
 import {
   useQuery,
   useQueryClient,
@@ -211,6 +213,21 @@ function ProjectSelectorPlanBadgeSlot({
   )
 }
 
+/**
+ * The open project as the trigger names it. Inside an environment that is the
+ * production project's name and then the environment's, each cut to the limit
+ * on its own so the slash between them stays.
+ */
+function formatProjectPathForDisplay(
+  name: string,
+  parentName: string | null,
+  maxLength: number,
+): string {
+  const project = formatProjectNameForDisplay(name, maxLength)
+  if (!parentName) return project
+  return `${formatProjectNameForDisplay(parentName, maxLength)} / ${project}`
+}
+
 function getProjectsInfiniteNextPageParam(
   lastPage: { total?: number; projects?: unknown[] | null },
   allPages: Array<{ projects?: unknown[] | null }>,
@@ -275,9 +292,17 @@ export function ProjectSelector({
   // Fetch current project separately by ID
   const {
     project: currentProject,
+    projectData: currentProjectData,
     isLoading: currentProjectLoading,
     error: currentProjectError,
   } = useProject(projectId)
+  // Inside an environment the open project is the environment, under the
+  // project's own ID and with the environment's name. The project itself is
+  // asked for apart, so the trigger reads organization / project / environment
+  // and the list names the project, not the environment.
+  const { project: parentProject } = useProductionProject(
+    projectEnvironmentId(currentProjectData) ? projectId : undefined,
+  )
   const projectPaymentRequired = isHttpPaymentRequiredError(currentProjectError)
   const projectAccessFailed = isHttpProjectAccessError(currentProjectError)
 
@@ -316,9 +341,11 @@ export function ProjectSelector({
   const resolvedProject = useMemo(() => {
     const candidate = selectedProject ?? currentProject ?? null
     if (!candidate || !projectId) return null
-    if (candidate.$id !== projectId) {
-      return currentProject?.$id === projectId ? currentProject : null
-    }
+    // What was fetched for the open project is what is open. Inside an
+    // environment that is the environment, while the row picked from the list
+    // is the project it belongs to, under the same ID.
+    if (currentProject?.$id === projectId) return currentProject
+    if (candidate.$id !== projectId) return null
     return candidate
   }, [selectedProject, currentProject, projectId])
 
@@ -571,6 +598,13 @@ export function ProjectSelector({
   }, [currentProjectOrg, billingPlans, currentOrganizationPlan])
 
   const orgDisplayName = currentProjectTeam?.name || resolvedTeam?.name || ''
+  const parentName =
+    resolvedProject && parentProject ? parentProject.name : null
+  const projectPath = resolvedProject
+    ? parentName
+      ? `${parentName} / ${resolvedProject.name}`
+      : resolvedProject.name
+    : ''
 
   const lastFullProjectsCountRef = useRef(0)
   if (!projectSearchActive && teamProjectsTotalData?.total != null) {
@@ -625,11 +659,14 @@ export function ProjectSelector({
       : pinnedProjects.filter((p) => p.$id !== projectId)
 
     if (currentProject && currentProject.teamId === resolvedTeam.$id) {
-      return [currentProject, ...pinnedForList, ...otherProjects]
+      // The list is of projects: inside an environment the current row is the
+      // project the environment belongs to
+      return [parentProject ?? currentProject, ...pinnedForList, ...otherProjects]
     }
     return [...pinnedForList, ...otherProjects]
   }, [
     currentProject,
+    parentProject,
     pinnedProjects,
     paginatedProjects,
     projectId,
@@ -895,15 +932,16 @@ export function ProjectSelector({
             className,
           )}
         >
-          <InitialsAvatar name={resolvedProject.name} size="sm" />
+          <InitialsAvatar name={parentName ?? resolvedProject.name} size="sm" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <p
                 className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground"
-                title={resolvedProject.name}
+                title={projectPath}
               >
-                {formatProjectNameForDisplay(
+                {formatProjectPathForDisplay(
                   resolvedProject.name,
+                  parentName,
                   PROJECT_NAME_DISPLAY_MAX_SELECTOR,
                 )}
               </p>
@@ -984,7 +1022,11 @@ export function ProjectSelector({
           >
             {resolvedProject ? (
               <InitialsAvatar
-                name={resolvedProject.name}
+                name={
+                  compact
+                    ? resolvedProject.name
+                    : (parentName ?? resolvedProject.name)
+                }
                 size={compact ? 'xs' : 'sm'}
                 className={compact ? 'h-3.5 w-3.5 text-[8px]' : undefined}
               />
@@ -1008,8 +1050,8 @@ export function ProjectSelector({
                 title={
                   resolvedProject
                     ? supportsMultiTenancy && orgDisplayName
-                      ? `${orgDisplayName} / ${resolvedProject.name}`
-                      : resolvedProject.name
+                      ? `${orgDisplayName} / ${projectPath}`
+                      : projectPath
                     : undefined
                 }
               >
@@ -1025,14 +1067,17 @@ export function ProjectSelector({
                         {truncateMiddle(orgDisplayName || 'Organization', 20)}
                       </span>{' '}
                       /{' '}
-                      {formatProjectNameForDisplay(
+                      {formatProjectPathForDisplay(
                         resolvedProject.name,
+                        parentName,
                         PROJECT_NAME_DISPLAY_MAX_COMPACT,
                       )}
                     </>
                   ) : (
-                    formatProjectNameForDisplay(
+                    // The compact trigger has room for one name only
+                    formatProjectPathForDisplay(
                       resolvedProject.name,
+                      compact ? null : parentName,
                       compact
                         ? PROJECT_NAME_DISPLAY_MAX_COMPACT
                         : PROJECT_NAME_DISPLAY_MAX_SELECTOR,

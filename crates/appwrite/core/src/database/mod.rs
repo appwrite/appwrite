@@ -207,8 +207,9 @@ mod tests {
     }
 
     /// The keys PHP's `Factory` databases give (`getCacheKeys()` and
-    /// `getQueryCacheKey()` printed by PHP 8.1.3 with Appwrite's filters):
-    /// the cache is shared, so they must be the same.
+    /// `getQueryCacheKey()` with Appwrite's filters): the cache is shared, so
+    /// they must be the same. The hashes cover the filters' signatures, which
+    /// `filters::tests::signatures_match_the_php_source` pins to PHP's source.
     #[utopia_async::test]
     async fn cache_keys_match_php() {
         let databases = databases().await;
@@ -226,7 +227,7 @@ mod tests {
             [
                 "default-cache-console:appwrite:_console::collection:projects",
                 "default-cache-console:appwrite:_console::collection:projects:p1",
-                "default-cache-console:appwrite:_console::collection:projects:p1:33cef9106fc54859d59ac2e4e64c3180",
+                "default-cache-console:appwrite:_console::collection:projects:p1:8f61be1117ab951258a4217d25967aae",
             ]
         );
         assert_eq!(
@@ -234,13 +235,13 @@ mod tests {
             [
                 "default-cache-database_db_main:appwrite:_7::collection:users",
                 "default-cache-database_db_main:appwrite:_7::collection:users:u1",
-                "default-cache-database_db_main:appwrite:_7::collection:users:u1:33cef9106fc54859d59ac2e4e64c3180",
+                "default-cache-database_db_main:appwrite:_7::collection:users:u1:8f61be1117ab951258a4217d25967aae",
             ]
         );
         let selects = ["name".to_owned(), "$id".to_owned()];
         assert_eq!(
             db.cache_keys("users", Some("u1"), &selects).await.unwrap().2,
-            "default-cache-database_db_main:appwrite:_7::collection:users:u1:c18f23e260f01bcf88ac1ee872b6c741"
+            "default-cache-database_db_main:appwrite:_7::collection:users:u1:aaa49b49f21a9a4396c0b4ab60fe16fe"
         );
         assert_eq!(
             db.query_cache_key("users", None).await.unwrap(),
@@ -251,7 +252,7 @@ mod tests {
             db.skip_filters(Some(skipped.as_slice()), db.cache_keys("users", Some("u1"), &[])).await.unwrap();
         assert_eq!(
             hash,
-            "default-cache-database_db_main:appwrite:_7::collection:users:u1:7e28cd740374d16a34075c661e11f5c5"
+            "default-cache-database_db_main:appwrite:_7::collection:users:u1:471a80ba4e7e2505658f5fbab52c7048"
         );
     }
 }

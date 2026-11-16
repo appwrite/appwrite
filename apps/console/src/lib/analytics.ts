@@ -3,6 +3,7 @@ import {
   getAnalyticsSurface,
   type AnalyticsSurface,
 } from '@/lib/analytics-route'
+import { trackAppwriteEvent } from '@/lib/appwrite-analytics'
 import { getAttributionSearchForPlausible } from '@/lib/marketing/utm'
 import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
 import { getRuntimeConfig } from '@/lib/runtime-config'
@@ -61,6 +62,10 @@ export type AnalyticsEventName =
   | 'Form Validation Failed'
   | 'Menu Item Clicked'
   | 'Navigation Clicked'
+  | 'Overview Quick Start Clicked'
+  | 'Overview Resource Create Clicked'
+  | 'Overview Resource Opened'
+  | 'Overview Resource View All Clicked'
   | 'Pagination Changed'
   | 'Resource Created'
   | 'Resource Creation Failed'
@@ -70,6 +75,7 @@ export type AnalyticsEventName =
   | 'View Mode Changed'
   | 'Wizard Opened'
   | 'Wizard Option Selected'
+  | 'WebMCP Tool Called'
 
 export type AnalyticsPropValue = string | number | boolean | null | undefined
 export type AnalyticsProps = Record<string, AnalyticsPropValue>
@@ -272,7 +278,7 @@ export function trackEvent(
   props: AnalyticsProps = {},
   options: { routePath?: string; url?: string } = {},
 ) {
-  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+  if (typeof window === 'undefined') return
 
   const routePath = options.routePath
   const plausibleOptions: PlausibleOptions = {
@@ -287,6 +293,10 @@ export function trackEvent(
       ...getGlobalAnalyticsProps(routePath),
     }),
   }
+
+  // Appwrite Analytics sends its own pageview on start, so it skips the queue.
+  trackAppwriteEvent(eventName, plausibleOptions)
+  if (!isAnalyticsAllowed()) return
 
   if (!hasTrackedPageview) {
     if (pendingAnalyticsEvents.length < MAX_PENDING_ANALYTICS_EVENTS) {

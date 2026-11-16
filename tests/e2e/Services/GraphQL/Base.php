@@ -5,7 +5,8 @@ namespace Tests\E2E\Services\GraphQL;
 use CURLFile;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
-use Utopia\Image\Image;
+use Utopia\Image\Canvas;
+use Utopia\Image\Format;
 
 trait Base
 {
@@ -504,10 +505,9 @@ trait Base
         $this->assertEquals('image/png', $file['headers']['content-type']);
         $this->assertNotEmpty($file['body']);
 
-        $image = new Image($file['body']);
         $dimensions = \getimagesizefromstring($file['body']);
 
-        $this->assertNotEmpty($image->output('png'));
+        $this->assertNotEmpty((new Canvas($file['body']))->encode(Format::Png));
         $this->assertIsArray($dimensions);
         $this->assertSame(100, $dimensions[0]);
         $this->assertSame(100, $dimensions[1]);

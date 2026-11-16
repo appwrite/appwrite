@@ -20,12 +20,17 @@ import {
   getResourceActions,
   DOCS_LINK,
 } from '@/lib/events-editor/events-model'
-import { buildChannelString, isValidChannelString, REALTIME_CHANNELS_DOCS_LINK } from '@/lib/realtime/channel-builder'
+import {
+  buildChannelString,
+  isValidChannelString,
+  REALTIME_CHANNELS_DOCS_LINK,
+} from '@/lib/realtime/channel-builder'
 import { useEventBuilder } from '@/lib/events-editor/use-event-builder'
 import { EventResourceIdSelector } from './EventResourceIdSelector'
 import type { EventEditorModalProps } from './types'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 export function EventEditor({
   open,
@@ -40,6 +45,7 @@ export function EventEditor({
   title,
 }: EventEditorModalProps) {
   const t = useT()
+  const { features } = useConsoleProfile()
   const builder = useEventBuilder(initialValue)
   const [copied, setCopied] = useState(false)
 
@@ -80,9 +86,7 @@ export function EventEditor({
   const showResourceRow = resources.length > 0
   const showActionRow = !channelMode && builder.selection.service
   const showAttributeRow =
-    !channelMode &&
-    selectedAction?.columns &&
-    selectedAction.columns.length > 0
+    !channelMode && selectedAction?.columns && selectedAction.columns.length > 0
 
   const resolvedDocsLink =
     docsLink ?? (channelMode ? REALTIME_CHANNELS_DOCS_LINK : DOCS_LINK)
@@ -166,7 +170,10 @@ export function EventEditor({
               <PillRow
                 label="Service"
                 value={builder.selection.service}
-                options={EVENT_SERVICES.map((s) => s.name)}
+                options={EVENT_SERVICES.map((s) => s.name).filter(
+                  // Alert events ship behind the alerts preview.
+                  (name) => name !== 'monitors' || features.alerts,
+                )}
                 onSelect={builder.setService}
               />
               {builder.selection.service === 'databases' && projectId && (

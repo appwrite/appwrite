@@ -2,16 +2,13 @@
 
 use std::io::Write;
 
-use image::{ImageEncoder, RgbaImage};
+use image::RgbaImage;
 
 use crate::error::{Error, Result};
 use crate::frame::{Format, Frame};
 
-/// What Imagick reports when an encoder produced nothing.
-const EMPTY: &str = "Failed to get the image contents (empty or invalid image?)";
-
-fn failed(_: impl std::fmt::Display) -> Error {
-    Error::imagick(EMPTY)
+fn failed(e: impl std::fmt::Display) -> Error {
+    Error::write(e)
 }
 
 /// Whether the format keeps every frame in one file (ImageMagick's adjoin).
@@ -32,12 +29,22 @@ pub(crate) fn encode(
     let first = &frames[0];
     match format {
         Format::Jpeg => jpeg(first, quality),
-        Format::Png => png(first, quality),
+        Format::Png => png(first),
         Format::Gif => gif(frames),
         Format::Webp => webp(frames, quality),
         Format::Avif => avif(first, wand_quality),
-        Format::Heic => Err(Error::imagick(EMPTY)),
+        Format::Heic => heic(first, wand_quality),
     }
+}
+
+/// The grey level of every pixel, with its alpha when `alpha`, if every pixel is
+/// a grey: such an image is written with one colour channel, as ImageMagick does.
+fn gray(pixels: &RgbaImage, alpha: bool) -> Option<Vec<u8>> {
+    let raw = pixels.as_raw();
+    if !raw.chunks_exact(4).all(|px| px[0] == px[1] && px[1] == px[2]) {
+        return None;
+    }
+    Some(raw.chunks_exact(4).flat_map(|px| [px[0], px[3]].into_iter().take(if alpha { 2 } else { 1 })).collect())
 }
 
 fn rgb(pixels: &RgbaImage) -> Vec<u8> {
@@ -48,53 +55,57 @@ fn rgb(pixels: &RgbaImage) -> Vec<u8> {
     out
 }
 
+/// JPEG as ImageMagick's libjpeg writes it: baseline, with Huffman tables
+/// built for the image. The chroma subsampling is the source's when that was
+/// a JPEG; otherwise 4:4:4 from quality 90 and 4:2:0 below.
 fn jpeg(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     // ImageMagick's JPEG default is 92; 0 means unset.
     let quality = match quality {
         Some(q) if q > 0 => q.min(100) as u8,
         _ => 92,
     };
+    // JPEG's own limit; ImageMagick fails on a larger image too.
+    let (width, height) =
+        (u16::try_from(frame.width()).map_err(failed)?, u16::try_from(frame.height()).map_err(failed)?);
     let mut out = Vec::new();
-    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut out, quality)
-        .write_image(&rgb(&frame.pixels), frame.width(), frame.height(), image::ExtendedColorType::Rgb8)
-        .map_err(failed)?;
+    let mut encoder = jpeg_encoder::Encoder::new(&mut out, quality);
+    let sampling = match frame.jpeg_sampling {
+        Some((horizontal, vertical)) => jpeg_encoder::SamplingFactor::from_factors(horizontal, vertical),
+        None if quality >= 90 => Some(jpeg_encoder::SamplingFactor::F_1_1),
+        None => None,
+    };
+    encoder.set_sampling_factor(sampling.unwrap_or(jpeg_encoder::SamplingFactor::F_2_2));
+    encoder.set_optimized_huffman_tables(true);
+    match gray(&frame.pixels, false) {
+        Some(luma) => encoder.encode(&luma, width, height, jpeg_encoder::ColorType::Luma),
+        None => encoder.encode(&rgb(&frame.pixels), width, height, jpeg_encoder::ColorType::Rgb),
+    }
+    .map_err(failed)?;
     Ok(out)
 }
 
-/// PNG: ImageMagick reads the quality as `zlib level * 10 + filter`, 75 when
-/// unset. `Image::output()` maps 0–100 onto 9–0, which is level 0 (Huffman
-/// only, the fastest deflate here) with filters 0–9 (5 and up adaptive).
-fn png(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
-    let q = match quality {
-        Some(q) if (0..=99).contains(&q) => q,
-        _ => 75,
-    };
-    let (level, filter) = (q / 10, q % 10);
-    let deflate = match level {
-        0 => png::DeflateCompression::FdeflateUltraFast,
-        l => png::DeflateCompression::Level(l as u8),
-    };
-    let filter = match filter {
-        0 => png::Filter::NoFilter,
-        1 => png::Filter::Sub,
-        2 => png::Filter::Up,
-        3 => png::Filter::Avg,
-        4 => png::Filter::Paeth,
-        _ => png::Filter::Adaptive,
-    };
+/// PNG: ImageMagick's PNG coder reads its quality (`zlib level * 10 + filter`)
+/// from the wand, never from the image, so the image quality `Image::output()`
+/// sets changes nothing: every PNG is written at the default 75, which is
+/// zlib level 7 with adaptive filtering.
+fn png(frame: &Frame) -> Result<Vec<u8>> {
+    let deflate = png::DeflateCompression::Level(7);
+    let filter = png::Filter::Adaptive;
     let mut out = Vec::new();
     {
         let mut encoder = png::Encoder::new(&mut out, frame.width(), frame.height());
-        encoder.set_color(if frame.alpha { png::ColorType::Rgba } else { png::ColorType::Rgb });
+        let (color, data) = match (gray(&frame.pixels, frame.alpha), frame.alpha) {
+            (Some(levels), true) => (png::ColorType::GrayscaleAlpha, levels),
+            (Some(levels), false) => (png::ColorType::Grayscale, levels),
+            (None, true) => (png::ColorType::Rgba, frame.pixels.as_raw().clone()),
+            (None, false) => (png::ColorType::Rgb, rgb(&frame.pixels)),
+        };
+        encoder.set_color(color);
         encoder.set_depth(png::BitDepth::Eight);
         encoder.set_deflate_compression(deflate);
         encoder.set_filter(filter);
         let mut writer = encoder.write_header().map_err(failed)?;
-        if frame.alpha {
-            writer.write_image_data(frame.pixels.as_raw()).map_err(failed)?;
-        } else {
-            writer.write_image_data(&rgb(&frame.pixels)).map_err(failed)?;
-        }
+        writer.write_image_data(&data).map_err(failed)?;
         writer.finish().map_err(failed)?;
     }
     Ok(out)
@@ -146,7 +157,7 @@ fn vp8l(frame: &Frame, width: u32, height: u32) -> Result<Vec<u8>> {
     let (data, color) = if frame.alpha {
         (pixels, image_webp::ColorType::Rgba8)
     } else {
-        let rgba = RgbaImage::from_raw(width, height, pixels).ok_or_else(|| Error::imagick(EMPTY))?;
+        let rgba = RgbaImage::from_raw(width, height, pixels).ok_or_else(|| Error::write("frame size"))?;
         (rgb(&rgba), image_webp::ColorType::Rgb8)
     };
     let mut file = Vec::new();
@@ -168,14 +179,62 @@ fn u24(out: &mut Vec<u8>, v: u32) {
     out.extend_from_slice(&v.to_le_bytes()[..3]);
 }
 
-/// WebP, always lossless (see the crate docs). Several frames make an
-/// animation; consecutive identical frames merge into one with their delays
-/// summed, as libwebp's animation encoder does.
+/// One WebP frame as a whole file written by libwebp, as ImageMagick sets it
+/// up: lossy at `quality` (75 when unset or 0), lossless from 100.
+#[cfg(feature = "libwebp")]
+fn libwebp(frame: &Frame, width: u32, height: u32, quality: Option<i64>) -> Vec<u8> {
+    let cropped;
+    let pixels = if (width, height) == frame.pixels.dimensions() {
+        &frame.pixels
+    } else {
+        cropped = image::imageops::crop_imm(&frame.pixels, 0, 0, width, height).to_image();
+        &cropped
+    };
+    let opaque;
+    let encoder = if frame.alpha {
+        webp::Encoder::from_rgba(pixels.as_raw(), width, height)
+    } else {
+        opaque = rgb(pixels);
+        webp::Encoder::from_rgb(&opaque, width, height)
+    };
+    match quality {
+        Some(q) if q >= 100 => encoder.encode_lossless().to_vec(),
+        Some(q) if q > 0 => encoder.encode(q as f32).to_vec(),
+        _ => encoder.encode(75.0).to_vec(),
+    }
+}
+
+/// The image chunks of a WebP file (`ALPH`, `VP8 `, `VP8L`), headers included:
+/// what an animation frame holds.
+#[cfg(feature = "libwebp")]
+fn image_chunks(file: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    let mut rest = file.get(12..).unwrap_or_default();
+    while rest.len() >= 8 {
+        let size = u32::from_le_bytes([rest[4], rest[5], rest[6], rest[7]]) as usize;
+        let end = (8 + size + size % 2).min(rest.len());
+        if matches!(&rest[..4], b"ALPH" | b"VP8 " | b"VP8L") {
+            out.extend_from_slice(&rest[..end]);
+        }
+        rest = &rest[end..];
+    }
+    out
+}
+
+/// WebP: lossy with the `libwebp` feature, as ImageMagick writes it, and
+/// lossless without (see the crate docs). Several frames make an animation;
+/// consecutive identical frames merge into one with their delays summed, as
+/// libwebp's animation encoder does.
 fn webp(frames: &[Frame], quality: Option<i64>) -> Result<Vec<u8>> {
+    // ImageMagick's WebP coder fails on a quality over 100.
     if quality.is_some_and(|q| q > 100) {
-        return Err(Error::imagick(EMPTY));
+        return Err(Error::write("quality over 100"));
     }
     let first = &frames[0];
+    #[cfg(feature = "libwebp")]
+    if frames.len() == 1 {
+        return Ok(libwebp(first, first.width(), first.height(), quality));
+    }
     if frames.len() == 1 {
         let mut out = Vec::new();
         let body = vp8l(first, first.width(), first.height())?;
@@ -217,6 +276,9 @@ fn webp(frames: &[Frame], quality: Option<i64>) -> Result<Vec<u8>> {
         u24(&mut anmf, (delay * 10).min(0xFF_FFFF));
         // No blending: every frame is the whole picture.
         anmf.push(1 << 1);
+        #[cfg(feature = "libwebp")]
+        anmf.extend_from_slice(&image_chunks(&libwebp(frame, w, h, quality)));
+        #[cfg(not(feature = "libwebp"))]
         chunk(&mut anmf, b"VP8L", &vp8l(frame, w, h)?);
         chunk(&mut out, b"ANMF", &anmf);
     }
@@ -225,7 +287,28 @@ fn webp(frames: &[Frame], quality: Option<i64>) -> Result<Vec<u8>> {
     Ok(out)
 }
 
+/// AVIF: through libheif with the `libheif` feature, as ImageMagick writes it,
+/// when it has an AV1 encoder; the pure-Rust encoder (the `ravif` feature)
+/// otherwise, and an unsupported format with neither.
 fn avif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
+    #[cfg(feature = "libheif")]
+    if let Some(encoded) = crate::heif::encode(frame, quality, Format::Avif) {
+        return Ok(encoded);
+    }
+    #[cfg(feature = "ravif")]
+    return ravif(frame, quality);
+    #[cfg(not(feature = "ravif"))]
+    {
+        let _ = (frame, quality);
+        Err(Error::unavailable("AVIF", "output"))
+    }
+}
+
+/// AVIF from the pure-Rust encoder (rav1e).
+#[cfg(feature = "ravif")]
+fn ravif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
+    use image::ImageEncoder;
+
     // ImageMagick's AVIF default quality is 50.
     let quality = match quality {
         Some(q) if q >= 0 => q.min(100) as u8,
@@ -245,9 +328,20 @@ fn avif(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
     Ok(out)
 }
 
+/// HEIC, where libheif has an HEVC encoder; an unsupported format otherwise.
+fn heic(frame: &Frame, quality: Option<i64>) -> Result<Vec<u8>> {
+    #[cfg(feature = "libheif")]
+    let encoded = crate::heif::encode(frame, quality, Format::Heic);
+    #[cfg(not(feature = "libheif"))]
+    let encoded: Option<Vec<u8>> = {
+        let _ = (frame, quality);
+        None
+    };
+    encoded.ok_or_else(|| Error::unavailable("HEIC", "output"))
+}
+
 /// Writes `data` to `path`.
 pub(crate) fn write(path: &std::path::Path, data: &[u8]) -> Result<()> {
-    let mut file = std::fs::File::create(path)
-        .map_err(|e| Error::imagick(format!("unable to open image `{}': {e}", path.display())))?;
-    file.write_all(data).map_err(|e| Error::imagick(e.to_string()))
+    let mut file = std::fs::File::create(path).map_err(|e| Error::write(format_args!("{}: {e}", path.display())))?;
+    file.write_all(data).map_err(Error::write)
 }

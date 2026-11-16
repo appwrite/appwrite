@@ -683,7 +683,8 @@ mod tests {
         assert_eq!(emails[0].id, "packages/emails/import.php");
         assert_eq!(emails[0].scripts.len(), 5);
         assert_eq!(ids("packages/domains"), ["packages/domains/data/import.php"]);
-        assert_eq!(ids("packages/agents"), ["packages/agents/scripts/sync-openrouter-models.php"]);
+        // packages/agents has no scripts since its redesign.
+        assert!(ids("packages/agents").is_empty());
         assert_eq!(ids("packages/nats").len(), 4);
         assert!(ids("packages/dsn").is_empty());
     }

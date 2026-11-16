@@ -1260,7 +1260,6 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Close panel': 'סגירת החלונית',
   'Switch to dark mode': 'מעבר למצב כהה',
   'Switch to light mode': 'מעבר למצב בהיר',
-  'Use system theme': 'שימוש בערכת הנושא של המערכת',
 
   // GitHub Education program sign-up flow (/education/join)
   'Appwrite and GitHub': 'Appwrite ו-GitHub',

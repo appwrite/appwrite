@@ -101,6 +101,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 1,
             ])
+            ->addRule(Resource::TYPE_PROJECT_PREFERENCES, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of project preference sets to be migrated (always 0 or 1).',
+                'default' => 0,
+                'example' => 1,
+            ])
             ->addRule(Resource::TYPE_PROJECT_SERVICES, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of service configs to be migrated (always 0 or 1 — the project-level enable/disable flags for all 17 services).',

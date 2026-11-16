@@ -14,3 +14,13 @@ LIBSQLITE3_FLAGS = "SQLITE_ENABLE_MATH_FUNCTIONS SQLITE_MAX_VARIABLE_NUMBER=2500
 # runtime and fall back when they are missing.
 [target.'cfg(target_arch = "aarch64")']
 rustflags = ["--cfg", "aes_armv8", "--cfg", "polyval_armv8"]
+
+# The utopia PHP extension (crates/extension) leaves PHP's symbols for the
+# `php` binary that loads it to resolve; macOS's linker needs telling.
+[target.'cfg(target_os = "macos")']
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+# rustup's musl targets link statically by default, and a static target cannot
+# produce the shared library PHP loads (Alpine, the base image).
+[target.'cfg(target_env = "musl")']
+rustflags = ["-C", "target-feature=-crt-static"]

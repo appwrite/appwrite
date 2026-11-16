@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97358ffd1cf376198b73aeffe4bbdb0b",
+    "content-hash": "d0c3ea2367878992f78c1321ac7b8726",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "32.1.0",
+            "version": "32.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "92e840031d688c933acfde19e5114ca6f5ca2bb6"
+                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/92e840031d688c933acfde19e5114ca6f5ca2bb6",
-                "reference": "92e840031d688c933acfde19e5114ca6f5ca2bb6",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
+                "reference": "2ed11392c3759c5f7df415ede8296b5b75ff7f9c",
                 "shasum": ""
             },
             "require": {
@@ -111,10 +111,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/32.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.3.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-10-28T08:19:04+00:00"
+            "time": "2026-11-11T13:02:34+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -661,6 +661,245 @@
                 "source": "https://github.com/darylldoyle/svg-sanitizer/tree/1.0.0"
             },
             "time": "2026-09-01T09:35:47+00:00"
+        },
+        {
+            "name": "freedsx/asn1",
+            "version": "0.4.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/ASN1.git",
+                "reference": "a136e7981d2ca76b140570834bd65debf42ee3da"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/ASN1/zipball/a136e7981d2ca76b140570834bd65debf42ee3da",
+                "reference": "a136e7981d2ca76b140570834bd65debf42ee3da",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "friends-of-phpspec/phpspec-code-coverage": "^4.3|^6.1",
+                "phpspec/phpspec": "^5.1|^6.1|^7.1",
+                "phpstan/phpstan": "^0.11.15|^0.12",
+                "slevomat/coding-standard": "~7.0",
+                "squizlabs/php_codesniffer": "3.*",
+                "symplify/easy-coding-standard": "^6.1|^7.3|^9.0"
+            },
+            "suggest": {
+                "ext-gmp": "For big integer support in Integer/Enumerated/OID types and tag numbers."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Asn1\\": "src/FreeDSx/Asn1"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "An ASN.1 library for PHP.",
+            "homepage": "https://github.com/FreeDSx/ASN1",
+            "keywords": [
+                "DER",
+                "asn.1",
+                "asn1",
+                "ber",
+                "x.690"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/ASN1/issues",
+                "source": "https://github.com/FreeDSx/ASN1/tree/0.4.8"
+            },
+            "time": "2024-10-13T15:35:35+00:00",
+            "published-time": "2024-10-13T15:40:40+00:00"
+        },
+        {
+            "name": "freedsx/ldap",
+            "version": "0.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/LDAP.git",
+                "reference": "839bef5acc9bbee5b4bec56a56d91439b4be509f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/LDAP/zipball/839bef5acc9bbee5b4bec56a56d91439b4be509f",
+                "reference": "839bef5acc9bbee5b4bec56a56d91439b4be509f",
+                "shasum": ""
+            },
+            "require": {
+                "freedsx/asn1": ">=0.4,<1.0",
+                "freedsx/sasl": ">=0.1,<1.0",
+                "freedsx/socket": ">=0.5,<1.0",
+                "php": ">=7.1",
+                "psr/log": "^1||^2||^3"
+            },
+            "require-dev": {
+                "friends-of-phpspec/phpspec-code-coverage": "^4.3|^6.1|dev-master",
+                "phpspec/phpspec": "^7.2|^7.1|^6.1|^5.1",
+                "phpstan/phpstan": "^0.12.70",
+                "phpunit/phpunit": "^9.3|^8.0|^7.0",
+                "slevomat/coding-standard": "~7.0",
+                "squizlabs/php_codesniffer": "3.*",
+                "symfony/process": "^3.0|^4.0|^5.0",
+                "symplify/easy-coding-standard": "^6.1|^7.3|^9.0"
+            },
+            "suggest": {
+                "ext-openssl": "For SSL/TLS support and some SASL mechanisms.",
+                "ext-pcntl": "For LDAP server functionality.",
+                "ext-posix": "For LDAP server functionality."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Ldap\\": "src/FreeDSx/Ldap"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "A Pure PHP LDAP library",
+            "homepage": "https://github.com/FreeDSx/LDAP",
+            "keywords": [
+                "activedirectory",
+                "ldap",
+                "openldap"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/LDAP/issues",
+                "source": "https://github.com/FreeDSx/LDAP/tree/0.9.0"
+            },
+            "time": "2026-08-28T22:14:23+00:00",
+            "published-time": "2026-08-28T22:16:08+00:00"
+        },
+        {
+            "name": "freedsx/sasl",
+            "version": "0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/SASL.git",
+                "reference": "8dfa6e105f101960d9fa5f9c57d9c461d2c20593"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/SASL/zipball/8dfa6e105f101960d9fa5f9c57d9c461d2c20593",
+                "reference": "8dfa6e105f101960d9fa5f9c57d9c461d2c20593",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^0.11|^0.12",
+                "phpunit/phpunit": "^7.0|^8.5|^9.5",
+                "symfony/polyfill-php80": "^1.27",
+                "symplify/easy-coding-standard": ">=6.1"
+            },
+            "suggest": {
+                "ext-openssl": "Needed for encryption for certain mechanisms."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Sasl\\": "src/FreeDSx/Sasl"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "A Pure PHP SASL Library",
+            "homepage": "https://github.com/FreeDSx/SASL",
+            "keywords": [
+                "CRAM-MD5",
+                "DIGEST-MD5",
+                "sasl"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/SASL/issues",
+                "source": "https://github.com/FreeDSx/SASL/tree/0.2.1"
+            },
+            "time": "2026-03-22T23:50:16+00:00",
+            "published-time": "2026-03-22T23:51:18+00:00"
+        },
+        {
+            "name": "freedsx/socket",
+            "version": "0.6.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/FreeDSx/Socket.git",
+                "reference": "d0c8c6f684582e5ddbf5fc3d59d2316d3914b271"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/FreeDSx/Socket/zipball/d0c8c6f684582e5ddbf5fc3d59d2316d3914b271",
+                "reference": "d0c8c6f684582e5ddbf5fc3d59d2316d3914b271",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "freedsx/asn1": ">=0.4, <1.0",
+                "friends-of-phpspec/phpspec-code-coverage": "^6.1|^7.0",
+                "phpspec/phpspec": "^7.1|^8.0",
+                "phpstan/phpstan": "^2.0"
+            },
+            "suggest": {
+                "ext-openssl": "For SSL/TLS support.",
+                "freedsx/asn1": "For ASN.1 based message queues."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FreeDSx\\Socket\\": "src/FreeDSx/Socket"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chad Sikorra",
+                    "email": "Chad.Sikorra@gmail.com"
+                }
+            ],
+            "description": "A simple socket library for FreeDSx",
+            "homepage": "https://github.com/FreeDSx/Socket",
+            "keywords": [
+                "Socket",
+                "tcp",
+                "udp"
+            ],
+            "support": {
+                "issues": "https://github.com/FreeDSx/Socket/issues",
+                "source": "https://github.com/FreeDSx/Socket/tree/0.6.3"
+            },
+            "time": "2026-04-25T17:18:43+00:00",
+            "published-time": "2026-04-25T17:19:56+00:00"
         },
         {
             "name": "google/protobuf",
@@ -2798,16 +3037,16 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.7.1",
+            "version": "v3.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "f3202fa1b5097b0af062dc978b32ecf63404e31d"
+                "reference": "feb1edf4e546af3b85c5caebe8359a20db230ca3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/f3202fa1b5097b0af062dc978b32ecf63404e31d",
-                "reference": "f3202fa1b5097b0af062dc978b32ecf63404e31d",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/feb1edf4e546af3b85c5caebe8359a20db230ca3",
+                "reference": "feb1edf4e546af3b85c5caebe8359a20db230ca3",
                 "shasum": ""
             },
             "require": {
@@ -2820,7 +3059,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.7-dev"
+                    "dev-main": "3.8-dev"
                 }
             },
             "autoload": {
@@ -2845,7 +3084,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.7.1"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.8.1"
             },
             "funding": [
                 {
@@ -2865,20 +3104,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-06-05T06:23:12+00:00"
+            "time": "2026-09-16T14:15:10+00:00"
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.4.19",
+            "version": "v7.4.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "3a523f38dc399337ec45b2ab9628e8c37ceb23c7"
+                "reference": "ed012bfca0f7b45d97016efcdf9b0639c52a1722"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/3a523f38dc399337ec45b2ab9628e8c37ceb23c7",
-                "reference": "3a523f38dc399337ec45b2ab9628e8c37ceb23c7",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/ed012bfca0f7b45d97016efcdf9b0639c52a1722",
+                "reference": "ed012bfca0f7b45d97016efcdf9b0639c52a1722",
                 "shasum": ""
             },
             "require": {
@@ -2946,7 +3185,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.4.19"
+                "source": "https://github.com/symfony/http-client/tree/v7.4.23"
             },
             "funding": [
                 {
@@ -2966,20 +3205,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-08T13:28:43+00:00"
+            "time": "2026-11-04T08:27:22+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
-            "version": "v3.7.3",
+            "version": "v3.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client-contracts.git",
-                "reference": "35be0019e2c2c9fba80f9dc033290a5240f7b44f"
+                "reference": "f9f94260f787446c6fd430b2ae1969fe41ae1ba8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client-contracts/zipball/35be0019e2c2c9fba80f9dc033290a5240f7b44f",
-                "reference": "35be0019e2c2c9fba80f9dc033290a5240f7b44f",
+                "url": "https://api.github.com/repos/symfony/http-client-contracts/zipball/f9f94260f787446c6fd430b2ae1969fe41ae1ba8",
+                "reference": "f9f94260f787446c6fd430b2ae1969fe41ae1ba8",
                 "shasum": ""
             },
             "require": {
@@ -2992,7 +3231,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.7-dev"
+                    "dev-main": "3.8-dev"
                 }
             },
             "autoload": {
@@ -3028,7 +3267,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client-contracts/tree/v3.7.3"
+                "source": "https://github.com/symfony/http-client-contracts/tree/v3.8.1"
             },
             "funding": [
                 {
@@ -3048,7 +3287,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-08-04T08:41:16+00:00"
+            "time": "2026-10-04T15:04:25+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -3877,16 +4116,16 @@
         },
         {
             "name": "symfony/serializer",
-            "version": "v8.1.8",
+            "version": "v8.1.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/serializer.git",
-                "reference": "df54c4fe859d945eb633d2c5e6a410ce535f21e4"
+                "reference": "05624c94507c3acf065b6486bb626f0d741af459"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/serializer/zipball/df54c4fe859d945eb633d2c5e6a410ce535f21e4",
-                "reference": "df54c4fe859d945eb633d2c5e6a410ce535f21e4",
+                "url": "https://api.github.com/repos/symfony/serializer/zipball/05624c94507c3acf065b6486bb626f0d741af459",
+                "reference": "05624c94507c3acf065b6486bb626f0d741af459",
                 "shasum": ""
             },
             "require": {
@@ -3952,7 +4191,7 @@
             "description": "Handles serializing and deserializing data structures, including object graphs, into array structures or other formats like XML and JSON.",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/serializer/tree/v8.1.8"
+                "source": "https://github.com/symfony/serializer/tree/v8.1.11"
             },
             "funding": [
                 {
@@ -3972,20 +4211,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-28T09:40:25+00:00"
+            "time": "2026-11-04T08:39:20+00:00"
         },
         {
             "name": "symfony/service-contracts",
-            "version": "v3.7.3",
+            "version": "v3.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/service-contracts.git",
-                "reference": "15e6a07ec2a2c75ceb1b21dd98105ee8456d2257"
+                "reference": "052852a96fd5e5ebdb617dba22031e41a3300fb5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/15e6a07ec2a2c75ceb1b21dd98105ee8456d2257",
-                "reference": "15e6a07ec2a2c75ceb1b21dd98105ee8456d2257",
+                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/052852a96fd5e5ebdb617dba22031e41a3300fb5",
+                "reference": "052852a96fd5e5ebdb617dba22031e41a3300fb5",
                 "shasum": ""
             },
             "require": {
@@ -4003,7 +4242,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.7-dev"
+                    "dev-main": "3.8-dev"
                 }
             },
             "autoload": {
@@ -4039,7 +4278,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/service-contracts/tree/v3.7.3"
+                "source": "https://github.com/symfony/service-contracts/tree/v3.8.1"
             },
             "funding": [
                 {
@@ -4059,7 +4298,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-27T15:39:01+00:00"
+            "time": "2026-10-20T17:38:25+00:00"
         },
         {
             "name": "symfony/string",
@@ -4427,16 +4666,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "10.0.0",
+            "version": "10.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "06db36eb846dd49587708548c4f52f89cf947288"
+                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/06db36eb846dd49587708548c4f52f89cf947288",
-                "reference": "06db36eb846dd49587708548c4f52f89cf947288",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0f136bb85cf69e8310db135b3fc2da1360dbf726",
+                "reference": "0f136bb85cf69e8310db135b3fc2da1360dbf726",
                 "shasum": ""
             },
             "require": {
@@ -4494,9 +4733,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/10.0.0"
+                "source": "https://github.com/utopia-php/database/tree/10.1.2"
             },
-            "time": "2026-10-31T22:42:40+00:00"
+            "time": "2026-11-11T13:40:42+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4861,16 +5100,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.13.17",
+            "version": "5.19.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9"
+                "reference": "18aedd92d4d95646524f6c597d39f6282a11480d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/be65dd140b1f01386a1a93307c2de2ec326ad4e9",
-                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/18aedd92d4d95646524f6c597d39f6282a11480d",
+                "reference": "18aedd92d4d95646524f6c597d39f6282a11480d",
                 "shasum": ""
             },
             "require": {
@@ -4886,7 +5125,8 @@
                 "brianium/paratest": "^7",
                 "phpunit/phpunit": "^11",
                 "rector/rector": "^2.4",
-                "squizlabs/php_codesniffer": "^4"
+                "squizlabs/php_codesniffer": "^4",
+                "utopia-php/client": "^0.6"
             },
             "type": "library",
             "autoload": {
@@ -4907,9 +5147,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.13.17"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.19.1"
             },
-            "time": "2026-10-24T11:32:35+00:00"
+            "time": "2026-11-12T14:56:25+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -5619,11 +5859,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.3.0",
+            "version": "2.3.5",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/b1f9890d9af53a25c58129e78f0aadd31f90d7f4",
-                "reference": "b1f9890d9af53a25c58129e78f0aadd31f90d7f4",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/645a1bd6bead15fc1b8474137467961d0fa30a79",
+                "reference": "645a1bd6bead15fc1b8474137467961d0fa30a79",
                 "shasum": ""
             },
             "require": {
@@ -5679,7 +5919,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-10-06T06:15:36+00:00"
+            "time": "2026-11-03T12:14:22+00:00",
+            "published-time": "2026-11-03T12:14:36+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -6118,21 +6359,21 @@
         },
         {
             "name": "rector/rector",
-            "version": "2.6.7",
+            "version": "2.8.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rectorphp/rector.git",
-                "reference": "f4aa224edb9b0630fb43826d4cb6a49b62e48d4c"
+                "reference": "55acbd956d7e3907f7d21aab54edd68a310609e6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/f4aa224edb9b0630fb43826d4cb6a49b62e48d4c",
-                "reference": "f4aa224edb9b0630fb43826d4cb6a49b62e48d4c",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/55acbd956d7e3907f7d21aab54edd68a310609e6",
+                "reference": "55acbd956d7e3907f7d21aab54edd68a310609e6",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.4|^8.0",
-                "phpstan/phpstan": "^2.2.14"
+                "phpstan/phpstan": "^2.3.5"
             },
             "conflict": {
                 "rector/rector-doctrine": "*",
@@ -6163,7 +6404,7 @@
             ],
             "support": {
                 "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/2.6.7"
+                "source": "https://github.com/rectorphp/rector/tree/2.8.4"
             },
             "funding": [
                 {
@@ -6171,7 +6412,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-09-13T20:17:44+00:00"
+            "time": "2026-11-03T18:48:08+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -7688,7 +7929,6 @@
     "platform": {
         "php": ">=8.5.0",
         "ext-curl": "*",
-        "ext-imagick": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
         "ext-yaml": "*",
@@ -7705,5 +7945,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }

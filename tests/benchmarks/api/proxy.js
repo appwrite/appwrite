@@ -96,6 +96,11 @@ const bench = define({
             },
         },
     ],
+    skipped: [
+        { skipped: 'PATCH /v1/proxy/rules/:ruleId/function', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/proxy/rules/:ruleId/redirect', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+        { skipped: 'PATCH /v1/proxy/rules/:ruleId/site', reason: 'added on main in the Nov 16 merge; its scenario is pending (task main-nov16-benchmarks)' },
+    ],
 });
 
 export const options = bench.options;

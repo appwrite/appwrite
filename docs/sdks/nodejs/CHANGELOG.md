@@ -1,5 +1,75 @@
 # Change Log
 
+## 31.2.0
+
+* Updated: `project.listEnvironments`, `project.createEnvironment`, `project.getEnvironment`, `project.updateEnvironment` return `Environment` models instead of `Project`
+* Added: `account.createDevice`, `account.getDevice`, `account.deleteDevice` and `account.updateDeviceSession`, and the `Device` model
+* Added: `project.updateAccountDevicesPolicy`, `ProjectPolicyId.Accountdevices` and the `PolicyAccountDevices` model
+* Added: `project.updateOAuth2Vipps`, `project.updateOAuth2VippsSandbox` and the `OAuth2Vipps` model
+* Added: `OAuthProvider.Vipps` and `OAuthProvider.VippsSandbox`
+* Added: `proxy.updateFunctionRule`, `proxy.updateRedirectRule` and `proxy.updateSiteRule`
+* Added: optional `schedule` on `waf` rule create and update methods and on `WafRule*` models
+* Added: `project.getPrefs` and `project.updatePrefs` for project preferences
+* Added: `Client.setEnvironment` to act in a project environment
+* Added: `AppwriteMigrationResource.Projectpreferences` to migrate project preferences
+* Added: `monitors.read`, `monitors.write`, `alerts.read`, `alerts.write`, `reviews.read` and `reviews.write` to `ProjectKeyScopes`
+* Added: `Organization.budgetNotify`, `budgetCritical` and `educationExpiresAt`
+* Added: `Project.environmentId`, `Session.userName` and `ActivityEvent.reason`
+* Added: `ProxyRule.expireAt` and `certificateStatus`
+* Updated: requests send response format `2.7.1`; README targets Appwrite 2.7.x
+
+## 31.1.0
+
+* Added: `Migrations` service to run Appwrite, Firebase, NHost, Supabase, CSV and JSON migrations, plus retries and listing
+* Added: `AppwriteMigrationResource`, `FirebaseMigrationResource`, `NHostMigrationResource`, `SupabaseMigrationResource` and `OnDuplicate` enums
+* Added: `project.updateDenyRealtimeGuestsPolicy`, `Models.PolicyDenyRealtimeGuests` and `ProjectPolicyId.Denyrealtimeguests`
+* Added: `project.deleteSessions` to sign out every user in the project
+* Added: `BillingPlan.deploymentRetention`, `deploymentRetentionMax` and `deploymentsRetentionCount`
+* Added: `python-3.15`, `deno-2.9`, `go-1.27` and `rust-1.99` to `Runtime` and `BuildRuntime`
+* Updated: requests send `X-Appwrite-Response-Format: 2.6.2`; README targets Appwrite 2.6.x
+* Updated: redirects are no longer followed; a 3xx throws `AppwriteException` naming the `Location`
+* Fixed: path parameters `.` and `..` throw `AppwriteException` instead of changing the request URL
+* Updated: dev dependencies `eslint`, `typescript-eslint`, `prettier` and `@types/node` refreshed
+
+## 31.0.0
+
+* Breaking: positional `tablesDB`, `documentsDB` and `vectorsDB` `create` and `update` take `description` before `specification`
+* Breaking: positional `functions.update` takes `description` before `emailEnabled`
+* Added: `createQuery` on `databases`, `documentsDB` and `tablesDB` to send list queries in the request body
+* Added: `account.listMemberships`
+* Added: optional `description` on create and update for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `description` on the matching models
+* Added: `total` on list methods in `activities`, `backups`, `domains`, `mongo`, `mysql` and `postgresql`
+* Added: `emails` on `messaging.createEmail` and `messaging.updateEmail`
+* Added: `denyList` on `project.updatePasswordDictionaryPolicy`, `updatePasswordPersonalDataPolicy` and their policy models
+* Added: `BillingPlan.functionsAllowCron`
+* Added: `stripMetadata` on `storage.createBucket`, `updateBucket` and the `Bucket` model
+* Updated: `package.json` declares `engines.node` `>=20.0.0`
+
+## 30.0.1
+
+* Breaking: requests send `X-Appwrite-Response-Format: 2.5.0`; responses follow the 2.5 shapes
+* Breaking: removed `account.listLogs`, `users.listLogs` and the `Models.Log`/`Models.LogList` models
+* Breaking: removed `organization.createKey`, `getKey`, `listKeys`, `updateKey` and `deleteKey`, and `OrganizationKeyScopes`; use `organization.listProjectKeys`, `getProjectKey`, `updateProjectKey` and `deleteProjectKey` instead
+* Breaking: removed `Client.setDevKey`, `Models.DevKey` and `Project.devKeys`
+* Breaking: removed `BillingPlanGroup.Starter`; use `BillingPlanGroup.Free`
+* Breaking: `listSpecifications` returns each specification's prices and overage rates on the row itself. Removed the list-level `pricing` field and the `DedicatedDatabaseSpecificationPricing` model
+* Breaking: removed `Block` fields `reason`, `projectName`, `region`, `organizationName`, `organizationId` and `billingPlan`
+* Breaking: OAuth2 `resource` params now take `string[]`
+* Breaking: `project.updateOAuth2Kakao` takes `enabled` before `prompt`
+* Breaking: `BackupRestoration.options` is now an object
+* Breaking: nullable response fields are typed `T | null`; some became optional, such as `BillingPlan.usage`
+* Added: `Topic` helper to build MQTT topics for push messages
+* Added: `mongo`, `mysql` and `postgresql` `promoteRestoration`, `restoreMode`, `targetName` and `autoPromote` on `createRestoration`, and `DedicatedDatabaseRestoration.restoreMode`
+* Added: `proxy.createSMTPRule`, the `ProxyRuleProtocol` enum and `ProxyRule.protocol`
+* Added: `emailEnabled` on `functions.update` and `Function`, and `ExecutionTrigger.Email`
+* Added: `Query` aggregates (`count`, `countDistinct`, `sum`, `avg`, `min`, `max` and more), `groupBy`, `having`, `distinct`, joins, `relationship`, `covers`, `spatialEquals` and `page`
+* Added: `Query.builder()` to chain queries into a list
+* Updated: nullable request params accept `null`, such as `qos` on topics and the Appwrite provider
+* Updated: missing response fields fall back to their documented defaults
+* Updated: OAuth2 `prompt` and native fields, `PlatformAndroid.fingerprints` and `Identity.providerIdToken` are always returned
+* Fixed: list and object defaults filled into a response are copied per model, and object defaults are `{}` instead of `[]`
+
 ## 29.4.0
 
 * Added: `domains` service to manage domains, DNS records, email presets, prices, transfer status and zones

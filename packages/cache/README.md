@@ -47,6 +47,7 @@ echo $data;
 | Adapter | Notes |
 | --- | --- |
 | `Filesystem` | Files on disk, with optional streaming reads. |
+| `Storage` | One object per entry on a `utopia-php/storage` device, such as S3. Age comes from the object's last modified time, and a load is one conditional GET on S3. A failed load or save reads as a miss. `flush` lists every object under the root and `getSize` returns 0. |
 | `Memory` | In-process array, useful in tests. |
 | `None` | Stores nothing, for turning caching off. |
 | `Redis` | phpredis, with reconnect and leases. |
