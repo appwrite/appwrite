@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useIsFetching } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { BuyDomainHeaderButton } from '../shared/BuyDomainHeaderButton'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import type { Models } from '@appwrite.io/console'
@@ -638,7 +639,22 @@ function FunctionLayoutContent() {
           showRefresh={activeTab === 'executions' && hasRefreshHandler}
           onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
           isRefreshing={executionsListRefreshing}
-          beforeCreateButtons={undefined}
+          beforeCreateButtons={
+            activeTab === 'domains' ? (
+              <BuyDomainHeaderButton
+                orgId={project?.teamId}
+                onClick={() =>
+                  navigate({
+                    to: '/projects/$projectId/functions/$functionId/domains/buy',
+                    params: {
+                      projectId: projectId!,
+                      functionId: functionId!,
+                    },
+                  })
+                }
+              />
+            ) : undefined
+          }
           createLabel={
             activeTab === 'deployments'
               ? undefined

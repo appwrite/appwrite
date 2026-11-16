@@ -1,6 +1,9 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { z } from 'zod'
 import { BuyDomainWizard } from '@/components/pages/organizations/$orgId/domains/_components/BuyDomainWizard'
+import {
+  buyDomainSearchSchema,
+  type BuyDomainWizardSearch,
+} from '@/lib/domains/buy-wizard'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
@@ -10,14 +13,7 @@ import {
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 
-export const buyDomainSearchSchema = z.object({
-  payment: z.enum(['purchase']).optional(),
-  invoiceId: z.string().optional(),
-  domain: z.string().optional(),
-  stage: z.enum(['checkout']).optional(),
-})
-
-export type BuyDomainWizardSearch = z.infer<typeof buyDomainSearchSchema>
+export type { BuyDomainWizardSearch }
 
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/domains/buy',

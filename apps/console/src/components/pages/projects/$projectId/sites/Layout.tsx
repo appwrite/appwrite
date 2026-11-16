@@ -12,6 +12,7 @@ import {
   useIsFetching,
 } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { BuyDomainHeaderButton } from '../shared/BuyDomainHeaderButton'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -540,6 +541,22 @@ function SiteLayoutContent() {
             showRefresh={activeTab === 'logs' && hasRefreshHandler}
             onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
             isRefreshing={siteLogsListRefreshing}
+            beforeCreateButtons={
+              activeTab === 'domains' ? (
+                <BuyDomainHeaderButton
+                  orgId={project?.teamId}
+                  onClick={() =>
+                    navigate({
+                      to: '/projects/$projectId/sites/$siteId/domains/buy',
+                      params: {
+                        projectId: projectId!,
+                        siteId: siteId!,
+                      },
+                    })
+                  }
+                />
+              ) : undefined
+            }
             createLabel={activeTab === 'domains' ? t('Add domain') : undefined}
             createAnalyticsAction={
               activeTab === 'domains' ? 'create-site-domain' : undefined
